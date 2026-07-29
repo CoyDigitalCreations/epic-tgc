@@ -1,0 +1,38 @@
+@import "https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Inter:wght@300;400;500;600;700&display=swap";
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Cinzel", serif;
+  --font-body: "Inter", sans-serif;
+  --color-ether-50: #f0f0ff;
+  --color-ether-100: #d0d0ff;
+  --color-ether-200: #a0a0ff;
+  --color-ether-300: #7070ff;
+  --color-ether-400: #4040ff;
+  --color-ether-500: #2020ff;
+  --color-ether-600: #1a1acc;
+  --color-ether-700: #151599;
+  --color-ether-800: #101066;
+  --color-ether-900: #0a0a33;
+  --color-card-campeon: #ef4444;
+  --color-card-mistica: #a855f7;
+  --color-card-tactica: #22d3ee;
+  --color-card-arcana: #f59e0b;
+  --color-card-combate: #ec4899;
+  --color-card-eter: #fbbf24;
+  --color-card-bg: #1e1e2e;
+  --color-card-border: #3b3b5c;
+  --color-surface: #16161e;
+  --color-surface-2: #1e1e2a;
+}
+
+body {
+  margin: 0;
+  background: #0d0d14;
+  color: #e2e2e8;
+  font-family: var(--font-body);
+}
+
+#root {
+  min-height: 100svh;
+}

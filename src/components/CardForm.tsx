@@ -1,0 +1,182 @@
+import { useCardStore } from '../store/useCardStore'
+import { CARD_TYPES, RARITIES, KEYWORDS } from '../types'
+import { getFormConfig } from '../types/form-config'
+import type { CardType } from '../types'
+import { validateCard } from '../utils/validation'
+import { TextField, NumberField, SelectField, TextAreaField, MultiSelectField } from './fields'
+import { ImageUpload } from './ImageUpload'
+
+export function CardForm() {
+  const draft = useCardStore((s) => s.draft)
+  const updateDraft = useCardStore((s) => s.updateDraft)
+  const initDraft = useCardStore((s) => s.initDraft)
+  const addCard = useCardStore((s) => s.addCard)
+  const updateCard = useCardStore((s) => s.updateCard)
+  const cards = useCardStore((s) => s.cards)
+
+  const isEditing = draft.id && cards.some((c) => c.id === draft.id)
+  const config = draft.type ? getFormConfig(draft.type as CardType) : null
+
+  const handleSave = () => {
+    const errors = validateCard(draft)
+    if (errors.length > 0) {
+      alert(errors.map((e) => `${e.field}: ${e.message}`).join('\n'))
+      return
+    }
+
+    // Fill defaults for missing fields
+    const card = {
+      ...draft,
+      rarity: (draft.rarity as string) || 'Común',
+      keywords: (draft.keywords as string[]) || [],
+      flavorText: (draft.flavorText as string) || '',
+      updatedAt: new Date().toISOString(),
+      id: draft.id || crypto.randomUUID(),
+    } as Parameters<typeof addCard>[0]
+
+    if (isEditing) {
+      updateCard(card.id, card)
+    } else {
+      addCard(card)
+    }
+    useCardStore.getState().resetDraft()
+  }
+
+  /** Fields that live inside `draft.stats` instead of flat on draft */
+  const STATS_FIELDS = new Set(['cost', 'poder', 'resistencia', 'duracion'])
+
+  const handleTypeChange = (type: string) => {
+    initDraft(type as CardType)
+  }
+
+  const renderField = (field: { name: string; label: string; type: string; required: boolean; options?: string[]; min?: number; max?: number; placeholder?: string }) => {
+    const isStatsField = STATS_FIELDS.has(field.name)
+    const value = isStatsField
+      ? (draft.stats as Record<string, unknown>)?.[field.name] ?? ''
+      : draft[field.name]
+    const onChange = (val: unknown) => {
+      if (isStatsField) {
+        const currentStats = (draft.stats as Record<string, unknown>) ?? {}
+        updateDraft('stats', { ...currentStats, [field.name]: val })
+      } else {
+        updateDraft(field.name, val)
+      }
+    }
+
+    switch (field.type) {
+      case 'text':
+        return (
+          <TextField
+            key={field.name}
+            label={field.label}
+            value={(value as string) ?? ''}
+            onChange={(v) => onChange(v)}
+            placeholder={field.placeholder}
+          />
+        )
+      case 'number':
+        return (
+          <NumberField
+            key={field.name}
+            label={field.label}
+            value={value as number}
+            onChange={(v) => onChange(v)}
+            min={field.min}
+            max={field.max}
+          />
+        )
+      case 'select':
+        return (
+          <SelectField
+            key={field.name}
+            label={field.label}
+            value={(value as string) ?? ''}
+            onChange={(v) => onChange(v)}
+            options={field.options ?? []}
+          />
+        )
+      case 'textarea':
+        return (
+          <TextAreaField
+            key={field.name}
+            label={field.label}
+            value={(value as string) ?? ''}
+            onChange={(v) => onChange(v)}
+            placeholder={field.placeholder}
+          />
+        )
+      case 'multi-select': {
+        const keywords = (value as string[]) ?? []
+        return (
+          <MultiSelectField
+            key={field.name}
+            label={field.label}
+            value={keywords}
+            onChange={(v) => onChange(v)}
+            options={[...KEYWORDS]}
+          />
+        )
+      }
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-4">
+      <h2 className="text-xl font-display text-gray-100">
+        {isEditing ? 'Editar Carta' : 'Nueva Carta'}
+      </h2>
+
+      {/* Card Type Selector */}
+      <div className="flex gap-2 flex-wrap">
+        {CARD_TYPES.map((type) => (
+          <button
+            key={type}
+            onClick={() => handleTypeChange(type)}
+            className={`px-3 py-1 rounded text-sm font-medium transition-colors cursor-pointer
+              ${draft.type === type
+                ? 'bg-ether-600 text-white'
+                : 'bg-surface-2 text-gray-300 hover:bg-card-border'
+              }`}
+          >
+            {type}
+          </button>
+        ))}
+      </div>
+
+      {/* Rarity */}
+      <SelectField
+        label="Rareza"
+        value={(draft.rarity as string) ?? 'Común'}
+        onChange={(v) => updateDraft('rarity', v)}
+        options={[...RARITIES]}
+      />
+
+      {/* Image upload */}
+      <ImageUpload
+        value={draft.imageUrl as string | undefined}
+        onChange={(dataUrl) => updateDraft('imageUrl', dataUrl)}
+      />
+
+      {/* Dynamic fields from config */}
+      {config?.fields?.map(renderField) ?? null}
+
+      {/* Buttons */}
+      <div className="flex gap-2 pt-2">
+        <button
+          onClick={handleSave}
+          className="flex-1 bg-ether-600 hover:bg-ether-700 text-white font-medium py-2 rounded 
+                     transition-colors cursor-pointer"
+        >
+          {isEditing ? 'Actualizar' : 'Guardar'}
+        </button>
+        <button
+          onClick={() => useCardStore.getState().resetDraft()}
+          className="px-4 bg-surface-2 hover:bg-card-border text-gray-300 font-medium py-2 rounded 
+                     transition-colors cursor-pointer"
+        >
+          Cancelar
+        </button>
+      </div>
+    </div>
+  )
+}
