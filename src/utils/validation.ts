@@ -42,8 +42,9 @@ export function validateCard(card: Partial<AnyCard>): ValidationError[] {
       }
     }
 
-    if (field.type === 'select' && field.options && value) {
-      if (!field.options.includes(value as string)) {
+    if (field.type === 'select' && field.options && value !== undefined && value !== null && value !== '') {
+      const strValue = String(value)
+      if (!field.options.includes(strValue)) {
         errors.push({ field: field.name, message: `${field.label} inválido` })
       }
     }

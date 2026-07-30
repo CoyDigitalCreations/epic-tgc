@@ -1,0 +1,1421 @@
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ÉTER ENGINE TCG — Manual de Reglas v1.0</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Inter:wght@300;400;500;600;700&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0d0d14;
+    --surface: #16161e;
+    --surface-2: #1e1e2a;
+    --border: #3b3b5c;
+    --ether-300: #7070ff;
+    --ether-400: #4040ff;
+    --ether-600: #1a1acc;
+    --text: #e2e2e8;
+    --text-dim: #8b8ba0;
+    --text-muted: #6b6b80;
+    --red: #ef4444;
+    --green: #22c55e;
+    --amber: #f59e0b;
+    --cyan: #22d3ee;
+    --pink: #ec4899;
+    --purple: #a855f7;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    padding: 0;
+  }
+
+  /* ── Page ── */
+  .page {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+
+  /* ── Cover ── */
+  .cover {
+    text-align: center;
+    padding: 80px 24px 60px;
+    border-bottom: 2px solid var(--border);
+    margin-bottom: 48px;
+  }
+  .cover h1 {
+    font-family: 'Cinzel', serif;
+    font-size: 2.2rem;
+    font-weight: 900;
+    letter-spacing: 4px;
+    background: linear-gradient(135deg, var(--ether-300), var(--ether-400));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 8px;
+  }
+  .cover .subtitle {
+    font-family: 'Cinzel', serif;
+    font-size: 1rem;
+    color: var(--text-dim);
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  .cover .version {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+  }
+  .cover .version span {
+    color: var(--ether-300);
+  }
+  .cover .divider {
+    width: 80px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--ether-600), transparent);
+    margin: 20px auto;
+  }
+
+  /* ── Section ── */
+  .section {
+    margin-bottom: 40px;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .section-header .num {
+    font-family: 'Cinzel', serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--ether-300);
+    min-width: 28px;
+  }
+  .section-header h2 {
+    font-family: 'Cinzel', serif;
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: var(--text);
+  }
+
+  .section-header.sub {
+    margin-top: 24px;
+    border-bottom: 1px solid rgba(59,59,92,0.5);
+  }
+  .section-header.sub .num {
+    font-size: 0.95rem;
+    color: var(--cyan);
+  }
+  .section-header.sub h3 {
+    font-family: 'Cinzel', serif;
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    color: var(--text);
+  }
+
+  .section-header.sub2 {
+    margin-top: 18px;
+    padding-bottom: 4px;
+    border-bottom: none;
+  }
+  .section-header.sub2 h4 {
+    font-family: 'Cinzel', serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--amber);
+    letter-spacing: 0.5px;
+  }
+
+  /* ── Content ── */
+  .content {
+    padding-left: 4px;
+  }
+  .content p {
+    margin-bottom: 12px;
+    font-size: 0.92rem;
+    color: var(--text);
+    line-height: 1.7;
+  }
+
+  .content ul, .content ol {
+    margin: 8px 0 16px 20px;
+  }
+  .content li {
+    font-size: 0.92rem;
+    margin-bottom: 6px;
+    line-height: 1.6;
+  }
+  .content li::marker {
+    color: var(--ether-400);
+  }
+
+  .content strong {
+    color: #fff;
+    font-weight: 600;
+  }
+
+  .highlight {
+    color: var(--ether-300);
+    font-weight: 600;
+  }
+  .highlight-amber {
+    color: var(--amber);
+    font-weight: 600;
+  }
+  .highlight-red {
+    color: var(--red);
+    font-weight: 600;
+  }
+  .highlight-green {
+    color: var(--green);
+    font-weight: 600;
+  }
+  .highlight-cyan {
+    color: var(--cyan);
+    font-weight: 600;
+  }
+
+  .tag {
+    display: inline-block;
+    background: rgba(112,112,255,0.15);
+    color: var(--ether-300);
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 1px 8px;
+    border-radius: 4px;
+    letter-spacing: 0.3px;
+  }
+
+  /* ── Lore box ── */
+  .lore-box {
+    background: var(--surface-2);
+    border-left: 3px solid var(--ether-600);
+    border-radius: 0 8px 8px 0;
+    padding: 16px 20px;
+    margin: 12px 0 20px;
+    font-style: italic;
+    color: var(--text-dim);
+    font-size: 0.9rem;
+  }
+  .lore-box .attrib {
+    margin-top: 8px;
+    text-align: right;
+    font-style: normal;
+    font-size: 0.85rem;
+    color: var(--ether-300);
+  }
+
+  /* ── Steps / numbered list ── */
+  .steps {
+    counter-reset: step;
+    list-style: none;
+    padding: 0;
+    margin: 12px 0 20px;
+  }
+  .steps li {
+    counter-increment: step;
+    padding: 8px 12px 8px 44px;
+    position: relative;
+    font-size: 0.92rem;
+    margin-bottom: 6px;
+    background: var(--surface-2);
+    border-radius: 6px;
+    border: 1px solid var(--border);
+  }
+  .steps li::before {
+    content: counter(step);
+    position: absolute;
+    left: 12px;
+    top: 8px;
+    width: 24px;
+    height: 24px;
+    background: var(--ether-600);
+    color: white;
+    font-size: 0.78rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+  }
+
+  /* ── Tables ── */
+  .table-wrap {
+    overflow-x: auto;
+    margin: 12px 0 20px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+  }
+  th {
+    background: var(--surface-2);
+    color: var(--text);
+    font-weight: 600;
+    text-align: left;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    font-family: 'Cinzel', serif;
+    font-size: 0.82rem;
+    letter-spacing: 0.5px;
+  }
+  td {
+    padding: 9px 14px;
+    border-bottom: 1px solid rgba(59,59,92,0.4);
+    color: var(--text);
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--surface-2); }
+
+  /* ── Map ── */
+  .map-container {
+    margin: 16px 0 20px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .map-grid {
+    display: grid;
+    grid-template-columns: 140px 1fr 120px;
+    font-size: 0.82rem;
+  }
+  .map-cell {
+    padding: 10px 12px;
+    border: 1px solid rgba(59,59,92,0.5);
+    min-height: 50px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .map-cell .code {
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    color: var(--ether-300);
+    font-size: 0.75rem;
+    margin-bottom: 2px;
+  }
+  .map-cell .label {
+    color: var(--text-dim);
+    font-size: 0.78rem;
+    line-height: 1.4;
+  }
+  .map-row-label {
+    background: var(--surface-2);
+    font-family: 'Cinzel', serif;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-align: center;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 4px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* ── Destiny table ── */
+  .destiny-table {
+    width: 100%;
+    font-size: 0.88rem;
+    border-collapse: collapse;
+    margin: 12px 0 20px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .destiny-table th {
+    background: var(--surface-2);
+    padding: 10px 14px;
+    text-align: left;
+    font-family: 'Cinzel', serif;
+    font-size: 0.8rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .destiny-table td {
+    padding: 9px 14px;
+    border-bottom: 1px solid rgba(59,59,92,0.4);
+  }
+  .destiny-table tr:last-child td { border-bottom: none; }
+
+  /* ── Keyword cards ── */
+  .kw-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 12px;
+    margin: 12px 0 20px;
+  }
+  .kw-card {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    transition: border-color 0.2s;
+  }
+  .kw-card:hover { border-color: var(--ether-600); }
+  .kw-card .kw-name {
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: var(--ether-300);
+    margin-bottom: 4px;
+  }
+  .kw-card .kw-desc {
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+
+  /* ── Example boxes ── */
+  .example {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--amber);
+    border-radius: 0 8px 8px 0;
+    padding: 14px 18px;
+    margin: 8px 0 16px;
+    font-size: 0.88rem;
+  }
+  .example .ex-title {
+    font-weight: 600;
+    color: var(--amber);
+    margin-bottom: 4px;
+    font-size: 0.82rem;
+  }
+
+  /* ── Scene boxes ── */
+  .scene-box {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin: 10px 0 16px;
+  }
+  .scene-box .scene-title {
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    font-size: 0.88rem;
+    color: var(--cyan);
+    margin-bottom: 6px;
+  }
+  .scene-box p, .scene-box li { font-size: 0.88rem; }
+
+  /* ── Card anatomy ── */
+  .card-anatomy {
+    background: linear-gradient(135deg, #1a1a30, #222240);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin: 12px 0 20px;
+    font-family: 'Cinzel', serif;
+    max-width: 380px;
+  }
+  .card-anatomy .ca-name {
+    font-weight: 900;
+    font-size: 1rem;
+    color: #f0f0f0;
+    letter-spacing: 1px;
+    margin-bottom: 2px;
+  }
+  .card-anatomy .ca-line {
+    border-top: 1px solid rgba(59,59,92,0.6);
+    margin: 4px 0;
+  }
+  .card-anatomy .ca-meta {
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    font-family: 'Inter', sans-serif;
+  }
+  .card-anatomy .ca-stats {
+    font-size: 0.85rem;
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+  }
+  .card-anatomy .ca-effect {
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    font-family: 'Inter', sans-serif;
+    font-style: italic;
+  }
+  .card-anatomy .ca-copies {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    font-family: 'Inter', sans-serif;
+    text-align: right;
+    margin-top: 4px;
+  }
+
+  /* ── Footer ── */
+  .footer {
+    text-align: center;
+    padding: 40px 24px 20px;
+    border-top: 1px solid var(--border);
+    margin-top: 48px;
+  }
+  .footer p {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+  .footer .logo {
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    font-size: 1rem;
+    background: linear-gradient(135deg, var(--ether-300), var(--ether-400));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* ── TOG ── */
+  .toc {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px 24px;
+    margin-bottom: 40px;
+  }
+  .toc h3 {
+    font-family: 'Cinzel', serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--ether-300);
+    margin-bottom: 12px;
+    letter-spacing: 1px;
+  }
+  .toc-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px 24px;
+  }
+  .toc-item {
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    padding: 3px 0;
+    border-bottom: 1px dotted rgba(59,59,92,0.3);
+  }
+  .toc-item .toc-num {
+    color: var(--ether-300);
+    font-weight: 600;
+    margin-right: 6px;
+  }
+
+  /* ── Rarity table ── */
+  .rarity-table td:first-child { font-weight: 600; }
+
+  /* ── Firstborne list ── */
+  .fb-section {
+    margin-top: 6px;
+  }
+  .fb-group {
+    margin: 8px 0 12px;
+    padding-left: 4px;
+  }
+  .fb-group .fb-label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .fb-group ul {
+    list-style: none;
+    padding: 0;
+  }
+  .fb-group ul li {
+    font-size: 0.85rem;
+    padding: 2px 0;
+    color: var(--text-dim);
+    border-bottom: 1px dotted rgba(59,59,92,0.2);
+  }
+  .fb-group ul li .fb-cost {
+    color: var(--ether-300);
+    font-weight: 600;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 640px) {
+    .page { padding: 20px 14px 60px; }
+    .cover h1 { font-size: 1.5rem; }
+    .toc-grid { grid-template-columns: 1fr; }
+    .map-grid { grid-template-columns: 90px 1fr 80px; font-size: 0.7rem; }
+    .map-cell { padding: 6px 8px; }
+    .kw-grid { grid-template-columns: 1fr; }
+    .card-anatomy { max-width: 100%; }
+  }
+
+  /* ── Print ── */
+  @media print {
+    body { background: white; color: #222; }
+    .page { max-width: 100%; padding: 0.5in; }
+    .cover h1 { -webkit-text-fill-color: #1a1acc; }
+    .section-header .num { color: #1a1acc; }
+    .map-cell .code { color: #1a1acc; }
+    .kw-card .kw-name { color: #1a1acc; }
+    .highlight { color: #1a1acc; }
+    .lore-box { border-left-color: #1a1acc; }
+    .example { border-left-color: #f59e0b; }
+    .steps li { background: #f5f5f8; border-color: #ddd; }
+    .steps li::before { background: #1a1acc; }
+    .map-container { border-color: #ddd; }
+    .map-cell { border-color: #ddd; }
+    table, .destiny-table, .toc, .kw-card, .scene-box, .lore-box, .card-anatomy { border-color: #ddd; }
+    th { background: #f0f0f5; color: #222; }
+    .toc { background: #f5f5f8; }
+    .kw-card { background: #fafafc; }
+    .scene-box { background: #fafafc; }
+    .lore-box { background: #f5f5f8; }
+    .example { background: #fafafc; }
+    .card-anatomy { background: #f0f0f5; border-color: #ccc; }
+    .card-anatomy .ca-name { color: #111; }
+    .fb-group ul li { color: #555; }
+    .section-header h2, .section-header.sub h3 { color: #111; }
+    .content p, .content li { color: #333; }
+    .content strong { color: #000; }
+    .highlight-amber { color: #d97706; }
+    .highlight-red { color: #dc2626; }
+    .highlight-green { color: #16a34a; }
+    .highlight-cyan { color: #0891b2; }
+    .tag { background: #e0e0f0; color: #1a1acc; }
+    .map-row-label { background: #f0f0f5; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- ═══════ COVER ═══════ -->
+  <div class="cover">
+    <h1>ÉTER ENGINE TCG</h1>
+    <p class="subtitle">Manual de Reglas</p>
+    <p class="version">Versión <span>1.0</span> — Set Básico "El Despertar del Éter" + Firstborne</p>
+    <div class="divider"></div>
+    <p style="color:var(--text-muted);font-size:0.85rem;margin-top:12px;">
+      Julio 2026 &middot; Creado con Éter Forge
+    </p>
+  </div>
+
+  <!-- ═══════ TOC ═══════ -->
+  <div class="toc">
+    <h3>ÍNDICE</h3>
+    <div class="toc-grid">
+      <div class="toc-item"><span class="toc-num">1</span> El Mundo de Éter</div>
+      <div class="toc-item"><span class="toc-num">9</span> Fases del Turno</div>
+      <div class="toc-item"><span class="toc-num">2</span> Componentes del Juego</div>
+      <div class="toc-item"><span class="toc-num">10</span> El Sistema de Combate</div>
+      <div class="toc-item"><span class="toc-num">3</span> Preparación de la Partida</div>
+      <div class="toc-item"><span class="toc-num">11</span> Palabras Clave (Keywords)</div>
+      <div class="toc-item"><span class="toc-num">4</span> Estructura del Mazo</div>
+      <div class="toc-item"><span class="toc-num">12</span> Taxonomía</div>
+      <div class="toc-item"><span class="toc-num">5</span> Anatomía de una Carta</div>
+      <div class="toc-item"><span class="toc-num">13</span> Límite de Copias y Rarezas</div>
+      <div class="toc-item"><span class="toc-num">6</span> Tipos de Carta Detallados</div>
+      <div class="toc-item"><span class="toc-num">14</span> Condiciones de Derrota</div>
+      <div class="toc-item"><span class="toc-num">7</span> El Campo de Juego</div>
+      <div class="toc-item"><span class="toc-num">15</span> Mazo Firstborne</div>
+      <div class="toc-item"><span class="toc-num">8</span> El Recurso: ÉTER</div>
+      <div class="toc-item"><span class="toc-num">16</span> Glosario</div>
+    </div>
+  </div>
+
+  <!-- ═══════ 1 ═══════ -->
+  <div class="section">
+    <div class="section-header"><span class="num">1</span><h2>EL MUNDO DE ÉTER</h2></div>
+    <div class="content">
+      <p>En el principio existía el Éter. Una energía primordial que fluye a través de toda la realidad, conectando mundos, criaturas y destinos. De esta energía nacieron las cuatro grandes facciones:</p>
+      <ul>
+        <li><strong style="color:var(--cyan)">ORDEN</strong> &mdash; La disciplina y la luz, guardianes del equilibrio.</li>
+        <li><strong style="color:var(--red)">CAOS</strong> &mdash; La libertad y la oscuridad, fuerzas primigenias.</li>
+        <li><strong style="color:var(--purple)">SABIDURÍA</strong> &mdash; El conocimiento y el poder arcano.</li>
+        <li><strong style="color:var(--green)">NATURALEZA</strong> &mdash; La vida salvaje y los elementos.</li>
+      </ul>
+      <p>Cada facción canaliza el Éter de forma distinta, ya sea a través de campeones, conjuros mágicos, estrategias de batalla, pactos arcanos o golpes de combate.</p>
+      <p>El Set Básico, <strong>"El Despertar del Éter"</strong>, contiene 285 cartas que introducen las mecánicas fundamentales del juego. El mazo temático <strong><span class="highlight">FIRSTBORNE</span></strong> ("Primer Nacido") expande el juego con 29 cartas únicas centradas en campeonas unidas por el Éter primigenio.</p>
+    </div>
+  </div>
+
+  <!-- ═══════ 2 ═══════ -->
+  <div class="section">
+    <div class="section-header"><span class="num">2</span><h2>COMPONENTES DEL JUEGO</h2></div>
+    <div class="content">
+      <p>Para jugar una partida de Éter Engine TCG cada jugador necesita:</p>
+      <ul>
+        <li><strong>1 Mazo de ÉTER</strong> &mdash; 20 cartas exactas</li>
+        <li><strong>1 Mazo PRINCIPAL</strong> &mdash; 50 cartas exactas</li>
+        <li><strong>Marcadores de PE</strong> &mdash; dados o fichas para llevar la cuenta</li>
+        <li><strong>Un campo de juego</strong> &mdash; ver sección 7</li>
+      </ul>
+      <p><strong>Total por jugador: 70 cartas exactas.</strong></p>
+    </div>
+  </div>
+
+  <!-- ═══════ 3 ═══════ -->
+  <div class="section">
+    <div class="section-header"><span class="num">3</span><h2>PREPARACIÓN DE LA PARTIDA</h2></div>
+    <div class="content">
+      <ol class="steps">
+        <li><strong>Barajar:</strong> Ambos jugadores barajan sus DOS mazos por separado:<br>
+          &mdash; Mazo de ÉTER (20 cartas)<br>
+          &mdash; Mazo PRINCIPAL (50 cartas)</li>
+        <li><strong>Colocar:</strong> Ambos jugadores colocan sus mazos en las zonas correspondientes del campo (<span class="highlight">1A</span> para el Mazo de Éter, <span class="highlight">3G</span> para el Mazo Principal).</li>
+        <li><strong>Mano inicial:</strong> Cada jugador roba <strong>5 cartas</strong> de su Mazo PRINCIPAL como mano inicial.</li>
+        <li><strong>Determinar quién empieza:</strong> Los jugadores eligen el método de su preferencia para decidir quién toma el primer turno: volado (moneda al aire), piedra-papel-tijera, dado, etc.</li>
+        <li><strong>Puntos de Energía:</strong> Cada jugador comienza con <strong class="highlight-amber">50 PE</strong> (Puntos de Energía).</li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- ═══════ 4 ═══════ -->
+  <div class="section">
+    <div class="section-header"><span class="num">4</span><h2>ESTRUCTURA DEL MAZO</h2></div>
+    <div class="content">
+
+      <div class="section-header sub"><span class="num">4.1</span><h3>COMPOSICIÓN OBLIGATORIA</h3></div>
+
+      <p><strong>Mazo de ÉTER (20 cartas):</strong></p>
+      <ul>
+        <li>Solo cartas de tipo <span class="tag">ÉTER</span>.</li>
+        <li>Pueden repetirse hasta su límite de copias (×1, ×2 o ×3).</li>
+        <li>Si una carta tiene límite ×3, puedes llevar hasta 3 copias.</li>
+        <li>Las 20 se completan combinando distintas cartas de Éter.</li>
+      </ul>
+
+      <p><strong>Mazo PRINCIPAL (50 cartas):</strong></p>
+      <ul>
+        <li>Cartas de tipo: <span class="tag">CAMPEÓN</span>, <span class="tag">MÍSTICA</span>, <span class="tag">TÁCTICA</span>, <span class="tag">ARCANA</span>, <span class="tag">COMBATE</span>.</li>
+        <li><strong>NO</strong> puede llevar cartas de tipo ÉTER.</li>
+        <li>No hay límite por tipo &mdash; el jugador decide su distribución.</li>
+        <li>Pueden repetirse hasta su límite de copias.</li>
+      </ul>
+
+      <div class="section-header sub"><span class="num">4.2</span><h3>LÍMITE DE COPIAS POR CARTA</h3></div>
+      <ul>
+        <li><strong>×3</strong> &mdash; Límite estándar (la mayoría de las cartas).</li>
+        <li><strong>×2</strong> &mdash; Cartas con restricción moderada.</li>
+        <li><strong>×1</strong> &mdash; Cartas de rareza Única o con restricción especial.</li>
+      </ul>
+      <p>El campo <strong>"limiteCopias"</strong> de cada carta indica visualmente este límite.</p>
+
+      <div class="section-header sub"><span class="num">4.3</span><h3>CATEGORÍA DE HABILIDAD "ÚNICO"</h3></div>
+      <p>Las cartas con <strong>catHabilidad "Único"</strong> tienen una restricción adicional: <strong class="highlight-red">SOLO 1 copia</strong> de esa carta puede estar en el tablero al mismo tiempo. Puedes tener copias extras en la mano, pero no puedes jugar otra mientras una ya esté en tu campo.</p>
+    </div>
+  </div>
+
+  <!-- ═══════ 5 ═══════ -->
+  <div class="section">
+    <div class="section-header"><span class="num">5</span><h2>ANATOMÍA DE UNA CARTA</h2></div>
+    <div class="content">
+
+      <div class="card-anatomy">
+        <div class="ca-name">NOMBRE DE LA CARTA</div>
+        <div class="ca-meta">★ RAREZA &nbsp;&middot;&nbsp; COSTE de Éter (stats.cost)</div>
+        <div class="ca-line"></div>
+        <div class="ca-meta">Tipo: Campeón | Mística | ...</div>
+        <div class="ca-meta">Elemento: Fuego | Agua | ...</div>
+        <div class="ca-line"></div>
+        <div class="ca-stats">⚔ Poder &nbsp;|&nbsp; 🛡 Resistencia <span style="font-weight:400;color:var(--text-muted)">(solo Campeón)</span></div>
+        <div class="ca-line"></div>
+        <div class="ca-effect">Efecto / Habilidad</div>
+        <div class="ca-effect" style="margin-top:4px;color:var(--text-muted)">"Texto de sabor (flavorText)"</div>
+        <div class="ca-copies">×3 (límite de copias por mazo)</div>
+      </div>
+
+      <table>
+        <tr><td style="width:140px"><strong>name</strong></td><td>Nombre de la carta</td></tr>
+        <tr><td><strong>type</strong></td><td>Tipo (Campeón, Mística, Táctica, Arcana, Combate, Éter)</td></tr>
+        <tr><td><strong>rarity</strong></td><td>Rareza (Común, Poco Común, Rara, Épica, Legendaria, Única)</td></tr>
+        <tr><td><strong>element</strong></td><td>Elemento (Fuego, Agua, Tierra, Aire, Luz, Tinieblas)</td></tr>
+        <tr><td><strong>stats.cost</strong></td><td>Coste de Éter</td></tr>
+        <tr><td><strong>stats.poder</strong></td><td>Ataque (solo Campeón)</td></tr>
+        <tr><td><strong>stats.resistencia</strong></td><td>Defensa (solo Campeón)</td></tr>
+        <tr><td><strong>keywords</strong></td><td>Palabras clave que modifican reglas</td></tr>
+        <tr><td><strong>flavorText</strong></td><td>Texto de ambientación (sin efecto en el juego)</td></tr>
+        <tr><td><strong>limiteCopias</strong></td><td>Máximo de copias de esta carta por mazo (3, 2 o 1)</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══════ 6 ═══════ -->
+  <div class="section">
+    <div class="section-header"><span class="num">6</span><h2>TIPOS DE CARTA DETALLADOS</h2></div>
+    <div class="content">
+
+      <!-- 6.1 -->
+      <div class="section-header sub"><span class="num">6.1</span><h3>ÉTER <span style="font-weight:400;color:var(--text-muted);font-family:'Inter',sans-serif;">(Recurso)</span></h3></div>
+      <p>Las cartas de <span class="tag">ÉTER</span> son el <strong>RECURSO PRINCIPAL</strong> del juego.</p>
+      <ul>
+        <li><strong>VALOR:</strong> Cada carta de Éter tiene un valor del 1 al 5 (stats.cost).</li>
+        <li>Van del Mazo de Éter (1A) a la mano.</li>
+        <li>Se colocan en la <strong>RESERVA DE ÉTER</strong> (2A) durante la Fase de Forja.</li>
+        <li>Desde la Reserva se usan para pagar costes de otras cartas.</li>
+      </ul>
+      <p>Pueden tener:</p>
+      <ul>
+        <li><strong>EFECTO PASIVO:</strong> Mientras están en la Reserva o asignadas a un Campeón.</li>
+        <li><strong>EFECTO ACTIVO:</strong> Se exilian de la Reserva para activar un efecto.</li>
+      </ul>
+      <p>Las cartas de Éter <strong>NO</strong> tienen Poder ni Resistencia. No combaten.</p>
+
+      <!-- 6.2 -->
+      <div class="section-header sub"><span class="num">6.2</span><h3>CAMPEÓN <span style="font-weight:400;color:var(--text-muted);font-family:'Inter',sans-serif;">(Combatiente principal)</span></h3></div>
+      <p>Los Campeones son las cartas de COMBATE. Van al <strong>CAMPO</strong> (zona 2B-2F).</p>
+      <ul>
+        <li><strong>cost</strong> &mdash; Coste de Éter para invocarlo</li>
+        <li><strong>poder</strong> &mdash; Ataque (daño que inflige en combate)</li>
+        <li><strong>resistencia</strong> &mdash; Defensa (vida del Campeón)</li>
+        <li><strong>faccion</strong> &mdash; Orden, Caos, Sabiduría o Naturaleza</li>
+        <li><strong>esencia</strong> &mdash; Mago, Guerrero, Bestia, Dragón, Espectro, Céleste, Abisal, Elemental, Constructo, Humano</li>
+        <li><strong>rol</strong> &mdash; Asalto, Guardia, Soporte, Control, etc.</li>
+        <li><strong>catHabilidad</strong> &mdash; Efecto, Único, Legendario, Maldito, Bendito, Normal</li>
+      </ul>
+      <p><strong>Habilidades:</strong></p>
+      <ul>
+        <li><strong>tipoEfecto:</strong> Pasivo (siempre activo), Activo (requiere exiliar Éter asignado), Especial (tiene ambos)</li>
+        <li><strong>efectoPasivo:</strong> Efecto continuo mientras está en el campo</li>
+        <li><strong>efectoActivo:</strong> Efecto que requiere exiliar Éter asignado como coste</li>
+      </ul>
+      <p class="highlight-amber" style="font-weight:600;">AL INVOCAR un Campeón: el Éter pagado se ASIGNA al Campeón (va a las zonas 1B-1F encima del Campeón), NO va al Cementerio.</p>
+
+      <!-- 6.3 -->
+      <div class="section-header sub"><span class="num">6.3</span><h3>MÍSTICA <span style="font-weight:400;color:var(--text-muted);font-family:'Inter',sans-serif;">(Conjuro)</span></h3></div>
+      <p>Las Místicas son conjuros de <strong>UN SOLO USO</strong>.</p>
+      <ul>
+        <li>Se juegan en un slot de soporte (3A-3C).</li>
+        <li>Se paga su coste de Éter (va al Cementerio).</li>
+        <li>Se resuelven y luego van al Cementerio.</li>
+        <li>No tienen Poder ni Resistencia &mdash; son puramente conjuros.</li>
+        <li>Si su efecto es continuo, permanecen en el slot hasta que termine.</li>
+      </ul>
+
+      <!-- 6.4 -->
+      <div class="section-header sub"><span class="num">6.4</span><h3>TÁCTICA <span style="font-weight:400;color:var(--text-muted);font-family:'Inter',sans-serif;">(Reacción / Estrategia)</span></h3></div>
+      <p>Las Tácticas son cartas de <strong>REACCIÓN gratuitas</strong>.</p>
+      <ul>
+        <li>Se juegan en un slot de soporte (3A-3C) &mdash; comparten espacio con Místicas.</li>
+        <li><strong>NO</strong> cuestan Éter.</li>
+        <li>Se activan cuando se cumple su condición.</li>
+        <li>Van al Cementerio tras resolverse.</li>
+        <li>Se pueden jugar desde la mano en cualquier momento.</li>
+      </ul>
+
+      <!-- 6.5 -->
+      <div class="section-header sub"><span class="num">6.5</span><h3>ARCANA <span style="font-weight:400;color:var(--text-muted);font-family:'Inter',sans-serif;">(Pacto / Condición)</span></h3></div>
+      <p>Las Arcanas son cartas de <strong>CONDICIÓN + RECOMPENSA</strong>.</p>
+      <ul>
+        <li>Se colocan <strong>BOCA ABAJO</strong> en un slot (3D-3F) sin pagar coste.</li>
+        <li>Cuando se cumple su condición, se puede <strong>PAGAR</strong> su coste de Éter para activar la recompensa.</li>
+        <li>Si no se tiene suficiente Éter en la Reserva, no se puede activar y la carta permanece boca abajo.</li>
+        <li>El Éter pagado va al Cementerio.</li>
+        <li>No tienen Poder ni Resistencia.</li>
+      </ul>
+
+      <!-- 6.6 -->
+      <div class="section-header sub"><span class="num">6.6</span><h3>COMBATE <span style="font-weight:400;color:var(--text-muted);font-family:'Inter',sans-serif;">(Golpe / Reacción de batalla)</span></h3></div>
+      <p>Las cartas de Combate son <strong>REACCIONES DE BATALLA</strong>.</p>
+      <ul>
+        <li>Se colocan <strong>BOCA ABAJO</strong> en un slot (3D-3F) &mdash; comparten espacio con Arcanas.</li>
+        <li><strong>NO</strong> cuestan Éter.</li>
+        <li>Se activan cuando se cumple su condición durante el combate.</li>
+        <li>Deben haber sido colocadas en un turno anterior.</li>
+        <li>Van al Cementerio tras resolverse.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ═══════ 7 ═══════ -->
+  <div class="section">
+    <div class="section-header"><span class="num">7</span><h2>EL CAMPO DE JUEGO</h2></div>
+    <div class="content">
+
+      <div class="map-container">
+        <div class="map-grid">
+          <!-- Fila 1 -->
+          <div class="map-cell"><div class="code">1A</div><div class="label">MAZO DE ÉTER</div></div>
+          <div class="map-cell" style="grid-column:span 1;"><div class="code">1B — 1F</div><div class="label">ÉTER ASIGNADO A CAMPEONES</div></div>
+          <div class="map-cell"><div class="code">1G</div><div class="label">EXILIO</div></div>
+          <!-- Fila 2 -->
+          <div class="map-cell"><div class="code">2A</div><div class="label">RESERVA DE ÉTER</div></div>
+          <div class="map-cell"><div class="code">2B — 2F</div><div class="label">CAMPEONES</div></div>
+          <div class="map-cell"><div class="code">2G</div><div class="label">CEMENTERIO</div></div>
+          <!-- Fila 3 -->
+          <div class="map-cell"><div class="code">3A · 3B · 3C</div><div class="label">MÍSTICAS / TÁCTICAS</div></div>
+          <div class="map-cell"><div class="code">3D · 3E · 3F</div><div class="label">ARCANAS / COMBATE</div></div>
+          <div class="map-cell"><div class="code">3G</div><div class="label">MAZO PRINCIPAL</div></div>
+        </div>
+      </div>
+
+      <p><strong>ZONAS DEL CAMPO:</strong></p>
+      <table>
+        <tr><td style="width:60px"><span class="highlight">1A</span></td><td>Mazo de ÉTER</td><td style="color:var(--text-muted)">boca abajo, se roba de aqu&iacute;</td></tr>
+        <tr><td><span class="highlight">1B-1F</span></td><td>Éter asignado</td><td style="color:var(--text-muted)">encima del Campeón correspondiente</td></tr>
+        <tr><td><span class="highlight">1G</span></td><td>Exilio</td><td style="color:var(--text-muted)">cartas fuera del juego</td></tr>
+        <tr><td><span class="highlight">2A</span></td><td>Reserva de ÉTER</td><td style="color:var(--text-muted)">Éter listo para usar</td></tr>
+        <tr><td><span class="highlight">2B-2F</span></td><td>Campeones</td><td style="color:var(--text-muted)">hasta 5 Campeones en juego</td></tr>
+        <tr><td><span class="highlight">2G</span></td><td>Cementerio</td><td style="color:var(--text-muted)">cartas destruidas, descartadas o resueltas</td></tr>
+        <tr><td><span class="highlight">3A-3C</span></td><td>Místicas / Tácticas</td><td style="color:var(--text-muted)">3 slots compartidos</td></tr>
+        <tr><td><span class="highlight">3D-3F</span></td><td>Arcanas / Combate</td><td style="color:var(--text-muted)">3 slots compartidos</td></tr>
+        <tr><td><span class="highlight">3G</span></td><td>Mazo PRINCIPAL</td><td style="color:var(--text-muted)">boca abajo, se roba de aqu&iacute;</td></tr>
+      </table>
+
+      <div class="section-header sub"><span class="num">7.1</span><h3>DISTRIBUCIÓN DE SLOTS DE SOPORTE</h3></div>
+      <ul>
+        <li><strong>Slot 3A-3C:</strong> Puedes tener cualquier combinación de Místicas y Tácticas. Ej: 1 Mística + 2 Tácticas, o 3 Místicas, o 3 Tácticas.</li>
+        <li><strong>Slot 3D-3F:</strong> Puedes tener cualquier combinación de Arcanas y Combate. Ej: 2 Arcanas + 1 Combate, o 3 Combate, o 3 Arcanas.</li>
+        <li>Cuando una carta de soporte se resuelve, libera su slot.</li>
+        <li>Mientras una carta de soporte con efecto continuo está activa, ocupa su slot.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ═══════ 8 ═══════ -->
+  <div class="section">
+    <div class="section-header"><span class="num">8</span><h2>EL RECURSO: ÉTER</h2></div>
+    <div class="content">
+
+      <div class="section-header sub"><span class="num">8.1</span><h3>¿CÓMO SE OBTIENE?</h3></div>
+      <ul>
+        <li>Al inicio de la partida, cada jugador roba 1 carta de su Mazo de Éter (además de las 5 del Mazo Principal).</li>
+        <li>En la Fase de Alba de cada turno, robas <strong>1 carta</strong> de tu Mazo de Éter.</li>
+        <li>Si tu Mazo de Éter se agota, sigues robando solo del Mazo Principal.</li>
+      </ul>
+      <p><strong>LÍMITE DE MANO:</strong> 10 cartas entre ambos mazos (Principal + Éter). Si al final del turno tienes más, descartas hasta 10.</p>
+
+      <div class="section-header sub"><span class="num">8.2</span><h3>¿DÓNDE SE ALMACENA?</h3></div>
+      <ol>
+        <li><strong>MANO:</strong> Al robarlas, las cartas de Éter van a tu mano. No se pueden usar directamente desde la mano.</li>
+        <li><strong>RESERVA DE ÉTER (2A):</strong> Durante la Fase de Forja, puedes mover cualquier cantidad de cartas de Éter de tu mano a la Reserva. No hay límite de cartas en la Reserva.</li>
+        <li><strong>ASIGNADO A CAMPEÓN (1B-1F):</strong> Cuando invocas un Campeón, el Éter que pagas se coloca encima del Campeón (zona 1B-1F). Representa la energía que el Campeón está usando.</li>
+        <li><strong>CEMENTERIO (2G):</strong> El Éter usado para pagar Místicas o Arcanas va al Cementerio. También va si el Campeón al que está asignado muere.</li>
+        <li><strong>EXILIO (1G):</strong> El Éter que se consume para activar habilidades de Campeones va al Exilio. No puede ser recuperado (salvo que un efecto lo indique explícitamente).</li>
+      </ol>
+
+      <div class="section-header sub"><span class="num">8.3</span><h3>¿CÓMO SE USA?</h3></div>
+      <p><strong>REGLA FUNDAMENTAL:</strong> El Éter solo se puede usar desde la <span class="highlight">RESERVA (2A)</span>. No se puede usar desde la mano, el Cementerio ni el Exilio (salvo efectos que lo permitan).</p>
+      <p><strong>Pasos para pagar:</strong></p>
+      <ol>
+        <li>Tienes Éter en tu Reserva (2A).</li>
+        <li>Decides jugar una carta que requiera Éter.</li>
+        <li>Mueves cartas de Éter de la Reserva al destino correspondiente (asignado al Campeón, Cementerio o Exilio).</li>
+        <li>El efecto de la carta se resuelve.</li>
+      </ol>
+
+      <div class="section-header sub"><span class="num">8.4</span><h3>DESTINO DEL ÉTER SEGÚN EL USO</h3></div>
+      <div class="destiny-table">
+        <table>
+          <tr><th>USO</th><th>DESTINO DEL ÉTER</th></tr>
+          <tr><td>Invocar un Campeón</td><td>→ Asignado al Campeón <span class="highlight">(1B-1F)</span></td></tr>
+          <tr><td>Jugar una Mística</td><td>→ Cementerio <span class="highlight">(2G)</span></td></tr>
+          <tr><td>Activar una Arcana</td><td>→ Cementerio <span class="highlight">(2G)</span></td></tr>
+          <tr><td>Activar habilidad de Campeón</td><td>→ Exilio <span class="highlight">(1G)</span></td></tr>
+          <tr><td>Efecto de carta de Éter</td><td>→ Exilio <span class="highlight">(1G)</span></td></tr>
+        </table>
+      </div>
+
+      <div class="section-header sub"><span class="num">8.5</span><h3>REGLA DEL OVERPAY (Pago sin Fraccionamiento)</h3></div>
+      <p>Cuando pagas un coste, puedes <strong>COMBINAR</strong> varias cartas de Éter para alcanzar el valor exacto (ej: 2 + 1 = 3).</p>
+      <p>Si usas una carta de Éter de <strong>mayor valor</strong> que el coste, el excedente <strong class="highlight-red">SE PIERDE</strong>. No hay "vuelto".</p>
+      <div class="example">
+        <div class="ex-title">Ejemplo de Overpay</div>
+        Pagar un coste de 3 con una carta de valor 5 → pierdes 2 puntos.<br>
+        Para evitar overpay, combina cartas hasta llegar al valor exacto.
+      </div>
+
+      <div class="section-header sub"><span class="num">8.6</span><h3>HABILIDADES QUE DICEN "EXILIA X ÉTER"</h3></div>
+      <p>Cuando una habilidad de Campeón dice <strong>"Exilia 2 Éter"</strong>, se refiere al <span class="highlight">VALOR total</span> de Éter a exiliar, <strong>no a la cantidad de cartas</strong>.</p>
+      <div class="example">
+        <div class="ex-title">Ejemplo</div>
+        Un Campeón tiene 3 cartas asignadas (valores 1, 1 y 2) y su habilidad dice "Exilia 2 Éter". Puedes:<br>
+        &bull; Exiliar las 2 cartas de valor 1 (1+1=2), o<br>
+        &bull; Exiliar la carta de valor 2.<br>
+        En ambos casos, el Éter exiliado va al Exilio (1G).
+      </div>
+
+      <div class="section-header sub"><span class="num">8.7</span><h3>EFECTOS DE LAS CARTAS DE ÉTER</h3></div>
+      <p>Las cartas de Éter pueden tener:</p>
+      <ul>
+        <li><strong>EFECTO PASIVO:</strong> Se activa mientras la carta está en la Reserva (2A) o asignada a un Campeón (1B-1F).<br>
+          <span class="example" style="margin:4px 0 0;display:inline-block;padding:6px 12px;">"Mientras esta carta esté en tu Reserva, tus Campeones ganan +1 Ataque."</span></li>
+        <li><strong>EFECTO ACTIVO (Sacrificio):</strong> Exilias voluntariamente la carta de la Reserva al Exilio para activar su efecto.<br>
+          <span class="example" style="margin:4px 0 0;display:inline-block;padding:6px 12px;">"Exilia esta carta de tu Reserva: Roba 1 carta."</span></li>
+        <li><strong>EFECTO AL IR AL CEMENTERIO:</strong> Se activa cuando la carta va al Cementerio por cualquier motivo.<br>
+          <span class="example" style="margin:4px 0 0;display:inline-block;padding:6px 12px;">"Cuando esta carta vaya al Cementerio, ganas 3 PE."</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ═══════ 9 ═══════ -->
+  <div class="section">
+    <div class="section-header"><span class="num">9</span><h2>FASES DEL TURNO</h2></div>
+    <div class="content">
+
+      <div class="section-header sub"><span class="num">9.1</span><h3>ESTRUCTURA GENERAL</h3></div>
+      <p>Cada turno se divide en 4 fases, en este orden:</p>
+      <div class="destiny-table">
+        <table>
+          <tr><th style="width:70px">FASE</th><th style="width:100px">NOMBRE</th><th>QUÉ PASA</th></tr>
+          <tr><td><span class="highlight">1</span></td><td><strong>ALBA</strong></td><td>Robo: 1 Éter + 1 Mazo Principal. Se resuelven efectos "Al inicio de tu turno".</td></tr>
+          <tr><td><span class="highlight">2</span></td><td><strong>FORJA</strong></td><td>Bajar Éter a la Reserva. Jugar Campeones, Místicas, Arcanas, Tácticas. Activar efectos.</td></tr>
+          <tr><td><span class="highlight">3</span></td><td><strong>CHOQUE</strong></td><td>Combate (ver sección 10).</td></tr>
+          <tr><td><span class="highlight">4</span></td><td><strong>OCASO</strong></td><td>Descartar al límite de mano (10). Efectos "hasta final del turno" expiran. Pasa el turno al otro jugador.</td></tr>
+        </table>
+      </div>
+
+      <div class="section-header sub"><span class="num">9.2</span><h3>FASE DE ALBA (Robo)</h3></div>
+      <ol>
+        <li>Se resuelven efectos que dicen "Al inicio de tu turno...".</li>
+        <li>Robas <strong>1 carta</strong> de tu Mazo de ÉTER (1A) a tu mano.</li>
+        <li>Robas <strong>1 carta</strong> de tu Mazo PRINCIPAL (3G) a tu mano.</li>
+        <li>Si tu Mazo de ÉTER está vacío, solo robas del Principal.</li>
+      </ol>
+
+      <div class="section-header sub"><span class="num">9.3</span><h3>FASE DE FORJA (Juego)</h3></div>
+      <p>Puedes, en cualquier orden y <strong>sin límite por turno</strong>:</p>
+      <ul>
+        <li>Mover cartas de Éter de tu mano a la <span class="highlight">RESERVA (2A)</span>.</li>
+        <li>Invocar <span class="tag">CAMPEONES</span> pagando su coste desde la Reserva.</li>
+        <li>Jugar <span class="tag">MÍSTICAS</span> pagando su coste.</li>
+        <li>Colocar <span class="tag">ARCANAS</span> boca abajo en los slots 3D-3F.</li>
+        <li>Colocar <span class="tag">COMBATE</span> boca abajo en los slots 3D-3F.</li>
+        <li>Activar habilidades ACTIVAS de tus cartas.</li>
+        <li>Jugar <span class="tag">TÁCTICAS</span> desde la mano (también aplica en otras fases).</li>
+      </ul>
+
+      <div class="section-header sub"><span class="num">9.4</span><h3>FASE DE CHOQUE (Combate)</h3></div>
+      <p>Ver sección 10 — El Sistema de Combate.</p>
+
+      <div class="section-header sub"><span class="num">9.5</span><h3>FASE DE OCASO (Final)</h3></div>
+      <ol>
+        <li>Se resuelven efectos "hasta el final del turno".</li>
+        <li>Si tienes más de <strong>10 cartas</strong> en la mano, descartas hasta 10.</li>
+        <li>Pasa el turno al oponente.</li>
+      </ol>
+
+      <div class="section-header sub"><span class="num">9.6</span><h3>PRIMER TURNO — REGLAS ESPECIALES</h3></div>
+      <p><strong>JUGADOR 1 (el que empieza):</strong></p>
+      <ul>
+        <li>En su <strong>PRIMER</strong> turno, roba NORMAL (1 Éter + 1 Principal).</li>
+        <li><span class="highlight-red">NO</span> puede entrar en la <strong>FASE DE CHOQUE</strong> (no ataca).</li>
+        <li>Pasa directo de Forja a Ocaso.</li>
+        <li>Esto aplica <strong>SOLO</strong> al primer turno del Jugador 1.</li>
+      </ul>
+      <p><strong>JUGADOR 2 (el segundo):</strong></p>
+      <ul>
+        <li>En su <strong>PRIMER</strong> turno, roba NORMAL (1 Éter + 1 Principal).</li>
+        <li><span class="highlight-green">SÍ</span> puede atacar con normalidad.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ═══════ 10 ═══════ -->
+  <div class="section">
+    <div class="section-header"><span class="num">10</span><h2>EL SISTEMA DE COMBATE</h2></div>
+    <div class="content">
+
+      <div class="section-header sub"><span class="num">10.1</span><h3>FASES DEL COMBATE</h3></div>
+      <p>El combate se divide en <strong>4 pasos secuenciales</strong>:</p>
+      <ol>
+        <li><strong>DECLARACIÓN DE ATAQUE</strong></li>
+        <li><strong>DECLARACIÓN DE BLOQUEO</strong></li>
+        <li><strong>RESOLUCIÓN DE COMBATE</strong></li>
+        <li><strong>APLICACIÓN DE DAÑO</strong></li>
+      </ol>
+
+      <div class="section-header sub"><span class="num">10.2</span><h3>PASO 1: DECLARACIÓN DE ATAQUE</h3></div>
+      <ul>
+        <li>El jugador activo elige qué Campeones atacan y a qué objetivo.</li>
+        <li>Cada Campeón solo puede atacar <strong>UNA VEZ</strong> por turno.</li>
+        <li>Los Campeones pueden atacar el turno en que son invocados (no hay "cansancio" de invocación).</li>
+        <li>Se puede atacar a un Campeón enemigo <strong>O</strong> directamente al jugador.</li>
+      </ul>
+
+      <div class="section-header sub"><span class="num">10.3</span><h3>PASO 2: DECLARACIÓN DE BLOQUEO</h3></div>
+      <ul>
+        <li>El jugador defensor asigna Campeones para bloquear.</li>
+        <li>Cada Campeón solo puede bloquear <strong>UN ATAQUE</strong> por turno.</li>
+        <li>El defensor puede elegir <strong>NO bloquear</strong> y recibir daño directo.</li>
+        <li><strong>REGLA DEL GUARDIÁN:</strong> Si hay un Campeón con Guardián en el campo, debe bloquear el primer ataque que vaya directo al jugador.</li>
+        <li>Mientras haya un Guardián en campo, el atacante no puede ignorarlo (salvo que tenga Espectro u otra habilidad).</li>
+      </ul>
+
+      <div class="section-header sub"><span class="num">10.4</span><h3>PASO 3: RESOLUCIÓN DE COMBATE</h3></div>
+
+      <div class="scene-box">
+        <div class="scene-title">ESCENARIO A: ATAQUE DIRECTO (sin bloqueo)</div>
+        <ul>
+          <li>El ataque impacta directamente al jugador.</li>
+          <li>El jugador pierde <strong>PE = PODER del atacante</strong>.</li>
+          <li><strong>NO</strong> hay exilio de mazo en ataque directo.</li>
+        </ul>
+      </div>
+
+      <div class="scene-box">
+        <div class="scene-title">ESCENARIO B: BLOQUEO SIN GUARDIÁN</div>
+        <ul>
+          <li>El bloqueador recibe daño igual al PODER del atacante.</li>
+          <li>Si daño &ge; defensa: el bloqueador <strong>MUERE</strong> (va al Cementerio).</li>
+          <li>El jugador pierde <strong>PE = COSTE (stats.cost) del Campeón destruido</strong>.</li>
+          <li>El excedente (Ataque - Defensa) <strong>EXILIA cartas</strong> del Mazo Principal del jugador defensor (una carta por punto).</li>
+          <li>Si daño &lt; defensa: el bloqueador sobrevive, no hay daño.</li>
+        </ul>
+      </div>
+
+      <div class="scene-box">
+        <div class="scene-title">ESCENARIO C: BLOQUEO CON GUARDIÁN</div>
+        <ul>
+          <li>Si el Guardián <strong>MUERE</strong>: El jugador pierde <strong>PE = DIFERENCIA (Ataque - Defensa)</strong>. El excedente exilia cartas del Mazo Principal.</li>
+          <li>Si el Guardián <strong>SOBREVIVE</strong>: El jugador <strong>NO</strong> recibe daño a PE ni exilio de mazo.</li>
+        </ul>
+      </div>
+
+      <div class="section-header sub"><span class="num">10.5</span><h3>EJEMPLOS DE COMBATE</h3></div>
+
+      <div class="example">
+        <div class="ex-title">EJEMPLO 1 — Ataque directo</div>
+        Atacante: Poder 5. Sin bloqueo.<br>
+        → El jugador pierde <strong>5 PE</strong>. Sin exilio de mazo.
+      </div>
+
+      <div class="example">
+        <div class="ex-title">EJEMPLO 2 — Bloqueo, bloqueador muere</div>
+        Atacante: Poder 6. Bloqueador: Defensa 4, Coste 2.<br>
+        → Bloqueador muere. Jugador pierde <strong>2 PE</strong>. Exilia <strong>2 cartas</strong> del mazo.
+      </div>
+
+      <div class="example">
+        <div class="ex-title">EJEMPLO 3 — Bloqueo con Guardián que sobrevive</div>
+        Atacante: Poder 5. Guardián: Defensa 6.<br>
+        → Guardián sobrevive. Jugador no pierde PE. No exilia cartas.
+      </div>
+
+      <div class="example">
+        <div class="ex-title">EJEMPLO 4 — Bloqueo con Guardián que muere</div>
+        Atacante: Poder 7. Guardián: Defensa 5.<br>
+        → Guardián muere. Jugador pierde <strong>2 PE</strong> (diferencia). Exilia <strong>2 cartas</strong>.
+      </div>
+
+      <div class="example">
+        <div class="ex-title">EJEMPLO 5 — Ataque con Espectro</div>
+        Atacante: Poder 4, Espectro. Guardián enemigo en campo.<br>
+        → El Guardián NO puede bloquear a Espectro. Ataque directo: jugador pierde <strong>4 PE</strong>.
+      </div>
+
+      <div class="section-header sub"><span class="num">10.6</span><h3>CADENA DE EFECTOS EN COMBATE</h3></div>
+      <p>Durante el combate, los jugadores pueden activar Tácticas, Combate y Arcanas en respuesta a las acciones del oponente.</p>
+      <p><strong>ORDEN DE ACTIVACIÓN:</strong></p>
+      <ol>
+        <li>El defensor tiene prioridad: activa primero sus respuestas.</li>
+        <li>Luego el atacante puede responder.</li>
+        <li>Se forma una <strong>CADENA</strong> que se resuelve en <strong>ORDEN INVERSO</strong> (la última activación se resuelve primero).</li>
+      </ol>
+
+      <div class="example">
+        <div class="ex-title">Ejemplo de Cadena</div>
+        <strong>Jugador A:</strong> Declara ataque con "Ariete del Vacío" (Poder 6).<br>
+        <strong>Jugador B:</strong> Activa "Contraataque" (Táctica) → Niega el ataque.<br>
+        <strong>Jugador A:</strong> Responde con "Golpe Rápido" (Combate) → +2 Ataque.<br><br>
+        <strong>Resolución (orden inverso):</strong><br>
+        1. "Golpe Rápido" se resuelve: Ariete gana +2 (ahora Poder 8).<br>
+        2. "Contraataque" se resuelve: Niega el ataque.<br><br>
+        <em>Resultado: El ataque es negado, pero el Ariete mantiene +2 Ataque por el resto del turno.</em>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════ 11 ═══════ -->
+  <div class="section">
+    <div class="section-header"><span class="num">11</span><h2>PALABRAS CLAVE (KEYWORDS)</h2></div>
+    <div class="content">
+
+      <div class="kw-grid">
+        <div class="kw-card"><div class="kw-name">GUARDIÁN</div><div class="kw-desc">Bloquea obligatoriamente el primer ataque directo al jugador. Mientras esté en campo, el atacante no puede ignorarlo (salvo Espectro). Si sobrevive, el jugador no recibe daño.</div></div>
+
+        <div class="kw-card"><div class="kw-name">PROTECTOR</div><div class="kw-desc">Puede bloquear ataques dirigidos a otros Campeones (además de los directos al jugador). Versátil.</div></div>
+
+        <div class="kw-card"><div class="kw-name">CARGA</div><div class="kw-desc">Cuando ataca en el turno en que fue invocado, gana un bonus de Ataque adicional (indicado en la carta).</div></div>
+
+        <div class="kw-card"><div class="kw-name">ESPECTRO</div><div class="kw-desc">No puede ser bloqueado por Campeones que no tengan Espectro. Los ataques con Espectro van directo a los PE del jugador.</div></div>
+
+        <div class="kw-card"><div class="kw-name">RECARGA</div><div class="kw-desc">Puede ser enderezado una vez por turno sin esperar la fase de Alba. Permite usar habilidades activas múltiples veces.</div></div>
+
+        <div class="kw-card"><div class="kw-name">VANGUARDIA</div><div class="kw-desc">Ataca primero en la fase de Choque, antes que los Campeones sin Vanguardia. Si dos tienen Vanguardia, atacan simultáneamente.</div></div>
+
+        <div class="kw-card"><div class="kw-name">INMORTAL</div><div class="kw-desc">Cuando fuera a ser destruido, vuelve al campo al final del turno con su Resistencia completa. Una vez por partida (salvo que la carta especifique lo contrario).</div></div>
+
+        <div class="kw-card"><div class="kw-name">ÉTER-FURIA</div><div class="kw-desc">Gana +X Ataque por cada carta de Éter en tu Reserva. Mientras más Éter acumulado, más fuerte es.</div></div>
+
+        <div class="kw-card"><div class="kw-name">FRACTURAR</div><div class="kw-desc">El excedente de daño exilia el DOBLE de cartas del Mazo Principal del defensor.</div></div>
+
+        <div class="kw-card"><div class="kw-name">RESTAURAR</div><div class="kw-desc">Al inicio de tu turno, recuperas PE o cartas del Cementerio (según indique la carta).</div></div>
+
+        <div class="kw-card"><div class="kw-name">GOLPE LETAL</div><div class="kw-desc">Duplica el daño directo a PE. En ataque bloqueado, el daño al jugador se duplica.</div></div>
+
+        <div class="kw-card"><div class="kw-name">INQUEBRANTABLE</div><div class="kw-desc">No puede ser destruido por efectos de cartas. Solo puede ser destruido en combate si su Defensa llega a 0. Si sobrevive, el excedente se transmite al jugador como exilio de mazo, pero el Campeón sigue en pie.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════ 12 ═══════ -->
+  <div class="section">
+    <div class="section-header"><span class="num">12</span><h2>TAXONOMÍA</h2></div>
+    <div class="content">
+
+      <div class="section-header sub"><span class="num">12.1</span><h3>FACCIONES</h3></div>
+      <div class="destiny-table">
+        <table>
+          <tr><th>FACCIÓN</th><th>DESCRIPCIÓN</th></tr>
+          <tr><td style="color:var(--cyan);font-weight:600;">ORDEN</td><td>Luz, disciplina, protección. Paladines y ángeles.</td></tr>
+          <tr><td style="color:var(--red);font-weight:600;">CAOS</td><td>Tinieblas, agresión, sacrificio. Demonios y sombras.</td></tr>
+          <tr><td style="color:var(--purple);font-weight:600;">SABIDURÍA</td><td>Conocimiento, magia, control. Magos y arcanistas.</td></tr>
+          <tr><td style="color:var(--green);font-weight:600;">NATURALEZA</td><td>Bestias, elementales, instinto. Fuerza bruta.</td></tr>
+        </table>
+      </div>
+
+      <div class="section-header sub"><span class="num">12.2</span><h3>ESENCIAS</h3></div>
+      <div class="destiny-table">
+        <table>
+          <tr><th>ESENCIA</th><th>DESCRIPCIÓN</th></tr>
+          <tr><td>MAGO</td><td>Usuarios de magia y manipulación arcana</td></tr>
+          <tr><td>GUERRERO</td><td>Combatientes entrenados, fuerza y técnica</td></tr>
+          <tr><td>BESTIA</td><td>Criaturas salvajes, ferocidad e instinto</td></tr>
+          <tr><td>DRAGÓN</td><td>Criaturas legendarias de poder abrumador</td></tr>
+          <tr><td>ESPECTRO</td><td>Entidades etéreas, sombras y no-muertos</td></tr>
+          <tr><td>CÉLESTE</td><td>Seres divinos, luz y poder celestial</td></tr>
+          <tr><td>ABISAL</td><td>Entidades del vacío, oscuridad y caos</td></tr>
+          <tr><td>ELEMENTAL</td><td>Seres de puro elemento (fuego, agua, tierra, aire)</td></tr>
+          <tr><td>CONSTRUCTO</td><td>Autómatas, golems y creaciones artificiales</td></tr>
+          <tr><td>HUMANO</td><td>Mortales comunes, versátiles y adaptables</td></tr>
+        </table>
+      </div>
+
+      <div class="section-header sub"><span class="num">12.3</span><h3>ROLES</h3></div>
+      <div class="destiny-table">
+        <table>
+          <tr><th>ROL</th><th>DESCRIPCIÓN</th></tr>
+          <tr><td>ASALTO</td><td>Atacante principal (alto poder, baja defensa)</td></tr>
+          <tr><td>GUARDIA</td><td>Defensor (protege, alta resistencia)</td></tr>
+          <tr><td>SOPORTE</td><td>Apoyo (otorga beneficios a otros)</td></tr>
+          <tr><td>CONTROL</td><td>Manipula al rival (descarte, robo, etc.)</td></tr>
+          <tr><td>SACRIFICIO</td><td>Requiere sacrificar otros Campeones para jugarse</td></tr>
+          <tr><td>EVOLUCIÓN</td><td>Se transforma o mejora con condiciones</td></tr>
+          <tr><td>ÉTER</td><td>Interactúa directamente con cartas de Éter</td></tr>
+          <tr><td>NORMAL</td><td>Sin rol especializado</td></tr>
+        </table>
+      </div>
+
+      <div class="section-header sub"><span class="num">12.4</span><h3>CATEGORÍAS DE HABILIDAD</h3></div>
+      <div class="destiny-table">
+        <table>
+          <tr><th>CATEGORÍA</th><th>DESCRIPCIÓN</th></tr>
+          <tr><td>EFECTO</td><td>Habilidad estándar</td></tr>
+          <tr><td>ÚNICO</td><td>Solo 1 copia de esta carta en el tablero a la vez</td></tr>
+          <tr><td>LEGENDARIO</td><td>Habilidad de nivel legendario</td></tr>
+          <tr><td>MALDITO</td><td>Habilidad con coste o efecto negativo</td></tr>
+          <tr><td>BENDITO</td><td>Habilidad con beneficio adicional</td></tr>
+          <tr><td>NORMAL</td><td>Sin habilidad especial</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════ 13 ═══════ -->
+  <div class="section">
+    <div class="section-header"><span class="num">13</span><h2>LÍMITE DE COPIAS Y RAREZAS</h2></div>
+    <div class="content">
+
+      <div class="destiny-table">
+        <table class="rarity-table">
+          <tr><th>RAREZA</th><th>LÍMITE DE COPIAS</th></tr>
+          <tr><td>Común</td><td>×3 (hasta 3 copias)</td></tr>
+          <tr><td>Poco Común</td><td>×3 (hasta 3 copias)</td></tr>
+          <tr><td>Rara</td><td>×3 (hasta 3 copias)</td></tr>
+          <tr><td>Épica</td><td>×3 (hasta 3 copias)</td></tr>
+          <tr><td>Legendaria</td><td>×3 (hasta 3 copias)</td></tr>
+          <tr><td style="color:var(--amber);font-weight:600;">Única</td><td><strong>×1 (SOLO 1 copia)</strong></td></tr>
+        </table>
+      </div>
+
+      <p><strong>NOTAS IMPORTANTES:</strong></p>
+      <ul>
+        <li>La rareza es independiente del límite. Una carta puede ser Común con límite ×2 si su efecto lo justifica, o Legendaria con ×3 si no rompe el balance. El límite depende de la carta, no de su rareza.</li>
+        <li>El límite <strong>×1</strong> por rareza Única es fijo: solo 1 copia de esa carta en <strong>TODO</strong> el mazo.</li>
+        <li>El campo <strong>"limiteCopias"</strong> de cada carta indica visualmente su límite.</li>
+      </ul>
+
+      <p><strong>Al construir el mazo:</strong></p>
+      <ul>
+        <li>20 cartas de ÉTER (sumando límites de copias según cada carta).</li>
+        <li>50 cartas de Mazo PRINCIPAL (sumando límites de copias según cada carta).</li>
+        <li><strong>TOTAL: 70 cartas exactas. Ni una más, ni una menos.</strong></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ═══════ 14 ═══════ -->
+  <div class="section">
+    <div class="section-header"><span class="num">14</span><h2>CONDICIONES DE DERROTA</h2></div>
+    <div class="content">
+      <p>Un jugador pierde la partida si ocurre <strong>CUALQUIERA</strong> de estas condiciones:</p>
+      <ol>
+        <li><strong class="highlight-red">PE LLEGAN A 0</strong> — Después de aplicar daño directo o daño por Campeón destruido, sus Puntos de Energía llegan a 0 o menos.</li>
+        <li><strong class="highlight-red">MAZO PRINCIPAL VACÍO</strong> — Cuando deba robar de su Mazo Principal y no queden cartas, pierde en el momento de intentar robar.</li>
+        <li><strong>RENDICIÓN</strong> — El jugador declara que se rinde.</li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- ═══════ 15 ═══════ -->
+  <div class="section">
+    <div class="section-header"><span class="num">15</span><h2>MAZO FIRSTBORNE</h2></div>
+    <div class="content">
+
+      <div class="section-header sub"><span class="num">15.1</span><h3>LORE</h3></div>
+
+      <div class="lore-box">
+        Antes de la Gran Escisión, cuando las facciones de Orden y Caos aún no habían tomado sus nombres, existían las Primeras Hijas. Cada una era la primogénita de su casa noble, elegida al nacer para fusionarse con un cristal de Éter primigenio.
+        <br><br>
+        Este vínculo las marcó para siempre. Sus cuerpos se convirtieron en conductos vivientes del Éter, y su voluntad en la fuerza que moldea la realidad. Pero cuando las casas cayeron en la guerra, las Firstborne se negaron a elegir bando.
+        <br><br>
+        Ahora vagan por el mundo, unidas por la sangre y el Éter, buscando el origen de su poder y el propósito de su existencia.
+        <div class="attrib">— "No somos hijas de ningún reino. Somos el Reino."<br>Aurora, La Primogénita</div>
+      </div>
+
+      <div class="section-header sub"><span class="num">15.2</span><h3>MECÁNICA PRINCIPAL</h3></div>
+      <p>Las Firstborne giran en torno a <strong>EXILIAR ÉTER de la RESERVA</strong> para activar sus habilidades. La sinergia del mazo recompensa mantener la Reserva llena y gestionar el flujo de Éter.</p>
+      <p><strong>Estrategia clave:</strong> Acumula Éter en la Reserva para tener combustible para las habilidades de tus Campeonas, y usa cartas como "Éter de Fusión" o "Seraphina" para optimizar los costes.</p>
+
+      <div class="section-header sub"><span class="num">15.3</span><h3>CARTAS DEL MAZO (29 únicas)</h3></div>
+
+      <div class="fb-section">
+        <div class="fb-group">
+          <div class="fb-label" style="color:var(--cyan)">★ ÉTER (8 cartas)</div>
+          <ul>
+            <li><strong>Éter de Alborada</strong> <span class="fb-cost">(1)</span> — +1 Ataque a Firstborne mientras está en Reserva</li>
+            <li><strong>Éter de Ocaso</strong> <span class="fb-cost">(1)</span> — -1 Ataque a enemigo por Éter en Reserva (Activo)</li>
+            <li><strong>Éter de Vendaval</strong> <span class="fb-cost">(2)</span> — Mira 2, roba 1 (Activo)</li>
+            <li><strong>Éter de Escarcha</strong> <span class="fb-cost">(2)</span> — Congela un Campeón enemigo (Activo)</li>
+            <li><strong>Éter de Renacimiento</strong> <span class="fb-cost">(3)</span> — Salva un Campeón de destrucción (Activo)</li>
+            <li><strong>Éter de Tormenta Inminente</strong> <span class="fb-cost">(3)</span> — Roba 1 por Éter exiliado este turno (Activo)</li>
+            <li><strong>Éter de Eclipse</strong> <span class="fb-cost">(4)</span> — Exilia enemigo con Defensa menor a tu Reserva</li>
+            <li><strong>Éter de Fusión</strong> <span class="fb-cost">(4)</span> — Reduce coste de exiliar en 1 (Pasivo)</li>
+          </ul>
+        </div>
+
+        <div class="fb-group">
+          <div class="fb-label" style="color:var(--amber)">★ CAMPEONAS (11 — todas facción Firstborne)</div>
+          <ul>
+            <li><strong>Aurora, la Primogénita</strong> <span class="fb-cost">(5, 5/6)</span> — Reduce coste de Firstborne, buff +2/+1, busca Éter (Única)</li>
+            <li><strong>Seraphina, Portavoz del Éter</strong> <span class="fb-cost">(4, 3/5)</span> — Éter cuenta como Activo (Épica)</li>
+            <li><strong>Lilith, Abrazo del Vacío</strong> <span class="fb-cost">(5, 6/4)</span> — Ataca imbloqueable, Espectro (Épica)</li>
+            <li><strong>Cassandra, la Voz Ardiente</strong> <span class="fb-cost">(3, 5/2)</span> — Destruye enemigo + daño directo (Rara)</li>
+            <li><strong>Octavia, Muro de la Hermandad</strong> <span class="fb-cost">(4, 3/5)</span> — Guardián + buff a Firstborne (Rara)</li>
+            <li><strong>Ravenna, Maestra del Eclipse</strong> <span class="fb-cost">(4, 4/4)</span> — Control de enemigos (Rara)</li>
+            <li><strong>Selene, Cazadora de Sombras</strong> <span class="fb-cost">(3, 4/3)</span> — +2 y no bloqueable (Poco Común)</li>
+            <li><strong>Iris, Tejedora de Destinos</strong> <span class="fb-cost">(3, 2/4)</span> — Robo adicional (Poco Común)</li>
+            <li><strong>Aria, Portadora del Alba</strong> <span class="fb-cost">(1, 2/2)</span> — +1 y Vanguardia (Común)</li>
+            <li><strong>Lyra, Susurro del Viento</strong> <span class="fb-cost">(2, 2/3)</span> — Filtro de mazo (Común)</li>
+            <li><strong>Valeria, Corazón de Escarcha</strong> <span class="fb-cost">(2, 1/4)</span> — Guardián debuff (Común)</li>
+          </ul>
+        </div>
+
+        <div class="fb-group">
+          <div class="fb-label" style="color:var(--purple)">★ MÍSTICAS (3)</div>
+          <ul>
+            <li><strong>Vínculo de Hermandad</strong> <span class="fb-cost">(2)</span> — Copia stats de otra Firstborne</li>
+            <li><strong>Renacer de las Cenizas</strong> <span class="fb-cost">(3)</span> — Revive Firstborne</li>
+            <li><strong>Canción de la Primogénita</strong> <span class="fb-cost">(5)</span> — Busca Éter y roba (Única)</li>
+          </ul>
+        </div>
+
+        <div class="fb-group">
+          <div class="fb-label" style="color:var(--amber)">★ ARCANAS (3)</div>
+          <ul>
+            <li><strong>Escudo de la Luna</strong> <span class="fb-cost">(2)</span> — Reduce daño directo</li>
+            <li><strong>Grito de Guerra Ancestral</strong> <span class="fb-cost">(3)</span> — +1 Atq por Éter en combate</li>
+            <li><strong>Despertar del Éter Primigenio</strong> <span class="fb-cost">(5)</span> — Revive + buff (Única)</li>
+          </ul>
+        </div>
+
+        <div class="fb-group">
+          <div class="fb-label" style="color:var(--cyan)">★ TÁCTICAS (2)</div>
+          <ul>
+            <li><strong>Reflejos de Éter</strong> — Niega ataque + roba</li>
+            <li><strong>Vínculo de Sangre</strong> — Reduce coste de exiliar</li>
+          </ul>
+        </div>
+
+        <div class="fb-group">
+          <div class="fb-label" style="color:var(--red)">★ COMBATE (2)</div>
+          <ul>
+            <li><strong>Golpe de la Primogénita</strong> — +2 Atq + Golpe Letal</li>
+            <li><strong>Manto de Sombras</strong> — +3 Def + contraataque</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════ 16 ═══════ -->
+  <div class="section">
+    <div class="section-header"><span class="num">16</span><h2>GLOSARIO</h2></div>
+    <div class="content">
+      <div class="destiny-table">
+        <table>
+          <tr><th style="width:160px">TÉRMINO</th><th>DEFINICIÓN</th></tr>
+          <tr><td>ALBA</td><td>Primera fase del turno (robo de cartas)</td></tr>
+          <tr><td>ASIGNAR</td><td>Colocar Éter encima de un Campeón al invocarlo</td></tr>
+          <tr><td>CADENA</td><td>Secuencia de efectos que se resuelven en orden inverso</td></tr>
+          <tr><td>CAMPO</td><td>Zona donde están los Campeones y cartas de soporte</td></tr>
+          <tr><td>CEMENTERIO</td><td>Zona de cartas destruidas, descartadas o resueltas</td></tr>
+          <tr><td>CHOQUE</td><td>Fase de combate del turno</td></tr>
+          <tr><td>COSTE</td><td>Valor de Éter necesario para jugar una carta</td></tr>
+          <tr><td>DAÑO DIRECTO</td><td>Daño que va directo a los PE del jugador</td></tr>
+          <tr><td>DESTRUIR</td><td>Mandar una carta del Campo al Cementerio</td></tr>
+          <tr><td>EXILIO</td><td>Zona de cartas fuera del juego (no recuperables)</td></tr>
+          <tr><td>EXILIAR</td><td>Mover una carta al Exilio</td></tr>
+          <tr><td>FORJA</td><td>Segunda fase del turno (jugar cartas)</td></tr>
+          <tr><td>MANO</td><td>Cartas que tienes disponibles para jugar (límite 10)</td></tr>
+          <tr><td>MAZO DE ÉTER</td><td>Mazo de 20 cartas de recurso</td></tr>
+          <tr><td>MAZO PRINCIPAL</td><td>Mazo de 50 cartas de juego</td></tr>
+          <tr><td>OCASO</td><td>Fase final del turno</td></tr>
+          <tr><td>OVERPAY</td><td>Perder excedente al pagar con Éter de mayor valor</td></tr>
+          <tr><td>PE</td><td>Puntos de Energía (vida del jugador, 50 iniciales)</td></tr>
+          <tr><td>PODER</td><td>Estadística de ataque de un Campeón</td></tr>
+          <tr><td>RESERVA</td><td>Zona 2A donde se almacena el Éter listo para usar</td></tr>
+          <tr><td>RESISTENCIA</td><td>Estadística de defensa de un Campeón</td></tr>
+          <tr><td>ROBAR</td><td>Tomar la primera carta de un mazo a la mano</td></tr>
+          <tr><td>SLOT</td><td>Espacio en el campo (5 para Campeones, 6 de soporte)</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════ FOOTER ═══════ -->
+  <div class="footer">
+    <p><span class="logo">ÉTER ENGINE TCG</span></p>
+    <p>Set Básico: "El Despertar del Éter" (285 cartas)</p>
+    <p>Mazo Temático: "Firstborne" (29 cartas)</p>
+    <p style="margin-top:8px;">Versión 1.0 — Julio 2026</p>
+    <p style="margin-top:4px;color:var(--text-muted);">Creado con Éter Forge</p>
+  </div>
+
+</div>
+
+</body>
+</html>

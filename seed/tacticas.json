@@ -1,0 +1,750 @@
+[
+  {
+    "id": "cd6fc2e4-9598-4ab1-8678-5f5bdb10a3e9",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Contraataque demuestra que la mente es el arma más letal.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Contraataque",
+    "type": "Táctica",
+    "rarity": "Común",
+    "stats": {
+      "cost": 0,
+      "duracion": 0
+    },
+    "descripcion": "Cuando un Campeón enemigo ataque: Niega el ataque."
+  },
+  {
+    "id": "9fdf6b41-2093-496e-9a92-e14b141e29b8",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"No hay ejército que resista una escudo de mano bien ejecutada.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Escudo de Mano",
+    "type": "Táctica",
+    "rarity": "Común",
+    "stats": {
+      "cost": 0,
+      "duracion": 0
+    },
+    "descripcion": "Cuando recibas daño directo: Reduce el daño en 2."
+  },
+  {
+    "id": "8ab2ad3e-d96b-4e01-993c-d661fceeb4bf",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Recarga Rápida: un plan que cambia el curso de la batalla.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Recarga Rápida",
+    "type": "Táctica",
+    "rarity": "Común",
+    "stats": {
+      "cost": 0,
+      "duracion": 0
+    },
+    "descripcion": "En tu turno: Coloca 1 Éter de tu mano a tu Reserva."
+  },
+  {
+    "id": "02c0a928-8c6b-499b-ae49-359af20351be",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Los generales enseñan golpe bajo como lección fundamental.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Golpe Bajo",
+    "type": "Táctica",
+    "rarity": "Común",
+    "stats": {
+      "cost": 0,
+      "duracion": 0
+    },
+    "descripcion": "Cuando un Campeón enemigo ataque: El Campeón atacante pierde -2 Ataque."
+  },
+  {
+    "id": "19171556-e633-4f62-9231-5a7d1f64c2fe",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Defensa Repentina convierte la desventaja en oportunidad.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Defensa Repentina",
+    "type": "Táctica",
+    "rarity": "Común",
+    "stats": {
+      "cost": 0,
+      "duracion": 0
+    },
+    "descripcion": "Cuando un Campeón propio sea atacado: El Campeón gana +2 Defensa."
+  },
+  {
+    "id": "0a66b613-9b7d-4e6d-837c-b9dbab996e3e",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Robo de Oportunidad convierte la desventaja en oportunidad.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Robo de Oportunidad",
+    "type": "Táctica",
+    "rarity": "Común",
+    "stats": {
+      "cost": 0,
+      "duracion": 0
+    },
+    "descripcion": "Cuando destruyas un Campeón enemigo: Roba 1 carta."
+  },
+  {
+    "id": "234dcb93-aa7f-4a24-adb4-9557f98d861a",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Los generales enseñan refuerzo de éter como lección fundamental.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Refuerzo de Éter",
+    "type": "Táctica",
+    "rarity": "Poco Común",
+    "stats": {
+      "cost": 0,
+      "duracion": 0
+    },
+    "descripcion": "Cuando un Campeón propio use una habilidad: Reduce el coste de Éter en 1."
+  },
+  {
+    "id": "5190100b-65b5-4f33-b310-83f3517b1c02",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Guardia de Emergencia: un plan que cambia el curso de la batalla.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Guardia de Emergencia",
+    "type": "Táctica",
+    "rarity": "Poco Común",
+    "stats": {
+      "cost": 0,
+      "duracion": 0
+    },
+    "descripcion": "Cuando un Campeón enemigo ataque directo: Redirige el ataque a un Campeón con Guardián."
+  },
+  {
+    "id": "fe1fe650-ca41-487e-996b-5613ebc51f7a",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"No hay ejército que resista una recuperación de éter bien ejecutada.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Recuperación de Éter",
+    "type": "Táctica",
+    "rarity": "Poco Común",
+    "stats": {
+      "cost": 0,
+      "duracion": 0
+    },
+    "descripcion": "Cuando una carta de Éter vaya al Cementerio: Recupera esa carta a tu mano en su lugar."
+  },
+  {
+    "id": "9e32f88a-b6bd-431d-9add-f9fa0958a663",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Venganza convierte la desventaja en oportunidad.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Venganza",
+    "type": "Táctica",
+    "rarity": "Poco Común",
+    "stats": {
+      "cost": 0,
+      "duracion": 0
+    },
+    "descripcion": "Cuando un Campeón propio sea destruido: Haz 2 de daño al jugador enemigo."
+  },
+  {
+    "id": "cb4edd0b-91a1-40a8-b95e-bbde5fec4729",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Escudo de Almas demuestra que la mente es el arma más letal.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Escudo de Almas",
+    "type": "Táctica",
+    "rarity": "Poco Común",
+    "stats": {
+      "cost": 0,
+      "duracion": 0
+    },
+    "descripcion": "Cuando recibas daño a tus PE: Exilia 1 Éter de tu Reserva: Reduce el daño en 3."
+  },
+  {
+    "id": "992a9732-b03d-433c-9794-54331edd799d",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Refuerzo de Guardia convierte la desventaja en oportunidad.\"",
+    "keywords": [
+      "Guardián"
+    ],
+    "limiteCopias": 3,
+    "name": "Refuerzo de Guardia",
+    "type": "Táctica",
+    "rarity": "Rara",
+    "stats": {
+      "cost": 0,
+      "duracion": 0
+    },
+    "descripcion": "Cuando un Guardián sea atacado: El Guardián gana +3 Defensa."
+  },
+  {
+    "id": "c53b4a68-66bb-4d44-983a-157357b698e5",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Robo de Alma demuestra que la mente es el arma más letal.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Robo de Alma",
+    "type": "Táctica",
+    "rarity": "Rara",
+    "stats": {
+      "cost": 0,
+      "duracion": 0
+    },
+    "descripcion": "Cuando un Campeón enemigo vaya al Cementerio: Ganas 3 PE."
+  },
+  {
+    "id": "f1a6c4a1-bca6-4aef-a844-fd2989f7ae6a",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Explosión de Éter: un plan que cambia el curso de la batalla.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Explosión de Éter",
+    "type": "Táctica",
+    "rarity": "Rara",
+    "stats": {
+      "cost": 0,
+      "duracion": 0
+    },
+    "descripcion": "Cuando un Campeón propio muera: Haz 3 de daño a todos los Campeones enemigos."
+  },
+  {
+    "id": "df5d0145-3988-42dc-aee7-d30aab204e2d",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Los generales enseñan escudo de luz como lección fundamental.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Escudo de Luz",
+    "type": "Táctica",
+    "rarity": "Rara",
+    "element": "Luz",
+    "stats": {
+      "cost": 0,
+      "duracion": 0
+    },
+    "descripcion": "Cuando recibas daño directo: Reduce el daño a 0 si exilias 1 Éter de tu Reserva."
+  },
+  {
+    "id": "c9f916bb-9f0c-464e-932a-91af01b67f4b",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Furia de la Naturaleza: un plan que cambia el curso de la batalla.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Furia de la Naturaleza",
+    "type": "Táctica",
+    "rarity": "Épica",
+    "element": "Tierra",
+    "stats": {
+      "cost": 0,
+      "duracion": 0
+    },
+    "descripcion": "Cuando un Campeón de tipo Bestia ataque: Gana +2 Ataque."
+  },
+  {
+    "id": "b725c738-1215-4a9c-a5c3-7b42f9b4ebeb",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"La visión del mago es el arte de la guerra en acción.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Visión del Mago",
+    "type": "Táctica",
+    "rarity": "Épica",
+    "stats": {
+      "cost": 0,
+      "duracion": 0
+    },
+    "descripcion": "Cuando juegues una Mística: Puedes copiarla y jugarla de nuevo sin coste."
+  },
+  {
+    "id": "08326e89-7155-4444-9e11-697c4607f2f6",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"La sombra del vacío es el arte de la guerra en acción.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Sombra del Vacío",
+    "type": "Táctica",
+    "rarity": "Épica",
+    "element": "Tinieblas",
+    "stats": {
+      "cost": 0,
+      "duracion": 0
+    },
+    "descripcion": "Cuando un Campeón de tipo Espectro ataque: El daño no puede ser bloqueado."
+  },
+  {
+    "id": "0c17483b-6147-41c7-984e-8113ac4bb855",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Solo los dignos pueden comprender el poder de Orden Supremo.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Orden Supremo",
+    "type": "Táctica",
+    "rarity": "Legendaria",
+    "stats": {
+      "cost": 0,
+      "duracion": 0
+    },
+    "descripcion": "Cuando un Campeón de tipo Dragón entre al campo: Roba 2 cartas."
+  },
+  {
+    "id": "076760fb-2386-4088-9ba4-8d12a3f73719",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Solo los dignos pueden comprender el poder de Caos Infinito.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Caos Infinito",
+    "type": "Táctica",
+    "rarity": "Legendaria",
+    "stats": {
+      "cost": 0,
+      "duracion": 0
+    },
+    "descripcion": "Cuando un Campeón de tipo Abisal entre al campo: Destruye un Campeón enemigo con 4 o menos de Defensa."
+  },
+  {
+    "id": "b35dfc84-ea4f-40b2-ac7a-0d935e2d4f32",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"La emboscada es el arte de la guerra en acción.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Emboscada",
+    "type": "Táctica",
+    "rarity": "Poco Común",
+    "stats": {
+      "cost": 0,
+      "duracion": 0
+    },
+    "descripcion": "Cuando un Campeón propio ataque a un Guardián: Ignora la habilidad Guardián este ataque."
+  },
+  {
+    "id": "abdb74a2-79f2-4912-a270-04de1bc8348b",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Contraofensiva convierte la desventaja en oportunidad.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Contraofensiva",
+    "type": "Táctica",
+    "rarity": "Poco Común",
+    "stats": {
+      "cost": 0,
+      "duracion": 0
+    },
+    "descripcion": "Cuando un Campeón propio sea destruido: Haz 3 de daño al jugador enemigo."
+  },
+  {
+    "id": "d8aff684-ce4f-4866-95ea-85f4f8646e32",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Fortaleza: un plan que cambia el curso de la batalla.\"",
+    "keywords": [
+      "Guardián"
+    ],
+    "limiteCopias": 3,
+    "name": "Fortaleza",
+    "type": "Táctica",
+    "rarity": "Rara",
+    "stats": {
+      "cost": 0,
+      "duracion": 0
+    },
+    "descripcion": "Cuando un Guardián sea atacado: Gana +4 Defensa."
+  },
+  {
+    "id": "7e52151b-6735-4fe5-8a52-f9494330ee6d",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Recuperación: un plan que cambia el curso de la batalla.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Recuperación",
+    "type": "Táctica",
+    "rarity": "Común",
+    "stats": {
+      "cost": 0,
+      "duracion": 0
+    },
+    "descripcion": "Cuando una carta vaya a tu Cementerio desde el campo: Ganas 2 PE."
+  },
+  {
+    "id": "1f9fb619-fcd1-42cd-8182-f3596523e443",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"No hay ejército que resista una escudo de viento bien ejecutada.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Escudo de Viento",
+    "type": "Táctica",
+    "rarity": "Común",
+    "element": "Aire",
+    "stats": {
+      "cost": 0,
+      "duracion": 0
+    },
+    "descripcion": "Cuando recibas daño directo: Reduce el daño en 3."
+  },
+  {
+    "id": "887eee83-f249-4deb-9ecc-0e4199d1d9b0",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"No hay ejército que resista una golpe certero bien ejecutada.\"",
+    "keywords": [
+      "Golpe Letal"
+    ],
+    "limiteCopias": 3,
+    "name": "Golpe Certero",
+    "type": "Táctica",
+    "rarity": "Rara",
+    "stats": {
+      "cost": 0,
+      "duracion": 0
+    },
+    "descripcion": "Cuando un Campeón con Golpe Letal ataque: El daño no puede ser reducido."
+  },
+  {
+    "id": "a2ee831e-08a6-4d99-8498-43b9462d9683",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Refuerzo Bestial: un plan que cambia el curso de la batalla.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Refuerzo Bestial",
+    "type": "Táctica",
+    "rarity": "Poco Común",
+    "element": "Tierra",
+    "stats": {
+      "cost": 0,
+      "duracion": 0
+    },
+    "descripcion": "Cuando un Campeón de tipo Bestia entre al campo: Gana +2 Ataque este turno."
+  },
+  {
+    "id": "1f775392-5911-4123-b486-41f4f222a491",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Los generales enseñan escudo arcano como lección fundamental.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Escudo Arcano",
+    "type": "Táctica",
+    "rarity": "Poco Común",
+    "element": "Luz",
+    "stats": {
+      "cost": 0,
+      "duracion": 0
+    },
+    "descripcion": "Cuando juegues una Mística: Ganas 3 PE."
+  },
+  {
+    "id": "917a2ada-3226-4a2b-bb27-54b04e4befb9",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Drenaje de Éter: un plan que cambia el curso de la batalla.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Drenaje de Éter",
+    "type": "Táctica",
+    "rarity": "Rara",
+    "element": "Tinieblas",
+    "stats": {
+      "cost": 0,
+      "duracion": 0
+    },
+    "descripcion": "Cuando un Campeón enemigo use una habilidad: Exilia 1 Éter de la Reserva enemiga."
+  },
+  {
+    "id": "950b6af6-5867-4ae2-9692-1fa6c994d1b5",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Reflejos Rápidos convierte la desventaja en oportunidad.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Reflejos Rápidos",
+    "type": "Táctica",
+    "rarity": "Poco Común",
+    "element": "Aire",
+    "stats": {
+      "cost": 0,
+      "duracion": 0
+    },
+    "descripcion": "Cuando un Campeón enemigo ataque: Roba 1 carta."
+  },
+  {
+    "id": "237650b8-01da-43bb-830a-2614ef0fb730",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"No hay ejército que resista una sacrificio de éter bien ejecutada.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Sacrificio de Éter",
+    "type": "Táctica",
+    "rarity": "Rara",
+    "stats": {
+      "cost": 0,
+      "duracion": 0
+    },
+    "descripcion": "Cuando necesites pagar Éter: Paga 3 PE en lugar de 1 Éter."
+  },
+  {
+    "id": "a86ccbcd-0780-4d71-809a-9823f3ba7102",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Los generales enseñan manto de sombras como lección fundamental.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Manto de Sombras",
+    "type": "Táctica",
+    "rarity": "Rara",
+    "element": "Tinieblas",
+    "stats": {
+      "cost": 0,
+      "duracion": 0
+    },
+    "descripcion": "Cuando un Campeón propio sea destruido: Exilia esa carta: recupera 1 Éter de tu Cementerio."
+  },
+  {
+    "id": "9249a26e-8553-4049-9f82-974d73554cef",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"No hay ejército que resista una alianza sagrada bien ejecutada.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Alianza Sagrada",
+    "type": "Táctica",
+    "rarity": "Épica",
+    "element": "Luz",
+    "stats": {
+      "cost": 0,
+      "duracion": 0
+    },
+    "descripcion": "Cuando tengas 2 o más Campeones de Orden en campo: Todos ganan +1 Ataque y +1 Defensa."
+  },
+  {
+    "id": "88f1ee2e-b8ae-4918-8bf0-d6cf0778e631",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Los generales enseñan caos desatado como lección fundamental.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Caos Desatado",
+    "type": "Táctica",
+    "rarity": "Épica",
+    "element": "Tinieblas",
+    "stats": {
+      "cost": 0,
+      "duracion": 0
+    },
+    "descripcion": "Cuando tengas 2 o más Campeones de Caos en campo: Haz 2 de daño a todos los Campeones enemigos."
+  },
+  {
+    "id": "64c50a73-6e6e-4d7b-9147-5c54e95eeeee",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"La sabiduría ancestral es el arte de la guerra en acción.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Sabiduría Ancestral",
+    "type": "Táctica",
+    "rarity": "Épica",
+    "element": "Luz",
+    "stats": {
+      "cost": 0,
+      "duracion": 0
+    },
+    "descripcion": "Cuando juegues una Mística o Arcana: Puedes mirar la primera carta de tu mazo."
+  },
+  {
+    "id": "12564488-6be4-4785-98bd-4c8bfc78a31d",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Los generales enseñan furia salvaje como lección fundamental.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Furia Salvaje",
+    "type": "Táctica",
+    "rarity": "Épica",
+    "element": "Tierra",
+    "stats": {
+      "cost": 0,
+      "duracion": 0
+    },
+    "descripcion": "Cuando tengas 2 o más Bestias en campo: Tus Bestias ganan +3 Ataque este turno."
+  },
+  {
+    "id": "804fbb5a-f073-4a51-8c82-88449085fa47",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Escudo de la Naturaleza: un plan que cambia el curso de la batalla.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Escudo de la Naturaleza",
+    "type": "Táctica",
+    "rarity": "Épica",
+    "element": "Tierra",
+    "stats": {
+      "cost": 0,
+      "duracion": 0
+    },
+    "descripcion": "Cuando recibas daño directo: Reduce el daño a 0 si controlas un Elemental."
+  },
+  {
+    "id": "8bcf00c3-136a-4d72-95fd-453365c9294c",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Golpe del Vacío: un plan que cambia el curso de la batalla.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Golpe del Vacío",
+    "type": "Táctica",
+    "rarity": "Rara",
+    "element": "Tinieblas",
+    "stats": {
+      "cost": 0,
+      "duracion": 0
+    },
+    "descripcion": "Cuando un Espectro ataque: El Campeón enemigo pierde -2 Defensa."
+  },
+  {
+    "id": "3a50b7f5-f315-4219-b506-25b918245a5d",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Resistencia Arcana demuestra que la mente es el arma más letal.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Resistencia Arcana",
+    "type": "Táctica",
+    "rarity": "Poco Común",
+    "stats": {
+      "cost": 0,
+      "duracion": 0
+    },
+    "descripcion": "Cuando un Campeón de tipo Mago sea atacado: Reduce el daño en 2."
+  },
+  {
+    "id": "88653aa1-3d24-4d45-8509-f2e766dffb0f",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Los generales enseñan escudo de dragón como lección fundamental.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Escudo de Dragón",
+    "type": "Táctica",
+    "rarity": "Rara",
+    "stats": {
+      "cost": 0,
+      "duracion": 0
+    },
+    "descripcion": "Cuando un Campeón de tipo Dragón sea atacado: Gana +5 Defensa."
+  },
+  {
+    "id": "6c4fa953-ada7-4608-a7ea-b8d1160ef668",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Bendición de la Luz demuestra que la mente es el arma más letal.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Bendición de la Luz",
+    "type": "Táctica",
+    "rarity": "Rara",
+    "element": "Luz",
+    "stats": {
+      "cost": 0,
+      "duracion": 0
+    },
+    "descripcion": "Cuando un Campeón de tipo Céleste entre al campo: Ganas 4 PE."
+  },
+  {
+    "id": "e6c5ead7-1b13-4dc8-bd9c-e8cdbd61d189",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Maldición del Abismo convierte la desventaja en oportunidad.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Maldición del Abismo",
+    "type": "Táctica",
+    "rarity": "Poco Común",
+    "element": "Tinieblas",
+    "stats": {
+      "cost": 0,
+      "duracion": 0
+    },
+    "descripcion": "Cuando un Campeón de tipo Abisal entre al campo: Un Campeón enemigo pierde -2 Ataque."
+  },
+  {
+    "id": "4e390fb3-13ed-4887-8446-9b5c40a4f620",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Los generales enseñan viento favorable como lección fundamental.\"",
+    "keywords": [
+      "Vanguardia"
+    ],
+    "limiteCopias": 3,
+    "name": "Viento Favorable",
+    "type": "Táctica",
+    "rarity": "Poco Común",
+    "element": "Aire",
+    "stats": {
+      "cost": 0,
+      "duracion": 0
+    },
+    "descripcion": "Cuando un Campeón con Vanguardia ataque: Gana +2 Ataque adicional."
+  },
+  {
+    "id": "3636cd7a-4a96-492e-8ef0-0b4e988cf05a",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"La refuerzo inquebrantable es el arte de la guerra en acción.\"",
+    "keywords": [
+      "Inquebrantable"
+    ],
+    "limiteCopias": 3,
+    "name": "Refuerzo Inquebrantable",
+    "type": "Táctica",
+    "rarity": "Rara",
+    "stats": {
+      "cost": 0,
+      "duracion": 0
+    },
+    "descripcion": "Cuando un Campeón con Inquebrantable reciba daño: Reduce el daño en 2."
+  },
+  {
+    "id": "c1b2853c-80ae-4ff4-9e8b-5e4dd5bd483a",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Los generales enseñan toque de éter como lección fundamental.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Toque de Éter",
+    "type": "Táctica",
+    "rarity": "Común",
+    "stats": {
+      "cost": 0,
+      "duracion": 0
+    },
+    "descripcion": "Cuando un Éter sea exiliado: Ganas 1 PE."
+  }
+]

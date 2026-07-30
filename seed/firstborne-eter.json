@@ -1,0 +1,138 @@
+[
+  {
+    "id": "6dfb208c-2770-4155-93c1-78b4523f62c1",
+    "createdAt": "2026-07-30T18:09:41.702Z",
+    "updatedAt": "2026-07-30T18:09:41.702Z",
+    "flavorText": "\"El primer rayo de luz que tocó su piel encendió algo que nunca se apagaría.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Éter de Alborada",
+    "type": "Éter",
+    "rarity": "Común",
+    "element": "Luz",
+    "stats": {
+      "cost": 1
+    },
+    "tipoEfecto": "Pasivo",
+    "efectoPasivo": "Mientras esta carta esté en tu Reserva, tus Campeones Firstborne ganan +1 Ataque."
+  },
+  {
+    "id": "e04ca072-3342-4860-9a1a-cc48f7f40bd1",
+    "createdAt": "2026-07-30T18:09:41.702Z",
+    "updatedAt": "2026-07-30T18:09:41.702Z",
+    "flavorText": "\"En la penumbra aprendió que la oscuridad no es una enemiga, sino un arma.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Éter de Ocaso",
+    "type": "Éter",
+    "rarity": "Común",
+    "element": "Tinieblas",
+    "stats": {
+      "cost": 1
+    },
+    "tipoEfecto": "Activo",
+    "efectoActivo": "Exilia esta carta: Un Campeón enemigo pierde -1 Ataque por cada Éter en tu Reserva (máx. -3)."
+  },
+  {
+    "id": "3ab9c60b-fbd6-4abc-b8ee-266f4eb84a6c",
+    "createdAt": "2026-07-30T18:09:41.702Z",
+    "updatedAt": "2026-07-30T18:09:41.702Z",
+    "flavorText": "\"El viento no miente, y ella aprendió a escuchar su verdad.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Éter de Vendaval",
+    "type": "Éter",
+    "rarity": "Poco Común",
+    "element": "Aire",
+    "stats": {
+      "cost": 2
+    },
+    "tipoEfecto": "Activo",
+    "efectoActivo": "Exilia esta carta: Mira las primeras 2 cartas de tu mazo. Añade 1 a tu mano y pon la otra en el fondo de tu mazo."
+  },
+  {
+    "id": "2a854cb4-31f7-4f9b-9211-4c57a0a84bc2",
+    "createdAt": "2026-07-30T18:09:41.702Z",
+    "updatedAt": "2026-07-30T18:09:41.702Z",
+    "flavorText": "\"Su corazón es una gema de hielo forjada en la soledad de las montañas.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Éter de Escarcha Eterna",
+    "type": "Éter",
+    "rarity": "Poco Común",
+    "element": "Agua",
+    "stats": {
+      "cost": 2
+    },
+    "tipoEfecto": "Activo",
+    "efectoActivo": "Exilia esta carta: Congela un Campeón enemigo (no puede atacar ni usar habilidades) hasta tu próximo turno."
+  },
+  {
+    "id": "9b9c964d-baef-428a-b790-1de1dc2b6be6",
+    "createdAt": "2026-07-30T18:09:41.702Z",
+    "updatedAt": "2026-07-30T18:09:41.702Z",
+    "flavorText": "\"Cicatriz de guerra. Prueba de que sobrevivió a lo imposible. Una vez más.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Éter de Renacimiento",
+    "type": "Éter",
+    "rarity": "Rara",
+    "element": "Luz",
+    "stats": {
+      "cost": 3
+    },
+    "tipoEfecto": "Activo",
+    "efectoActivo": "Exilia esta carta: La próxima vez que un Campeón Firstborne fuera a ser destruido este turno, en su lugar vuelve al campo con 2 de Defensa."
+  },
+  {
+    "id": "db6d7c5f-9aa9-4875-a7af-ded0a5ebe859",
+    "createdAt": "2026-07-30T18:09:41.702Z",
+    "updatedAt": "2026-07-30T18:09:41.702Z",
+    "flavorText": "\"Donde ella camina, la tormenta la sigue. Donde ella lucha, el cielo se desgarra.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Éter de Tormenta Inminente",
+    "type": "Éter",
+    "rarity": "Rara",
+    "element": "Aire",
+    "stats": {
+      "cost": 3
+    },
+    "tipoEfecto": "Activo",
+    "efectoActivo": "Exilia esta carta: Roba 1 carta por cada Éter que hayas exiliado de tu Reserva este turno."
+  },
+  {
+    "id": "ec2a0588-ce7c-4a5c-97ea-4ad402a5f383",
+    "createdAt": "2026-07-30T18:09:41.702Z",
+    "updatedAt": "2026-07-30T18:09:41.702Z",
+    "flavorText": "\"Cuando el sol y la luna se encuentran, el velo entre mundos se desgarra.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Éter de Eclipse",
+    "type": "Éter",
+    "rarity": "Épica",
+    "element": "Tinieblas",
+    "stats": {
+      "cost": 4
+    },
+    "tipoEfecto": "Activo",
+    "efectoActivo": "Exilia esta carta: Exilia un Campeón enemigo con Defensa igual o menor a la cantidad de Éter en tu Reserva."
+  },
+  {
+    "id": "a6bc620a-4dac-4e4a-8423-a4a30c0a87a2",
+    "createdAt": "2026-07-30T18:09:41.702Z",
+    "updatedAt": "2026-07-30T18:09:41.702Z",
+    "flavorText": "\"Dos almas, un solo propósito. Su vínculo trasciende lo físico.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Éter de Fusión",
+    "type": "Éter",
+    "rarity": "Épica",
+    "element": "Fuego",
+    "stats": {
+      "cost": 4
+    },
+    "tipoEfecto": "Pasivo",
+    "efectoPasivo": "Mientras esta carta esté en tu Reserva, los efectos de tus cartas Firstborne que requieran exiliar Éter cuestan 1 Éter menos (mín. 1)."
+  }
+]

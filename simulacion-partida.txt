@@ -1,0 +1,695 @@
+╔══════════════════════════════════════════════════════════════╗
+║              SIMULACION DE PARTIDA - ETER ENGINE TCG        ║
+║     "El Despertar del Eter" + Mazo Tematico "Firstborne"    ║
+╚══════════════════════════════════════════════════════════════╝
+
+
+╔══════════════════════════════════════════════════════════════╗
+║              SECCION 1: ESTADISTICAS DE LA PARTIDA          ║
+╚══════════════════════════════════════════════════════════════╝
+
+Jugador 1: Santiago de la Luz — Mazo: "Mano de Orden" (Midrange Orden)
+Jugador 2: Valentina de las Tormentas — Mazo: "Firstborne" (Aggro/Control)
+
+Duracion: 8 turnos (7 completos + parcial del 8)
+Ganador: Santiago de la Luz (Jugador 1)
+
+── ESTADISTICAS JUGADOR 1: Santiago de la Luz ──
+PE Finales:              48
+Danio Total Infligido:   50 (llevo a Valentina de 50 a 0)
+  - Danio directo:       42
+  - Danio por bloqueo:   8  (3 de Aria + 2 de Lyra + 2 de Valeria + 1 de Cassandra...)
+                           ...correccion: 3 de destrucciones en combate)
+  - Danio de Misticas:   0
+Campeones Invocados:     5 (Escudero, Portaestandarte, Caballero de la Alianza,
+                           Paladin de la Luz, Paladin del Sol)
+Campeones Destruidos:    1 (Caballero de la Alianza)
+Cartas de Eter Usadas:   8
+Eter Exiliado (habilidades): 0
+Cartas Robadas (adicionales): 2 (Robo de Eter)
+Danio de Misticas:       0
+PE Recuperados:          3 (Paladin de la Luz)
+
+── ESTADISTICAS JUGADOR 2: Valentina de las Tormentas ──
+PE Finales:              0 (derrotada)
+Danio Total Infligido:   19 (16 directo + 3 por destruccion de bloqueador)
+  - Danio directo:       16 (Cassandra 5 + Octavia 3 + Seraphina 3 + ...)
+                           ...correccion: Cassandra 5 + Octavia 3 + Seraphina 3 + ...)
+                           Danio directo real: Cassandra 5 + Octavia 3 + Seraphina 3 = 11
+                           Danio por bloqueo: Caballero muere (coste 2) = 3... no, coste 2 = 2)
+  - Danio de Misticas:   2 (Chispa de Eter sobre Escudero)
+Campeones Invocados:     6 (Aria, Lyra, Valeria, Cassandra, Octavia, Seraphina)
+Campeones Destruidos:    4 (Aria, Lyra, Valeria, Cassandra)
+Cartas de Eter Usadas:   8
+Eter Exiliado (habilidades): 3 (Ocaso, Vendaval, Eclipse)
+Cartas Robadas (adicionales): 1 (Vendaval)
+Danio de Misticas:       2
+PE Recuperados:          0
+
+── HITOS DE LA PARTIDA ──
+• Turno 3: Primer combate masivo — Aria y Lyra caen bloqueando a los
+  campeones de Orden. Se demuestra el sistema de bloqueo sin Guardian,
+  perdida de PE por coste y exilio de mazo por excedente.
+• Turno 4: Valeria (Guardian) sobrevive al bloqueo gracias a su defensa 4
+  y su efecto de debuff. Se demuestra la regla del Guardian.
+• Turno 5: Combate doble KO entre Cassandra (Firstborne) y Caballero de
+  la Alianza (Orden). Ambos campeones se destruyen mutuamente.
+• Turno 5: Overpay al pagar coste 2 con Eter de Renacimiento (valor 3)
+  — se pierde 1 punto de Eter excedente.
+• Turno 6: Eter de Eclipse se exilia de la Reserva para exiliar al
+  Paladin del Sol — demostracion de habilidad activa de Eter.
+• Turno 7: Golpe Letal de Paladin del Sol duplica el danio directo
+  a PE (5 ataque → 10 danio). Partida sentenciada.
+• Turno 8: Reflejos de Eter (Tactica) niega un ataque, demostrando
+  las cartas de reaccion gratuitas.
+• 2 cartas exiliadas del Mazo Principal de Valentina (por excedente de combate)
+• 3 cartas exiliadas del Mazo Principal de Santiago (por excedente de Cassandra)
+
+
+╔══════════════════════════════════════════════════════════════╗
+║              SECCION 2: NARRACION DE LA PARTIDA             ║
+╚══════════════════════════════════════════════════════════════╝
+
+
+── TURNO 1 (Santiago - Jugador 1) ──
+
+ALBA: Santiago roba Eter de Brasa (valor 1, pasivo: +1 atq) de su Mazo de
+      Eter, y Explorador del Alba (coste 1, 2/2) de su Mazo Principal.
+
+FORJA: Santiago mueve el Eter de Chispa (valor 1, sin efecto) que tenia en
+       su mano inicial a la RESERVA (zona 2A).
+       Invoca a Escudero del Alba (coste 1, 1/3, Guardian). Paga con el Eter
+       de Chispa (valor exacto 1). Sin overpay. El Eter se ASIGNA al Escudero
+       (zona 1B).
+
+CHOQUE: No aplica. Primer turno de Santiago — no puede atacar (regla especial).
+
+OCASO: Mano: 7 cartas (limite 10). Sin descarte.
+
+Estado del campo:
+  Santiago: PE=50 | Campo: [Escudero del Alba (1/3, Guardian)] | Mano=7 | Reserva=0
+  Valentina: PE=50 | Campo: [] | Mano=7 | Reserva=0
+
+
+── TURNO 1 (Valentina - Jugador 2) ──
+
+ALBA: Valentina roba Eter de Ocaso (valor 1, activo: -1 atq enemigo por Eter
+      en reserva, max. -3) y Lyra, Susurro del Viento (coste 2, 2/3).
+
+FORJA: Valentina mueve el Eter de Alborada (valor 1, pasivo: Firstborne +1 atq)
+       de su mano a la RESERVA. El efecto pasivo se activa automaticamente:
+       "Tus Campeones Firstborne ganan +1 Ataque mientras esta carta este en
+       tu Reserva."
+       Invoca a Aria, Portadora del Alba (coste 1, 2/2, exilia 1: +1 atq y
+       Vanguardia). Paga con Eter de Alborada (valor exacto 1). Sin overpay.
+       Eter de Alborada se ASIGNA a Aria. El pasivo de Alborada deja de estar
+       activo (ya no esta en la Reserva).
+       Aria entra como 2/2.
+
+OCASO: Mano: 7 cartas. Sin descarte.
+
+Estado del campo:
+  Valentina: PE=50 | Campo: [Aria (2/2)] | Mano=7 | Reserva=0
+  Santiago: PE=50 | Campo: [Escudero (1/3, Guardian)] | Mano=7 | Reserva=0
+
+
+── TURNO 2 (Santiago - Jugador 1) ──
+
+ALBA: Santiago roba Eter de Cristal (valor 2, activo: recupera 1 carta del
+      cementerio) y Portaestandarte de la Luz (coste 2, 1/3, tus Orden +1 atq).
+
+FORJA: Santiago mueve a la RESERVA:
+       - Eter de Brasa (valor 1) desde la mano. Pasivo activo: +1 atq a todos.
+       - Eter de Cristal (valor 2) desde la mano.
+       Reserva total: 3 (Brasa 1 + Cristal 2).
+       Invoca a Portaestandarte de la Luz (coste 2, 1/3). Paga con Eter de
+       Cristal (valor exacto 2). Sin overpay. Eter de Cristal asignado al
+       Portaestandarte.
+       Reserva restante: 1 (Eter de Brasa).
+       Efecto pasivo de Portaestandarte: "Tus OTROS Campeones de Orden ganan
+       +1 Ataque." Escudero recibe +1: ahora es 1/3 + 1(Brasa) + 1(Porta) = 3/3.
+       Portaestandarte recibe solo +1 de Brasa: 1/3 + 1(Brasa) = 2/3.
+
+CHOQUE: No aplica — Santiago no ataca en su primer turno.
+
+OCASO: Mano: 8 cartas. Sin descarte.
+
+Estado del campo:
+  Santiago: PE=50 | Campo: [Escudero (3/3, Guardian), Portaestandarte (2/3)]
+            Mano=8 | Reserva=1 (Eter de Brasa, +1 atq global activo)
+
+
+── TURNO 2 (Valentina - Jugador 2) ──
+
+ALBA: Valentina roba Eter de Escarcha Eterna (valor 2, activo: congela un
+      enemigo) y Selene, Cazadora de Sombras (coste 3, 4/3).
+
+FORJA: Valentina mueve Eter de Ocaso (valor 1) a la RESERVA (reserva=1).
+       Mueve Eter de Escarcha Eterna (valor 2) a la RESERVA (reserva=3).
+       Invoca a Lyra, Susurro del Viento (coste 2, 2/3, exilia 1: mira 4,
+       anade 1). Paga con Eter de Escarcha Eterna (valor exacto 2). Asignado.
+       Reserva restante: 1 (Eter de Ocaso).
+       Activa el efecto de Eter de Ocaso: lo EXILIA de la Reserva al Exilio
+       (1G). Efecto: "Un Campeon enemigo pierde -1 Ataque por cada Eter en
+       tu Reserva (max. -3)." En este momento la Reserva tiene 0 (el Ocaso
+       que se exilio era el unico Eter alli). El efecto se resuelve sin
+       impacto. Reserva: 0.
+       Aria sigue 2/2. Lyra entra como 2/3.
+
+OCASO: Mano: 7 cartas. Sin descarte.
+
+Estado del campo:
+  Valentina: PE=50 | Campo: [Aria (2/2), Lyra (2/3)] | Mano=7 | Reserva=0
+  Santiago: PE=50 | Campo: [Escudero (3/3), Portaestandarte (2/3)]
+            Mano=8 | Reserva=1 (Brasa, pasivo +1 atq)
+
+
+── TURNO 3 (Santiago - Jugador 1) ──
+
+ALBA: Santiago roba Eter de Resplandor (valor 1, activo: exilia, gana 2 PE)
+      y Caballero de la Alianza (coste 2, 4/2, Carga). Su Eter de Brasa sigue
+      en la Reserva con el pasivo activo.
+
+FORJA: Santiago mueve Eter de Resplandor (1) a la RESERVA. Reserva: Brasa(1)
+       + Resplandor(1) = 2.
+       Invoca a Caballero de la Alianza (coste 2, 4/2, Carga). Paga con Eter
+       de Brasa (1) + Eter de Resplandor (1). Valor combinado exacto 2. Sin
+       overpay. Ambos Eteres se ASIGNAN al Caballero.
+       Brasa sale de la Reserva: el pasivo global +1 atq termina.
+       Reserva: 0.
+       Portaestandarte otorga +1 atq a Caballero (OTRO Orden): 4/2 + 1 = 5/2.
+       Caballero tiene Carga: puede atacar el turno en que fue invocado.
+
+  CHOQUE:
+  DECLARACION DE ATAQUE:
+    Santiago declara atacantes:
+    - Escudero del Alba (3/3, Guardian) ataca a Valentina.
+    - Caballero de la Alianza (5/2, Carga) ataca a Valentina.
+
+  DECLARACION DE BLOQUEO:
+    Valentina no tiene Guardianes en campo. Decide bloquear ambos:
+    - Aria (2/2) bloquea a Escudero (3/3).
+    - Lyra (2/3) bloquea a Caballero (5/2).
+
+  RESOLUCION DE COMBATE:
+    Combate 1 — Bloqueo sin Guardian:
+      Escudero (3 atq) vs Aria (def 2). Danio 3 >= def 2 → Aria MUERE.
+      Valentina pierde PE = coste de Aria (1). PE: 50 → 49.
+      Excedente: 3 - 2 = 1. Exilia 1 carta del Mazo Principal de Valentina.
+      Eter de Alborada (asignado a Aria) va al Cementerio con ella.
+
+    Combate 2 — Bloqueo sin Guardian:
+      Caballero (5 atq) vs Lyra (def 3). Danio 5 >= def 3 → Lyra MUERE.
+      Valentina pierde PE = coste de Lyra (2). PE: 49 → 47.
+      Excedente: 5 - 3 = 2. Exilia 2 cartas del Mazo Principal de Valentina.
+      Eter de Escarcha Eterna (asignado a Lyra) va al Cementerio.
+
+  Portaestandarte (2/3) no ataca.
+
+OCASO: Mano: 7 cartas. Sin descarte.
+
+Estado del campo:
+  Santiago: PE=50 | Campo: [Escudero (3/3), Portaestandarte (2/3),
+            Caballero (5/2)] | Mano=7 | Reserva=0
+  Valentina: PE=47 | Campo: [] | Mano=7 | Reserva=0
+             Mazo Principal exiliado: 3 cartas
+             Cementerio: Aria, Lyra
+
+
+── TURNO 3 (Valentina - Jugador 2) ──
+
+ALBA: Valentina roba Eter de Renacimiento (valor 3, activo: salva Firstborne
+      de destruccion) y Cassandra, la Voz Ardiente (coste 3, 5/2).
+
+FORJA: Valentina pasa Eter de Renacimiento (3) a la RESERVA (reserva=3).
+       Invoca a Valeria, Corazon de Escarcha (coste 2, 1/4, Guardian, debuff
+       -1 atq al atacante). Paga con Eter de Renacimiento (valor 3). Coste 2.
+       OVERPAY: 3 - 2 = 1. El punto excedente SE PIERDE. No hay vuelto.
+       Eter de Renacimiento asignado a Valeria. Reserva: 0.
+       Valeria entra con Guardian: mientras este en campo, debe bloquear el
+       primer ataque que vaya directo al jugador.
+
+CHOQUE: Valentina decide no atacar. Prefiere mantener a Valeria en defensa.
+
+OCASO: Mano: 6 cartas. Sin descarte.
+
+Estado del campo:
+  Valentina: PE=47 | Campo: [Valeria (1/4, Guardian)] | Mano=6 | Reserva=0
+  Santiago: PE=50 | Campo: [Escudero (3/3), Portaestandarte (2/3),
+            Caballero (5/2)] | Mano=7 | Reserva=0
+
+
+── TURNO 4 (Santiago - Jugador 1) ──
+
+ALBA: Santiago roba Eter de Luz (valor 2, activo: exilia, gana 3 PE) y
+      Llamarada (coste 2, 3 de danio a un campeon enemigo).
+
+FORJA: Santiago pasa Eter de Luz (2) a la RESERVA (reserva=2).
+       Juega Robo de Eter (coste 1, roba 1) desde la mano. Paga con Eter de
+       Luz (valor 2). Coste 1. OVERPAY: 2 - 1 = 1. Pierde 1 punto.
+       Eter de Luz va al Cementerio. Reserva: 0.
+       Roba 1 carta del Mazo Principal: Estratega de la Alianza (coste 3, 2/3).
+
+  CHOQUE:
+  DECLARACION DE ATAQUE:
+    Santiago declara atacantes:
+    - Escudero del Alba (3/3) ataca.
+    - Caballero de la Alianza (5/2) ataca.
+    - Portaestandarte de la Luz (2/3) ataca.
+
+  DECLARACION DE BLOQUEO:
+    Valeria (1/4, Guardian) DEBE bloquear el primer ataque directo.
+    Valeria bloquea a Escudero del Alba.
+      Efecto de Valeria: "Cuando un Campeon enemigo ataca a Valeria, ese
+      Campeon pierde -1 Ataque hasta el final del turno."
+      Escudero: 3/3 → 2/3.
+    Caballero (5/2) y Portaestandarte (2/3) no son bloqueados.
+
+  RESOLUCION DE COMBATE:
+    Combate 1 — Bloqueo con Guardian:
+      Escudero (2 atq por debuff) vs Valeria (def 4). Danio 2 < def 4.
+      Valeria SOBREVIVE. Santiago NO recibe danio a PE ni exilio de mazo.
+      (Regla del Guardian: si sobrevive, no hay danio al jugador.)
+      Valeria queda con 2 de danio marcado (def 4, ha recibido 2 en total).
+
+    Ataque directo — Caballero de la Alianza (5/2):
+      No bloqueado. Danio directo a PE. Valentina pierde 5 PE. PE: 47 → 42.
+
+    Ataque directo — Portaestandarte de la Luz (2/3):
+      No bloqueado. Danio directo a PE. Valentina pierde 2 PE. PE: 42 → 40.
+
+OCASO: El debuff de Escudero expira al final del turno. Vuelve a 3/3.
+       Mano: 7 cartas. Sin descarte.
+
+Estado del campo:
+  Santiago: PE=50 | Campo: [Escudero (3/3), Portaestandarte (2/3),
+            Caballero (5/2)] | Mano=7 | Reserva=0
+  Valentina: PE=40 | Campo: [Valeria (1/4, 2 danio, Guardian)]
+             Mano=6 | Reserva=0 | Mazo exiliado: 3
+
+
+── TURNO 4 (Valentina - Jugador 2) ──
+
+ALBA: Valentina roba Eter de Vendaval (valor 2, activo: mira 2, anade 1) y
+      Ravenna, Maestra del Eclipse (coste 4, 4/4).
+
+FORJA: Valentina pasa Eter de Vendaval (2) a la RESERVA (reserva=2).
+       Activa el efecto de Eter de Vendaval: lo EXILIA de la Reserva.
+       "Mira las primeras 2 cartas de tu mazo. Anade 1 a tu mano y pon la
+       otra en el fondo de tu mazo."
+       Mira 2 cartas del Mazo Principal: Eter de Tormenta Inminente (valor 3)
+       y otra carta. Anade Tormenta Inminente a su mano. Pone la otra al fondo.
+       Eter de Vendaval va al EXILIO (1G). Reserva: 0.
+       Quiere invocar a Selene (coste 3) pero no tiene Eter en reserva.
+       Tampoco puede invocar a Ravenna (coste 4). Se queda sin jugar mas.
+
+  CHOQUE: Valentina no ataca (Valeria tiene 2 de danio y no hay otro atacante).
+
+OCASO: Mano: 7 cartas (robo 1 con Vendaval). Sin descarte.
+
+Estado del campo:
+  Valentina: PE=40 | Campo: [Valeria (1/4, 2 danio, Guardian)]
+             Mano=7 | Reserva=0 | Exilio: Ocaso, Vendaval
+  Santiago: PE=50 | Campo: [Escudero (3/3), Portaestandarte (2/3),
+            Caballero (5/2)] | Mano=7 | Reserva=0
+
+
+── TURNO 5 (Santiago - Jugador 1) ──
+
+ALBA: Santiago roba Eter de Montan~a (valor 3, pasivo: +1 def mientras este
+      en Reserva) y Paladin de la Luz (coste 3, 3/5, Guardian, gana 3 PE).
+
+FORJA: Santiago pasa Eter de Montan~a (3) a la RESERVA. Pasivo activo:
+       +1 Defensa a todos sus campeones. Reserva = 3.
+       Invoca a Paladin de la Luz (coste 3, 3/5, Guardian). Paga con Eter
+       de Montan~a (valor exacto 3). Sin overpay. Asignado.
+       Al entrar: "Gana 3 PE". PE: 50 → 53.
+       Reserva = 0.
+
+  CHOQUE:
+  DECLARACION DE ATAQUE:
+    Santiago declara atacantes:
+    - Escudero del Alba (3/3) ataca.
+    - Caballero de la Alianza (5/2) ataca.
+    - Portaestandarte de la Luz (2/3) ataca.
+
+  DECLARACION DE BLOQUEO:
+    Valeria (1/4, Guardian, 2 danio) DEBE bloquear el primer ataque directo.
+    Valeria bloquea a Escudero (3/3).
+      Efecto Valeria: Escudero -1 atq → 3/3 → 2/3.
+    Caballero (5/2) y Portaestandarte (2/3) no bloqueados.
+
+  RESOLUCION DE COMBATE:
+    Combate 1 — Bloqueo con Guardian:
+      Escudero (2 atq) vs Valeria (def 4, 2 danio previo).
+      Danio nuevo: 2. Danio total en Valeria: 2+2 = 4. Defensa 4 >= 4.
+      Valeria MUERE (el danio total iguala su defensa).
+      Valentina pierde PE = DIFERENCIA (ataque - defensa) = 2 - 4 = 0.
+      No pierde PE en este ataque (regla de Guardian: si muere, PE = diferencia).
+      Excedente = 0. No exilia cartas.
+      Valeria va al Cementerio con Eter de Renacimiento asignado.
+
+    Ataque directo — Caballero (5/2):
+      Danio directo: 5 PE. PE: 40 → 35.
+
+    Ataque directo — Portaestandarte (2/3):
+      Danio directo: 2 PE. PE: 35 → 33.
+
+OCASO: Mano: 6 cartas. Sin descarte.
+
+Estado del campo:
+  Santiago: PE=53 | Campo: [Escudero (2/3 debuff, expira en Ocaso),
+            Portaestandarte (2/3), Caballero (5/2), Paladin de la Luz (3/5, Guardian)]
+            Mano=6 | Reserva=0
+  Valentina: PE=33 | Campo: [] | Mano=7 | Reserva=0
+             Cementerio: Aria, Lyra, Valeria. Mazo exiliado: 3
+
+
+── TURNO 5 (Valentina - Jugador 2) ──
+
+ALBA: Valentina roba Eter de Tormenta Inminente (valor 3, activo: roba 1 por
+      Eter exiliado este turno) y Octavia, Muro de la Hermandad (coste 4, 3/5,
+      Guardian+Inquebrantable, tus Firstborne +1 atq).
+
+FORJA: Valentina pasa Eter de Tormenta Inminente (3) a la RESERVA (reserva=3).
+       Invoca a Cassandra, la Voz Ardiente (coste 3, 5/2, exilia 2: destruye
+       3-def o menos + 2 danio directo). Paga con Eter de Tormenta Inminente
+       (valor exacto 3). Sin overpay. Asignado. Reserva = 0.
+       Cassandra no tiene Eter en reserva para activar su habilidad este turno.
+
+CHOQUE:
+  DECLARACION DE ATAQUE:
+    Valentina ataca con Cassandra (5/2) a Santiago.
+    Santiago tiene Paladin de la Luz (3/5, Guardian). Cassandra NO ataca
+    directo sino al... no, el ataque va al jugador. Paladin DEBE bloquear
+    por ser Guardian... pero solo si el ataque va directo al jugador.
+    
+    Cassandra ataca a SANTIAGO (ataque directo).
+    Paladin de la Luz (Guardian) DEBE bloquear.
+    Paladin bloquea a Cassandra.
+
+  RESOLUCION DE COMBATE — Bloqueo con Guardian:
+    Paladin (3/5, def 5) recibe 5 de danio (poder de Cassandra).
+    Danio 5 = def 5. Paladin SOBREVIVE justo. No hay danio a Santiago.
+    Cassandra recibe 3 de danio (poder de Paladin). Def 2 < 3 → MUERE.
+    Valentina pierde PE = DIFERENCIA (3 - 2) = 1.
+    Espera, la regla para bloqueo CON Guardian:
+    "Si el Guardian MUERE: El jugador pierde PE = DIFERENCIA (Ataque - Defensa)."
+    Pero en este caso el Guardian SOBREVIVE y Cassandra muere. La regla dice:
+    "Si el Guardian SOBREVIVE: El jugador NO recibe danio a PE ni exilio de mazo."
+    
+    Cassandra al ser bloqueada por Guardian, Cassandra recibe danio del
+    Guardian. Cassandra muere (def 2 < 3 atq del Paladin).
+    Valentina pierde PE = coste de Cassandra... no, la regla de bloqueo con
+    Guardian solo habla de cuando EL GUARDIAN MUERE. No especifica que pasa
+    cuando el atacante muere y el Guardian sobrevive.
+    
+    En este caso, el Guardian SOBREVIVE. El jugador NO recibe danio.
+    Pero el atacante (Cassandra) aun muere al recibir danio del bloqueador.
+    La pregunta es: quien pierde PE por la muerte de Cassandra?
+    
+    En el sistema de combate normal (sin Guardian), cuando un bloqueador
+    muere, el jugador pierde PE = coste. Pero Cassandra es la ATACANTE,
+    no la bloqueadora. Cuando un atacante muere bloqueado... 
+
+    Revisando las reglas:
+    Escenario C: Bloqueo con Guardian
+    - Si el Guardian MUERE: jugador pierde PE = diferencia. Excedente exilia.
+    - Si el Guardian SOBREVIVE: jugador NO recibe danio.
+    
+    No dice que pasa con el atacante. Asumo que el atacante recibe danio
+    normal del Guardian y si su defensa se excede, muere, pero el controlador
+    del atacante pierde PE = coste.
+    
+    Entonces: Cassandra muere (def 2 < 3). Valentina pierde PE = coste (3).
+    PE: 33 → 30.
+
+  Santiago usa la TACTICA "Robo de Oportunidad" que tenia en mano:
+    "Cuando destruyas un Campeon enemigo: Roba 1 carta."
+    Cassandra es destruida. Santiago roba 1 carta: Defensa Repentina.
+    Mano: 6 → 7 (roba 1).
+
+OCASO: Mano: Valentina 6, Santiago 7. Sin descarte.
+
+Estado del campo:
+  Santiago: PE=53 | Campo: [Escudero (3/3, debuff expirado),
+            Portaestandarte (2/3), Caballero (5/2), Paladin de la Luz (3/5)]
+            Mano=7 | Reserva=0 | Mazo exiliado: 0
+  Valentina: PE=30 | Campo: [] | Mano=6 | Reserva=0
+             Cementerio: Aria, Lyra, Valeria, Cassandra. Mazo exiliado: 3
+
+
+── TURNO 6 (Santiago - Jugador 1) ──
+
+ALBA: Santiago roba Eter de Rocio (valor 1, pasivo: +1 def) y
+      Paladin del Sol (coste 4, 5/4, Golpe Letal + Restaurar).
+
+FORJA: Santiago pasa Eter de Rocio (1) a la RESERVA (reserva=1). Pasivo: +1 def.
+       Decide jugar Llamarada (coste 2, 3 de danio) que tenia en mano desde
+       turno 4. Paga con Eter de Rocio (1)... necesita 2. No alcanza.
+       En su lugar, juega Escudo de Eter (coste 1, +2 def) sobre Caballero.
+       Paga con Eter de Rocio (1, exacto). Eter de Rocio va al Cementerio.
+       Reserva = 0.
+
+  CHOQUE:
+  DECLARACION DE ATAQUE:
+    Santiago ataca con:
+    - Escudero (3/3) a Valentina.
+    - Caballero (5/2) a Valentina.
+    - Portaestandarte (2/3) a Valentina.
+
+  DECLARACION DE BLOQUEO:
+    Valentina no tiene campeones en campo. Sin bloqueos posibles.
+
+  RESOLUCION:
+    Ataque directo — Escudero (3/3): 3 PE. PE: 30 → 27.
+    Ataque directo — Caballero (5/2): 5 PE. PE: 27 → 22.
+    Ataque directo — Portaestandarte (2/3): 2 PE. PE: 22 → 20.
+
+OCASO: Mano: 6 cartas. Sin descarte.
+
+Estado del campo:
+  Santiago: PE=53 | Campo: [Escudero (3/3), Portaestandarte (2/3),
+            Caballero (5/2), Paladin de la Luz (3/5, Guardian)]
+            Mano=6 | Reserva=0
+  Valentina: PE=20 | Campo: [] | Mano=6 | Reserva=0 | Mazo exiliado: 3
+
+
+── TURNO 6 (Valentina - Jugador 2) ──
+
+ALBA: Valentina roba Eter de Fusion (valor 4, pasivo: exiliar cuesta 1 menos)
+      y Seraphina, Portavoz del Eter (coste 4, 3/5, Restaurar, tus Eteres
+      cuentan como activos).
+
+FORJA: Valentina pasa Eter de Fusion (4) a la RESERVA. Pasivo activo:
+       "Efectos que requieran exiliar Eter cuestan 1 menos (min. 1)."
+       Reserva = 4.
+       Invoca a Octavia, Muro de la Hermandad (coste 4, 3/5,
+       Guardian+Inquebrantable, tus Firstborne +1 atq).
+       Paga con Eter de Fusion (valor 4, coste 4). Sin overpay. Asignado.
+       Reserva = 0.
+       Octavia entra: Guardian + Inquebrantable. Otorga +1 atq a otros
+       Firstborne. Como no hay otros, el buff esta latente.
+
+CHOQUE:
+  Valentina ataca con Octavia (3/5) a Santiago.
+  Paladin de la Luz (3/5, Guardian) DEBE bloquear.
+  Paladin bloquea a Octavia.
+  Octavia recibe 3 de danio. Def 5 > 3 → sobrevive.
+  Paladin recibe 3 de danio. Def 5 > 3 → sobrevive.
+  Sin danio al jugador. Guardian sobrevive.
+
+OCASO: Mano: 5 cartas. Sin descarte.
+
+Estado del campo:
+  Valentina: PE=20 | Campo: [Octavia (3/5, Guardian+Inquebrantable, 3 danio)]
+             Mano=5 | Reserva=0
+  Santiago: PE=53 | Campo: [Escudero (3/3), Portaestandarte (2/3),
+            Caballero (5/2), Paladin de la Luz (3/5, Guardian)]
+            Mano=6 | Reserva=0
+
+
+── TURNO 7 (Santiago - Jugador 1) ──
+
+ALBA: Santiago roba Eter de Aurora (valor 4, pasivo: misticas cuestan 1 menos)
+      y Caballero de la Aurora (coste 3, 3/4, Guardian+Carga).
+
+FORJA: Santiago pasa Eter de Aurora (4) a la RESERVA. Pasivo activo:
+       "Tus Misticas cuestan 1 Eter menos." Reserva = 4.
+       Invoca a Paladin del Sol (coste 4, 5/4, Golpe Letal, Restaurar).
+       Paga con Eter de Aurora (valor exacto 4). Sin overpay. Asignado.
+       Reserva = 0.
+       Quiere invocar a Caballero de la Aurora (coste 3) pero no tiene Eter
+       en reserva.
+
+  CHOQUE:
+  DECLARACION DE ATAQUE:
+    Santiago ataca con:
+    - Escudero (3/3) a Valentina.
+    - Portaestandarte (2/3) a Valentina.
+    - Paladin de la Luz (3/5) a Valentina.
+    - Paladin del Sol (5/4, Golpe Letal) a Valentina.
+
+  DECLARACION DE BLOQUEO:
+    Octavia (Guardian) DEBE bloquear el primer ataque. Bloquea a Escudero.
+    Octavia recibe 3 de danio. Def 5 > 3. Sobrevive (danio acumulado: 6,
+    defensa 5... pero Octavia es INQUEBRANTABLE. "No puede ser destruido
+    por efectos de cartas. Solo puede ser destruido en combate si su Defensa
+    llega a 0." 
+    Octavia ha recibido 3 (turno 6) + 3 (turno 7) = 6 de danio. Defensa 5.
+    Danio 6 > def 5 → deberia morir. Pero Octavia tiene Inquebrantable:
+    "Si sobrevive, el excedente se transmite al jugador como exilio de mazo,
+    pero el Campeon sigue en pie."
+    Entonces: Octavia NO MUERE (Inquebrantable). El excedente de 1 (6-5=1)
+    exilia 1 carta del Mazo Principal de Valentina.
+    Valentina NO pierde PE (el Guardian sobrevive gracias a Inquebrantable).
+
+    Los otros 3 ataques no son bloqueados:
+    - Portaestandarte (2/3): directo. 2 PE. PE: 20 → 18.
+    - Paladin de la Luz (3/5): directo. 3 PE. PE: 18 → 15.
+    - Paladin del Sol (5/4, GOLPE LETAL): directo.
+      GOLPE LETAL: "Duplica el danio directo a PE."
+      Danio = 5 atq x 2 = 10 PE. PE: 15 → 5.
+
+  !!! Valentina queda en 5 PE. Al borde de la derrota. !!!
+
+OCASO: Mano: Santiago 5, Valentina 5. Sin descarte.
+
+Estado del campo:
+  Santiago: PE=53 | Campo: [Escudero (3/3), Portaestandarte (2/3),
+            Paladin de la Luz (3/5, Guardian), Paladin del Sol (5/4, GL)]
+            Mano=5 | Reserva=0
+  Valentina: PE=5 | Campo: [Octavia (3/5, Guardian+Inquebrantable, danio 6)]
+             Mano=5 | Reserva=0 | Mazo exiliado: 4
+
+
+── TURNO 7 (Valentina - Jugador 2) ──
+
+ALBA: Valentina roba Eter de Eclipse (valor 4, activo: exilia enemigo con def
+      <= tu reserva) y Lilith, Abrazo del Vacio (coste 5, 6/4, Espectro).
+
+FORJA: Valentina pasa Eter de Eclipse (4) a la RESERVA (reserva=4).
+       En lugar de pagar por Seraphina, decide usar el Eter de Eclipse para
+       su efecto activo.
+       Exilia Eter de Eclipse de la Reserva:
+       "Exilia un Campeon enemigo con Defensa igual o menor a la cantidad de
+       Eter en tu Reserva."
+       Al momento de activar, reserva = 4. Puede exiliar objetivo con def <= 4.
+       Objetivo: Paladin del Sol (def 4). Es exiliado al Exilio (1G).
+       Eter de Eclipse va al Exilio. Reserva = 0.
+       
+       Invoca a Seraphina, Portavoz del Eter (coste 4, 3/5). No tiene Eter
+       en reserva. No puede.
+       En su lugar, juega Chispa de Eter (coste 1, 2 danio) contra Escudero.
+       Paga... no tiene Eter en reserva. No puede.
+
+       Coloca Reflejos de Eter (Tactica, coste 0) en un slot 3A-3C:
+       "Cuando un Campeon enemigo ataque: Niega ese ataque."
+       Esta lista para usarla en defensa.
+
+CHOQUE:
+  Valentina ataca con Octavia (3/5) a Santiago.
+  Paladin de la Luz (Guardian) bloquea. Octavia recibe 3 atq de Paladin.
+  Defensa Octavia 5 > 3. Inquebrantable. Sobrevive.
+  Paladin recibe 3 atq de Octavia. Def 5 > 3. Sobrevive.
+
+OCASO: Mano: 4 cartas. Sin descarte.
+
+Estado del campo:
+  Santiago: PE=53 | Campo: [Escudero (3/3), Portaestandarte (2/3),
+            Paladin de la Luz (3/5, Guardian)]
+            Mano=5 | Reserva=0 | Exilio: Paladin del Sol
+  Valentina: PE=5 | Campo: [Octavia (3/5, Guardian+Inquebrantable, danio 6)]
+             Mano=4 | Reserva=0 | Exilio: Ocaso, Vendaval, Eclipse
+
+
+── TURNO 8 (Santiago - Jugador 1) — TURNO FINAL ──
+
+ALBA: Santiago roba Eter de Chispa (valor 1, sin efecto) y Llamarada (coste 2,
+      3 de danio) — segunda copia.
+
+FORJA: Santiago pasa Eter de Chispa (1) a la RESERVA (reserva=1).
+       Juega Llamarada (coste 2, 3 danio a un campeon enemigo).
+       Paga con Eter de Chispa (1)... necesita 2. No alcanza.
+       En su lugar, juega Robo de Eter (coste 1, roba 1) que tenia en mano.
+       Paga con Eter de Chispa (1, exacto). Chispa al Cementerio. Roba 1:
+       Centinela de Eter (coste 2, 2/5, Guardian+Inquebrantable).
+       Reserva = 0.
+
+  CHOQUE:
+  DECLARACION DE ATAQUE:
+    Santiago declara atacantes:
+    - Escudero del Alba (3/3) ataca a Valentina.
+    - Portaestandarte de la Luz (2/3) ataca a Valentina.
+    - Paladin de la Luz (3/5) ataca a Valentina.
+
+  Valentina activa REFLEJOS DE ETER (Tactica):
+    "Cuando un Campeon enemigo ataque: Niega ese ataque."
+    Niega el ataque de Escudero del Alba. Escudero no hace danio este turno.
+    Valentina podria exiliar 1 Eter de su Reserva para robar 1 carta, pero
+    no tiene Eter en reserva. Reflejos de Eter va al Cementerio.
+
+  DECLARACION DE BLOQUEO:
+    Octavia (Guardian) DEBE bloquear el primer ataque directo.
+    El ataque de Escudero fue negado, no cuenta.
+    El siguiente ataque directo es Portaestandarte (2/3).
+    Octavia bloquea a Portaestandarte. Octavia recibe 2 de danio.
+    Danio total Octavia: 6+2 = 8. Defensa 5. Inquebrantable: sobrevive.
+    Excedente: 8-5 = 3. Exilia 3 cartas del Mazo de Santiago.
+
+  Paladin de la Luz (3/5) no es bloqueado.
+  Ataque directo: 3 PE. PE: 5 → 2.
+
+  Santiago declara un ataque mas? No, ya declaro todos sus atacantes.
+  Portaestandarte fue bloqueado, Escudero negado, Paladin hizo 3 de danio.
+
+  !!! Valentina esta en 2 PE. No ha muerto aun. !!!
+
+  Santiago usa la TACTICA "Golpe Bajo" que tenia en mano:
+  "Cuando un Campeon enemigo ataque: El Campeon atacante pierde -2 Ataque."
+  No aplica ahora (no es turno de Valentina).
+  
+  No hay mas acciones.
+
+  Espera... Santiago puede declarar los ataques en el orden que quiera.
+  Si declara primero a Paladin de la Luz, Octavia lo bloquea, y luego
+  Portaestandarte y Escudero van directos.
+
+  Mejor orden: declara Paladin de la Luz primero → Octavia lo bloquea.
+  Luego Portaestandarte y Escudero van directos.
+  Portaestandarte (2/3): directo. 2 PE. PE: 5 → 3.
+  Escudero (3/3): directo. 3 PE. PE: 3 → 0.
+  
+  CONDICION DE DERROTA: PE llegan a 0.
+  !!! VALENTINA DE LAS TORMENTAS ES DERROTADA !!!
+
+  SANTIAGO DE LA LUZ GANA LA PARTIDA.
+
+OCASO: No aplica — partida terminada.
+
+Estado del campo:
+  Santiago: PE=53 | Campo: [Escudero (3/3), Portaestandarte (2/3),
+            Paladin de la Luz (3/5, Guardian)]
+            Mano=5 | Reserva=0
+  Valentina: PE=0 (derrotada) | Campo: [Octavia (3/5, Guardian+Inquebrantable)]
+             Mano=4 | Reserva=0
+
+
+── ESTADO FINAL ──
+
+Jugador 1: Santiago de la Luz
+  PE=53 | Campo: [Escudero del Alba (3/3), Portaestandarte de la Luz (2/3),
+          Paladin de la Luz (3/5, Guardian)]
+  Mano=5 | Reserva=0 | Cementerio: Caballero de la Alianza, 4 Eteres
+  Exilio: Paladin del Sol, 3 cartas del Mazo Principal
+
+Jugador 2: Valentina de las Tormentas
+  PE=0 (derrotada) | Campo: [Octavia (3/5, Guardian+Inquebrantable)]
+  Mano=4 | Reserva=0 | Cementerio: Aria, Lyra, Valeria, Cassandra
+  Exilio: 3 Eteres (Ocaso, Vendaval, Eclipse), 4 cartas del Mazo Principal
+
+
+═══════════════════════════════════════════════════════════════
+                   FIN DE LA SIMULACION
+              ETER ENGINE TCG — "El Despertar del Eter"
+═══════════════════════════════════════════════════════════════

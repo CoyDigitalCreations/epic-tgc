@@ -22,7 +22,7 @@ const makeCard = (overrides: Partial<AnyCard> = {}): AnyCard => ({
   createdAt: '2024-01-01',
   updatedAt: '2024-01-01',
   stats: { cost: 3, poder: 1000, resistencia: 800 },
-  habilidad: 'Test habilidad',
+  efectoPasivo: 'Test pasiva',
   ...overrides,
 }) as AnyCard
 
@@ -95,12 +95,16 @@ describe('useCardStore', () => {
   })
 
   describe('loadCards', () => {
-    it('replaces entire collection', () => {
-      useCardStore.getState().addCard(makeCard())
-      const newCards = [makeCard({ id: 'new-1', name: 'New Card' })]
+    it('merges by id (new replaces old, others preserved)', () => {
+      useCardStore.getState().addCard(makeCard({ id: 'orig-1', name: 'Old Card' }))
+      const newCards = [
+        makeCard({ id: 'orig-1', name: 'Updated Card' }),
+        makeCard({ id: 'new-1', name: 'New Card' }),
+      ]
       useCardStore.getState().loadCards(newCards)
-      expect(useCardStore.getState().cards).toHaveLength(1)
-      expect(useCardStore.getState().cards[0].name).toBe('New Card')
+      expect(useCardStore.getState().cards).toHaveLength(2)
+      expect(useCardStore.getState().cards.find((c) => c.id === 'orig-1')?.name).toBe('Updated Card')
+      expect(useCardStore.getState().cards.find((c) => c.id === 'new-1')?.name).toBe('New Card')
     })
   })
 

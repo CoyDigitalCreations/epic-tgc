@@ -39,7 +39,9 @@ export interface CardMeta {
 export interface CampeonCard extends CardMeta {
   type: 'Campeón'
   stats: CombatStats
-  habilidad: string
+  tipoEfecto?: 'Pasivo' | 'Activo' | 'Especial'
+  efectoPasivo?: string
+  efectoActivo?: string
 }
 
 export interface MisticaCard extends CardMeta {
@@ -70,7 +72,9 @@ export interface CombateCard extends CardMeta {
 export interface EterCard extends CardMeta {
   type: 'Éter'
   stats: CombatStats
-  efectoContinuo: string
+  tipoEfecto?: 'Pasivo' | 'Activo' | 'Especial'
+  efectoPasivo?: string
+  efectoActivo?: string
 }
 
 /** Discriminated union of all card types */

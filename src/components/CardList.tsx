@@ -1,19 +1,41 @@
+import { useState, useMemo, useRef } from 'react'
 import { useCardStore } from '../store/useCardStore'
 import { exportCollectionToJson, importCollectionFromJson } from '../utils/export-json'
-import { useRef } from 'react'
+import { CARD_TYPES, type CardType } from '../types'
+import { ConfirmModal } from './modals/ConfirmModal'
 
 export function CardList() {
   const cards = useCardStore((s) => s.cards)
   const deleteCard = useCardStore((s) => s.deleteCard)
   const loadCards = useCardStore((s) => s.loadCards)
-  const setDraft = useCardStore((s) => s.setDraft)
+  const clearCards = useCardStore((s) => s.clearCards)
   const setSelectedCardId = useCardStore((s) => s.setSelectedCardId)
   const selectedCardId = useCardStore((s) => s.selectedCardId)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  // Filters
+  const [search, setSearch] = useState('')
+  const [typeFilter, setTypeFilter] = useState<CardType | 'Todas'>('Todas')
+
+  // Clear confirmation
+  const [showClearModal, setShowClearModal] = useState(false)
+
+  const filteredCards = useMemo(
+    () =>
+      cards.filter((card) => {
+        if (typeFilter !== 'Todas' && card.type !== typeFilter) return false
+        if (search) {
+          const q = search.toLowerCase()
+          const name = (card.name || '').toLowerCase()
+          if (!name.includes(q)) return false
+        }
+        return true
+      }),
+    [cards, search, typeFilter],
+  )
+
   const handleEdit = (card: (typeof cards)[number]) => {
-    setDraft(card as unknown as Record<string, unknown>)
-    setSelectedCardId(null)
+    setSelectedCardId(card.id)
   }
 
   const handleImport = () => {
@@ -32,30 +54,35 @@ export function CardList() {
     e.target.value = ''
   }
 
-  if (cards.length === 0) {
-    return (
-      <div className="text-center py-12 text-gray-500">
-        <p className="text-4xl mb-2">📜</p>
-        <p className="font-display text-lg">No hay cartas todavía</p>
-        <p className="text-sm mt-1">Creá tu primera carta arriba</p>
-      </div>
-    )
-  }
-
   return (
     <div>
+      {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-display text-gray-100">
-          Colección ({cards.length})
+          Colección
+          {filteredCards.length !== cards.length
+            ? ` (${filteredCards.length}/${cards.length})`
+            : ` (${cards.length})`}
         </h2>
         <div className="flex gap-2">
-          <button
-            onClick={() => exportCollectionToJson(cards)}
-            className="text-xs bg-surface-2 hover:bg-card-border text-gray-300 px-3 py-1.5 rounded 
-                       transition-colors cursor-pointer"
-          >
-            Exportar JSON
-          </button>
+          {cards.length > 0 && (
+            <>
+              <button
+                onClick={() => exportCollectionToJson(cards)}
+                className="text-xs bg-surface-2 hover:bg-card-border text-gray-300 px-3 py-1.5 rounded 
+                           transition-colors cursor-pointer"
+              >
+                Exportar JSON
+              </button>
+              <button
+                onClick={() => setShowClearModal(true)}
+                className="text-xs bg-red-600/30 hover:bg-red-600/50 text-red-300 px-3 py-1.5 rounded 
+                           transition-colors cursor-pointer"
+              >
+                Limpiar
+              </button>
+            </>
+          )}
           <button
             onClick={handleImport}
             className="text-xs bg-surface-2 hover:bg-card-border text-gray-300 px-3 py-1.5 rounded 
@@ -73,117 +100,225 @@ export function CardList() {
         />
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-        {cards.map((card) => (
-          <div
-            key={card.id}
-            onClick={() => setSelectedCardId(card.id)}
-            className={`bg-surface-2 border rounded-lg p-3 cursor-pointer transition-all
-              ${selectedCardId === card.id
-                ? 'border-ether-400 ring-1 ring-ether-400'
-                : 'border-card-border hover:border-gray-500'
+      {/* Search + Filters */}
+      <div className="flex flex-col sm:flex-row gap-3 mb-4">
+        {/* Search bar */}
+        <div className="relative flex-1">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm pointer-events-none">
+            🔍
+          </span>
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Buscar por nombre..."
+            className="w-full bg-surface-2 border border-card-border rounded-lg pl-9 pr-3 py-2 
+                       text-sm text-gray-100 placeholder-gray-500
+                       focus:outline-none focus:border-ether-400 transition-colors"
+          />
+          {search && (
+            <button
+              onClick={() => setSearch('')}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 
+                         text-sm cursor-pointer"
+            >
+              ✕
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Type filter pills */}
+      <div className="flex gap-1.5 flex-wrap mb-4">
+        <button
+          onClick={() => setTypeFilter('Todas')}
+          className={`px-3 py-1 rounded-full text-xs font-medium transition-colors cursor-pointer
+            ${typeFilter === 'Todas'
+              ? 'bg-ether-600 text-white'
+              : 'bg-surface-2 text-gray-400 hover:text-gray-200 hover:bg-card-border'
+            }`}
+        >
+          Todas
+        </button>
+        {CARD_TYPES.map((type) => (
+          <button
+            key={type}
+            onClick={() => setTypeFilter(type)}
+            className={`px-3 py-1 rounded-full text-xs font-medium transition-colors cursor-pointer
+              ${typeFilter === type
+                ? 'bg-ether-600 text-white'
+                : 'bg-surface-2 text-gray-400 hover:text-gray-200 hover:bg-card-border'
               }`}
           >
-            {/* Mini preview */}
-            <div
-              style={{
-                aspectRatio: '744/1038',
-                borderRadius: 6,
-                background: 'linear-gradient(135deg, #16162a, #1e1e36)',
-                border: '1px solid #3b3b5c',
-                display: 'flex',
-                flexDirection: 'column',
-                overflow: 'hidden',
-              }}
-            >
-              {/* Mini name bar */}
-              <div
-                style={{
-                  padding: '4px 6px',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                }}
-              >
-                <span
-                  style={{
-                    fontFamily: '"Cinzel", serif',
-                    fontSize: 8,
-                    fontWeight: 700,
-                    color: '#f0f0f0',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                    flex: 1,
-                  }}
-                >
-                  {card.name || 'Sin nombre'}
-                </span>
-                <span
-                  style={{
-                    fontSize: 8,
-                    color: '#93c5fd',
-                    fontWeight: 700,
-                  }}
-                >
-                  {card.stats?.cost ?? 0}
-                </span>
-              </div>
-              {/* Mini stats if combat */}
-              {(card.type === 'Campeón' || card.type === 'Mística' || card.type === 'Éter') && (
-                <div
-                  style={{
-                    marginTop: 'auto',
-                    padding: '2px 6px',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    background: 'rgba(0,0,0,0.4)',
-                    fontSize: 8,
-                  }}
-                >
-                  <span style={{ color: '#ef4444', fontWeight: 700 }}>
-                    {(card.stats as { poder?: number }).poder ?? 0}
-                  </span>
-                  <span style={{ color: '#22c55e', fontWeight: 700 }}>
-                    {(card.stats as { resistencia?: number }).resistencia ?? 0}
-                  </span>
-                </div>
-              )}
-            </div>
-            {/* Card name + actions */}
-            <div className="mt-1.5">
-              <p className="text-xs text-gray-200 truncate font-medium">
-                {card.name || 'Sin nombre'}
-              </p>
-              <p className="text-[10px] text-gray-500">{card.type}</p>
-            </div>
-            <div className="flex gap-1 mt-1.5">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  handleEdit(card)
-                }}
-                className="flex-1 text-[10px] bg-ether-600/30 hover:bg-ether-600/50 text-ether-300 py-0.5 
-                           rounded transition-colors cursor-pointer"
-              >
-                Editar
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  if (confirm(`¿Eliminar "${card.name}"?`)) {
-                    deleteCard(card.id)
-                  }
-                }}
-                className="flex-1 text-[10px] bg-red-600/30 hover:bg-red-600/50 text-red-300 py-0.5 
-                           rounded transition-colors cursor-pointer"
-              >
-                Eliminar
-              </button>
-            </div>
-          </div>
+            {type}
+          </button>
         ))}
       </div>
+
+      {/* Empty states */}
+      {cards.length === 0 ? (
+        <div className="text-center py-12 text-gray-500">
+          <p className="text-4xl mb-2">📜</p>
+          <p className="font-display text-lg">No hay cartas todavía</p>
+          <p className="text-sm mt-1">Importá un archivo JSON o creá tu primera carta arriba</p>
+        </div>
+      ) : filteredCards.length === 0 ? (
+        <div className="text-center py-12 text-gray-500">
+          <p className="text-4xl mb-2">🔍</p>
+          <p className="font-display text-lg">No se encontraron cartas</p>
+          <p className="text-sm mt-1">
+            Probá con otro término de búsqueda o{' '}
+            <button
+              onClick={() => {
+                setSearch('')
+                setTypeFilter('Todas')
+              }}
+              className="text-ether-400 hover:text-ether-300 underline cursor-pointer"
+            >
+              limpiá los filtros
+            </button>
+          </p>
+        </div>
+      ) : (
+        /* Card grid */
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+          {filteredCards.map((card) => (
+            <div
+              key={card.id}
+              onClick={() => setSelectedCardId(card.id)}
+              className={`bg-surface-2 border rounded-lg p-3 cursor-pointer transition-all
+                ${selectedCardId === card.id
+                  ? 'border-ether-400 ring-1 ring-ether-400'
+                  : 'border-card-border hover:border-gray-500'
+                }`}
+            >
+              {/* Mini preview */}
+              <div
+                style={{
+                  aspectRatio: '744/1038',
+                  borderRadius: 6,
+                  background: card.imageUrl
+                    ? `url(${card.imageUrl}) center top / cover no-repeat`
+                    : 'linear-gradient(135deg, #16162a, #1e1e36)',
+                  border: '1px solid #3b3b5c',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  overflow: 'hidden',
+                }}
+              >
+                {/* Mini name bar */}
+                <div
+                  style={{
+                    padding: '4px 6px',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    background: card.imageUrl ? 'linear-gradient(180deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 70%, transparent 100%)' : 'none',
+                  }}
+                >
+                  <span
+                    style={{
+                      fontFamily: '"Cinzel", serif',
+                      fontSize: 8,
+                      fontWeight: 700,
+                      color: '#f0f0f0',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                      flex: 1,
+                    }}
+                  >
+                    {card.name || 'Sin nombre'}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: 8,
+                      color: '#93c5fd',
+                      fontWeight: 700,
+                    }}
+                  >
+                    {card.stats?.cost ?? 0}
+                  </span>
+                </div>
+                {/* Mini stats if combat */}
+                {(card.type === 'Campeón' || card.type === 'Mística' || card.type === 'Éter') && (
+                  <div
+                    style={{
+                      marginTop: 'auto',
+                      padding: '2px 6px',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      background: card.imageUrl ? 'linear-gradient(0deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 60%, transparent 100%)' : 'rgba(0,0,0,0.4)',
+                      fontSize: 8,
+                    }}
+                  >
+                    <span style={{ color: '#ef4444', fontWeight: 700 }}>
+                      {(card.stats as { poder?: number }).poder ?? 0}
+                    </span>
+                    <span style={{ color: '#22c55e', fontWeight: 700 }}>
+                      {(card.stats as { resistencia?: number }).resistencia ?? 0}
+                    </span>
+                  </div>
+                )}
+              </div>
+              {/* Card name + actions */}
+              <div className="mt-1.5">
+                <div className="flex items-center gap-1.5">
+                  <p className="text-xs text-gray-200 truncate font-medium flex-1">
+                    {card.name || 'Sin nombre'}
+                  </p>
+                  {(card as Record<string, unknown>).limiteCopias && (
+                    <span className="text-[10px] font-mono text-gray-500 bg-surface border border-card-border rounded px-1 py-0.5 leading-none shrink-0">
+                      ×{(card as Record<string, unknown>).limiteCopias as number}
+                    </span>
+                  )}
+                </div>
+                <p className="text-[10px] text-gray-500">{card.type}</p>
+              </div>
+              <div className="flex gap-1 mt-1.5">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleEdit(card)
+                  }}
+                  className="flex-1 text-[10px] bg-ether-600/30 hover:bg-ether-600/50 text-ether-300 py-0.5 
+                             rounded transition-colors cursor-pointer"
+                >
+                  Editar
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    if (confirm(`¿Eliminar "${card.name}"?`)) {
+                      deleteCard(card.id)
+                    }
+                  }}
+                  className="flex-1 text-[10px] bg-red-600/30 hover:bg-red-600/50 text-red-300 py-0.5 
+                             rounded transition-colors cursor-pointer"
+                >
+                  Eliminar
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Clear confirmation modal */}
+      <ConfirmModal
+        isOpen={showClearModal}
+        title="¿Limpiar toda la colección?"
+        message="Esta acción va a eliminar TODAS las cartas de la colección local. 
+                 No se puede deshacer. Asegurate de haber exportado los datos antes si querés conservarlos."
+        confirmLabel="Sí, limpiar todo"
+        cancelLabel="Cancelar"
+        variant="danger"
+        onConfirm={() => {
+          clearCards()
+          setShowClearModal(false)
+        }}
+        onCancel={() => setShowClearModal(false)}
+      />
     </div>
   )
 }

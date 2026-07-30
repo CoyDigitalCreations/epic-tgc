@@ -55,6 +55,7 @@ export const FACCIONES = [
   'Caos',
   'Sabiduría',
   'Naturaleza',
+  'Firstborne',
 ] as const
 export type Faccion = (typeof FACCIONES)[number]
 

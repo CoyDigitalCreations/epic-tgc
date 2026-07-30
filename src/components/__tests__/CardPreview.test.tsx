@@ -32,7 +32,8 @@ describe('CardPreview', () => {
         keywords: ['Guardián'],
         flavorText: 'El portador del Éter.',
         stats: { cost: 5, poder: 2000, resistencia: 1500 },
-        habilidad: 'Brilla como el sol',
+        tipoEfecto: 'Activo',
+        efectoActivo: 'Brilla como el sol',
       },
     })
     render(<CardPreview />)
@@ -68,7 +69,8 @@ describe('CardPreview', () => {
         keywords: [],
         flavorText: '',
         stats: { cost: 7, poder: 3000, resistencia: 4000 },
-        habilidad: 'Gana poder cada turno',
+        tipoEfecto: 'Pasivo',
+        efectoPasivo: 'Gana poder cada turno',
       },
     })
     render(<CardPreview />)

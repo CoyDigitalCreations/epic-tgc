@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useCardStore } from '../store/useCardStore'
 import { CARD_TYPES, RARITIES, KEYWORDS } from '../types'
 import { getFormConfig } from '../types/form-config'
@@ -12,9 +13,24 @@ export function CardForm() {
   const initDraft = useCardStore((s) => s.initDraft)
   const addCard = useCardStore((s) => s.addCard)
   const updateCard = useCardStore((s) => s.updateCard)
+  const setDraft = useCardStore((s) => s.setDraft)
   const cards = useCardStore((s) => s.cards)
+  const getCard = useCardStore((s) => s.getCard)
+  const selectedCardId = useCardStore((s) => s.selectedCardId)
+  const setSelectedCardId = useCardStore((s) => s.setSelectedCardId)
 
   const isEditing = draft.id && cards.some((c) => c.id === draft.id)
+
+  // Auto-load card data when a card is selected in the collection
+  useEffect(() => {
+    if (!selectedCardId) return
+    // Don't overwrite if already editing this card
+    if (draft.id === selectedCardId) return
+    const card = getCard(selectedCardId)
+    if (card) {
+      setDraft(card as unknown as Record<string, unknown>)
+    }
+  }, [selectedCardId, getCard, setDraft, draft.id])
   const config = draft.type ? getFormConfig(draft.type as CardType) : null
 
   const handleSave = () => {
@@ -40,6 +56,7 @@ export function CardForm() {
       addCard(card)
     }
     useCardStore.getState().resetDraft()
+    setSelectedCardId(null)
   }
 
   /** Fields that live inside `draft.stats` instead of flat on draft */
@@ -170,7 +187,10 @@ export function CardForm() {
           {isEditing ? 'Actualizar' : 'Guardar'}
         </button>
         <button
-          onClick={() => useCardStore.getState().resetDraft()}
+          onClick={() => {
+            useCardStore.getState().resetDraft()
+            setSelectedCardId(null)
+          }}
           className="px-4 bg-surface-2 hover:bg-card-border text-gray-300 font-medium py-2 rounded 
                      transition-colors cursor-pointer"
         >

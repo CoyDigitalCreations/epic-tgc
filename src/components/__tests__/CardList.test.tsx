@@ -30,7 +30,8 @@ describe('CardList', () => {
           createdAt: '2024-01-01',
           updatedAt: '2024-01-01',
           stats: { cost: 8, poder: 3500, resistencia: 2500 },
-          habilidad: 'Aliento de éter',
+          tipoEfecto: 'Activo',
+          efectoActivo: 'Aliento de éter',
         } as import('../../types').CampeonCard,
         {
           id: 'card-2',
@@ -65,7 +66,7 @@ describe('CardList', () => {
         createdAt: '2024-01-01',
         updatedAt: '2024-01-01',
         stats: { cost: 0, poder: 0, resistencia: 0 },
-        habilidad: '',
+        efectoPasivo: '',
       } as import('../../types').CampeonCard],
     })
     render(<CardList />)

@@ -10,6 +10,7 @@ interface CardStore {
   updateCard: (id: string, card: AnyCard) => void
   deleteCard: (id: string) => void
   loadCards: (cards: AnyCard[]) => void
+  clearCards: () => void
   getCard: (id: string) => AnyCard | undefined
 
   // Draft (current editing) — free-form object being built
@@ -30,6 +31,7 @@ const initialDraft: Record<string, unknown> = {
   rarity: 'Común',
   keywords: [],
   flavorText: '',
+  limiteCopias: '3',
   stats: { cost: 0, poder: 0, resistencia: 0 },
 }
 
@@ -50,7 +52,19 @@ export const useCardStore = create<CardStore>()(
           selectedCardId:
             state.selectedCardId === id ? null : state.selectedCardId,
         })),
-      loadCards: (cards) => set({ cards }),
+      loadCards: (cards) =>
+    set((state) => {
+      // Merge: reemplazar cartas existentes con mismo ID, agregar nuevas
+      const existing = new Map(state.cards.map((c) => [c.id, c]))
+      for (const card of cards) existing.set(card.id, card)
+      return { cards: [...existing.values()] }
+    }),
+      clearCards: () =>
+        set({
+          cards: [],
+          selectedCardId: null,
+          draft: initialDraft,
+        }),
       getCard: (id) => get().cards.find((c) => c.id === id),
 
       // Draft
@@ -67,6 +81,7 @@ export const useCardStore = create<CardStore>()(
             rarity: 'Común',
             keywords: [],
             flavorText: '',
+            limiteCopias: '3',
             stats: { cost: 0, poder: 0, resistencia: 0 },
             id: uuid(),
             createdAt: new Date().toISOString(),

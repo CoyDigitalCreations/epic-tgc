@@ -1,0 +1,764 @@
+[
+  {
+    "id": "4ecb82dd-7bee-48d9-b2da-488479743a8f",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Quien activa trampa de éter debe estar preparado para las consecuencias.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Trampa de Éter",
+    "type": "Arcana",
+    "rarity": "Común",
+    "element": "Aire",
+    "stats": {
+      "cost": 1
+    },
+    "condicion": "Cuando un Campeón enemigo ataque",
+    "recompensa": "El Campeón atacante pierde -1 Ataque y -1 Defensa."
+  },
+  {
+    "id": "7cabdb13-eba4-48b8-8c0e-03768f28bdbd",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Escudo Oculto desafía las leyes de la realidad conocida.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Escudo Oculto",
+    "type": "Arcana",
+    "rarity": "Común",
+    "element": "Tierra",
+    "stats": {
+      "cost": 1
+    },
+    "condicion": "Cuando recibas daño directo",
+    "recompensa": "Reduce el daño en 2."
+  },
+  {
+    "id": "a89a39eb-a352-4606-b0b8-5194dadbd970",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Los arcanistas ocultan robo de sombra en tomos sellados.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Robo de Sombra",
+    "type": "Arcana",
+    "rarity": "Común",
+    "element": "Tinieblas",
+    "stats": {
+      "cost": 1
+    },
+    "condicion": "Cuando un Campeón enemigo muera",
+    "recompensa": "Roba 1 carta."
+  },
+  {
+    "id": "bdb1c1d5-05a8-49a4-9076-9e6a84f50eba",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Golpe de Niebla revela los secretos mejor guardados del universo.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Golpe de Niebla",
+    "type": "Arcana",
+    "rarity": "Común",
+    "element": "Agua",
+    "stats": {
+      "cost": 2
+    },
+    "condicion": "Cuando un Campeón enemigo ataque",
+    "recompensa": "Haz 2 de daño al Campeón atacante."
+  },
+  {
+    "id": "0d5adf47-303a-403d-9869-dc0c42245db9",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Defensa de Éter despierta fuerzas que deberían permanecer dormidas.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Defensa de Éter",
+    "type": "Arcana",
+    "rarity": "Común",
+    "element": "Tierra",
+    "stats": {
+      "cost": 2
+    },
+    "condicion": "Cuando un Campeón propio sea atacado",
+    "recompensa": "El Campeón gana +3 Defensa."
+  },
+  {
+    "id": "502136ed-ae3d-4e8d-942f-5a1da8e4fcfd",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Quien activa drenaje de éter debe estar preparado para las consecuencias.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Drenaje de Éter",
+    "type": "Arcana",
+    "rarity": "Poco Común",
+    "element": "Tinieblas",
+    "stats": {
+      "cost": 2
+    },
+    "condicion": "Cuando un Campeón enemigo use una habilidad",
+    "recompensa": "El enemigo exilia 1 Éter de su Reserva."
+  },
+  {
+    "id": "0a60e383-efe9-44d2-853f-c8c1b6ccd364",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Venganza de Éter desafía las leyes de la realidad conocida.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Venganza de Éter",
+    "type": "Arcana",
+    "rarity": "Poco Común",
+    "element": "Fuego",
+    "stats": {
+      "cost": 2
+    },
+    "condicion": "Cuando un Campeón propio muera",
+    "recompensa": "Haz 3 de daño al jugador enemigo."
+  },
+  {
+    "id": "c704b775-5932-4f8d-ad59-58dfc42cee22",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Escudo del Vacío revela los secretos mejor guardados del universo.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Escudo del Vacío",
+    "type": "Arcana",
+    "rarity": "Poco Común",
+    "element": "Tinieblas",
+    "stats": {
+      "cost": 3
+    },
+    "condicion": "Cuando recibas daño directo",
+    "recompensa": "Reduce el daño a 0 y exilia 1 Éter del enemigo."
+  },
+  {
+    "id": "2665372d-eebc-486f-877f-b92bb10dc939",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Robo de Almas desafía las leyes de la realidad conocida.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Robo de Almas",
+    "type": "Arcana",
+    "rarity": "Poco Común",
+    "element": "Luz",
+    "stats": {
+      "cost": 3
+    },
+    "condicion": "Cuando un Campeón enemigo muera",
+    "recompensa": "Ganas 5 PE."
+  },
+  {
+    "id": "16d23f38-3929-494d-b8f6-02d9766c26ef",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Golpe del Mago revela los secretos mejor guardados del universo.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Golpe del Mago",
+    "type": "Arcana",
+    "rarity": "Poco Común",
+    "stats": {
+      "cost": 3
+    },
+    "condicion": "Cuando un Campeón de tipo Mago ataque",
+    "recompensa": "El ataque no puede ser bloqueado."
+  },
+  {
+    "id": "9ba5a717-cbd8-48b4-adb6-2204bf1ec093",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Quien activa destino del guerrero debe estar preparado para las consecuencias.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Destino del Guerrero",
+    "type": "Arcana",
+    "rarity": "Rara",
+    "stats": {
+      "cost": 3
+    },
+    "condicion": "Cuando un Campeón de tipo Guerrero ataque",
+    "recompensa": "Gana +3 Ataque."
+  },
+  {
+    "id": "43bbd584-7aa4-4a96-97d5-6344c1e6e9c0",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"El conocimiento prohibido de escudo de dragón tiene un precio.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Escudo de Dragón",
+    "type": "Arcana",
+    "rarity": "Rara",
+    "stats": {
+      "cost": 4
+    },
+    "condicion": "Cuando un Campeón de tipo Dragón sea atacado",
+    "recompensa": "El Dragón gana +5 Defensa."
+  },
+  {
+    "id": "6a1cf3a2-9bff-4769-884b-73cfddf2ac9a",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Robo de la Bestia desafía las leyes de la realidad conocida.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Robo de la Bestia",
+    "type": "Arcana",
+    "rarity": "Rara",
+    "stats": {
+      "cost": 4
+    },
+    "condicion": "Cuando un Campeón de tipo Bestia destruya un Campeón",
+    "recompensa": "Roba 2 cartas."
+  },
+  {
+    "id": "3cc3ed93-4d43-4ce9-8680-4f53169fbb2c",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Juicio del Orden revela los secretos mejor guardados del universo.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Juicio del Orden",
+    "type": "Arcana",
+    "rarity": "Rara",
+    "element": "Luz",
+    "stats": {
+      "cost": 4
+    },
+    "condicion": "Cuando un Campeón de tipo Céleste entre al campo",
+    "recompensa": "Destruye un Campeón enemigo con 3 o menos de Defensa."
+  },
+  {
+    "id": "4493bf4e-3ced-40c4-aa27-a536aa3a3049",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Caos de la Sombra desafía las leyes de la realidad conocida.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Caos de la Sombra",
+    "type": "Arcana",
+    "rarity": "Épica",
+    "element": "Tinieblas",
+    "stats": {
+      "cost": 4
+    },
+    "condicion": "Cuando un Campeón de tipo Espectro ataque",
+    "recompensa": "El daño se duplica."
+  },
+  {
+    "id": "4d947554-17d1-48b3-b8c5-6c4c587770b2",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Llamada del Vacío despierta fuerzas que deberían permanecer dormidas.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Llamada del Vacío",
+    "type": "Arcana",
+    "rarity": "Épica",
+    "element": "Tinieblas",
+    "stats": {
+      "cost": 4
+    },
+    "condicion": "Cuando un Campeón de tipo Abisal muera",
+    "recompensa": "Roba 2 cartas y ganas 3 PE."
+  },
+  {
+    "id": "999ca95a-c589-4728-a1fa-38bcc9ec57f0",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Escudo de la Alianza revela los secretos mejor guardados del universo.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Escudo de la Alianza",
+    "type": "Arcana",
+    "rarity": "Épica",
+    "element": "Luz",
+    "stats": {
+      "cost": 5
+    },
+    "condicion": "Cuando recibas daño directo",
+    "recompensa": "Reduce el daño a 0 y todos tus Campeones ganan +2 Defensa."
+  },
+  {
+    "id": "2ca3d9c0-80ef-4284-880c-83fbd9da0bdb",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Ira del Dragón desafía las leyes de la realidad conocida.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Ira del Dragón",
+    "type": "Arcana",
+    "rarity": "Épica",
+    "element": "Fuego",
+    "stats": {
+      "cost": 5
+    },
+    "condicion": "Cuando un Campeón de tipo Dragón ataque",
+    "recompensa": "Haz 5 de daño a todos los Campeones enemigos."
+  },
+  {
+    "id": "afc99fe0-d32a-4be1-a420-f2131ef3fe77",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Solo los dignos pueden comprender el poder de Orden Supremo.\"",
+    "keywords": [
+      "Inmortal"
+    ],
+    "limiteCopias": 3,
+    "name": "Orden Supremo",
+    "type": "Arcana",
+    "rarity": "Legendaria",
+    "element": "Luz",
+    "stats": {
+      "cost": 5
+    },
+    "condicion": "Cuando tengas 3 Campeones de Orden en campo",
+    "recompensa": "Ganas la partida."
+  },
+  {
+    "id": "09954a04-5628-41e6-8f93-5f9a53532e71",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Solo los dignos pueden comprender el poder de Caos Infinito.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Caos Infinito",
+    "type": "Arcana",
+    "rarity": "Legendaria",
+    "element": "Tinieblas",
+    "stats": {
+      "cost": 5
+    },
+    "condicion": "Cuando tengas 3 Campeones de Caos en campo",
+    "recompensa": "Destruye todos los Campeones enemigos."
+  },
+  {
+    "id": "5f891378-2f3e-413f-a775-363da9d41969",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Marca de Éter despierta fuerzas que deberían permanecer dormidas.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Marca de Éter",
+    "type": "Arcana",
+    "rarity": "Común",
+    "element": "Luz",
+    "stats": {
+      "cost": 1
+    },
+    "condicion": "Cuando un Campeón entre al campo",
+    "recompensa": "Pon 1 contador de Éter en ese Campeón (gana +1 Ataque)."
+  },
+  {
+    "id": "99939e8f-1a52-400b-912a-00a323097c81",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Los arcanistas ocultan cuchilla de viento en tomos sellados.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Cuchilla de Viento",
+    "type": "Arcana",
+    "rarity": "Común",
+    "element": "Aire",
+    "stats": {
+      "cost": 1
+    },
+    "condicion": "Cuando ataques con un Campeón",
+    "recompensa": "El Campeón gana +1 Ataque."
+  },
+  {
+    "id": "26e46d2c-2af3-4a89-97e4-806e45ac0cf9",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Escudo Terrenal es un pacto con el Éter mismo.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Escudo Terrenal",
+    "type": "Arcana",
+    "rarity": "Común",
+    "element": "Tierra",
+    "stats": {
+      "cost": 2
+    },
+    "condicion": "Cuando un Campeón enemigo ataque",
+    "recompensa": "Reduce el daño en 2."
+  },
+  {
+    "id": "add0d045-bc77-4847-925b-a8076220de3d",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"El conocimiento prohibido de robo arcano tiene un precio.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Robo Arcano",
+    "type": "Arcana",
+    "rarity": "Poco Común",
+    "element": "Aire",
+    "stats": {
+      "cost": 2
+    },
+    "condicion": "Cuando juegues una Mística",
+    "recompensa": "Roba 1 carta."
+  },
+  {
+    "id": "64ac2075-ea22-4d91-9d65-38cb7cb36cb3",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Fuego Interior desafía las leyes de la realidad conocida.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Fuego Interior",
+    "type": "Arcana",
+    "rarity": "Poco Común",
+    "element": "Fuego",
+    "stats": {
+      "cost": 2
+    },
+    "condicion": "Cuando un Campeón propio sea destruido",
+    "recompensa": "Haz 2 de daño al jugador enemigo."
+  },
+  {
+    "id": "3b4c3e55-d846-4372-bbe9-16805d1bb286",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Refuerzo de Éter es un pacto con el Éter mismo.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Refuerzo de Éter",
+    "type": "Arcana",
+    "rarity": "Poco Común",
+    "element": "Luz",
+    "stats": {
+      "cost": 3
+    },
+    "condicion": "Cuando pagues Éter",
+    "recompensa": "Paga 2 PE en lugar de 1 Éter."
+  },
+  {
+    "id": "f4d2c2b2-0af4-4572-a2ba-848f778eb42d",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Sombra del Cazador desafía las leyes de la realidad conocida.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Sombra del Cazador",
+    "type": "Arcana",
+    "rarity": "Poco Común",
+    "element": "Tierra",
+    "stats": {
+      "cost": 3
+    },
+    "condicion": "Cuando un Campeón de tipo Bestia ataque",
+    "recompensa": "El Campeón enemigo no puede bloquear."
+  },
+  {
+    "id": "2d0a1883-8e28-4205-af44-dcffe364c59a",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Escarcha de la Tundra despierta fuerzas que deberían permanecer dormidas.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Escarcha de la Tundra",
+    "type": "Arcana",
+    "rarity": "Rara",
+    "element": "Agua",
+    "stats": {
+      "cost": 3
+    },
+    "condicion": "Cuando un Campeón enemigo ataque",
+    "recompensa": "El Campeón pierde -2 Ataque y -1 Defensa."
+  },
+  {
+    "id": "b2432698-6368-4ffd-a69a-bb08a45f231b",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"El conocimiento prohibido de escudo de luz tiene un precio.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Escudo de Luz",
+    "type": "Arcana",
+    "rarity": "Rara",
+    "element": "Luz",
+    "stats": {
+      "cost": 4
+    },
+    "condicion": "Cuando recibas daño directo",
+    "recompensa": "Reduce el daño a 0 y ganas 3 PE."
+  },
+  {
+    "id": "d2a6625c-9f91-4450-9d41-e76362f937b6",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"El conocimiento prohibido de golpe del dragón tiene un precio.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Golpe del Dragón",
+    "type": "Arcana",
+    "rarity": "Rara",
+    "element": "Fuego",
+    "stats": {
+      "cost": 4
+    },
+    "condicion": "Cuando un Campeón de tipo Dragón entre al campo",
+    "recompensa": "Haz 3 de daño a un Campeón enemigo."
+  },
+  {
+    "id": "5edb2aba-fc04-4d63-9842-389ae0756230",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Los arcanistas ocultan manto del mago en tomos sellados.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Manto del Mago",
+    "type": "Arcana",
+    "rarity": "Épica",
+    "element": "Aire",
+    "stats": {
+      "cost": 4
+    },
+    "condicion": "Cuando juegues una Mística",
+    "recompensa": "Copia esa Mística y elige un nuevo objetivo."
+  },
+  {
+    "id": "63c3331c-e765-4b86-9029-a86521b7dfb0",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Quien activa furia de la tierra debe estar preparado para las consecuencias.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Furia de la Tierra",
+    "type": "Arcana",
+    "rarity": "Épica",
+    "element": "Tierra",
+    "stats": {
+      "cost": 4
+    },
+    "condicion": "Cuando un Elemental sea destruido",
+    "recompensa": "Haz 3 de daño a todos los Campeones enemigos."
+  },
+  {
+    "id": "c63bf5d3-dafd-420f-bed4-3b3d953600c9",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Alma de Dragón despierta fuerzas que deberían permanecer dormidas.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Alma de Dragón",
+    "type": "Arcana",
+    "rarity": "Épica",
+    "element": "Fuego",
+    "stats": {
+      "cost": 5
+    },
+    "condicion": "Cuando un Dragón sea destruido",
+    "recompensa": "Devuelve ese Dragón al campo con +2/+2."
+  },
+  {
+    "id": "4fa71fee-dc5e-4b5f-8aa0-9fb9e967813c",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Vacío Eterno es un pacto con el Éter mismo.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Vacío Eterno",
+    "type": "Arcana",
+    "rarity": "Épica",
+    "element": "Tinieblas",
+    "stats": {
+      "cost": 5
+    },
+    "condicion": "Cuando un Espectro sea destruido",
+    "recompensa": "Exilia ese Espectro: roba 2 cartas."
+  },
+  {
+    "id": "aabcc31f-19ec-44c7-aea8-7d71626a0e3c",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Solo los dignos pueden comprender el poder de Bendición de la Sabiduría.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Bendición de la Sabiduría",
+    "type": "Arcana",
+    "rarity": "Legendaria",
+    "element": "Luz",
+    "stats": {
+      "cost": 5
+    },
+    "condicion": "Cuando juegues 3 Místicas en un turno",
+    "recompensa": "Roba 3 cartas y ganas 5 PE."
+  },
+  {
+    "id": "e2fc0a3d-90d9-4386-9763-59b52e276fc3",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Naturaleza Salvaje. Que su nombre sea recordido por siempre.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Naturaleza Salvaje",
+    "type": "Arcana",
+    "rarity": "Legendaria",
+    "element": "Tierra",
+    "stats": {
+      "cost": 5
+    },
+    "condicion": "Cuando tengas 3 Campeones de Naturaleza en campo",
+    "recompensa": "Tus Bestias y Elementales ganan +3 Ataque."
+  },
+  {
+    "id": "b11e3915-b709-4556-b85f-47507ca3a7d6",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Sabiduría Infinita. Que su nombre sea recordido por siempre.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Sabiduría Infinita",
+    "type": "Arcana",
+    "rarity": "Legendaria",
+    "element": "Luz",
+    "stats": {
+      "cost": 5
+    },
+    "condicion": "Cuando tengas 3 Campeones de Sabiduría en campo",
+    "recompensa": "Puedes jugar Místicas de tu Cementerio este turno."
+  },
+  {
+    "id": "af7ace82-0366-41dc-9413-72832ccaa85d",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Los arcanistas ocultan retorno del éter en tomos sellados.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Retorno del Éter",
+    "type": "Arcana",
+    "rarity": "Rara",
+    "element": "Luz",
+    "stats": {
+      "cost": 3
+    },
+    "condicion": "Cuando un Éter sea exiliado de tu Reserva",
+    "recompensa": "Devuelve ese Éter a tu mano en su lugar."
+  },
+  {
+    "id": "a3eda6c6-c8dd-4633-9a31-66d03c5a6281",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Barrera Elemental es un pacto con el Éter mismo.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Barrera Elemental",
+    "type": "Arcana",
+    "rarity": "Poco Común",
+    "element": "Tierra",
+    "stats": {
+      "cost": 2
+    },
+    "condicion": "Cuando un Elemental sea atacado",
+    "recompensa": "Reduce el daño en 3."
+  },
+  {
+    "id": "135ca26d-fa93-459a-bb9b-f87059f27205",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Golpe del Cazador es un pacto con el Éter mismo.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Golpe del Cazador",
+    "type": "Arcana",
+    "rarity": "Poco Común",
+    "element": "Aire",
+    "stats": {
+      "cost": 2
+    },
+    "condicion": "Cuando un Campeón con Vanguardia ataque",
+    "recompensa": "Haz 2 de daño al jugador enemigo."
+  },
+  {
+    "id": "913c58b1-d04e-4269-b84a-2251197a53f5",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Muro de Huesos desafía las leyes de la realidad conocida.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Muro de Huesos",
+    "type": "Arcana",
+    "rarity": "Rara",
+    "element": "Tierra",
+    "stats": {
+      "cost": 4
+    },
+    "condicion": "Cuando un Campeón con Guardián sea atacado",
+    "recompensa": "El atacante recibe 2 de daño."
+  },
+  {
+    "id": "b3c4176a-8f2d-4a66-a0b3-4d496336e69d",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Los arcanistas ocultan tormenta de almas en tomos sellados.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Tormenta de Almas",
+    "type": "Arcana",
+    "rarity": "Épica",
+    "element": "Tinieblas",
+    "stats": {
+      "cost": 4
+    },
+    "condicion": "Cuando 2 o más Campeones sean destruidos en un turno",
+    "recompensa": "Roba 1 carta por cada uno."
+  },
+  {
+    "id": "8f10ab39-1a4b-425d-a42b-a676fbd83f81",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Escudo de la Manada revela los secretos mejor guardados del universo.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Escudo de la Manada",
+    "type": "Arcana",
+    "rarity": "Rara",
+    "element": "Tierra",
+    "stats": {
+      "cost": 3
+    },
+    "condicion": "Cuando un Campeón de tipo Bestia sea atacado",
+    "recompensa": "Otro Campeón Bestia recibe el daño en su lugar."
+  },
+  {
+    "id": "c2c26c7a-2369-4ed5-96cb-4db605197b08",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"El conocimiento prohibido de grito de batalla tiene un precio.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Grito de Batalla",
+    "type": "Arcana",
+    "rarity": "Rara",
+    "stats": {
+      "cost": 3
+    },
+    "condicion": "Cuando tu fase de Combate comience",
+    "recompensa": "Todos tus Campeones ganan +1 Ataque."
+  },
+  {
+    "id": "1ab8de71-053b-4b00-8ddd-d0ef435983f7",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Susurro del Más Allá desafía las leyes de la realidad conocida.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Susurro del Más Allá",
+    "type": "Arcana",
+    "rarity": "Poco Común",
+    "element": "Tinieblas",
+    "stats": {
+      "cost": 2
+    },
+    "condicion": "Cuando un Campeón enemigo sea exiliado",
+    "recompensa": "Ganas 3 PE."
+  }
+]

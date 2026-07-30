@@ -1,0 +1,1921 @@
+[
+  {
+    "id": "7dba1a0d-2834-43f9-ba04-a05b1e92f06e",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Las leyendas hablan de Escudero del Alba en susurros de admiración.\"",
+    "keywords": [
+      "Guardián"
+    ],
+    "limiteCopias": 3,
+    "name": "Escudero del Alba",
+    "type": "Campeón",
+    "rarity": "Común",
+    "stats": {
+      "cost": 1,
+      "poder": 1,
+      "resistencia": 3
+    },
+    "faccion": "Orden",
+    "esencia": "Humano",
+    "rol": "Guardia",
+    "catHabilidad": "Efecto",
+    "tipoEfecto": "Pasivo",
+    "efectoPasivo": "Guardián."
+  },
+  {
+    "id": "f514a17b-3eef-45e2-a38a-48a5dc052057",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Centinela de Éter lucha por un ideal más grande que la victoria.\"",
+    "keywords": [
+      "Guardián",
+      "Inquebrantable"
+    ],
+    "limiteCopias": 3,
+    "name": "Centinela de Éter",
+    "type": "Campeón",
+    "rarity": "Común",
+    "stats": {
+      "cost": 2,
+      "poder": 2,
+      "resistencia": 5
+    },
+    "faccion": "Orden",
+    "esencia": "Constructo",
+    "rol": "Guardia",
+    "catHabilidad": "Efecto",
+    "tipoEfecto": "Pasivo",
+    "efectoPasivo": "Guardián. Inquebrantable."
+  },
+  {
+    "id": "f3073691-c6c9-455f-ac35-a778a61e5cdd",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Las leyendas hablan de Caballero de la Alianza en susurros de admiración.\"",
+    "keywords": [
+      "Carga"
+    ],
+    "limiteCopias": 3,
+    "name": "Caballero de la Alianza",
+    "type": "Campeón",
+    "rarity": "Común",
+    "stats": {
+      "cost": 2,
+      "poder": 4,
+      "resistencia": 2
+    },
+    "faccion": "Orden",
+    "esencia": "Guerrero",
+    "rol": "Asalto",
+    "catHabilidad": "Efecto",
+    "tipoEfecto": "Pasivo",
+    "efectoPasivo": "Carga."
+  },
+  {
+    "id": "b0050d05-a7cf-4c88-a073-32fcfe0be3f8",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Paladín de la Luz es un faro en la tormenta del caos.\"",
+    "keywords": [
+      "Guardián"
+    ],
+    "limiteCopias": 3,
+    "name": "Paladín de la Luz",
+    "type": "Campeón",
+    "rarity": "Poco Común",
+    "element": "Luz",
+    "stats": {
+      "cost": 3,
+      "poder": 3,
+      "resistencia": 5
+    },
+    "faccion": "Orden",
+    "esencia": "Céleste",
+    "rol": "Guardia",
+    "catHabilidad": "Efecto",
+    "tipoEfecto": "Pasivo",
+    "efectoPasivo": "Guardián. Cuando entra al campo, ganas 3 PE."
+  },
+  {
+    "id": "f33b1282-77a5-4996-8192-50ccc8b51217",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Justiciero del Cielo lucha por un ideal más grande que la victoria.\"",
+    "keywords": [
+      "Golpe Letal"
+    ],
+    "limiteCopias": 3,
+    "name": "Justiciero del Cielo",
+    "type": "Campeón",
+    "rarity": "Poco Común",
+    "element": "Aire",
+    "stats": {
+      "cost": 3,
+      "poder": 5,
+      "resistencia": 3
+    },
+    "faccion": "Orden",
+    "esencia": "Guerrero",
+    "rol": "Asalto",
+    "catHabilidad": "Efecto",
+    "tipoEfecto": "Pasivo",
+    "efectoPasivo": "Golpe Letal."
+  },
+  {
+    "id": "e0d4854a-9578-499a-91f7-1463eedb9258",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Las leyendas hablan de Arcángel de la Alborada en susurros de admiración.\"",
+    "keywords": [
+      "Restaurar"
+    ],
+    "limiteCopias": 3,
+    "name": "Arcángel de la Alborada",
+    "type": "Campeón",
+    "rarity": "Rara",
+    "element": "Luz",
+    "stats": {
+      "cost": 4,
+      "poder": 3,
+      "resistencia": 4
+    },
+    "faccion": "Orden",
+    "esencia": "Céleste",
+    "rol": "Soporte",
+    "catHabilidad": "Efecto",
+    "tipoEfecto": "Activo",
+    "efectoActivo": "Cuando entra al campo, recupera 1 carta exiliada a tu mano."
+  },
+  {
+    "id": "06a5390f-1866-4f6e-992c-2506ced9549b",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Dragón del Orden lucha por un ideal más grande que la victoria.\"",
+    "keywords": [
+      "Golpe Letal"
+    ],
+    "limiteCopias": 3,
+    "name": "Dragón del Orden",
+    "type": "Campeón",
+    "rarity": "Épica",
+    "element": "Luz",
+    "stats": {
+      "cost": 5,
+      "poder": 7,
+      "resistencia": 5
+    },
+    "faccion": "Orden",
+    "esencia": "Dragón",
+    "rol": "Sacrificio",
+    "catHabilidad": "Efecto",
+    "tipoEfecto": "Pasivo",
+    "efectoPasivo": "Requiere sacrificar 1 Campeón. Golpe Letal."
+  },
+  {
+    "id": "2eeeee30-fb23-4e56-8d71-b267027452c2",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Solo los dignos pueden comprender el poder de Señor de los Cielos.\"",
+    "keywords": [
+      "Inquebrantable",
+      "Golpe Letal"
+    ],
+    "limiteCopias": 1,
+    "name": "Señor de los Cielos",
+    "type": "Campeón",
+    "rarity": "Única",
+    "element": "Luz",
+    "stats": {
+      "cost": 5,
+      "poder": 8,
+      "resistencia": 6
+    },
+    "faccion": "Orden",
+    "esencia": "Dragón",
+    "rol": "Sacrificio",
+    "catHabilidad": "Único",
+    "tipoEfecto": "Especial",
+    "efectoPasivo": "Inquebrantable.",
+    "efectoActivo": "Requiere sacrificar 2 Campeones. Golpe Letal."
+  },
+  {
+    "id": "39566b11-9bb3-4c68-9ffc-923ae45d1ba5",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Las leyendas hablan de Explorador del Alba en susurros de admiración.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Explorador del Alba",
+    "type": "Campeón",
+    "rarity": "Común",
+    "stats": {
+      "cost": 1,
+      "poder": 2,
+      "resistencia": 2
+    },
+    "faccion": "Orden",
+    "esencia": "Humano",
+    "rol": "Asalto",
+    "catHabilidad": "Normal"
+  },
+  {
+    "id": "57c1390d-c677-4a05-ab12-d6e20d25d572",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Portaestandarte de la Luz lucha por un ideal más grande que la victoria.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Portaestandarte de la Luz",
+    "type": "Campeón",
+    "rarity": "Común",
+    "stats": {
+      "cost": 2,
+      "poder": 1,
+      "resistencia": 3
+    },
+    "faccion": "Orden",
+    "esencia": "Humano",
+    "rol": "Soporte",
+    "catHabilidad": "Efecto",
+    "tipoEfecto": "Pasivo",
+    "efectoPasivo": "Tus otros Campeones de Orden ganan +1 Ataque."
+  },
+  {
+    "id": "38e7addf-a02d-4ec7-95fc-d868acff2562",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Forjador de Éter forjó su leyenda en el campo de batalla.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Forjador de Éter",
+    "type": "Campeón",
+    "rarity": "Poco Común",
+    "stats": {
+      "cost": 2,
+      "poder": 2,
+      "resistencia": 3
+    },
+    "faccion": "Orden",
+    "esencia": "Constructo",
+    "rol": "Control",
+    "catHabilidad": "Efecto",
+    "tipoEfecto": "Activo",
+    "efectoActivo": "Cuando entra, busca 1 carta de Éter de tu mazo y añádela a tu mano."
+  },
+  {
+    "id": "7bf06a74-cc50-4f2f-a124-7f6c9d08c3fe",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Ni el más oscuro de los abismos pudo contener a Caballero de la Aurora.\"",
+    "keywords": [
+      "Guardián",
+      "Carga"
+    ],
+    "limiteCopias": 3,
+    "name": "Caballero de la Aurora",
+    "type": "Campeón",
+    "rarity": "Poco Común",
+    "stats": {
+      "cost": 3,
+      "poder": 3,
+      "resistencia": 4
+    },
+    "faccion": "Orden",
+    "esencia": "Guerrero",
+    "rol": "Guardia",
+    "catHabilidad": "Efecto",
+    "tipoEfecto": "Pasivo",
+    "efectoPasivo": "Guardián. Carga."
+  },
+  {
+    "id": "16faecae-6ac1-4b87-a48b-21920d791def",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Monje de la Armonía forjó su leyenda en el campo de batalla.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Monje de la Armonía",
+    "type": "Campeón",
+    "rarity": "Poco Común",
+    "element": "Luz",
+    "stats": {
+      "cost": 3,
+      "poder": 2,
+      "resistencia": 4
+    },
+    "faccion": "Orden",
+    "esencia": "Humano",
+    "rol": "Control",
+    "catHabilidad": "Efecto",
+    "tipoEfecto": "Activo",
+    "efectoActivo": "Cuando entra, roba 1 carta."
+  },
+  {
+    "id": "a073d11e-8c63-4fa1-87d3-76093a8a59b1",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Estratega de la Alianza no conoce el miedo, solo el deber.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Estratega de la Alianza",
+    "type": "Campeón",
+    "rarity": "Poco Común",
+    "stats": {
+      "cost": 3,
+      "poder": 2,
+      "resistencia": 3
+    },
+    "faccion": "Orden",
+    "esencia": "Humano",
+    "rol": "Soporte",
+    "catHabilidad": "Efecto",
+    "tipoEfecto": "Pasivo",
+    "efectoPasivo": "Tus Campeones de Orden ganan +1 Ataque y +1 Defensa."
+  },
+  {
+    "id": "49952e8b-64c1-4325-848a-7f9956d4354d",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Las leyendas hablan de Guardián del Templo en susurros de admiración.\"",
+    "keywords": [
+      "Guardián",
+      "Inquebrantable"
+    ],
+    "limiteCopias": 3,
+    "name": "Guardián del Templo",
+    "type": "Campeón",
+    "rarity": "Rara",
+    "element": "Luz",
+    "stats": {
+      "cost": 4,
+      "poder": 3,
+      "resistencia": 6
+    },
+    "faccion": "Orden",
+    "esencia": "Constructo",
+    "rol": "Guardia",
+    "catHabilidad": "Efecto",
+    "tipoEfecto": "Pasivo",
+    "efectoPasivo": "Guardián. Inquebrantable."
+  },
+  {
+    "id": "8db732be-26e6-4841-a98d-aba83071ee7f",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"El coraje de Inquisidor de la Verdad inspira a quienes lo siguen.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Inquisidor de la Verdad",
+    "type": "Campeón",
+    "rarity": "Rara",
+    "element": "Luz",
+    "stats": {
+      "cost": 4,
+      "poder": 4,
+      "resistencia": 4
+    },
+    "faccion": "Orden",
+    "esencia": "Céleste",
+    "rol": "Control",
+    "catHabilidad": "Efecto",
+    "tipoEfecto": "Activo",
+    "efectoActivo": "Cuando entra, exilia un Campeón enemigo con 2 o menos de Defensa."
+  },
+  {
+    "id": "f492171a-288b-4d7d-9262-ec0e0b65110d",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Paladín del Sol no conoce el miedo, solo el deber.\"",
+    "keywords": [
+      "Golpe Letal",
+      "Restaurar"
+    ],
+    "limiteCopias": 3,
+    "name": "Paladín del Sol",
+    "type": "Campeón",
+    "rarity": "Rara",
+    "element": "Luz",
+    "stats": {
+      "cost": 4,
+      "poder": 5,
+      "resistencia": 4
+    },
+    "faccion": "Orden",
+    "esencia": "Céleste",
+    "rol": "Asalto",
+    "catHabilidad": "Efecto",
+    "tipoEfecto": "Pasivo",
+    "efectoPasivo": "Golpe Letal. Restaurar."
+  },
+  {
+    "id": "002bc156-0452-4e96-876d-37ea7097c247",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Dragón Alado convierte el Éter en voluntad, y la voluntad en victoria.\"",
+    "keywords": [
+      "Carga",
+      "Golpe Letal"
+    ],
+    "limiteCopias": 3,
+    "name": "Dragón Alado",
+    "type": "Campeón",
+    "rarity": "Épica",
+    "element": "Luz",
+    "stats": {
+      "cost": 5,
+      "poder": 6,
+      "resistencia": 5
+    },
+    "faccion": "Orden",
+    "esencia": "Dragón",
+    "rol": "Asalto",
+    "catHabilidad": "Efecto",
+    "tipoEfecto": "Pasivo",
+    "efectoPasivo": "Carga. Golpe Letal."
+  },
+  {
+    "id": "dd71fd48-c707-4597-b026-084eca241b53",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Incluso los dioses miran con respeto a Arcángel del Juicio.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Arcángel del Juicio",
+    "type": "Campeón",
+    "rarity": "Épica",
+    "element": "Luz",
+    "stats": {
+      "cost": 5,
+      "poder": 5,
+      "resistencia": 5
+    },
+    "faccion": "Orden",
+    "esencia": "Céleste",
+    "rol": "Control",
+    "catHabilidad": "Efecto",
+    "tipoEfecto": "Activo",
+    "efectoActivo": "Cuando entra, destruye un Campeón enemigo con 4 o más de Defensa."
+  },
+  {
+    "id": "82571a6f-faa9-4c0d-b8bc-0ca1c906d1d3",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Solo los dignos pueden comprender el poder de Emperador de la Luz.\"",
+    "keywords": [],
+    "limiteCopias": 1,
+    "name": "Emperador de la Luz",
+    "type": "Campeón",
+    "rarity": "Única",
+    "element": "Luz",
+    "stats": {
+      "cost": 5,
+      "poder": 4,
+      "resistencia": 6
+    },
+    "faccion": "Orden",
+    "esencia": "Céleste",
+    "rol": "Soporte",
+    "catHabilidad": "Único",
+    "tipoEfecto": "Pasivo",
+    "efectoPasivo": "Tus Campeones ganan +2 Ataque. Solo 1 copia."
+  },
+  {
+    "id": "3d6721cb-fb0b-45a7-8027-8c5a9227b86b",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Espectro Errante forjó su leyenda en el campo de batalla.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Espectro Errante",
+    "type": "Campeón",
+    "rarity": "Común",
+    "element": "Tinieblas",
+    "stats": {
+      "cost": 1,
+      "poder": 3,
+      "resistencia": 1
+    },
+    "faccion": "Caos",
+    "esencia": "Espectro",
+    "rol": "Asalto",
+    "catHabilidad": "Normal"
+  },
+  {
+    "id": "cb45ee4a-a0c9-42fd-bc4d-3d5c8a520903",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Donde Sombra del Vacío camina, la esperanza renace.\"",
+    "keywords": [
+      "Espectro"
+    ],
+    "limiteCopias": 3,
+    "name": "Sombra del Vacío",
+    "type": "Campeón",
+    "rarity": "Común",
+    "element": "Tinieblas",
+    "stats": {
+      "cost": 2,
+      "poder": 4,
+      "resistencia": 2
+    },
+    "faccion": "Caos",
+    "esencia": "Abisal",
+    "rol": "Asalto",
+    "catHabilidad": "Efecto",
+    "tipoEfecto": "Pasivo",
+    "efectoPasivo": "Espectro."
+  },
+  {
+    "id": "02e39198-fd15-47de-8f84-305f279d2b0e",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"El coraje de Devorador de Almas inspira a quienes lo siguen.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Devorador de Almas",
+    "type": "Campeón",
+    "rarity": "Común",
+    "element": "Tinieblas",
+    "stats": {
+      "cost": 2,
+      "poder": 5,
+      "resistencia": 1
+    },
+    "faccion": "Caos",
+    "esencia": "Espectro",
+    "rol": "Asalto",
+    "catHabilidad": "Efecto",
+    "tipoEfecto": "Pasivo",
+    "efectoPasivo": "Cuando destruye un Campeón, ganas 2 PE."
+  },
+  {
+    "id": "3f10b927-7896-4531-807c-bf5dfa59bd9c",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Bestia de Brazas es un faro en la tormenta del caos.\"",
+    "keywords": [
+      "Carga",
+      "Fracturar"
+    ],
+    "limiteCopias": 3,
+    "name": "Bestia de Brazas",
+    "type": "Campeón",
+    "rarity": "Poco Común",
+    "element": "Fuego",
+    "stats": {
+      "cost": 3,
+      "poder": 5,
+      "resistencia": 3
+    },
+    "faccion": "Caos",
+    "esencia": "Bestia",
+    "rol": "Asalto",
+    "catHabilidad": "Efecto",
+    "tipoEfecto": "Pasivo",
+    "efectoPasivo": "Carga. Fracturar."
+  },
+  {
+    "id": "a0d74ca3-22b4-4d21-95ea-e01e72292bff",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Demonio del Vacío convierte el Éter en voluntad, y la voluntad en victoria.\"",
+    "keywords": [
+      "Espectro",
+      "Golpe Letal"
+    ],
+    "limiteCopias": 3,
+    "name": "Demonio del Vacío",
+    "type": "Campeón",
+    "rarity": "Poco Común",
+    "element": "Tinieblas",
+    "stats": {
+      "cost": 3,
+      "poder": 6,
+      "resistencia": 2
+    },
+    "faccion": "Caos",
+    "esencia": "Abisal",
+    "rol": "Asalto",
+    "catHabilidad": "Efecto",
+    "tipoEfecto": "Pasivo",
+    "efectoPasivo": "Espectro. Golpe Letal."
+  },
+  {
+    "id": "0a2560e5-0538-4eed-b23c-3ea276b2c920",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Donde Ariete del Vacío camina, la esperanza renace.\"",
+    "keywords": [
+      "Golpe Letal",
+      "Espectro"
+    ],
+    "limiteCopias": 3,
+    "name": "Ariete del Vacío",
+    "type": "Campeón",
+    "rarity": "Rara",
+    "element": "Tinieblas",
+    "stats": {
+      "cost": 4,
+      "poder": 6,
+      "resistencia": 4
+    },
+    "faccion": "Caos",
+    "esencia": "Espectro",
+    "rol": "Asalto",
+    "catHabilidad": "Efecto",
+    "tipoEfecto": "Activo",
+    "efectoActivo": "Exilia 2 Éter de tu Reserva: Gana +3 Ataque."
+  },
+  {
+    "id": "771c31c4-e4f6-434a-9fd2-780b99a21182",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Dragón del Caos convierte el Éter en voluntad, y la voluntad en victoria.\"",
+    "keywords": [
+      "Fracturar"
+    ],
+    "limiteCopias": 3,
+    "name": "Dragón del Caos",
+    "type": "Campeón",
+    "rarity": "Épica",
+    "element": "Fuego",
+    "stats": {
+      "cost": 5,
+      "poder": 8,
+      "resistencia": 4
+    },
+    "faccion": "Caos",
+    "esencia": "Dragón",
+    "rol": "Sacrificio",
+    "catHabilidad": "Efecto",
+    "tipoEfecto": "Pasivo",
+    "efectoPasivo": "Requiere sacrificar 1 Campeón. Fracturar."
+  },
+  {
+    "id": "67eb52ff-c026-462f-a7dd-31df33253620",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Solo los dignos pueden comprender el poder de Devorador de Mundos.\"",
+    "keywords": [
+      "Espectro",
+      "Golpe Letal"
+    ],
+    "limiteCopias": 1,
+    "name": "Devorador de Mundos",
+    "type": "Campeón",
+    "rarity": "Única",
+    "element": "Tinieblas",
+    "stats": {
+      "cost": 5,
+      "poder": 9,
+      "resistencia": 3
+    },
+    "faccion": "Caos",
+    "esencia": "Abisal",
+    "rol": "Sacrificio",
+    "catHabilidad": "Único",
+    "tipoEfecto": "Especial",
+    "efectoPasivo": "Espectro.",
+    "efectoActivo": "Requiere sacrificar 2 Campeones. Golpe Letal."
+  },
+  {
+    "id": "896a1fb3-66d5-43e9-b8d3-c364599828e8",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Donde Buitre del Abismo camina, la esperanza renace.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Buitre del Abismo",
+    "type": "Campeón",
+    "rarity": "Común",
+    "element": "Tinieblas",
+    "stats": {
+      "cost": 1,
+      "poder": 2,
+      "resistencia": 1
+    },
+    "faccion": "Caos",
+    "esencia": "Abisal",
+    "rol": "Asalto",
+    "catHabilidad": "Efecto",
+    "tipoEfecto": "Pasivo",
+    "efectoPasivo": "Cuando destruye un Campeón, ganas 1 PE."
+  },
+  {
+    "id": "e58c57b9-0e45-4a42-bfdb-419413bdb9b1",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Incluso los dioses miran con respeto a Esbirro del Caos.\"",
+    "keywords": [
+      "Espectro"
+    ],
+    "limiteCopias": 3,
+    "name": "Esbirro del Caos",
+    "type": "Campeón",
+    "rarity": "Común",
+    "element": "Tinieblas",
+    "stats": {
+      "cost": 2,
+      "poder": 3,
+      "resistencia": 2
+    },
+    "faccion": "Caos",
+    "esencia": "Espectro",
+    "rol": "Asalto",
+    "catHabilidad": "Normal",
+    "tipoEfecto": "Pasivo",
+    "efectoPasivo": "Espectro."
+  },
+  {
+    "id": "fec81486-27fd-464d-a575-c72cd513deb8",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Invocador Oscuro forjó su leyenda en el campo de batalla.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Invocador Oscuro",
+    "type": "Campeón",
+    "rarity": "Poco Común",
+    "element": "Tinieblas",
+    "stats": {
+      "cost": 2,
+      "poder": 1,
+      "resistencia": 3
+    },
+    "faccion": "Caos",
+    "esencia": "Humano",
+    "rol": "Control",
+    "catHabilidad": "Efecto",
+    "tipoEfecto": "Activo",
+    "efectoActivo": "Cuando entra, exilia 1 carta de tu Cementerio: roba 1 carta."
+  },
+  {
+    "id": "c42b7ab7-cc76-4148-9110-f51b0915fa5b",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Ni el más oscuro de los abismos pudo contener a Súcubo del Vacío.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Súcubo del Vacío",
+    "type": "Campeón",
+    "rarity": "Poco Común",
+    "element": "Tinieblas",
+    "stats": {
+      "cost": 3,
+      "poder": 3,
+      "resistencia": 3
+    },
+    "faccion": "Caos",
+    "esencia": "Abisal",
+    "rol": "Soporte",
+    "catHabilidad": "Efecto",
+    "tipoEfecto": "Activo",
+    "efectoActivo": "Cuando entra, un Campeón enemigo pierde -2 Ataque este turno."
+  },
+  {
+    "id": "255aa6e0-19d1-47f4-a7ec-e6f287ab5347",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Las leyendas hablan de Vorágine de Sombras en susurros de admiración.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Vorágine de Sombras",
+    "type": "Campeón",
+    "rarity": "Poco Común",
+    "element": "Tinieblas",
+    "stats": {
+      "cost": 3,
+      "poder": 2,
+      "resistencia": 4
+    },
+    "faccion": "Caos",
+    "esencia": "Espectro",
+    "rol": "Control",
+    "catHabilidad": "Efecto",
+    "tipoEfecto": "Pasivo",
+    "efectoPasivo": "Los Campeones enemigos pierden -1 Ataque mientras esta carta esté en el campo."
+  },
+  {
+    "id": "76dac43f-dace-4c22-81e1-9e83934c106e",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Ni el más oscuro de los abismos pudo contener a Carnicero del Caos.\"",
+    "keywords": [
+      "Carga",
+      "Fracturar"
+    ],
+    "limiteCopias": 3,
+    "name": "Carnicero del Caos",
+    "type": "Campeón",
+    "rarity": "Poco Común",
+    "element": "Fuego",
+    "stats": {
+      "cost": 3,
+      "poder": 5,
+      "resistencia": 3
+    },
+    "faccion": "Caos",
+    "esencia": "Bestia",
+    "rol": "Asalto",
+    "catHabilidad": "Efecto",
+    "tipoEfecto": "Pasivo",
+    "efectoPasivo": "Carga. Fracturar."
+  },
+  {
+    "id": "706e2102-33f4-437e-abc9-81d6313ee12f",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Incluso los dioses miran con respeto a Hechicero del Vacío.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Hechicero del Vacío",
+    "type": "Campeón",
+    "rarity": "Rara",
+    "element": "Tinieblas",
+    "stats": {
+      "cost": 4,
+      "poder": 3,
+      "resistencia": 5
+    },
+    "faccion": "Caos",
+    "esencia": "Abisal",
+    "rol": "Control",
+    "catHabilidad": "Efecto",
+    "tipoEfecto": "Activo",
+    "efectoActivo": "Cuando entra, exilia 1 Éter de la Reserva enemiga."
+  },
+  {
+    "id": "a1bcdd97-9d05-4e9d-9b47-657183d12c1a",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Señor de las Sombras no conoce el miedo, solo el deber.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Señor de las Sombras",
+    "type": "Campeón",
+    "rarity": "Rara",
+    "element": "Tinieblas",
+    "stats": {
+      "cost": 4,
+      "poder": 4,
+      "resistencia": 4
+    },
+    "faccion": "Caos",
+    "esencia": "Espectro",
+    "rol": "Soporte",
+    "catHabilidad": "Efecto",
+    "tipoEfecto": "Pasivo",
+    "efectoPasivo": "Tus Espectros ganan +2 Ataque."
+  },
+  {
+    "id": "c770823c-0d42-48bf-8b0b-6c2a02ff0635",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Dragón Espectral convierte el Éter en voluntad, y la voluntad en victoria.\"",
+    "keywords": [
+      "Espectro",
+      "Golpe Letal"
+    ],
+    "limiteCopias": 3,
+    "name": "Dragón Espectral",
+    "type": "Campeón",
+    "rarity": "Rara",
+    "element": "Tinieblas",
+    "stats": {
+      "cost": 4,
+      "poder": 6,
+      "resistencia": 3
+    },
+    "faccion": "Caos",
+    "esencia": "Espectro",
+    "rol": "Asalto",
+    "catHabilidad": "Efecto",
+    "tipoEfecto": "Pasivo",
+    "efectoPasivo": "Espectro. Golpe Letal."
+  },
+  {
+    "id": "6790f8af-04c0-40b3-bd34-cdda15e1d242",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Incluso los dioses miran con respeto a Abismo Devorador.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Abismo Devorador",
+    "type": "Campeón",
+    "rarity": "Épica",
+    "element": "Tinieblas",
+    "stats": {
+      "cost": 5,
+      "poder": 7,
+      "resistencia": 5
+    },
+    "faccion": "Caos",
+    "esencia": "Abisal",
+    "rol": "Sacrificio",
+    "catHabilidad": "Efecto",
+    "tipoEfecto": "Activo",
+    "efectoActivo": "Requiere sacrificar 1 Campeón. Cuando entra, destruye un Campeón enemigo con 3 o menos de Defensa."
+  },
+  {
+    "id": "3ec6938d-4769-493e-88c5-652f1227255e",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"El coraje de Señor del Caos inspira a quienes lo siguen.\"",
+    "keywords": [
+      "Fracturar"
+    ],
+    "limiteCopias": 3,
+    "name": "Señor del Caos",
+    "type": "Campeón",
+    "rarity": "Épica",
+    "element": "Tinieblas",
+    "stats": {
+      "cost": 5,
+      "poder": 6,
+      "resistencia": 5
+    },
+    "faccion": "Caos",
+    "esencia": "Abisal",
+    "rol": "Control",
+    "catHabilidad": "Efecto",
+    "tipoEfecto": "Pasivo",
+    "efectoPasivo": "Tus Campeones de Caos ganan +2 Ataque. Fracturar."
+  },
+  {
+    "id": "d6ba4b70-4033-4b96-8caa-6ca98a635004",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Rey de las Tinieblas — la culminación del Éter en su máxima expresión.\"",
+    "keywords": [
+      "Inquebrantable"
+    ],
+    "limiteCopias": 1,
+    "name": "Rey de las Tinieblas",
+    "type": "Campeón",
+    "rarity": "Única",
+    "element": "Tinieblas",
+    "stats": {
+      "cost": 5,
+      "poder": 9,
+      "resistencia": 5
+    },
+    "faccion": "Caos",
+    "esencia": "Abisal",
+    "rol": "Sacrificio",
+    "catHabilidad": "Único",
+    "tipoEfecto": "Pasivo",
+    "efectoPasivo": "Requiere sacrificar 2 Campeones. Inquebrantable. Solo 1 copia."
+  },
+  {
+    "id": "2c73c8e1-5729-410b-95b6-31807199244d",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Aprendiz de Éter es un faro en la tormenta del caos.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Aprendiz de Éter",
+    "type": "Campeón",
+    "rarity": "Común",
+    "stats": {
+      "cost": 1,
+      "poder": 1,
+      "resistencia": 2
+    },
+    "faccion": "Sabiduría",
+    "esencia": "Humano",
+    "rol": "Control",
+    "catHabilidad": "Normal"
+  },
+  {
+    "id": "110880c9-b91a-4e6f-a541-7ad6e201daae",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"El coraje de Tejedor de Destinos inspira a quienes lo siguen.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Tejedor de Destinos",
+    "type": "Campeón",
+    "rarity": "Común",
+    "stats": {
+      "cost": 2,
+      "poder": 2,
+      "resistencia": 3
+    },
+    "faccion": "Sabiduría",
+    "esencia": "Mago",
+    "rol": "Control",
+    "catHabilidad": "Efecto",
+    "tipoEfecto": "Activo",
+    "efectoActivo": "Cuando entra, mira 2 cartas de tu mazo, elige 1 para tu mano."
+  },
+  {
+    "id": "127d6e74-aebd-444d-a482-cbd5cba87e0c",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Las leyendas hablan de Mago de la Niebla en susurros de admiración.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Mago de la Niebla",
+    "type": "Campeón",
+    "rarity": "Poco Común",
+    "element": "Agua",
+    "stats": {
+      "cost": 3,
+      "poder": 3,
+      "resistencia": 3
+    },
+    "faccion": "Sabiduría",
+    "esencia": "Mago",
+    "rol": "Control",
+    "catHabilidad": "Efecto",
+    "tipoEfecto": "Activo",
+    "efectoActivo": "Cuando entra, elige un Campeón enemigo: pierde -2 Ataque."
+  },
+  {
+    "id": "d31578d3-cabd-4f54-8db8-f91da612dc6a",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Archimago del Éter lucha por un ideal más grande que la victoria.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Archimago del Éter",
+    "type": "Campeón",
+    "rarity": "Poco Común",
+    "stats": {
+      "cost": 3,
+      "poder": 2,
+      "resistencia": 4
+    },
+    "faccion": "Sabiduría",
+    "esencia": "Mago",
+    "rol": "Control",
+    "catHabilidad": "Efecto",
+    "tipoEfecto": "Pasivo",
+    "efectoPasivo": "Tus Místicas cuestan 1 Éter menos."
+  },
+  {
+    "id": "a48dba8a-c7ea-4510-965f-f3cbfe5e8154",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Visionario del Alba forjó su leyenda en el campo de batalla.\"",
+    "keywords": [
+      "Restaurar"
+    ],
+    "limiteCopias": 3,
+    "name": "Visionario del Alba",
+    "type": "Campeón",
+    "rarity": "Rara",
+    "element": "Luz",
+    "stats": {
+      "cost": 4,
+      "poder": 3,
+      "resistencia": 4
+    },
+    "faccion": "Sabiduría",
+    "esencia": "Céleste",
+    "rol": "Soporte",
+    "catHabilidad": "Efecto",
+    "tipoEfecto": "Activo",
+    "efectoActivo": "Restaurar. Cuando entra, roba 1 carta."
+  },
+  {
+    "id": "36878753-09cf-4f64-92e1-4120ad179ac0",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"El coraje de Dragón del Conocimiento inspira a quienes lo siguen.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Dragón del Conocimiento",
+    "type": "Campeón",
+    "rarity": "Épica",
+    "element": "Aire",
+    "stats": {
+      "cost": 5,
+      "poder": 6,
+      "resistencia": 6
+    },
+    "faccion": "Sabiduría",
+    "esencia": "Dragón",
+    "rol": "Sacrificio",
+    "catHabilidad": "Efecto",
+    "tipoEfecto": "Activo",
+    "efectoActivo": "Requiere sacrificar 1 Campeón. Cuando entra, roba 2 cartas."
+  },
+  {
+    "id": "f05acd28-ffd9-4c05-a07c-6cd5331a2a33",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Solo los dignos pueden comprender el poder de Guardián del Conocimiento.\"",
+    "keywords": [
+      "Guardián",
+      "Inquebrantable"
+    ],
+    "limiteCopias": 1,
+    "name": "Guardián del Conocimiento",
+    "type": "Campeón",
+    "rarity": "Única",
+    "element": "Luz",
+    "stats": {
+      "cost": 5,
+      "poder": 4,
+      "resistencia": 8
+    },
+    "faccion": "Sabiduría",
+    "esencia": "Constructo",
+    "rol": "Guardia",
+    "catHabilidad": "Único",
+    "tipoEfecto": "Pasivo",
+    "efectoPasivo": "Guardián. Inquebrantable."
+  },
+  {
+    "id": "d37be92a-bf65-421b-86b3-05b0287d1cb6",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Sabio del Pueblo lucha por un ideal más grande que la victoria.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Sabio del Pueblo",
+    "type": "Campeón",
+    "rarity": "Común",
+    "stats": {
+      "cost": 1,
+      "poder": 1,
+      "resistencia": 3
+    },
+    "faccion": "Sabiduría",
+    "esencia": "Humano",
+    "rol": "Soporte",
+    "catHabilidad": "Efecto",
+    "tipoEfecto": "Pasivo",
+    "efectoPasivo": "Tus Místicas cuestan 1 Éter menos."
+  },
+  {
+    "id": "21a3947b-6c32-46d8-a3f2-4060d153b144",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Estudiante Arcano no conoce el miedo, solo el deber.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Estudiante Arcano",
+    "type": "Campeón",
+    "rarity": "Común",
+    "stats": {
+      "cost": 2,
+      "poder": 2,
+      "resistencia": 2
+    },
+    "faccion": "Sabiduría",
+    "esencia": "Mago",
+    "rol": "Control",
+    "catHabilidad": "Efecto",
+    "tipoEfecto": "Activo",
+    "efectoActivo": "Cuando entra, mira 1 carta de tu mazo."
+  },
+  {
+    "id": "21006de3-c592-4549-b94a-3bab52b56f59",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Incluso los dioses miran con respeto a Cartógrafo del Éter.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Cartógrafo del Éter",
+    "type": "Campeón",
+    "rarity": "Común",
+    "stats": {
+      "cost": 2,
+      "poder": 1,
+      "resistencia": 3
+    },
+    "faccion": "Sabiduría",
+    "esencia": "Humano",
+    "rol": "Control",
+    "catHabilidad": "Efecto",
+    "tipoEfecto": "Activo",
+    "efectoActivo": "Cuando entra, añade 1 carta de Éter de tu mazo a tu mano."
+  },
+  {
+    "id": "c5f5c32f-218b-4c04-aeae-bf00d03bec2d",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Bibliotecario del Conocimiento no conoce el miedo, solo el deber.\"",
+    "keywords": [
+      "Guardián"
+    ],
+    "limiteCopias": 3,
+    "name": "Bibliotecario del Conocimiento",
+    "type": "Campeón",
+    "rarity": "Poco Común",
+    "stats": {
+      "cost": 3,
+      "poder": 2,
+      "resistencia": 5
+    },
+    "faccion": "Sabiduría",
+    "esencia": "Constructo",
+    "rol": "Guardia",
+    "catHabilidad": "Efecto",
+    "tipoEfecto": "Activo",
+    "efectoActivo": "Guardián. Cuando entra, roba 1 carta."
+  },
+  {
+    "id": "adc00275-10c7-4258-b667-98b7f72d9c12",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Elementalista del Viento no conoce el miedo, solo el deber.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Elementalista del Viento",
+    "type": "Campeón",
+    "rarity": "Poco Común",
+    "element": "Aire",
+    "stats": {
+      "cost": 3,
+      "poder": 3,
+      "resistencia": 3
+    },
+    "faccion": "Sabiduría",
+    "esencia": "Elemental",
+    "rol": "Control",
+    "catHabilidad": "Efecto",
+    "tipoEfecto": "Activo",
+    "efectoActivo": "Cuando entra, devuelve un Campeón enemigo de coste 2 o menos a la mano de su dueño."
+  },
+  {
+    "id": "4f661884-1b23-41f8-ac19-145d47378738",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Maestro de la Ilusión no conoce el miedo, solo el deber.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Maestro de la Ilusión",
+    "type": "Campeón",
+    "rarity": "Poco Común",
+    "element": "Agua",
+    "stats": {
+      "cost": 3,
+      "poder": 2,
+      "resistencia": 4
+    },
+    "faccion": "Sabiduría",
+    "esencia": "Mago",
+    "rol": "Control",
+    "catHabilidad": "Efecto",
+    "tipoEfecto": "Activo",
+    "efectoActivo": "Cuando entra, un Campeón enemigo no puede atacar este turno."
+  },
+  {
+    "id": "d2ae09f7-f6fe-42bc-95d7-e81c36514591",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Ni el más oscuro de los abismos pudo contener a Espíritu del Saber.\"",
+    "keywords": [
+      "Restaurar"
+    ],
+    "limiteCopias": 3,
+    "name": "Espíritu del Saber",
+    "type": "Campeón",
+    "rarity": "Rara",
+    "element": "Luz",
+    "stats": {
+      "cost": 4,
+      "poder": 3,
+      "resistencia": 4
+    },
+    "faccion": "Sabiduría",
+    "esencia": "Elemental",
+    "rol": "Soporte",
+    "catHabilidad": "Efecto",
+    "tipoEfecto": "Pasivo",
+    "efectoPasivo": "Restaurar. Tus Místicas ganan \"Roba 1 carta\" al jugarse."
+  },
+  {
+    "id": "181f3b13-2051-4237-8724-9350badd98f5",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Las leyendas hablan de Guardián de la Biblioteca en susurros de admiración.\"",
+    "keywords": [
+      "Guardián",
+      "Inquebrantable"
+    ],
+    "limiteCopias": 3,
+    "name": "Guardián de la Biblioteca",
+    "type": "Campeón",
+    "rarity": "Rara",
+    "element": "Luz",
+    "stats": {
+      "cost": 4,
+      "poder": 3,
+      "resistencia": 7
+    },
+    "faccion": "Sabiduría",
+    "esencia": "Constructo",
+    "rol": "Guardia",
+    "catHabilidad": "Efecto",
+    "tipoEfecto": "Pasivo",
+    "efectoPasivo": "Guardián. Inquebrantable."
+  },
+  {
+    "id": "7f8e4358-28e3-487e-9841-4976e05d3b8a",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Oráculo del Destino lucha por un ideal más grande que la victoria.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Oráculo del Destino",
+    "type": "Campeón",
+    "rarity": "Rara",
+    "element": "Luz",
+    "stats": {
+      "cost": 4,
+      "poder": 2,
+      "resistencia": 5
+    },
+    "faccion": "Sabiduría",
+    "esencia": "Mago",
+    "rol": "Soporte",
+    "catHabilidad": "Efecto",
+    "tipoEfecto": "Activo",
+    "efectoActivo": "Cuando entra, mira 3 cartas de tu mazo, elige 1 para tu mano."
+  },
+  {
+    "id": "322e644f-8fa7-4bac-81f3-219ac26a8209",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Donde Sabio Elemental camina, la esperanza renace.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Sabio Elemental",
+    "type": "Campeón",
+    "rarity": "Rara",
+    "stats": {
+      "cost": 4,
+      "poder": 4,
+      "resistencia": 4
+    },
+    "faccion": "Sabiduría",
+    "esencia": "Elemental",
+    "rol": "Control",
+    "catHabilidad": "Efecto",
+    "tipoEfecto": "Pasivo",
+    "efectoPasivo": "Tus Místicas y Arcanas cuestan 1 Éter menos."
+  },
+  {
+    "id": "3408d551-1da5-4c6f-b761-7c8a6b0b0ab0",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"El coraje de Dragón Arcano inspira a quienes lo siguen.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Dragón Arcano",
+    "type": "Campeón",
+    "rarity": "Épica",
+    "element": "Aire",
+    "stats": {
+      "cost": 5,
+      "poder": 5,
+      "resistencia": 6
+    },
+    "faccion": "Sabiduría",
+    "esencia": "Dragón",
+    "rol": "Soporte",
+    "catHabilidad": "Efecto",
+    "tipoEfecto": "Activo",
+    "efectoActivo": "Requiere sacrificar 1 Campeón. Cuando entra, roba 2 cartas."
+  },
+  {
+    "id": "274f8d04-f654-46fc-95fb-132dd42c1c2d",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Archimago Supremo es un faro en la tormenta del caos.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Archimago Supremo",
+    "type": "Campeón",
+    "rarity": "Épica",
+    "element": "Luz",
+    "stats": {
+      "cost": 5,
+      "poder": 5,
+      "resistencia": 5
+    },
+    "faccion": "Sabiduría",
+    "esencia": "Mago",
+    "rol": "Control",
+    "catHabilidad": "Efecto",
+    "tipoEfecto": "Activo",
+    "efectoActivo": "Cuando entra, copia una Mística de tu Cementerio y juegala sin coste."
+  },
+  {
+    "id": "c382061d-859c-4058-9cad-c8ea4da57449",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Maestro del Conocimiento. Que su nombre sea recordido por siempre.\"",
+    "keywords": [],
+    "limiteCopias": 1,
+    "name": "Maestro del Conocimiento",
+    "type": "Campeón",
+    "rarity": "Única",
+    "element": "Luz",
+    "stats": {
+      "cost": 5,
+      "poder": 4,
+      "resistencia": 5
+    },
+    "faccion": "Sabiduría",
+    "esencia": "Mago",
+    "rol": "Control",
+    "catHabilidad": "Único",
+    "tipoEfecto": "Pasivo",
+    "efectoPasivo": "Al inicio de tu Alba, copia la primera carta de tu mazo en tu mano. Solo 1 copia."
+  },
+  {
+    "id": "82935e2d-3b90-427c-a855-7abc79b47376",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Ni el más oscuro de los abismos pudo contener a Lobezno Salvaje.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Lobezno Salvaje",
+    "type": "Campeón",
+    "rarity": "Común",
+    "stats": {
+      "cost": 1,
+      "poder": 3,
+      "resistencia": 1
+    },
+    "faccion": "Naturaleza",
+    "esencia": "Bestia",
+    "rol": "Asalto",
+    "catHabilidad": "Normal"
+  },
+  {
+    "id": "9823f14c-282d-4604-b252-d22854461ab6",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Incluso los dioses miran con respeto a Colmillo de Piedra.\"",
+    "keywords": [
+      "Carga"
+    ],
+    "limiteCopias": 3,
+    "name": "Colmillo de Piedra",
+    "type": "Campeón",
+    "rarity": "Común",
+    "element": "Tierra",
+    "stats": {
+      "cost": 2,
+      "poder": 4,
+      "resistencia": 3
+    },
+    "faccion": "Naturaleza",
+    "esencia": "Bestia",
+    "rol": "Asalto",
+    "catHabilidad": "Efecto",
+    "tipoEfecto": "Pasivo",
+    "efectoPasivo": "Carga."
+  },
+  {
+    "id": "74863c1e-9173-47ad-a705-d17d724562bd",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Ni el más oscuro de los abismos pudo contener a Fiera de la Tormenta.\"",
+    "keywords": [
+      "Carga",
+      "Golpe Letal"
+    ],
+    "limiteCopias": 3,
+    "name": "Fiera de la Tormenta",
+    "type": "Campeón",
+    "rarity": "Poco Común",
+    "element": "Aire",
+    "stats": {
+      "cost": 3,
+      "poder": 5,
+      "resistencia": 2
+    },
+    "faccion": "Naturaleza",
+    "esencia": "Bestia",
+    "rol": "Asalto",
+    "catHabilidad": "Efecto",
+    "tipoEfecto": "Pasivo",
+    "efectoPasivo": "Carga. Golpe Letal."
+  },
+  {
+    "id": "4aae5e6e-68f1-428f-bb38-6e47bbba4285",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Donde Guardián del Bosque camina, la esperanza renace.\"",
+    "keywords": [
+      "Guardián"
+    ],
+    "limiteCopias": 3,
+    "name": "Guardián del Bosque",
+    "type": "Campeón",
+    "rarity": "Poco Común",
+    "element": "Tierra",
+    "stats": {
+      "cost": 3,
+      "poder": 2,
+      "resistencia": 6
+    },
+    "faccion": "Naturaleza",
+    "esencia": "Elemental",
+    "rol": "Guardia",
+    "catHabilidad": "Efecto",
+    "tipoEfecto": "Activo",
+    "efectoActivo": "Guardián. Cuando entra, ganas 3 PE."
+  },
+  {
+    "id": "608cb689-ac71-4754-885b-e94da9ec21f2",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Espíritu de la Naturaleza no conoce el miedo, solo el deber.\"",
+    "keywords": [
+      "Restaurar"
+    ],
+    "limiteCopias": 3,
+    "name": "Espíritu de la Naturaleza",
+    "type": "Campeón",
+    "rarity": "Rara",
+    "element": "Tierra",
+    "stats": {
+      "cost": 4,
+      "poder": 2,
+      "resistencia": 5
+    },
+    "faccion": "Naturaleza",
+    "esencia": "Elemental",
+    "rol": "Soporte",
+    "catHabilidad": "Efecto",
+    "tipoEfecto": "Pasivo",
+    "efectoPasivo": "Restaurar. Tus Bestias ganan +1 Ataque."
+  },
+  {
+    "id": "bc8da1f5-402f-4161-81bb-7c7f148a0732",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Dragón de la Tierra lucha por un ideal más grande que la victoria.\"",
+    "keywords": [
+      "Inquebrantable"
+    ],
+    "limiteCopias": 3,
+    "name": "Dragón de la Tierra",
+    "type": "Campeón",
+    "rarity": "Épica",
+    "element": "Tierra",
+    "stats": {
+      "cost": 5,
+      "poder": 7,
+      "resistencia": 6
+    },
+    "faccion": "Naturaleza",
+    "esencia": "Dragón",
+    "rol": "Sacrificio",
+    "catHabilidad": "Efecto",
+    "tipoEfecto": "Pasivo",
+    "efectoPasivo": "Requiere sacrificar 1 Campeón. Inquebrantable."
+  },
+  {
+    "id": "441f4300-cbc5-4813-9726-66ba679c45a1",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Colmillo del Mundo. Que su nombre sea recordido por siempre.\"",
+    "keywords": [
+      "Golpe Letal"
+    ],
+    "limiteCopias": 1,
+    "name": "Colmillo del Mundo",
+    "type": "Campeón",
+    "rarity": "Única",
+    "element": "Tierra",
+    "stats": {
+      "cost": 5,
+      "poder": 8,
+      "resistencia": 5
+    },
+    "faccion": "Naturaleza",
+    "esencia": "Bestia",
+    "rol": "Sacrificio",
+    "catHabilidad": "Único",
+    "tipoEfecto": "Pasivo",
+    "efectoPasivo": "Requiere sacrificar 2 Campeones. Golpe Letal."
+  },
+  {
+    "id": "4b18dfbd-3dd0-494e-8889-4c7cb83ed3e1",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Las leyendas hablan de Jabalí del Bosque en susurros de admiración.\"",
+    "keywords": [
+      "Carga"
+    ],
+    "limiteCopias": 3,
+    "name": "Jabalí del Bosque",
+    "type": "Campeón",
+    "rarity": "Común",
+    "element": "Tierra",
+    "stats": {
+      "cost": 1,
+      "poder": 2,
+      "resistencia": 2
+    },
+    "faccion": "Naturaleza",
+    "esencia": "Bestia",
+    "rol": "Asalto",
+    "catHabilidad": "Normal",
+    "tipoEfecto": "Pasivo",
+    "efectoPasivo": "Carga."
+  },
+  {
+    "id": "e88f8a5f-4a96-468a-9553-6c876b7ef25e",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Donde Explorador de la Selva camina, la esperanza renace.\"",
+    "keywords": [
+      "Vanguardia"
+    ],
+    "limiteCopias": 3,
+    "name": "Explorador de la Selva",
+    "type": "Campeón",
+    "rarity": "Común",
+    "stats": {
+      "cost": 2,
+      "poder": 3,
+      "resistencia": 2
+    },
+    "faccion": "Naturaleza",
+    "esencia": "Humano",
+    "rol": "Asalto",
+    "catHabilidad": "Normal",
+    "tipoEfecto": "Pasivo",
+    "efectoPasivo": "Vanguardia."
+  },
+  {
+    "id": "7d74236d-ba97-40ca-ae02-e88cf97611c4",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Las leyendas hablan de Druida del Bosque en susurros de admiración.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Druida del Bosque",
+    "type": "Campeón",
+    "rarity": "Común",
+    "element": "Tierra",
+    "stats": {
+      "cost": 2,
+      "poder": 1,
+      "resistencia": 4
+    },
+    "faccion": "Naturaleza",
+    "esencia": "Humano",
+    "rol": "Soporte",
+    "catHabilidad": "Efecto",
+    "tipoEfecto": "Activo",
+    "efectoActivo": "Cuando entra, ganas 3 PE."
+  },
+  {
+    "id": "2ec2627e-4459-4d73-b050-ecff4edf60e4",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Lobo de la Manada es un faro en la tormenta del caos.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Lobo de la Manada",
+    "type": "Campeón",
+    "rarity": "Poco Común",
+    "element": "Tierra",
+    "stats": {
+      "cost": 2,
+      "poder": 3,
+      "resistencia": 3
+    },
+    "faccion": "Naturaleza",
+    "esencia": "Bestia",
+    "rol": "Asalto",
+    "catHabilidad": "Efecto",
+    "tipoEfecto": "Pasivo",
+    "efectoPasivo": "Tus Bestias ganan +1 Ataque."
+  },
+  {
+    "id": "013b8200-da23-4037-b7a8-b34d1c00142e",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"El coraje de Elemental de Roca inspira a quienes lo siguen.\"",
+    "keywords": [
+      "Guardián"
+    ],
+    "limiteCopias": 3,
+    "name": "Elemental de Roca",
+    "type": "Campeón",
+    "rarity": "Poco Común",
+    "element": "Tierra",
+    "stats": {
+      "cost": 3,
+      "poder": 2,
+      "resistencia": 6
+    },
+    "faccion": "Naturaleza",
+    "esencia": "Elemental",
+    "rol": "Guardia",
+    "catHabilidad": "Efecto",
+    "tipoEfecto": "Pasivo",
+    "efectoPasivo": "Guardián."
+  },
+  {
+    "id": "4ada61df-924b-4422-9cea-1ebb36c03da8",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Ni el más oscuro de los abismos pudo contener a Águila del Pico.\"",
+    "keywords": [
+      "Carga",
+      "Vanguardia"
+    ],
+    "limiteCopias": 3,
+    "name": "Águila del Pico",
+    "type": "Campeón",
+    "rarity": "Poco Común",
+    "element": "Aire",
+    "stats": {
+      "cost": 3,
+      "poder": 4,
+      "resistencia": 3
+    },
+    "faccion": "Naturaleza",
+    "esencia": "Bestia",
+    "rol": "Asalto",
+    "catHabilidad": "Efecto",
+    "tipoEfecto": "Pasivo",
+    "efectoPasivo": "Carga. Vanguardia."
+  },
+  {
+    "id": "5028217a-594d-4cd8-b6d1-bc5f3ef61914",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Serpiente de la Jungla no conoce el miedo, solo el deber.\"",
+    "keywords": [
+      "Golpe Letal"
+    ],
+    "limiteCopias": 3,
+    "name": "Serpiente de la Jungla",
+    "type": "Campeón",
+    "rarity": "Poco Común",
+    "element": "Tierra",
+    "stats": {
+      "cost": 3,
+      "poder": 5,
+      "resistencia": 2
+    },
+    "faccion": "Naturaleza",
+    "esencia": "Bestia",
+    "rol": "Asalto",
+    "catHabilidad": "Efecto",
+    "tipoEfecto": "Pasivo",
+    "efectoPasivo": "Golpe Letal."
+  },
+  {
+    "id": "bd5845b1-4fff-4900-8555-3fe255fd5454",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Incluso los dioses miran con respeto a Gigante del Bosque.\"",
+    "keywords": [
+      "Guardián",
+      "Inquebrantable"
+    ],
+    "limiteCopias": 3,
+    "name": "Gigante del Bosque",
+    "type": "Campeón",
+    "rarity": "Rara",
+    "element": "Tierra",
+    "stats": {
+      "cost": 4,
+      "poder": 4,
+      "resistencia": 7
+    },
+    "faccion": "Naturaleza",
+    "esencia": "Elemental",
+    "rol": "Guardia",
+    "catHabilidad": "Efecto",
+    "tipoEfecto": "Pasivo",
+    "efectoPasivo": "Guardián. Inquebrantable."
+  },
+  {
+    "id": "fc3b2ddf-1863-43c0-bb29-47293cc9f246",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Chamán de la Tribu lucha por un ideal más grande que la victoria.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Chamán de la Tribu",
+    "type": "Campeón",
+    "rarity": "Rara",
+    "element": "Tierra",
+    "stats": {
+      "cost": 4,
+      "poder": 3,
+      "resistencia": 4
+    },
+    "faccion": "Naturaleza",
+    "esencia": "Humano",
+    "rol": "Soporte",
+    "catHabilidad": "Efecto",
+    "tipoEfecto": "Pasivo",
+    "efectoPasivo": "Tus Bestias ganan +2 Ataque."
+  },
+  {
+    "id": "632d108e-e096-49ea-9fed-4446a38bfd8b",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Hidra del Pantano lucha por un ideal más grande que la victoria.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Hidra del Pantano",
+    "type": "Campeón",
+    "rarity": "Rara",
+    "element": "Agua",
+    "stats": {
+      "cost": 4,
+      "poder": 5,
+      "resistencia": 5
+    },
+    "faccion": "Naturaleza",
+    "esencia": "Bestia",
+    "rol": "Asalto",
+    "catHabilidad": "Efecto",
+    "tipoEfecto": "Pasivo",
+    "efectoPasivo": "Cuando esta carta es destruida, ganas 5 PE."
+  },
+  {
+    "id": "3496733f-f028-4708-bfbd-af92e2b54c9e",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Ni el más oscuro de los abismos pudo contener a Espíritu del Bosque.\"",
+    "keywords": [
+      "Restaurar"
+    ],
+    "limiteCopias": 3,
+    "name": "Espíritu del Bosque",
+    "type": "Campeón",
+    "rarity": "Rara",
+    "element": "Tierra",
+    "stats": {
+      "cost": 4,
+      "poder": 3,
+      "resistencia": 5
+    },
+    "faccion": "Naturaleza",
+    "esencia": "Elemental",
+    "rol": "Soporte",
+    "catHabilidad": "Efecto",
+    "tipoEfecto": "Pasivo",
+    "efectoPasivo": "Restaurar. Al inicio de tu Alba, ganas 2 PE."
+  },
+  {
+    "id": "245b3bf5-57c4-4858-a193-79db183c9308",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Las leyendas hablan de Dragón del Viento en susurros de admiración.\"",
+    "keywords": [
+      "Carga",
+      "Golpe Letal",
+      "Vanguardia"
+    ],
+    "limiteCopias": 3,
+    "name": "Dragón del Viento",
+    "type": "Campeón",
+    "rarity": "Épica",
+    "element": "Aire",
+    "stats": {
+      "cost": 5,
+      "poder": 7,
+      "resistencia": 5
+    },
+    "faccion": "Naturaleza",
+    "esencia": "Dragón",
+    "rol": "Asalto",
+    "catHabilidad": "Efecto",
+    "tipoEfecto": "Pasivo",
+    "efectoPasivo": "Carga. Golpe Letal. Vanguardia."
+  },
+  {
+    "id": "ed51fbb1-4c83-458f-bf3e-021fb99d1f58",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Solo los dignos pueden comprender el poder de Rey de la Manada.\"",
+    "keywords": [],
+    "limiteCopias": 1,
+    "name": "Rey de la Manada",
+    "type": "Campeón",
+    "rarity": "Única",
+    "element": "Tierra",
+    "stats": {
+      "cost": 5,
+      "poder": 7,
+      "resistencia": 5
+    },
+    "faccion": "Naturaleza",
+    "esencia": "Bestia",
+    "rol": "Sacrificio",
+    "catHabilidad": "Único",
+    "tipoEfecto": "Pasivo",
+    "efectoPasivo": "Tus Bestias ganan +2 Ataque y +1 Defensa. Solo 1 copia."
+  }
+]

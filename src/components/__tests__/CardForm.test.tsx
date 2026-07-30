@@ -48,7 +48,7 @@ describe('CardForm', () => {
           createdAt: '2024-01-01',
           updatedAt: '2024-01-01',
           stats: { cost: 0, poder: 0, resistencia: 0 },
-          habilidad: '',
+          efectoPasivo: '',
         } as import('../../types').CampeonCard,
       ],
       draft: {
@@ -59,7 +59,7 @@ describe('CardForm', () => {
         keywords: [],
         flavorText: '',
         stats: { cost: 0, poder: 0, resistencia: 0 },
-        habilidad: '',
+        efectoPasivo: '',
       },
     })
     render(<CardForm />)

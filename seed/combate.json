@@ -1,0 +1,470 @@
+[
+  {
+    "id": "c6fc1330-9598-4ae5-a51c-935d51aeefff",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Golpe Rápido: el movimiento que define al guerrero.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Golpe Rápido",
+    "type": "Combate",
+    "rarity": "Común",
+    "stats": {
+      "cost": 0
+    },
+    "descripcion": "Cuando un Campeón propio ataque: Gana +1 Ataque."
+  },
+  {
+    "id": "bee0d68e-a0df-4e43-b5c6-af8f8f57e495",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Quien domina defensa rápida, domina el combate.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Defensa Rápida",
+    "type": "Combate",
+    "rarity": "Común",
+    "stats": {
+      "cost": 0
+    },
+    "descripcion": "Cuando un Campeón propio sea atacado: Gana +2 Defensa."
+  },
+  {
+    "id": "f4adccf8-877b-4518-8177-680cfe595692",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Cada golpe de esquiva cuenta una historia de supervivencia.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Esquiva",
+    "type": "Combate",
+    "rarity": "Común",
+    "stats": {
+      "cost": 0
+    },
+    "descripcion": "Cuando un Campeón enemigo ataque directo: Reduce el daño en 2."
+  },
+  {
+    "id": "441c2dd3-c89e-4e1a-b7ef-17dc6e2dbf89",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Refuerzo de Guardia es la danza mortal del campo de batalla.\"",
+    "keywords": [
+      "Guardián"
+    ],
+    "limiteCopias": 3,
+    "name": "Refuerzo de Guardia",
+    "type": "Combate",
+    "rarity": "Común",
+    "stats": {
+      "cost": 0
+    },
+    "descripcion": "Cuando un Guardián sea atacado: Gana +2 Defensa."
+  },
+  {
+    "id": "2aac5c58-0db4-435f-9b19-faf09a27ead2",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Quien domina golpe de viento, domina el combate.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Golpe de Viento",
+    "type": "Combate",
+    "rarity": "Común",
+    "stats": {
+      "cost": 0
+    },
+    "descripcion": "Cuando un Campeón propio ataque: El enemigo pierde -1 Defensa."
+  },
+  {
+    "id": "5ea7871e-d335-4c82-b85b-399d7e30e67d",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Escudo de Mano es la danza mortal del campo de batalla.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Escudo de Mano",
+    "type": "Combate",
+    "rarity": "Común",
+    "stats": {
+      "cost": 0
+    },
+    "descripcion": "Cuando recibas daño directo: Reduce el daño en 3."
+  },
+  {
+    "id": "14781a55-5e50-4c58-abba-19d218fabb72",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Robo de Oportunidad transforma la energía en violencia controlada.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Robo de Oportunidad",
+    "type": "Combate",
+    "rarity": "Poco Común",
+    "stats": {
+      "cost": 0
+    },
+    "descripcion": "Cuando destruyas un Campeón enemigo: Roba 1 carta."
+  },
+  {
+    "id": "97f67caf-121e-44db-a8bb-0c4faa52939f",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Venganza de Éter transforma la energía en violencia controlada.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Venganza de Éter",
+    "type": "Combate",
+    "rarity": "Poco Común",
+    "stats": {
+      "cost": 0
+    },
+    "descripcion": "Cuando un Campeón propio muera: Haz 2 de daño al jugador enemigo."
+  },
+  {
+    "id": "e118d0c1-fdb9-42fb-b1e6-14ae35c3b580",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Quien domina recuperación de éter, domina el combate.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Recuperación de Éter",
+    "type": "Combate",
+    "rarity": "Poco Común",
+    "stats": {
+      "cost": 0
+    },
+    "descripcion": "Cuando una carta de Éter vaya al Cementerio: Recupera esa carta a tu mano."
+  },
+  {
+    "id": "5c04cc31-af2b-4765-b0ca-bbb40cc9b960",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Golpe Bajo: el movimiento que define al guerrero.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Golpe Bajo",
+    "type": "Combate",
+    "rarity": "Poco Común",
+    "stats": {
+      "cost": 0
+    },
+    "descripcion": "Cuando un Campeón enemigo ataque: El Campeón atacante pierde -2 Ataque."
+  },
+  {
+    "id": "798f8a49-3702-4936-9263-32c95ac4cd0c",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Escudo de Almas: el movimiento que define al guerrero.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Escudo de Almas",
+    "type": "Combate",
+    "rarity": "Poco Común",
+    "stats": {
+      "cost": 0
+    },
+    "descripcion": "Cuando recibas daño directo: Exilia 1 Éter de tu Reserva: Reduce el daño en 4."
+  },
+  {
+    "id": "f1d72650-0d11-4c6a-af99-3950b8f37143",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Cada golpe de refuerzo de guardia ii cuenta una historia de supervivencia.\"",
+    "keywords": [
+      "Guardián"
+    ],
+    "limiteCopias": 3,
+    "name": "Refuerzo de Guardia II",
+    "type": "Combate",
+    "rarity": "Rara",
+    "stats": {
+      "cost": 0
+    },
+    "descripcion": "Cuando un Guardián sea atacado: Gana +4 Defensa."
+  },
+  {
+    "id": "2a8fb061-5e63-4c62-935d-7eb3b8b86f6c",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Robo de Alma es la danza mortal del campo de batalla.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Robo de Alma",
+    "type": "Combate",
+    "rarity": "Rara",
+    "stats": {
+      "cost": 0
+    },
+    "descripcion": "Cuando un Campeón enemigo vaya al Cementerio: Ganas 4 PE."
+  },
+  {
+    "id": "12376dfd-a5b7-4f78-a3e7-a8a0ae9d68fe",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Explosión de Éter: el movimiento que define al guerrero.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Explosión de Éter",
+    "type": "Combate",
+    "rarity": "Rara",
+    "stats": {
+      "cost": 0
+    },
+    "descripcion": "Cuando un Campeón propio muera: Haz 4 de daño a todos los Campeones enemigos."
+  },
+  {
+    "id": "ff7d0018-57d8-42bb-a9ab-3d00c4e92568",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Furia de la Bestia: el movimiento que define al guerrero.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Furia de la Bestia",
+    "type": "Combate",
+    "rarity": "Rara",
+    "stats": {
+      "cost": 0
+    },
+    "descripcion": "Cuando un Campeón de tipo Bestia ataque: Gana +3 Ataque."
+  },
+  {
+    "id": "921315fd-f3a7-454f-bd36-a463f6ab916c",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Visión del Mago: el movimiento que define al guerrero.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Visión del Mago",
+    "type": "Combate",
+    "rarity": "Épica",
+    "stats": {
+      "cost": 0
+    },
+    "descripcion": "Cuando juegues una Mística: Puedes copiarla y jugarla de nuevo sin coste."
+  },
+  {
+    "id": "964aa81a-19e2-4d72-ba20-f8a67fd1eb08",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Sombra del Vacío: el movimiento que define al guerrero.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Sombra del Vacío",
+    "type": "Combate",
+    "rarity": "Épica",
+    "stats": {
+      "cost": 0
+    },
+    "descripcion": "Cuando un Campeón de tipo Espectro ataque: El daño no puede ser bloqueado."
+  },
+  {
+    "id": "69574b6b-2d35-4466-8082-fd78e620e0d5",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Escudo de Dragón es la danza mortal del campo de batalla.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Escudo de Dragón",
+    "type": "Combate",
+    "rarity": "Épica",
+    "stats": {
+      "cost": 0
+    },
+    "descripcion": "Cuando un Campeón de tipo Dragón sea atacado: Gana +5 Defensa."
+  },
+  {
+    "id": "62bc83cf-3d41-4acd-b4ba-571aeaf8293c",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Orden Divino. Que su nombre sea recordido por siempre.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Orden Divino",
+    "type": "Combate",
+    "rarity": "Legendaria",
+    "stats": {
+      "cost": 0
+    },
+    "descripcion": "Cuando un Campeón de tipo Céleste entre al campo: Ganas 5 PE."
+  },
+  {
+    "id": "79420ec9-0fd5-4da5-8702-e31126dd2196",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Caos Eterno — la culminación del Éter en su máxima expresión.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Caos Eterno",
+    "type": "Combate",
+    "rarity": "Legendaria",
+    "stats": {
+      "cost": 0
+    },
+    "descripcion": "Cuando un Campeón de tipo Abisal entre al campo: Destruye un Campeón enemigo con 5 o menos de Defensa."
+  },
+  {
+    "id": "33ebb989-45bc-44b9-9c7d-59afe437bc10",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Ataque Sorpresa transforma la energía en violencia controlada.\"",
+    "keywords": [
+      "Vanguardia"
+    ],
+    "limiteCopias": 3,
+    "name": "Ataque Sorpresa",
+    "type": "Combate",
+    "rarity": "Poco Común",
+    "stats": {
+      "cost": 0
+    },
+    "descripcion": "Cuando un Campeón con Vanguardia ataque: El daño no puede ser bloqueado."
+  },
+  {
+    "id": "435d54a6-a1d8-47e2-a58a-7d22dafc30f6",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Defensa de Hierro es la danza mortal del campo de batalla.\"",
+    "keywords": [
+      "Inquebrantable"
+    ],
+    "limiteCopias": 3,
+    "name": "Defensa de Hierro",
+    "type": "Combate",
+    "rarity": "Rara",
+    "stats": {
+      "cost": 0
+    },
+    "descripcion": "Cuando un Campeón con Inquebrantable reciba daño: Reduce el daño en 3."
+  },
+  {
+    "id": "f6c1b2aa-19a3-4fb2-86b9-4bec4b1c9793",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Golpe Letal transforma la energía en violencia controlada.\"",
+    "keywords": [
+      "Golpe Letal"
+    ],
+    "limiteCopias": 3,
+    "name": "Golpe Letal",
+    "type": "Combate",
+    "rarity": "Rara",
+    "stats": {
+      "cost": 0
+    },
+    "descripcion": "Cuando un Campeón con Golpe Letal ataque: Haz 2 de daño adicional."
+  },
+  {
+    "id": "2f417f9f-8b1d-4dff-81da-220ff13016f9",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Cada golpe de carga imparable cuenta una historia de supervivencia.\"",
+    "keywords": [
+      "Carga"
+    ],
+    "limiteCopias": 3,
+    "name": "Carga Imparable",
+    "type": "Combate",
+    "rarity": "Poco Común",
+    "stats": {
+      "cost": 0
+    },
+    "descripcion": "Cuando un Campeón con Carga ataque: Gana +2 Ataque adicional."
+  },
+  {
+    "id": "aa22fd2b-9d1e-4d01-bb0a-cadefe4b12a0",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Fracturar transforma la energía en violencia controlada.\"",
+    "keywords": [
+      "Fracturar"
+    ],
+    "limiteCopias": 3,
+    "name": "Fracturar",
+    "type": "Combate",
+    "rarity": "Poco Común",
+    "stats": {
+      "cost": 0
+    },
+    "descripcion": "Cuando un Campeón con Fracturar haga daño: Reduce la Defensa del enemigo en 1 permanente."
+  },
+  {
+    "id": "272d69d0-9aef-40e4-8158-1226a85a9030",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Escudo de la Luz transforma la energía en violencia controlada.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Escudo de la Luz",
+    "type": "Combate",
+    "rarity": "Rara",
+    "element": "Luz",
+    "stats": {
+      "cost": 0
+    },
+    "descripcion": "Cuando un Campeón de tipo Céleste sea atacado: Reduce el daño a 0."
+  },
+  {
+    "id": "94019281-6989-4b00-b648-79e3efdd6f59",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Manto Oscuro transforma la energía en violencia controlada.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Manto Oscuro",
+    "type": "Combate",
+    "rarity": "Rara",
+    "element": "Tinieblas",
+    "stats": {
+      "cost": 0
+    },
+    "descripcion": "Cuando un Campeón de tipo Espectro sea atacado: Niega el ataque."
+  },
+  {
+    "id": "8a445684-d264-4323-ad2c-6c73542303e4",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Garras de la Bestia: el movimiento que define al guerrero.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Garras de la Bestia",
+    "type": "Combate",
+    "rarity": "Épica",
+    "element": "Tierra",
+    "stats": {
+      "cost": 0
+    },
+    "descripcion": "Cuando un Campeón de tipo Bestia destruya un Campeón: Roba 1 carta."
+  },
+  {
+    "id": "bea5c6a0-1a51-4696-8e9c-c8d1b7bb95af",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Aliento de Dragón es la danza mortal del campo de batalla.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Aliento de Dragón",
+    "type": "Combate",
+    "rarity": "Épica",
+    "element": "Fuego",
+    "stats": {
+      "cost": 0
+    },
+    "descripcion": "Cuando un Campeón de tipo Dragón ataque: Haz 2 de daño a todos los Campeones enemigos."
+  },
+  {
+    "id": "740ddf69-152c-4871-b9a8-427ab2e06b2d",
+    "createdAt": "2026-07-30T18:09:40.364Z",
+    "updatedAt": "2026-07-30T18:09:40.364Z",
+    "flavorText": "\"Quien domina escudo del guerrero, domina el combate.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Escudo del Guerrero",
+    "type": "Combate",
+    "rarity": "Poco Común",
+    "stats": {
+      "cost": 0
+    },
+    "descripcion": "Cuando un Campeón de tipo Guerrero sea atacado: Gana +3 Defensa y contraataca con 1 de daño."
+  }
+]

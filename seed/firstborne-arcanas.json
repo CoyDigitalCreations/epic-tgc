@@ -1,0 +1,53 @@
+[
+  {
+    "id": "95d3048b-d630-4233-9cfd-6925a12dc274",
+    "createdAt": "2026-07-30T18:09:41.702Z",
+    "updatedAt": "2026-07-30T18:09:41.702Z",
+    "flavorText": "\"La luz de la luna la protege incluso en las batallas más oscuras.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Escudo de la Luna",
+    "type": "Arcana",
+    "rarity": "Poco Común",
+    "element": "Luz",
+    "stats": {
+      "cost": 2
+    },
+    "condicion": "Cuando recibas daño directo",
+    "recompensa": "Reduce el daño a 0. Si exilias 1 Éter de tu Reserva, el atacante recibe 2 de daño."
+  },
+  {
+    "id": "f11ce9fd-ae80-465e-a91c-cdbf1e828749",
+    "createdAt": "2026-07-30T18:09:41.702Z",
+    "updatedAt": "2026-07-30T18:09:41.702Z",
+    "flavorText": "\"Su grito atraviesa montañas. Su llamado convoca a todas las hijas del Éter.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Grito de Guerra Ancestral",
+    "type": "Arcana",
+    "rarity": "Épica",
+    "element": "Aire",
+    "stats": {
+      "cost": 3
+    },
+    "condicion": "Cuando tu fase de combate comience",
+    "recompensa": "Todos tus Campeones Firstborne ganan +1 Ataque por cada Éter en tu Reserva hasta el final de tu Ocaso."
+  },
+  {
+    "id": "44f06853-8cd8-4319-b261-06cb55726eb1",
+    "createdAt": "2026-07-30T18:09:41.702Z",
+    "updatedAt": "2026-07-30T18:09:41.702Z",
+    "flavorText": "\"La muerte no es el final. Es el comienzo de algo más grande. El Éter nunca olvida a sus hijas.\"",
+    "keywords": [],
+    "limiteCopias": 1,
+    "name": "Despertar del Éter Primigenio",
+    "type": "Arcana",
+    "rarity": "Única",
+    "element": "Luz",
+    "stats": {
+      "cost": 5
+    },
+    "condicion": "Cuando un Campeón Firstborne sea destruido",
+    "recompensa": "Devuelve ese Campeón al campo con +2 Ataque y +2 Defensa. Luego pon 2 cartas de Éter de tu mazo a tu Reserva."
+  }
+]

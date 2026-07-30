@@ -1,0 +1,34 @@
+[
+  {
+    "id": "1c52db72-598b-431e-8b7c-12f9d5a56bee",
+    "createdAt": "2026-07-30T18:09:41.702Z",
+    "updatedAt": "2026-07-30T18:09:41.702Z",
+    "flavorText": "\"Cada golpe lleva el peso de su legado. Cada batalla, la fuerza de su estirpe.\"",
+    "keywords": [
+      "Golpe Letal"
+    ],
+    "limiteCopias": 3,
+    "name": "Golpe de la Primogénita",
+    "type": "Combate",
+    "rarity": "Común",
+    "stats": {
+      "cost": 0
+    },
+    "descripcion": "Cuando un Campeón Firstborne ataque: Gana +2 Ataque. Si exilias 1 Éter de tu Reserva, también gana Golpe Letal este turno."
+  },
+  {
+    "id": "a85a53bc-fff5-466c-b5cc-07ef6e39e8bc",
+    "createdAt": "2026-07-30T18:09:41.702Z",
+    "updatedAt": "2026-07-30T18:09:41.702Z",
+    "flavorText": "\"La oscuridad la envuelve como una segunda piel. Sus enemigos nunca la ven venir.\"",
+    "keywords": [],
+    "limiteCopias": 3,
+    "name": "Manto de Sombras",
+    "type": "Combate",
+    "rarity": "Común",
+    "stats": {
+      "cost": 0
+    },
+    "descripcion": "Cuando un Campeón Firstborne sea atacado: Gana +3 Defensa. Si exilias 1 Éter de tu Reserva, el atacante recibe 2 de daño."
+  }
+]
