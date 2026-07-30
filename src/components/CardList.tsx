@@ -267,9 +267,9 @@ export function CardList() {
                   <p className="text-xs text-gray-200 truncate font-medium flex-1">
                     {card.name || 'Sin nombre'}
                   </p>
-                  {(card as Record<string, unknown>).limiteCopias && (
+                  {card.limiteCopias && (
                     <span className="text-[10px] font-mono text-gray-500 bg-surface border border-card-border rounded px-1 py-0.5 leading-none shrink-0">
-                      ×{(card as Record<string, unknown>).limiteCopias as number}
+                      ×{card.limiteCopias}
                     </span>
                   )}
                 </div>

@@ -33,6 +33,8 @@ export interface CardMeta {
   esencia?: Esencia
   rol?: Rol
   catHabilidad?: CatHabilidad
+  /** Copy limit: '1' | '2' | '3' (string to match form select) */
+  limiteCopias?: string
 }
 
 /** Card type discriminated payloads */
