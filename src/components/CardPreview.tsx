@@ -2,7 +2,9 @@ import { useRef, useState, type ChangeEvent } from 'react'
 import { useCardStore } from '../store/useCardStore'
 import { exportCardToPng } from '../utils/export-png'
 import { fileToDataUrl, isValidImageFile } from '../utils/file-to-data-url'
-import type { AnyCard, CampeonCard, EterCard } from '../types'
+import type { AnyCard, CampeonCard, EterCard, Faccion } from '../types'
+import { FACCION_IMAGES } from '../types'
+import { CardFrame, CostGem, EtherDiamond, NamePlate, StatBadge, TextScroll } from './card-art'
 
 /* ───────── type theme ───────── */
 const TYPE_THEME: Record<
@@ -39,6 +41,11 @@ const TYPE_THEME: Record<
     gradient: 'linear-gradient(180deg, #fbbf24 0%, #a16207 60%, #0d0d1a 100%)',
     border: '#f59e0b',
   },
+  Vínculo: {
+    color: '#34d399',
+    gradient: 'linear-gradient(180deg, #34d399 0%, #065f46 60%, #0d0d1a 100%)',
+    border: '#10b981',
+  },
 }
 
 const RARITY_BORDERS: Record<string, string> = {
@@ -48,15 +55,6 @@ const RARITY_BORDERS: Record<string, string> = {
   'Épica': '#a855f7',
   'Legendaria': '#f59e0b',
   'Única': '#ef4444',
-}
-
-const ELEMENT_COLORS: Record<string, string> = {
-  Fuego: '#ef4444',
-  Agua: '#3b82f6',
-  Tierra: '#92400e',
-  Aire: '#a3e635',
-  Luz: '#fef08a',
-  Tinieblas: '#6b21a8',
 }
 
 /* ───────── component ───────── */
@@ -178,9 +176,8 @@ export function CardPreview({
         overflow: 'hidden',
         borderRadius: 28,
         background: '#0d0f14',
-        border: '6px solid #ffffff',
         boxSizing: 'border-box',
-        boxShadow: `0 0 25px rgba(0,0,0,0.8), 0 0 15px ${rarityBorder}44`,
+        boxShadow: `0 0 30px rgba(0,0,0,0.9)`,
         fontFamily: '"Cinzel", serif',
       }}
       className="select-none"
@@ -301,15 +298,23 @@ export function CardPreview({
       </div>
 
       {/* ── Marco Rúnico y Adornos Metalicos de la Carta ── */}
-      <div
+      <CardFrame accent={theme.color} rarityColor={rarityBorder} variant={displayCard.type} />
+
+      {/* ── Marco Inferior (public/marco_bajo.png) — 75% del ancho, centrado ── */}
+      <img
+        src="/marco_bajo.png"
+        alt=""
+        draggable={false}
         style={{
           position: 'absolute',
-          inset: 12,
-          border: `2px solid ${rarityBorder}`,
-        borderRadius: 20,
-        pointerEvents: 'none',
-        boxShadow: `inset 0 0 15px rgba(0,0,0,0.8), 0 0 8px ${theme.color}33`,
-        zIndex: 5,
+          left: 48,
+          right: 48,
+          bottom: 40,
+          height: 100,
+          objectFit: 'fill',
+          zIndex: 6,
+          pointerEvents: 'none',
+          userSelect: 'none',
         }}
       />
 
@@ -319,81 +324,36 @@ export function CardPreview({
             position: 'absolute',
             top: 24,
             left: 24,
-            right: 24,
-            height: 60,
+            right: 18,
+            height: 80,
             display: 'flex',
             alignItems: 'center',
             zIndex: 10,
           }}
         >
           {/* ── GEMA HEXAGONAL DE COSTE (Esquina Izquierda) ── */}
-          {displayCard.type === 'Táctica' || displayCard.type === 'Combate' || displayCard.type === 'Éter' ? null : (
+          {displayCard.type === 'Táctica' || displayCard.type === 'Combate' || displayCard.type === 'Éter' || displayCard.type === 'Vínculo' ? null : (
             <div
               style={{
                 position: 'absolute',
                 left: 0,
                 top: -6,
-                width: 80,
+                width: 150,
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
                 zIndex: 15,
               }}
             >
-              {/* Hexágono Éter SVG */}
-              <div
-                style={{
-                  width: 60,
-                  height: 66,
-                  position: 'relative',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  filter: 'drop-shadow(0px 0px 8px rgba(56, 189, 248, 0.7))',
-                }}
-              >
-                <svg
-                  viewBox="0 0 100 115"
-                  width="60"
-                  height="66"
-                  style={{ position: 'absolute', inset: 0 }}
-                >
-                  <defs>
-                    <linearGradient id="etherHexGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                      <stop offset="0%" stopColor="#38bdf8" />
-                      <stop offset="60%" stopColor="#0284c7" />
-                      <stop offset="100%" stopColor="#0369a1" />
-                    </linearGradient>
-                  </defs>
-                  <polygon
-                    points="50,2 98,29 98,86 50,113 2,86 2,29"
-                    fill="url(#etherHexGrad)"
-                    stroke="#bae6fd"
-                    strokeWidth="4"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-                <span
-                  style={{
-                    position: 'relative',
-                    zIndex: 2,
-                    fontFamily: '"Cinzel", serif',
-                    fontSize: 32,
-                    fontWeight: 900,
-                    color: '#ffffff',
-                    textShadow: '0 2px 6px rgba(0,0,0,0.8), 0 0 8px rgba(255,255,255,0.8)',
-                  }}
-                >
-                  {(stats.cost as number) ?? 0}
-                </span>
-              </div>
+              {/* Hexágono Éter — imagen public/hexagono_eter.png (doble de tamaño) */}
+              <CostGem cost={(stats.cost as number) ?? 0} size={128} />
 
               {/* Etiqueta COSTE */}
               <div style={{ marginTop: 4, padding: '2px 8px' }}>
                 <span
                   style={{
                     fontFamily: '"Cinzel", serif',
-                    fontSize: 12,
+                    fontSize: 14,
                     fontWeight: 900,
                     color: '#bae6fd',
                     letterSpacing: '1px',
@@ -407,48 +367,20 @@ export function CardPreview({
           )}
 
           {/* ── PLACA PRINCIPAL DEL NOMBRE (Centro/Derecha) ── */}
-          <div
-            style={{
-              marginLeft: (displayCard.type === 'Táctica' || displayCard.type === 'Combate' || displayCard.type === 'Éter') ? 0 : 90,
-              flex: 1,
-              height: 48,
-              background: 'linear-gradient(180deg, #2a2420 0%, #171311 50%, #0d0a09 100%)',
-              border: '2px solid #a38258',
-              borderRadius: 6,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              paddingLeft: (displayCard.type === 'Táctica' || displayCard.type === 'Combate' || displayCard.type === 'Éter') ? 16 : 20,
-              paddingRight: 16,
-              boxShadow: 'inset 0 0 10px rgba(0,0,0,0.8), 0 4px 10px rgba(0,0,0,0.7)',
-              position: 'relative',
-            }}
-          >
-            <span
-              style={{
-                fontFamily: '"Cinzel", serif',
-                fontSize: 21,
-                fontWeight: 800,
-                color: '#fef08a',
-                textShadow: '0 2px 4px rgba(0,0,0,0.9), 0 0 6px rgba(253, 224, 71, 0.3)',
-                letterSpacing: '1px',
-                textTransform: 'uppercase',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-              }}
-            >
-              {displayCard.name || 'Sin Nombre'}
-            </span>
-          </div>
+          <NamePlate
+            name={displayCard.name}
+            accent={theme.color}
+            marginLeft={-6}
+            paddingLeft={(displayCard.type === 'Táctica' || displayCard.type === 'Combate' || displayCard.type === 'Éter' || displayCard.type === 'Vínculo') ? 16 : 20}
+          />
         </div>
 
         {displayCard.type === 'Éter' && (
-          /* ── SÍMBOLO DE ÉTER CENTRAL (debajo del nombre, 1.5x) ── */
+          /* ── SÍMBOLO DE ÉTER CENTRAL (debajo del nombre) ── */
           <div
             style={{
               position: 'absolute',
-              top: 90,
+              top: 80,
               left: '50%',
               transform: 'translateX(-50%)',
               display: 'flex',
@@ -458,69 +390,7 @@ export function CardPreview({
             }}
           >
             {/* Diamante ÉTER grande (1.5x del original) */}
-            <div
-              style={{
-                width: 90,
-                height: 90,
-                position: 'relative',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                filter: 'drop-shadow(0px 0px 15px rgba(251, 191, 36, 0.8))',
-              }}
-            >
-              <svg viewBox="0 0 100 100" width="87" height="87" style={{ position: 'absolute', inset: 0 }}>
-                <defs>
-                  <linearGradient id="eterBigDiamond" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#fef08a" />
-                    <stop offset="50%" stopColor="#fbbf24" />
-                    <stop offset="100%" stopColor="#b45309" />
-                  </linearGradient>
-                </defs>
-                <polygon
-                  points="50,2 98,50 50,98 2,50"
-                  fill="url(#eterBigDiamond)"
-                  stroke="#fef08a"
-                  strokeWidth="4"
-                  strokeLinejoin="round"
-                />
-              </svg>
-              <div
-                style={{
-                  position: 'relative',
-                  zIndex: 2,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  lineHeight: 1,
-                  gap: 4,
-                }}
-              >
-                <span
-                  style={{
-                    fontFamily: '"Cinzel", serif',
-                    fontSize: 22,
-                    fontWeight: 900,
-                    color: '#fef08a',
-                    textShadow: '0 2px 6px rgba(0,0,0,0.8), 0 0 10px rgba(255,255,255,0.8)',
-                  }}
-                >
-                  ✦
-                </span>
-                <span
-                  style={{
-                    fontFamily: '"Cinzel", serif',
-                    fontSize: 44,
-                    fontWeight: 900,
-                    color: '#ffffff',
-                    textShadow: '0 2px 6px rgba(0,0,0,0.8), 0 0 10px rgba(255,255,255,0.8)',
-                  }}
-                >
-                  {(stats.cost as number) ?? 0}
-                </span>
-              </div>
-            </div>
+            <EtherDiamond value={(stats.cost as number) ?? 0} size={90} />
             {/* Etiqueta ÉTER grande */}
             <div style={{ marginTop: 6 }}>
               <span
@@ -539,109 +409,100 @@ export function CardPreview({
           </div>
         )}
 
-        {/* ── Badge circular de Elemento (esquina derecha del header) ── */}
-        {displayCard.element && (
-          <div
-            style={{
-              position: 'absolute',
-              right: 28,
-              top: 90,
-              width: 50,
-              height: 50,
-              borderRadius: '50%',
-              background: `radial-gradient(circle at 30% 30%, ${ELEMENT_COLORS[displayCard.element] ?? '#888'} 0%, #000 150%)`,
-              border: '3px solid #fef08a',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 4px 10px rgba(0,0,0,0.8), inset 0 2px 4px rgba(255,255,255,0.4)',
-              zIndex: 15,
-            }}
-          >
-            <span
+        {(() => {
+          const facs = (displayCard as AnyCard & { facciones?: Faccion[] }).facciones
+          if (!facs?.length) return null
+          return (
+            <div
               style={{
-                fontFamily: '"Inter", sans-serif',
-                fontSize: 22,
-                textShadow: '0 2px 4px rgba(0,0,0,0.8)',
-                lineHeight: 1,
+                position: 'absolute',
+                right: 28,
+                top: 120,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 10,
+                zIndex: 15,
               }}
             >
-              {displayCard.element === 'Fuego' ? '🔥' :
-                displayCard.element === 'Agua' ? '💧' :
-                  displayCard.element === 'Tierra' ? '⛰️' :
-                    displayCard.element === 'Aire' ? '🌪️' :
-                      displayCard.element === 'Luz' ? '☀️' :
-                        displayCard.element === 'Tinieblas' ? '🌑' : '✨'}
-            </span>
-          </div>
-        )}
+              {facs.slice(0, 3).map((fac) => (
+                <img
+                  key={fac}
+                  src={FACCION_IMAGES[fac]}
+                  alt={fac}
+                  title={fac}
+                  style={{
+                    width: 110,
+                    height: 110,
+                    objectFit: 'contain',
+                    borderRadius: '50%',
+                    filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.6))',
+                  }}
+                />
+              ))}
+            </div>
+          )
+        })()}
 
         {/* ════════════ BARRA DE CLASIFICACIÓN / SUBTIPOS ════════════ */}
         <div
           style={{
             position: 'absolute',
-            top: 605,
-            left: 45,
-            right: 45,
-            height: 28,
-            background: 'linear-gradient(180deg, #2b231c 0%, #1a1410 100%)',
-            border: '1.5px solid #a38258',
-            borderRadius: 4,
+            top: 586,
+            left: 18,
+            right: 18,
+            height: 40,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             zIndex: 15,
-            boxShadow: '0 4px 8px rgba(0,0,0,0.6)',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.5)',
           }}
         >
+          {/* Fondo — imagen public/esencia_text.png */}
+          <img
+            src="/esencia_text.png"
+            alt=""
+            draggable={false}
+            style={{
+              position: 'absolute',
+              inset: 0,
+              width: '100%',
+              height: '100%',
+              objectFit: 'fill',
+              userSelect: 'none',
+            }}
+          />
           <span
             style={{
+              position: 'relative',
+              zIndex: 2,
               fontFamily: '"Cinzel", serif',
-              fontSize: 13,
-              fontWeight: 700,
+              fontSize: 14,
+              fontWeight: 800,
               color: '#fef08a',
               letterSpacing: '1.5px',
               textTransform: 'uppercase',
+              textShadow: '0 2px 4px rgba(0,0,0,0.9)',
             }}
           >
             {displayCard.type === 'Campeón'
               ? [
-                (displayCard as AnyCard & { faccion?: string }).faccion || 'SIN FACCIÓN',
                 (displayCard as AnyCard & { esencia?: string }).esencia || 'SIN ESENCIA',
                 (displayCard as AnyCard & { rol?: string }).rol || 'SIN ROL',
                 (displayCard as AnyCard & { catHabilidad?: string }).catHabilidad || 'NORML',
               ].join(' / ')
-              : displayCard.type === 'Mística'
-                ? `${displayCard.type.toUpperCase()}${displayCard.element ? ` - ${displayCard.element.toUpperCase()}` : ''}`
-                : displayCard.type === 'Éter'
-                  ? `ÉTER${(() => {
-                    const te = (displayCard as AnyCard & { tipoEfecto?: string }).tipoEfecto
-                    return te ? ` / ${te.toUpperCase()}` : ''
-                  })()}`
-                  : `${displayCard.type.toUpperCase()}${displayCard.element ? ` / ${displayCard.element.toUpperCase()}` : ''}`
+              : displayCard.type.toUpperCase()
             }
           </span>
         </div>
 
         {/* ════════════ CAJA DE TEXTO Y HABILIDADES (PERGAMINO ENVEJECIDO) ════════════ */}
-        <div
+        <TextScroll
           style={{
-            position: 'absolute',
-            top: 640,
-            left: 40,
-            right: 40,
-            height: 310,
-            background: 'linear-gradient(180deg, #d8c49e 0%, #c4af88 50%, #b8a27a 100%)',
-            border: '3px solid #6b5335',
-            borderRadius: 12,
-            padding: '24px 20px 60px 20px',
-            boxSizing: 'border-box',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'flex-start',
-            gap: 10,
-            boxShadow: 'inset 0 0 25px rgba(80, 55, 25, 0.4), 0 8px 16px rgba(0,0,0,0.6)',
-            zIndex: 10,
+            top: 624,
+            left: 48,
+            right: 48,
+            height: 330,
           }}
         >
           {/* Palabras clave (Keywords) */}
@@ -688,7 +549,7 @@ export function CardPreview({
                   if (cm.efectoActivo) {
                     parts.push(
                       <p key="activo" style={{ fontFamily: '"Inter", sans-serif', fontSize: fluidSize(cm.efectoActivo, 13.5), lineHeight: 1.35, fontWeight: 500, color: '#261a0e', margin: 0, marginTop: parts.length > 0 ? 8 : 0 }}>
-                        <strong>Activo:</strong> {cm.efectoActivo}
+                        <strong>Activo{cm.tipoHabilidad ? ` (${cm.tipoHabilidad})` : ''}:</strong> {cm.efectoActivo}
                       </p>
                     )
                   }
@@ -793,32 +654,50 @@ export function CardPreview({
               case 'Éter': {
                 const et = c as EterCard
                 const parts: React.ReactNode[] = []
-                if (et.tipoEfecto === 'Pasivo' || et.tipoEfecto === 'Especial') {
-                  if (et.efectoPasivo) {
-                    parts.push(
-                      <p key="pasivo" style={{ fontFamily: '"Inter", sans-serif', fontSize: fluidSize(et.efectoPasivo, 14), lineHeight: 1.4, color: '#1c130b', margin: 0 }}>
-                        <strong>Pasivo:</strong> {et.efectoPasivo}
-                      </p>
-                    )
-                  }
+                if (et.efectoReserva) {
+                  parts.push(
+                    <p key="reserva" style={{ fontFamily: '"Inter", sans-serif', fontSize: fluidSize(et.efectoReserva, 14), lineHeight: 1.4, color: '#1c130b', margin: 0 }}>
+                      <strong>Reserva (2A):</strong> {et.efectoReserva}
+                    </p>
+                  )
                 }
-                if (et.tipoEfecto === 'Activo' || et.tipoEfecto === 'Especial') {
-                  if (et.efectoActivo) {
-                    parts.push(
-                      <p key="activo" style={{ fontFamily: '"Inter", sans-serif', fontSize: fluidSize(et.efectoActivo, 14), lineHeight: 1.4, color: '#1c130b', margin: 0, marginTop: parts.length > 0 ? 8 : 0 }}>
-                        <strong>Activo:</strong> {et.efectoActivo}
-                      </p>
-                    )
-                  }
+                if (et.efectoPago) {
+                  parts.push(
+                    <p key="pago" style={{ fontFamily: '"Inter", sans-serif', fontSize: fluidSize(et.efectoPago, 14), lineHeight: 1.4, color: '#1c130b', margin: 0, marginTop: parts.length > 0 ? 8 : 0 }}>
+                      <strong>Pago (1A{et.variantePago ? `, ${et.variantePago}` : ''}):</strong> {et.efectoPago}
+                    </p>
+                  )
+                }
+                if (et.efectoBloqueo) {
+                  parts.push(
+                    <p key="bloqueo" style={{ fontFamily: '"Inter", sans-serif', fontSize: fluidSize(et.efectoBloqueo, 14), lineHeight: 1.4, color: '#1c130b', margin: 0, marginTop: parts.length > 0 ? 8 : 0 }}>
+                      <strong>Bloqueo (1B-1F):</strong> {et.efectoBloqueo}
+                    </p>
+                  )
                 }
                 return parts.length > 0 ? <>{parts}</> : null
               }
+
+              case 'Vínculo':
+                return c.efecto ? (
+                  <p
+                    style={{
+                      fontFamily: '"Inter", sans-serif',
+                      fontSize: fluidSize(c.efecto, 14),
+                      lineHeight: 1.4,
+                      color: '#1c130b',
+                      margin: 0,
+                    }}
+                  >
+                    <strong>Efecto Permanente:</strong> {c.efecto}
+                  </p>
+                ) : null
             }
           })()}
 
           {/* Texto de ambientación (Flavor Text) */}
           {hasFlavorText && (
-            <div style={{ marginTop: 'auto', paddingTop: 6, borderTop: '1px solid #a3825866' }}>
+            <div style={{ marginTop: 'auto', marginBottom: 40, paddingTop: 6, borderTop: '1px solid #a3825866' }}>
               <p
                 style={{
                   fontFamily: '"Inter", serif',
@@ -833,7 +712,7 @@ export function CardPreview({
               </p>
             </div>
           )}
-        </div>
+        </TextScroll>
 
         {/* ════════════ BADGES INFERIORES DE ATK Y DEF ════════════ */}
         {showCombatStats && (
@@ -851,124 +730,10 @@ export function CardPreview({
             }}
           >
             {/* BADGE DE ATK (Izquierda - Medallón con Hacha) */}
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                background: 'linear-gradient(180deg, #3a2218 0%, #1c0e08 100%)',
-                border: '2px solid #b45309',
-                borderRadius: 30,
-                padding: '3px 18px 3px 6px',
-                boxShadow: '0 6px 12px rgba(0,0,0,0.8), 0 0 10px rgba(180, 83, 9, 0.4)',
-              }}
-            >
-              {/* Ícono Círculo Hacha */}
-              <div
-                style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: '50%',
-                  background: 'radial-gradient(circle, #ea580c 0%, #7c2d12 100%)',
-                  border: '2px solid #fef08a',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  marginRight: 8,
-                  boxShadow: '0 2px 4px rgba(0,0,0,0.5)',
-                }}
-              >
-                <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#ffffff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M14.5 17.5L3 6V3h3l11.5 11.5" />
-                  <path d="M13 19l6-6" />
-                  <path d="M16 16l4 4" />
-                  <path d="M19 21l2-2" />
-                </svg>
-              </div>
-
-              {/* Valor Numérico y Etiqueta ATK */}
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
-                <span
-                  style={{
-                    fontFamily: '"Cinzel", serif',
-                    fontSize: 28,
-                    fontWeight: 900,
-                    color: '#ffffff',
-                    textShadow: '0 2px 4px rgba(0,0,0,0.9)',
-                  }}
-                >
-                  {(stats.poder as number) ?? 500}
-                </span>
-                <span
-                  style={{
-                    fontFamily: '"Cinzel", serif',
-                    fontSize: 12,
-                    fontWeight: 800,
-                    color: '#f97316',
-                    letterSpacing: '1px',
-                  }}
-                >
-                  ATQ
-                </span>
-              </div>
-            </div>
+            <StatBadge kind="atk" value={(stats.poder as number) ?? 500} />
 
             {/* BADGE DE RES (Derecha - Escudo Rúnico Cian) */}
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                background: 'linear-gradient(180deg, #0f2942 0%, #081420 100%)',
-                border: '2px solid #0284c7',
-                borderRadius: 30,
-                padding: '3px 6px 3px 18px',
-                boxShadow: '0 6px 12px rgba(0,0,0,0.8), 0 0 10px rgba(2, 132, 199, 0.4)',
-              }}
-            >
-              {/* Valor Numérico y Etiqueta DEF */}
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginRight: 8 }}>
-                <span
-                  style={{
-                    fontFamily: '"Cinzel", serif',
-                    fontSize: 12,
-                    fontWeight: 800,
-                    color: '#38bdf8',
-                    letterSpacing: '1px',
-                  }}
-                >
-                  RES
-                </span>
-                <span
-                  style={{
-                    fontFamily: '"Cinzel", serif',
-                    fontSize: 28,
-                    fontWeight: 900,
-                    color: '#ffffff',
-                    textShadow: '0 2px 4px rgba(0,0,0,0.9)',
-                  }}
-                >
-                  {(stats.resistencia as number) ?? 700}
-                </span>
-              </div>
-
-              {/* Ícono Círculo Escudo */}
-              <div
-                style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: '50%',
-                  background: 'radial-gradient(circle, #0284c7 0%, #0c4a6e 100%)',
-                  border: '2px solid #bae6fd',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  boxShadow: '0 2px 4px rgba(0,0,0,0.5)',
-                }}
-              >
-                <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#ffffff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" fill="rgba(255,255,255,0.15)" />
-                </svg>
-              </div>
-            </div>
+            <StatBadge kind="res" value={(stats.resistencia as number) ?? 700} />
           </div>
         )}
 

@@ -2,6 +2,8 @@ import { useState, useMemo, useRef } from 'react'
 import { useCardStore } from '../store/useCardStore'
 import { exportCollectionToJson, importCollectionFromJson } from '../utils/export-json'
 import { CARD_TYPES, type CardType } from '../types'
+import { PAQUETES, FIRSTBORNE_CARDS, progresoPaquete } from '../data/paquetes'
+import { RuneIcon } from './card-art'
 import { ConfirmModal } from './modals/ConfirmModal'
 
 export function CardList() {
@@ -16,6 +18,7 @@ export function CardList() {
   // Filters
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState<CardType | 'Todas'>('Todas')
+  const [paqueteFilter, setPaqueteFilter] = useState<string | 'Todos'>('Todos')
 
   // Clear confirmation
   const [showClearModal, setShowClearModal] = useState(false)
@@ -24,6 +27,7 @@ export function CardList() {
     () =>
       cards.filter((card) => {
         if (typeFilter !== 'Todas' && card.type !== typeFilter) return false
+        if (paqueteFilter !== 'Todos' && card.paqueteId !== paqueteFilter) return false
         if (search) {
           const q = search.toLowerCase()
           const name = (card.name || '').toLowerCase()
@@ -31,7 +35,7 @@ export function CardList() {
         }
         return true
       }),
-    [cards, search, typeFilter],
+    [cards, search, typeFilter, paqueteFilter],
   )
 
   const handleEdit = (card: (typeof cards)[number]) => {
@@ -41,6 +45,31 @@ export function CardList() {
   const handleImport = () => {
     fileInputRef.current?.click()
   }
+
+  const handleImportPaquete = (paqueteId: string) => {
+    const cartas = paqueteId === 'firstborne' ? FIRSTBORNE_CARDS : []
+    if (cartas.length === 0) return
+    const existentes = new Set(cards.map((c) => c.id))
+    const nuevas = cartas.filter((c) => !existentes.has(c.id))
+    loadCards(cartas)
+    if (nuevas.length === 0) {
+      alert('El paquete ya está completo en tu colección.')
+    } else {
+      alert(
+        `Paquete importado: ${nuevas.length} cartas nuevas agregadas ` +
+        `(ya tenías ${cartas.length - nuevas.length} en la colección).`,
+      )
+    }
+  }
+
+  // Progreso de colección por paquete (copias / total)
+  const progresoPorPaquete = useMemo(() => {
+    const map = new Map<string, ReturnType<typeof progresoPaquete>>()
+    for (const paquete of PAQUETES) {
+      map.set(paquete.id, progresoPaquete(cards, paquete.id))
+    }
+    return map
+  }, [cards])
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -155,6 +184,65 @@ export function CardList() {
         ))}
       </div>
 
+      {/* Paquete filter pills */}
+      {PAQUETES.length > 0 && (
+        <div className="flex gap-1.5 flex-wrap items-center mb-4">
+          <span className="text-[10px] uppercase tracking-wider text-gray-500 mr-1">
+            Paquete:
+          </span>
+          <button
+            onClick={() => setPaqueteFilter('Todos')}
+            className={`px-3 py-1 rounded-full text-xs font-medium transition-colors cursor-pointer
+              ${paqueteFilter === 'Todos'
+                ? 'bg-ether-600 text-white'
+                : 'bg-surface-2 text-gray-400 hover:text-gray-200 hover:bg-card-border'
+              }`}
+          >
+            Todos
+          </button>
+          {PAQUETES.map((paquete) => {
+            const prog = progresoPorPaquete.get(paquete.id)
+            return (
+              <span key={paquete.id} className="flex items-center gap-1">
+                <button
+                  onClick={() => setPaqueteFilter(paquete.id)}
+                  className={`px-3 py-1 rounded-full text-xs font-medium transition-colors cursor-pointer flex items-center gap-1
+                    ${paqueteFilter === paquete.id
+                      ? 'bg-ether-600 text-white'
+                      : 'bg-surface-2 text-gray-400 hover:text-gray-200 hover:bg-card-border'
+                    }`}
+                  title={paquete.lore}
+                >
+                  <RuneIcon faccion={paquete.facciones[0]} color={paquete.color} size={12} />
+                  {paquete.nombre}
+                </button>
+                {prog && (
+                  <span
+                    title={`Coleccionado: ${prog.coleccionadas}/${prog.total} copias`}
+                    className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono leading-none shrink-0
+                      ${prog.completo
+                        ? 'bg-emerald-600/30 text-emerald-300'
+                        : 'bg-surface text-gray-400 border border-card-border'
+                      }`}
+                  >
+                    {prog.coleccionadas}/{prog.total}
+                    {prog.completo && ' ✓'}
+                  </span>
+                )}
+                <button
+                  onClick={() => handleImportPaquete(paquete.id)}
+                  title={`Importar paquete ${paquete.nombre} (${paquete.distribucion.eter + paquete.distribucion.principal + paquete.distribucion.vinculos} cartas)`}
+                  className="px-2 py-1 rounded-full text-xs bg-ether-600/20 hover:bg-ether-600/40 
+                             text-ether-300 transition-colors cursor-pointer"
+                >
+                  Importar
+                </button>
+              </span>
+            )
+          })}
+        </div>
+      )}
+
       {/* Empty states */}
       {cards.length === 0 ? (
         <div className="text-center py-12 text-gray-500">
@@ -172,6 +260,7 @@ export function CardList() {
               onClick={() => {
                 setSearch('')
                 setTypeFilter('Todas')
+                setPaqueteFilter('Todos')
               }}
               className="text-ether-400 hover:text-ether-300 underline cursor-pointer"
             >
@@ -273,7 +362,21 @@ export function CardList() {
                     </span>
                   )}
                 </div>
-                <p className="text-[10px] text-gray-500">{card.type}</p>
+                <p className="text-[10px] text-gray-500 flex items-center gap-1">
+                  {card.type}
+                  {(() => {
+                    const paquete = PAQUETES.find((p) => p.id === card.paqueteId)
+                    return paquete ? (
+                      <span style={{ display: 'inline-flex' }} title={paquete.nombre}>
+                        <RuneIcon
+                          faccion={paquete.facciones[0]}
+                          color={paquete.color}
+                          size={10}
+                        />
+                      </span>
+                    ) : null
+                  })()}
+                </p>
               </div>
               <div className="flex gap-1 mt-1.5">
                 <button

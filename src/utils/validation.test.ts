@@ -26,11 +26,11 @@ describe('isValidRarity', () => {
 
 describe('isValidKeywords', () => {
   it('returns true for valid keywords', () => {
-    expect(isValidKeywords(['Guardián', 'Carga'])).toBe(true)
+    expect(isValidKeywords(['Carga', 'Vigor'])).toBe(true)
   })
 
   it('returns false if any keyword is invalid', () => {
-    expect(isValidKeywords(['Guardián', 'Invencible'])).toBe(false)
+    expect(isValidKeywords(['Carga', 'Invencible'])).toBe(false)
   })
 
   it('returns true for empty array', () => {
@@ -58,7 +58,7 @@ describe('validateCard', () => {
     const errors = validateCard({
       type: 'Campeón',
       name: 'Aurelion',
-      faccion: 'Orden',
+      facciones: ['Orden'],
       esencia: 'Mago',
       rol: 'Asalto',
       catHabilidad: 'Efecto',

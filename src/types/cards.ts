@@ -1,11 +1,11 @@
-import type { CardType, Rarity, Keyword, Element, Faccion, Esencia, Rol, CatHabilidad } from './enums'
+import type { CardType, Rarity, Keyword, Faccion, Esencia, Rol, CatHabilidad } from './enums'
 
 /** Base stats shared by all cards */
 export interface BaseStats {
   cost: number
 }
 
-/** Stats for cards that can fight (Campeón, Mística, Éter) */
+/** Stats for cards that can fight (solo Campeón en v2.0) */
 export interface CombatStats extends BaseStats {
   poder: number
   resistencia: number
@@ -22,19 +22,20 @@ export interface CardMeta {
   name: string
   type: CardType
   rarity: Rarity
-  element?: Element
   keywords: Keyword[]
   imageUrl?: string
   flavorText: string
   createdAt: string
   updatedAt: string
-  /** Taxonomy (primarily for Campeón) */
-  faccion?: Faccion
+  /** Taxonomy (primarily for Campeón): hasta 3 facciones */
+  facciones?: Faccion[]
   esencia?: Esencia
   rol?: Rol
   catHabilidad?: CatHabilidad
   /** Copy limit: '1' | '2' | '3' (string to match form select) */
   limiteCopias?: string
+  /** Paquete/set al que pertenece la carta (ver types/paquetes.ts) */
+  paqueteId?: string
 }
 
 /** Card type discriminated payloads */
@@ -42,18 +43,22 @@ export interface CampeonCard extends CardMeta {
   type: 'Campeón'
   stats: CombatStats
   tipoEfecto?: 'Pasivo' | 'Activo' | 'Especial'
+  /** Habilidades Activas: 'Continua' o 'Un Solo Uso' (v2.0) */
+  tipoHabilidad?: 'Continua' | 'Un Solo Uso'
   efectoPasivo?: string
   efectoActivo?: string
 }
 
 export interface MisticaCard extends CardMeta {
   type: 'Mística'
-  stats: CombatStats
+  /** No tienen Poder ni Resistencia — son puramente conjuros (6.3) */
+  stats: BaseStats
   efecto: string
 }
 
 export interface TacticaCard extends CardMeta {
   type: 'Táctica'
+  /** No cuestan Éter (6.4): cost se ignora en la UI */
   stats: TacticaStats
   descripcion: string
 }
@@ -67,16 +72,30 @@ export interface ArcanaCard extends CardMeta {
 
 export interface CombateCard extends CardMeta {
   type: 'Combate'
+  /** No cuestan Éter (6.6): cost se ignora en la UI */
   stats: BaseStats
   descripcion: string
 }
 
 export interface EterCard extends CardMeta {
   type: 'Éter'
-  stats: CombatStats
-  tipoEfecto?: 'Pasivo' | 'Activo' | 'Especial'
-  efectoPasivo?: string
-  efectoActivo?: string
+  /** No combaten: valen 1 en v2.0 (8.7). Sin Poder ni Resistencia */
+  stats: BaseStats
+  /** Efecto en zona RESERVA (2A) */
+  efectoReserva?: string
+  /** Efecto en zona PAGO (1A) — pasivo o gatillo */
+  efectoPago?: string
+  variantePago?: 'Pasivo' | 'Gatillo'
+  /** Efecto en zona BLOQUEO (1B-1F) */
+  efectoBloqueo?: string
+}
+
+export interface VinculoCard extends CardMeta {
+  type: 'Vínculo'
+  /** No cuestan Éter (6.7) */
+  stats: BaseStats
+  /** Efecto PERMANENTE a favor del dueño al ser destruido */
+  efecto: string
 }
 
 /** Discriminated union of all card types */
@@ -87,3 +106,4 @@ export type AnyCard =
   | ArcanaCard
   | CombateCard
   | EterCard
+  | VinculoCard

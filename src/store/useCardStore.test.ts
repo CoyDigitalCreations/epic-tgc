@@ -18,7 +18,6 @@ const makeCard = (overrides: Partial<AnyCard> = {}): AnyCard => ({
   rarity: 'Común',
   keywords: [],
   flavorText: '',
-  element: undefined as never,
   createdAt: '2024-01-01',
   updatedAt: '2024-01-01',
   stats: { cost: 3, poder: 1000, resistencia: 800 },

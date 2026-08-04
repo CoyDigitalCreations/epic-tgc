@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ÉTER ENGINE TCG — Manual de Reglas v1.0</title>
+<title>ÉTER ENGINE TCG — Manual de Reglas v2.0</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Inter:wght@300;400;500;600;700&display=swap');
 
@@ -328,6 +328,11 @@
     padding: 4px;
     border-bottom: 1px solid var(--border);
   }
+  .map-cell.span-full { grid-column: 1 / 4; }
+  .map-cell.vinculo {
+    background: linear-gradient(135deg, rgba(168,85,247,0.18), rgba(236,72,153,0.08));
+  }
+  .map-cell.vinculo .code { color: var(--purple); }
 
   /* ── Destiny table ── */
   .destiny-table {
@@ -605,7 +610,7 @@
   <div class="cover">
     <h1>ÉTER ENGINE TCG</h1>
     <p class="subtitle">Manual de Reglas</p>
-    <p class="version">Versión <span>1.0</span> — Set Básico "El Despertar del Éter" + Firstborne</p>
+    <p class="version">Versión <span>2.0</span> — Set Básico "El Despertar del Éter" + Firstborne</p>
     <div class="divider"></div>
     <p style="color:var(--text-muted);font-size:0.85rem;margin-top:12px;">
       Julio 2026 &middot; Creado con Éter Forge
@@ -639,15 +644,22 @@
   <div class="section">
     <div class="section-header"><span class="num">1</span><h2>EL MUNDO DE ÉTER</h2></div>
     <div class="content">
-      <p>En el principio existía el Éter. Una energía primordial que fluye a través de toda la realidad, conectando mundos, criaturas y destinos. De esta energía nacieron las cuatro grandes facciones:</p>
+      <p>En el principio existía el Éter. Una energía primordial que fluye a través de toda la realidad, conectando mundos, criaturas y destinos. De esta energía nacieron los <strong>Cuatro Pilares Cardinales</strong>, las fuerzas puras que sostienen la realidad:</p>
       <ul>
-        <li><strong style="color:var(--cyan)">ORDEN</strong> &mdash; La disciplina y la luz, guardianes del equilibrio.</li>
-        <li><strong style="color:var(--red)">CAOS</strong> &mdash; La libertad y la oscuridad, fuerzas primigenias.</li>
-        <li><strong style="color:var(--purple)">SABIDURÍA</strong> &mdash; El conocimiento y el poder arcano.</li>
-        <li><strong style="color:var(--green)">NATURALEZA</strong> &mdash; La vida salvaje y los elementos.</li>
+        <li><strong style="color:var(--cyan)">ORDEN</strong> <em>(Α · Alfa · Norte)</em> &mdash; La disciplina y la luz, guardianes del equilibrio.</li>
+        <li><strong style="color:var(--red)">CAOS</strong> <em>(Β · Beta · Sur)</em> &mdash; La libertad y la oscuridad, fuerzas primigenias.</li>
+        <li><strong style="color:var(--green)">CREACIÓN</strong> <em>(Γ · Gamma · Oeste)</em> &mdash; La vida, el crecimiento y la innovación.</li>
+        <li><strong style="color:#f97316">DESTRUCCIÓN</strong> <em>(Δ · Delta · Este)</em> &mdash; El fin, la purga y la renovación por el fuego.</li>
+      </ul>
+      <p>Donde los Pilares se entrelazan, surgieron las <strong>Cuatro Facciones Diagonales</strong>, cada una con identidad propia:</p>
+      <ul>
+        <li><strong style="color:#38bdf8">LEY</strong> <em>(Ε · Épsilon · Noroeste)</em> &mdash; El orden que construye y el progreso que legisla.</li>
+        <li><strong style="color:#ec4899">PURGA</strong> <em>(Ζ · Zeta · Noreste)</em> &mdash; La justicia implacable que arrasa lo corrupto.</li>
+        <li><strong style="color:#a855f7">ENTROPÍA</strong> <em>(Η · Eta · Sureste)</em> &mdash; La decadencia total, el vacío que todo lo consume.</li>
+        <li><strong style="color:#84cc16">MUTACIÓN</strong> <em>(Θ · Theta · Suroeste)</em> &mdash; La vida retorcida, la evolución sin reglas.</li>
       </ul>
       <p>Cada facción canaliza el Éter de forma distinta, ya sea a través de campeones, conjuros mágicos, estrategias de batalla, pactos arcanos o golpes de combate.</p>
-      <p>El Set Básico, <strong>"El Despertar del Éter"</strong>, contiene 285 cartas que introducen las mecánicas fundamentales del juego. El mazo temático <strong><span class="highlight">FIRSTBORNE</span></strong> ("Primer Nacido") expande el juego con 29 cartas únicas centradas en campeonas unidas por el Éter primigenio.</p>
+      <p>El Set Básico, <strong>"El Despertar del Éter"</strong>, presentará las mecánicas fundamentales del juego cuando sus cartas sean diseñadas para la v2.0. El mazo temático <strong><span class="highlight">FIRSTBORNE</span></strong> ("Primer Nacido") expande el juego con campeonas unidas por el Éter primigenio, y se encuentra en reestructuración total.</p>
     </div>
   </div>
 
@@ -657,12 +669,12 @@
     <div class="content">
       <p>Para jugar una partida de Éter Engine TCG cada jugador necesita:</p>
       <ul>
-        <li><strong>1 Mazo de ÉTER</strong> &mdash; 20 cartas exactas</li>
-        <li><strong>1 Mazo PRINCIPAL</strong> &mdash; 50 cartas exactas</li>
-        <li><strong>Marcadores de PE</strong> &mdash; dados o fichas para llevar la cuenta</li>
+        <li><strong>15 cartas de ÉTER</strong> &mdash; inician boca arriba en la Reserva (2A); no se roban</li>
+        <li><strong>1 Mazo PRINCIPAL</strong> &mdash; 40 cartas exactas</li>
+        <li><strong>1 Mazo de VÍNCULOS</strong> &mdash; 6 cartas exactas</li>
         <li><strong>Un campo de juego</strong> &mdash; ver sección 7</li>
       </ul>
-      <p><strong>Total por jugador: 70 cartas exactas.</strong></p>
+      <p><strong>Total por jugador: 61 cartas exactas.</strong></p>
     </div>
   </div>
 
@@ -672,12 +684,13 @@
     <div class="content">
       <ol class="steps">
         <li><strong>Barajar:</strong> Ambos jugadores barajan sus DOS mazos por separado:<br>
-          &mdash; Mazo de ÉTER (20 cartas)<br>
-          &mdash; Mazo PRINCIPAL (50 cartas)</li>
-        <li><strong>Colocar:</strong> Ambos jugadores colocan sus mazos en las zonas correspondientes del campo (<span class="highlight">1A</span> para el Mazo de Éter, <span class="highlight">3G</span> para el Mazo Principal).</li>
+          &mdash; Mazo PRINCIPAL (40 cartas)<br>
+          &mdash; Mazo de VÍNCULOS (6 cartas)</li>
+        <li><strong>Colocar:</strong> Cada jugador coloca su Mazo Principal en <span class="highlight">3G</span> (boca abajo) y sus <strong>15 cartas de ÉTER BOCA ARRIBA en la RESERVA (<span class="highlight">2A</span>)</strong>. El Éter no se roba: se dispone de él desde el inicio de la partida.</li>
+        <li><strong>Colocar Vínculos:</strong> Cada jugador coloca sus <strong>6 Vínculos BOCA ABAJO</strong> en las zonas <span class="highlight">4A-4F</span>, en el orden que elija. Cada jugador puede ver sus propios Vínculos, pero <strong>NO</strong> los del oponente.</li>
         <li><strong>Mano inicial:</strong> Cada jugador roba <strong>5 cartas</strong> de su Mazo PRINCIPAL como mano inicial.</li>
+        <li><strong>Mulligan (opcional, 1 vez):</strong> Antes de empezar, cada jugador puede barajar su mano inicial de vuelta al Mazo Principal y robar <strong>5 cartas nuevas</strong>, sin penalización. Solo una vez por jugador.</li>
         <li><strong>Determinar quién empieza:</strong> Los jugadores eligen el método de su preferencia para decidir quién toma el primer turno: volado (moneda al aire), piedra-papel-tijera, dado, etc.</li>
-        <li><strong>Puntos de Energía:</strong> Cada jugador comienza con <strong class="highlight-amber">50 PE</strong> (Puntos de Energía).</li>
       </ol>
     </div>
   </div>
@@ -689,20 +702,29 @@
 
       <div class="section-header sub"><span class="num">4.1</span><h3>COMPOSICIÓN OBLIGATORIA</h3></div>
 
-      <p><strong>Mazo de ÉTER (20 cartas):</strong></p>
+      <p><strong>ÉTER (15 cartas):</strong></p>
       <ul>
         <li>Solo cartas de tipo <span class="tag">ÉTER</span>.</li>
+        <li>En la v2.0 TODAS las cartas de Éter valen <strong>1</strong>.</li>
         <li>Pueden repetirse hasta su límite de copias (×1, ×2 o ×3).</li>
-        <li>Si una carta tiene límite ×3, puedes llevar hasta 3 copias.</li>
-        <li>Las 20 se completan combinando distintas cartas de Éter.</li>
+        <li>Las 15 se completan combinando distintas cartas de Éter.</li>
+        <li>No forman un mazo: inician <strong>BOCA ARRIBA</strong> en la Reserva (2A) y nunca se roban ni se barajan.</li>
       </ul>
 
-      <p><strong>Mazo PRINCIPAL (50 cartas):</strong></p>
+      <p><strong>Mazo PRINCIPAL (40 cartas):</strong></p>
       <ul>
         <li>Cartas de tipo: <span class="tag">CAMPEÓN</span>, <span class="tag">MÍSTICA</span>, <span class="tag">TÁCTICA</span>, <span class="tag">ARCANA</span>, <span class="tag">COMBATE</span>.</li>
-        <li><strong>NO</strong> puede llevar cartas de tipo ÉTER.</li>
+        <li><strong>NO</strong> puede llevar cartas de tipo ÉTER ni VÍNCULO.</li>
         <li>No hay límite por tipo &mdash; el jugador decide su distribución.</li>
         <li>Pueden repetirse hasta su límite de copias.</li>
+      </ul>
+
+      <p><strong>Mazo de VÍNCULOS (6 cartas):</strong></p>
+      <ul>
+        <li>Solo cartas de tipo <span class="tag">VÍNCULO</span>.</li>
+        <li><strong>NO</strong> puede llevar cartas de otro tipo &mdash; los Vínculos nunca se mezclan con los otros mazos, y las cartas de Éter/Principal nunca van al Mazo de Vínculos.</li>
+        <li>Máximo <strong>3 copias</strong> de un mismo Vínculo. Combinaciones válidas de 6: 3+3, 2+2+2, 3+2+1, o 6 Vínculos distintos.</li>
+        <li>Los Vínculos NO cuestan Éter y NO van a la mano: se colocan boca abajo en 4A-4F al inicio de la partida.</li>
       </ul>
 
       <div class="section-header sub"><span class="num">4.2</span><h3>LÍMITE DE COPIAS POR CARTA</h3></div>
@@ -713,8 +735,8 @@
       </ul>
       <p>El campo <strong>"limiteCopias"</strong> de cada carta indica visualmente este límite.</p>
 
-      <div class="section-header sub"><span class="num">4.3</span><h3>CATEGORÍA DE HABILIDAD "ÚNICO"</h3></div>
-      <p>Las cartas con <strong>catHabilidad "Único"</strong> tienen una restricción adicional: <strong class="highlight-red">SOLO 1 copia</strong> de esa carta puede estar en el tablero al mismo tiempo. Puedes tener copias extras en la mano, pero no puedes jugar otra mientras una ya esté en tu campo.</p>
+      <div class="section-header sub"><span class="num">4.3</span><h3>CATEGORÍA DE HABILIDAD "SINGULAR"</h3></div>
+      <p>Las cartas con <strong>catHabilidad "Singular"</strong> tienen una restricción adicional: <strong class="highlight-red">SOLO 1 copia</strong> de esa carta puede estar en el tablero al mismo tiempo. Puedes tener copias extras en la mano, pero no puedes jugar otra mientras una ya esté en tu campo.</p>
     </div>
   </div>
 
@@ -728,7 +750,7 @@
         <div class="ca-meta">★ RAREZA &nbsp;&middot;&nbsp; COSTE de Éter (stats.cost)</div>
         <div class="ca-line"></div>
         <div class="ca-meta">Tipo: Campeón | Mística | ...</div>
-        <div class="ca-meta">Elemento: Fuego | Agua | ...</div>
+        <div class="ca-meta">Facción: Orden | Caos | Creación | ...</div>
         <div class="ca-line"></div>
         <div class="ca-stats">⚔ Poder &nbsp;|&nbsp; 🛡 Resistencia <span style="font-weight:400;color:var(--text-muted)">(solo Campeón)</span></div>
         <div class="ca-line"></div>
@@ -739,9 +761,9 @@
 
       <table>
         <tr><td style="width:140px"><strong>name</strong></td><td>Nombre de la carta</td></tr>
-        <tr><td><strong>type</strong></td><td>Tipo (Campeón, Mística, Táctica, Arcana, Combate, Éter)</td></tr>
+        <tr><td><strong>type</strong></td><td>Tipo (Campeón, Mística, Táctica, Arcana, Combate, Éter, Vínculo)</td></tr>
         <tr><td><strong>rarity</strong></td><td>Rareza (Común, Poco Común, Rara, Épica, Legendaria, Única)</td></tr>
-        <tr><td><strong>element</strong></td><td>Elemento (Fuego, Agua, Tierra, Aire, Luz, Tinieblas)</td></tr>
+        <tr><td><strong>faccion</strong></td><td>Facción (Orden, Caos, Creación, Destrucción, Ley, Purga, Entropía, Mutación)</td></tr>
         <tr><td><strong>stats.cost</strong></td><td>Coste de Éter</td></tr>
         <tr><td><strong>stats.poder</strong></td><td>Ataque (solo Campeón)</td></tr>
         <tr><td><strong>stats.resistencia</strong></td><td>Defensa (solo Campeón)</td></tr>
@@ -749,6 +771,19 @@
         <tr><td><strong>flavorText</strong></td><td>Texto de ambientación (sin efecto en el juego)</td></tr>
         <tr><td><strong>limiteCopias</strong></td><td>Máximo de copias de esta carta por mazo (3, 2 o 1)</td></tr>
       </table>
+
+      <p style="margin-top:20px;"><strong>ANATOMÍA DE UN VÍNCULO:</strong></p>
+      <div class="card-anatomy" style="border-color:var(--purple);background:linear-gradient(135deg,#241a3a,#2e1f3d);">
+        <div class="ca-name">NOMBRE DEL VÍNCULO</div>
+        <div class="ca-meta">★ RAREZA &nbsp;&middot;&nbsp; <span style="color:var(--purple)">SIN COSTE de Éter</span></div>
+        <div class="ca-line"></div>
+        <div class="ca-meta">Tipo: Vínculo</div>
+        <div class="ca-meta">Facción: Cualquiera</div>
+        <div class="ca-line"></div>
+        <div class="ca-effect" style="color:var(--text-muted);font-size:0.75rem;">Al inicio: BOCA ABAJO (invisible para el rival)</div>
+        <div class="ca-effect" style="margin-top:4px;">Al ser destruido: "Efecto PERMANENTE a favor del jugador que recibió el daño"</div>
+        <div class="ca-copies">×3 (límite de copias por mazo de Vínculos)</div>
+      </div>
     </div>
   </div>
 
@@ -761,16 +796,12 @@
       <div class="section-header sub"><span class="num">6.1</span><h3>ÉTER <span style="font-weight:400;color:var(--text-muted);font-family:'Inter',sans-serif;">(Recurso)</span></h3></div>
       <p>Las cartas de <span class="tag">ÉTER</span> son el <strong>RECURSO PRINCIPAL</strong> del juego.</p>
       <ul>
-        <li><strong>VALOR:</strong> Cada carta de Éter tiene un valor del 1 al 5 (stats.cost).</li>
-        <li>Van del Mazo de Éter (1A) a la mano.</li>
-        <li>Se colocan en la <strong>RESERVA DE ÉTER</strong> (2A) durante la Fase de Forja.</li>
-        <li>Desde la Reserva se usan para pagar costes de otras cartas.</li>
+        <li><strong>VALOR:</strong> En la v2.0 TODAS las cartas de Éter valen <strong>1</strong> (ya no existen valores del 2 al 5).</li>
+        <li>Las <strong>15 cartas de Éter inician BOCA ARRIBA en la RESERVA (2A)</strong> desde el inicio de la partida.</li>
+        <li><span class="highlight-amber">NO se roban, NO pasan por la mano y NUNCA van al Cementerio ni al Exilio.</span></li>
+        <li>Desde la Reserva se usan para pagar costes, moviéndolas a la zona de <strong>ÉTER PAGADO (1A)</strong> o bloqueándolas en Campeones y cartas de soporte continuas.</li>
       </ul>
-      <p>Pueden tener:</p>
-      <ul>
-        <li><strong>EFECTO PASIVO:</strong> Mientras están en la Reserva o asignadas a un Campeón.</li>
-        <li><strong>EFECTO ACTIVO:</strong> Se exilian de la Reserva para activar un efecto.</li>
-      </ul>
+      <p>Pueden tener habilidades propias, que <strong>solo se activan en la zona donde la carta está</strong> (Reserva, pagada o bloqueada). Ver sección 8.7.</p>
       <p>Las cartas de Éter <strong>NO</strong> tienen Poder ni Resistencia. No combaten.</p>
 
       <!-- 6.2 -->
@@ -780,49 +811,70 @@
         <li><strong>cost</strong> &mdash; Coste de Éter para invocarlo</li>
         <li><strong>poder</strong> &mdash; Ataque (daño que inflige en combate)</li>
         <li><strong>resistencia</strong> &mdash; Defensa (vida del Campeón)</li>
-        <li><strong>faccion</strong> &mdash; Orden, Caos, Sabiduría o Naturaleza</li>
+        <li><strong>faccion</strong> &mdash; Orden, Caos, Creación, Destrucción, Ley, Purga, Entropía o Mutación</li>
         <li><strong>esencia</strong> &mdash; Mago, Guerrero, Bestia, Dragón, Espectro, Céleste, Abisal, Elemental, Constructo, Humano</li>
         <li><strong>rol</strong> &mdash; Asalto, Guardia, Soporte, Control, etc.</li>
-        <li><strong>catHabilidad</strong> &mdash; Efecto, Único, Legendario, Maldito, Bendito, Normal</li>
+        <li><strong>catHabilidad</strong> &mdash; Efecto, Singular, Legendario, Maldito, Bendito, Normal</li>
+      </ul>
+      <p><strong>Reglas de combate de Campeones:</strong></p>
+      <ul>
+        <li><strong>INVOCACIÓN CANSADA:</strong> Un Campeón NO puede atacar el turno en que fue invocado (sí puede defender).</li>
+        <li><strong>AGOTAMIENTO:</strong> Al atacar, el Campeón se gira (agota) y permanece agotado hasta tu próximo Alba. Un Campeón agotado no puede atacar, defender ni activar habilidades que exijan agotarlo.</li>
+        <li><strong>DAÑO SIMULTÁNEO:</strong> En combate, atacante y bloqueador infligen su Poder a la vez contra la Defensa del rival. Pueden morir ambos.</li>
       </ul>
       <p><strong>Habilidades:</strong></p>
       <ul>
-        <li><strong>tipoEfecto:</strong> Pasivo (siempre activo), Activo (requiere exiliar Éter asignado), Especial (tiene ambos)</li>
+        <li><strong>tipoEfecto:</strong> Pasivo (siempre activo), Activo (requiere pagar Éter &mdash; puede ser CONTINUA o DE UN SOLO USO, ver abajo), Especial (tiene ambos)</li>
         <li><strong>efectoPasivo:</strong> Efecto continuo mientras está en el campo</li>
-        <li><strong>efectoActivo:</strong> Efecto que requiere exiliar Éter asignado como coste</li>
+        <li><strong>efectoActivo:</strong> Efecto que requiere pagar Éter como coste (sección 8)</li>
       </ul>
-      <p class="highlight-amber" style="font-weight:600;">AL INVOCAR un Campeón: el Éter pagado se ASIGNA al Campeón (va a las zonas 1B-1F encima del Campeón), NO va al Cementerio.</p>
+      <p><strong>Pago de habilidades con Éter (v2.0):</strong> Las habilidades <strong>ACTIVAS</strong> pueden ser de cualquiera de estos dos tipos:</p>
+      <ul>
+        <li><strong>HABILIDAD CONTINUA:</strong> El Éter pagado queda <strong>BLOQUEADO</strong> en la zona de Éter del Campeón (1B-1F) mientras el efecto esté activo. <strong>NO agota</strong> al Campeón. <span class="highlight-amber">NO se puede activar más de una vez la misma habilidad continua</span> (no se apilan) salvo que una keyword lo permita. El efecto <strong>NO se puede cancelar a voluntad</strong>: termina cuando su Éter bloqueado es removido (por ejemplo, el Campeón deja el campo) o cuando el propio efecto indique otra duración.</li>
+        <li><strong>HABILIDAD DE UN SOLO USO:</strong> El Éter se paga de forma normal (2A → 1A), el efecto es momentáneo y el Campeón se <strong>AGOTA</strong>. Solo se puede usar si el Campeón <strong>NO está agotado</strong> (salvo que una keyword diga lo contrario).</li>
+      </ul>
+      <p class="highlight-amber" style="font-weight:600;">AL INVOCAR un Campeón: el Éter pagado va a la ZONA DE ÉTER PAGADO (1A) y vuelve a tu Reserva en tu próximo Alba. NO va al Cementerio ni al Exilio.</p>
+
+      <p><strong>INVOCACIÓN POR SACRIFICIO (Rol Sacrificio):</strong></p>
+      <ul>
+        <li>Algunos Campeones requieren <strong>SACRIFICAR</strong> otro Campeón que controles para ser invocados (rol <strong>SACRIFICIO</strong>, sección 12.3). El sacrificio <strong>ES el coste de invocación</strong>: no se paga Éter, salvo que la carta indique además un coste de Éter adicional (ambos pueden convivir).</li>
+        <li>El Campeón sacrificado debe ser de la <strong>MISMA FACCIÓN</strong> que el Campeón que vas a invocar.</li>
+        <li>El Campeón sacrificado va al Cementerio.</li>
+        <li>Es una invocación <strong>NORMAL</strong>: el nuevo Campeón baja <strong>enderezado</strong> (el estado del sacrificado, agotado o no, es irrelevante) y aplica la <strong>INVOCACIÓN CANSADA</strong> (no ataca el turno en que fue invocado).</li>
+        <li>Si el Campeón sacrificado tenía un efecto <strong>CONTINUO</strong> activo (Éter bloqueado), ese efecto <strong>TERMINA INMEDIATAMENTE</strong> y su Éter bloqueado vuelve a tu Reserva <strong>EN EL MOMENTO</strong>, sin esperar a tu próximo Alba.</li>
+      </ul>
 
       <!-- 6.3 -->
       <div class="section-header sub"><span class="num">6.3</span><h3>MÍSTICA <span style="font-weight:400;color:var(--text-muted);font-family:'Inter',sans-serif;">(Conjuro)</span></h3></div>
-      <p>Las Místicas son conjuros de <strong>UN SOLO USO</strong>.</p>
+      <p>Las Místicas son conjuros que se juegan <strong>SOLO en tu Fase de Forja</strong>.</p>
       <ul>
-        <li>Se juegan en un slot de soporte (3A-3C).</li>
-        <li>Se paga su coste de Éter (va al Cementerio).</li>
-        <li>Se resuelven y luego van al Cementerio.</li>
+        <li><strong>SECUENCIA DE ACTIVACIÓN:</strong> 1) Se juega desde la mano a un slot de soporte (3A-3C). <span class="highlight-amber">NO se coloca boca abajo.</span> 2) Se paga su coste de Éter. 3) Se resuelve su efecto.</li>
+        <li><strong>PAGO DEL COSTE (efecto de un solo uso):</strong> el Éter se mueve de la Reserva (2A) a la zona 1A (Éter pagado).</li>
+        <li>Tras resolverse, la carta va al <strong>Cementerio</strong> y libera su slot (solo la carta; el Éter nunca va al Cementerio).</li>
+        <li><strong>EFECTO CONTINUO:</strong> el Éter se mueve de la Reserva (2A) directamente a la carta, colocado <strong>EN HORIZONTAL sobre ella</strong> (slot 3A-3C), y permanece bloqueado mientras el efecto esté activo. La carta permanece en su slot. <span class="highlight-amber">El efecto continuo NO se puede cancelar a voluntad del controlador</span> (ver sección 8.2).</li>
         <li>No tienen Poder ni Resistencia &mdash; son puramente conjuros.</li>
-        <li>Si su efecto es continuo, permanecen en el slot hasta que termine.</li>
       </ul>
 
       <!-- 6.4 -->
       <div class="section-header sub"><span class="num">6.4</span><h3>TÁCTICA <span style="font-weight:400;color:var(--text-muted);font-family:'Inter',sans-serif;">(Reacción / Estrategia)</span></h3></div>
       <p>Las Tácticas son cartas de <strong>REACCIÓN gratuitas</strong>.</p>
       <ul>
-        <li>Se juegan en un slot de soporte (3A-3C) &mdash; comparten espacio con Místicas.</li>
+        <li>Se juegan en un slot de soporte (3A-3C) &mdash; comparten espacio con Místicas. <span class="highlight-amber">NO se colocan boca abajo.</span></li>
         <li><strong>NO</strong> cuestan Éter.</li>
-        <li>Se activan cuando se cumple su condición.</li>
-        <li>Van al Cementerio tras resolverse.</li>
-        <li>Se pueden jugar desde la mano en cualquier momento.</li>
+        <li><strong>Solo se JUGAN (colocan) en tu Fase de Forja.</strong> Una vez colocadas, se <strong>ACTIVAN automáticamente</strong> cuando se cumple su condición, en cualquier momento (incluso durante el turno del oponente).</li>
+        <li>Ocupan su slot mientras esperan su condición y van al <strong>Cementerio</strong> tras resolverse.</li>
       </ul>
 
       <!-- 6.5 -->
       <div class="section-header sub"><span class="num">6.5</span><h3>ARCANA <span style="font-weight:400;color:var(--text-muted);font-family:'Inter',sans-serif;">(Pacto / Condición)</span></h3></div>
       <p>Las Arcanas son cartas de <strong>CONDICIÓN + RECOMPENSA</strong>.</p>
       <ul>
-        <li>Se colocan <strong>BOCA ABAJO</strong> en un slot (3D-3F) sin pagar coste.</li>
-        <li>Cuando se cumple su condición, se puede <strong>PAGAR</strong> su coste de Éter para activar la recompensa.</li>
+        <li>Se colocan <strong>BOCA ABAJO</strong> en un slot (3D-3F) <strong>sin pagar coste</strong>.</li>
+        <li><strong class="highlight-red">NO se pueden activar el turno en que fueron colocadas:</strong> esperan hasta el turno del oponente (como las cartas de Combate).</li>
+        <li><strong>SECUENCIA DE ACTIVACIÓN:</strong> cuando se cumple su condición: 1) la carta se <strong>VOLTEA BOCA ARRIBA</strong>; 2) se realiza el <strong>PAGO</strong> del coste de Éter; 3) se resuelve la recompensa.</li>
         <li>Si no se tiene suficiente Éter en la Reserva, no se puede activar y la carta permanece boca abajo.</li>
-        <li>El Éter pagado va al Cementerio.</li>
+        <li><strong>PAGO DEL COSTE (efecto de un solo uso):</strong> el Éter se mueve de la Reserva (2A) a la zona 1A; la recompensa se resuelve y la carta va al <strong>Cementerio</strong>, liberando su slot.</li>
+        <li><strong>EFECTO CONTINUO:</strong> el Éter se mueve de la Reserva (2A) directamente a la carta, colocado <strong>EN HORIZONTAL sobre ella</strong> (slot 3D-3F); la carta permanece boca arriba en su slot mientras el efecto esté activo.</li>
         <li>No tienen Poder ni Resistencia.</li>
       </ul>
 
@@ -836,6 +888,28 @@
         <li>Deben haber sido colocadas en un turno anterior.</li>
         <li>Van al Cementerio tras resolverse.</li>
       </ul>
+
+      <!-- 6.7 -->
+      <div class="section-header sub"><span class="num">6.7</span><h3>VÍNCULO <span style="font-weight:400;color:var(--text-muted);font-family:'Inter',sans-serif;">(Vida / Sistema de daño)</span></h3></div>
+      <p>Los Vínculos son el <strong>SISTEMA DE VIDA</strong> del juego. Representan los lazos que mantienen a un jugador en la partida.</p>
+      <ul>
+        <li><strong>NO cuestan Éter.</strong> No tienen Poder ni Resistencia. No combaten.</li>
+        <li>Cada jugador tiene <strong>EXACTAMENTE 6 Vínculos</strong>, colocados <strong>BOCA ABAJO</strong> en 4A-4F desde el inicio de la partida.</li>
+        <li>El dueño <strong>SÍ</strong> puede ver sus Vínculos; el oponente <strong>NO</strong> los ve hasta que son destruidos.</li>
+        <li><strong>SOLO la RUPTURA</strong> (un ataque directo sin bloqueo, sección 10.4) destruye Vínculos. Ninguna Mística, Arcana u otro efecto puede destruirlos directamente.</li>
+        <li>Al ser destruido (el <strong>atacante elige cuál</strong>, a ciegas), el Vínculo se voltea <strong>BOCA ARRIBA</strong> y activa su efecto <strong>PERMANENTE</strong> (dura toda la partida), siempre <strong>A FAVOR DEL JUGADOR QUE RECIBIÓ EL DAÑO</strong>.</li>
+        <li>Los efectos de los Vínculos destruidos <strong>SE ACUMULAN</strong> (3 Vínculos destruidos = 3 efectos activos). Los destruidos permanecen boca arriba como recordatorio.</li>
+        <li><strong class="highlight-red">PIERDES LA PARTIDA</strong> si TODOS tus Vínculos son destruidos.</li>
+        <li><span class="highlight-amber">SEXTO VÍNCULO:</span> El ÚLTIMO Vínculo resuelve su efecto <strong>ANTES</strong> de confirmar la derrota: te da una última oportunidad, pero su efecto no debe crear bucles ni extender indefinidamente la partida.</li>
+      </ul>
+      <p><strong>EJEMPLOS DE EFECTOS DE VÍNCULO (leves, permanentes):</strong></p>
+      <ul>
+        <li>"Tus Campeones ganan +1 Ataque permanentemente."</li>
+        <li>"Tus Campeones ganan +1 Resistencia permanentemente."</li>
+        <li>"Una vez por turno, puedes activar una habilidad de Campeón sin agotarlo."</li>
+        <li>"Robas 1 carta adicional en tu Alba."</li>
+      </ul>
+      <p class="highlight-amber" style="font-weight:600;">NOTA: La derrota por Vínculos reemplaza por completo a los antiguos Puntos de Energía (PE).</p>
     </div>
   </div>
 
@@ -847,31 +921,34 @@
       <div class="map-container">
         <div class="map-grid">
           <!-- Fila 1 -->
-          <div class="map-cell"><div class="code">1A</div><div class="label">MAZO DE ÉTER</div></div>
-          <div class="map-cell" style="grid-column:span 1;"><div class="code">1B — 1F</div><div class="label">ÉTER ASIGNADO A CAMPEONES</div></div>
+          <div class="map-cell"><div class="code">1A</div><div class="label">ÉTER PAGADO</div></div>
+          <div class="map-cell" style="grid-column:span 1;"><div class="code">1B — 1F</div><div class="label">ÉTER BLOQUEADO (efectos continuos)</div></div>
           <div class="map-cell"><div class="code">1G</div><div class="label">EXILIO</div></div>
           <!-- Fila 2 -->
-          <div class="map-cell"><div class="code">2A</div><div class="label">RESERVA DE ÉTER</div></div>
+          <div class="map-cell"><div class="code">2A</div><div class="label">RESERVA DE ÉTER (15 cartas, boca arriba)</div></div>
           <div class="map-cell"><div class="code">2B — 2F</div><div class="label">CAMPEONES</div></div>
           <div class="map-cell"><div class="code">2G</div><div class="label">CEMENTERIO</div></div>
           <!-- Fila 3 -->
           <div class="map-cell"><div class="code">3A · 3B · 3C</div><div class="label">MÍSTICAS / TÁCTICAS</div></div>
           <div class="map-cell"><div class="code">3D · 3E · 3F</div><div class="label">ARCANAS / COMBATE</div></div>
           <div class="map-cell"><div class="code">3G</div><div class="label">MAZO PRINCIPAL</div></div>
+          <!-- Fila 4 -->
+          <div class="map-cell span-full vinculo"><div class="code">4A — 4F</div><div class="label">VÍNCULOS (6, boca abajo) — destruidos: boca arriba con efecto permanente</div></div>
         </div>
       </div>
 
       <p><strong>ZONAS DEL CAMPO:</strong></p>
       <table>
-        <tr><td style="width:60px"><span class="highlight">1A</span></td><td>Mazo de ÉTER</td><td style="color:var(--text-muted)">boca abajo, se roba de aqu&iacute;</td></tr>
-        <tr><td><span class="highlight">1B-1F</span></td><td>Éter asignado</td><td style="color:var(--text-muted)">encima del Campeón correspondiente</td></tr>
-        <tr><td><span class="highlight">1G</span></td><td>Exilio</td><td style="color:var(--text-muted)">cartas fuera del juego</td></tr>
-        <tr><td><span class="highlight">2A</span></td><td>Reserva de ÉTER</td><td style="color:var(--text-muted)">Éter listo para usar</td></tr>
+        <tr><td style="width:60px"><span class="highlight">1A</span></td><td>Éter pagado</td><td style="color:var(--text-muted)">el Éter usado para pagar costes; vuelve a tu Reserva (2A) en tu próximo Alba</td></tr>
+        <tr><td><span class="highlight">1B-1F</span></td><td>Éter bloqueado</td><td style="color:var(--text-muted)">encima del Campeón correspondiente (habilidades continuas)</td></tr>
+        <tr><td><span class="highlight">1G</span></td><td>Exilio</td><td style="color:var(--text-muted)">cartas fuera del juego (el Éter nunca va aquí)</td></tr>
+        <tr><td><span class="highlight">2A</span></td><td>Reserva de ÉTER</td><td style="color:var(--text-muted)">las 15 cartas de Éter inician aquí, boca arriba</td></tr>
         <tr><td><span class="highlight">2B-2F</span></td><td>Campeones</td><td style="color:var(--text-muted)">hasta 5 Campeones en juego</td></tr>
         <tr><td><span class="highlight">2G</span></td><td>Cementerio</td><td style="color:var(--text-muted)">cartas destruidas, descartadas o resueltas</td></tr>
         <tr><td><span class="highlight">3A-3C</span></td><td>Místicas / Tácticas</td><td style="color:var(--text-muted)">3 slots compartidos</td></tr>
         <tr><td><span class="highlight">3D-3F</span></td><td>Arcanas / Combate</td><td style="color:var(--text-muted)">3 slots compartidos</td></tr>
         <tr><td><span class="highlight">3G</span></td><td>Mazo PRINCIPAL</td><td style="color:var(--text-muted)">boca abajo, se roba de aqu&iacute;</td></tr>
+        <tr><td><span class="highlight" style="color:var(--purple)">4A-4F</span></td><td>Vínculos</td><td style="color:var(--text-muted)">6 Vínculos boca abajo; se voltean al ser destruidos</td></tr>
       </table>
 
       <div class="section-header sub"><span class="num">7.1</span><h3>DISTRIBUCIÓN DE SLOTS DE SOPORTE</h3></div>
@@ -891,19 +968,20 @@
 
       <div class="section-header sub"><span class="num">8.1</span><h3>¿CÓMO SE OBTIENE?</h3></div>
       <ul>
-        <li>Al inicio de la partida, cada jugador roba 1 carta de su Mazo de Éter (además de las 5 del Mazo Principal).</li>
-        <li>En la Fase de Alba de cada turno, robas <strong>1 carta</strong> de tu Mazo de Éter.</li>
-        <li>Si tu Mazo de Éter se agota, sigues robando solo del Mazo Principal.</li>
+        <li><strong>INICIO:</strong> Las <strong>15 cartas de Éter</strong> inician <strong>BOCA ARRIBA</strong> en tu Reserva (2A). No se roban ni se barajan.</li>
+        <li><strong>ALBA:</strong> En cada Fase de Alba, todo el Éter fuera de la Reserva <strong>SE REAGRUPA</strong>: vuelve a la Reserva (2A), <span class="highlight-amber">EXCEPTO el Éter de efectos continuos</span> (habilidades continuas de Campeones y Místicas/Arcanas continuas), que permanece bloqueado.</li>
+        <li><strong>NUNCA</strong> se roba Éter: el Mazo Principal solo contiene cartas de juego.</li>
       </ul>
-      <p><strong>LÍMITE DE MANO:</strong> 10 cartas entre ambos mazos (Principal + Éter). Si al final del turno tienes más, descartas hasta 10.</p>
+      <p><strong>LÍMITE DE MANO:</strong> 6 cartas (solo del Mazo Principal, ya que el Éter nunca va a la mano). Si al final del turno tienes más, descartas hasta 6.</p>
 
       <div class="section-header sub"><span class="num">8.2</span><h3>¿DÓNDE SE ALMACENA?</h3></div>
       <ol>
-        <li><strong>MANO:</strong> Al robarlas, las cartas de Éter van a tu mano. No se pueden usar directamente desde la mano.</li>
-        <li><strong>RESERVA DE ÉTER (2A):</strong> Durante la Fase de Forja, puedes mover cualquier cantidad de cartas de Éter de tu mano a la Reserva. No hay límite de cartas en la Reserva.</li>
-        <li><strong>ASIGNADO A CAMPEÓN (1B-1F):</strong> Cuando invocas un Campeón, el Éter que pagas se coloca encima del Campeón (zona 1B-1F). Representa la energía que el Campeón está usando.</li>
-        <li><strong>CEMENTERIO (2G):</strong> El Éter usado para pagar Místicas o Arcanas va al Cementerio. También va si el Campeón al que está asignado muere.</li>
-        <li><strong>EXILIO (1G):</strong> El Éter que se consume para activar habilidades de Campeones va al Exilio. No puede ser recuperado (salvo que un efecto lo indique explícitamente).</li>
+        <li><strong>RESERVA DE ÉTER (2A):</strong> Donde inician las 15 cartas y donde vuelven en cada Alba. No hay límite de cartas en la Reserva.</li>
+        <li><strong>ÉTER PAGADO (1A):</strong> Cuando pagas <strong>CUALQUIER coste</strong>, mueves el Éter de la Reserva (2A) a la zona 1A. Vuelve a tu Reserva en tu próximo Alba.</li>
+        <li><strong>BLOQUEADO EN CAMPEÓN (1B-1F):</strong> El Éter pagado para una habilidad <strong>CONTINUA</strong> de un Campeón queda bloqueado en la zona de Éter del Campeón. Permanece allí mientras el efecto esté activo y <strong>NO agota</strong> al Campeón.</li>
+        <li><strong>BLOQUEADO EN MÍSTICA/ARCANA:</strong> El Éter pagado para una Mística o Arcana con efecto <strong>CONTINUO</strong> queda bloqueado, colocado <strong>EN HORIZONTAL</strong> sobre la carta, mientras el efecto esté activo.</li>
+        <li><strong class="highlight-red">EL ÉTER NUNCA VA AL CEMENTERIO NI AL EXILIO.</strong> Cuando un Campeón deja el campo o una carta de soporte continua se destruye, su Éter bloqueado se libera y vuelve a tu Reserva en tu próximo Alba. <span class="highlight-amber">EXCEPCIÓN:</span> la invocación por sacrificio (sección 6.2) libera el Éter bloqueado <strong>INMEDIATAMENTE</strong>.</li>
+        <li><strong>LOS EFECTOS CONTINUOS NO SE CANCELAN A VOLUNTAD:</strong> permanecen activos mientras su Éter esté bloqueado (salvo que el propio efecto indique otra duración). Si el Éter bloqueado es removido por un efecto, la habilidad se <strong>DESACTIVA automáticamente</strong> y su Éter sigue la regla general: vuelve a tu Reserva en tu próximo Alba.</li>
       </ol>
 
       <div class="section-header sub"><span class="num">8.3</span><h3>¿CÓMO SE USA?</h3></div>
@@ -911,8 +989,8 @@
       <p><strong>Pasos para pagar:</strong></p>
       <ol>
         <li>Tienes Éter en tu Reserva (2A).</li>
-        <li>Decides jugar una carta que requiera Éter.</li>
-        <li>Mueves cartas de Éter de la Reserva al destino correspondiente (asignado al Campeón, Cementerio o Exilio).</li>
+        <li>Decides jugar una carta o activar una habilidad que requiera Éter.</li>
+        <li>Mueves la cantidad de Éter requerida de la Reserva (2A) a su destino: <strong>1A</strong> (pago normal) o <strong>1B-1F / sobre la carta</strong> (Éter bloqueado de efecto continuo).</li>
         <li>El efecto de la carta se resuelve.</li>
       </ol>
 
@@ -920,43 +998,50 @@
       <div class="destiny-table">
         <table>
           <tr><th>USO</th><th>DESTINO DEL ÉTER</th></tr>
-          <tr><td>Invocar un Campeón</td><td>→ Asignado al Campeón <span class="highlight">(1B-1F)</span></td></tr>
-          <tr><td>Jugar una Mística</td><td>→ Cementerio <span class="highlight">(2G)</span></td></tr>
-          <tr><td>Activar una Arcana</td><td>→ Cementerio <span class="highlight">(2G)</span></td></tr>
-          <tr><td>Activar habilidad de Campeón</td><td>→ Exilio <span class="highlight">(1G)</span></td></tr>
-          <tr><td>Efecto de carta de Éter</td><td>→ Exilio <span class="highlight">(1G)</span></td></tr>
+          <tr><td>Invocar un Campeón</td><td>→ Éter pagado <span class="highlight">(1A)</span></td></tr>
+          <tr><td>Jugar una Mística (un solo uso)</td><td>→ Éter pagado <span class="highlight">(1A)</span></td></tr>
+          <tr><td>Activar una Arcana (un solo uso)</td><td>→ Éter pagado <span class="highlight">(1A)</span></td></tr>
+          <tr><td>Habilidad de Campeón de UN SOLO USO</td><td>→ Éter pagado <span class="highlight">(1A)</span> + el Campeón se <strong>AGOTA</strong></td></tr>
+          <tr><td>Habilidad CONTINUA de Campeón</td><td>→ Bloqueado en el Campeón <span class="highlight">(1B-1F)</span></td></tr>
+          <tr><td>Mística/Arcana con efecto CONTINUO</td><td>→ Bloqueado en horizontal sobre la carta <span class="highlight">(3A-3F)</span></td></tr>
+          <tr><td>Invocar un Campeón (por sacrificio)</td><td>→ El sacrificio ES el coste: el Campeón sacrificado va al Cementerio y su Éter bloqueado se libera <strong>INMEDIATO</strong>. Si la carta tiene además coste de Éter, se paga normal (→ 1A)</td></tr>
         </table>
       </div>
+      <p class="highlight-amber" style="font-weight:600;">EN TODOS los casos, el Éter vuelve a tu Reserva (2A) en tu próximo Alba, salvo el de efectos continuos, que permanece bloqueado mientras su efecto esté activo.</p>
 
-      <div class="section-header sub"><span class="num">8.5</span><h3>REGLA DEL OVERPAY (Pago sin Fraccionamiento)</h3></div>
-      <p>Cuando pagas un coste, puedes <strong>COMBINAR</strong> varias cartas de Éter para alcanzar el valor exacto (ej: 2 + 1 = 3).</p>
-      <p>Si usas una carta de Éter de <strong>mayor valor</strong> que el coste, el excedente <strong class="highlight-red">SE PIERDE</strong>. No hay "vuelto".</p>
-      <div class="example">
-        <div class="ex-title">Ejemplo de Overpay</div>
-        Pagar un coste de 3 con una carta de valor 5 → pierdes 2 puntos.<br>
-        Para evitar overpay, combina cartas hasta llegar al valor exacto.
-      </div>
-
-      <div class="section-header sub"><span class="num">8.6</span><h3>HABILIDADES QUE DICEN "EXILIA X ÉTER"</h3></div>
-      <p>Cuando una habilidad de Campeón dice <strong>"Exilia 2 Éter"</strong>, se refiere al <span class="highlight">VALOR total</span> de Éter a exiliar, <strong>no a la cantidad de cartas</strong>.</p>
+      <div class="section-header sub"><span class="num">8.5</span><h3>ÉTER UNIFICADO — SIN OVERPAY (v2.0)</h3></div>
+      <p>En la v2.0, <strong>TODAS las cartas de Éter valen 1</strong>. No existen valores del 2 al 5, por lo que <strong>NO hay fraccionamiento ni overpay</strong>:</p>
+      <ul>
+        <li>Un coste de 3 = mover <strong>3 cartas de Éter</strong> de la Reserva (2A) a su destino.</li>
+        <li>No hay "vuelto" ni excedente posible: cada carta vale exactamente 1.</li>
+      </ul>
       <div class="example">
         <div class="ex-title">Ejemplo</div>
-        Un Campeón tiene 3 cartas asignadas (valores 1, 1 y 2) y su habilidad dice "Exilia 2 Éter". Puedes:<br>
-        &bull; Exiliar las 2 cartas de valor 1 (1+1=2), o<br>
-        &bull; Exiliar la carta de valor 2.<br>
-        En ambos casos, el Éter exiliado va al Exilio (1G).
+        Pagar un coste de 3: mueves 3 cartas de Éter de la Reserva a 1A. Pagar un coste de 5: mueves 5 cartas. Así de simple.
+      </div>
+
+      <div class="section-header sub"><span class="num">8.6</span><h3>HABILIDADES QUE DICEN "PAGA X ÉTER"</h3></div>
+      <p>Cuando una habilidad dice <strong>"Paga X Éter"</strong> (o "cuesta X Éter"), se refiere a la <span class="highlight">CANTIDAD de cartas</span> a mover, ya que todas valen 1.</p>
+      <div class="example">
+        <div class="ex-title">Ejemplo</div>
+        Una habilidad <strong>CONTINUA</strong> cuesta 2 Éter: mueves 2 cartas de la Reserva (2A) a la zona de Éter del Campeón (1B-1F). Quedan bloqueadas mientras el efecto esté activo.<br>
+        Una habilidad de <strong>UN SOLO USO</strong> cuesta 2 Éter: mueves 2 cartas a la zona 1A y el Campeón se agota (el Éter vuelve a tu Reserva en tu próximo Alba).
       </div>
 
       <div class="section-header sub"><span class="num">8.7</span><h3>EFECTOS DE LAS CARTAS DE ÉTER</h3></div>
-      <p>Las cartas de Éter pueden tener:</p>
+      <p>Las cartas de Éter pueden tener habilidades propias, y <strong>solo se activan en la zona donde la carta está</strong> (Reserva, pagada o bloqueada). Según la zona que exijan, se dividen en:</p>
       <ul>
-        <li><strong>EFECTO PASIVO:</strong> Se activa mientras la carta está en la Reserva (2A) o asignada a un Campeón (1B-1F).<br>
+        <li><strong>EFECTO DE RESERVA (2A):</strong> Se activa mientras la carta está en tu Reserva, es decir, <strong>mientras NO esté pagada ni bloqueada</strong>.<br>
           <span class="example" style="margin:4px 0 0;display:inline-block;padding:6px 12px;">"Mientras esta carta esté en tu Reserva, tus Campeones ganan +1 Ataque."</span></li>
-        <li><strong>EFECTO ACTIVO (Sacrificio):</strong> Exilias voluntariamente la carta de la Reserva al Exilio para activar su efecto.<br>
-          <span class="example" style="margin:4px 0 0;display:inline-block;padding:6px 12px;">"Exilia esta carta de tu Reserva: Roba 1 carta."</span></li>
-        <li><strong>EFECTO AL IR AL CEMENTERIO:</strong> Se activa cuando la carta va al Cementerio por cualquier motivo.<br>
-          <span class="example" style="margin:4px 0 0;display:inline-block;padding:6px 12px;">"Cuando esta carta vaya al Cementerio, ganas 3 PE."</span></li>
+        <li><strong>EFECTO DE PAGO (1A):</strong> Se activa al ser pagada. Dos variantes:<br>
+          &bull; <strong>PASIVO:</strong> funciona mientras la carta esté en tu zona de Éter pagado (1A), hasta tu próximo Alba.<br>
+          <span class="example" style="margin:4px 0 0;display:inline-block;padding:6px 12px;">"Mientras esta carta esté en tu zona de Éter pagado, tus Campeones ganan +1 Ataque."</span><br>
+          &bull; <strong>GATILLO:</strong> se activa UNA VEZ en el momento de pagarla para un uso específico.<br>
+          <span class="example" style="margin:4px 0 0;display:inline-block;padding:6px 12px;">"Cuando pagues esta carta para invocar un Campeón, roba 1 carta."</span></li>
+        <li><strong>EFECTO DE BLOQUEO (1B-1F):</strong> Se activa solo mientras la carta esté <strong>BLOQUEADA en la zona de Éter de un Campeón</strong> (habilidades continuas) o sobre una Mística/Arcana continua.<br>
+          <span class="example" style="margin:4px 0 0;display:inline-block;padding:6px 12px;">"Mientras esta carta esté bloqueada en un Campeón, ese Campeón gana +1 Resistencia."</span></li>
       </ul>
+      <p class="highlight-amber" style="font-weight:600;">NOTA v2.0: el Éter NO se exilia y NO va al Cementerio — los antiguos efectos de "Sacrificio" (exiliar) y "Al ir al Cementerio" quedan ELIMINADOS.</p>
     </div>
   </div>
 
@@ -970,31 +1055,31 @@
       <div class="destiny-table">
         <table>
           <tr><th style="width:70px">FASE</th><th style="width:100px">NOMBRE</th><th>QUÉ PASA</th></tr>
-          <tr><td><span class="highlight">1</span></td><td><strong>ALBA</strong></td><td>Robo: 1 Éter + 1 Mazo Principal. Se resuelven efectos "Al inicio de tu turno".</td></tr>
-          <tr><td><span class="highlight">2</span></td><td><strong>FORJA</strong></td><td>Bajar Éter a la Reserva. Jugar Campeones, Místicas, Arcanas, Tácticas. Activar efectos.</td></tr>
+          <tr><td><span class="highlight">1</span></td><td><strong>ALBA</strong></td><td>Enderezas Campeones. Reagrupas el Éter (todo vuelve a la Reserva salvo el de efectos continuos). Se resuelven efectos "Al inicio de tu turno". Robas 1 carta del Mazo Principal.</td></tr>
+          <tr><td><span class="highlight">2</span></td><td><strong>FORJA</strong></td><td>Jugar Campeones, Místicas, Arcanas, Tácticas. Activar efectos.</td></tr>
           <tr><td><span class="highlight">3</span></td><td><strong>CHOQUE</strong></td><td>Combate (ver sección 10).</td></tr>
-          <tr><td><span class="highlight">4</span></td><td><strong>OCASO</strong></td><td>Descartar al límite de mano (10). Efectos "hasta final del turno" expiran. Pasa el turno al otro jugador.</td></tr>
+          <tr><td><span class="highlight">4</span></td><td><strong>OCASO</strong></td><td>Descartar al límite de mano (6). Efectos "hasta final del turno" expiran. Pasa el turno al otro jugador.</td></tr>
         </table>
       </div>
 
-      <div class="section-header sub"><span class="num">9.2</span><h3>FASE DE ALBA (Robo)</h3></div>
+      <div class="section-header sub"><span class="num">9.2</span><h3>FASE DE ALBA (Robo y Reactivación)</h3></div>
       <ol>
+        <li><strong>Enderezas</strong> todos tus Campeones agotados (vuelven a estar disponibles).</li>
+        <li><strong>Reagrupas el Éter:</strong> todo el Éter fuera de la Reserva (1A y bloqueado en Campeones o cartas de soporte) vuelve a la Reserva (2A). <span class="highlight-amber">EXCEPTO el Éter de efectos continuos</span> (habilidades continuas de Campeones y Místicas/Arcanas continuas), que permanece bloqueado.</li>
         <li>Se resuelven efectos que dicen "Al inicio de tu turno...".</li>
-        <li>Robas <strong>1 carta</strong> de tu Mazo de ÉTER (1A) a tu mano.</li>
         <li>Robas <strong>1 carta</strong> de tu Mazo PRINCIPAL (3G) a tu mano.</li>
-        <li>Si tu Mazo de ÉTER está vacío, solo robas del Principal.</li>
+        <li>Si tu Mazo Principal está vacío al intentar robar, pierdes la partida (sección 14).</li>
       </ol>
 
       <div class="section-header sub"><span class="num">9.3</span><h3>FASE DE FORJA (Juego)</h3></div>
       <p>Puedes, en cualquier orden y <strong>sin límite por turno</strong>:</p>
       <ul>
-        <li>Mover cartas de Éter de tu mano a la <span class="highlight">RESERVA (2A)</span>.</li>
         <li>Invocar <span class="tag">CAMPEONES</span> pagando su coste desde la Reserva.</li>
         <li>Jugar <span class="tag">MÍSTICAS</span> pagando su coste.</li>
         <li>Colocar <span class="tag">ARCANAS</span> boca abajo en los slots 3D-3F.</li>
         <li>Colocar <span class="tag">COMBATE</span> boca abajo en los slots 3D-3F.</li>
         <li>Activar habilidades ACTIVAS de tus cartas.</li>
-        <li>Jugar <span class="tag">TÁCTICAS</span> desde la mano (también aplica en otras fases).</li>
+        <li>Jugar <span class="tag">TÁCTICAS</span> desde la mano (se colocan aquí y se activan cuando se cumple su condición, incluso en el turno del oponente).</li>
       </ul>
 
       <div class="section-header sub"><span class="num">9.4</span><h3>FASE DE CHOQUE (Combate)</h3></div>
@@ -1003,22 +1088,16 @@
       <div class="section-header sub"><span class="num">9.5</span><h3>FASE DE OCASO (Final)</h3></div>
       <ol>
         <li>Se resuelven efectos "hasta el final del turno".</li>
-        <li>Si tienes más de <strong>10 cartas</strong> en la mano, descartas hasta 10.</li>
+        <li>Si tienes más de <strong>6 cartas</strong> en la mano, descartas hasta 6. El Éter de tu Reserva <strong>NO</strong> cuenta para este límite.</li>
         <li>Pasa el turno al oponente.</li>
       </ol>
 
       <div class="section-header sub"><span class="num">9.6</span><h3>PRIMER TURNO — REGLAS ESPECIALES</h3></div>
-      <p><strong>JUGADOR 1 (el que empieza):</strong></p>
+      <p>Debido a la <strong>INVOCACIÓN CANSADA</strong> (los Campeones no atacan el turno en que son invocados, sección 10.2), <strong>NINGÚN jugador puede atacar en su primer turno</strong>: todos los Campeones que puedan jugar serán recién invocados.</p>
       <ul>
-        <li>En su <strong>PRIMER</strong> turno, roba NORMAL (1 Éter + 1 Principal).</li>
-        <li><span class="highlight-red">NO</span> puede entrar en la <strong>FASE DE CHOQUE</strong> (no ataca).</li>
-        <li>Pasa directo de Forja a Ocaso.</li>
-        <li>Esto aplica <strong>SOLO</strong> al primer turno del Jugador 1.</li>
-      </ul>
-      <p><strong>JUGADOR 2 (el segundo):</strong></p>
-      <ul>
-        <li>En su <strong>PRIMER</strong> turno, roba NORMAL (1 Éter + 1 Principal).</li>
-        <li><span class="highlight-green">SÍ</span> puede atacar con normalidad.</li>
+        <li>Ambos jugadores roban <strong>NORMAL</strong> en su primer Alba (1 carta del Principal; el Éter ya está en la Reserva).</li>
+        <li>No hay reglas especiales adicionales para el primer turno.</li>
+        <li>La única ventaja del Jugador 1 es robar primero; el Jugador 2 responde con un turno completo propio.</li>
       </ul>
     </div>
   </div>
@@ -1029,95 +1108,108 @@
     <div class="content">
 
       <div class="section-header sub"><span class="num">10.1</span><h3>FASES DEL COMBATE</h3></div>
-      <p>El combate se divide en <strong>4 pasos secuenciales</strong>:</p>
+      <p>El combate se divide en <strong>3 pasos secuenciales</strong>:</p>
       <ol>
         <li><strong>DECLARACIÓN DE ATAQUE</strong></li>
         <li><strong>DECLARACIÓN DE BLOQUEO</strong></li>
-        <li><strong>RESOLUCIÓN DE COMBATE</strong></li>
-        <li><strong>APLICACIÓN DE DAÑO</strong></li>
+        <li><strong>RESOLUCIÓN DE COMBATE</strong> (incluye el daño simultáneo y la Ruptura)</li>
       </ol>
 
       <div class="section-header sub"><span class="num">10.2</span><h3>PASO 1: DECLARACIÓN DE ATAQUE</h3></div>
       <ul>
-        <li>El jugador activo elige qué Campeones atacan y a qué objetivo.</li>
-        <li>Cada Campeón solo puede atacar <strong>UNA VEZ</strong> por turno.</li>
-        <li>Los Campeones pueden atacar el turno en que son invocados (no hay "cansancio" de invocación).</li>
-        <li>Se puede atacar a un Campeón enemigo <strong>O</strong> directamente al jugador.</li>
+        <li>El jugador activo elige qué Campeones atacan. <strong>Todos los ataques van directo al jugador rival</strong>; el defensor decide con qué Campeones bloquear (Paso 2).</li>
+        <li>Solo pueden atacar los Campeones <strong>DISPONIBLES</strong> (enderezados). Al declarar ataque, el Campeón se <strong>AGOTA</strong> (se gira) y permanece agotado hasta el inicio de su próximo Alba.</li>
+        <li>Un Campeón <strong>AGOTADO</strong> no puede: atacar, defender, ni activar habilidades que exijan agotarlo.</li>
+        <li>El agotamiento se paga <strong>AL DECLARAR</strong> el ataque: aunque el ataque sea luego negado por una cadena, el Campeón permanece agotado.</li>
+        <li><strong class="highlight-red">INVOCACIÓN CANSADA:</strong> Los Campeones <strong>NO pueden atacar el turno en que fueron invocados</strong> (salvo que una habilidad diga lo contrario). Sí pueden defender.</li>
       </ul>
 
       <div class="section-header sub"><span class="num">10.3</span><h3>PASO 2: DECLARACIÓN DE BLOQUEO</h3></div>
       <ul>
-        <li>El jugador defensor asigna Campeones para bloquear.</li>
-        <li>Cada Campeón solo puede bloquear <strong>UN ATAQUE</strong> por turno.</li>
-        <li>El defensor puede elegir <strong>NO bloquear</strong> y recibir daño directo.</li>
-        <li><strong>REGLA DEL GUARDIÁN:</strong> Si hay un Campeón con Guardián en el campo, debe bloquear el primer ataque que vaya directo al jugador.</li>
-        <li>Mientras haya un Guardián en campo, el atacante no puede ignorarlo (salvo que tenga Espectro u otra habilidad).</li>
+        <li>El jugador defensor asigna Campeones <strong>DISPONIBLES</strong> (enderezados) para bloquear. Un Campeón agotado <strong>NO</strong> puede bloquear.</li>
+        <li><strong class="highlight-red">BLOQUEO FORZOSO:</strong> Mientras el defensor tenga un Campeón disponible sin asignar, <strong>NO puede elegir recibir la Ruptura</strong>: está obligado a bloquear. Solo recibe la Ruptura si no le queda ningún Campeón disponible para bloquear.</li>
+        <li>El defensor elige <strong>CON QUÉ</strong> Campeón(es) bloquear, pero debe asignar tantos bloqueadores como le sea posible (mientras tenga disponibles y queden ataques sin bloquear).</li>
+        <li><strong>Bloquear NO agota</strong> al Campeón: el bloqueador permanece enderezado tras el combate.</li>
+        <li>Cada Campeón solo puede bloquear <strong>UN ATAQUE</strong> por turno. Cada atacante puede recibir <strong>UN</strong> bloqueador.</li>
       </ul>
 
       <div class="section-header sub"><span class="num">10.4</span><h3>PASO 3: RESOLUCIÓN DE COMBATE</h3></div>
 
       <div class="scene-box">
-        <div class="scene-title">ESCENARIO A: ATAQUE DIRECTO (sin bloqueo)</div>
+        <div class="scene-title">ESCENARIO A: ATAQUE DIRECTO (sin bloqueo) — LA RUPTURA</div>
         <ul>
-          <li>El ataque impacta directamente al jugador.</li>
-          <li>El jugador pierde <strong>PE = PODER del atacante</strong>.</li>
-          <li><strong>NO</strong> hay exilio de mazo en ataque directo.</li>
+          <li>Cuando uno o más Campeones quedan <strong>sin bloquear</strong>, el atacante <strong>PUEDE</strong> elegir <strong>UNO</strong> de ellos para realizar la <strong>RUPTURA</strong> &mdash; es una acción <strong class="highlight-red">VOLUNTARIA</strong>: puede elegir no romper ningún Vínculo. Los demás ataques sin bloquear no hacen nada.</li>
+          <li>La Ruptura destruye <strong>1 VÍNCULO</strong> del jugador defensor: el <strong>ATACANTE elige cuál</strong> (posición 4A-4F), a ciegas, ya que los Vínculos del defensor están boca abajo y solo su dueño los conoce.</li>
+          <li>El Vínculo destruido se voltea <strong>BOCA ARRIBA</strong> y su efecto <strong>PERMANENTE</strong> se activa <strong>A FAVOR DEL JUGADOR QUE RECIBIÓ EL DAÑO</strong>.</li>
+          <li>El valor de <strong>PODER no modifica la Ruptura</strong>: un Campeón con Poder 2 y otro con Poder 10 rompen exactamente 1 Vínculo.</li>
+          <li><strong class="highlight-red">MÁXIMO 1 Vínculo destruido por turno de ataque</strong>, sin importar cuántos Campeones ataquen sin bloqueo.</li>
         </ul>
       </div>
 
       <div class="scene-box">
-        <div class="scene-title">ESCENARIO B: BLOQUEO SIN GUARDIÁN</div>
+        <div class="scene-title">ESCENARIO B: BLOQUEO — DAÑO SIMULTÁNEO</div>
         <ul>
-          <li>El bloqueador recibe daño igual al PODER del atacante.</li>
-          <li>Si daño &ge; defensa: el bloqueador <strong>MUERE</strong> (va al Cementerio).</li>
-          <li>El jugador pierde <strong>PE = COSTE (stats.cost) del Campeón destruido</strong>.</li>
-          <li>El excedente (Ataque - Defensa) <strong>EXILIA cartas</strong> del Mazo Principal del jugador defensor (una carta por punto).</li>
-          <li>Si daño &lt; defensa: el bloqueador sobrevive, no hay daño.</li>
-        </ul>
-      </div>
-
-      <div class="scene-box">
-        <div class="scene-title">ESCENARIO C: BLOQUEO CON GUARDIÁN</div>
-        <ul>
-          <li>Si el Guardián <strong>MUERE</strong>: El jugador pierde <strong>PE = DIFERENCIA (Ataque - Defensa)</strong>. El excedente exilia cartas del Mazo Principal.</li>
-          <li>Si el Guardián <strong>SOBREVIVE</strong>: El jugador <strong>NO</strong> recibe daño a PE ni exilio de mazo.</li>
+          <li>El atacante inflige su <strong>PODER</strong> contra la <strong>DEFENSA</strong> del bloqueador.</li>
+          <li>El bloqueador inflige su <strong>PODER</strong> contra la <strong>DEFENSA</strong> del atacante.</li>
+          <li>Ambos efectos se resuelven <strong>SIMULTÁNEAMENTE</strong>. Pueden morir ambos, uno solo o ninguno.</li>
+          <li>Si el daño recibido &ge; la Defensa, el Campeón <strong>MUERE</strong> (va al Cementerio). El Éter que tuviera bloqueado se libera y vuelve a tu Reserva en tu próximo Alba.</li>
+          <li>El daño <strong>NO permanece</strong> después del combate: un Campeón que sobrevive vuelve a su estado normal sin marcas de daño.</li>
+          <li><strong>Un Campeón bloqueado NO puede hacer la Ruptura</strong>, aunque destruya a su bloqueador.</li>
+          <li>Un bloqueador que muere <strong>NO destruye Vínculos</strong>: solo la Ruptura (Escenario A) lo hace.</li>
         </ul>
       </div>
 
       <div class="section-header sub"><span class="num">10.5</span><h3>EJEMPLOS DE COMBATE</h3></div>
 
       <div class="example">
-        <div class="ex-title">EJEMPLO 1 — Ataque directo</div>
-        Atacante: Poder 5. Sin bloqueo.<br>
-        → El jugador pierde <strong>5 PE</strong>. Sin exilio de mazo.
+        <div class="ex-title">EJEMPLO 1 — Ataque directo (Ruptura)</div>
+        Atacante: Poder 5. El defensor <strong>NO tiene ningún Campeón disponible</strong> para bloquear.<br>
+        → No hay bloqueo posible: se destruye <strong>1 Vínculo</strong> del defensor (el atacante elige cuál, a ciegas). Su efecto permanente se activa a favor del defensor. El PODER del atacante no cambia nada.
       </div>
 
       <div class="example">
-        <div class="ex-title">EJEMPLO 2 — Bloqueo, bloqueador muere</div>
-        Atacante: Poder 6. Bloqueador: Defensa 4, Coste 2.<br>
-        → Bloqueador muere. Jugador pierde <strong>2 PE</strong>. Exilia <strong>2 cartas</strong> del mazo.
+        <div class="ex-title">EJEMPLO 2 — Bloqueo forzoso</div>
+        Atacante: Poder 5. Defensor: tiene 1 Campeón disponible (Poder 2 / Defensa 6).<br>
+        → El defensor <strong>NO puede dejar pasar</strong> el ataque: está obligado a bloquear aunque prefiera perder el Vínculo. El combate se resuelve con daño simultáneo.
       </div>
 
       <div class="example">
-        <div class="ex-title">EJEMPLO 3 — Bloqueo con Guardián que sobrevive</div>
-        Atacante: Poder 5. Guardián: Defensa 6.<br>
-        → Guardián sobrevive. Jugador no pierde PE. No exilia cartas.
+        <div class="ex-title">EJEMPLO 3 — Bloqueo, muere solo el bloqueador</div>
+        Atacante: <strong>Poder 6 / Defensa 4</strong>. Bloqueador: <strong>Poder 3 / Defensa 5</strong>.<br>
+        → El atacante inflige 6 &ge; 5: el bloqueador <strong>MUERE</strong>.<br>
+        → El bloqueador inflige 3 &lt; 4: el atacante <strong>SOBREVIVE</strong>.<br>
+        <em>El atacante quedó bloqueado: NO hace Ruptura, aunque haya destruido al bloqueador.</em>
       </div>
 
       <div class="example">
-        <div class="ex-title">EJEMPLO 4 — Bloqueo con Guardián que muere</div>
-        Atacante: Poder 7. Guardián: Defensa 5.<br>
-        → Guardián muere. Jugador pierde <strong>2 PE</strong> (diferencia). Exilia <strong>2 cartas</strong>.
+        <div class="ex-title">EJEMPLO 4 — Bloqueo, mueren AMBOS</div>
+        Atacante: <strong>Poder 5 / Defensa 4</strong>. Bloqueador: <strong>Poder 4 / Defensa 5</strong>.<br>
+        → El atacante inflige 5 &ge; 5: el bloqueador muere.<br>
+        → El bloqueador inflige 4 &ge; 4: el atacante muere.<br>
+        <em>Ambos van al Cementerio (daño simultáneo). Sus Éter bloqueados se liberan y vuelven a tu Reserva en tu próximo Alba.</em>
       </div>
 
       <div class="example">
-        <div class="ex-title">EJEMPLO 5 — Ataque con Espectro</div>
-        Atacante: Poder 4, Espectro. Guardián enemigo en campo.<br>
-        → El Guardián NO puede bloquear a Espectro. Ataque directo: jugador pierde <strong>4 PE</strong>.
+        <div class="ex-title">EJEMPLO 5 — Bloqueo, sobreviven ambos</div>
+        Atacante: <strong>Poder 3 / Defensa 6</strong>. Bloqueador: <strong>Poder 2 / Defensa 7</strong>.<br>
+        → 3 &lt; 7: el bloqueador sobrevive. → 2 &lt; 6: el atacante sobrevive.<br>
+        <em>Nadie muere. El daño no queda marcado (sin contadores).</em>
+      </div>
+
+      <div class="example">
+        <div class="ex-title">EJEMPLO 6 — Múltiples atacantes, bloqueadores insuficientes</div>
+        Tres Campeones atacan. El defensor solo tiene <strong>1 Campeón disponible</strong>: bloquea un ataque (obligatorio) y los otros dos quedan sin bloquear.<br>
+        → El atacante elige <strong>UNO</strong> de los dos sin bloquear para la Ruptura (o puede elegir <strong>NO</strong> romper ningún Vínculo, ya que es voluntaria): se destruye <strong>SOLO 1 Vínculo</strong> (límite de 1 por turno de ataque). El otro ataque directo no tiene efecto.
+      </div>
+
+      <div class="example">
+        <div class="ex-title">EJEMPLO 7 — Invocación cansada</div>
+        Un Campeón invocado este turno quiere atacar.<br>
+        → <strong>NO puede</strong>. Los Campeones no atacan el turno en que fueron invocados (salvo que una habilidad diga lo contrario). Sí puede defender (y está obligado a hacerlo si es el único disponible).
       </div>
 
       <div class="section-header sub"><span class="num">10.6</span><h3>CADENA DE EFECTOS EN COMBATE</h3></div>
-      <p>Durante el combate, los jugadores pueden activar Tácticas, Combate y Arcanas en respuesta a las acciones del oponente.</p>
+      <p>Durante el combate, los jugadores pueden activar Tácticas (colocadas en turnos anteriores), cartas de Combate y Arcanas en respuesta a las acciones del oponente.</p>
       <p><strong>ORDEN DE ACTIVACIÓN:</strong></p>
       <ol>
         <li>El defensor tiene prioridad: activa primero sus respuestas.</li>
@@ -1127,13 +1219,13 @@
 
       <div class="example">
         <div class="ex-title">Ejemplo de Cadena</div>
-        <strong>Jugador A:</strong> Declara ataque con "Ariete del Vacío" (Poder 6).<br>
-        <strong>Jugador B:</strong> Activa "Contraataque" (Táctica) → Niega el ataque.<br>
-        <strong>Jugador A:</strong> Responde con "Golpe Rápido" (Combate) → +2 Ataque.<br><br>
+        <strong>Jugador A:</strong> Declara ataque con un Campeón (Poder 6). El Campeón se AGOTA al declarar.<br>
+        <strong>Jugador B:</strong> Activa una Táctica → Niega el ataque.<br>
+        <strong>Jugador A:</strong> Responde con una carta de Combate (colocada boca abajo en un turno anterior) → +2 Ataque.<br><br>
         <strong>Resolución (orden inverso):</strong><br>
-        1. "Golpe Rápido" se resuelve: Ariete gana +2 (ahora Poder 8).<br>
-        2. "Contraataque" se resuelve: Niega el ataque.<br><br>
-        <em>Resultado: El ataque es negado, pero el Ariete mantiene +2 Ataque por el resto del turno.</em>
+        1. La carta de Combate se resuelve: el Campeón gana +2 (ahora Poder 8).<br>
+        2. La Táctica se resuelve: niega el ataque.<br><br>
+        <em>Resultado: el ataque es negado, pero el Campeón mantiene +2 Ataque por el resto del turno y permanece AGOTADO (el agotamiento se pagó al declarar).</em>
       </div>
     </div>
   </div>
@@ -1142,32 +1234,23 @@
   <div class="section">
     <div class="section-header"><span class="num">11</span><h2>PALABRAS CLAVE (KEYWORDS)</h2></div>
     <div class="content">
-
-      <div class="kw-grid">
-        <div class="kw-card"><div class="kw-name">GUARDIÁN</div><div class="kw-desc">Bloquea obligatoriamente el primer ataque directo al jugador. Mientras esté en campo, el atacante no puede ignorarlo (salvo Espectro). Si sobrevive, el jugador no recibe daño.</div></div>
-
-        <div class="kw-card"><div class="kw-name">PROTECTOR</div><div class="kw-desc">Puede bloquear ataques dirigidos a otros Campeones (además de los directos al jugador). Versátil.</div></div>
-
-        <div class="kw-card"><div class="kw-name">CARGA</div><div class="kw-desc">Cuando ataca en el turno en que fue invocado, gana un bonus de Ataque adicional (indicado en la carta).</div></div>
-
-        <div class="kw-card"><div class="kw-name">ESPECTRO</div><div class="kw-desc">No puede ser bloqueado por Campeones que no tengan Espectro. Los ataques con Espectro van directo a los PE del jugador.</div></div>
-
-        <div class="kw-card"><div class="kw-name">RECARGA</div><div class="kw-desc">Puede ser enderezado una vez por turno sin esperar la fase de Alba. Permite usar habilidades activas múltiples veces.</div></div>
-
-        <div class="kw-card"><div class="kw-name">VANGUARDIA</div><div class="kw-desc">Ataca primero en la fase de Choque, antes que los Campeones sin Vanguardia. Si dos tienen Vanguardia, atacan simultáneamente.</div></div>
-
-        <div class="kw-card"><div class="kw-name">INMORTAL</div><div class="kw-desc">Cuando fuera a ser destruido, vuelve al campo al final del turno con su Resistencia completa. Una vez por partida (salvo que la carta especifique lo contrario).</div></div>
-
-        <div class="kw-card"><div class="kw-name">ÉTER-FURIA</div><div class="kw-desc">Gana +X Ataque por cada carta de Éter en tu Reserva. Mientras más Éter acumulado, más fuerte es.</div></div>
-
-        <div class="kw-card"><div class="kw-name">FRACTURAR</div><div class="kw-desc">El excedente de daño exilia el DOBLE de cartas del Mazo Principal del defensor.</div></div>
-
-        <div class="kw-card"><div class="kw-name">RESTAURAR</div><div class="kw-desc">Al inicio de tu turno, recuperas PE o cartas del Cementerio (según indique la carta).</div></div>
-
-        <div class="kw-card"><div class="kw-name">GOLPE LETAL</div><div class="kw-desc">Duplica el daño directo a PE. En ataque bloqueado, el daño al jugador se duplica.</div></div>
-
-        <div class="kw-card"><div class="kw-name">INQUEBRANTABLE</div><div class="kw-desc">No puede ser destruido por efectos de cartas. Solo puede ser destruido en combate si su Defensa llega a 0. Si sobrevive, el excedente se transmite al jugador como exilio de mazo, pero el Campeón sigue en pie.</div></div>
+      <p>Las palabras clave son reglas abreviadas que se imprimen en las cartas para simplificar su texto. Definiciones oficiales v2.0:</p>
+      <div class="destiny-table">
+        <table>
+          <tr><th>KEYWORD</th><th>DEFINICIÓN OFICIAL</th></tr>
+          <tr><td><strong>CARGA</strong></td><td>Puede atacar el turno en que es invocado</td></tr>
+          <tr><td><strong>VIGOR</strong></td><td>No se agota al atacar</td></tr>
+          <tr><td><strong>INMORTAL</strong></td><td>No puede ser destruido por efectos (Místicas, Arcanas o habilidades). Sí puede morir en combate</td></tr>
+          <tr><td><strong>INDESTRUCTIBLE</strong></td><td>No puede ser destruido por batalla. Sí puede ser destruido por efectos</td></tr>
+          <tr><td><strong>RECARGA</strong></td><td>Cuando este Campeón ataca, regresa 1 Éter bloqueado que controles a tu Reserva</td></tr>
+          <tr><td><strong>RESONANCIA</strong></td><td>Al inicio de tu Alba, si pagaste esta carta con 2 o más Éter de distinto nombre, gana +1 Ataque o +1 Resistencia (a tu elección)</td></tr>
+          <tr><td><strong>TRANSMUTAR</strong></td><td>Manda esta carta al Cementerio: regresa hasta 2 Éter pagados (1A) a tu Reserva</td></tr>
+          <tr><td><strong>FRENESÍ</strong></td><td>Puedes agotar este Campeón: gana +2 Ataque hasta el final del turno</td></tr>
+          <tr><td><strong>PROTECTOR</strong></td><td>Mientras este Campeón esté en el campo, tus otros Campeones no pueden ser objetivo de habilidades Activas del rival</td></tr>
+          <tr><td><strong>FRACTURAR</strong></td><td>Cuando este Campeón destruye a otro en combate, el rival pierde 1 carta de su mano al azar</td></tr>
+        </table>
       </div>
+      <p class="highlight-amber" style="font-weight:600;">Nota: INMORTAL e INDESTRUCTIBLE son complementarias: la primera protege de efectos, la segunda de la batalla.</p>
     </div>
   </div>
 
@@ -1177,13 +1260,24 @@
     <div class="content">
 
       <div class="section-header sub"><span class="num">12.1</span><h3>FACCIONES</h3></div>
+      <p><strong>PILARES CARDINALES</strong> (fuerzas puras):</p>
       <div class="destiny-table">
         <table>
-          <tr><th>FACCIÓN</th><th>DESCRIPCIÓN</th></tr>
-          <tr><td style="color:var(--cyan);font-weight:600;">ORDEN</td><td>Luz, disciplina, protección. Paladines y ángeles.</td></tr>
-          <tr><td style="color:var(--red);font-weight:600;">CAOS</td><td>Tinieblas, agresión, sacrificio. Demonios y sombras.</td></tr>
-          <tr><td style="color:var(--purple);font-weight:600;">SABIDURÍA</td><td>Conocimiento, magia, control. Magos y arcanistas.</td></tr>
-          <tr><td style="color:var(--green);font-weight:600;">NATURALEZA</td><td>Bestias, elementales, instinto. Fuerza bruta.</td></tr>
+          <tr><th>FACCIÓN</th><th>SÍMBOLO</th><th>POSICIÓN</th><th>DESCRIPCIÓN</th></tr>
+          <tr><td style="color:var(--cyan);font-weight:600;">ORDEN</td><td>Α · Alfa</td><td>Norte</td><td>Disciplina, luz, protección. Paladines y ángeles.</td></tr>
+          <tr><td style="color:var(--red);font-weight:600;">CAOS</td><td>Β · Beta</td><td>Sur</td><td>Tinieblas, agresión, sacrificio. Demonios y sombras.</td></tr>
+          <tr><td style="color:var(--green);font-weight:600;">CREACIÓN</td><td>Γ · Gamma</td><td>Oeste</td><td>Vida, crecimiento, innovación. Constructos y druidas.</td></tr>
+          <tr><td style="color:#f97316;font-weight:600;">DESTRUCCIÓN</td><td>Δ · Delta</td><td>Este</td><td>Fin, purga, renovación. Guerreros del apocalipsis.</td></tr>
+        </table>
+      </div>
+      <p><strong>FACCIONES DIAGONALES</strong> (cada una con identidad propia):</p>
+      <div class="destiny-table">
+        <table>
+          <tr><th>FACCIÓN</th><th>SÍMBOLO</th><th>POSICIÓN</th><th>DESCRIPCIÓN</th></tr>
+          <tr><td style="color:#38bdf8;font-weight:600;">LEY</td><td>Ε · Épsilon</td><td>Noroeste</td><td>El orden que construye y legisla el progreso.</td></tr>
+          <tr><td style="color:#ec4899;font-weight:600;">PURGA</td><td>Ζ · Zeta</td><td>Noreste</td><td>La justicia implacable que arrasa lo corrupto.</td></tr>
+          <tr><td style="color:#a855f7;font-weight:600;">ENTROPÍA</td><td>Η · Eta</td><td>Sureste</td><td>La decadencia total, el vacío que consume.</td></tr>
+          <tr><td style="color:#84cc16;font-weight:600;">MUTACIÓN</td><td>Θ · Theta</td><td>Suroeste</td><td>La vida retorcida, la evolución sin reglas.</td></tr>
         </table>
       </div>
 
@@ -1198,7 +1292,7 @@
           <tr><td>ESPECTRO</td><td>Entidades etéreas, sombras y no-muertos</td></tr>
           <tr><td>CÉLESTE</td><td>Seres divinos, luz y poder celestial</td></tr>
           <tr><td>ABISAL</td><td>Entidades del vacío, oscuridad y caos</td></tr>
-          <tr><td>ELEMENTAL</td><td>Seres de puro elemento (fuego, agua, tierra, aire)</td></tr>
+          <tr><td>ELEMENTAL</td><td>Seres de pura esencia elemental</td></tr>
           <tr><td>CONSTRUCTO</td><td>Autómatas, golems y creaciones artificiales</td></tr>
           <tr><td>HUMANO</td><td>Mortales comunes, versátiles y adaptables</td></tr>
         </table>
@@ -1212,7 +1306,7 @@
           <tr><td>GUARDIA</td><td>Defensor (protege, alta resistencia)</td></tr>
           <tr><td>SOPORTE</td><td>Apoyo (otorga beneficios a otros)</td></tr>
           <tr><td>CONTROL</td><td>Manipula al rival (descarte, robo, etc.)</td></tr>
-          <tr><td>SACRIFICIO</td><td>Requiere sacrificar otros Campeones para jugarse</td></tr>
+          <tr><td>SACRIFICIO</td><td>El sacrificio ES el coste de invocación: sacrificar un Campeón de la MISMA facción (ver 6.2). Puede combinarse con coste de Éter si la carta lo indica</td></tr>
           <tr><td>EVOLUCIÓN</td><td>Se transforma o mejora con condiciones</td></tr>
           <tr><td>ÉTER</td><td>Interactúa directamente con cartas de Éter</td></tr>
           <tr><td>NORMAL</td><td>Sin rol especializado</td></tr>
@@ -1224,7 +1318,7 @@
         <table>
           <tr><th>CATEGORÍA</th><th>DESCRIPCIÓN</th></tr>
           <tr><td>EFECTO</td><td>Habilidad estándar</td></tr>
-          <tr><td>ÚNICO</td><td>Solo 1 copia de esta carta en el tablero a la vez</td></tr>
+          <tr><td>SINGULAR</td><td>Solo 1 copia de esta carta en el tablero a la vez</td></tr>
           <tr><td>LEGENDARIO</td><td>Habilidad de nivel legendario</td></tr>
           <tr><td>MALDITO</td><td>Habilidad con coste o efecto negativo</td></tr>
           <tr><td>BENDITO</td><td>Habilidad con beneficio adicional</td></tr>
@@ -1260,9 +1354,10 @@
 
       <p><strong>Al construir el mazo:</strong></p>
       <ul>
-        <li>20 cartas de ÉTER (sumando límites de copias según cada carta).</li>
-        <li>50 cartas de Mazo PRINCIPAL (sumando límites de copias según cada carta).</li>
-        <li><strong>TOTAL: 70 cartas exactas. Ni una más, ni una menos.</strong></li>
+        <li>15 cartas de ÉTER (sumando límites de copias según cada carta).</li>
+        <li>40 cartas de Mazo PRINCIPAL (sumando límites de copias según cada carta).</li>
+        <li>6 cartas de VÍNCULOS (máximo 3 copias de un mismo Vínculo).</li>
+        <li><strong>TOTAL: 61 cartas exactas. Ni una más, ni una menos.</strong></li>
       </ul>
     </div>
   </div>
@@ -1273,7 +1368,7 @@
     <div class="content">
       <p>Un jugador pierde la partida si ocurre <strong>CUALQUIERA</strong> de estas condiciones:</p>
       <ol>
-        <li><strong class="highlight-red">PE LLEGAN A 0</strong> — Después de aplicar daño directo o daño por Campeón destruido, sus Puntos de Energía llegan a 0 o menos.</li>
+        <li><strong class="highlight-red">VÍNCULOS DESTRUIDOS</strong> — Cuando TODOS sus Vínculos (4A-4F) han sido destruidos. Es la condición de derrota principal del juego. <span class="highlight-amber">El SEXTO Vínculo resuelve su efecto ANTES de confirmar la derrota</span>: permite una última oportunidad, pero no debe crear bucles ni extender indefinidamente la partida.</li>
         <li><strong class="highlight-red">MAZO PRINCIPAL VACÍO</strong> — Cuando deba robar de su Mazo Principal y no queden cartas, pierde en el momento de intentar robar.</li>
         <li><strong>RENDICIÓN</strong> — El jugador declara que se rinde.</li>
       </ol>
@@ -1287,6 +1382,11 @@
 
       <div class="section-header sub"><span class="num">15.1</span><h3>LORE</h3></div>
 
+      <div class="example">
+        <div class="ex-title">NOTA v2.0 — REESTRUCTURACIÓN TOTAL</div>
+        Todas las cartas del Mazo Firstborne de la versión v1.0 fueron <strong>DESCARTADAS</strong>: no son compatibles con las mecánicas v2.0 (sin PE, facciones renovadas, Ruptura por Vínculos, agotamiento y daño simultáneo). El mazo se reestructurará desde cero cuando se diseñen las cartas de la v2.0, junto con el set principal. Por el momento NO existe ninguna carta oficial del juego.
+      </div>
+
       <div class="lore-box">
         Antes de la Gran Escisión, cuando las facciones de Orden y Caos aún no habían tomado sus nombres, existían las Primeras Hijas. Cada una era la primogénita de su casa noble, elegida al nacer para fusionarse con un cristal de Éter primigenio.
         <br><br>
@@ -1296,78 +1396,7 @@
         <div class="attrib">— "No somos hijas de ningún reino. Somos el Reino."<br>Aurora, La Primogénita</div>
       </div>
 
-      <div class="section-header sub"><span class="num">15.2</span><h3>MECÁNICA PRINCIPAL</h3></div>
-      <p>Las Firstborne giran en torno a <strong>EXILIAR ÉTER de la RESERVA</strong> para activar sus habilidades. La sinergia del mazo recompensa mantener la Reserva llena y gestionar el flujo de Éter.</p>
-      <p><strong>Estrategia clave:</strong> Acumula Éter en la Reserva para tener combustible para las habilidades de tus Campeonas, y usa cartas como "Éter de Fusión" o "Seraphina" para optimizar los costes.</p>
-
-      <div class="section-header sub"><span class="num">15.3</span><h3>CARTAS DEL MAZO (29 únicas)</h3></div>
-
-      <div class="fb-section">
-        <div class="fb-group">
-          <div class="fb-label" style="color:var(--cyan)">★ ÉTER (8 cartas)</div>
-          <ul>
-            <li><strong>Éter de Alborada</strong> <span class="fb-cost">(1)</span> — +1 Ataque a Firstborne mientras está en Reserva</li>
-            <li><strong>Éter de Ocaso</strong> <span class="fb-cost">(1)</span> — -1 Ataque a enemigo por Éter en Reserva (Activo)</li>
-            <li><strong>Éter de Vendaval</strong> <span class="fb-cost">(2)</span> — Mira 2, roba 1 (Activo)</li>
-            <li><strong>Éter de Escarcha</strong> <span class="fb-cost">(2)</span> — Congela un Campeón enemigo (Activo)</li>
-            <li><strong>Éter de Renacimiento</strong> <span class="fb-cost">(3)</span> — Salva un Campeón de destrucción (Activo)</li>
-            <li><strong>Éter de Tormenta Inminente</strong> <span class="fb-cost">(3)</span> — Roba 1 por Éter exiliado este turno (Activo)</li>
-            <li><strong>Éter de Eclipse</strong> <span class="fb-cost">(4)</span> — Exilia enemigo con Defensa menor a tu Reserva</li>
-            <li><strong>Éter de Fusión</strong> <span class="fb-cost">(4)</span> — Reduce coste de exiliar en 1 (Pasivo)</li>
-          </ul>
-        </div>
-
-        <div class="fb-group">
-          <div class="fb-label" style="color:var(--amber)">★ CAMPEONAS (11 — todas facción Firstborne)</div>
-          <ul>
-            <li><strong>Aurora, la Primogénita</strong> <span class="fb-cost">(5, 5/6)</span> — Reduce coste de Firstborne, buff +2/+1, busca Éter (Única)</li>
-            <li><strong>Seraphina, Portavoz del Éter</strong> <span class="fb-cost">(4, 3/5)</span> — Éter cuenta como Activo (Épica)</li>
-            <li><strong>Lilith, Abrazo del Vacío</strong> <span class="fb-cost">(5, 6/4)</span> — Ataca imbloqueable, Espectro (Épica)</li>
-            <li><strong>Cassandra, la Voz Ardiente</strong> <span class="fb-cost">(3, 5/2)</span> — Destruye enemigo + daño directo (Rara)</li>
-            <li><strong>Octavia, Muro de la Hermandad</strong> <span class="fb-cost">(4, 3/5)</span> — Guardián + buff a Firstborne (Rara)</li>
-            <li><strong>Ravenna, Maestra del Eclipse</strong> <span class="fb-cost">(4, 4/4)</span> — Control de enemigos (Rara)</li>
-            <li><strong>Selene, Cazadora de Sombras</strong> <span class="fb-cost">(3, 4/3)</span> — +2 y no bloqueable (Poco Común)</li>
-            <li><strong>Iris, Tejedora de Destinos</strong> <span class="fb-cost">(3, 2/4)</span> — Robo adicional (Poco Común)</li>
-            <li><strong>Aria, Portadora del Alba</strong> <span class="fb-cost">(1, 2/2)</span> — +1 y Vanguardia (Común)</li>
-            <li><strong>Lyra, Susurro del Viento</strong> <span class="fb-cost">(2, 2/3)</span> — Filtro de mazo (Común)</li>
-            <li><strong>Valeria, Corazón de Escarcha</strong> <span class="fb-cost">(2, 1/4)</span> — Guardián debuff (Común)</li>
-          </ul>
-        </div>
-
-        <div class="fb-group">
-          <div class="fb-label" style="color:var(--purple)">★ MÍSTICAS (3)</div>
-          <ul>
-            <li><strong>Vínculo de Hermandad</strong> <span class="fb-cost">(2)</span> — Copia stats de otra Firstborne</li>
-            <li><strong>Renacer de las Cenizas</strong> <span class="fb-cost">(3)</span> — Revive Firstborne</li>
-            <li><strong>Canción de la Primogénita</strong> <span class="fb-cost">(5)</span> — Busca Éter y roba (Única)</li>
-          </ul>
-        </div>
-
-        <div class="fb-group">
-          <div class="fb-label" style="color:var(--amber)">★ ARCANAS (3)</div>
-          <ul>
-            <li><strong>Escudo de la Luna</strong> <span class="fb-cost">(2)</span> — Reduce daño directo</li>
-            <li><strong>Grito de Guerra Ancestral</strong> <span class="fb-cost">(3)</span> — +1 Atq por Éter en combate</li>
-            <li><strong>Despertar del Éter Primigenio</strong> <span class="fb-cost">(5)</span> — Revive + buff (Única)</li>
-          </ul>
-        </div>
-
-        <div class="fb-group">
-          <div class="fb-label" style="color:var(--cyan)">★ TÁCTICAS (2)</div>
-          <ul>
-            <li><strong>Reflejos de Éter</strong> — Niega ataque + roba</li>
-            <li><strong>Vínculo de Sangre</strong> — Reduce coste de exiliar</li>
-          </ul>
-        </div>
-
-        <div class="fb-group">
-          <div class="fb-label" style="color:var(--red)">★ COMBATE (2)</div>
-          <ul>
-            <li><strong>Golpe de la Primogénita</strong> — +2 Atq + Golpe Letal</li>
-            <li><strong>Manto de Sombras</strong> — +3 Def + contraataque</li>
-          </ul>
-        </div>
-      </div>
+      <p style="color:var(--text-muted);font-style:italic;">El Lore del mazo se conserva como referencia narrativa. La mecánica de juego y el listado de cartas se publicarán cuando el mazo sea rediseñado para la v2.0.</p>
     </div>
   </div>
 
@@ -1378,29 +1407,36 @@
       <div class="destiny-table">
         <table>
           <tr><th style="width:160px">TÉRMINO</th><th>DEFINICIÓN</th></tr>
-          <tr><td>ALBA</td><td>Primera fase del turno (robo de cartas)</td></tr>
-          <tr><td>ASIGNAR</td><td>Colocar Éter encima de un Campeón al invocarlo</td></tr>
+          <tr><td>ALBA</td><td>Primera fase del turno (enderezar Campeones, reagrupar Éter, robar 1 carta del Mazo Principal)</td></tr>
+          <tr><td>AGOTAR</td><td>Girar un Campeón al atacar. Agotado no ataca, no defiende y no activa habilidades que exijan agotarlo. Se endereza al inicio de tu Alba</td></tr>
+          <tr><td>BLOQUEAR (ÉTER)</td><td>Mover Éter de la Reserva a la zona de un Campeón (1B-1F) o sobre una Mística/Arcana continua para sostener un efecto continuo</td></tr>
           <tr><td>CADENA</td><td>Secuencia de efectos que se resuelven en orden inverso</td></tr>
           <tr><td>CAMPO</td><td>Zona donde están los Campeones y cartas de soporte</td></tr>
-          <tr><td>CEMENTERIO</td><td>Zona de cartas destruidas, descartadas o resueltas</td></tr>
+          <tr><td>CEMENTERIO</td><td>Zona de cartas destruidas, descartadas o resueltas (el Éter nunca va aquí)</td></tr>
           <tr><td>CHOQUE</td><td>Fase de combate del turno</td></tr>
-          <tr><td>COSTE</td><td>Valor de Éter necesario para jugar una carta</td></tr>
-          <tr><td>DAÑO DIRECTO</td><td>Daño que va directo a los PE del jugador</td></tr>
+          <tr><td>COSTE</td><td>Cantidad de cartas de Éter necesarias para jugar una carta o activar una habilidad (todas valen 1)</td></tr>
+          <tr><td>ÉTER BLOQUEADO</td><td>Éter movido de la Reserva a 1B-1F o sobre una Mística/Arcana continua. Permanece bloqueado mientras el efecto continuo esté activo y vuelve a la Reserva cuando termina</td></tr>
+          <tr><td>DAÑO DIRECTO</td><td>Ataque sin bloqueo que destruye 1 Vínculo del defensor (ver RUPTURA)</td></tr>
           <tr><td>DESTRUIR</td><td>Mandar una carta del Campo al Cementerio</td></tr>
-          <tr><td>EXILIO</td><td>Zona de cartas fuera del juego (no recuperables)</td></tr>
+          <tr><td>EXILIO</td><td>Zona de cartas fuera del juego (no recuperables; el Éter nunca va aquí)</td></tr>
           <tr><td>EXILIAR</td><td>Mover una carta al Exilio</td></tr>
           <tr><td>FORJA</td><td>Segunda fase del turno (jugar cartas)</td></tr>
-          <tr><td>MANO</td><td>Cartas que tienes disponibles para jugar (límite 10)</td></tr>
-          <tr><td>MAZO DE ÉTER</td><td>Mazo de 20 cartas de recurso</td></tr>
-          <tr><td>MAZO PRINCIPAL</td><td>Mazo de 50 cartas de juego</td></tr>
-          <tr><td>OCASO</td><td>Fase final del turno</td></tr>
-          <tr><td>OVERPAY</td><td>Perder excedente al pagar con Éter de mayor valor</td></tr>
-          <tr><td>PE</td><td>Puntos de Energía (vida del jugador, 50 iniciales)</td></tr>
+          <tr><td>INVOCACIÓN CANSADA</td><td>Los Campeones no atacan el turno en que fueron invocados (sí pueden defender)</td></tr>
+          <tr><td>MANO</td><td>Cartas que tienes disponibles para jugar (límite 6)</td></tr>
+          <tr><td>MULLIGAN</td><td>Acción opcional al inicio de la partida, 1 sola vez por jugador: barajar la mano inicial de vuelta al Mazo Principal y robar 5 cartas nuevas, sin penalización</td></tr>
+          <tr><td>ÉTER (RECURSO)</td><td>15 cartas de valor 1 que inician boca arriba en la Reserva (2A). Nunca se roban, ni van a la mano, al Cementerio o al Exilio. Sus habilidades se activan según la zona donde estén (8.7)</td></tr>
+          <tr><td>MAZO PRINCIPAL</td><td>Mazo de 40 cartas de juego</td></tr>
+          <tr><td>MAZO DE VÍNCULOS</td><td>Mazo de 6 cartas de Vínculo (se colocan boca abajo en 4A-4F)</td></tr>
+          <tr><td>OCASO</td><td>Fase final del turno (descartar a 6 cartas de mano)</td></tr>
+          <tr><td>PAGAR ÉTER</td><td>Mover la cantidad requerida de cartas de Éter de la Reserva (2A) a su destino: 1A (pago normal) o bloqueado (efecto continuo)</td></tr>
           <tr><td>PODER</td><td>Estadística de ataque de un Campeón</td></tr>
-          <tr><td>RESERVA</td><td>Zona 2A donde se almacena el Éter listo para usar</td></tr>
+          <tr><td>RESERVA</td><td>Zona 2A donde se almacena el Éter listo para usar; las 15 cartas inician aquí y aquí vuelven en cada Alba</td></tr>
           <tr><td>RESISTENCIA</td><td>Estadística de defensa de un Campeón</td></tr>
-          <tr><td>ROBAR</td><td>Tomar la primera carta de un mazo a la mano</td></tr>
-          <tr><td>SLOT</td><td>Espacio en el campo (5 para Campeones, 6 de soporte)</td></tr>
+          <tr><td>SACRIFICIO</td><td>Coste de invocación alternativo: sacrificar un Campeón propio de la misma facción (puede sumar coste de Éter si la carta lo indica). El Éter bloqueado del sacrificado se libera INMEDIATAMENTE</td></tr>
+          <tr><td>RUPTURA</td><td>Acción VOLUNTARIA del atacante: elegir UN Campeón sin bloquear para destruir 1 Vínculo (máx 1 por turno de ataque)</td></tr>
+          <tr><td>ROBAR</td><td>Tomar la primera carta de un mazo (solo del Mazo Principal; el Éter nunca se roba)</td></tr>
+          <tr><td>SLOT</td><td>Espacio en el campo (5 para Campeones, 6 de soporte, 6 para Vínculos)</td></tr>
+          <tr><td>VÍNCULO</td><td>Carta de vida del jugador. Boca abajo en 4A-4F. Al destruirse, activa un efecto permanente a favor de quien recibió el daño. Perderlos todos = derrota.</td></tr>
         </table>
       </div>
     </div>
@@ -1409,9 +1445,9 @@
   <!-- ═══════ FOOTER ═══════ -->
   <div class="footer">
     <p><span class="logo">ÉTER ENGINE TCG</span></p>
-    <p>Set Básico: "El Despertar del Éter" (285 cartas)</p>
-    <p>Mazo Temático: "Firstborne" (29 cartas)</p>
-    <p style="margin-top:8px;">Versión 1.0 — Julio 2026</p>
+    <p>Set Básico: "El Despertar del Éter" — cartas en desarrollo</p>
+    <p>Mazo Temático: "Firstborne" — reestructuración v2.0</p>
+    <p style="margin-top:8px;">Versión 2.0 — Julio 2026</p>
     <p style="margin-top:4px;color:var(--text-muted);">Creado con Éter Forge</p>
   </div>
 

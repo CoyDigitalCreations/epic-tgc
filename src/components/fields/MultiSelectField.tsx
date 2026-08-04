@@ -5,15 +5,18 @@ interface MultiSelectFieldProps {
   value: string[]
   onChange: (value: string[]) => void
   options: string[]
+  /** Máximo de selecciones permitidas (ej: facciones máx 3) */
+  max?: number
 }
 
-export function MultiSelectField({ label, value, onChange, options }: MultiSelectFieldProps) {
+export function MultiSelectField({ label, value, onChange, options, max }: MultiSelectFieldProps) {
   const [isOpen, setIsOpen] = useState(false)
+  const atLimit = max !== undefined && value.length >= max
 
   const toggle = (opt: string) => {
     if (value.includes(opt)) {
       onChange(value.filter((v) => v !== opt))
-    } else {
+    } else if (!atLimit) {
       onChange([...value, opt])
     }
   }
@@ -31,21 +34,32 @@ export function MultiSelectField({ label, value, onChange, options }: MultiSelec
       </button>
       {isOpen && (
         <div className="absolute top-full left-0 right-0 mt-1 bg-surface-2 border border-card-border rounded z-10 shadow-lg">
-          {options.map((opt) => (
-            <label
-              key={opt}
-              className="flex items-center gap-2 px-3 py-2 hover:bg-card-border cursor-pointer text-sm"
-            >
-              <input
-                type="checkbox"
-                checked={value.includes(opt)}
-                onChange={() => toggle(opt)}
-                className="accent-ether-400"
-              />
-              {opt}
-            </label>
-          ))}
+          {options.map((opt) => {
+            const disabled = !value.includes(opt) && atLimit
+            return (
+              <label
+                key={opt}
+                className={`flex items-center gap-2 px-3 py-2 text-sm ${
+                  disabled ? 'opacity-40 cursor-not-allowed' : 'hover:bg-card-border cursor-pointer'
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  checked={value.includes(opt)}
+                  onChange={() => toggle(opt)}
+                  disabled={disabled}
+                  className="accent-ether-400"
+                />
+                {opt}
+              </label>
+            )
+          })}
         </div>
+      )}
+      {max !== undefined && value.length > 0 && (
+        <span className="text-xs text-gray-500">
+          {value.length}/{max} seleccionadas
+        </span>
       )}
       {isOpen && (
         <div className="fixed inset-0 z-0" onClick={() => setIsOpen(false)} />

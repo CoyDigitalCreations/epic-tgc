@@ -29,7 +29,7 @@ describe('CardPreview', () => {
         name: 'Aurelion',
         type: 'Campeón',
         rarity: 'Legendaria',
-        keywords: ['Guardián'],
+        keywords: ['Carga'],
         flavorText: 'El portador del Éter.',
         stats: { cost: 5, poder: 2000, resistencia: 1500 },
         tipoEfecto: 'Activo',
@@ -38,7 +38,7 @@ describe('CardPreview', () => {
     })
     render(<CardPreview />)
     expect(screen.getByText('Aurelion')).toBeInTheDocument()
-    expect(screen.getByText('Guardián')).toBeInTheDocument()
+    expect(screen.getByText('Carga')).toBeInTheDocument()
   })
 
   it('renders a standalone card with export button', () => {
@@ -49,10 +49,9 @@ describe('CardPreview', () => {
       rarity: 'Rara' as const,
       keywords: [],
       flavorText: '',
-      element: 'Fuego' as const,
       createdAt: '2024-01-01',
       updatedAt: '2024-01-01',
-      stats: { cost: 3, poder: 1200, resistencia: 900 },
+      stats: { cost: 3 },
       efecto: 'Hace daño en área',
     }
     render(<CardPreview card={card} standalone />)
@@ -96,6 +95,26 @@ describe('CardPreview', () => {
     render(<CardPreview />)
     // The cost is rendered in a gem hexagon
     expect(screen.getByText('9')).toBeInTheDocument()
+  })
+
+  it('shows facción medallones stacked for multi-facción Campeón', () => {
+    useCardStore.setState({
+      draft: {
+        name: 'Bifronte',
+        type: 'Campeón',
+        rarity: 'Épica',
+        keywords: [],
+        flavorText: '',
+        stats: { cost: 6, poder: 2000, resistencia: 1800 },
+        facciones: ['Orden', 'Caos'],
+      },
+    })
+    render(<CardPreview />)
+    // One medallón (image) per facción, con su src oficial
+    expect(screen.getByAltText('Orden')).toBeInTheDocument()
+    expect(screen.getByAltText('Caos')).toBeInTheDocument()
+    expect(screen.getByAltText('Orden').getAttribute('src')).toBe('/facciones_white.png')
+    expect(screen.getByAltText('Caos').getAttribute('src')).toBe('/facciones_blue.png')
   })
 
   it('hides cost gem for Táctica cards', () => {

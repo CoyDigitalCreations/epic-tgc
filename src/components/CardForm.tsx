@@ -130,7 +130,8 @@ export function CardForm() {
             label={field.label}
             value={keywords}
             onChange={(v) => onChange(v)}
-            options={[...KEYWORDS]}
+            options={field.options ?? [...KEYWORDS]}
+            max={field.max}
           />
         )
       }

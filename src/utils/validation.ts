@@ -29,6 +29,10 @@ export function validateCard(card: Partial<AnyCard>): ValidationError[] {
         errors.push({ field: field.name, message: `${field.label} es requerido` })
         continue
       }
+      if (field.type === 'multi-select' && Array.isArray(value) && value.length === 0) {
+        errors.push({ field: field.name, message: `${field.label} es requerido` })
+        continue
+      }
     }
 
     if (field.type === 'number' && value !== undefined && value !== null && value !== '') {
