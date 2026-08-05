@@ -1,10 +1,11 @@
 import { useRef, useState, type ChangeEvent } from 'react'
 import { useCardStore } from '../store/useCardStore'
 import { exportCardToPng } from '../utils/export-png'
-import { fileToDataUrl, isValidImageFile } from '../utils/file-to-data-url'
+import { fileToCompressedDataUrl, isValidImageFile } from '../utils/file-to-data-url'
+import { useCardImage } from '../hooks/useCardImage'
 import type { AnyCard, CampeonCard, EterCard, Faccion } from '../types'
-import { FACCION_IMAGES } from '../types'
-import { CardFrame, CostGem, EtherDiamond, NamePlate, StatBadge, TextScroll } from './card-art'
+import { FACCION_COLORS, FACCION_IMAGES } from '../types'
+import { CardFrame, CostGem, EtherDiamond, NamePlate, RuneIcon, StatBadge, TextScroll } from './card-art'
 
 /* ───────── type theme ───────── */
 const TYPE_THEME: Record<
@@ -98,7 +99,7 @@ export function CardPreview({
       return
     }
     try {
-      const dataUrl = await fileToDataUrl(file)
+      const dataUrl = await fileToCompressedDataUrl(file)
       onImageChange?.(dataUrl)
       setImageError(null)
     } catch {
@@ -119,6 +120,13 @@ export function CardPreview({
   } else if (draft.type) {
     displayCard = draft as unknown as AnyCard
   }
+
+  // Resolve art: inline (draft/in-memory) wins, else load from IndexedDB
+  const resolvedImageUrl = useCardImage(
+    displayCard?.id,
+    displayCard?.hasImage,
+    displayCard?.imageUrl,
+  )
 
   if (!displayCard) {
     return (
@@ -190,8 +198,8 @@ export function CardPreview({
         style={{
           position: 'absolute',
           inset: 0,
-          background: displayCard.imageUrl
-            ? `url(${displayCard.imageUrl}) center top / cover no-repeat`
+          background: resolvedImageUrl
+            ? `url(${resolvedImageUrl}) center top / cover no-repeat`
             : `radial-gradient(circle at 50% 35%, ${theme.color}44 0%, #0d0f14 70%)`,
           cursor: editable ? 'pointer' : 'default',
         }}
@@ -260,7 +268,7 @@ export function CardPreview({
                 border: '1px solid #38bdf866',
               }}
             >
-              {displayCard.imageUrl ? 'Cambiar imagen de arte' : 'Cargar imagen de arte (Rec. 744x1038)'}
+              {resolvedImageUrl ? 'Cambiar imagen de arte' : 'Cargar imagen de arte (Rec. 744x1038)'}
             </span>
           </div>
         )}
@@ -425,19 +433,51 @@ export function CardPreview({
               }}
             >
               {facs.slice(0, 3).map((fac) => (
-                <img
+                <div
                   key={fac}
-                  src={FACCION_IMAGES[fac]}
-                  alt={fac}
                   title={fac}
                   style={{
+                    position: 'relative',
                     width: 110,
                     height: 110,
-                    objectFit: 'contain',
-                    borderRadius: '50%',
-                    filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.6))',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
                   }}
-                />
+                >
+                  <img
+                    src={FACCION_IMAGES[fac]}
+                    alt={fac}
+                    style={{
+                      position: 'absolute',
+                      inset: 0,
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'contain',
+                      borderRadius: '50%',
+                      filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.6))',
+                    }}
+                  />
+                  {/* Runa de la cosmología (FACCION_RUNES) superpuesta al medallón */}
+                  <div
+                    style={{
+                      position: 'absolute',
+                      inset: 0,
+                      zIndex: 2,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.9))',
+                    }}
+                  >
+                    <RuneIcon
+                      faccion={fac}
+                      color={FACCION_COLORS[fac]}
+                      size={62}
+                      strokeWidth={2.5}
+                    />
+                  </div>
+                </div>
               ))}
             </div>
           )
@@ -488,7 +528,7 @@ export function CardPreview({
             {displayCard.type === 'Campeón'
               ? [
                 (displayCard as AnyCard & { esencia?: string }).esencia || 'SIN ESENCIA',
-                (displayCard as AnyCard & { rol?: string }).rol || 'SIN ROL',
+                (displayCard as AnyCard & { roles?: string[] }).roles?.join(' / ') || 'SIN ROL',
                 (displayCard as AnyCard & { catHabilidad?: string }).catHabilidad || 'NORML',
               ].join(' / ')
               : displayCard.type.toUpperCase()
@@ -549,7 +589,7 @@ export function CardPreview({
                   if (cm.efectoActivo) {
                     parts.push(
                       <p key="activo" style={{ fontFamily: '"Inter", sans-serif', fontSize: fluidSize(cm.efectoActivo, 13.5), lineHeight: 1.35, fontWeight: 500, color: '#261a0e', margin: 0, marginTop: parts.length > 0 ? 8 : 0 }}>
-                        <strong>Activo{cm.tipoHabilidad ? ` (${cm.tipoHabilidad})` : ''}:</strong> {cm.efectoActivo}
+                        <strong>Activo:</strong> {cm.efectoActivo}
                       </p>
                     )
                   }

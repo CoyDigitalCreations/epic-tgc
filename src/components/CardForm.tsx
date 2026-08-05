@@ -172,7 +172,12 @@ export function CardForm() {
       {/* Image upload */}
       <ImageUpload
         value={draft.imageUrl as string | undefined}
-        onChange={(dataUrl) => updateDraft('imageUrl', dataUrl)}
+        onChange={(dataUrl) => {
+          updateDraft('imageUrl', dataUrl)
+          // Remover la imagen = marcar hasImage:false para que updateCard la
+          // borre de IndexedDB. Si no se toca, hasImage queda true y se conserva.
+          if (!dataUrl) updateDraft('hasImage', false)
+        }}
       />
 
       {/* Dynamic fields from config */}

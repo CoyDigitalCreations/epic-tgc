@@ -2,9 +2,159 @@ import { useState, useMemo, useRef } from 'react'
 import { useCardStore } from '../store/useCardStore'
 import { exportCollectionToJson, importCollectionFromJson } from '../utils/export-json'
 import { CARD_TYPES, type CardType } from '../types'
-import { PAQUETES, FIRSTBORNE_CARDS, progresoPaquete } from '../data/paquetes'
+import { PAQUETES, ESTASIS_CARDS, progresoPaquete } from '../data/paquetes'
 import { RuneIcon } from './card-art'
 import { ConfirmModal } from './modals/ConfirmModal'
+import { useCardImage } from '../hooks/useCardImage'
+import type { AnyCard } from '../types'
+
+/** Cartas disponibles por paquete (clave = paquete.id) — el import los agrega a la colección */
+const CARTAS_POR_PAQUETE = {
+  estasis: ESTASIS_CARDS,
+}
+
+interface CardGridItemProps {
+  card: AnyCard
+  selected: boolean
+  onSelect: () => void
+  onEdit: () => void
+  onDelete: () => void
+}
+
+/** Single grid tile. Hooks are required here (can't be inside a .map). */
+function CardGridItem({ card, selected, onSelect, onEdit, onDelete }: CardGridItemProps) {
+  const imageUrl = useCardImage(card.id, card.hasImage, card.imageUrl)
+  return (
+    <div
+      onClick={onSelect}
+      className={`bg-surface-2 border rounded-lg p-3 cursor-pointer transition-all
+        ${selected
+          ? 'border-ether-400 ring-1 ring-ether-400'
+          : 'border-card-border hover:border-gray-500'
+        }`}
+    >
+      {/* Mini preview */}
+      <div
+        style={{
+          aspectRatio: '744/1038',
+          borderRadius: 6,
+          background: imageUrl
+            ? `url(${imageUrl}) center top / cover no-repeat`
+            : 'linear-gradient(135deg, #16162a, #1e1e36)',
+          border: '1px solid #3b3b5c',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+        }}
+      >
+        {/* Mini name bar */}
+        <div
+          style={{
+            padding: '4px 6px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            background: imageUrl ? 'linear-gradient(180deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 70%, transparent 100%)' : 'none',
+          }}
+        >
+          <span
+            style={{
+              fontFamily: '"Cinzel", serif',
+              fontSize: 8,
+              fontWeight: 700,
+              color: '#f0f0f0',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+              flex: 1,
+            }}
+          >
+            {card.name || 'Sin nombre'}
+          </span>
+          <span
+            style={{
+              fontSize: 8,
+              color: '#93c5fd',
+              fontWeight: 700,
+            }}
+          >
+            {card.stats?.cost ?? 0}
+          </span>
+        </div>
+        {/* Mini stats if combat */}
+        {(card.type === 'Campeón' || card.type === 'Mística' || card.type === 'Éter') && (
+          <div
+            style={{
+              marginTop: 'auto',
+              padding: '2px 6px',
+              display: 'flex',
+              justifyContent: 'space-between',
+              background: imageUrl ? 'linear-gradient(0deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 60%, transparent 100%)' : 'rgba(0,0,0,0.4)',
+              fontSize: 8,
+            }}
+          >
+            <span style={{ color: '#ef4444', fontWeight: 700 }}>
+              {(card.stats as { poder?: number }).poder ?? 0}
+            </span>
+            <span style={{ color: '#22c55e', fontWeight: 700 }}>
+              {(card.stats as { resistencia?: number }).resistencia ?? 0}
+            </span>
+          </div>
+        )}
+      </div>
+      {/* Card name + actions */}
+      <div className="mt-1.5">
+        <div className="flex items-center gap-1.5">
+          <p className="text-xs text-gray-200 truncate font-medium flex-1">
+            {card.name || 'Sin nombre'}
+          </p>
+          {card.limiteCopias && (
+            <span className="text-[10px] font-mono text-gray-500 bg-surface border border-card-border rounded px-1 py-0.5 leading-none shrink-0">
+              ×{card.limiteCopias}
+            </span>
+          )}
+        </div>
+        <p className="text-[10px] text-gray-500 flex items-center gap-1">
+          {card.type}
+          {(() => {
+            const paquete = PAQUETES.find((p) => p.id === card.paqueteId)
+            return paquete ? (
+              <span style={{ display: 'inline-flex' }} title={paquete.nombre}>
+                <RuneIcon
+                  faccion={paquete.facciones[0]}
+                  color={paquete.color}
+                  size={10}
+                />
+              </span>
+            ) : null
+          })()}
+        </p>
+      </div>
+      <div className="flex gap-1 mt-1.5">
+        <button
+          onClick={(e) => {
+            e.stopPropagation()
+            onEdit()
+          }}
+          className="flex-1 text-[10px] bg-ether-600/30 hover:bg-ether-600/50 text-ether-300 py-0.5 
+                     rounded transition-colors cursor-pointer"
+        >
+          Editar
+        </button>
+        <button
+          onClick={(e) => {
+            e.stopPropagation()
+            onDelete()
+          }}
+          className="flex-1 text-[10px] bg-red-600/30 hover:bg-red-600/50 text-red-300 py-0.5 
+                     rounded transition-colors cursor-pointer"
+        >
+          Eliminar
+        </button>
+      </div>
+    </div>
+  )
+}
 
 export function CardList() {
   const cards = useCardStore((s) => s.cards)
@@ -47,7 +197,7 @@ export function CardList() {
   }
 
   const handleImportPaquete = (paqueteId: string) => {
-    const cartas = paqueteId === 'firstborne' ? FIRSTBORNE_CARDS : []
+    const cartas = CARTAS_POR_PAQUETE[paqueteId] ?? []
     if (cartas.length === 0) return
     const existentes = new Set(cards.map((c) => c.id))
     const nuevas = cartas.filter((c) => !existentes.has(c.id))
@@ -97,7 +247,11 @@ export function CardList() {
           {cards.length > 0 && (
             <>
               <button
-                onClick={() => exportCollectionToJson(cards)}
+                onClick={() => {
+                  void exportCollectionToJson(cards).catch((err) => {
+                    console.error('Error al exportar JSON:', err)
+                  })
+                }}
                 className="text-xs bg-surface-2 hover:bg-card-border text-gray-300 px-3 py-1.5 rounded 
                            transition-colors cursor-pointer"
               >
@@ -272,137 +426,18 @@ export function CardList() {
         /* Card grid */
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
           {filteredCards.map((card) => (
-            <div
+            <CardGridItem
               key={card.id}
-              onClick={() => setSelectedCardId(card.id)}
-              className={`bg-surface-2 border rounded-lg p-3 cursor-pointer transition-all
-                ${selectedCardId === card.id
-                  ? 'border-ether-400 ring-1 ring-ether-400'
-                  : 'border-card-border hover:border-gray-500'
-                }`}
-            >
-              {/* Mini preview */}
-              <div
-                style={{
-                  aspectRatio: '744/1038',
-                  borderRadius: 6,
-                  background: card.imageUrl
-                    ? `url(${card.imageUrl}) center top / cover no-repeat`
-                    : 'linear-gradient(135deg, #16162a, #1e1e36)',
-                  border: '1px solid #3b3b5c',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  overflow: 'hidden',
-                }}
-              >
-                {/* Mini name bar */}
-                <div
-                  style={{
-                    padding: '4px 6px',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    background: card.imageUrl ? 'linear-gradient(180deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 70%, transparent 100%)' : 'none',
-                  }}
-                >
-                  <span
-                    style={{
-                      fontFamily: '"Cinzel", serif',
-                      fontSize: 8,
-                      fontWeight: 700,
-                      color: '#f0f0f0',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                      flex: 1,
-                    }}
-                  >
-                    {card.name || 'Sin nombre'}
-                  </span>
-                  <span
-                    style={{
-                      fontSize: 8,
-                      color: '#93c5fd',
-                      fontWeight: 700,
-                    }}
-                  >
-                    {card.stats?.cost ?? 0}
-                  </span>
-                </div>
-                {/* Mini stats if combat */}
-                {(card.type === 'Campeón' || card.type === 'Mística' || card.type === 'Éter') && (
-                  <div
-                    style={{
-                      marginTop: 'auto',
-                      padding: '2px 6px',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      background: card.imageUrl ? 'linear-gradient(0deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 60%, transparent 100%)' : 'rgba(0,0,0,0.4)',
-                      fontSize: 8,
-                    }}
-                  >
-                    <span style={{ color: '#ef4444', fontWeight: 700 }}>
-                      {(card.stats as { poder?: number }).poder ?? 0}
-                    </span>
-                    <span style={{ color: '#22c55e', fontWeight: 700 }}>
-                      {(card.stats as { resistencia?: number }).resistencia ?? 0}
-                    </span>
-                  </div>
-                )}
-              </div>
-              {/* Card name + actions */}
-              <div className="mt-1.5">
-                <div className="flex items-center gap-1.5">
-                  <p className="text-xs text-gray-200 truncate font-medium flex-1">
-                    {card.name || 'Sin nombre'}
-                  </p>
-                  {card.limiteCopias && (
-                    <span className="text-[10px] font-mono text-gray-500 bg-surface border border-card-border rounded px-1 py-0.5 leading-none shrink-0">
-                      ×{card.limiteCopias}
-                    </span>
-                  )}
-                </div>
-                <p className="text-[10px] text-gray-500 flex items-center gap-1">
-                  {card.type}
-                  {(() => {
-                    const paquete = PAQUETES.find((p) => p.id === card.paqueteId)
-                    return paquete ? (
-                      <span style={{ display: 'inline-flex' }} title={paquete.nombre}>
-                        <RuneIcon
-                          faccion={paquete.facciones[0]}
-                          color={paquete.color}
-                          size={10}
-                        />
-                      </span>
-                    ) : null
-                  })()}
-                </p>
-              </div>
-              <div className="flex gap-1 mt-1.5">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    handleEdit(card)
-                  }}
-                  className="flex-1 text-[10px] bg-ether-600/30 hover:bg-ether-600/50 text-ether-300 py-0.5 
-                             rounded transition-colors cursor-pointer"
-                >
-                  Editar
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    if (confirm(`¿Eliminar "${card.name}"?`)) {
-                      deleteCard(card.id)
-                    }
-                  }}
-                  className="flex-1 text-[10px] bg-red-600/30 hover:bg-red-600/50 text-red-300 py-0.5 
-                             rounded transition-colors cursor-pointer"
-                >
-                  Eliminar
-                </button>
-              </div>
-            </div>
+              card={card}
+              selected={selectedCardId === card.id}
+              onSelect={() => setSelectedCardId(card.id)}
+              onEdit={() => handleEdit(card)}
+              onDelete={() => {
+                if (confirm(`¿Eliminar "${card.name}"?`)) {
+                  deleteCard(card.id)
+                }
+              }}
+            />
           ))}
         </div>
       )}

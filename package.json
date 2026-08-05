@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "seed": "node --experimental-strip-types scripts/generate-seed.ts",
+    "seed": "tsx scripts/generate-seed.ts",
     "test": "vitest run",
     "test:watch": "vitest"
   },
@@ -32,10 +32,12 @@
     "@types/uuid": "^10.0.0",
     "@vitejs/plugin-react": "^6.0.3",
     "autoprefixer": "^10.5.4",
+    "fake-indexeddb": "^6.2.5",
     "jsdom": "^29.1.1",
     "oxlint": "^1.71.0",
     "postcss": "^8.5.24",
     "tailwindcss": "^4.3.3",
+    "tsx": "^4.23.5",
     "typescript": "~6.0.2",
     "vite": "^8.1.1",
     "vitest": "^4.1.10"

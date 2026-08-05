@@ -1,7 +1,17 @@
 import type { AnyCard } from '../types'
+import { getCardImage } from './image-store'
 
-export function exportCollectionToJson(cards: AnyCard[]): void {
-  const json = JSON.stringify(cards, null, 2)
+export async function exportCollectionToJson(cards: AnyCard[]): Promise<void> {
+  // Images live in IndexedDB, not in the persisted cards — embed them back
+  // into the exported JSON so a backup keeps the art.
+  const exported = await Promise.all(
+    cards.map(async (card) => {
+      if (!card.hasImage) return card
+      const dataUrl = await getCardImage(card.id)
+      return dataUrl ? { ...card, imageUrl: dataUrl } : card
+    }),
+  )
+  const json = JSON.stringify(exported, null, 2)
   const blob = new Blob([json], { type: 'application/json' })
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
