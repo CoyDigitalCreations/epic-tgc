@@ -24,13 +24,16 @@ export interface CardMeta {
   rarity: Rarity
   keywords: Keyword[]
   imageUrl?: string
+  /** true cuando la imagen vive en IndexedDB (no en localStorage) — ver utils/image-store.ts */
+  hasImage?: boolean
   flavorText: string
   createdAt: string
   updatedAt: string
   /** Taxonomy (primarily for Campeón): hasta 3 facciones */
   facciones?: Faccion[]
   esencia?: Esencia
-  rol?: Rol
+  /** Roles (taxonomía, principalmente para Campeón): hasta 2 */
+  roles?: Rol[]
   catHabilidad?: CatHabilidad
   /** Copy limit: '1' | '2' | '3' (string to match form select) */
   limiteCopias?: string
@@ -51,14 +54,14 @@ export interface CampeonCard extends CardMeta {
 
 export interface MisticaCard extends CardMeta {
   type: 'Mística'
-  /** No tienen Poder ni Resistencia — son puramente conjuros (6.3) */
+  /** No tienen Poder ni Resistencia — son puramente conjuros (5.3) */
   stats: BaseStats
   efecto: string
 }
 
 export interface TacticaCard extends CardMeta {
   type: 'Táctica'
-  /** No cuestan Éter (6.4): cost se ignora en la UI */
+  /** No cuestan Éter (5.4): cost se ignora en la UI */
   stats: TacticaStats
   descripcion: string
 }
@@ -72,14 +75,14 @@ export interface ArcanaCard extends CardMeta {
 
 export interface CombateCard extends CardMeta {
   type: 'Combate'
-  /** No cuestan Éter (6.6): cost se ignora en la UI */
+  /** No cuestan Éter (5.6): cost se ignora en la UI */
   stats: BaseStats
   descripcion: string
 }
 
 export interface EterCard extends CardMeta {
   type: 'Éter'
-  /** No combaten: valen 1 en v2.0 (8.7). Sin Poder ni Resistencia */
+  /** No combaten: valen 1 en v2.0 (7.7). Sin Poder ni Resistencia */
   stats: BaseStats
   /** Efecto en zona RESERVA (2A) */
   efectoReserva?: string
@@ -92,7 +95,7 @@ export interface EterCard extends CardMeta {
 
 export interface VinculoCard extends CardMeta {
   type: 'Vínculo'
-  /** No cuestan Éter (6.7) */
+  /** No cuestan Éter (5.7) */
   stats: BaseStats
   /** Efecto PERMANENTE a favor del dueño al ser destruido */
   efecto: string
