@@ -9,7 +9,7 @@ import { useCardImage } from '../hooks/useCardImage'
 import type { AnyCard } from '../types'
 
 /** Cartas disponibles por paquete (clave = paquete.id) — el import los agrega a la colección */
-const CARTAS_POR_PAQUETE = {
+const CARTAS_POR_PAQUETE: Record<string, AnyCard[]> = {
   estasis: ESTASIS_CARDS,
 }
 
