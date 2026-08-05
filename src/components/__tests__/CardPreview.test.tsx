@@ -115,6 +115,16 @@ describe('CardPreview', () => {
     expect(screen.getByAltText('Caos')).toBeInTheDocument()
     expect(screen.getByAltText('Orden').getAttribute('src')).toBe('/facciones_white.png')
     expect(screen.getByAltText('Caos').getAttribute('src')).toBe('/facciones_blue.png')
+    // La runa de la cosmología va superpuesta encima de cada medallón
+    expect(screen.getByTestId('rune-Orden')).toBeInTheDocument()
+    expect(screen.getByTestId('rune-Caos')).toBeInTheDocument()
+    const runeOrden = screen.getByTestId('rune-Orden')
+    const medallonOrden = screen.getByAltText('Orden')
+    // La runa va DESPUÉS del medallón en el DOM (superpuesta, zIndex 2)
+    expect(
+      medallonOrden.compareDocumentPosition(runeOrden) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy()
   })
 
   it('hides cost gem for Táctica cards', () => {

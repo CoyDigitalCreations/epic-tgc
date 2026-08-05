@@ -60,7 +60,7 @@ describe('validateCard', () => {
       name: 'Aurelion',
       facciones: ['Orden'],
       esencia: 'Mago',
-      rol: 'Asalto',
+      roles: ['Normal'],
       catHabilidad: 'Efecto',
       stats: { cost: 3, poder: 1000, resistencia: 800 },
     })

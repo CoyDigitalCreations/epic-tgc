@@ -7,33 +7,43 @@ import { FACCION_COLORS } from '../types'
 
 export const PAQUETES: Paquete[] = [
   {
-    id: 'firstborne',
-    nombre: 'Firstborne',
+    id: 'estasis',
+    nombre: 'Estásis',
     tipo: 'Mazo Temático',
     color: FACCION_COLORS.Orden,
     facciones: ['Orden'],
+    entrega: 'Primogénitos',
     distribucion: { eter: 15, principal: 40, vinculos: 6 },
     lore:
-      'Firstborne ("Primer Nacimiento") es el mazo temático de la facción Orden. ' +
-      'Según el lore oficial, las Primeras Hijas de las Casas del Norte fueron los ' +
-      'primeros seres humanos que se fusionaron con el Éter: cada una se convirtió ' +
-      'en un conducto viviente de la energía primigenia. Aurora, la Primogénita, ' +
-      'fue la primera de todas y su sangre se convirtió en la fuente del poder de ' +
-      'las casas. El mazo juega con la economía de Éter: bloquear, devolver y ' +
-      'reciclar recursos mientras los Campeones se fortalecen con cada cristal.',
+      'Estásis ("El Ancla") es el mazo temático de la facción Orden y la primera ' +
+      'entrega de Los Primogénitos. Antes de la Gran Escisión, cuando las facciones aún ' +
+      'no habían tomado sus nombres, el polo del norte se llamaba Estásis: el Ancla ' +
+      'y el Eje de la realidad. De la tensión entre los polos del Éter nacieron ' +
+      'los Primogénitos del Éter: los primeros seres humanos en fusionarse con la ' +
+      'energía primigenia, cada uno elegido al nacer por su casa noble para portar ' +
+      'un cristal de Éter. En esta primera entrega, las primogénitas de Orden son ' +
+      'mujeres y los primogénitos de Caos, hombres. Aurora, la Primogénita, fue la ' +
+      'primera de todas y su sangre se convirtió en la fuente del poder de las casas.\n\n' +
+      'Cuando la Gran Escisión partió el Eje y las casas cayeron en la guerra, las ' +
+      'primogénitas del norte se negaron a elegir bando y formaron una hermandad ' +
+      'errante, unidas por la sangre y el Éter: "No somos hijos de ningún reino. ' +
+      'Somos el Reino."\n\n' +
+      'El mazo juega con la economía de Éter: bloquear, devolver y reciclar recursos ' +
+      'mientras los Campeones se fortalecen con cada cristal anclado.',
   },
 ]
 
 export const getPaquete = (id?: string) => PAQUETES.find((p) => p.id === id)
 
 /* ─────────────────────────────────────────────
-   Set Firstborne — 30 diseños / 61 cartas (15 Éter + 40 Principal + 6 Vínculos)
+   Mazo Estásis (entrega Primogénitos) — 30 diseños / 61 cartas
+   (15 Éter + 40 Principal + 6 Vínculos)
    Todas las cartas son de la facción Orden.
    ───────────────────────────────────────────── */
 
 const FB_TS = '2026-08-03T00:00:00.000Z'
 
-export const FIRSTBORNE_CARDS: AnyCard[] = [
+export const ESTASIS_CARDS: AnyCard[] = [
   /* ── ÉTER (9 diseños → 15 copias) ─────────────────────────────── */
   {
     id: 'FB-001',
@@ -42,13 +52,13 @@ export const FIRSTBORNE_CARDS: AnyCard[] = [
     rarity: 'Rara',
     keywords: [],
     flavorText: 'El primer latido del Éter se sintió en el norte, y las casas abrieron los ojos.',
-    paqueteId: 'firstborne',
+    paqueteId: 'estasis',
     limiteCopias: '2',
     createdAt: FB_TS,
     updatedAt: FB_TS,
     facciones: ['Orden'],
     stats: { cost: 1 },
-    efectoReserva: 'Mientras esté en tu Reserva, tus Campeones ganan +1 de Poder.',
+    efectoReserva: 'Mientras esté en tu Reserva, los Campeones que controles ganan +1 de Poder.',
   },
   {
     id: 'FB-002',
@@ -57,13 +67,13 @@ export const FIRSTBORNE_CARDS: AnyCard[] = [
     rarity: 'Poco Común',
     keywords: [],
     flavorText: 'Las casas cayeron, pero su memoria no.',
-    paqueteId: 'firstborne',
+    paqueteId: 'estasis',
     limiteCopias: '1',
     createdAt: FB_TS,
     updatedAt: FB_TS,
     facciones: ['Orden'],
     stats: { cost: 1 },
-    efectoReserva: 'Al inicio de tu Choque, si está en tu Reserva, un Campeón tuyo gana Vigor hasta el final del turno.',
+    efectoReserva: 'Al inicio de tu Choque, si está en tu Reserva, un Campeón que controles gana Vigor hasta el final del turno.',
   },
   {
     id: 'FB-003',
@@ -72,7 +82,7 @@ export const FIRSTBORNE_CARDS: AnyCard[] = [
     rarity: 'Común',
     keywords: [],
     flavorText: 'Lo que corre por sus venas no es sangre: es promesa.',
-    paqueteId: 'firstborne',
+    paqueteId: 'estasis',
     limiteCopias: '2',
     createdAt: FB_TS,
     updatedAt: FB_TS,
@@ -88,7 +98,7 @@ export const FIRSTBORNE_CARDS: AnyCard[] = [
     rarity: 'Común',
     keywords: [],
     flavorText: 'Aún roto, el cristal recuerda cómo cantar.',
-    paqueteId: 'firstborne',
+    paqueteId: 'estasis',
     limiteCopias: '2',
     createdAt: FB_TS,
     updatedAt: FB_TS,
@@ -104,7 +114,7 @@ export const FIRSTBORNE_CARDS: AnyCard[] = [
     rarity: 'Común',
     keywords: [],
     flavorText: 'Cada hermana es la voz de una casa que ya no existe.',
-    paqueteId: 'firstborne',
+    paqueteId: 'estasis',
     limiteCopias: '2',
     createdAt: FB_TS,
     updatedAt: FB_TS,
@@ -120,7 +130,7 @@ export const FIRSTBORNE_CARDS: AnyCard[] = [
     rarity: 'Rara',
     keywords: [],
     flavorText: 'Ninguna casa las reclamó. El Éter sí.',
-    paqueteId: 'firstborne',
+    paqueteId: 'estasis',
     limiteCopias: '1',
     createdAt: FB_TS,
     updatedAt: FB_TS,
@@ -136,7 +146,7 @@ export const FIRSTBORNE_CARDS: AnyCard[] = [
     rarity: 'Épica',
     keywords: [],
     flavorText: 'La primera en fusionarse. La que marcó el camino.',
-    paqueteId: 'firstborne',
+    paqueteId: 'estasis',
     limiteCopias: '1',
     createdAt: FB_TS,
     updatedAt: FB_TS,
@@ -151,7 +161,7 @@ export const FIRSTBORNE_CARDS: AnyCard[] = [
     rarity: 'Poco Común',
     keywords: [],
     flavorText: 'Cuando el cristal despierta, la hija despierta con él.',
-    paqueteId: 'firstborne',
+    paqueteId: 'estasis',
     limiteCopias: '2',
     createdAt: FB_TS,
     updatedAt: FB_TS,
@@ -166,7 +176,7 @@ export const FIRSTBORNE_CARDS: AnyCard[] = [
     rarity: 'Común',
     keywords: [],
     flavorText: 'La última en caer no fue la más débil: fue la que resistió.',
-    paqueteId: 'firstborne',
+    paqueteId: 'estasis',
     limiteCopias: '2',
     createdAt: FB_TS,
     updatedAt: FB_TS,
@@ -182,19 +192,19 @@ export const FIRSTBORNE_CARDS: AnyCard[] = [
     type: 'Campeón',
     rarity: 'Única',
     keywords: [],
-    flavorText: 'No somos hijas de ningún reino. Somos el Reino.',
-    paqueteId: 'firstborne',
+    flavorText: 'No somos hijos de ningún reino. Somos el Reino.',
+    paqueteId: 'estasis',
     limiteCopias: '1',
     createdAt: FB_TS,
     updatedAt: FB_TS,
     facciones: ['Orden'],
-    esencia: 'Humano',
-    rol: 'Soporte',
+    esencia: 'Céleste',
+    roles: ['Soberano'],
     catHabilidad: 'Singular',
     stats: { cost: 4, poder: 9, resistencia: 9 },
     tipoEfecto: 'Especial',
-    efectoPasivo: 'Tus otros Campeones ganan +1 de Poder y +1 de Resistencia.',
-    efectoActivo: 'Paga 2 Éter (bloqueado): mientras ese Éter esté bloqueado, un Campeón tuyo gana +2 de Poder y +2 de Resistencia.',
+    efectoPasivo: 'Al ser invocada, tomá control de un Campeón que controla el rival. Ese Campeón queda agotado.',
+    efectoActivo: 'Paga 2 Éter (bloqueado): mientras ese Éter esté bloqueado, un Campeón que controles gana +2 de Poder y +2 de Resistencia.',
   },
   {
     id: 'FB-011',
@@ -203,15 +213,17 @@ export const FIRSTBORNE_CARDS: AnyCard[] = [
     rarity: 'Común',
     keywords: ['Carga'],
     flavorText: 'Ataca antes de que el alba termine de cantar.',
-    paqueteId: 'firstborne',
+    paqueteId: 'estasis',
     limiteCopias: '3',
     createdAt: FB_TS,
     updatedAt: FB_TS,
     facciones: ['Orden'],
-    esencia: 'Elemental',
-    rol: 'Asalto',
+    esencia: 'Céleste',
+    roles: ['Normal'],
     catHabilidad: 'Efecto',
     stats: { cost: 2, poder: 5, resistencia: 3 },
+    tipoEfecto: 'Pasivo',
+    efectoPasivo: 'Al atacar, agotá un Campeón que controla el rival.',
   },
   {
     id: 'FB-012',
@@ -220,13 +232,13 @@ export const FIRSTBORNE_CARDS: AnyCard[] = [
     rarity: 'Común',
     keywords: ['Transmutar'],
     flavorText: 'Recupera lo que otros dan por perdido.',
-    paqueteId: 'firstborne',
+    paqueteId: 'estasis',
     limiteCopias: '3',
     createdAt: FB_TS,
     updatedAt: FB_TS,
     facciones: ['Orden'],
-    esencia: 'Elemental',
-    rol: 'Éter',
+    esencia: 'Céleste',
+    roles: ['Éter'],
     catHabilidad: 'Efecto',
     stats: { cost: 2, poder: 4, resistencia: 4 },
     tipoEfecto: 'Pasivo',
@@ -239,18 +251,18 @@ export const FIRSTBORNE_CARDS: AnyCard[] = [
     rarity: 'Común',
     keywords: [],
     flavorText: 'Sus palabras aún resuenan en las ruinas de las casas.',
-    paqueteId: 'firstborne',
+    paqueteId: 'estasis',
     limiteCopias: '3',
     createdAt: FB_TS,
     updatedAt: FB_TS,
     facciones: ['Orden'],
-    esencia: 'Humano',
-    rol: 'Control',
+    esencia: 'Espectro',
+    roles: ['Normal'],
     catHabilidad: 'Efecto',
     stats: { cost: 3, poder: 4, resistencia: 3 },
     tipoEfecto: 'Activo',
     tipoHabilidad: 'Un Solo Uso',
-    efectoActivo: 'Paga 1 Éter (un solo uso) y agota esta carta: el rival descarta 1 carta al azar.',
+    efectoActivo: 'Una vez por turno, pagá 1 Éter y agotá esta carta: cambiá el agotamiento de un Campeón que controla el rival (de agotado a no agotado, o viceversa).',
   },
   {
     id: 'FB-014',
@@ -259,15 +271,17 @@ export const FIRSTBORNE_CARDS: AnyCard[] = [
     rarity: 'Poco Común',
     keywords: ['Protector'],
     flavorText: 'Muro de carne, promesa de cristal.',
-    paqueteId: 'firstborne',
+    paqueteId: 'estasis',
     limiteCopias: '2',
     createdAt: FB_TS,
     updatedAt: FB_TS,
     facciones: ['Orden'],
-    esencia: 'Elemental',
-    rol: 'Guardia',
+    esencia: 'Céleste',
+    roles: ['Soporte'],
     catHabilidad: 'Efecto',
     stats: { cost: 3, poder: 3, resistencia: 7 },
+    tipoEfecto: 'Pasivo',
+    efectoPasivo: 'Los otros Campeones que controles ganan +1 de Poder y +1 de Resistencia.',
   },
   {
     id: 'FB-015',
@@ -276,13 +290,13 @@ export const FIRSTBORNE_CARDS: AnyCard[] = [
     rarity: 'Poco Común',
     keywords: ['Recarga'],
     flavorText: 'El Éter que la despierta también la alimenta.',
-    paqueteId: 'firstborne',
+    paqueteId: 'estasis',
     limiteCopias: '2',
     createdAt: FB_TS,
     updatedAt: FB_TS,
     facciones: ['Orden'],
-    esencia: 'Elemental',
-    rol: 'Asalto',
+    esencia: 'Céleste',
+    roles: ['Normal'],
     catHabilidad: 'Efecto',
     stats: { cost: 3, poder: 5, resistencia: 4 },
     tipoEfecto: 'Pasivo',
@@ -295,18 +309,18 @@ export const FIRSTBORNE_CARDS: AnyCard[] = [
     rarity: 'Común',
     keywords: [],
     flavorText: 'Vio caer su reino y juró que el próximo no caerá.',
-    paqueteId: 'firstborne',
+    paqueteId: 'estasis',
     limiteCopias: '3',
     createdAt: FB_TS,
     updatedAt: FB_TS,
     facciones: ['Orden'],
-    esencia: 'Humano',
-    rol: 'Soporte',
+    esencia: 'Espectro',
+    roles: ['Soporte'],
     catHabilidad: 'Efecto',
     stats: { cost: 3, poder: 3, resistencia: 5 },
     tipoEfecto: 'Activo',
     tipoHabilidad: 'Continua',
-    efectoActivo: 'Paga 1 Éter (bloqueado): mientras esté bloqueado, tus Campeones ganan +1 de Resistencia.',
+    efectoActivo: 'Paga 1 Éter (bloqueado): mientras esté bloqueado, los Campeones que controles ganan +1 de Resistencia.',
   },
   {
     id: 'FB-017',
@@ -315,18 +329,18 @@ export const FIRSTBORNE_CARDS: AnyCard[] = [
     rarity: 'Poco Común',
     keywords: [],
     flavorText: 'Rompe lo que ata. Libera lo que fue tomado.',
-    paqueteId: 'firstborne',
+    paqueteId: 'estasis',
     limiteCopias: '2',
     createdAt: FB_TS,
     updatedAt: FB_TS,
     facciones: ['Orden'],
-    esencia: 'Humano',
-    rol: 'Control',
+    esencia: 'Espectro',
+    roles: ['Éter'],
     catHabilidad: 'Efecto',
     stats: { cost: 4, poder: 4, resistencia: 5 },
     tipoEfecto: 'Activo',
     tipoHabilidad: 'Un Solo Uso',
-    efectoActivo: 'Paga 1 Éter (un solo uso) y agota esta carta: liberá hasta 2 Éter bloqueados de Campeones rivales (van a su zona de pago).',
+    efectoActivo: 'Una vez por turno, pagá 1 Éter y agotá esta carta: liberá hasta 2 Éter bloqueados de Campeones que controla el rival (van a la zona de pago de su dueño).',
   },
   {
     id: 'FB-018',
@@ -335,17 +349,17 @@ export const FIRSTBORNE_CARDS: AnyCard[] = [
     rarity: 'Común',
     keywords: [],
     flavorText: 'El vínculo es la vida. Nadie lo tocará.',
-    paqueteId: 'firstborne',
+    paqueteId: 'estasis',
     limiteCopias: '3',
     createdAt: FB_TS,
     updatedAt: FB_TS,
     facciones: ['Orden'],
-    esencia: 'Humano',
-    rol: 'Guardia',
+    esencia: 'Céleste',
+    roles: ['Soporte'],
     catHabilidad: 'Efecto',
     stats: { cost: 4, poder: 3, resistencia: 6 },
     tipoEfecto: 'Pasivo',
-    efectoPasivo: 'Una vez por turno, si uno de tus Vínculos fuera a ser destruido, no lo es.',
+    efectoPasivo: 'Una vez por turno, si un Vínculo que controles fuera a ser destruido, no lo es.',
   },
   {
     id: 'FB-019',
@@ -354,13 +368,13 @@ export const FIRSTBORNE_CARDS: AnyCard[] = [
     rarity: 'Común',
     keywords: [],
     flavorText: 'Lo que la casa construyó, la casa reclama.',
-    paqueteId: 'firstborne',
+    paqueteId: 'estasis',
     limiteCopias: '3',
     createdAt: FB_TS,
     updatedAt: FB_TS,
     facciones: ['Orden'],
     stats: { cost: 2 },
-    efecto: 'Devuelve un Campeón rival con Poder 5 o menos a la mano de su dueño.',
+    efecto: 'Devuelve un Campeón que controla el rival con Poder 5 o menos a la mano de su dueño.',
   },
   {
     id: 'FB-020',
@@ -369,13 +383,13 @@ export const FIRSTBORNE_CARDS: AnyCard[] = [
     rarity: 'Común',
     keywords: [],
     flavorText: 'El dolor de una casa es el poder de otra.',
-    paqueteId: 'firstborne',
+    paqueteId: 'estasis',
     limiteCopias: '3',
     createdAt: FB_TS,
     updatedAt: FB_TS,
     facciones: ['Orden'],
     stats: { cost: 1 },
-    efecto: 'Un Campeón tuyo gana +3 de Poder hasta el final del turno.',
+    efecto: 'Un Campeón que controles gana +2 de Poder hasta el final del turno.',
   },
   {
     id: 'FB-021',
@@ -384,7 +398,7 @@ export const FIRSTBORNE_CARDS: AnyCard[] = [
     rarity: 'Común',
     keywords: [],
     flavorText: 'Unidas por la sangre y el Éter, no hay muro que las detenga.',
-    paqueteId: 'firstborne',
+    paqueteId: 'estasis',
     limiteCopias: '3',
     createdAt: FB_TS,
     updatedAt: FB_TS,
@@ -399,13 +413,13 @@ export const FIRSTBORNE_CARDS: AnyCard[] = [
     rarity: 'Común',
     keywords: [],
     flavorText: 'Cuando todo cae, queda el juramento.',
-    paqueteId: 'firstborne',
+    paqueteId: 'estasis',
     limiteCopias: '3',
     createdAt: FB_TS,
     updatedAt: FB_TS,
     facciones: ['Orden'],
     stats: { cost: 0, duracion: 3 },
-    descripcion: 'Mientras dure, la primera vez por turno que un Campeón tuyo fuera a ser destruido, no lo es.',
+    descripcion: 'Mientras dure, la primera vez por turno que un Campeón que controles fuera a ser destruido, no lo es.',
   },
   {
     id: 'FB-023',
@@ -414,14 +428,14 @@ export const FIRSTBORNE_CARDS: AnyCard[] = [
     rarity: 'Rara',
     keywords: [],
     flavorText: 'El trono vacío aún exige respuestas.',
-    paqueteId: 'firstborne',
+    paqueteId: 'estasis',
     limiteCopias: '3',
     createdAt: FB_TS,
     updatedAt: FB_TS,
     facciones: ['Orden'],
     stats: { cost: 3 },
     condicion: 'Al inicio de tu Choque, si controlás 2 o más Campeones con Éter bloqueado.',
-    recompensa: 'Robá 2 cartas y un Campeón tuyo gana +3 de Poder hasta el final del turno.',
+    recompensa: 'Robá 2 cartas y un Campeón que controles gana +3 de Poder hasta el final del turno.',
   },
   {
     id: 'FB-024',
@@ -430,13 +444,13 @@ export const FIRSTBORNE_CARDS: AnyCard[] = [
     rarity: 'Común',
     keywords: [],
     flavorText: 'El cristal no corta: recuerda.',
-    paqueteId: 'firstborne',
+    paqueteId: 'estasis',
     limiteCopias: '3',
     createdAt: FB_TS,
     updatedAt: FB_TS,
     facciones: ['Orden'],
     stats: { cost: 0 },
-    descripcion: 'Un Campeón tuyo gana +3 de Poder hasta el final del turno. Si destruye a un Campeón rival este turno, robá 1 carta.',
+    descripcion: 'Un Campeón que controles gana +2 de Poder hasta el final del turno. Si destruye a un Campeón que controla el rival este turno, robá 1 carta.',
   },
 
   /* ── VÍNCULOS (6 diseños → 6 copias) ───────────────────────────── */
@@ -447,7 +461,7 @@ export const FIRSTBORNE_CARDS: AnyCard[] = [
     rarity: 'Común',
     keywords: [],
     flavorText: 'El primero de todos los pactos no se rompe jamás.',
-    paqueteId: 'firstborne',
+    paqueteId: 'estasis',
     limiteCopias: '1',
     createdAt: FB_TS,
     updatedAt: FB_TS,
@@ -462,7 +476,7 @@ export const FIRSTBORNE_CARDS: AnyCard[] = [
     rarity: 'Común',
     keywords: [],
     flavorText: 'El norte recuerda a sus hijas.',
-    paqueteId: 'firstborne',
+    paqueteId: 'estasis',
     limiteCopias: '1',
     createdAt: FB_TS,
     updatedAt: FB_TS,
@@ -477,7 +491,7 @@ export const FIRSTBORNE_CARDS: AnyCard[] = [
     rarity: 'Común',
     keywords: [],
     flavorText: 'En la caída, las hermanas se abrazan.',
-    paqueteId: 'firstborne',
+    paqueteId: 'estasis',
     limiteCopias: '1',
     createdAt: FB_TS,
     updatedAt: FB_TS,
@@ -492,13 +506,13 @@ export const FIRSTBORNE_CARDS: AnyCard[] = [
     rarity: 'Poco Común',
     keywords: [],
     flavorText: 'El último fragmento sigue ardiendo.',
-    paqueteId: 'firstborne',
+    paqueteId: 'estasis',
     limiteCopias: '1',
     createdAt: FB_TS,
     updatedAt: FB_TS,
     facciones: ['Orden'],
     stats: { cost: 0 },
-    efecto: 'Un Campeón tuyo gana Inmortal de forma permanente.',
+    efecto: 'Un Campeón que controles gana Inmortal de forma permanente.',
   },
   {
     id: 'FB-029',
@@ -507,7 +521,7 @@ export const FIRSTBORNE_CARDS: AnyCard[] = [
     rarity: 'Poco Común',
     keywords: [],
     flavorText: 'El alba devuelve lo que la noche tomó.',
-    paqueteId: 'firstborne',
+    paqueteId: 'estasis',
     limiteCopias: '1',
     createdAt: FB_TS,
     updatedAt: FB_TS,
@@ -522,21 +536,21 @@ export const FIRSTBORNE_CARDS: AnyCard[] = [
     rarity: 'Rara',
     keywords: [],
     flavorText: 'El lamento de la primera todavía se escucha.',
-    paqueteId: 'firstborne',
+    paqueteId: 'estasis',
     limiteCopias: '1',
     createdAt: FB_TS,
     updatedAt: FB_TS,
     facciones: ['Orden'],
     stats: { cost: 0 },
-    efecto: 'El Campeón rival con mayor Poder pierde 2 de Poder de forma permanente.',
+    efecto: 'El Campeón que controla el rival con mayor Poder pierde 2 de Poder de forma permanente.',
   },
 ]
 
 /** Distribución del paquete por tipo de carta (para tests e integridad) */
-export const firstborneDistribucion = () => {
-  const eter = FIRSTBORNE_CARDS.filter((c) => c.type === 'Éter')
-  const vinculos = FIRSTBORNE_CARDS.filter((c) => c.type === 'Vínculo')
-  const principal = FIRSTBORNE_CARDS.filter(
+export const estasisDistribucion = () => {
+  const eter = ESTASIS_CARDS.filter((c) => c.type === 'Éter')
+  const vinculos = ESTASIS_CARDS.filter((c) => c.type === 'Vínculo')
+  const principal = ESTASIS_CARDS.filter(
     (c) => c.type !== 'Éter' && c.type !== 'Vínculo',
   )
   const copias = (cs: AnyCard[]) =>
@@ -545,7 +559,7 @@ export const firstborneDistribucion = () => {
     eter: copias(eter),
     principal: copias(principal),
     vinculos: copias(vinculos),
-    total: copias(FIRSTBORNE_CARDS),
+    total: copias(ESTASIS_CARDS),
   }
 }
 
@@ -588,4 +602,4 @@ export function progresoPaquete(
    solo hay que sumar sus cartas acá y el script lo detecta solo.
    ───────────────────────────────────────────── */
 
-export const ALL_CARDS: AnyCard[] = [...FIRSTBORNE_CARDS]
+export const ALL_CARDS: AnyCard[] = [...ESTASIS_CARDS]

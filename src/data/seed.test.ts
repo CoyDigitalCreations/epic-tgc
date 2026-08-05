@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { FIRSTBORNE_CARDS, ALL_CARDS } from './paquetes'
+import { ESTASIS_CARDS, ALL_CARDS } from './paquetes'
 import type { AnyCard } from '../types'
 
 /**
@@ -15,10 +15,10 @@ const readSeed = (file: string): AnyCard[] =>
   ) as AnyCard[]
 
 describe('Seeds JSON (seed/)', () => {
-  it('firstborne.json existe y coincide 1:1 con FIRSTBORNE_CARDS', () => {
-    const seed = readSeed('firstborne.json')
-    expect(seed).toHaveLength(FIRSTBORNE_CARDS.length)
-    expect(seed.map((c) => c.id)).toEqual(FIRSTBORNE_CARDS.map((c) => c.id))
+  it('estasis.json existe y coincide 1:1 con ESTASIS_CARDS', () => {
+    const seed = readSeed('estasis.json')
+    expect(seed).toHaveLength(ESTASIS_CARDS.length)
+    expect(seed.map((c) => c.id)).toEqual(ESTASIS_CARDS.map((c) => c.id))
   })
 
   it('coleccion-completa.json coincide 1:1 con ALL_CARDS', () => {
@@ -27,7 +27,7 @@ describe('Seeds JSON (seed/)', () => {
   })
 
   it('el seed es importable por la app (campos mínimos por carta)', () => {
-    const seed = readSeed('firstborne.json')
+    const seed = readSeed('estasis.json')
     for (const card of seed) {
       expect(card.id).toBeTruthy()
       expect(card.name).toBeTruthy()
@@ -38,7 +38,7 @@ describe('Seeds JSON (seed/)', () => {
 
   it('no deja cartas sueltas: todas las del seed pertenecen a un paquete registrado', () => {
     const seed = readSeed('coleccion-completa.json')
-    const paqueteIds = new Set(['firstborne'])
+    const paqueteIds = new Set(['estasis'])
     for (const card of seed) {
       expect(card.paqueteId).toBeTruthy()
       expect(paqueteIds.has(card.paqueteId!)).toBe(true)

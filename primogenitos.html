@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ÉTER ENGINE TCG — Los Primogénitos del Éter</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Inter:wght@300;400;500;600;700&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0d0d14;
+    --surface: #16161e;
+    --surface-2: #1e1e2a;
+    --border: #3b3b5c;
+    --ether-300: #7070ff;
+    --ether-400: #4040ff;
+    --ether-600: #1a1acc;
+    --text: #e2e2e8;
+    --text-dim: #8b8ba0;
+    --text-muted: #6b6b80;
+    --red: #ef4444;
+    --green: #22c55e;
+    --amber: #f59e0b;
+    --cyan: #22d3ee;
+    --pink: #ec4899;
+    --purple: #a855f7;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    padding: 0;
+  }
+
+  /* ── Page ── */
+  .page {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+
+  /* ── Cover ── */
+  .cover {
+    text-align: center;
+    padding: 80px 24px 60px;
+    border-bottom: 2px solid var(--border);
+    margin-bottom: 48px;
+  }
+  .cover h1 {
+    font-family: 'Cinzel', serif;
+    font-size: 2.2rem;
+    font-weight: 900;
+    letter-spacing: 4px;
+    background: linear-gradient(135deg, var(--ether-300), var(--ether-400));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 8px;
+  }
+  .cover .subtitle {
+    font-family: 'Cinzel', serif;
+    font-size: 1rem;
+    color: var(--text-dim);
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  .cover .version {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+  }
+  .cover .version span {
+    color: var(--ether-300);
+  }
+  .cover .divider {
+    width: 80px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--ether-600), transparent);
+    margin: 20px auto;
+  }
+
+  /* ── Section ── */
+  .section {
+    margin-bottom: 40px;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .section-header .num {
+    font-family: 'Cinzel', serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--ether-300);
+    min-width: 28px;
+  }
+  .section-header h2 {
+    font-family: 'Cinzel', serif;
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: var(--text);
+  }
+
+  .section-header.sub {
+    margin-top: 24px;
+    border-bottom: 1px solid rgba(59,59,92,0.5);
+  }
+  .section-header.sub .num {
+    font-size: 0.95rem;
+    color: var(--cyan);
+  }
+  .section-header.sub h3 {
+    font-family: 'Cinzel', serif;
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    color: var(--text);
+  }
+
+  .section-header.sub2 {
+    margin-top: 18px;
+    padding-bottom: 4px;
+    border-bottom: none;
+  }
+  .section-header.sub2 h4 {
+    font-family: 'Cinzel', serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--amber);
+    letter-spacing: 0.5px;
+  }
+
+  /* ── Content ── */
+  .content {
+    padding-left: 4px;
+  }
+  .content p {
+    margin-bottom: 12px;
+    font-size: 0.92rem;
+    color: var(--text);
+    line-height: 1.7;
+  }
+
+  .content ul, .content ol {
+    margin: 8px 0 16px 20px;
+  }
+  .content li {
+    font-size: 0.92rem;
+    margin-bottom: 6px;
+    line-height: 1.6;
+  }
+  .content li::marker {
+    color: var(--ether-400);
+  }
+
+  .content strong {
+    color: #fff;
+    font-weight: 600;
+  }
+
+  .highlight {
+    color: var(--ether-300);
+    font-weight: 600;
+  }
+  .highlight-amber {
+    color: var(--amber);
+    font-weight: 600;
+  }
+  .highlight-red {
+    color: var(--red);
+    font-weight: 600;
+  }
+  .highlight-green {
+    color: var(--green);
+    font-weight: 600;
+  }
+  .highlight-cyan {
+    color: var(--cyan);
+    font-weight: 600;
+  }
+
+  .tag {
+    display: inline-block;
+    background: rgba(112,112,255,0.15);
+    color: var(--ether-300);
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 1px 8px;
+    border-radius: 4px;
+    letter-spacing: 0.3px;
+  }
+
+  /* ── Lore box ── */
+  .lore-box {
+    background: var(--surface-2);
+    border-left: 3px solid var(--ether-600);
+    border-radius: 0 8px 8px 0;
+    padding: 16px 20px;
+    margin: 12px 0 20px;
+    font-style: italic;
+    color: var(--text-dim);
+    font-size: 0.9rem;
+  }
+  .lore-box .attrib {
+    margin-top: 8px;
+    text-align: right;
+    font-style: normal;
+    font-size: 0.85rem;
+    color: var(--ether-300);
+  }
+
+  /* ── Steps / numbered list ── */
+  .steps {
+    counter-reset: step;
+    list-style: none;
+    padding: 0;
+    margin: 12px 0 20px;
+  }
+  .steps li {
+    counter-increment: step;
+    padding: 8px 12px 8px 44px;
+    position: relative;
+    font-size: 0.92rem;
+    margin-bottom: 6px;
+    background: var(--surface-2);
+    border-radius: 6px;
+    border: 1px solid var(--border);
+  }
+  .steps li::before {
+    content: counter(step);
+    position: absolute;
+    left: 12px;
+    top: 8px;
+    width: 24px;
+    height: 24px;
+    background: var(--ether-600);
+    color: white;
+    font-size: 0.78rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+  }
+
+  /* ── Tables ── */
+  .table-wrap {
+    overflow-x: auto;
+    margin: 12px 0 20px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+  }
+  th {
+    background: var(--surface-2);
+    color: var(--text);
+    font-weight: 600;
+    text-align: left;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    font-family: 'Cinzel', serif;
+    font-size: 0.82rem;
+    letter-spacing: 0.5px;
+  }
+  td {
+    padding: 9px 14px;
+    border-bottom: 1px solid rgba(59,59,92,0.4);
+    color: var(--text);
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--surface-2); }
+
+  /* ── Map ── */
+  .map-container {
+    margin: 16px 0 20px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .map-grid {
+    display: grid;
+    grid-template-columns: 140px 1fr 120px;
+    font-size: 0.82rem;
+  }
+  .map-cell {
+    padding: 10px 12px;
+    border: 1px solid rgba(59,59,92,0.5);
+    min-height: 50px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .map-cell .code {
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    color: var(--ether-300);
+    font-size: 0.75rem;
+    margin-bottom: 2px;
+  }
+  .map-cell .label {
+    color: var(--text-dim);
+    font-size: 0.78rem;
+    line-height: 1.4;
+  }
+  .map-row-label {
+    background: var(--surface-2);
+    font-family: 'Cinzel', serif;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-align: center;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 4px;
+    border-bottom: 1px solid var(--border);
+  }
+  .map-cell.span-full { grid-column: 1 / 4; }
+  .map-cell.vinculo {
+    background: linear-gradient(135deg, rgba(168,85,247,0.18), rgba(236,72,153,0.08));
+  }
+  .map-cell.vinculo .code { color: var(--purple); }
+
+  /* ── Destiny table ── */
+  .destiny-table {
+    width: 100%;
+    font-size: 0.88rem;
+    border-collapse: collapse;
+    margin: 12px 0 20px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .destiny-table th {
+    background: var(--surface-2);
+    padding: 10px 14px;
+    text-align: left;
+    font-family: 'Cinzel', serif;
+    font-size: 0.8rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .destiny-table td {
+    padding: 9px 14px;
+    border-bottom: 1px solid rgba(59,59,92,0.4);
+  }
+  .destiny-table tr:last-child td { border-bottom: none; }
+
+  /* ── Keyword cards ── */
+  .kw-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 12px;
+    margin: 12px 0 20px;
+  }
+  .kw-card {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    transition: border-color 0.2s;
+  }
+  .kw-card:hover { border-color: var(--ether-600); }
+  .kw-card .kw-name {
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: var(--ether-300);
+    margin-bottom: 4px;
+  }
+  .kw-card .kw-desc {
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+
+  /* ── Example boxes ── */
+  .example {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--amber);
+    border-radius: 0 8px 8px 0;
+    padding: 14px 18px;
+    margin: 8px 0 16px;
+    font-size: 0.88rem;
+  }
+  .example .ex-title {
+    font-weight: 600;
+    color: var(--amber);
+    margin-bottom: 4px;
+    font-size: 0.82rem;
+  }
+
+  /* ── Scene boxes ── */
+  .scene-box {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin: 10px 0 16px;
+  }
+  .scene-box .scene-title {
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    font-size: 0.88rem;
+    color: var(--cyan);
+    margin-bottom: 6px;
+  }
+  .scene-box p, .scene-box li { font-size: 0.88rem; }
+
+  /* ── Card anatomy ── */
+  .card-anatomy {
+    background: linear-gradient(135deg, #1a1a30, #222240);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin: 12px 0 20px;
+    font-family: 'Cinzel', serif;
+    max-width: 380px;
+  }
+  .card-anatomy .ca-name {
+    font-weight: 900;
+    font-size: 1rem;
+    color: #f0f0f0;
+    letter-spacing: 1px;
+    margin-bottom: 2px;
+  }
+  .card-anatomy .ca-line {
+    border-top: 1px solid rgba(59,59,92,0.6);
+    margin: 4px 0;
+  }
+  .card-anatomy .ca-meta {
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    font-family: 'Inter', sans-serif;
+  }
+  .card-anatomy .ca-stats {
+    font-size: 0.85rem;
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+  }
+  .card-anatomy .ca-effect {
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    font-family: 'Inter', sans-serif;
+    font-style: italic;
+  }
+  .card-anatomy .ca-copies {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    font-family: 'Inter', sans-serif;
+    text-align: right;
+    margin-top: 4px;
+  }
+
+  /* ── Footer ── */
+  .footer {
+    text-align: center;
+    padding: 40px 24px 20px;
+    border-top: 1px solid var(--border);
+    margin-top: 48px;
+  }
+  .footer p {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+  .footer .logo {
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    font-size: 1rem;
+    background: linear-gradient(135deg, var(--ether-300), var(--ether-400));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* ── TOG ── */
+  .toc {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px 24px;
+    margin-bottom: 40px;
+  }
+  .toc h3 {
+    font-family: 'Cinzel', serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--ether-300);
+    margin-bottom: 12px;
+    letter-spacing: 1px;
+  }
+  .toc-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px 24px;
+  }
+  .toc-item {
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    padding: 3px 0;
+    border-bottom: 1px dotted rgba(59,59,92,0.3);
+  }
+  .toc-item .toc-num {
+    color: var(--ether-300);
+    font-weight: 600;
+    margin-right: 6px;
+  }
+
+  /* ── Rarity table ── */
+  .rarity-table td:first-child { font-weight: 600; }
+
+  /* ── Responsive ── */
+  @media (max-width: 640px) {
+    .page { padding: 20px 14px 60px; }
+    .cover h1 { font-size: 1.5rem; }
+    .toc-grid { grid-template-columns: 1fr; }
+    .map-grid { grid-template-columns: 90px 1fr 80px; font-size: 0.7rem; }
+    .map-cell { padding: 6px 8px; }
+    .kw-grid { grid-template-columns: 1fr; }
+    .card-anatomy { max-width: 100%; }
+  }
+
+  /* ── Print ── */
+  @media print {
+    body { background: white; color: #222; }
+    .page { max-width: 100%; padding: 0.5in; }
+    .cover h1 { -webkit-text-fill-color: #1a1acc; }
+    .section-header .num { color: #1a1acc; }
+    .map-cell .code { color: #1a1acc; }
+    .kw-card .kw-name { color: #1a1acc; }
+    .highlight { color: #1a1acc; }
+    .lore-box { border-left-color: #1a1acc; }
+    .example { border-left-color: #f59e0b; }
+    .steps li { background: #f5f5f8; border-color: #ddd; }
+    .steps li::before { background: #1a1acc; }
+    .map-container { border-color: #ddd; }
+    .map-cell { border-color: #ddd; }
+    table, .destiny-table, .toc, .kw-card, .scene-box, .lore-box, .card-anatomy { border-color: #ddd; }
+    th { background: #f0f0f5; color: #222; }
+    .toc { background: #f5f5f8; }
+    .kw-card { background: #fafafc; }
+    .scene-box { background: #fafafc; }
+    .lore-box { background: #f5f5f8; }
+    .example { background: #fafafc; }
+    .card-anatomy { background: #f0f0f5; border-color: #ccc; }
+    .card-anatomy .ca-name { color: #111; }
+    .section-header h2, .section-header.sub h3 { color: #111; }
+    .content p, .content li { color: #333; }
+    .content strong { color: #000; }
+    .highlight-amber { color: #d97706; }
+    .highlight-red { color: #dc2626; }
+    .highlight-green { color: #16a34a; }
+    .highlight-cyan { color: #0891b2; }
+    .tag { background: #e0e0f0; color: #1a1acc; }
+    .map-row-label { background: #f0f0f5; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- ═══════ COVER ═══════ -->
+  <div class="cover">
+    <h1>ÉTER ENGINE TCG</h1>
+    <p class="subtitle">Los Primogénitos del Éter</p>
+    <p class="version">Versión <span>2.0</span> — Lore y cosmología del Eje · Entrega Los Primogénitos</p>
+    <div class="divider"></div>
+    <p style="color:var(--text-muted);font-size:0.85rem;margin-top:12px;">
+      Julio 2026 &middot; Creado con Éter Forge
+    </p>
+  </div>
+
+  <!-- ═══════ TOC ═══════ -->
+  <div class="toc">
+    <h3>ÍNDICE</h3>
+    <div class="toc-grid">
+      <div class="toc-item"><span class="toc-num">1</span> El Mundo de Éter</div>
+      <div class="toc-item"><span class="toc-num">2</span> Las Facciones</div>
+      <div class="toc-item"><span class="toc-num">3</span> La Gran Escisión</div>
+      <div class="toc-item"><span class="toc-num">4</span> Los Primogénitos</div>
+      <div class="toc-item"><span class="toc-num">5</span> Las Casas Nobles</div>
+      <div class="toc-item"><span class="toc-num">6</span> Aurora, La Primogénita</div>
+      <div class="toc-item"><span class="toc-num">7</span> El Mazo Estásis</div>
+    </div>
+  </div>
+
+  <!-- ═══════ 1 ═══════ -->
+  <div class="section">
+    <div class="section-header"><span class="num">1</span><h2>EL MUNDO DE ÉTER</h2></div>
+    <div class="content">
+      <p>En el principio existía el Éter. Una energía primordial que fluye a través de toda la realidad, conectando mundos, criaturas y destinos. Del latido del Éter surgió el <strong>Eje</strong>: la línea de fuerza que une los <strong>Dos Polos Primigenios</strong>, fuerzas opuestas y complementarias que sostienen la realidad:</p>
+      <ul>
+        <li><strong style="color:var(--cyan)">ORDEN</strong> <em>(Estásis · El Ancla / El Eje · Norte)</em> &mdash; La disciplina y la luz, guardianes del equilibrio.</li>
+        <li><strong style="color:var(--red)">CAOS</strong> <em>(Disonancia · La Tormenta / El Nudo · Sur)</em> &mdash; La libertad y la oscuridad, fuerzas primigenias.</li>
+      </ul>
+      <p>Donde el Eje se entrelaza consigo mismo, de los Polos derivaron las <strong>Seis Facetas</strong> — cada una nacida como hija de la tensión entre Orden y Caos, con identidad y runa propias:</p>
+      <ul>
+        <li><strong style="color:#38bdf8">LEY</strong> <em>(La Escuadra / El Cimiento · Noreste)</em> &mdash; El orden que construye y el progreso que legisla.</li>
+        <li><strong style="color:#ec4899">PURGA</strong> <em>(La Flecha / El Corte · Noroeste)</em> &mdash; La justicia implacable que arrasa lo corrupto.</li>
+        <li><strong style="color:var(--green)">CREACIÓN</strong> <em>(Vitalidad · La Espiral / El Crecimiento · Este)</em> &mdash; La vida, el crecimiento y la innovación.</li>
+        <li><strong style="color:#a855f7">ENTROPÍA</strong> <em>(La Brecha / El Desgaste · Sudoeste)</em> &mdash; La decadencia total, el vacío que todo lo consume.</li>
+        <li><strong style="color:#84cc16">MUTACIÓN</strong> <em>(El Vórtice / El Cambio · Sudeste)</em> &mdash; La vida retorcida, la evolución sin reglas.</li>
+        <li><strong style="color:#f97316">DESTRUCCIÓN</strong> <em>(Vacío · La Cruz Rota · Oeste)</em> &mdash; El fin, la purga y la renovación por el fuego.</li>
+      </ul>
+      <p>Cada facción canaliza el Éter de forma distinta, ya sea a través de campeones, conjuros mágicos, estrategias de batalla, pactos arcanos o golpes de combate.</p>
+
+      <p>El Éter no es un elemento ni una fuerza: es la <strong>sustancia de la voluntad</strong>. Todo lo que existe &mdash; la piedra, la memoria, el miedo, el amanecer &mdash; no es más que Éter que aprendió a tener forma. Por eso los sabios dicen que ninguna batalla es física: cada espada, cada juramento y cada reino son dos voluntades chocando, y el Éter es el campo donde chocan.</p>
+
+      <p>El <strong>Eje</strong> no es una línea dibujada en el mapa: es la tensión viva entre los Dos Polos, el pulso que mantiene la realidad tensa como una cuerda de arco. Toda criatura camina sobre el Eje sin saberlo; cada decisión lo curva un poco hacia el norte o hacia el sur. Cuando el Éter se concentra con suficiente fuerza en un solo punto, <strong>cristaliza</strong>: así nacen los cristales primigenios, fragmentos del primer latido que conservan memoria propia y cantan para quien sabe escucharlos.</p>
+
+      <div class="lore-box">
+        El Éter respira. Fluye desde la <strong>Reserva</strong> hacia el mundo cuando despierta el <strong>Alba</strong>; se <strong>ancla</strong> en los seres y las promesas que quieren sostener; se <strong>gasta</strong> en cada acto de poder; y al final <strong>regresa</strong>, porque nada de lo que fue Éter deja de serlo. Los sabios del norte llaman a este ciclo <em>el Gran Ciclo</em>: la forma que tiene la realidad de recordarse a sí misma. Quien aprende a leerlo, aprende a ganar.
+        <div class="attrib">— "El alba devuelve lo que la noche tomó."<br>Proverbio de las casas del norte</div>
+      </div>
+      <p>El Set Básico, <strong>"El Despertar del Éter"</strong>, presentará las mecánicas fundamentales del juego cuando sus cartas sean diseñadas para la v2.0. La primera entrega, <strong><span class="highlight">LOS PRIMOGÉNITOS</span></strong>, abre con el mazo temático <strong><span class="highlight">ESTÁSIS</span></strong> ("El Ancla"): los Primogénitos del Éter, unidos por el Éter primigenio del polo norte.</p>
+    </div>
+  </div>
+
+  <!-- ═══════ 2 ═══════ -->
+  <div class="section">
+    <div class="section-header"><span class="num">2</span><h2>LAS FACCIONES</h2></div>
+    <div class="content">
+      <p><strong>LOS DOS POLOS PRIMIGENIOS</strong> (el Eje):</p>
+      <div class="destiny-table">
+        <table>
+          <tr><th>FACCIÓN</th><th>FACETA</th><th>RUNA</th><th>POSICIÓN</th><th>DESCRIPCIÓN</th></tr>
+          <tr><td style="color:var(--cyan);font-weight:600;">ORDEN</td><td>Estásis</td><td>El Ancla / El Eje</td><td>Norte</td><td>Disciplina, luz, protección. Paladines y ángeles.</td></tr>
+          <tr><td style="color:var(--red);font-weight:600;">CAOS</td><td>Disonancia</td><td>La Tormenta / El Nudo</td><td>Sur</td><td>Tinieblas, agresión, sacrificio. Demonios y sombras.</td></tr>
+        </table>
+      </div>
+      <p><strong>LAS SEIS FACETAS</strong> (derivadas del Eje):</p>
+      <div class="destiny-table">
+        <table>
+          <tr><th>FACCIÓN</th><th>FACETA</th><th>RUNA</th><th>POSICIÓN</th><th>DESCRIPCIÓN</th></tr>
+          <tr><td style="color:var(--green);font-weight:600;">CREACIÓN</td><td>Vitalidad</td><td>La Espiral / El Crecimiento</td><td>Este</td><td>Vida, crecimiento, innovación. Constructos y druidas.</td></tr>
+          <tr><td style="color:#f97316;font-weight:600;">DESTRUCCIÓN</td><td>Vacío</td><td>La Cruz Rota</td><td>Oeste</td><td>Fin, purga, renovación. Guerreros del apocalipsis.</td></tr>
+          <tr><td style="color:#38bdf8;font-weight:600;">LEY</td><td>Ley</td><td>La Escuadra / El Cimiento</td><td>Noreste</td><td>El orden que construye y legisla el progreso.</td></tr>
+          <tr><td style="color:#ec4899;font-weight:600;">PURGA</td><td>Purga</td><td>La Flecha / El Corte</td><td>Noroeste</td><td>La justicia implacable que arrasa lo corrupto.</td></tr>
+          <tr><td style="color:#a855f7;font-weight:600;">ENTROPÍA</td><td>Entropía</td><td>La Brecha / El Desgaste</td><td>Sudoeste</td><td>La decadencia total, el vacío que consume.</td></tr>
+          <tr><td style="color:#84cc16;font-weight:600;">MUTACIÓN</td><td>Mutación</td><td>El Vórtice / El Cambio</td><td>Sudeste</td><td>La vida retorcida, la evolución sin reglas.</td></tr>
+        </table>
+      </div>
+
+      <div class="lore-box">
+        <strong>EL MITO DE LAS SEIS FACETAS</strong> &mdash; Cuenta la tradición que, en el instante del primer latido, el Eje se hizo seis preguntas y cada respuesta se volvió una faceta. <em>¿Qué ordena lo disperso?</em> y nació <strong style="color:#38bdf8">LEY</strong>, la Escuadra que construye. <em>¿Qué se poda para que el resto viva?</em> y nació <strong style="color:#ec4899">PURGA</strong>, la Flecha que corta lo corrupto. <em>¿Qué florece si se lo cuida?</em> y nació <strong style="color:var(--green)">CREACIÓN</strong>, la Espiral que crece. <em>¿Qué se deshace cuando nada lo sostiene?</em> y nació <strong style="color:#a855f7">ENTROPÍA</strong>, la Brecha que consume. <em>¿Qué cambia cuando las reglas mueren?</em> y nació <strong style="color:#84cc16">MUTACIÓN</strong>, el Vórtice sin ley. <em>¿Qué termina para que algo comience?</em> y nació <strong style="color:#f97316">DESTRUCCIÓN</strong>, la Cruz Rota que renueva por el fuego. Ninguna faceta es buena ni mala: todas son el Eje preguntándose a sí mismo.
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══════ 3 ═══════ -->
+  <div class="section">
+    <div class="section-header"><span class="num">3</span><h2>LA GRAN ESCISIÓN</h2></div>
+    <div class="content">
+      <p>Tras el primer latido, el norte conoció una era de esplendor: la <strong>Edad de las Casas</strong>. Alrededor de la sangre de la Primogénita florecieron reinos de cristal y juramento, ciudades talladas en Éter solidificado, bibliotecas donde las runas cantaban solas. Las casas nobles gobernaron en nombre del Eje, y durante generaciones el mundo creyó que el equilibrio era para siempre.</p>
+      <p>Pero el poder de la sangre se volvió apetito. Cada casa quiso un cristal más grande, un linaje más puro, un fragmento del primer latido que fuera solo suyo. Las promesas que sostenían los reinos empezaron a quebrarse una a una, y la guerra llegó como llegan las tormentas: primero un rumor, después un trueno, después nada que no fuera ceniza. <em>"El dolor de una casa es el poder de otra"</em>, decían los heraldos mientras las espadas cantaban.</p>
+      <p>Esa guerra se llamó la <strong>Gran Escisión</strong>, porque partió en dos lo que siempre había sido uno. Los polos, que aún se llamaban <strong>Estásis</strong> y <strong>Disonancia</strong>, dejaron de ser los dos brazos del mismo abrazo y se volvieron bandos: <span class="highlight-cyan">Orden</span> contra <span class="highlight-red">Caos</span>. El mundo aprendió los nombres nuevos y olvidó los antiguos; el Eje quedó tenso como una cuerda a punto de cortarse.</p>
+      <p>Los reinos cayeron. Los tronos quedaron vacíos, y los vacíos aún exigen respuestas. Cada casa noble ordenó a su primogénita empuñar el cristal contra sus hermanas: <em>peleá por tu casa, es tu sangre</em>. Y por primera vez en la Edad de las Casas, las hijas del Éter dijeron <strong>no</strong>.</p>
+      <div class="lore-box">
+        "Las casas nos dieron el cristal al nacer y nos pidieron la vida al crecer. Nos dieron un bando y nos exigieron un enemigo. Nosotras les dimos la espalda a los dos."
+        <div class="attrib">— Seraphina, Voz de las Casas</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════ 4 ═══════ -->
+  <div class="section">
+    <div class="section-header"><span class="num">4</span><h2>LOS PRIMOGÉNITOS</h2></div>
+    <div class="content">
+      <p>Antes de la Escisión, cuando el Éter despertó en el norte, cada casa noble eligió al heredero de su linaje para un destino mayor: al nacer, el <strong>primogénito</strong> de la casa recibía un <strong>cristal de Éter primigenio</strong>, implantado en el pecho por los sabios del Eje. El vínculo los marcó para siempre: sus cuerpos se volvieron <strong>conductos vivientes</strong> por donde el Éter fluía como sangre, y su voluntad se volvió la fuerza que moldea la realidad. Ya no eran solo humanos: eran el Éter con forma de hija.</p>
+      <p>El cristal no se entrega: se <strong>hereda</strong>, y solo al primogénito. Por eso, cuando las casas cayeron, las hijas que llevaban el cristal quedaron como la última memoria viva de cada linaje. En esta entrega, las primogénitas de Orden son <strong>mujeres</strong>; en el sur, donde el Nudo aprieta, los primogénitos de Caos son <strong>hombres</strong> &mdash; y el mundo aún no sabe cuál de los dos destinos es más pesado.</p>
+      <p>Reunidas en la ruina, las primogénitas del norte hicieron un pacto que ninguna casa firmó: <strong>no elegir bando</strong>. Ni Orden ni Caos, ni reino ni corona. Desde entonces vagan por el mundo como una sola hermandad, unidas por la sangre y por el Éter, buscando el origen de su poder y el propósito de su existencia. <em>"Cada hermana es la voz de una casa que ya no existe"</em> &mdash; y juntas, esas voces forman un reino nuevo, sin muros y sin trono.</p>
+      <div class="lore-box">
+        Su poder no es la violencia: es la <strong>constancia</strong>. La hermandad no gana golpeando más fuerte &mdash; gana porque el Éter nunca las abandona. Cada cristal que anclan en una hermana es una promesa que sostienen; cada Éter que devuelven al alba es una vida que renace; cada recuerdo que rescatan del olvido es una casa que se niega a morir del todo. El Gran Ciclo es su estrategia y su juramento.
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════ 5 ═══════ -->
+  <div class="section">
+    <div class="section-header"><span class="num">5</span><h2>LAS CASAS NOBLES</h2></div>
+    <div class="content">
+      <p>Cinco casas del norte levantaron sus reinos alrededor del cristal de sus primogénitas. Cada una canalizó el Éter a su manera; cada una cayó a su manera. De todas quedan las hijas, y de las hijas queda esta memoria:</p>
+      <div class="kw-grid">
+        <div class="kw-card">
+          <div class="kw-name">CASA ALBA</div>
+          <div class="kw-desc">La primera casa, nacida del primer amanecer. Su heredad es el alba: lo que construye, lo reclama. Primogénitas: <strong>Aurora</strong> y <strong>Vaela, Sed de Alba</strong>.</div>
+        </div>
+        <div class="kw-card">
+          <div class="kw-name">CASA SERENA</div>
+          <div class="kw-desc">La casa del consejo y de la palabra, donde las runas se hablaban antes de escribirse. El norte recuerda a sus hijas. Primogénitas: <strong>Seraphina</strong>, la voz, y <strong>Elena</strong>, el despertar.</div>
+        </div>
+        <div class="kw-card">
+          <div class="kw-name">CASA VIGÍA</div>
+          <div class="kw-desc">Guardianes del Reino Perdido, centinelas del Eje que juraron no dormir jamás. Su primogénita vio caer su reino y juró que el próximo no caerá: <strong>Cassandra, Vigía del Reino Perdido</strong>.</div>
+        </div>
+        <div class="kw-card">
+          <div class="kw-name">CASA ETERNA</div>
+          <div class="kw-desc">La casa del vínculo y de la sangre, donde los pactos valían más que las espadas. Lo que corre por sus venas no es sangre: es promesa. Primogénitas: <strong>Rowena, Vínculo Eterno</strong>, y <strong>Nymeria, Conducto Roto</strong>.</div>
+        </div>
+        <div class="kw-card">
+          <div class="kw-name">CASA ÚLTIMA</div>
+          <div class="kw-desc">La casa que resistió hasta el final, la que no cayó por débil sino por tozuda. Su cristal fue el último en apagarse. Primogénita: <strong>Isolde, Última Casa</strong>.</div>
+        </div>
+        <div class="kw-card">
+          <div class="kw-name">LA HUÉRFANA</div>
+          <div class="kw-desc">No toda primogénita tuvo casa que la reclamara. <strong>Mira, Cristal Huérfano</strong> despertó sobre las ruinas de un linaje sin nombre, y el Éter la reclamó a ella. Ninguna casa la recibió; la hermandad sí.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════ 6 ═══════ -->
+  <div class="section">
+    <div class="section-header"><span class="num">6</span><h2>AURORA, LA PRIMOGÉNITA</h2></div>
+    <div class="content">
+      <p>Cuando el Éter latió por primera vez en el norte, la primera en abrir los ojos fue una niña de Casa Alba, y el alba entero se detuvo a mirarla. <strong>Aurora</strong> fue la primera en fusionarse, la que marcó el camino: la primera de todas, la que ningún cristal eligió porque fue el cristal quien la eligió a ella.</p>
+      <p>De su sangre se forjaron los cristales de las demás casas. Cada primogénita que vino después bebió, en un sentido antiguo y literal, de la misma promesa: por eso todas son hermanas, aunque ningún árbol genealógico las una. Cuando las casas cayeron, lo que cayó fue un reino hecho de su linaje &mdash; y el trono vacío que quedó en el norte es, en verdad, el trono de Aurora.</p>
+      <p>Su voluntad no se impone: <strong>domina</strong>. Los campeones que se enfrentan a ella sienten su cristal cantar en el pecho ajeno, y los que luchan a su lado se vuelven más de lo que eran. No necesita alzar la voz: el Éter la obedece antes de que pida. Y sin embargo, dicen que en las noches de luna muerta se la oye llorar por las hermanas perdidas y por las casas que no volverán &mdash; el lamento de la primera todavía se escucha, si uno sabe escuchar.</p>
+      <div class="lore-box">
+        "No somos hijos de ningún reino. Somos el Reino."
+        <div class="attrib">— Aurora, La Primogénita</div>
+      </div>
+      <p>Ella es el ancla de la hermandad: la que mantiene unidas a las errantes cuando el camino se parte, la que recuerda por qué se negaron a elegir bando, la que sabe que el reino que juraron construir no tendrá muros ni corona &mdash; solo hermanas.</p>
+    </div>
+  </div>
+
+  <!-- ═══════ 7 ═══════ -->
+  <div class="section">
+    <div class="section-header"><span class="num">7</span><h2>EL MAZO ESTÁSIS <span style="font-size:.55em;color:var(--text-muted);font-weight:400;">· entrega LOS PRIMOGÉNITOS</span></h2></div>
+    <div class="content">
+
+      <div class="example">
+        <div class="ex-title">NOTA v2.0 — MAZO IMPLEMENTADO</div>
+        El mazo Estásis, primera entrega de Los Primogénitos, ya está implementado para la v2.0: <strong>30 diseños / 61 cartas</strong> (15 de Éter, 40 de Mazo Principal y 6 de Vínculos), disponibles en el constructor de cartas. Su contraparte del polo sur, el mazo Disonancia, se diseñará en una próxima entrega.
+      </div>
+
+      <div class="lore-box">
+        Antes de la Gran Escisión, cuando las facciones de Orden y Caos aún no habían tomado sus nombres, los polos del Éter se llamaban <strong>Estásis</strong> y <strong>Disonancia</strong>: el Ancla y la Tormenta, unidos por el Eje. De la tensión entre ambos polos nacieron los <strong>Primogénitos del Éter</strong>: los primeros seres humanos en fusionarse con la energía primigenia. Cada uno era el primogénito de su casa noble, elegido al nacer para portar un cristal de Éter primigenio.
+        <br><br>
+        En esta primera entrega, las primogénitas de Orden son mujeres y los primogénitos de Caos, hombres. El vínculo los marcó para siempre: sus cuerpos se convirtieron en conductos vivientes del Éter, y su voluntad en la fuerza que moldea la realidad. Aurora, la Primogénita, fue la primera de todas, y su sangre se convirtió en la fuente del poder de las casas.
+        <br><br>
+        Pero cuando las casas cayeron en la guerra, los Primogénitos se negaron a elegir bando. Ahora vagan por el mundo, unidos por la sangre y el Éter, buscando el origen de su poder y el propósito de su existencia.
+        <div class="attrib">— "No somos hijos de ningún reino. Somos el Reino."<br>Aurora, La Primogénita</div>
+      </div>
+
+      <div class="section-header sub"><span class="num">·</span><h3>LOS CAMPEONES DEL MAZO</h3></div>
+      <p>Nueve primogénitas, nueve historias que juegan como una sola hermandad:</p>
+      <div class="kw-grid">
+        <div class="kw-card">
+          <div class="kw-name">AURORA · La Primogénita</div>
+          <div class="kw-desc">Casa Alba · <em>Soberana</em>. La primera de todas, el ancla. Su presencia domina el campo y arrebata la voluntad del rival.</div>
+        </div>
+        <div class="kw-card">
+          <div class="kw-name">VAELA · Sed de Alba</div>
+          <div class="kw-desc">Casa Alba · <em>Normal</em>. Ataca antes de que el alba termine de cantar; la urgencia del amanecer hecha guerrera.</div>
+        </div>
+        <div class="kw-card">
+          <div class="kw-name">MIRA · Cristal Huérfano</div>
+          <div class="kw-desc">La Huérfana · <em>Éter</em>. Recupera lo que otros dan por perdido: cada Éter gastado vuelve a sus manos.</div>
+        </div>
+        <div class="kw-card">
+          <div class="kw-name">SERAPHINA · Voz de las Casas</div>
+          <div class="kw-desc">Casa Serena · <em>Normal</em>. Sus palabras aún resuenan en las ruinas; con una frase cambia el orden del campo.</div>
+        </div>
+        <div class="kw-card">
+          <div class="kw-name">ISOLDE · Última Casa</div>
+          <div class="kw-desc">Casa Última · <em>Soporte</em>. Muro de carne, promesa de cristal: mientras ella resiste, las hermanas crecen.</div>
+        </div>
+        <div class="kw-card">
+          <div class="kw-name">ELENA · Despertar del Éter</div>
+          <div class="kw-desc">Casa Serena · <em>Normal</em>. El Éter que la despierta también la alimenta: cada cristal anclado la vuelve más fuerte.</div>
+        </div>
+        <div class="kw-card">
+          <div class="kw-name">CASSANDRA · Vigía del Reino Perdido</div>
+          <div class="kw-desc">Casa Vigía · <em>Soporte</em>. Vio caer su reino y juró que el próximo no caerá: sostiene la defensa de todas.</div>
+        </div>
+        <div class="kw-card">
+          <div class="kw-name">NYMERIA · Conducto Roto</div>
+          <div class="kw-desc">Casa Eterna · <em>Éter</em>. Su cristal se rompió en la guerra: ahora rompe lo que ata y libera lo que fue tomado.</div>
+        </div>
+        <div class="kw-card">
+          <div class="kw-name">ROWENA · Vínculo Eterno</div>
+          <div class="kw-desc">Casa Eterna · <em>Soporte</em>. El vínculo es la vida: guardiana de los pactos, nadie tocará a sus hermanas.</div>
+        </div>
+      </div>
+
+      <div class="section-header sub"><span class="num">·</span><h3>EL CICLO DEL ÉTER EN EL MAZO</h3></div>
+      <p>El mazo Estásis juega la cosmología entera en cada partida: la hermandad no gana por golpes, gana por <strong>constancia</strong>.</p>
+      <ul>
+        <li><strong>El Alba despierta:</strong> cuando el día comienza, el Éter fluye sin esfuerzo &mdash; bloquear un cristal sin agotarlo es el primer juramento del turno (<em>Primer Juramento</em>, <em>Marcha de las Primeras</em>, <em>Voz del Alba</em>).</li>
+        <li><strong>Anclar la promesa:</strong> cada Éter bloqueado en una hermana es un cristal que la sostiene: le da Vigor, le da Inmortal, la vuelve imparable (<em>Éter del Despertar</em>, <em>Éter de la Primogénita</em>).</li>
+        <li><strong>Devolver al alba:</strong> el Éter gastado no se pierde: regresa a la Reserva, porque el alba devuelve lo que la noche tomó (<em>Refugio de las Casas</em>, <em>Mira</em>, <em>Voz del Alba</em>).</li>
+        <li><strong>Recuperar la memoria:</strong> lo que cae al Cementerio tampoco muere: la memoria del Éter lo trae de vuelta, y el filo del cristal no corta &mdash; <em>recuerda</em> (<em>Filo del Éter Primigenio</em>, <em>Voz del Alba</em>).</li>
+      </ul>
+      <div class="lore-box">
+        Así juega la hermandad: anclando, devolviendo, reciclando, resistiendo. El rival puede golpear más fuerte, pero el Éter siempre vuelve a las manos que lo cuidaron. Esa es la estrategia de las casas caídas: no caer nunca del todo.
+      </div>
+
+      <div class="lore-box" style="border-left-color:var(--red);">
+        <strong style="color:var(--red);">EL NUDO RECUERDA</strong> &mdash; En el sur, la Tormenta nunca dejó de girar. Los primogénitos de Caos despertaron con el cristal del Nudo clavado en el pecho, y el Nudo aprieta cada vez que el Eje tiembla. Un día, cuando el sur decida hablar, la Disonancia desatará su voz &mdash; y esta vez no habrá casas que la ignoren. <em>(Próxima entrega: el mazo Disonancia.)</em>
+      </div>
+
+      <p style="color:var(--text-muted);font-style:italic;">El mazo Estásis está disponible en el constructor de cartas (30 diseños / 61 cartas). El lore continúa expandiéndose con la nueva cosmología del Éter.</p>
+    </div>
+  </div>
+
+  <!-- ═══════ FOOTER ═══════ -->
+  <div class="footer">
+    <p><span class="logo">ÉTER ENGINE TCG</span></p>
+    <p>Cosmología del Eje — "El Despertar del Éter"</p>
+    <p>Mazo Temático: "Los Primogénitos" — Los Primogénitos del Éter · Estásis</p>
+    <p style="margin-top:8px;">Versión 2.0 — Julio 2026</p>
+    <p style="margin-top:4px;color:var(--text-muted);">Creado con Éter Forge</p>
+  </div>
+
+</div>
+
+</body>
+</html>

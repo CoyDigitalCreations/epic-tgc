@@ -27,7 +27,7 @@ export const FORM_CONFIGS: CardFormConfig[] = [
       { name: 'resistencia', label: 'Resistencia', type: 'number', required: true, min: 0, max: 9999 },
       { name: 'facciones', label: 'Facciones (máx 3)', type: 'multi-select', required: true, options: [...FACCIONES], max: 3 },
       { name: 'esencia', label: 'Esencia', type: 'select', required: true, options: [...ESENCIAS] },
-      { name: 'rol', label: 'Rol', type: 'select', required: true, options: [...ROLES] },
+      { name: 'roles', label: 'Roles (máx 2)', type: 'multi-select', required: true, options: [...ROLES], max: 2 },
       { name: 'catHabilidad', label: 'Categoría de Habilidad', type: 'select', required: true, options: [...CAT_HABILIDAD] },
       { name: 'tipoEfecto', label: 'Tipo de Efecto', type: 'select', required: false, options: ['Pasivo', 'Activo', 'Especial'], placeholder: 'Sin efecto' },
       { name: 'tipoHabilidad', label: 'Tipo de Habilidad Activa', type: 'select', required: false, options: ['Continua', 'Un Solo Uso'], placeholder: 'Solo si Tipo de Efecto es Activo/Especial' },

@@ -1,44 +1,46 @@
 import { describe, it, expect } from 'vitest'
 import {
   PAQUETES,
-  FIRSTBORNE_CARDS,
-  firstborneDistribucion,
+  ESTASIS_CARDS,
+  estasisDistribucion,
   progresoPaquete,
 } from './paquetes'
 import { KEYWORDS, RARITIES } from '../types/enums'
 import type { AnyCard } from '../types'
 
 describe('Paquetes', () => {
-  it('registra el mazo temático Firstborne con distribución oficial', () => {
-    const firstborne = PAQUETES.find((p) => p.id === 'firstborne')
-    expect(firstborne).toBeDefined()
-    expect(firstborne?.tipo).toBe('Mazo Temático')
-    expect(firstborne?.facciones).toEqual(['Orden'])
-    expect(firstborne?.distribucion).toEqual({ eter: 15, principal: 40, vinculos: 6 })
+  it('registra el mazo temático Estásis de la entrega Primogénitos con distribución oficial', () => {
+    const estasis = PAQUETES.find((p) => p.id === 'estasis')
+    expect(estasis).toBeDefined()
+    expect(estasis?.nombre).toBe('Estásis')
+    expect(estasis?.entrega).toBe('Primogénitos')
+    expect(estasis?.tipo).toBe('Mazo Temático')
+    expect(estasis?.facciones).toEqual(['Orden'])
+    expect(estasis?.distribucion).toEqual({ eter: 15, principal: 40, vinculos: 6 })
   })
 
-  describe('Firstborne — 30 diseños / 61 cartas', () => {
+  describe('Estásis (entrega Primogénitos) — 30 diseños / 61 cartas', () => {
     it('tiene 30 diseños con IDs únicos y prefijo FB-', () => {
-      expect(FIRSTBORNE_CARDS).toHaveLength(30)
-      const ids = FIRSTBORNE_CARDS.map((c) => c.id)
+      expect(ESTASIS_CARDS).toHaveLength(30)
+      const ids = ESTASIS_CARDS.map((c) => c.id)
       expect(new Set(ids).size).toBe(ids.length)
       expect(ids.every((id) => /^FB-\d{3}$/.test(id))).toBe(true)
     })
 
     it('cumple la distribución oficial: 15 Éter + 40 Principal + 6 Vínculos = 61', () => {
-      const dist = firstborneDistribucion()
+      const dist = estasisDistribucion()
       expect(dist).toEqual({ eter: 15, principal: 40, vinculos: 6, total: 61 })
     })
 
     it('todas las cartas pertenecen al paquete y a la facción Orden', () => {
-      for (const card of FIRSTBORNE_CARDS) {
-        expect(card.paqueteId).toBe('firstborne')
+      for (const card of ESTASIS_CARDS) {
+        expect(card.paqueteId).toBe('estasis')
         expect(card.facciones).toEqual(['Orden'])
       }
     })
 
     it('todas tienen nombre, flavor text y límite de copias válido', () => {
-      for (const card of FIRSTBORNE_CARDS) {
+      for (const card of ESTASIS_CARDS) {
         expect(card.name.trim().length).toBeGreaterThan(0)
         expect(card.flavorText.trim().length).toBeGreaterThan(0)
         expect(['1', '2', '3']).toContain(card.limiteCopias)
@@ -46,14 +48,14 @@ describe('Paquetes', () => {
     })
 
     it('usa solo raridades y keywords del catálogo', () => {
-      for (const card of FIRSTBORNE_CARDS) {
+      for (const card of ESTASIS_CARDS) {
         expect(RARITIES).toContain(card.rarity)
         expect(card.keywords.every((k) => KEYWORDS.includes(k))).toBe(true)
       }
     })
 
     it('respeta los valores MEL (1-12) en los Campeones', () => {
-      for (const card of FIRSTBORNE_CARDS) {
+      for (const card of ESTASIS_CARDS) {
         if (card.type !== 'Campeón') continue
         const { poder, resistencia } = card.stats
         expect(poder).toBeGreaterThanOrEqual(1)
@@ -75,7 +77,7 @@ describe('Paquetes', () => {
         'Combate': (c) => typeof (c as { descripcion?: string }).descripcion === 'string',
         'Vínculo': (c) => typeof (c as { efecto?: string }).efecto === 'string',
       }
-      for (const card of FIRSTBORNE_CARDS) {
+      for (const card of ESTASIS_CARDS) {
         const check = expectations[card.type]
         expect(check, `carta ${card.id} (${card.type}) con campos incompletos`).toBeDefined()
         expect(check(card), `carta ${card.id} (${card.type}) con campos incompletos`).toBe(true)
@@ -83,7 +85,7 @@ describe('Paquetes', () => {
     })
 
     it('los Vínculos no cuestan Éter (cost 0) y no tienen Poder/Resistencia', () => {
-      const vinculos = FIRSTBORNE_CARDS.filter((c) => c.type === 'Vínculo')
+      const vinculos = ESTASIS_CARDS.filter((c) => c.type === 'Vínculo')
       expect(vinculos).toHaveLength(6)
       for (const v of vinculos) {
         expect(v.stats.cost).toBe(0)
@@ -94,8 +96,8 @@ describe('Paquetes', () => {
 
   describe('progresoPaquete — contador de colección', () => {
     it('devuelve 0/61 cuando la colección no tiene cartas del paquete', () => {
-      expect(progresoPaquete([], 'firstborne')).toEqual({
-        paqueteId: 'firstborne',
+      expect(progresoPaquete([], 'estasis')).toEqual({
+        paqueteId: 'estasis',
         coleccionadas: 0,
         total: 61,
         completo: false,
@@ -104,25 +106,25 @@ describe('Paquetes', () => {
 
     it('suma copias por limiteCopias, no diseños únicos', () => {
       // FB-001 ×2 + FB-002 ×1 + FB-003 ×2 = 5 copias (3 diseños)
-      const parcial = FIRSTBORNE_CARDS.slice(0, 3)
-      const prog = progresoPaquete(parcial, 'firstborne')
+      const parcial = ESTASIS_CARDS.slice(0, 3)
+      const prog = progresoPaquete(parcial, 'estasis')
       expect(prog?.coleccionadas).toBe(5)
       expect(prog?.completo).toBe(false)
     })
 
     it('marca completo cuando la colección tiene las 61 copias', () => {
-      const prog = progresoPaquete(FIRSTBORNE_CARDS, 'firstborne')
+      const prog = progresoPaquete(ESTASIS_CARDS, 'estasis')
       expect(prog?.coleccionadas).toBe(61)
       expect(prog?.completo).toBe(true)
     })
 
     it('devuelve null para un paquete inexistente', () => {
-      expect(progresoPaquete(FIRSTBORNE_CARDS, 'no-existe')).toBeNull()
+      expect(progresoPaquete(ESTASIS_CARDS, 'no-existe')).toBeNull()
     })
 
     it('ignora cartas de otros paquetes y cartas sin paquete', () => {
       const foraneas: AnyCard[] = [
-        FIRSTBORNE_CARDS[0],
+        ESTASIS_CARDS[0],
         {
           id: 'manual-1',
           name: 'Carta Manual',
@@ -137,7 +139,7 @@ describe('Paquetes', () => {
         } as AnyCard,
       ]
       // Solo cuenta la FB-001 (×2); la manual no tiene paqueteId
-      expect(progresoPaquete(foraneas, 'firstborne')?.coleccionadas).toBe(2)
+      expect(progresoPaquete(foraneas, 'estasis')?.coleccionadas).toBe(2)
     })
   })
 })

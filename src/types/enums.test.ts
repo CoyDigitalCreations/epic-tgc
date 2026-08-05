@@ -8,6 +8,8 @@ import {
   FACCIONES,
   FACCION_COLORS,
   FACCION_IMAGES,
+  ROLES,
+  FACCION_LORE,
 } from './enums'
 
 describe('CARD_TYPES', () => {
@@ -85,5 +87,49 @@ describe('FACCIONES', () => {
         existsSync(resolve(process.cwd(), 'public', file.replace(/^\//, ''))),
       ).toBe(true)
     }
+  })
+})
+
+describe('ROLES', () => {
+  it('incluye los 5 roles oficiales', () => {
+    expect(ROLES).toHaveLength(5)
+    expect(ROLES).toEqual(['Soberano', 'Emperador', 'Soporte', 'Éter', 'Normal'])
+  })
+
+  it('no incluye roles retirados ni el antiguo coste Sacrificio', () => {
+    expect(ROLES).not.toContain('Asalto')
+    expect(ROLES).not.toContain('Guardia')
+    expect(ROLES).not.toContain('Control')
+    expect(ROLES).not.toContain('Evolución')
+    expect(ROLES).not.toContain('Sacrificio')
+  })
+})
+
+describe('FACCION_LORE', () => {
+  it('cubre las 8 facciones con faceta, runa y posición', () => {
+    for (const faccion of FACCIONES) {
+      const lore = FACCION_LORE[faccion]
+      expect(lore.faceta.trim().length).toBeGreaterThan(0)
+      expect(lore.runa.trim().length).toBeGreaterThan(0)
+      expect(lore.posicion.trim().length).toBeGreaterThan(0)
+    }
+  })
+
+  it('asigna los nombres primigenios del Eje', () => {
+    expect(FACCION_LORE.Orden.faceta).toBe('Estásis')
+    expect(FACCION_LORE.Caos.faceta).toBe('Disonancia')
+    expect(FACCION_LORE.Creación.faceta).toBe('Vitalidad')
+    expect(FACCION_LORE.Destrucción.faceta).toBe('Vacío')
+  })
+
+  it('asigna las posiciones del diagrama del Eje', () => {
+    expect(FACCION_LORE.Orden.posicion).toBe('Norte')
+    expect(FACCION_LORE.Caos.posicion).toBe('Sur')
+    expect(FACCION_LORE.Creación.posicion).toBe('Este')
+    expect(FACCION_LORE.Destrucción.posicion).toBe('Oeste')
+    expect(FACCION_LORE.Ley.posicion).toBe('Noreste')
+    expect(FACCION_LORE.Purga.posicion).toBe('Noroeste')
+    expect(FACCION_LORE.Entropía.posicion).toBe('Sudoeste')
+    expect(FACCION_LORE.Mutación.posicion).toBe('Sudeste')
   })
 })

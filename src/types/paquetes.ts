@@ -17,6 +17,8 @@ export interface Paquete {
   color: string
   /** Facción(es) a la que pertenecen sus cartas — la runa se deriva de facciones[0] */
   facciones: Faccion[]
+  /** Entrega/set comercial al que pertenece el mazo (p.ej. la entrega "Primogénitos") */
+  entrega?: string
   /** Distribución oficial del mazo: 15 Éter + 40 Principal + 6 Vínculos */
   distribucion: {
     eter: number
