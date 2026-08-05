@@ -39,7 +39,7 @@ export function CostGem({ cost, size = 64 }: CostGemProps) {
           fontSize: size * 0.55,
           fontWeight: 900,
           color: '#ffffff',
-          marginTop: -(size * 0.16),
+          marginTop: -(size * 0.24),
           textShadow: '0 2px 4px rgba(0,0,0,0.8)',
         }}
       >

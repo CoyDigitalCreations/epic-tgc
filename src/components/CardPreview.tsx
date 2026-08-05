@@ -3,7 +3,7 @@ import { useCardStore } from '../store/useCardStore'
 import { exportCardToPng } from '../utils/export-png'
 import { fileToCompressedDataUrl, isValidImageFile } from '../utils/file-to-data-url'
 import { useCardImage } from '../hooks/useCardImage'
-import type { AnyCard, CampeonCard, EterCard, Faccion } from '../types'
+import type { AnyCard } from '../types'
 import { FACCION_COLORS, FACCION_IMAGES } from '../types'
 import { CardFrame, CostGem, EtherDiamond, NamePlate, RuneIcon, StatBadge, TextScroll } from './card-art'
 
@@ -150,7 +150,7 @@ export function CardPreview({
   const theme = TYPE_THEME[displayCard.type] ?? TYPE_THEME['Campeón']
   const rarityBorder = RARITY_BORDERS[displayCard.rarity] ?? '#4a4a5a'
   const showCombatStats = displayCard.type === 'Campeón'
-  const stats = displayCard.stats as unknown as Record<string, unknown>
+  const stats = displayCard.stats as Record<string, any>
   const hasFlavorText = !!displayCard.flavorText
 
   /** Auto-escala el fontSize: texto corto → más grande (hasta 2x), texto largo → más chico (hasta minSize) */
@@ -166,7 +166,7 @@ export function CardPreview({
     if (previewRef.current) {
       await exportCardToPng(
         previewRef.current,
-        displayCard!.name.replace(/\s+/g, '_'),
+        displayCard.name.replace(/\s+/g, '_'),
       )
     }
   }
@@ -198,12 +198,22 @@ export function CardPreview({
         style={{
           position: 'absolute',
           inset: 0,
-          background: resolvedImageUrl
-            ? `url(${resolvedImageUrl}) center top / cover no-repeat`
-            : `radial-gradient(circle at 50% 35%, ${theme.color}44 0%, #0d0f14 70%)`,
           cursor: editable ? 'pointer' : 'default',
         }}
       >
+        {/* Imagen de arte limitada en altura */}
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 586,
+            background: resolvedImageUrl
+              ? `url(${resolvedImageUrl}) center top / cover no-repeat`
+              : `radial-gradient(circle at 50% 35%, ${theme.color}44 0%, #0d0f14 70%)`,
+          }}
+        />
         {/* Sombras y Difuminado Progresivo para integrar el Arte con el Marco */}
         <div
           style={{
@@ -418,7 +428,7 @@ export function CardPreview({
         )}
 
         {(() => {
-          const facs = (displayCard as AnyCard & { facciones?: Faccion[] }).facciones
+          const facs = displayCard.facciones
           if (!facs?.length) return null
           return (
             <div
@@ -527,9 +537,9 @@ export function CardPreview({
           >
             {displayCard.type === 'Campeón'
               ? [
-                (displayCard as AnyCard & { esencia?: string }).esencia || 'SIN ESENCIA',
-                (displayCard as AnyCard & { roles?: string[] }).roles?.join(' / ') || 'SIN ROL',
-                (displayCard as AnyCard & { catHabilidad?: string }).catHabilidad || 'NORML',
+                displayCard.esencia || 'SIN ESENCIA',
+                displayCard.roles?.join(' / ') || 'SIN ROL',
+                displayCard.catHabilidad || 'NORML',
               ].join(' / ')
               : displayCard.type.toUpperCase()
             }
@@ -571,10 +581,10 @@ export function CardPreview({
 
           {/* Habilidades según tipo */}
           {(() => {
-            const c = displayCard as AnyCard
+            const c = displayCard
             switch (c.type) {
               case 'Campeón': {
-                const cm = c as CampeonCard
+                const cm = c
                 const parts: React.ReactNode[] = []
                 if (cm.tipoEfecto === 'Pasivo' || cm.tipoEfecto === 'Especial') {
                   if (cm.efectoPasivo) {
@@ -692,7 +702,7 @@ export function CardPreview({
                 ) : null
 
               case 'Éter': {
-                const et = c as EterCard
+                const et = c
                 const parts: React.ReactNode[] = []
                 if (et.efectoReserva) {
                   parts.push(
