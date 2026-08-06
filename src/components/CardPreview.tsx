@@ -390,6 +390,7 @@ export function CardPreview({
             accent={theme.color}
             marginLeft={-6}
             paddingLeft={(displayCard.type === 'Táctica' || displayCard.type === 'Combate' || displayCard.type === 'Éter' || displayCard.type === 'Vínculo') ? 16 : 20}
+            hasHexagon={!(displayCard.type === 'Táctica' || displayCard.type === 'Combate' || displayCard.type === 'Éter' || displayCard.type === 'Vínculo')}
           />
         </div>
 

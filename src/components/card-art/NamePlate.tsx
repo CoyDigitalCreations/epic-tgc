@@ -3,9 +3,29 @@ interface NamePlateProps {
   accent: string
   marginLeft: number
   paddingLeft: number
+  hasHexagon?: boolean
 }
 
-export function NamePlate({ name, marginLeft, paddingLeft }: NamePlateProps) {
+export function NamePlate({ name, marginLeft, paddingLeft, hasHexagon }: NamePlateProps) {
+  const actualPaddingLeft = hasHexagon ? 120 : paddingLeft;
+
+  const fluidNameSize = (text: string, hasHex: boolean) => {
+    const len = (text || '').length
+    if (hasHex) {
+      if (len <= 15) return 24
+      if (len >= 35) return 12
+      const t = (len - 15) / (35 - 15)
+      return 24 - t * (24 - 12)
+    } else {
+      if (len <= 22) return 24
+      if (len >= 45) return 12
+      const t = (len - 22) / (45 - 22)
+      return 24 - t * (24 - 12)
+    }
+  }
+
+  const fontSize = fluidNameSize(name, !!hasHexagon);
+
   return (
     <div
       style={{
@@ -16,7 +36,7 @@ export function NamePlate({ name, marginLeft, paddingLeft }: NamePlateProps) {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        paddingLeft,
+        paddingLeft: actualPaddingLeft,
         paddingRight: 16,
       }}
     >
@@ -39,7 +59,7 @@ export function NamePlate({ name, marginLeft, paddingLeft }: NamePlateProps) {
           position: 'relative',
           zIndex: 2,
           fontFamily: '"Cinzel", serif',
-          fontSize: 24,
+          fontSize,
           fontWeight: 800,
           color: '#fef08a',
           letterSpacing: '1px',
