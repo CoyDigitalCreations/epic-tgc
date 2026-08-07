@@ -5,7 +5,7 @@ import { fileToCompressedDataUrl, isValidImageFile } from '../utils/file-to-data
 import { useCardImage } from '../hooks/useCardImage'
 import type { AnyCard } from '../types'
 import { FACCION_COLORS, FACCION_IMAGES } from '../types'
-import { CardFrame, CostGem, EtherDiamond, NamePlate, RuneIcon, StatBadge, TextScroll } from './card-art'
+import { CardFrame, CostGem, EtherHexagon, NamePlate, RuneIcon, StatBadge, TextScroll } from './card-art'
 
 /* ───────── type theme ───────── */
 const TYPE_THEME: Record<
@@ -408,16 +408,16 @@ export function CardPreview({
               zIndex: 15,
             }}
           >
-            {/* Diamante ÉTER grande (1.5x del original) */}
-            <EtherDiamond value={(stats.cost as number) ?? 0} size={90} />
-            {/* Etiqueta ÉTER grande */}
+            {/* Hexágono ÉTER — asset public/eter_solo.png (solo cartas de Éter) */}
+            <EtherHexagon value={(stats.cost as number) ?? 0} size={90} />
+            {/* Etiqueta ÉTER (azul cielo) */}
             <div style={{ marginTop: 6 }}>
               <span
                 style={{
                   fontFamily: '"Cinzel", serif',
-                  fontSize: 18,
+                  fontSize: 27,
                   fontWeight: 900,
-                  color: '#fde68a',
+                  color: '#7dd3fc',
                   letterSpacing: '2px',
                   textShadow: '0 2px 4px rgba(0,0,0,0.9)',
                 }}

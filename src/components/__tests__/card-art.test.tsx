@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
-import { CardFrame, CostGem, EtherDiamond } from '../card-art'
+import { CardFrame, CostGem, EtherDiamond, EtherHexagon } from '../card-art'
 
 describe('card-art', () => {
   describe('CostGem', () => {
@@ -15,6 +15,14 @@ describe('card-art', () => {
       render(<EtherDiamond value={1} />)
       expect(screen.getByText('1')).toBeInTheDocument()
       expect(screen.getByText('✦')).toBeInTheDocument()
+    })
+  })
+
+  describe('EtherHexagon', () => {
+    it('muestra el valor del Éter centrado (sin estrella)', () => {
+      render(<EtherHexagon value={3} />)
+      expect(screen.getByText('3')).toBeInTheDocument()
+      expect(screen.queryByText('✦')).not.toBeInTheDocument()
     })
   })
 
