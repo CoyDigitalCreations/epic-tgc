@@ -1,14 +1,18 @@
 import { useEffect, useState } from 'react'
 import { getCardImage } from '../utils/image-store'
+import { cardArtPath } from '../data/paquetes'
 
 /**
  * Resolves the dataUrl of a card's art.
  *
  * Priority:
- * 1. `inlineUrl` — image already in memory (draft being edited, or a card
- *    freshly loaded from an import before it was moved to IndexedDB).
+ * 1. `inlineUrl` — image already in memory (draft being edited, a card
+ *    freshly loaded from an import, or a static path /cartas/*.png
+ *    already stored on the card).
  * 2. IndexedDB — card flagged `hasImage` but art not in memory (after a
  *    page reload, since images are never persisted in localStorage).
+ * 3. Static art — card belongs to a set with versioned PNGs in
+ *    public/cartas/{cardId}.png (see cardArtPath).
  */
 export function useCardImage(
   cardId: string | undefined,
@@ -23,14 +27,21 @@ export function useCardImage(
       setUrl(inlineUrl)
       return
     }
-    if (!cardId || !hasImage) {
+    if (!cardId) {
       setUrl(undefined)
       return
     }
+    // Static art: versioned PNGs win over nothing, but IndexedDB art
+    // (user uploads) takes precedence — check that before falling back.
     let cancelled = false
-    getCardImage(cardId).then((dataUrl) => {
-      if (!cancelled) setUrl(dataUrl)
-    })
+    if (hasImage) {
+      getCardImage(cardId).then((dataUrl) => {
+        if (cancelled) return
+        setUrl(dataUrl ?? cardArtPath(cardId))
+      })
+    } else {
+      setUrl(cardArtPath(cardId))
+    }
     return () => {
       cancelled = true
     }

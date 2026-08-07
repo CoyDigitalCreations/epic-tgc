@@ -16,7 +16,7 @@
     "stats": {
       "cost": 1
     },
-    "efectoReserva": "Mientras esté en tu Reserva, los Campeones que controles ganan +1 de Poder."
+    "efectoReserva": "Mientras esté en tu Reserva, los Campeones que controles ganan +1 de ATQ."
   },
   {
     "id": "FB-002",
@@ -75,7 +75,7 @@
       "cost": 1
     },
     "variantePago": "Gatillo",
-    "efectoPago": "Cuando pagues esta carta para invocar un Campeón, ese Campeón gana +1 de Poder hasta el final del turno."
+    "efectoPago": "Cuando pagues esta carta para invocar un Campeón, ese Campeón gana +1 de RES hasta el final del turno."
   },
   {
     "id": "FB-005",
@@ -115,7 +115,7 @@
       "cost": 1
     },
     "variantePago": "Gatillo",
-    "efectoPago": "Cuando pagues esta carta, devolvé un Éter de tu zona de pago (1A) a tu Reserva."
+    "efectoPago": "Cuando pagues esta carta, devuelve un Éter de tu zona de pago (1A) a tu Reserva."
   },
   {
     "id": "FB-007",
@@ -134,7 +134,7 @@
     "stats": {
       "cost": 1
     },
-    "efectoBloqueo": "Mientras esté bloqueado en un Campeón, ese Campeón gana +2 de Poder y +2 de Resistencia."
+    "efectoBloqueo": "Mientras esté bloqueado en un Campeón, ese Campeón gana +2 de ATQ y +2 de RES."
   },
   {
     "id": "FB-008",
@@ -172,14 +172,16 @@
     "stats": {
       "cost": 1
     },
-    "efectoBloqueo": "Mientras esté bloqueado en un Campeón, ese Campeón gana +1 de Resistencia."
+    "efectoBloqueo": "Mientras esté bloqueado en un Campeón, ese Campeón gana +1 de RES."
   },
   {
     "id": "FB-010",
     "name": "Aurora, La Primogénita",
     "type": "Campeón",
     "rarity": "Única",
-    "keywords": [],
+    "keywords": [
+      "Inmortal"
+    ],
     "flavorText": "No somos hijos de ningún reino. Somos el Reino.",
     "paqueteId": "estasis",
     "limiteCopias": "1",
@@ -199,8 +201,8 @@
       "resistencia": 9
     },
     "tipoEfecto": "Especial",
-    "efectoPasivo": "Al ser invocada, tomá control de un Campeón que controla el rival. Ese Campeón queda agotado.",
-    "efectoActivo": "Paga 2 Éter (bloqueado): mientras ese Éter esté bloqueado, un Campeón que controles gana +2 de Poder y +2 de Resistencia."
+    "efectoPasivo": "Al ser invocada, toma control de un Campeón que controla el rival. Ese Campeón queda agotado hasta el inicio de tu próxima Alba.",
+    "efectoActivo": "Paga 2 Éter (bloqueado): mientras ese Éter esté bloqueado, un Campeón que controles gana +2 de ATQ y +2 de RES. Al inicio de tu próxima Alba reagrupa el Éter usado por este efecto."
   },
   {
     "id": "FB-011",
@@ -315,7 +317,7 @@
       "resistencia": 7
     },
     "tipoEfecto": "Pasivo",
-    "efectoPasivo": "Los otros Campeones que controles ganan +1 de Poder y +1 de Resistencia."
+    "efectoPasivo": "Los otros Campeones que controles ganan +1 de ATQ y +1 de RES."
   },
   {
     "id": "FB-015",
@@ -344,7 +346,7 @@
       "resistencia": 4
     },
     "tipoEfecto": "Pasivo",
-    "efectoPasivo": "Mientras esta carta tenga al menos 1 Éter bloqueado, gana +1 de Poder."
+    "efectoPasivo": "Mientras esta carta tenga al menos 1 Éter bloqueado, gana +1 de ATQ."
   },
   {
     "id": "FB-016",
@@ -372,7 +374,7 @@
     },
     "tipoEfecto": "Activo",
     "tipoHabilidad": "Continua",
-    "efectoActivo": "Paga 1 Éter (bloqueado): mientras esté bloqueado, los Campeones que controles ganan +1 de Resistencia."
+    "efectoActivo": "Paga 1 Éter (bloqueado): mientras esté bloqueado, los Campeones que controles ganan +1 de RES."
   },
   {
     "id": "FB-017",
@@ -446,7 +448,7 @@
     "stats": {
       "cost": 2
     },
-    "efecto": "Devuelve un Campeón que controla el rival con Poder 5 o menos a la mano de su dueño."
+    "efecto": "Devuelve un Campeón que controla el rival con ATQ 5 o menos a la mano de su dueño."
   },
   {
     "id": "FB-020",
@@ -465,7 +467,7 @@
     "stats": {
       "cost": 1
     },
-    "efecto": "Un Campeón que controles gana +2 de Poder hasta el final del turno."
+    "efecto": "Un Campeón que controles gana +2 de ATQ hasta el final del turno."
   },
   {
     "id": "FB-021",
@@ -544,7 +546,7 @@
     "stats": {
       "cost": 0
     },
-    "descripcion": "Un Campeón que controles gana +2 de Poder hasta el final del turno. Si destruye a un Campeón que controla el rival este turno, robá 1 carta."
+    "descripcion": "Un Campeón que controles gana +2 de ATQ hasta el final del turno. Si destruye a un Campeón que controla el rival este turno, roba 1 carta."
   },
   {
     "id": "FB-025",
@@ -582,7 +584,7 @@
     "stats": {
       "cost": 0
     },
-    "efecto": "Robá 2 cartas."
+    "efecto": "Roba 2 cartas."
   },
   {
     "id": "FB-027",
@@ -658,6 +660,6 @@
     "stats": {
       "cost": 0
     },
-    "efecto": "El Campeón que controla el rival con mayor Poder pierde 2 de Poder de forma permanente."
+    "efecto": "El Campeón que controla el rival con mayor ATQ pierde 2 de ATQ de forma permanente."
   }
 ]

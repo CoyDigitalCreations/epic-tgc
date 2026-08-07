@@ -6,6 +6,7 @@ import {
   getAllCardImages,
   deleteCardImage,
   clearCardImages,
+  isDataUrl,
 } from '../image-store'
 
 // fake-indexeddb gives us a REAL IndexedDB implementation in jsdom, so these
@@ -51,5 +52,19 @@ describe('image-store (IndexedDB real)', () => {
     await saveCardImage('c1', 'data:image/webp;base64,AAA')
     await clearCardImages()
     expect(await getAllCardImages()).toEqual([])
+  })
+})
+
+describe('isDataUrl — distingue base64 embebido de rutas estáticas', () => {
+  it('reconoce data URLs reales (base64 embebido)', () => {
+    expect(isDataUrl('data:image/png;base64,iVBORw0K')).toBe(true)
+    expect(isDataUrl('data:image/webp;base64,AAA')).toBe(true)
+  })
+
+  it('NO confunde rutas estáticas versionadas (/cartas/*.png) con base64', () => {
+    expect(isDataUrl('/cartas/FB-001.png')).toBe(false)
+    expect(isDataUrl('/facciones_white.png')).toBe(false)
+    expect(isDataUrl('')).toBe(false)
+    expect(isDataUrl('https://cdn.ejemplo.com/carta.png')).toBe(false)
   })
 })

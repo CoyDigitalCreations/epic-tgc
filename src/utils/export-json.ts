@@ -3,7 +3,9 @@ import { getCardImage } from './image-store'
 
 export async function exportCollectionToJson(cards: AnyCard[]): Promise<void> {
   // Images live in IndexedDB, not in the persisted cards — embed them back
-  // into the exported JSON so a backup keeps the art.
+  // into the exported JSON so a backup keeps the art. Cards with a static
+  // path (/cartas/*.png) keep their path as-is: the art is versioned in
+  // public/ and the path stays valid everywhere.
   const exported = await Promise.all(
     cards.map(async (card) => {
       if (!card.hasImage) return card

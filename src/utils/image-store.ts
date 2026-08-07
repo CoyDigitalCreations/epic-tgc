@@ -14,6 +14,15 @@
 const DB_NAME = 'epic-tgc-images'
 const STORE = 'card-images'
 
+/**
+ * True cuando la URL es arte embebido (data URL base64).
+ * Las rutas estáticas (`/cartas/FB-001.png`) NO pasan por IndexedDB:
+ * viven versionadas en public/ y el navegador las sirve directo.
+ */
+export function isDataUrl(url: string): boolean {
+  return url.startsWith('data:')
+}
+
 /** In-memory cache: avoids repeated IndexedDB reads during renders */
 const cache = new Map<string, string>()
 

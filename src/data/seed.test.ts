@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { ESTASIS_CARDS, ALL_CARDS } from './paquetes'
+import { ESTASIS_CARDS, DISONANCIA_CARDS, ALL_CARDS } from './paquetes'
 import type { AnyCard } from '../types'
 
 /**
@@ -21,6 +21,12 @@ describe('Seeds JSON (seed/)', () => {
     expect(seed.map((c) => c.id)).toEqual(ESTASIS_CARDS.map((c) => c.id))
   })
 
+  it('disonancia.json existe y coincide 1:1 con DISONANCIA_CARDS', () => {
+    const seed = readSeed('disonancia.json')
+    expect(seed).toHaveLength(DISONANCIA_CARDS.length)
+    expect(seed.map((c) => c.id)).toEqual(DISONANCIA_CARDS.map((c) => c.id))
+  })
+
   it('coleccion-completa.json coincide 1:1 con ALL_CARDS', () => {
     const seed = readSeed('coleccion-completa.json')
     expect(seed.map((c) => c.id)).toEqual(ALL_CARDS.map((c) => c.id))
@@ -38,7 +44,7 @@ describe('Seeds JSON (seed/)', () => {
 
   it('no deja cartas sueltas: todas las del seed pertenecen a un paquete registrado', () => {
     const seed = readSeed('coleccion-completa.json')
-    const paqueteIds = new Set(['estasis'])
+    const paqueteIds = new Set(['estasis', 'disonancia'])
     for (const card of seed) {
       expect(card.paqueteId).toBeTruthy()
       expect(paqueteIds.has(card.paqueteId!)).toBe(true)

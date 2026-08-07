@@ -365,22 +365,6 @@ export function CardPreview({
             >
               {/* Hexágono Éter — imagen public/hexagono_eter.png (doble de tamaño) */}
               <CostGem cost={(stats.cost as number) ?? 0} size={128} />
-
-              {/* Etiqueta COSTE */}
-              <div style={{ marginTop: 4, padding: '2px 8px' }}>
-                <span
-                  style={{
-                    fontFamily: '"Cinzel", serif',
-                    fontSize: 14,
-                    fontWeight: 900,
-                    color: '#bae6fd',
-                    letterSpacing: '1px',
-                    textShadow: '0 2px 4px rgba(0,0,0,0.9)',
-                  }}
-                >
-                  COSTE
-                </span>
-              </div>
             </div>
           )}
 

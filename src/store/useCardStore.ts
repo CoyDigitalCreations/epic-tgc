@@ -6,6 +6,7 @@ import {
   saveCardImage,
   deleteCardImage,
   clearCardImages,
+  isDataUrl,
 } from '../utils/image-store'
 
 interface CardStore {
@@ -47,16 +48,24 @@ const initialDraft: Record<string, unknown> = {
    a few KB instead of blowing its ~5MB quota.
    ───────────────────────────────────────────── */
 
-/** Move inline base64 art to IndexedDB (fire-and-forget, non-blocking) */
+/** Move inline base64 art to IndexedDB (fire-and-forget, non-blocking).
+ *  Rutas estáticas (/cartas/*.png) NO van a IndexedDB: ya viven en public/. */
 function persistImages(cards: AnyCard[]): void {
   for (const card of cards) {
-    if (card.imageUrl) saveCardImage(card.id, card.imageUrl)
+    if (card.imageUrl && isDataUrl(card.imageUrl)) {
+      saveCardImage(card.id, card.imageUrl)
+    }
   }
 }
 
-/** Strip inline art before persisting; mark the card as hasImage */
+/**
+ * Strip inline art before persisting; mark the card as hasImage.
+ * Solo aplica a data URLs: las rutas estáticas se conservan tal cual
+ * (el navegador las resuelve desde public/ en cada render).
+ */
 function stripCardImage(card: AnyCard): AnyCard {
-  return card.imageUrl
+  if (!card.imageUrl) return card
+  return isDataUrl(card.imageUrl)
     ? { ...card, imageUrl: undefined, hasImage: true }
     : card
 }
@@ -94,7 +103,9 @@ export const useCardStore = create<CardStore>()(
       },
       deleteCard: (id) => {
         const old = get().cards.find((c) => c.id === id)
-        if (old?.hasImage || old?.imageUrl) deleteCardImage(id)
+        // Solo hay arte en IndexedDB si la carta lo marcó (hasImage);
+        // las rutas estáticas (/cartas/*.png) viven en public/ y no se borran.
+        if (old?.hasImage) deleteCardImage(id)
         set((state) => ({
           cards: state.cards.filter((c) => c.id !== id),
           selectedCardId:
