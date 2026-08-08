@@ -707,7 +707,7 @@
         <tr><td style="width:140px"><strong>name</strong></td><td>Nombre de la carta</td></tr>
         <tr><td><strong>type</strong></td><td>Tipo (Campeón, Mística, Táctica, Arcana, Combate, Éter, Vínculo)</td></tr>
         <tr><td><strong>rarity</strong></td><td>Rareza (Común, Poco Común, Rara, Épica, Legendaria, Única)</td></tr>
-        <tr><td><strong>faccion</strong></td><td>Facción (Orden, Caos, Creación, Destrucción, Ley, Purga, Entropía, Mutación)</td></tr>
+        <tr><td><strong>faccion</strong></td><td>Facción (Orden, Caos, Creación, Destrucción, Ley, Purga, Entropía, Mutación) — <strong>solo Campeón, Éter, Mística, Arcana y Vínculo</strong>; Táctica y Combate <strong>NO</strong> tienen facción</td></tr>
         <tr><td><strong>stats.cost</strong></td><td>Coste de Éter</td></tr>
         <tr><td><strong>stats.poder</strong></td><td>Ataque (solo Campeón)</td></tr>
         <tr><td><strong>stats.resistencia</strong></td><td>Defensa (solo Campeón)</td></tr>
@@ -806,6 +806,7 @@
       <ul>
         <li>Se juegan en un slot de soporte (3A-3C) &mdash; comparten espacio con Místicas. <span class="highlight-amber">NO se colocan boca abajo.</span></li>
         <li><strong>NO</strong> cuestan Éter.</li>
+        <li><strong>NO tienen facción:</strong> son cartas neutrales, no pertenecen a ninguna facción (a diferencia de Campeones, Éteres, Místicas, Arcanas y Vínculos).</li>
         <li><strong>Solo se JUGAN (colocan) en tu Fase de Forja.</strong> Una vez colocadas, se <strong>ACTIVAN automáticamente</strong> cuando se cumple su condición, en cualquier momento (incluso durante el turno del oponente).</li>
         <li>Ocupan su slot mientras esperan su condición y van al <strong>Cementerio</strong> tras resolverse.</li>
       </ul>
@@ -829,6 +830,7 @@
       <ul>
         <li>Se colocan <strong>BOCA ABAJO</strong> en un slot (3D-3F) &mdash; comparten espacio con Arcanas.</li>
         <li><strong>NO</strong> cuestan Éter.</li>
+        <li><strong>NO tienen facción:</strong> son cartas neutrales, no pertenecen a ninguna facción.</li>
         <li>Se activan cuando se cumple su condición durante el combate.</li>
         <li>Deben haber sido colocadas en un turno anterior.</li>
         <li>Van al Cementerio tras resolverse.</li>

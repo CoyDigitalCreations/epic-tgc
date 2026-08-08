@@ -480,9 +480,6 @@
     "limiteCopias": "3",
     "createdAt": "2026-08-03T00:00:00.000Z",
     "updatedAt": "2026-08-03T00:00:00.000Z",
-    "facciones": [
-      "Orden"
-    ],
     "stats": {
       "cost": 0,
       "duracion": 2
@@ -500,9 +497,6 @@
     "limiteCopias": "3",
     "createdAt": "2026-08-03T00:00:00.000Z",
     "updatedAt": "2026-08-03T00:00:00.000Z",
-    "facciones": [
-      "Orden"
-    ],
     "stats": {
       "cost": 0,
       "duracion": 3
@@ -540,9 +534,6 @@
     "limiteCopias": "3",
     "createdAt": "2026-08-03T00:00:00.000Z",
     "updatedAt": "2026-08-03T00:00:00.000Z",
-    "facciones": [
-      "Orden"
-    ],
     "stats": {
       "cost": 0
     },
@@ -1143,9 +1134,6 @@
     "limiteCopias": "3",
     "createdAt": "2026-08-06T00:00:00.000Z",
     "updatedAt": "2026-08-06T00:00:00.000Z",
-    "facciones": [
-      "Caos"
-    ],
     "stats": {
       "cost": 0,
       "duracion": 2
@@ -1163,9 +1151,6 @@
     "limiteCopias": "3",
     "createdAt": "2026-08-06T00:00:00.000Z",
     "updatedAt": "2026-08-06T00:00:00.000Z",
-    "facciones": [
-      "Caos"
-    ],
     "stats": {
       "cost": 0,
       "duracion": 3
@@ -1203,9 +1188,6 @@
     "limiteCopias": "3",
     "createdAt": "2026-08-06T00:00:00.000Z",
     "updatedAt": "2026-08-06T00:00:00.000Z",
-    "facciones": [
-      "Caos"
-    ],
     "stats": {
       "cost": 0
     },

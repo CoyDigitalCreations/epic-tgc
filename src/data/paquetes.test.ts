@@ -47,10 +47,14 @@ describe('Paquetes', () => {
       expect(dist).toEqual({ eter: 15, principal: 40, vinculos: 6, total: 61 })
     })
 
-    it('todas las cartas pertenecen al paquete y a la facción Orden', () => {
+    it('las cartas con facción son de Orden; Táctica y Combate no tienen facción', () => {
       for (const card of ESTASIS_CARDS) {
         expect(card.paqueteId).toBe('estasis')
-        expect(card.facciones).toEqual(['Orden'])
+        if (card.type === 'Táctica' || card.type === 'Combate') {
+          expect(card.facciones, `${card.id} (${card.type}) no debe tener facción`).toBeUndefined()
+        } else {
+          expect(card.facciones).toEqual(['Orden'])
+        }
       }
     })
 
@@ -122,10 +126,14 @@ describe('Paquetes', () => {
       expect(dist).toEqual({ eter: 15, principal: 40, vinculos: 6, total: 61 })
     })
 
-    it('todas las cartas pertenecen al paquete y a la facción Caos', () => {
+    it('las cartas con facción son de Caos; Táctica y Combate no tienen facción', () => {
       for (const card of DISONANCIA_CARDS) {
         expect(card.paqueteId).toBe('disonancia')
-        expect(card.facciones).toEqual(['Caos'])
+        if (card.type === 'Táctica' || card.type === 'Combate') {
+          expect(card.facciones, `${card.id} (${card.type}) no debe tener facción`).toBeUndefined()
+        } else {
+          expect(card.facciones).toEqual(['Caos'])
+        }
       }
     })
 
