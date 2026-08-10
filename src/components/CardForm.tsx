@@ -46,6 +46,8 @@ export function CardForm() {
       rarity: (draft.rarity as string) || 'Común',
       keywords: (draft.keywords as string[]) || [],
       flavorText: (draft.flavorText as string) || '',
+      // Un multi-select vacío = sin facción (campo ausente, igual que en la data)
+      facciones: Array.isArray(draft.facciones) && (draft.facciones as string[]).length === 0 ? undefined : draft.facciones,
       updatedAt: new Date().toISOString(),
       id: draft.id || crypto.randomUUID(),
     } as Parameters<typeof addCard>[0]

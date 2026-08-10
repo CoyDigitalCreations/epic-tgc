@@ -42,6 +42,7 @@ export const FORM_CONFIGS: CardFormConfig[] = [
     type: 'Mística',
     fields: [
       { name: 'name', label: 'Nombre', type: 'text', required: true, placeholder: 'Ej: Tormenta de Maná' },
+      { name: 'facciones', label: 'Facciones (máx 3)', type: 'multi-select', required: false, options: [...FACCIONES], max: 3 },
       { name: 'cost', label: 'Coste de Éter', type: 'number', required: true, min: 0, max: 20 },
       { name: 'efecto', label: 'Efecto', type: 'textarea', required: true, placeholder: 'Describe el efecto mágico...' },
       { name: 'keywords', label: 'Palabras Clave', type: 'multi-select', required: false },
@@ -53,6 +54,7 @@ export const FORM_CONFIGS: CardFormConfig[] = [
     type: 'Táctica',
     fields: [
       { name: 'name', label: 'Nombre', type: 'text', required: true, placeholder: 'Ej: Emboscada' },
+      { name: 'facciones', label: 'Facciones (máx 3)', type: 'multi-select', required: false, options: [...FACCIONES], max: 3 },
       { name: 'duracion', label: 'Duración (turnos)', type: 'number', required: true, min: 1, max: 10 },
       { name: 'descripcion', label: 'Descripción', type: 'textarea', required: true },
       { name: 'keywords', label: 'Palabras Clave', type: 'multi-select', required: false },
@@ -64,6 +66,7 @@ export const FORM_CONFIGS: CardFormConfig[] = [
     type: 'Arcana',
     fields: [
       { name: 'name', label: 'Nombre', type: 'text', required: true, placeholder: 'Ej: El Juicio Final' },
+      { name: 'facciones', label: 'Facciones (máx 3)', type: 'multi-select', required: false, options: [...FACCIONES], max: 3 },
       { name: 'cost', label: 'Coste de Éter', type: 'number', required: true, min: 0, max: 20 },
       { name: 'condicion', label: 'Condición de Activación', type: 'textarea', required: true },
       { name: 'recompensa', label: 'Recompensa', type: 'textarea', required: true },
@@ -76,6 +79,7 @@ export const FORM_CONFIGS: CardFormConfig[] = [
     type: 'Combate',
     fields: [
       { name: 'name', label: 'Nombre', type: 'text', required: true, placeholder: 'Ej: Golpe Certero' },
+      { name: 'facciones', label: 'Facciones (máx 3)', type: 'multi-select', required: false, options: [...FACCIONES], max: 3 },
       { name: 'descripcion', label: 'Descripción', type: 'textarea', required: true },
       { name: 'keywords', label: 'Palabras Clave', type: 'multi-select', required: false },
       { name: 'flavorText', label: 'Texto de Sabor', type: 'textarea', required: false },
@@ -86,6 +90,7 @@ export const FORM_CONFIGS: CardFormConfig[] = [
     type: 'Éter',
     fields: [
       { name: 'name', label: 'Nombre', type: 'text', required: true, placeholder: 'Ej: Corazón del Éter' },
+      { name: 'facciones', label: 'Facciones (máx 3)', type: 'multi-select', required: false, options: [...FACCIONES], max: 3 },
       { name: 'cost', label: 'Valor de Éter', type: 'number', required: true, min: 1, max: 1 },
       { name: 'efectoReserva', label: 'Efecto en Reserva (2A)', type: 'textarea', required: false, placeholder: 'Efecto que da mientras está en la zona Reserva (solo 2 asignados)...' },
       { name: 'variantePago', label: 'Variante de Efecto de Pago', type: 'select', required: false, options: ['Pasivo', 'Gatillo'], placeholder: 'Sin efecto de pago' },
@@ -100,6 +105,7 @@ export const FORM_CONFIGS: CardFormConfig[] = [
     type: 'Vínculo',
     fields: [
       { name: 'name', label: 'Nombre', type: 'text', required: true, placeholder: 'Ej: Pacto de Sangre' },
+      { name: 'facciones', label: 'Facciones (máx 3)', type: 'multi-select', required: false, options: [...FACCIONES], max: 3 },
       { name: 'efecto', label: 'Efecto PERMANENTE', type: 'textarea', required: true, placeholder: 'Efecto permanente a favor del dueño cuando es destruido (solo Ruptura lo destruye)...' },
       { name: 'keywords', label: 'Palabras Clave', type: 'multi-select', required: false },
       { name: 'flavorText', label: 'Texto de Sabor', type: 'textarea', required: false },
