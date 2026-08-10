@@ -1,0 +1,10 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "rewrites": [
+    {
+      "source": "/((?!manual\\.html|primogenitos\\.html|assets|.*\\.(png|jpg|jpeg|svg|ico|json|css|js|webp|gif|woff2?|map|html)).*)",
+      "destination": "/index.html"
+    }
+  ]
+}
