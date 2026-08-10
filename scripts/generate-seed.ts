@@ -9,7 +9,7 @@
  */
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { ALL_CARDS, PAQUETES } from '../src/data/paquetes.ts'
+import { ALL_CARDS, PAQUETES } from '../src/forge/data/paquetes.ts'
 
 const seedDir = resolve(process.cwd(), 'seed')
 mkdirSync(seedDir, { recursive: true })
