@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
-import { AppRoutes } from './AppRoutes'
+import { AppFallback, AppRoutes } from './AppRoutes'
 
 describe('AppRoutes', () => {
   it('renderiza la landing en / sin montar el card maker (lazy)', () => {
@@ -42,5 +42,12 @@ describe('AppRoutes', () => {
       </MemoryRouter>,
     )
     expect(await screen.findByText(/próximamente/i)).toBeInTheDocument()
+  })
+})
+
+describe('AppFallback', () => {
+  it('muestra el mensaje de carga mientras se resuelve el chunk lazy', () => {
+    render(<AppFallback />)
+    expect(screen.getByText('Cargando…')).toBeInTheDocument()
   })
 })

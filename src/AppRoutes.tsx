@@ -5,7 +5,7 @@ import Landing from './Landing'
 const ForgeApp = lazy(() => import('./forge/App'))
 const OnlineApp = lazy(() => import('./online/OnlineApp'))
 
-function AppFallback() {
+export function AppFallback() {
   return (
     <div className="min-h-screen bg-[#0d0d14] flex items-center justify-center">
       <p className="font-display text-lg text-ether-200">Cargando…</p>
