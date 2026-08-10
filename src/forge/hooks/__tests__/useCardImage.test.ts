@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { renderHook, waitFor } from '@testing-library/react'
 import { useCardImage } from '../useCardImage'
 import { saveCardImage, clearCardImages } from '../../utils/image-store'
-import { cardArtPath } from '../../data/paquetes'
+import { cardArtPath } from '../../../shared/data/paquetes'
 
 describe('useCardImage — resolución de arte', () => {
   beforeEach(async () => {

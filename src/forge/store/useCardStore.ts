@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 import { v4 as uuid } from 'uuid'
-import type { AnyCard, CardType } from '../types'
+import type { AnyCard, CardType } from '../../shared/types'
 import {
   saveCardImage,
   deleteCardImage,

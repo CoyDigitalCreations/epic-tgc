@@ -1,5 +1,5 @@
-import { CARD_TYPES, RARITIES, KEYWORDS } from '../types'
-import type { CardType, AnyCard } from '../types'
+import { CARD_TYPES, RARITIES, KEYWORDS } from '../../shared/types'
+import type { CardType, AnyCard } from '../../shared/types'
 import { FORM_CONFIGS } from '../types/form-config'
 
 /** Fields that live inside `stats` sub-object instead of flat on the card */

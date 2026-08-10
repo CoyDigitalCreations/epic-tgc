@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
-import { FACCIONES, FACCION_RUNES } from '../../types'
+import { FACCIONES, FACCION_RUNES } from '../../../shared/types'
 import { RuneIcon } from '../card-art/RuneIcon'
 
 describe('RuneIcon', () => {

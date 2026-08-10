@@ -1,4 +1,4 @@
-import type { AnyCard } from '../types'
+import type { AnyCard } from '../../shared/types'
 import { getCardImage } from './image-store'
 
 export async function exportCollectionToJson(cards: AnyCard[]): Promise<void> {

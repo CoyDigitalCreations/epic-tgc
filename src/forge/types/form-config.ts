@@ -1,5 +1,5 @@
-import type { CardType } from './enums'
-import { FACCIONES, ESENCIAS, ROLES, CAT_HABILIDAD } from './enums'
+import type { CardType } from '../../shared/types/enums'
+import { FACCIONES, ESENCIAS, ROLES, CAT_HABILIDAD } from '../../shared/types/enums'
 
 export interface FieldDef {
   name: string

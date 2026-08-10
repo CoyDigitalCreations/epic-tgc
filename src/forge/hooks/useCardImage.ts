@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getCardImage } from '../utils/image-store'
-import { cardArtPath } from '../data/paquetes'
+import { cardArtPath } from '../../shared/data/paquetes'
 
 /**
  * Resolves the dataUrl of a card's art.

@@ -15,7 +15,7 @@ const campeon = (id: string, imageUrl?: string) =>
     updatedAt: '2024-01-01',
     stats: { cost: 0, poder: 0, resistencia: 0 },
     imageUrl,
-  }) as import('../../types').CampeonCard
+  }) as import('../../../shared/types').CampeonCard
 
 beforeEach(() => {
   localStorage.clear()

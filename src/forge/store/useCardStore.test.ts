@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { useCardStore } from './useCardStore'
-import type { AnyCard } from '../types'
+import type { AnyCard } from '../../shared/types'
 
 // Reset store before each test
 beforeEach(() => {

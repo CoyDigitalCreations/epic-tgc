@@ -1,5 +1,5 @@
-import type { Faccion } from '../../types'
-import { FACCION_RUNES } from '../../types'
+import type { Faccion } from '../../../shared/types'
+import { FACCION_RUNES } from '../../../shared/types'
 
 interface RuneIconProps {
   faccion: Faccion

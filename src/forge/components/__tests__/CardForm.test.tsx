@@ -49,7 +49,7 @@ describe('CardForm', () => {
           updatedAt: '2024-01-01',
           stats: { cost: 0, poder: 0, resistencia: 0 },
           efectoPasivo: '',
-        } as import('../../types').CampeonCard,
+        } as import('../../../shared/types').CampeonCard,
       ],
       draft: {
         id: 'test-1',

@@ -3,8 +3,8 @@ import { useCardStore } from '../store/useCardStore'
 import { exportCardToPng } from '../utils/export-png'
 import { fileToCompressedDataUrl, isValidImageFile } from '../utils/file-to-data-url'
 import { useCardImage } from '../hooks/useCardImage'
-import type { AnyCard } from '../types'
-import { FACCION_COLORS, FACCION_IMAGES } from '../types'
+import type { AnyCard } from '../../shared/types'
+import { FACCION_COLORS, FACCION_IMAGES } from '../../shared/types'
 import { CardFrame, CostGem, EtherHexagon, NamePlate, RuneIcon, StatBadge, TextScroll } from './card-art'
 
 /* ───────── type theme ───────── */

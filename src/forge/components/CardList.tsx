@@ -1,12 +1,12 @@
 import { useState, useMemo, useRef } from 'react'
 import { useCardStore } from '../store/useCardStore'
 import { exportCollectionToJson, importCollectionFromJson } from '../utils/export-json'
-import { CARD_TYPES, type CardType } from '../types'
-import { PAQUETES, ESTASIS_CARDS, progresoPaquete } from '../data/paquetes'
+import { CARD_TYPES, type CardType } from '../../shared/types'
+import { PAQUETES, ESTASIS_CARDS, progresoPaquete } from '../../shared/data/paquetes'
 import { RuneIcon } from './card-art'
 import { ConfirmModal } from './modals/ConfirmModal'
 import { useCardImage } from '../hooks/useCardImage'
-import type { AnyCard } from '../types'
+import type { AnyCard } from '../../shared/types'
 
 /** Cartas disponibles por paquete (clave = paquete.id) — el import los agrega a la colección */
 const CARTAS_POR_PAQUETE: Record<string, AnyCard[]> = {

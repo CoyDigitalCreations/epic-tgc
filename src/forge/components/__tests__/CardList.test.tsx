@@ -32,7 +32,7 @@ describe('CardList', () => {
           stats: { cost: 8, poder: 3500, resistencia: 2500 },
           tipoEfecto: 'Activo',
           efectoActivo: 'Aliento de éter',
-        } as import('../../types').CampeonCard,
+        } as import('../../../shared/types').CampeonCard,
         {
           id: 'card-2',
           name: 'Escudo Sagrado',
@@ -44,7 +44,7 @@ describe('CardList', () => {
           updatedAt: '2024-01-01',
           stats: { cost: 2, duracion: 3 },
           descripcion: 'Protege por 3 turnos',
-        } as import('../../types').TacticaCard,
+        } as import('../../../shared/types').TacticaCard,
       ],
     })
     render(<CardList />)
@@ -67,7 +67,7 @@ describe('CardList', () => {
         updatedAt: '2024-01-01',
         stats: { cost: 0, poder: 0, resistencia: 0 },
         efectoPasivo: '',
-      } as import('../../types').CampeonCard],
+      } as import('../../../shared/types').CampeonCard],
     })
     render(<CardList />)
     expect(screen.getByText('Exportar JSON')).toBeInTheDocument()
