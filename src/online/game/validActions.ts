@@ -1,6 +1,7 @@
 import { getCardMeta, faccionesCompartidas } from './cards'
 import type { Action } from './actions'
 import { generarAccionesForja } from './actions'
+import { atacantesElegibles, asignacionForzada, rivalDe } from './combat'
 import type { GameState, PlayerId } from './types'
 
 /**
@@ -13,6 +14,10 @@ import type { GameState, PlayerId } from './types'
  * C4: forja/choque → pasar_turno; ocaso → pasar_turno (mano ≤ 6) + descartar.
  * C5: forja → jugar/colocar por carta en mano (generador de payloads que
  * NUNCA fallan) + bloquear_eter por Campeón propio con Éter compartido.
+ * C2: choque → sub-máquina (9.1): paso ataque (declarar_ataque del activo),
+ * paso bloqueo (declarar_bloqueo FORZOSO del DEFENSOR — excepción al "solo
+ * jugador activo": en paso bloqueo el actor es el RIVAL, ADR-11), paso
+ * resolución (pasar_turno con limpieza). (R12, R15)
  */
 export function getValidActions(state: GameState, playerId: PlayerId): Action[] {
   if (state.fase === 'terminada') return []
@@ -51,13 +56,36 @@ export function getValidActions(state: GameState, playerId: PlayerId): Action[] 
       })
       acciones.push({ type: 'pasar_turno' })
     } else if (state.fase === 'choque') {
-      acciones.push({ type: 'pasar_turno' })
+      const combate = state.combate
+      if (!combate) {
+        // Paso ataque (9.2): 1 acción "todos los elegibles" + 1 por Campeón
+        // (el payload mínimo nunca falla; primerTurno/cansados ya excluidos).
+        const elegibles = atacantesElegibles(state)
+        if (elegibles.length > 0) {
+          acciones.push({ type: 'declarar_ataque', atacanteIds: elegibles })
+          for (const id of elegibles) {
+            acciones.push({ type: 'declarar_ataque', atacanteIds: [id] })
+          }
+        }
+        acciones.push({ type: 'pasar_turno' })
+      } else if (combate.paso === 'resolucion') {
+        // Resolución completada (9.4): se puede pasar; la limpieza del
+        // combate ocurre en la transición choque→ocaso (ADR-11).
+        acciones.push({ type: 'pasar_turno' })
+      }
+      // Paso bloqueo: el actor es el DEFENSOR (rival) — el activo no tiene
+      // acciones propias hasta resolver el bloqueo (R15).
     } else if (state.fase === 'ocaso') {
       if (p.mano.length <= 6) acciones.push({ type: 'pasar_turno' })
       for (const id of p.mano) {
         acciones.push({ type: 'descartar_carta', cardInstanceIds: [id] })
       }
     }
+  } else if (state.fase === 'choque' && playerId === rivalDe(state) && state.combate?.paso === 'bloqueo') {
+    // Bloqueo forzoso (9.3): 1 greedy determinista para el DEFENSOR — no hay
+    // variante "no bloquear" (ej.2) ni sub-asignaciones (ej.6, ADR-19).
+    const asignaciones = asignacionForzada(state)
+    if (asignaciones) acciones.push({ type: 'declarar_bloqueo', asignaciones })
   }
 
   return acciones

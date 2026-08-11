@@ -175,3 +175,73 @@ describe('getValidActions en Forja (5.5)', () => {
     }
   })
 })
+
+describe('getValidActions en Choque (9.1-9.3, C2)', () => {
+  it('Choque sin combate: el activo declara_ataque (todos los elegibles + por Campeón) o pasa_turno; el rival solo rendirse', () => {
+    let s = conInstancias(estadoMinimo(), { a1: { cardId: CAMPEON, owner: 'A' } })
+    s = { ...s, fase: 'choque', primerTurno: false, players: { ...s.players, A: { ...s.players.A, campo: { ...s.players.A.campo, campeones: ['a1', null, null, null, null] } } } }
+
+    const activo = getValidActions(s, 'A')
+    const tipos = activo.map((a) => a.type)
+    expect(tipos).toContain('pasar_turno') // ataque OPCIONAL (9.1, ADR-11)
+    expect(activo.filter((a) => a.type === 'declarar_ataque')).toHaveLength(2) // "todos" + 1 por Campeón
+    expect(getValidActions(s, 'B').map((a) => a.type)).toEqual(['rendirse'])
+  })
+
+  it('primerTurno prohíbe atacar (§8.6): sin declarar_ataque, sí pasar_turno', () => {
+    let s = conInstancias(estadoMinimo(), { a1: { cardId: CAMPEON, owner: 'A' } }) // primerTurno: true
+    s = { ...s, fase: 'choque', players: { ...s.players, A: { ...s.players.A, campo: { ...s.players.A.campo, campeones: ['a1', null, null, null, null] } } } }
+
+    const tipos = getValidActions(s, 'A').map((a) => a.type)
+    expect(tipos).not.toContain('declarar_ataque')
+    expect(tipos).toContain('pasar_turno')
+  })
+
+  it('combate pendiente (paso bloqueo): el activo NO pasa el turno (R15); el DEFENSOR recibe el bloqueo greedy forzado', () => {
+    let s = conInstancias(estadoMinimo(), { a1: { cardId: CAMPEON, owner: 'A' }, b1: { cardId: CAMPEON, owner: 'B' } })
+    s = {
+      ...s,
+      fase: 'choque',
+      primerTurno: false,
+      players: {
+        ...s.players,
+        A: { ...s.players.A, campo: { ...s.players.A.campo, campeones: ['a1', null, null, null, null] } },
+        B: { ...s.players.B, campo: { ...s.players.B.campo, campeones: ['b1', null, null, null, null] } },
+      },
+      combate: { paso: 'bloqueo', atacantes: ['a1'], bloqueos: {}, rupturaDisponible: true, rupturaUsadaEsteTurno: false },
+    }
+
+    expect(getValidActions(s, 'A').map((a) => a.type)).toEqual(['rendirse']) // gated: no pasar_turno
+    const defensor = getValidActions(s, 'B')
+    const bloqueo = defensor.find((a): a is Extract<Action, { type: 'declarar_bloqueo' }> => a.type === 'declarar_bloqueo')
+    expect(bloqueo).toBeDefined()
+    if (bloqueo) expect(bloqueo.asignaciones).toEqual({ a1: 'b1' })
+  })
+
+  it('payloads de combate generados pasan applyAction (nunca fallan, 6.2)', () => {
+    let s = conInstancias(estadoMinimo(), { a1: { cardId: CAMPEON, owner: 'A' }, b1: { cardId: CAMPEON, owner: 'B' } })
+    s = {
+      ...s,
+      fase: 'choque',
+      primerTurno: false,
+      players: {
+        ...s.players,
+        A: { ...s.players.A, campo: { ...s.players.A.campo, campeones: ['a1', null, null, null, null] } },
+        B: { ...s.players.B, campo: { ...s.players.B.campo, campeones: ['b1', null, null, null, null] } },
+      },
+    }
+    const ctx: Ctx = { next: () => 0, emit: () => {}, events: [] }
+
+    const ataque = getValidActions(s, 'A').find((a): a is Extract<Action, { type: 'declarar_ataque' }> => a.type === 'declarar_ataque')
+    expect(ataque).toBeDefined()
+    const r1 = applyAction(s, ataque!, ctx)
+    if (!r1.ok) throw new Error(`declarar_ataque generado falló: ${r1.error}`)
+    expect(r1.state.combate?.paso).toBe('bloqueo')
+
+    const bloqueo = getValidActions(r1.state, 'B').find((a): a is Extract<Action, { type: 'declarar_bloqueo' }> => a.type === 'declarar_bloqueo')
+    expect(bloqueo).toBeDefined()
+    const r2 = applyAction(r1.state, bloqueo!, ctx)
+    if (!r2.ok) throw new Error(`declarar_bloqueo generado falló: ${r2.error}`)
+    expect(r2.state.combate?.paso).toBe('resolucion')
+  })
+})

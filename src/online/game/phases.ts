@@ -41,3 +41,11 @@ export function robarCarta(s: GameState, ctx: Ctx, jugador: PlayerId): void {
   p.mano.push(tope)
   ctx.emit({ type: 'carta_robada', jugador, cardInstanceId: tope })
 }
+
+/**
+ * Limpieza defensiva del combate al salir de Choque (ADR-11): la transición
+ * choque→ocaso borra GameState.combate aunque el flujo normal ya lo resolvió.
+ */
+export function limpiarCombate(s: GameState): void {
+  s.combate = undefined
+}

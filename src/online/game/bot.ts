@@ -9,9 +9,12 @@ import type { GameState, PlayerId } from './types'
  * Bot TONTO para simulación (5.7): elige la primera acción legal no-rendirse
  * de getValidActions, o null si no es el turno del jugador. Determinista:
  * decide solo con el estado, que a su vez depende solo del seed.
+ * Excepción (9.3, ADR-11): en paso bloqueo el actor es el DEFENSOR (rival del
+ * activo) — el bot del rival decide el bloqueo forzoso.
  */
 export function botTonto(state: GameState, playerId: PlayerId): Action | null {
-  if (state.turno !== playerId) return null
+  const esDefensor = state.fase === 'choque' && state.combate?.paso === 'bloqueo' && playerId !== state.turno
+  if (state.turno !== playerId && !esDefensor) return null
   const acciones = getValidActions(state, playerId)
   return acciones.find((a) => a.type !== 'rendirse') ?? null
 }
@@ -36,7 +39,11 @@ export function simularPartida(deckA: string[], deckB: string[], seed: number, m
   let iteraciones = 0
   let estado = state
   while (estado.fase !== 'terminada' && iteraciones < maxTurnos) {
-    const accion = botTonto(estado, estado.turno)
+    // En paso bloqueo el actor es el DEFENSOR (9.3, ADR-11): sin esta
+    // excepción simularPartida deadlockea pidiendo acciones al activo.
+    const actor: PlayerId =
+      estado.fase === 'choque' && estado.combate?.paso === 'bloqueo' ? (estado.turno === 'A' ? 'B' : 'A') : estado.turno
+    const accion = botTonto(estado, actor)
     if (!accion) throw new Error('el bot no encontró acción válida (sin progreso)')
     const r = applyAction(estado, accion, ctx)
     if (!r.ok) throw new Error(`la acción del bot falló (${accion.type}): ${r.error}`)

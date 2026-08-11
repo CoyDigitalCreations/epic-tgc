@@ -207,6 +207,26 @@ describe('jugar_campeon (R9)', () => {
     ])
   })
 
+  it('Soberano: el sacrificio libera el Éter bloqueado del sacrificado INMEDIATO → 2A (glosario L1351, 7.2 L937)', () => {
+    const ctx = crearCtx()
+    const conCampo = conCampeonEnCampo(estadoMinimo(), CAMPEON, 1) // sacrificio en slot 1 (2C)
+    const s = conMano(conCampo.s, { aurora: AURORA })
+    let { s: s2, ids } = conEteres(s, ETER_ORDEN, 4) // pago de Aurora (cost 4)
+    s2.players.A.campo.campeones[0] = null // slot 0 libre
+    const sac = 'campo-FB-011-1'
+    const eterBloq = 'eter-bloq-1' // Éter YA bloqueado en el sacrificado (1B-1F), fuera de 2A
+    s2.instances[sac] = { ...s2.instances[sac], eterBloqueado: [eterBloq] }
+
+    s2 = aplicar(
+      s2,
+      { type: 'jugar_campeon', cardInstanceId: 'aurora', slot: 0, eterIds: ids, sacrificios: [sac] },
+      ctx,
+    )
+    expect(s2.instances[sac].eterBloqueado).toEqual([]) // liberado al salir del campo
+    expect(s2.players.A.eterReserva).toContain(eterBloq) // → 2A INMEDIATO (no 1A)
+    expect(s2.players.A.cementerio).toEqual([sac]) // el sacrificio sigue yendo a 2G
+  })
+
   it('Soberano: rechaza sin sacrificios, con 2, duplicados, ajenos o de facción distinta', () => {
     const ctx = crearCtx()
     const montar = () => {

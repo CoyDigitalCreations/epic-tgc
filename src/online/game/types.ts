@@ -44,6 +44,8 @@ export interface CardInstance {
   agotado?: boolean
   /** Éter bloqueado (1B-1F): ids de Éter sobre este Campeón (6.2: boca arriba). */
   eterBloqueado?: string[]
+  /** Override aditivo de keywords (tests con cartas sin la keyword en data; efectos que otorgan keywords). */
+  keywords?: string[]
   bocaArriba?: boolean
 }
 

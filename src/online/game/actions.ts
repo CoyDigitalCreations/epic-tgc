@@ -1,5 +1,5 @@
 import type { GameEvent } from './events'
-import { resolverAlba } from './phases'
+import { limpiarCombate, resolverAlba } from './phases'
 import { shuffleFisherYates } from './rng'
 import type { Ctx, FaseNombre, GameState, PlayerId } from './types'
 import { esCampeon, esMistica, esTactica, esArcana, esCombate, faccionesCompartidas, getCardMeta } from './cards'
@@ -7,6 +7,8 @@ import { esSingular, sacrificiosRequeridos, copiasEnCampo, campeonesSacrificable
 import { aplicarPago, validarPago, validarBloqueo, etersParaPagar } from './payments'
 import { SLOTS_CAMPEONES, SLOTS_MISTICAS_TACTICAS, SLOTS_ARCANAS_COMBATE, slotAZona } from './zones'
 import type { CardInstance } from './types'
+import { ejecutarDeclararAtaque, ejecutarDeclararBloqueo, validarDeclararAtaque, validarDeclararBloqueo } from './combat'
+import { liberarEterBloqueado } from './replacements'
 
 /**
  * Acciones atómicas del jugador (superficie de applyAction/getValidActions).
@@ -33,6 +35,15 @@ export type Action =
   | { type: 'bloquear_eter'; eterIds: string[]; campeonSlot: number }
   | { type: 'descartar_carta'; cardInstanceIds: string[] }
   | { type: 'elegir_opcion'; opcionId: string }
+  // Apéndice de combate (change 2, spec #1227 R15): declarar_ataque y
+  // declarar_bloqueo ya despachan en el core; elegir_ruptura (C3),
+  // responder_cadena y pasar_prioridad (C4) entran a la unión como stub
+  // (fallan por validación hasta su commit, patrón elegir_opcion).
+  | { type: 'declarar_ataque'; atacanteIds: string[] }
+  | { type: 'declarar_bloqueo'; asignaciones: Record<string, string> }
+  | { type: 'elegir_ruptura'; atacanteId: string | null; vinculoSlot?: number }
+  | { type: 'responder_cadena'; cardInstanceId: string }
+  | { type: 'pasar_prioridad' }
 
 export type ApplyActionResult =
   | { ok: true; state: GameState; events: GameEvent[] }
@@ -79,6 +90,10 @@ function validarAccion(state: GameState, action: Action): string | null {
       return validarColocarCombate(state, action)
     case 'bloquear_eter':
       return validarBloquearEter(state, action)
+    case 'declarar_ataque':
+      return validarDeclararAtaque(state, action.atacanteIds)
+    case 'declarar_bloqueo':
+      return validarDeclararBloqueo(state, action.asignaciones)
     default:
       return 'acción no disponible en esta fase'
   }
@@ -92,8 +107,13 @@ function validarPasarTurno(state: GameState): string | null {
   const p = state.players[state.turno]
   switch (state.fase) {
     case 'forja':
-    case 'choque':
       return null
+    case 'choque':
+      // ADR-11: solo se pasa con el combate RESUELTO (paso 'resolucion');
+      // la limpieza del estado ocurre en la transición choque→ocaso.
+      return state.combate && state.combate.paso !== 'resolucion'
+        ? 'resuelve el combate antes de pasar el turno'
+        : null
     case 'ocaso':
       return p.mano.length > 6 ? 'no puedes pasar el turno con más de 6 cartas en mano' : null
     case 'pre_partida':
@@ -284,6 +304,14 @@ function ejecutarAccion(s: GameState, action: Action, ctx: Ctx): void {
       ejecutarBloquearEter(s, action, ctx)
       return
     }
+    case 'declarar_ataque': {
+      ejecutarDeclararAtaque(s, action.atacanteIds, ctx)
+      return
+    }
+    case 'declarar_bloqueo': {
+      ejecutarDeclararBloqueo(s, action.asignaciones, ctx)
+      return
+    }
   }
 }
 
@@ -321,6 +349,7 @@ function iniciarPartida(s: GameState, ctx: Ctx): void {
 function ejecutarPasarTurno(s: GameState, ctx: Ctx): void {
   if (s.fase === 'forja' || s.fase === 'choque') {
     const siguiente: FaseNombre = s.fase === 'forja' ? 'choque' : 'ocaso'
+    if (s.fase === 'choque') limpiarCombate(s) // ADR-11: limpieza defensiva al salir de Choque
     s.fase = siguiente
     ctx.emit({ type: 'fase_iniciada', fase: siguiente, jugador: s.turno })
     return
@@ -369,6 +398,10 @@ function ejecutarJugarCampeon(s: GameState, action: Extract<Action, { type: 'jug
     const zona = slotAZona('campeones', slotIdx) ?? '2B'
     ctx.emit({ type: 'carta_salida_de_zona', cardInstanceId: sacId, zona, jugador: s.turno })
     p.campo.campeones[slotIdx] = null
+    // ADR-17: el sacrificio NO es evitable — el Éter bloqueado del sacrificado
+    // vuelve a la Reserva 2A INMEDIATO (glosario L1351, manual 7.2 L937).
+    // Fix del gap #1223: antes quedaba atascado en la instancia que iba a 2G.
+    liberarEterBloqueado(s, ctx, sacId, '2A')
     p.cementerio.push(sacId)
     ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: sacId, zona: '2G', jugador: s.turno, bocaArriba: true })
   }
