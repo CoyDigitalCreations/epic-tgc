@@ -17,10 +17,9 @@ export function getValidActions(state: GameState, playerId: PlayerId): Action[] 
 
   if (state.turno === playerId && state.fase === 'pre_partida') {
     const p = state.players[playerId]
-    const rival = state.players[playerId === 'A' ? 'B' : 'A']
-    // Mulligan: opcional, a lo sumo UNO por partida (spec: "Un segundo
-    // mulligan MUST ser inválido"); si el rival ya lo usó, solo queda pasar.
-    if (!p.mulliganUsado && !rival.mulliganUsado) acciones.push({ type: 'mulligan' })
+    // Mulligan opcional, 1 vez POR JUGADOR (manual §2) — el rival no afecta
+    // tu derecho a mulliganear.
+    if (!p.mulliganUsado) acciones.push({ type: 'mulligan' })
     acciones.push({ type: 'pasar_mulligan' })
   }
 

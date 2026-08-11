@@ -189,7 +189,7 @@ describe('mulligan y arranque de partida (R5)', () => {
     expect(ctx.next()).toBe(rand()) // posición 90: pasar_mulligan no consumió
   })
 
-  it('el segundo mulligan del mismo jugador no está en getValidActions ni es aceptado', () => {
+  it('el mulligan es una vez POR JUGADOR: tras el de A, B aún puede usar el suyo', () => {
     const { state, ctx } = createInitialState(deckA, deckB, 123)
     expect(getValidActions(state, 'A').map((a) => a.type)).toContain('mulligan')
 
@@ -197,10 +197,15 @@ describe('mulligan y arranque de partida (R5)', () => {
     expect(r.ok).toBe(true)
     if (!r.ok) throw new Error('primer mulligan falló')
 
-    // A ya no puede mulliganear (turno de B; además mulliganUsado)
+    // A ya no puede mulliganear (usó su única vez)
     expect(getValidActions(r.state, 'A').map((a) => a.type)).not.toContain('mulligan')
-    const r2 = applyAction(r.state, { type: 'mulligan' }, ctx)
-    expect(r2.ok).toBe(false)
+
+    // B SÍ puede: el mulligan es por jugador (manual §2: "Solo una vez por jugador")
+    expect(getValidActions(r.state, 'B').map((a) => a.type)).toContain('mulligan')
+    const r2 = applyAction(r.state, { type: 'mulligan' }, ctx) // actor implícito = turno = B
+    expect(r2.ok).toBe(true)
+    if (!r2.ok) throw new Error('mulligan de B falló')
+    expect(r2.state.players.B.mulliganUsado).toBe(true)
   })
 
   it('al decidir ambos jugadores la partida inicia: partida_iniciada, turno_iniciado, alba, robo, forja', () => {

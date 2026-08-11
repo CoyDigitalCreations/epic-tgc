@@ -65,11 +65,10 @@ function validarAccion(state: GameState, action: Action): string | null {
 
 function validarMulligan(state: GameState): string | null {
   if (state.fase !== 'pre_partida') return 'mulligan solo en pre_partida'
-  // Spec: "Un segundo mulligan MUST ser inválido" → a lo sumo UNO por partida:
-  // quien lo toma primero decide; si A pasó (nadie lo usó), B aún puede usarlo.
+  // Manual §2: "Solo una vez por jugador" — cada jugador decide su mulligan
+  // independientemente del rival (fiel al físico, #1212).
   const activo = state.players[state.turno]
-  const rival = state.players[state.turno === 'A' ? 'B' : 'A']
-  if (activo.mulliganUsado || rival.mulliganUsado) return 'el mulligan ya se usó'
+  if (activo.mulliganUsado) return 'el mulligan ya se usó'
   return null
 }
 
