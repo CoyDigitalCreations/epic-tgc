@@ -1,7 +1,7 @@
 import type { GameEvent } from './events'
 import { resolverAlba } from './phases'
 import { shuffleFisherYates } from './rng'
-import type { Ctx, GameState, PlayerId } from './types'
+import type { Ctx, FaseNombre, GameState, PlayerId } from './types'
 
 /**
  * Acciones atómicas del jugador (superficie de applyAction/getValidActions).
@@ -58,9 +58,46 @@ function validarAccion(state: GameState, action: Action): string | null {
       return validarMulligan(state)
     case 'pasar_mulligan':
       return state.fase !== 'pre_partida' ? 'pasar_mulligan solo en pre_partida' : null
+    case 'pasar_turno':
+      return validarPasarTurno(state)
+    case 'descartar_carta':
+      return validarDescartarCarta(state, action)
     default:
       return 'acción no disponible en esta fase'
   }
+}
+
+/**
+ * Pasar de fase (C4): forja→choque→ocaso→alba del rival (auto-resuelta).
+ * En Ocaso solo se puede pasar con mano ≤ 6 (manual §8).
+ */
+function validarPasarTurno(state: GameState): string | null {
+  const p = state.players[state.turno]
+  switch (state.fase) {
+    case 'forja':
+    case 'choque':
+      return null
+    case 'ocaso':
+      return p.mano.length > 6 ? 'no puedes pasar el turno con más de 6 cartas en mano' : null
+    case 'pre_partida':
+      return 'pasar_turno solo durante la partida'
+    case 'terminada':
+      return 'la partida terminó'
+  }
+}
+
+/** Descartar en Ocaso (manual §8): cartas propias en mano, sin duplicados. */
+function validarDescartarCarta(state: GameState, action: Extract<Action, { type: 'descartar_carta' }>): string | null {
+  if (state.fase !== 'ocaso') return 'descartar_carta solo en Ocaso'
+  if (action.cardInstanceIds.length === 0) return 'no indicaste cartas para descartar'
+  if (new Set(action.cardInstanceIds).size !== action.cardInstanceIds.length) {
+    return 'no puedes descartar cartas duplicadas'
+  }
+  const p = state.players[state.turno]
+  for (const id of action.cardInstanceIds) {
+    if (!p.mano.includes(id)) return `la carta no está en tu mano: ${id}`
+  }
+  return null
 }
 
 function validarMulligan(state: GameState): string | null {
@@ -99,6 +136,14 @@ function ejecutarAccion(s: GameState, action: Action, ctx: Ctx): void {
       avanzarMulligan(s, ctx)
       return
     }
+    case 'pasar_turno': {
+      ejecutarPasarTurno(s, ctx)
+      return
+    }
+    case 'descartar_carta': {
+      ejecutarDescartarCarta(s, action, ctx)
+      return
+    }
   }
 }
 
@@ -125,5 +170,46 @@ function iniciarPartida(s: GameState, ctx: Ctx): void {
   // Si el primer robo agotó el mazo (defensivo), la partida ya terminó y no hay forja
   if (s.fase === 'forja') {
     ctx.emit({ type: 'fase_iniciada', fase: 'forja', jugador: pj })
+  }
+}
+
+/**
+ * Transiciones de fase (C4): forja→choque→ocaso→alba del rival (auto-resuelta).
+ * Al pasar Ocaso el turno cambia al rival y su Alba se resuelve DENTRO de la
+ * misma acción (ADR-3): turno_iniciado, fase_iniciada{alba}, Alba, fase_iniciada{forja}.
+ */
+function ejecutarPasarTurno(s: GameState, ctx: Ctx): void {
+  if (s.fase === 'forja' || s.fase === 'choque') {
+    const siguiente: FaseNombre = s.fase === 'forja' ? 'choque' : 'ocaso'
+    s.fase = siguiente
+    ctx.emit({ type: 'fase_iniciada', fase: siguiente, jugador: s.turno })
+    return
+  }
+  // Ocaso: fin del turno del jugador activo
+  const rival: PlayerId = s.turno === 'A' ? 'B' : 'A'
+  if (s.primerTurno && s.turno === s.primerJugador) s.primerTurno = false
+  s.turno = rival
+  ctx.emit({ type: 'turno_iniciado', jugador: rival })
+  ctx.emit({ type: 'fase_iniciada', fase: 'alba', jugador: rival })
+  resolverAlba(s, ctx, rival)
+  if (s.fase !== 'terminada') {
+    s.fase = 'forja'
+    ctx.emit({ type: 'fase_iniciada', fase: 'forja', jugador: rival })
+  }
+}
+
+/** Descarta en Ocaso: mano → cementerio; un solo evento con todos los ids (eventos.ts). */
+function ejecutarDescartarCarta(s: GameState, action: Extract<Action, { type: 'descartar_carta' }>, ctx: Ctx): void {
+  const p = s.players[s.turno]
+  const descartadas: string[] = []
+  for (const id of action.cardInstanceIds) {
+    const idx = p.mano.indexOf(id)
+    if (idx === -1) continue // validado antes (defensivo)
+    p.mano.splice(idx, 1)
+    p.cementerio.push(id)
+    descartadas.push(id)
+  }
+  if (descartadas.length > 0) {
+    ctx.emit({ type: 'carta_descartada', jugador: s.turno, cardInstanceIds: descartadas })
   }
 }

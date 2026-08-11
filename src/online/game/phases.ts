@@ -1,3 +1,4 @@
+import { reagruparEter } from './payments'
 import type { Ctx, GameState, PlayerId } from './types'
 
 /**
@@ -18,12 +19,7 @@ export function resolverAlba(s: GameState, ctx: Ctx, jugador: PlayerId): void {
   }
 
   // 2. Reagrupar Éter pagado 1A → 2A (los bloqueados permanecen en el Campeón)
-  if (p.eterPagado.length > 0) {
-    const reagrupados = p.eterPagado
-    p.eterReserva.push(...reagrupados)
-    p.eterPagado = []
-    ctx.emit({ type: 'eter_reagrupado', jugador, eterIds: reagrupados })
-  }
+  reagruparEter(s, ctx, jugador)
 
   // 3. Robar 1 (no consume RNG: toma del tope)
   robarCarta(s, ctx, jugador)
