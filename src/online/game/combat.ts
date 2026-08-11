@@ -1,4 +1,5 @@
 import { esCampeon, getCardMeta } from './cards'
+import { destruirCarta } from './replacements'
 import type { Ctx, GameState, PlayerId } from './types'
 
 /**
@@ -42,6 +43,7 @@ export function atacantesElegibles(state: GameState): string[] {
     if (!id) return false
     const inst = state.instances[id]
     if (!inst) return false
+    if (inst.atacoEsteTurno) return false
     if (inst.agotado && !tieneKeyword(state, id, 'Carga')) return false
     return true
   })
@@ -108,6 +110,8 @@ export function ejecutarDeclararAtaque(s: GameState, atacanteIds: string[], ctx:
   }
   for (const id of atacanteIds) {
     const inst = s.instances[id]
+    // Ya atacó este turno (un ataque por turno; cierra re-ataque Carga/Vigor)
+    inst.atacoEsteTurno = true
     // Agotar AL DECLARAR (L1089); Vigor no agota (L1208)
     if (!tieneKeyword(s, id, 'Vigor')) inst.agotado = true
     // Recarga (L1211): 1 Éter bloqueado del atacante vuelve a la Reserva 2A
@@ -122,6 +126,7 @@ export function ejecutarDeclararAtaque(s: GameState, atacanteIds: string[], ctx:
   // evento bloqueo_declarado (los ataques quedan sin bloquear)
   if (bloqueadoresDisponibles(s).length === 0) {
     s.combate.paso = 'resolucion'
+    resolverCombate(s, ctx) // sin pares: sin muertes
   }
 }
 
@@ -155,4 +160,76 @@ export function ejecutarDeclararBloqueo(s: GameState, asignaciones: Record<strin
   combate.paso = 'resolucion'
   combate.rupturaDisponible = ataquesSinBloquear(s).length > 0
   ctx.emit({ type: 'bloqueo_declarado', jugador: rivalDe(s), asignaciones })
+  // Resolución (9.4-B, ADR-11/14): daño simultáneo aplicado EN LA TRANSICIÓN
+  resolverCombate(s, ctx)
+}
+
+/* ─────────────────── resolución: daño simultáneo (9.4-B, ADR-14) ─────────────────── */
+
+const poderDe = (s: GameState, id: string): number => {
+  const inst = s.instances[id]
+  const meta = inst?.cardId ? getCardMeta(inst.cardId) : null
+  return inst?.poder ?? (meta && esCampeon(meta) ? meta.stats.poder : 0)
+}
+
+const resistenciaDe = (s: GameState, id: string): number => {
+  const inst = s.instances[id]
+  const meta = inst?.cardId ? getCardMeta(inst.cardId) : null
+  return inst?.resistencia ?? (meta && esCampeon(meta) ? meta.stats.resistencia : 0)
+}
+
+/**
+ * Daño simultáneo (9.4-B, L1119-1124): con los pares atacante→bloqueador ya
+ * fijados, decide TODAS las muertes sobre el estado PRE-daño (sin cascadas,
+ * ADR-14; el daño no persiste, L1122) y las aplica en orden determinista
+ * (atacantes, luego bloqueadores) vía destruirCarta('combate') → 2G + Éter
+ * 1A + carta_muerta + destruccion.
+ */
+function resolverCombate(s: GameState, ctx: Ctx): void {
+  const combate = s.combate
+  if (!combate) return
+  const muertosAtacantes: string[] = []
+  const muertosBloqueadores: string[] = []
+  for (const atacante of combate.atacantes) {
+    const bloqueador = combate.bloqueos[atacante]
+    if (!bloqueador) continue // sin bloquear: no hay daño (Ruptura, no muerte)
+    // Ambos deciden con el estado PRE-daño (los stats no cambian: sin marcas)
+    if (poderDe(s, atacante) >= resistenciaDe(s, bloqueador)) muertosBloqueadores.push(bloqueador)
+    if (poderDe(s, bloqueador) >= resistenciaDe(s, atacante)) muertosAtacantes.push(atacante)
+  }
+  for (const id of [...muertosAtacantes, ...muertosBloqueadores]) {
+    destruirCarta(s, ctx, id, 'combate')
+  }
+}
+
+/* ─────────────────── Ruptura (9.4-A, ADR-13) ─────────────────── */
+
+export function validarElegirRuptura(state: GameState, atacanteId: string | null, vinculoSlot?: number): string | null {
+  if (state.fase !== 'choque') return 'elegir_ruptura solo en Choque'
+  const combate = state.combate
+  if (!combate || combate.paso !== 'resolucion') return 'no hay resolución pendiente'
+  if (combate.rupturaUsadaEsteTurno) return 'ya usaste la Ruptura este turno de ataque'
+  if (atacanteId === null) {
+    if (vinculoSlot !== undefined) return 'sin atacante no hay slot de Vínculo'
+    return null // no romper es voluntario (L1107)
+  }
+  if (!combate.rupturaDisponible) return 'no hay ataques sin bloquear para romper'
+  if (!combate.atacantes.includes(atacanteId)) return 'no es un atacante declarado'
+  if (atacanteId in combate.bloqueos) return 'el ataque fue bloqueado: no rompe (L1123)'
+  if (!state.players[state.turno].campo.campeones.includes(atacanteId)) return 'el atacante murió'
+  if (vinculoSlot === undefined || vinculoSlot < 0 || vinculoSlot > 5) return 'vinculoSlot 0-5'
+  const vinculoId = state.players[rivalDe(state)].vinculos[vinculoSlot]
+  if (!vinculoId) return 'no hay Vínculo vivo en ese slot'
+  if (state.instances[vinculoId]?.bocaArriba) return 'el Vínculo ya fue destruido'
+  return null
+}
+
+export function ejecutarElegirRuptura(s: GameState, atacanteId: string | null, vinculoSlot: number | undefined, ctx: Ctx): void {
+  if (atacanteId !== null && vinculoSlot !== undefined) {
+    const vinculoId = s.players[rivalDe(s)].vinculos[vinculoSlot]!
+    ctx.emit({ type: 'ruptura_realizada', atacanteId, vinculoSlot, vinculoId })
+    destruirCarta(s, ctx, vinculoId, 'ruptura') // bocaArriba + sexto Vínculo + derrota
+    if (s.combate) s.combate.rupturaUsadaEsteTurno = true // defensivo
+  }
+  s.combate = undefined // elegir_ruptura cierra (ADR-11)
 }

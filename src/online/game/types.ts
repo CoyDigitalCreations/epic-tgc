@@ -42,10 +42,20 @@ export interface CardInstance {
   cardId: string | null
   owner: PlayerId
   agotado?: boolean
+  /**
+   * Ya atacó este turno (un Campeón ataca UNA vez por turno). Cierra el
+   * re-ataque infinito de Carga (sigue agotado tras atacar, L1207) y Vigor
+   * (no se agota al atacar, L1208); la Alba del dueño lo borra junto a agotado.
+   */
+  atacoEsteTurno?: boolean
   /** Éter bloqueado (1B-1F): ids de Éter sobre este Campeón (6.2: boca arriba). */
   eterBloqueado?: string[]
   /** Override aditivo de keywords (tests con cartas sin la keyword en data; efectos que otorgan keywords). */
   keywords?: string[]
+  /** Override aditivo de poder (tests de combate; efectos que modifican poder, patrón keywords). */
+  poder?: number
+  /** Override aditivo de resistencia (tests de combate; efectos que modifican resistencia, patrón keywords). */
+  resistencia?: number
   bocaArriba?: boolean
 }
 

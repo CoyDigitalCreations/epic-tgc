@@ -1,7 +1,7 @@
 import { getCardMeta, faccionesCompartidas } from './cards'
 import type { Action } from './actions'
 import { generarAccionesForja } from './actions'
-import { atacantesElegibles, asignacionForzada, rivalDe } from './combat'
+import { atacantesElegibles, asignacionForzada, ataquesSinBloquear, rivalDe } from './combat'
 import type { GameState, PlayerId } from './types'
 
 /**
@@ -17,7 +17,8 @@ import type { GameState, PlayerId } from './types'
  * C2: choque → sub-máquina (9.1): paso ataque (declarar_ataque del activo),
  * paso bloqueo (declarar_bloqueo FORZOSO del DEFENSOR — excepción al "solo
  * jugador activo": en paso bloqueo el actor es el RIVAL, ADR-11), paso
- * resolución (pasar_turno con limpieza). (R12, R15)
+ * resolución (elegir_ruptura voluntaria + pasar_turno con limpieza).
+ * (R12, R15; Ruptura C3/ADR-13)
  */
 export function getValidActions(state: GameState, playerId: PlayerId): Action[] {
   if (state.fase === 'terminada') return []
@@ -69,8 +70,25 @@ export function getValidActions(state: GameState, playerId: PlayerId): Action[] 
         }
         acciones.push({ type: 'pasar_turno' })
       } else if (combate.paso === 'resolucion') {
-        // Resolución completada (9.4): se puede pasar; la limpieza del
-        // combate ocurre en la transición choque→ocaso (ADR-11).
+        // Resolución (9.4-A, ADR-13): Ruptura VOLUNTARIA del jugador activo —
+        // null "no romper" + 1 por atacante sin bloquear que SOBREVIVIÓ con
+        // slot de Vínculo vivo (0-5). Sin cardIds: el slot se elige a ciegas
+        // (6.2, anti-cheat). Máx 1 por turno (rupturaUsadaEsteTurno).
+        if (!combate.rupturaUsadaEsteTurno) {
+          acciones.push({ type: 'elegir_ruptura', atacanteId: null })
+          if (combate.rupturaDisponible) {
+            const rival = rivalDe(state)
+            for (const atacanteId of ataquesSinBloquear(state)) {
+              if (!state.players[state.turno].campo.campeones.includes(atacanteId)) continue // murió en el daño
+              state.players[rival].vinculos.forEach((vinculoId, slot) => {
+                const v = vinculoId ? state.instances[vinculoId] : undefined
+                if (vinculoId && !v?.bocaArriba) {
+                  acciones.push({ type: 'elegir_ruptura', atacanteId, vinculoSlot: slot })
+                }
+              })
+            }
+          }
+        }
         acciones.push({ type: 'pasar_turno' })
       }
       // Paso bloqueo: el actor es el DEFENSOR (rival) — el activo no tiene

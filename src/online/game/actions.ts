@@ -7,7 +7,7 @@ import { esSingular, sacrificiosRequeridos, copiasEnCampo, campeonesSacrificable
 import { aplicarPago, validarPago, validarBloqueo, etersParaPagar } from './payments'
 import { SLOTS_CAMPEONES, SLOTS_MISTICAS_TACTICAS, SLOTS_ARCANAS_COMBATE, slotAZona } from './zones'
 import type { CardInstance } from './types'
-import { ejecutarDeclararAtaque, ejecutarDeclararBloqueo, validarDeclararAtaque, validarDeclararBloqueo } from './combat'
+import { ejecutarDeclararAtaque, ejecutarDeclararBloqueo, validarDeclararAtaque, validarDeclararBloqueo, validarElegirRuptura, ejecutarElegirRuptura } from './combat'
 import { liberarEterBloqueado } from './replacements'
 
 /**
@@ -35,8 +35,8 @@ export type Action =
   | { type: 'bloquear_eter'; eterIds: string[]; campeonSlot: number }
   | { type: 'descartar_carta'; cardInstanceIds: string[] }
   | { type: 'elegir_opcion'; opcionId: string }
-  // Apéndice de combate (change 2, spec #1227 R15): declarar_ataque y
-  // declarar_bloqueo ya despachan en el core; elegir_ruptura (C3),
+  // Apéndice de combate (change 2, spec #1227 R15): declarar_ataque,
+  // declarar_bloqueo y elegir_ruptura (C3) ya despachan en el core;
   // responder_cadena y pasar_prioridad (C4) entran a la unión como stub
   // (fallan por validación hasta su commit, patrón elegir_opcion).
   | { type: 'declarar_ataque'; atacanteIds: string[] }
@@ -94,6 +94,8 @@ function validarAccion(state: GameState, action: Action): string | null {
       return validarDeclararAtaque(state, action.atacanteIds)
     case 'declarar_bloqueo':
       return validarDeclararBloqueo(state, action.asignaciones)
+    case 'elegir_ruptura':
+      return validarElegirRuptura(state, action.atacanteId, action.vinculoSlot)
     default:
       return 'acción no disponible en esta fase'
   }
@@ -310,6 +312,10 @@ function ejecutarAccion(s: GameState, action: Action, ctx: Ctx): void {
     }
     case 'declarar_bloqueo': {
       ejecutarDeclararBloqueo(s, action.asignaciones, ctx)
+      return
+    }
+    case 'elegir_ruptura': {
+      ejecutarElegirRuptura(s, action.atacanteId, action.vinculoSlot, ctx)
       return
     }
   }

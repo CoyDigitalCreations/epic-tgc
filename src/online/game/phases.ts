@@ -15,6 +15,7 @@ export function resolverAlba(s: GameState, ctx: Ctx, jugador: PlayerId): void {
     if (slot) {
       const inst = s.instances[slot]
       if (inst.agotado) delete inst.agotado
+      if (inst.atacoEsteTurno) delete inst.atacoEsteTurno
     }
   }
 

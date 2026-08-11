@@ -222,7 +222,7 @@ describe('jugar_campeon (R9)', () => {
       { type: 'jugar_campeon', cardInstanceId: 'aurora', slot: 0, eterIds: ids, sacrificios: [sac] },
       ctx,
     )
-    expect(s2.instances[sac].eterBloqueado).toEqual([]) // liberado al salir del campo
+    expect(s2.instances[sac].eterBloqueado).toBeUndefined() // liberado al salir del campo (ADR-17: delete, no [])
     expect(s2.players.A.eterReserva).toContain(eterBloq) // → 2A INMEDIATO (no 1A)
     expect(s2.players.A.cementerio).toEqual([sac]) // el sacrificio sigue yendo a 2G
   })

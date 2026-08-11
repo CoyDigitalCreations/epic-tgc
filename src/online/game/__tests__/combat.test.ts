@@ -13,6 +13,7 @@ const ELENA = 'FB-015' // Recarga 5/4
 const CASSANDRA = 'FB-016' // sin keywords 3/5
 const ISOLDE = 'FB-014' // Protector 3/7
 const ROWENA = 'FB-018' // sin keywords 3/6
+const VINCULO = 'FB-025' // Primer Juramento (Vínculo Orden)
 
 function estadoMinimo(): GameState {
   const jugador = (id: PlayerId) => ({
@@ -87,6 +88,23 @@ function conCampeon(s: GameState, cardId: string, slot: number, opts: OpcionesCa
 function crearCtx(): Ctx {
   const events: Ctx['events'] = []
   return { next: () => 0, emit: (e) => { events.push(e) }, events }
+}
+
+/** Vínculos de B en los slots dados (4A-4F); devuelve el estado y los ids por slot. */
+function conVinculos(s: GameState, vivos: number[]): { s: GameState; ids: Record<number, string> } {
+  const ids: Record<number, string> = {}
+  const instancias: Record<string, unknown> = {}
+  const vinculos: (string | null)[] = [null, null, null, null, null, null]
+  for (const slot of vivos) {
+    const id = `vin-${slot}`
+    ids[slot] = id
+    instancias[id] = { cardInstanceId: id, cardId: VINCULO, owner: 'B' }
+    vinculos[slot] = id
+  }
+  return {
+    s: { ...s, instances: { ...s.instances, ...instancias }, players: { ...s.players, B: { ...s.players.B, vinculos } } },
+    ids,
+  }
 }
 
 function aplicar(s: GameState, accion: Action, ctx: Ctx): GameState {
@@ -318,5 +336,188 @@ describe('declarar_bloqueo (9.3, forzoso)', () => {
     expect(
       applyAction(s, { type: 'declarar_bloqueo', asignaciones: { 'no-existe': agotadoId } }, ctx).ok,
     ).toBe(false)
+  })
+})
+
+describe('resolución: daño simultáneo (9.4-B, ADR-14)', () => {
+  /**
+   * A declara 1 ataque y B bloquea con 1 campeón (paso → resolución con el
+   * daño aplicado EN LA TRANSICIÓN, ADR-11/14). El poder/resistencia se leen
+   * de la instancia si el test los overrided (patrón aditivo, como keywords).
+   */
+  function conPelea(
+    atacante: { cardId: string; opts?: OpcionesCampeon },
+    bloqueador: { cardId: string; opts?: OpcionesCampeon },
+  ): { s: GameState; atacanteId: string; bloqueadorId: string; ctx: Ctx } {
+    const ctx = crearCtx()
+    const a = conCampeon(estadoMinimo(), atacante.cardId, 0, atacante.opts)
+    const b = conCampeon(a.s, bloqueador.cardId, 0, { owner: 'B', ...bloqueador.opts })
+    const r = applyAction(b.s, { type: 'declarar_ataque', atacanteIds: [a.id] }, ctx)
+    if (!r.ok) throw new Error(`declarar_ataque falló: ${r.error}`)
+    const r2 = applyAction(r.state, { type: 'declarar_bloqueo', asignaciones: { [a.id]: b.id } }, ctx)
+    if (!r2.ok) throw new Error(`declarar_bloqueo falló: ${r2.error}`)
+    return { s: r2.state, atacanteId: a.id, bloqueadorId: b.id, ctx }
+  }
+
+  it('ej.3: muere SOLO el bloqueador (atacante Isolde 3/7 vs bloqueador Vaela 5/3) → 2G; el atacante no muere ni rompe (L1123)', () => {
+    // Manual 7.4 (daño ≥ Defensa): Isolde 3 ≥ 3 mata a Vaela; Vaela 5 < 7 no puede
+    // matar a Isolde → muere SOLO el bloqueador.
+    const { s, atacanteId, bloqueadorId, ctx } = conPelea({ cardId: ISOLDE }, { cardId: VAELA, opts: { eterBloqueado: ['etB'] } })
+
+    expect(s.players.B.cementerio).toContain(bloqueadorId) // bloqueador muerto → 2G
+    expect(s.players.B.campo.campeones).not.toContain(bloqueadorId)
+    expect(s.players.A.campo.campeones).toContain(atacanteId) // atacante sobrevive (5 < 7)
+    expect(s.players.B.eterPagado).toContain('etB') // Éter bloqueado del muerto → 1A (L1121)
+    expect(s.instances[bloqueadorId].eterBloqueado).toBeUndefined() // liberado
+    expect(ctx.events).toContainEqual({ type: 'carta_muerta', cardInstanceId: bloqueadorId, jugador: 'B', causa: 'combate' })
+    expect(ctx.events).toContainEqual({ type: 'destruccion', cardInstanceId: bloqueadorId, jugador: 'B', causa: 'combate' })
+    expect(ctx.events.some((e) => e.type === 'carta_muerta' && e.cardInstanceId === atacanteId)).toBe(false)
+  })
+
+  it('ej.4: mueren AMBOS (Vaela 5/3 vs Elena 5/4); Éter de los dos muertos → 1A silencioso (L1121)', () => {
+    const { s, atacanteId, bloqueadorId, ctx } = conPelea(
+      { cardId: VAELA, opts: { eterBloqueado: ['etA'] } },
+      { cardId: ELENA, opts: { eterBloqueado: ['etB'] } },
+    )
+
+    expect(s.players.A.cementerio).toContain(atacanteId)
+    expect(s.players.B.cementerio).toContain(bloqueadorId)
+    expect(s.players.A.eterPagado).toContain('etA')
+    expect(s.players.B.eterPagado).toContain('etB')
+    expect(ctx.events.filter((e) => e.type === 'carta_muerta')).toHaveLength(2)
+    expect(ctx.events.filter((e) => e.type === 'destruccion')).toHaveLength(2)
+    expect(ctx.events.some((e) => e.type === 'eter_reagrupado')).toBe(false) // el 1A es silencioso (ADR-14)
+  })
+
+  it('ej.5: sobreviven AMBOS (Cassandra 3/5 vs Isolde 3/7) — sin marcas de daño (L1122)', () => {
+    const { s, atacanteId, bloqueadorId, ctx } = conPelea({ cardId: CASSANDRA }, { cardId: ISOLDE })
+
+    expect(s.players.A.campo.campeones).toContain(atacanteId)
+    expect(s.players.B.campo.campeones).toContain(bloqueadorId)
+    expect(s.players.A.cementerio).toEqual([])
+    expect(s.players.B.cementerio).toEqual([])
+    expect(ctx.events.some((e) => e.type === 'carta_muerta' || e.type === 'destruccion')).toBe(false)
+  })
+
+  it('Indestructible previene (destruccion_prevenida, SIN carta_muerta ni movimiento) (L1209)', () => {
+    // Vaela 5/3 la mataría (5≥5) → prevenido; Cassandra 3 ≥ 3 → Vaela sí muere
+    const { s, atacanteId, bloqueadorId, ctx } = conPelea(
+      { cardId: VAELA },
+      { cardId: CASSANDRA, opts: { keywords: ['Indestructible'] } },
+    )
+
+    expect(s.players.B.campo.campeones).toContain(bloqueadorId) // no se movió
+    expect(s.players.B.cementerio).toEqual([])
+    expect(s.players.A.cementerio).toContain(atacanteId)
+    expect(ctx.events).toContainEqual({ type: 'destruccion_prevenida', cardInstanceId: bloqueadorId, jugador: 'B', causa: 'combate' })
+    expect(ctx.events.some((e) => e.type === 'carta_muerta' && e.cardInstanceId === bloqueadorId)).toBe(false)
+  })
+
+  it('muertes en BATCH sobre el estado PRE-daño: mueren los 4 en orden determinista (atacantes, luego bloqueadores)', () => {
+    const ctx = crearCtx()
+    // A: Vaela(5/3) + Rowena(4/3) · B: Elena(5/3) + Cassandra(4/3) — todos mueren
+    const a0 = conCampeon(estadoMinimo(), VAELA, 0, { poder: 5, resistencia: 3 })
+    const a1 = conCampeon(a0.s, ROWENA, 1, { poder: 4, resistencia: 3 })
+    const b0 = conCampeon(a1.s, ELENA, 0, { owner: 'B', poder: 5, resistencia: 3 })
+    const b1 = conCampeon(b0.s, CASSANDRA, 1, { owner: 'B', poder: 4, resistencia: 3 })
+    const r = applyAction(b1.s, { type: 'declarar_ataque', atacanteIds: [a0.id, a1.id] }, ctx)
+    if (!r.ok) throw new Error(r.error)
+    const r2 = applyAction(r.state, { type: 'declarar_bloqueo', asignaciones: { [a0.id]: b0.id, [a1.id]: b1.id } }, ctx)
+    if (!r2.ok) throw new Error(r2.error)
+    const s2 = r2.state
+
+    for (const [id, owner] of [[a0.id, 'A'], [a1.id, 'A'], [b0.id, 'B'], [b1.id, 'B']] as const) {
+      expect(s2.players[owner].cementerio).toContain(id)
+    }
+    expect(ctx.events.filter((e) => e.type === 'carta_muerta').map((e) => e.cardInstanceId)).toEqual([a0.id, a1.id, b0.id, b1.id])
+  })
+})
+
+describe('resolución: Ruptura (9.4-A, ADR-13)', () => {
+  /** A declara 1 ataque sin bloqueadores → auto-avance a resolución (9.3). */
+  function conRupturaPendiente(slotsVivos: number[]): { s: GameState; atacanteId: string; ctx: Ctx } {
+    const ctx = crearCtx()
+    const a = conCampeon(estadoMinimo(), CASSANDRA, 0) // poder 3: irrelevante para romper (L1110)
+    const conV = conVinculos(a.s, slotsVivos)
+    const r = applyAction(conV.s, { type: 'declarar_ataque', atacanteIds: [a.id] }, ctx)
+    if (!r.ok) throw new Error(`declarar_ataque falló: ${r.error}`)
+    expect(r.state.combate?.paso).toBe('resolucion')
+    return { s: r.state, atacanteId: a.id, ctx }
+  }
+
+  it('ej.1: ataque sin bloquear rompe el slot 2 — bocaArriba=true PERMANECE en slot (L848), ruptura_realizada + destruccion, poder irrelevante', () => {
+    const { s, atacanteId, ctx } = conRupturaPendiente([2, 4])
+    const vinculoId = `vin-2`
+
+    const r = applyAction(s, { type: 'elegir_ruptura', atacanteId, vinculoSlot: 2 }, ctx)
+    expect(r.ok).toBe(true)
+    if (!r.ok) return
+    expect(r.state.players.B.vinculos[2]).toBe(vinculoId) // permanece en su slot
+    expect(r.state.instances[vinculoId].bocaArriba).toBe(true) // recordatorio visible (L911)
+    expect(r.state.combate).toBeUndefined() // elegir_ruptura cierra (ADR-11)
+    expect(ctx.events).toContainEqual({ type: 'ruptura_realizada', atacanteId, vinculoSlot: 2, vinculoId })
+    expect(ctx.events).toContainEqual({ type: 'destruccion', cardInstanceId: vinculoId, jugador: 'B', causa: 'ruptura' })
+    expect(ctx.events.some((e) => e.type === 'carta_muerta' && e.cardInstanceId === vinculoId)).toBe(false) // solo destruccion
+  })
+
+  it('ej.6: elegir_ruptura null = NO romper (voluntaria, L1107) — vínculo intacto, sin eventos de destrucción', () => {
+    const { s, atacanteId, ctx } = conRupturaPendiente([2])
+
+    const r = applyAction(s, { type: 'elegir_ruptura', atacanteId: null }, ctx)
+    expect(r.ok).toBe(true)
+    if (!r.ok) return
+    expect(r.state.players.B.vinculos[2]).toBe('vin-2')
+    expect(r.state.instances['vin-2'].bocaArriba).toBeUndefined()
+    expect(ctx.events.some((e) => e.type === 'ruptura_realizada' || e.type === 'destruccion')).toBe(false)
+  })
+
+  it('máx 1 Ruptura por turno de ataque (rupturaUsadaEsteTurno): la segunda elegir_ruptura es rechazada', () => {
+    const ctx = crearCtx()
+    const a = conCampeon(estadoMinimo(), CASSANDRA, 0)
+    const conV = conVinculos(a.s, [2, 4])
+    const s: GameState = {
+      ...conV.s,
+      combate: {
+        paso: 'resolucion',
+        atacantes: [a.id],
+        bloqueos: {},
+        rupturaDisponible: true,
+        rupturaUsadaEsteTurno: true, // ya se rompió este turno de ataque
+      },
+    }
+    const r = applyAction(s, { type: 'elegir_ruptura', atacanteId: a.id, vinculoSlot: 4 }, ctx)
+    expect(r.ok).toBe(false)
+  })
+
+  it('bloqueado no rompe (L1123): el atacante cuyo bloqueador murió NO puede elegir_ruptura', () => {
+    // ej.3 (emparejado con el manual): Isolde 3/7 ataca y Vaela 5/3 bloquea;
+    // Vaela muere (3 ≥ 3) → Isolde sobrevive PERO estuvo bloqueada (L1124).
+    const ctx = crearCtx()
+    const a = conCampeon(estadoMinimo(), ISOLDE, 0)
+    const b = conCampeon(a.s, VAELA, 0, { owner: 'B' })
+    const conV = conVinculos(b.s, [2])
+    const r1 = applyAction(conV.s, { type: 'declarar_ataque', atacanteIds: [a.id] }, ctx)
+    if (!r1.ok) throw new Error(r1.error)
+    const r2 = applyAction(r1.state, { type: 'declarar_bloqueo', asignaciones: { [a.id]: b.id } }, ctx)
+    if (!r2.ok) throw new Error(r2.error)
+    expect(r2.state.players.B.cementerio).toContain(b.id) // el bloqueador murió
+
+    const r3 = applyAction(r2.state, { type: 'elegir_ruptura', atacanteId: a.id, vinculoSlot: 2 }, ctx)
+    expect(r3.ok).toBe(false) // bloqueado ≠ sin bloquear (L1124)
+  })
+
+  it('sexto Vínculo: destruir el último Vivo resuelve el hook NO-OP (flag) ANTES de partida_terminada(ganador, motivo=vinculos) (L850)', () => {
+    const { s, atacanteId, ctx } = conRupturaPendiente([2]) // B con UN solo Vínculo vivo
+
+    const r = applyAction(s, { type: 'elegir_ruptura', atacanteId, vinculoSlot: 2 }, ctx)
+    expect(r.ok).toBe(true)
+    if (!r.ok) return
+    expect(r.state.fase).toBe('terminada')
+    expect(r.state.ganador).toBe('A')
+    expect(r.state.motivo).toBe('vinculos')
+    expect(r.state.sextoVinculoResuelto).toBe(true) // hook NO-OP resuelto antes de la derrota
+    const tipos = ctx.events.map((e) => e.type)
+    expect(tipos.filter((t) => t === 'partida_terminada')).toHaveLength(1)
+    expect(ctx.events[ctx.events.length - 1]).toEqual({ type: 'partida_terminada', ganador: 'A', motivo: 'vinculos' })
   })
 })
