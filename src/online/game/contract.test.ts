@@ -2,6 +2,9 @@
 import { describe, it, expect } from 'vitest'
 import { CATALOGO_EVENTOS } from './events'
 import type { GameEvent } from './events'
+import { ESTASIS_CARDS, DISONANCIA_CARDS } from '../../shared/data/paquetes'
+import { simularPartida } from './bot'
+import { expandirMazo } from './__tests__/helpers'
 
 /**
  * Contrato de eventos (ADR-10) — diseño central de game-core.
@@ -121,5 +124,26 @@ describe('contrato de eventos (ADR-10)', () => {
       expect(valida, `sin validador para ${evento.type}`).toBeDefined()
       expect(valida(evento), `payload inválido para ${evento.type}`).toBe(true)
     }
+  })
+})
+
+const deckA = expandirMazo(ESTASIS_CARDS) // 61 cartas
+const deckB = expandirMazo(DISONANCIA_CARDS) // 61 cartas
+
+describe('integración bot ↔ contrato (5.8)', () => {
+  it('todo evento emitido por el bot en una partida cumple la forma del contrato (5.7 + ADR-10)', () => {
+    const { eventos, turnos } = simularPartida(deckA, deckB, 1)
+    expect(turnos).toBeGreaterThan(0)
+    expect(eventos.length).toBeGreaterThan(0)
+    for (const evento of eventos) {
+      const valida = VALIDADORES[evento.type]
+      expect(valida, `sin validador para ${evento.type}`).toBeDefined()
+      expect(valida(evento), `payload inválido para ${evento.type} en la partida simulada`).toBe(true)
+    }
+  })
+
+  it('snapshot: la secuencia de acciones del bot (seed 1) queda fijada por el contrato', () => {
+    const { eventos } = simularPartida(deckA, deckB, 1)
+    expect(eventos.map((e) => e.type)).toMatchSnapshot()
   })
 })

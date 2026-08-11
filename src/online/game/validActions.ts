@@ -1,4 +1,6 @@
+import { getCardMeta, faccionesCompartidas } from './cards'
 import type { Action } from './actions'
+import { generarAccionesForja } from './actions'
 import type { GameState, PlayerId } from './types'
 
 /**
@@ -7,9 +9,10 @@ import type { GameState, PlayerId } from './types'
  * que fallarán por validación; operan sobre el estado interno completo,
  * anti-cheat: los payloads solo referencian ids visibles al jugador, 6.2).
  *
- * Alcance C3: pre_partida (mulligan/pasar_mulligan del decisor, orden A→B)
- * + rendirse. C4: forja/choque → pasar_turno; ocaso → pasar_turno (mano ≤ 6)
- * + descartar_carta por carta en mano. El resto de acciones llega en C5.
+ * Alcance C3: pre_partida (mulligan/pasar_mulligan del decisor, orden A→B).
+ * C4: forja/choque → pasar_turno; ocaso → pasar_turno (mano ≤ 6) + descartar.
+ * C5: forja → jugar/colocar por carta en mano (generador de payloads que
+ * NUNCA fallan) + bloquear_eter por Campeón propio con Éter compartido.
  */
 export function getValidActions(state: GameState, playerId: PlayerId): Action[] {
   if (state.fase === 'terminada') return []
@@ -24,10 +27,32 @@ export function getValidActions(state: GameState, playerId: PlayerId): Action[] 
   }
 
   if (state.turno === playerId) {
-    if (state.fase === 'forja' || state.fase === 'choque') {
+    const p = state.players[playerId]
+    if (state.fase === 'forja') {
+      // Jugadas por carta en mano (el generador garantiza payloads válidos)
+      for (const id of p.mano) {
+        const accion = generarAccionesForja(state, playerId, id)
+        if (accion) acciones.push(accion)
+      }
+      // Bloqueo de Éter: por cada Campeón propio con un Éter de facción
+      // compartida disponible en la Reserva (faccionesCompartidas).
+      p.campo.campeones.forEach((campeonId, slot) => {
+        if (!campeonId) return
+        const inst = state.instances[campeonId]
+        const campeon = inst?.cardId ? getCardMeta(inst.cardId) : null
+        if (!campeon) return
+        const eterId = p.eterReserva.find((id) => {
+          const meta = state.instances[id]?.cardId ? getCardMeta(state.instances[id]!.cardId!) : null
+          return meta !== null && faccionesCompartidas(meta.facciones, campeon.facciones)
+        })
+        if (eterId !== undefined) {
+          acciones.push({ type: 'bloquear_eter', eterIds: [eterId], campeonSlot: slot })
+        }
+      })
+      acciones.push({ type: 'pasar_turno' })
+    } else if (state.fase === 'choque') {
       acciones.push({ type: 'pasar_turno' })
     } else if (state.fase === 'ocaso') {
-      const p = state.players[playerId]
       if (p.mano.length <= 6) acciones.push({ type: 'pasar_turno' })
       for (const id of p.mano) {
         acciones.push({ type: 'descartar_carta', cardInstanceIds: [id] })

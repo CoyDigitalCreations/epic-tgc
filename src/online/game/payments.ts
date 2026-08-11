@@ -86,6 +86,49 @@ export function aplicarPago(
 }
 
 /**
+ * Éteres de la Reserva (en orden) que cubren el coste de la carta objetivo,
+ * o null si la Reserva completa no alcanza. Base 2 (aporteDe). Read-only.
+ * Usado por getValidActions/bot para generar pagos "nunca fallarán".
+ */
+export function etersParaPagar(state: GameState, jugador: PlayerId, objetivoCardId: string): string[] | null {
+  const objetivo = getCardMeta(objetivoCardId)
+  if (!objetivo) return null
+  const p = state.players[jugador]
+  const elegidos: string[] = []
+  let suma = 0
+  for (const id of p.eterReserva) {
+    const inst = state.instances[id]
+    const meta = inst?.cardId ? getCardMeta(inst.cardId) : null
+    if (!meta) continue
+    elegidos.push(id)
+    suma += aporteDe(meta.id, objetivoCardId)
+    if (suma >= objetivo.stats.cost * 2) return elegidos
+  }
+  return null
+}
+
+/** Validación read-only del bloqueo: null = válido, string = motivo de rechazo. */
+export function validarBloqueo(state: GameState, jugador: PlayerId, eterIds: string[], campeonSlot: number): string | null {
+  const p = state.players[jugador]
+  const campeonId = p.campo.campeones[campeonSlot]
+  if (!campeonId) return 'el slot de Campeón está vacío'
+  const instCampeon = state.instances[campeonId]
+  const campeon = instCampeon?.cardId ? getCardMeta(instCampeon.cardId) : null
+  if (!campeon) return 'Campeón desconocido'
+  if (eterIds.length === 0) return 'no indicaste Éteres para bloquear'
+  for (const id of eterIds) {
+    const inst = state.instances[id]
+    const meta = inst?.cardId ? getCardMeta(inst.cardId) : null
+    if (!inst || !meta || !esEter(meta)) return `no es un Éter: ${id}`
+    if (!p.eterReserva.includes(id)) return `el Éter no está en tu Reserva: ${id}`
+    if (!faccionesCompartidas(meta.facciones, campeon.facciones)) {
+      return `el Éter no comparte facción con el Campeón: ${id}`
+    }
+  }
+  return null
+}
+
+/**
  * Bloqueo facción v2.1: valida TODO (sin mutar) y luego mueve 2A → Campeón.eterBloqueado.
  * Devuelve null si fue válido, o el motivo de rechazo.
  */
@@ -96,22 +139,11 @@ export function bloquearEter(
   eterIds: string[],
   campeonSlot: number,
 ): string | null {
+  const error = validarBloqueo(s, jugador, eterIds, campeonSlot)
+  if (error) return error
   const p = s.players[jugador]
-  const campeonId = p.campo.campeones[campeonSlot]
-  if (!campeonId) return 'el slot de Campeón está vacío'
+  const campeonId = p.campo.campeones[campeonSlot]!
   const instCampeon = s.instances[campeonId]
-  const campeon = instCampeon?.cardId ? getCardMeta(instCampeon.cardId) : null
-  if (!campeon) return 'Campeón desconocido'
-  if (eterIds.length === 0) return 'no indicaste Éteres para bloquear'
-  for (const id of eterIds) {
-    const inst = s.instances[id]
-    const meta = inst?.cardId ? getCardMeta(inst.cardId) : null
-    if (!inst || !meta || !esEter(meta)) return `no es un Éter: ${id}`
-    if (!p.eterReserva.includes(id)) return `el Éter no está en tu Reserva: ${id}`
-    if (!faccionesCompartidas(meta.facciones, campeon.facciones)) {
-      return `el Éter no comparte facción con el Campeón: ${id}`
-    }
-  }
   instCampeon.eterBloqueado = [...(instCampeon.eterBloqueado ?? []), ...eterIds]
   for (const id of eterIds) {
     p.eterReserva.splice(p.eterReserva.indexOf(id), 1)
