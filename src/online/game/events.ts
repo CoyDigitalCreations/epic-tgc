@@ -1,5 +1,5 @@
 import type { CardType } from '../../shared/types'
-import type { FaseNombre, MotivoFin, PlayerId, Zona } from './types'
+import type { CausaDestruccion, FaseNombre, MotivoFin, PlayerId, Zona } from './types'
 
 /**
  * Catálogo de eventos del motor (contrato central, ADR-5/ADR-10).
@@ -103,6 +103,62 @@ export interface PartidaTerminadaEvent {
   motivo: MotivoFin
 }
 
+// ── Apéndice de combate (change 2, spec #1227 R14 — los 15 del core NO se tocan) ──
+
+export interface AtaqueDeclaradoEvent {
+  type: 'ataque_declarado'
+  jugador: PlayerId
+  /** Campeones atacantes (agotados AL DECLARAR, L1089). */
+  atacanteIds: string[]
+}
+
+export interface BloqueoDeclaradoEvent {
+  type: 'bloqueo_declarado'
+  jugador: PlayerId
+  /** asignaciones: Record<atacanteId, bloqueadorId> (1 bloqueador/ataque y viceversa, L1099). */
+  asignaciones: Record<string, string>
+}
+
+export interface CartaMuertaEvent {
+  type: 'carta_muerta'
+  cardInstanceId: string
+  jugador: PlayerId
+  causa: CausaDestruccion
+}
+
+export interface DestruccionEvent {
+  type: 'destruccion'
+  cardInstanceId: string
+  jugador: PlayerId
+  causa: CausaDestruccion
+}
+
+export interface DestruccionPrevenidaEvent {
+  type: 'destruccion_prevenida'
+  cardInstanceId: string
+  jugador: PlayerId
+  causa: CausaDestruccion
+}
+
+export interface RupturaRealizadaEvent {
+  type: 'ruptura_realizada'
+  atacanteId: string
+  /** Posición 0-5 (4A-4F) del Vínculo rival, elegida a ciegas (ADR-13, 0 RNG). */
+  vinculoSlot: number
+  vinculoId: string
+}
+
+export interface RespuestaEncadenadaEvent {
+  type: 'respuesta_encadenada'
+  jugador: PlayerId
+  cardInstanceId: string
+}
+
+export interface PrioridadPasadaEvent {
+  type: 'prioridad_pasada'
+  jugador: PlayerId
+}
+
 export type GameEvent =
   | PartidaIniciadaEvent
   | TurnoIniciadoEvent
@@ -119,6 +175,14 @@ export type GameEvent =
   | MulliganRealizadoEvent
   | RendicionEvent
   | PartidaTerminadaEvent
+  | AtaqueDeclaradoEvent
+  | BloqueoDeclaradoEvent
+  | CartaMuertaEvent
+  | DestruccionEvent
+  | DestruccionPrevenidaEvent
+  | RupturaRealizadaEvent
+  | RespuestaEncadenadaEvent
+  | PrioridadPasadaEvent
 
 /** Catálogo canónico: un payload de muestra por evento (orden = orden del contrato). */
 export const CATALOGO_EVENTOS: readonly GameEvent[] = [
@@ -137,6 +201,15 @@ export const CATALOGO_EVENTOS: readonly GameEvent[] = [
   { type: 'mulligan_realizado', jugador: 'A' },
   { type: 'rendicion', jugador: 'A' },
   { type: 'partida_terminada', ganador: 'B', motivo: 'rendicion' },
+  // Apéndice de combate (change 2, spec #1227 R14)
+  { type: 'ataque_declarado', jugador: 'A', atacanteIds: ['c1'] },
+  { type: 'bloqueo_declarado', jugador: 'B', asignaciones: { c1: 'c2' } },
+  { type: 'carta_muerta', cardInstanceId: 'c2', jugador: 'B', causa: 'combate' },
+  { type: 'destruccion', cardInstanceId: 'c2', jugador: 'B', causa: 'combate' },
+  { type: 'destruccion_prevenida', cardInstanceId: 'c1', jugador: 'A', causa: 'combate' },
+  { type: 'ruptura_realizada', atacanteId: 'c1', vinculoSlot: 2, vinculoId: 'c3' },
+  { type: 'respuesta_encadenada', jugador: 'B', cardInstanceId: 'c4' },
+  { type: 'prioridad_pasada', jugador: 'A' },
 ]
 
 function assertNunca(x: never): never {
@@ -166,6 +239,14 @@ export function validarExhaustividadEventos(tipo: GameEvent['type']): void {
     case 'mulligan_realizado': return
     case 'rendicion': return
     case 'partida_terminada': return
+    case 'ataque_declarado': return
+    case 'bloqueo_declarado': return
+    case 'carta_muerta': return
+    case 'destruccion': return
+    case 'destruccion_prevenida': return
+    case 'ruptura_realizada': return
+    case 'respuesta_encadenada': return
+    case 'prioridad_pasada': return
     default: assertNunca(tipo)
   }
 }

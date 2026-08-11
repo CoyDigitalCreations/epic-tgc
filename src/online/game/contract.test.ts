@@ -28,6 +28,15 @@ export const NOMBRES_EVENTOS = [
   'mulligan_realizado',
   'rendicion',
   'partida_terminada',
+  // Apéndice de combate (change 2, spec #1227 R14): los 15 del core NO se tocan.
+  'ataque_declarado',
+  'bloqueo_declarado',
+  'carta_muerta',
+  'destruccion',
+  'destruccion_prevenida',
+  'ruptura_realizada',
+  'respuesta_encadenada',
+  'prioridad_pasada',
 ] as const
 
 /** Guardia exhaustiva tipo-level: añadir/quitar un evento rompe `tsc -b`. */
@@ -52,6 +61,14 @@ function validarExhaustividad(tipo: GameEvent['type']): void {
     case 'mulligan_realizado': return
     case 'rendicion': return
     case 'partida_terminada': return
+    case 'ataque_declarado': return
+    case 'bloqueo_declarado': return
+    case 'carta_muerta': return
+    case 'destruccion': return
+    case 'destruccion_prevenida': return
+    case 'ruptura_realizada': return
+    case 'respuesta_encadenada': return
+    case 'prioridad_pasada': return
     default: assertNunca(tipo)
   }
 }
@@ -59,6 +76,8 @@ function validarExhaustividad(tipo: GameEvent['type']): void {
 const esJugador = (x: unknown): x is 'A' | 'B' => x === 'A' || x === 'B'
 const esId = (x: unknown): x is string => typeof x === 'string' && x.length > 0
 const esBooleano = (x: unknown): x is boolean => typeof x === 'boolean'
+const esCausa = (x: unknown): x is 'combate' | 'efecto' | 'ruptura' =>
+  x === 'combate' || x === 'efecto' || x === 'ruptura'
 
 /** Validador de payload por evento: fija la FORMA exacta del contrato. */
 const VALIDADORES: Record<GameEvent['type'], (e: GameEvent) => boolean> = {
@@ -101,14 +120,40 @@ const VALIDADORES: Record<GameEvent['type'], (e: GameEvent) => boolean> = {
   mulligan_realizado: (e) => e.type === 'mulligan_realizado' && esJugador(e.jugador),
   rendicion: (e) => e.type === 'rendicion' && esJugador(e.jugador),
   partida_terminada: (e) =>
-    e.type === 'partida_terminada' && esJugador(e.ganador) && (e.motivo === 'mazo_vacio' || e.motivo === 'rendicion'),
+    e.type === 'partida_terminada' &&
+    esJugador(e.ganador) &&
+    (e.motivo === 'mazo_vacio' || e.motivo === 'rendicion' || e.motivo === 'vinculos'),
+  ataque_declarado: (e) =>
+    e.type === 'ataque_declarado' &&
+    esJugador(e.jugador) &&
+    Array.isArray(e.atacanteIds) &&
+    e.atacanteIds.every(esId),
+  bloqueo_declarado: (e) =>
+    e.type === 'bloqueo_declarado' &&
+    esJugador(e.jugador) &&
+    typeof e.asignaciones === 'object' &&
+    e.asignaciones !== null &&
+    !Array.isArray(e.asignaciones) &&
+    Object.keys(e.asignaciones).every(esId) &&
+    Object.values(e.asignaciones).every(esId),
+  carta_muerta: (e) =>
+    e.type === 'carta_muerta' && esId(e.cardInstanceId) && esJugador(e.jugador) && esCausa(e.causa),
+  destruccion: (e) =>
+    e.type === 'destruccion' && esId(e.cardInstanceId) && esJugador(e.jugador) && esCausa(e.causa),
+  destruccion_prevenida: (e) =>
+    e.type === 'destruccion_prevenida' && esId(e.cardInstanceId) && esJugador(e.jugador) && esCausa(e.causa),
+  ruptura_realizada: (e) =>
+    e.type === 'ruptura_realizada' && esId(e.atacanteId) && typeof e.vinculoSlot === 'number' && esId(e.vinculoId),
+  respuesta_encadenada: (e) =>
+    e.type === 'respuesta_encadenada' && esJugador(e.jugador) && esId(e.cardInstanceId),
+  prioridad_pasada: (e) => e.type === 'prioridad_pasada' && esJugador(e.jugador),
 }
 
 describe('contrato de eventos (ADR-10)', () => {
-  it('el catálogo expone exactamente los 15 eventos del contrato en orden', () => {
+  it('el catálogo expone exactamente los 23 eventos del contrato en orden', () => {
     const nombres = CATALOGO_EVENTOS.map((e) => e.type)
     expect(nombres).toEqual([...NOMBRES_EVENTOS])
-    expect(new Set(nombres).size).toBe(15)
+    expect(new Set(nombres).size).toBe(23)
   })
 
   it('el switch exhaustivo cubre TODO el tipo GameEvent (añadir/quitar rompe tsc)', () => {
