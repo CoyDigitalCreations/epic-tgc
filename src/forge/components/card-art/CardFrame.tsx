@@ -1,3 +1,5 @@
+import { hashStr, mulberry32 } from '../../../shared/rng'
+
 interface CardFrameProps {
   accent: string
   rarityColor: string
@@ -6,27 +8,6 @@ interface CardFrameProps {
 
 const W = 744
 const H = 1038
-
-/** Hash determinístico (djb2): deriva el patrón de runas de cada variante */
-function hashStr(s: string): number {
-  let h = 5381
-  for (let i = 0; i < s.length; i++) {
-    h = ((h << 5) + h + s.charCodeAt(i)) | 0
-  }
-  return h >>> 0
-}
-
-/** PRNG determinístico (mulberry32) — nunca usa Math.random */
-function mulberry32(seed: number) {
-  let a = seed
-  return () => {
-    a |= 0
-    a = (a + 0x6d2b79f5) | 0
-    let t = Math.imul(a ^ (a >>> 15), 1 | a)
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
-  }
-}
 
 interface Runa {
   points: string
