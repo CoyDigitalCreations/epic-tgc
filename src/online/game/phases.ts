@@ -18,6 +18,11 @@ export function resolverAlba(s: GameState, ctx: Ctx, jugador: PlayerId): void {
       if (inst.atacoEsteTurno) delete inst.atacoEsteTurno
     }
   }
+  // 1b. Activación diferida (§5.5, C4): Tácticas/Arcanas colocadas el turno
+  // anterior ya pueden responder en la cadena 9.6 (el flag no existe en Campeones).
+  for (const id of [...p.campo.misticasTacticas, ...p.campo.arcanasCombate]) {
+    if (id && s.instances[id]?.entradaEsteTurno) delete s.instances[id].entradaEsteTurno
+  }
 
   // 2. Reagrupar Éter pagado 1A → 2A (los bloqueados permanecen en el Campeón)
   reagruparEter(s, ctx, jugador)

@@ -111,4 +111,26 @@ describe('visibleState (6.2)', () => {
     expect(v.players.A.mazo[0]).toBe('A-d1')
     expect(v.instances['A-d1'].cardId).toBeNull() // mazo propio opaco también
   })
+
+  it('Vínculos rivales destruidos por Ruptura (bocaArriba) son visibles (L911)', () => {
+    const s = estadoPoblado()
+    s.instances['B-vin1'].bocaArriba = true // destruido: permanece en slot pero recordatorio visible
+    const v = visibleState(s, 'A')
+    expect(v.instances['B-vin1'].cardId).toBe(VINCULO)
+  })
+
+  it('las cartas de la pila de la cadena son visibles a ambos (6.2)', () => {
+    const s = estadoPoblado()
+    s.fase = 'choque'
+    s.combate = {
+      paso: 'resolucion',
+      atacantes: [],
+      bloqueos: {},
+      rupturaDisponible: false,
+      rupturaUsadaEsteTurno: true,
+      cadena: { pila: ['B-arc1'], prioridad: 'B', pasesConsecutivos: 0 },
+    }
+    const v = visibleState(s, 'A')
+    expect(v.instances['B-arc1'].cardId).toBe(ARCANA) // Arcana rival en la pila → visible
+  })
 })

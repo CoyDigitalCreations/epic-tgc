@@ -28,10 +28,16 @@ export { resolverAlba, robarCarta } from './phases'
 export { createCtx, shuffleFisherYates } from './rng'
 
 // Catálogo de cartas
-export { getCardMeta, faccionesCompartidas, esCampeon, esMistica, esTactica, esArcana, esCombate, esEter, esVinculo } from './cards'
+export { getCardMeta, registrarCartas, faccionesCompartidas, esCampeon, esMistica, esTactica, esArcana, esCombate, esEter, esVinculo } from './cards'
 
 // Reglas de campo
 export { sacrificiosRequeridos, esSingular, copiasEnCampo, campeonesSacrificables } from './campo'
+
+// Cadena de efectos en combate (9.6)
+export { respondiblesDe, validarResponderCadena, validarPasarPrioridad } from './chain'
+
+// Invariantes de partida (mazo estándar de 61)
+export { verificarInvariantes } from './invariants'
 
 // Zonas y límites
 export { SLOTS_CAMPEONES, SLOTS_MISTICAS_TACTICAS, SLOTS_ARCANAS_COMBATE, SLOTS_VINCULOS, LIMITE_MANO, limiteSlots, slotAZona } from './zones'

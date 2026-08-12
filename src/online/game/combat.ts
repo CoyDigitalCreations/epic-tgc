@@ -1,4 +1,5 @@
 import { esCampeon, getCardMeta } from './cards'
+import { abrirCadena } from './chain'
 import { destruirCarta } from './replacements'
 import type { Ctx, GameState, PlayerId } from './types'
 
@@ -122,6 +123,9 @@ export function ejecutarDeclararAtaque(s: GameState, atacanteIds: string[], ctx:
     }
   }
   ctx.emit({ type: 'ataque_declarado', jugador: s.turno, atacanteIds })
+  // C4 (9.6): el DEFENSOR responde primero (L1181) — si tiene respondibles la
+  // cadena se abre y el auto-avance 9.3 queda DIFERIDO hasta cerrarla.
+  if (abrirCadena(s, rivalDe(s))) return
   // Auto-avance (9.3, ADR-11): defensor sin enderezados → resolución sin
   // evento bloqueo_declarado (los ataques quedan sin bloquear)
   if (bloqueadoresDisponibles(s).length === 0) {
@@ -162,6 +166,9 @@ export function ejecutarDeclararBloqueo(s: GameState, asignaciones: Record<strin
   ctx.emit({ type: 'bloqueo_declarado', jugador: rivalDe(s), asignaciones })
   // Resolución (9.4-B, ADR-11/14): daño simultáneo aplicado EN LA TRANSICIÓN
   resolverCombate(s, ctx)
+  // C4 (9.6): tras la resolución, el ATACANTE puede responder (L1182); la
+  // Ruptura queda pendiente hasta cerrar la cadena.
+  abrirCadena(s, s.turno)
 }
 
 /* ─────────────────── resolución: daño simultáneo (9.4-B, ADR-14) ─────────────────── */
@@ -199,6 +206,21 @@ function resolverCombate(s: GameState, ctx: Ctx): void {
   }
   for (const id of [...muertosAtacantes, ...muertosBloqueadores]) {
     destruirCarta(s, ctx, id, 'combate')
+  }
+}
+
+/**
+ * Reanuda la sub-máquina tras CERRAR la cadena 9.6 (C4): si la cadena se abrió
+ * tras declarar_ataque (paso 'bloqueo'), el auto-avance 9.3 que quedó diferido
+ * ahora se evalúa; si se abrió tras declarar_bloqueo (paso 'resolucion'), la
+ * Ruptura queda pendiente como en el flujo normal.
+ */
+export function continuarCombateTrasCadena(s: GameState, ctx: Ctx): void {
+  const combate = s.combate
+  if (!combate) return
+  if (combate.paso === 'bloqueo' && bloqueadoresDisponibles(s).length === 0) {
+    combate.paso = 'resolucion'
+    resolverCombate(s, ctx) // sin pares: sin muertes
   }
 }
 

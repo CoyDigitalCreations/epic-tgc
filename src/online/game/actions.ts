@@ -9,6 +9,7 @@ import { SLOTS_CAMPEONES, SLOTS_MISTICAS_TACTICAS, SLOTS_ARCANAS_COMBATE, slotAZ
 import type { CardInstance } from './types'
 import { ejecutarDeclararAtaque, ejecutarDeclararBloqueo, validarDeclararAtaque, validarDeclararBloqueo, validarElegirRuptura, ejecutarElegirRuptura } from './combat'
 import { liberarEterBloqueado } from './replacements'
+import { validarResponderCadena, validarPasarPrioridad, ejecutarResponderCadena, ejecutarPasarPrioridad } from './chain'
 
 /**
  * Acciones atómicas del jugador (superficie de applyAction/getValidActions).
@@ -96,6 +97,10 @@ function validarAccion(state: GameState, action: Action): string | null {
       return validarDeclararBloqueo(state, action.asignaciones)
     case 'elegir_ruptura':
       return validarElegirRuptura(state, action.atacanteId, action.vinculoSlot)
+    case 'responder_cadena':
+      return validarResponderCadena(state, action.cardInstanceId)
+    case 'pasar_prioridad':
+      return validarPasarPrioridad(state)
     default:
       return 'acción no disponible en esta fase'
   }
@@ -318,6 +323,14 @@ function ejecutarAccion(s: GameState, action: Action, ctx: Ctx): void {
       ejecutarElegirRuptura(s, action.atacanteId, action.vinculoSlot, ctx)
       return
     }
+    case 'responder_cadena': {
+      ejecutarResponderCadena(s, action.cardInstanceId, ctx)
+      return
+    }
+    case 'pasar_prioridad': {
+      ejecutarPasarPrioridad(s, ctx)
+      return
+    }
   }
 }
 
@@ -442,6 +455,8 @@ function ejecutarColocarTactica(s: GameState, action: Extract<Action, { type: 'c
   const zona = slotAZona('misticasTacticas', action.slot) ?? '3A'
   ctx.emit({ type: 'carta_salida_de_zona', cardInstanceId: id, zona: 'mano', jugador: s.turno })
   p.campo.misticasTacticas[action.slot] = id
+  // §5.5 (activación diferida): recién colocada → NO responde en la cadena 9.6
+  s.instances[id]!.entradaEsteTurno = true
   ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: id, zona, jugador: s.turno, bocaArriba: true })
   ctx.emit({ type: 'carta_invocada', cardInstanceId: id, tipo: 'Táctica', slot: action.slot })
 }
@@ -455,6 +470,8 @@ function ejecutarColocarArcana(s: GameState, action: Extract<Action, { type: 'co
   const zona = slotAZona('arcanasCombate', action.slot) ?? '3D'
   ctx.emit({ type: 'carta_salida_de_zona', cardInstanceId: id, zona: 'mano', jugador: s.turno })
   p.campo.arcanasCombate[action.slot] = id
+  // §5.5 (activación diferida): recién colocada → NO responde en la cadena 9.6
+  s.instances[id]!.entradaEsteTurno = true
   ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: id, zona, jugador: s.turno, bocaArriba: false })
   ctx.emit({ type: 'carta_invocada', cardInstanceId: id, tipo: 'Arcana', slot: action.slot })
 }

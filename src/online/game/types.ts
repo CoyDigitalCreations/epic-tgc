@@ -48,6 +48,12 @@ export interface CardInstance {
    * (no se agota al atacar, L1208); la Alba del dueño lo borra junto a agotado.
    */
   atacoEsteTurno?: boolean
+  /**
+   * Activación diferida (§5.5, C4): la carta entró al campo ESTE turno.
+   * Tácticas/Arcanas recién colocadas NO pueden responder en la cadena 9.6
+   * (solo las de turnos anteriores); la Alba del dueño lo borra (phases.ts).
+   */
+  entradaEsteTurno?: boolean
   /** Éter bloqueado (1B-1F): ids de Éter sobre este Campeón (6.2: boca arriba). */
   eterBloqueado?: string[]
   /** Override aditivo de keywords (tests con cartas sin la keyword en data; efectos que otorgan keywords). */

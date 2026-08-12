@@ -7,10 +7,22 @@ import type { AnyCard, ArcanaCard, CampeonCard, CombateCard, EterCard, MisticaCa
  * Fuente única de metadatos: paquetes.ts (ADR-2: el meta vive en shared, no en el estado).
  */
 
-const INDICE_CARTAS: ReadonlyMap<string, AnyCard> = new Map(ALL_CARDS.map((c) => [c.id, c]))
+const INDICE_CARTAS: Map<string, AnyCard> = new Map(ALL_CARDS.map((c) => [c.id, c]))
 
 export function getCardMeta(cardId: string): AnyCard | null {
   return INDICE_CARTAS.get(cardId) ?? null
+}
+
+/**
+ * Registra cartas de la colección de la forja en el catálogo del motor.
+ * Aditivo y determinístico: si una carta ya existe con el mismo id, la
+ * reemplaza; el resto de ALL_CARDS queda intacto. Se llama ANTES de
+ * createInitialState para que getCardMeta resuelva las cartas custom.
+ */
+export function registrarCartas(cartas: AnyCard[]): void {
+  for (const c of cartas) {
+    if (c?.id) INDICE_CARTAS.set(c.id, c)
+  }
 }
 
 /** true si las facciones A y B comparten al menos una facción. */

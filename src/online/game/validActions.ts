@@ -2,6 +2,7 @@ import { getCardMeta, faccionesCompartidas } from './cards'
 import type { Action } from './actions'
 import { generarAccionesForja } from './actions'
 import { atacantesElegibles, asignacionForzada, ataquesSinBloquear, rivalDe } from './combat'
+import { respondiblesDe } from './chain'
 import type { GameState, PlayerId } from './types'
 
 /**
@@ -30,6 +31,20 @@ export function getValidActions(state: GameState, playerId: PlayerId): Action[] 
     // tu derecho a mulliganear.
     if (!p.mulliganUsado) acciones.push({ type: 'mulligan' })
     acciones.push({ type: 'pasar_mulligan' })
+  }
+
+  // Cadena 9.6 abierta (C4): SOLO responder/pasar del jugador con prioridad —
+  // el resto del turno queda CONGELADO (ni declarar_bloqueo del defensor, ni
+  // Ruptura, ni pasar_turno del activo) hasta cerrar la cadena.
+  const cadena = state.combate?.cadena
+  if (cadena) {
+    if (cadena.prioridad === playerId) {
+      for (const id of respondiblesDe(state, playerId)) {
+        acciones.push({ type: 'responder_cadena', cardInstanceId: id })
+      }
+      acciones.push({ type: 'pasar_prioridad' })
+    }
+    return acciones
   }
 
   if (state.turno === playerId) {
