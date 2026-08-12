@@ -35,13 +35,15 @@ describe('AppRoutes', () => {
     expect(await screen.findByText('Card Creator — Alpha')).toBeInTheDocument()
   })
 
-  it('monta el placeholder de Éter Online en /epiconline', async () => {
+  it('monta el menú de Éter Online en /epiconline', async () => {
     render(
       <MemoryRouter initialEntries={['/epiconline']}>
         <AppRoutes />
       </MemoryRouter>,
     )
-    expect(await screen.findByText(/próximamente/i)).toBeInTheDocument()
+    expect(
+      await screen.findByRole('button', { name: 'Comenzar partida' }),
+    ).toBeInTheDocument()
   })
 })
 

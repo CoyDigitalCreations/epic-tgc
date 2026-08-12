@@ -1,0 +1,121 @@
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { applyAction, botTonto, createInitialState, getValidActions } from './game'
+import type { Action, Ctx, GameState, PlayerId } from './game'
+import { eventosParaLog } from './log'
+
+export interface PartidaConfig {
+  /** Mazo del humano (jugador A). */
+  deckA: string[]
+  /** Mazo del bot (jugador B). */
+  deckB: string[]
+  seed: number
+  /** Delay entre jugadas del bot (0 en tests). */
+  delayMs?: number
+}
+
+/** Salvaguarda anti-bucle: si el bot acumula más jugadas que esto sin terminar, se rinde. */
+const MAX_JUGADAS_BOT = 2000
+
+/**
+ * El actor de la jugada actual NO es siempre `estado.turno`:
+ * - Cadena 9.6 abierta → el actor es `cadena.prioridad` (el turno queda congelado).
+ * - Paso bloqueo (9.3, ADR-11) → el actor es el DEFENSOR (rival del activo).
+ * - Resto → el jugador activo.
+ */
+export function actorActual(estado: GameState): PlayerId | null {
+  if (estado.fase === 'terminada') return null
+  const cadena = estado.combate?.cadena
+  if (estado.fase === 'choque' && cadena) return cadena.prioridad
+  if (estado.fase === 'choque' && estado.combate?.paso === 'bloqueo') {
+    return estado.turno === 'A' ? 'B' : 'A'
+  }
+  return estado.turno
+}
+
+/**
+ * Lógica de una partida humana (A) vs bot (B).
+ *
+ * El estado y el ctx viven en refs (el motor los MUTA en applyAction); un
+ * `tick` fuerza el re-render. El bot juega automáticamente cuando es su turno
+ * (o su bloqueo/prioridad), con un delay configurable para que el humano
+ * pueda seguir la partida. Determinista: mismo seed + mismas decisiones del
+ * humano → mismo resultado.
+ */
+export function usePartida(config: PartidaConfig) {
+  // El estado inicial se crea UNA vez en el primer render (idempotente en
+  // StrictMode: la segunda pasada ya encuentra los refs inicializados).
+  const estadoRef = useRef<GameState | null>(null)
+  const ctxRef = useRef<Ctx | null>(null)
+  const logRef = useRef<string[]>([])
+  if (!estadoRef.current) {
+    const inicial = createInitialState(config.deckA, config.deckB, config.seed)
+    estadoRef.current = inicial.state
+    ctxRef.current = inicial.ctx
+    logRef.current = [`La partida comienza (seed ${config.seed}).`]
+  }
+  const [estado, setEstado] = useState<GameState>(estadoRef.current)
+  const [log, setLog] = useState<string[]>(logRef.current)
+  const delayRef = useRef(config.delayMs ?? 350)
+  const jugadasBotRef = useRef(0)
+
+  const sincronizar = useCallback(() => {
+    setEstado(estadoRef.current as GameState)
+    setLog(logRef.current)
+  }, [])
+
+  /** Aplica una acción del humano. Los eventos del motor se suman al log. */
+  const ejecutar = useCallback(
+    (accion: Action) => {
+      const s = estadoRef.current
+      const ctx = ctxRef.current
+      if (!s || !ctx || s.fase === 'terminada') return
+      const r = applyAction(s, accion, ctx)
+      if (!r.ok) {
+        logRef.current = [...logRef.current, `⚠ Acción inválida: ${r.error}`]
+        setLog(logRef.current)
+        return
+      }
+      estadoRef.current = r.state
+      logRef.current = [...logRef.current, ...eventosParaLog(r.state, r.events)]
+      sincronizar()
+    },
+    [sincronizar],
+  )
+
+  /** El bot juega solo cuando el actor actual es B, con delay, hasta devolverle el turno al humano. */
+  useEffect(() => {
+    if (estado.fase === 'terminada') return
+    const actor = actorActual(estado)
+    if (!actor || actor === 'A') return
+    const timeout = window.setTimeout(() => {
+      const s = estadoRef.current
+      if (!s || s.fase === 'terminada') return
+      const act = actorActual(s)
+      if (!act || act === 'A') return
+      jugadasBotRef.current += 1
+      const accion = botTonto(s, act)
+      if (!accion || jugadasBotRef.current > MAX_JUGADAS_BOT) {
+        // Sin progreso posible: el bot se rinde para no colgar la partida.
+        ejecutar({ type: 'rendirse' })
+        return
+      }
+      ejecutar(accion)
+    }, delayRef.current)
+    return () => window.clearTimeout(timeout)
+  }, [estado, ejecutar])
+
+  const leTocaA = estado.fase !== 'terminada' && actorActual(estado) === 'A'
+  const acciones = leTocaA ? getValidActions(estado, 'A') : []
+
+  /** Nueva partida con la misma configuración (mismo seed). */
+  const reiniciar = useCallback(() => {
+    const inicial = createInitialState(config.deckA, config.deckB, config.seed)
+    estadoRef.current = inicial.state
+    ctxRef.current = inicial.ctx
+    jugadasBotRef.current = 0
+    logRef.current = [`La partida comienza (seed ${config.seed}).`]
+    sincronizar()
+  }, [config, sincronizar])
+
+  return { estado, log, leTocaA, acciones, ejecutar, reiniciar }
+}

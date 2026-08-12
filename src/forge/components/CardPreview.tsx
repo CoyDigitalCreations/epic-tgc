@@ -58,6 +58,603 @@ const RARITY_BORDERS: Record<string, string> = {
   'Única': '#ef4444',
 }
 
+/* ───────── RenderCarta: render puro 744×1038 ─────────
+   Componente reutilizable sin estado: dibuja la carta exactamente como la
+   exporta el creador. CardPreview lo envuelve con overlays de edición y el
+   tablero de Éter Online lo reutiliza para que las cartas se vean idénticas
+   a las del creador. */
+
+export interface RenderCartaProps {
+  card: AnyCard
+  imageUrl?: string
+  /** Click sobre el área de arte (para el modo editable de CardPreview) */
+  onArtClick?: () => void
+  artCursor?: 'pointer' | 'default'
+}
+
+export function RenderCarta({
+  card,
+  imageUrl,
+  onArtClick,
+  artCursor = 'default',
+}: RenderCartaProps) {
+  const theme = TYPE_THEME[card.type] ?? TYPE_THEME['Campeón']
+  const rarityBorder = RARITY_BORDERS[card.rarity] ?? '#4a4a5a'
+  const showCombatStats = card.type === 'Campeón'
+  const stats = card.stats as Record<string, any>
+  const hasFlavorText = !!card.flavorText
+  const sinGem =
+    card.type === 'Táctica' ||
+    card.type === 'Combate' ||
+    card.type === 'Éter' ||
+    card.type === 'Vínculo'
+
+  /** Auto-escala el fontSize: texto corto → más grande (hasta 2x), texto largo → más chico (hasta minSize) */
+  const fluidSize = (text: string | undefined | null, minSize: number): number => {
+    const len = (text ?? '').length
+    if (len <= 35) return +(minSize * 2).toFixed(1)
+    if (len >= 220) return +minSize.toFixed(1)
+    const t = (len - 35) / (220 - 35)
+    return +(minSize * (2 - t)).toFixed(1)
+  }
+
+  return (
+    <div
+      style={{
+        width: 744,
+        height: 1038,
+        position: 'relative',
+        overflow: 'hidden',
+        borderRadius: 28,
+        background: '#0d0f14',
+        boxSizing: 'border-box',
+        boxShadow: `0 0 30px rgba(0,0,0,0.9)`,
+        fontFamily: '"Cinzel", serif',
+      }}
+      className="select-none"
+    >
+      {/* ── Capa de Fondo / Arte Principal Difuminado ── */}
+      <div
+        onClick={onArtClick}
+        style={{
+          position: 'absolute',
+          inset: 0,
+          cursor: artCursor,
+        }}
+      >
+        {/* Imagen de arte limitada en altura */}
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 586,
+            background: imageUrl
+              ? `url(${imageUrl}) center top / cover no-repeat`
+              : `radial-gradient(circle at 50% 35%, ${theme.color}44 0%, #0d0f14 70%)`,
+          }}
+        />
+        {/* Sombras y Difuminado Progresivo para integrar el Arte con el Marco */}
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            background: `
+              linear-gradient(180deg, 
+                ${theme.color}E6 0%, 
+                ${theme.color}99 7%, 
+                transparent 10%, 
+                transparent 58%, 
+                ${theme.color}88 62%, 
+                ${theme.color}E6 100%
+              )
+            `,
+            pointerEvents: 'none',
+          }}
+        />
+        {/* Sombra oscura extra para legibilidad */}
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            background: `
+              linear-gradient(180deg, 
+                rgba(0,0,0,0.85) 0%, 
+                rgba(0,0,0,0.3) 7%, 
+                transparent 10%, 
+                transparent 58%, 
+                rgba(0,0,0,0.7) 64%, 
+                rgba(0,0,0,0.95) 100%
+              )
+            `,
+            pointerEvents: 'none',
+          }}
+        />
+      </div>
+
+      {/* ── Marco Rúnico y Adornos Metalicos de la Carta ── */}
+      <CardFrame accent={theme.color} rarityColor={rarityBorder} variant={card.type} />
+
+      {/* ── Marco Inferior (public/marco_bajo.png) — 75% del ancho, centrado ── */}
+      <img
+        src="/marco_bajo.png"
+        alt=""
+        draggable={false}
+        style={{
+          position: 'absolute',
+          left: 48,
+          right: 48,
+          bottom: 40,
+          height: 100,
+          objectFit: 'fill',
+          zIndex: 6,
+          pointerEvents: 'none',
+          userSelect: 'none',
+        }}
+      />
+
+      {/* ════════════ HEADER BAR & TITLE ════════════ */}
+      <div
+        style={{
+          position: 'absolute',
+          top: 24,
+          left: 24,
+          right: 18,
+          height: 80,
+          display: 'flex',
+          alignItems: 'center',
+          zIndex: 10,
+        }}
+      >
+        {/* ── GEMA HEXAGONAL DE COSTE (Esquina Izquierda) ── */}
+        {sinGem ? null : (
+          <div
+            style={{
+              position: 'absolute',
+              left: 0,
+              top: -6,
+              width: 150,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              zIndex: 15,
+            }}
+          >
+            {/* Hexágono Éter — imagen public/hexagono_eter.png (doble de tamaño) */}
+            <CostGem cost={(stats.cost as number) ?? 0} size={128} />
+          </div>
+        )}
+
+        {/* ── PLACA PRINCIPAL DEL NOMBRE (Centro/Derecha) ── */}
+        <NamePlate
+          name={card.name}
+          accent={theme.color}
+          marginLeft={-6}
+          paddingLeft={sinGem ? 16 : 20}
+          hasHexagon={!sinGem}
+        />
+      </div>
+
+      {card.type === 'Éter' && (
+        /* ── SÍMBOLO DE ÉTER CENTRAL (debajo del nombre) ── */
+        <div
+          style={{
+            position: 'absolute',
+            top: 80,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            zIndex: 15,
+          }}
+        >
+          {/* Hexágono ÉTER — asset public/eter_solo.png (solo cartas de Éter) */}
+          <EtherHexagon value={(stats.cost as number) ?? 0} size={90} />
+          {/* Etiqueta ÉTER (azul cielo) */}
+          <div style={{ marginTop: 6 }}>
+            <span
+              style={{
+                fontFamily: '"Cinzel", serif',
+                fontSize: 27,
+                fontWeight: 900,
+                color: '#7dd3fc',
+                letterSpacing: '2px',
+                textShadow: '0 2px 4px rgba(0,0,0,0.9)',
+              }}
+            >
+              ÉTER
+            </span>
+          </div>
+        </div>
+      )}
+
+      {(() => {
+        const facs = card.facciones
+        if (!facs?.length) return null
+        return (
+          <div
+            style={{
+              position: 'absolute',
+              right: 28,
+              top: 120,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 10,
+              zIndex: 15,
+            }}
+          >
+            {facs.slice(0, 3).map((fac) => (
+              <div
+                key={fac}
+                title={fac}
+                style={{
+                  position: 'relative',
+                  width: 110,
+                  height: 110,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <img
+                  src={FACCION_IMAGES[fac]}
+                  alt={fac}
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'contain',
+                    borderRadius: '50%',
+                    filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.6))',
+                  }}
+                />
+                {/* Runa de la cosmología (FACCION_RUNES) superpuesta al medallón */}
+                <div
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    zIndex: 2,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.9))',
+                  }}
+                >
+                  <RuneIcon
+                    faccion={fac}
+                    color={FACCION_COLORS[fac]}
+                    size={62}
+                    strokeWidth={2.5}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        )
+      })()}
+
+      {/* ════════════ BARRA DE CLASIFICACIÓN / SUBTIPOS ════════════ */}
+      <div
+        style={{
+          position: 'absolute',
+          top: 586,
+          left: 18,
+          right: 18,
+          height: 40,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 15,
+          boxShadow: '0 2px 4px rgba(0,0,0,0.5)',
+        }}
+      >
+        {/* Fondo — imagen public/esencia_text.png */}
+        <img
+          src="/esencia_text.png"
+          alt=""
+          draggable={false}
+          style={{
+            position: 'absolute',
+            inset: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'fill',
+            userSelect: 'none',
+          }}
+        />
+        <span
+          style={{
+            position: 'relative',
+            zIndex: 2,
+            fontFamily: '"Cinzel", serif',
+            fontSize: 14,
+            fontWeight: 800,
+            color: '#fef08a',
+            letterSpacing: '1.5px',
+            textTransform: 'uppercase',
+            textShadow: '0 2px 4px rgba(0,0,0,0.9)',
+          }}
+        >
+          {card.type === 'Campeón'
+            ? [
+              card.esencia || 'SIN ESENCIA',
+              card.roles?.join(' / ') || 'SIN ROL',
+              card.catHabilidad || 'NORML',
+            ].join(' / ')
+            : card.type.toUpperCase()
+          }
+        </span>
+      </div>
+
+      {/* ════════════ CAJA DE TEXTO Y HABILIDADES (PERGAMINO ENVEJECIDO) ════════════ */}
+      <TextScroll
+        style={{
+          top: 624,
+          left: 48,
+          right: 48,
+          height: 330,
+        }}
+      >
+        {/* Palabras clave (Keywords) */}
+        {card.keywords && card.keywords.length > 0 && (
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 4 }}>
+            {card.keywords.map((kw) => (
+              <span
+                key={kw}
+                style={{
+                  background: '#4a3722',
+                  border: '1px solid #8c6d47',
+                  borderRadius: 3,
+                  padding: '2px 8px',
+                  fontFamily: '"Cinzel", serif',
+                  fontSize: 10,
+                  fontWeight: 700,
+                  color: '#fef3c7',
+                  letterSpacing: '0.5px',
+                }}
+              >
+                {kw}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {/* Habilidades según tipo */}
+        {(() => {
+          const c = card
+          switch (c.type) {
+            case 'Campeón': {
+              const cm = c
+              const parts: React.ReactNode[] = []
+              if (cm.tipoEfecto === 'Pasivo' || cm.tipoEfecto === 'Especial') {
+                if (cm.efectoPasivo) {
+                  parts.push(
+                    <p key="pasivo" style={{ fontFamily: '"Inter", sans-serif', fontSize: fluidSize(cm.efectoPasivo, 13.5), lineHeight: 1.35, fontWeight: 500, color: '#261a0e', margin: 0 }}>
+                      <strong>Pasivo:</strong> {cm.efectoPasivo}
+                    </p>
+                  )
+                }
+              }
+              if (cm.tipoEfecto === 'Activo' || cm.tipoEfecto === 'Especial') {
+                if (cm.efectoActivo) {
+                  parts.push(
+                    <p key="activo" style={{ fontFamily: '"Inter", sans-serif', fontSize: fluidSize(cm.efectoActivo, 13.5), lineHeight: 1.35, fontWeight: 500, color: '#261a0e', margin: 0, marginTop: parts.length > 0 ? 8 : 0 }}>
+                      <strong>Activo:</strong> {cm.efectoActivo}
+                    </p>
+                  )
+                }
+              }
+              return parts.length > 0 ? <>{parts}</> : null
+            }
+
+            case 'Mística':
+              return c.efecto ? (
+                <p
+                  style={{
+                    fontFamily: '"Inter", sans-serif',
+                    fontSize: fluidSize(c.efecto, 14),
+                    lineHeight: 1.4,
+                    color: '#1c130b',
+                    margin: 0,
+                  }}
+                >
+                  <strong>Efecto:</strong> {c.efecto}
+                </p>
+              ) : null
+
+            case 'Táctica':
+              return (
+                <>
+                  {c.descripcion ? (
+                    <p
+                      style={{
+                        fontFamily: '"Inter", sans-serif',
+                        fontSize: fluidSize(c.descripcion, 14),
+                        lineHeight: 1.4,
+                        color: '#1c130b',
+                        margin: 0,
+                      }}
+                    >
+                      {c.descripcion}
+                    </p>
+                  ) : null}
+                  {c.stats.duracion ? (
+                    <p
+                      style={{
+                        fontFamily: '"Cinzel", serif',
+                        fontSize: 12,
+                        color: '#7c2d12',
+                        fontWeight: 700,
+                        margin: '4px 0 0',
+                      }}
+                    >
+                      Duración: {c.stats.duracion} turnos
+                    </p>
+                  ) : null}
+                </>
+              )
+
+            case 'Arcana':
+              return (
+                <>
+                  {c.condicion ? (
+                    <p
+                      style={{
+                        fontFamily: '"Inter", sans-serif',
+                        fontSize: fluidSize(c.condicion, 13.5),
+                        lineHeight: 1.4,
+                        color: '#1c130b',
+                        margin: 0,
+                      }}
+                    >
+                      <strong>Condición:</strong> {c.condicion}
+                    </p>
+                  ) : null}
+                  {c.recompensa ? (
+                    <p
+                      style={{
+                        fontFamily: '"Inter", sans-serif',
+                        fontSize: fluidSize(c.recompensa, 13.5),
+                        lineHeight: 1.4,
+                        color: '#1c130b',
+                        margin: '4px 0 0',
+                      }}
+                    >
+                      <strong>Recompensa:</strong> {c.recompensa}
+                    </p>
+                  ) : null}
+                </>
+              )
+
+            case 'Combate':
+              return c.descripcion ? (
+                <p
+                  style={{
+                    fontFamily: '"Inter", sans-serif',
+                    fontSize: fluidSize(c.descripcion, 14),
+                    lineHeight: 1.4,
+                    color: '#1c130b',
+                    margin: 0,
+                  }}
+                >
+                  {c.descripcion}
+                </p>
+              ) : null
+
+            case 'Éter': {
+              const et = c
+              const parts: React.ReactNode[] = []
+              if (et.efectoReserva) {
+                parts.push(
+                  <p key="reserva" style={{ fontFamily: '"Inter", sans-serif', fontSize: fluidSize(et.efectoReserva, 14), lineHeight: 1.4, color: '#1c130b', margin: 0 }}>
+                    <strong>Reserva (2A):</strong> {et.efectoReserva}
+                  </p>
+                )
+              }
+              if (et.efectoPago) {
+                parts.push(
+                  <p key="pago" style={{ fontFamily: '"Inter", sans-serif', fontSize: fluidSize(et.efectoPago, 14), lineHeight: 1.4, color: '#1c130b', margin: 0, marginTop: parts.length > 0 ? 8 : 0 }}>
+                    <strong>Pago (1A{et.variantePago ? `, ${et.variantePago}` : ''}):</strong> {et.efectoPago}
+                  </p>
+                )
+              }
+              if (et.efectoBloqueo) {
+                parts.push(
+                  <p key="bloqueo" style={{ fontFamily: '"Inter", sans-serif', fontSize: fluidSize(et.efectoBloqueo, 14), lineHeight: 1.4, color: '#1c130b', margin: 0, marginTop: parts.length > 0 ? 8 : 0 }}>
+                    <strong>Bloqueo (1B-1F):</strong> {et.efectoBloqueo}
+                  </p>
+                )
+              }
+              return parts.length > 0 ? <>{parts}</> : null
+            }
+
+            case 'Vínculo':
+              return c.efecto ? (
+                <p
+                  style={{
+                    fontFamily: '"Inter", sans-serif',
+                    fontSize: fluidSize(c.efecto, 14),
+                    lineHeight: 1.4,
+                    color: '#1c130b',
+                    margin: 0,
+                  }}
+                >
+                  <strong>Efecto Permanente:</strong> {c.efecto}
+                </p>
+              ) : null
+          }
+        })()}
+
+        {/* Texto de ambientación (Flavor Text) */}
+        {hasFlavorText && (
+          <div style={{ marginTop: 'auto', marginBottom: 40, paddingTop: 6, borderTop: '1px solid #a3825866' }}>
+            <p
+              style={{
+                fontFamily: '"Inter", serif',
+                fontSize: fluidSize(card.flavorText, 11.5),
+                fontStyle: 'italic',
+                lineHeight: 1.35,
+                color: '#4a3722',
+                margin: 0,
+              }}
+            >
+              &ldquo;{card.flavorText as string}&rdquo;
+            </p>
+          </div>
+        )}
+      </TextScroll>
+
+      {/* ════════════ BADGES INFERIORES DE ATK Y DEF ════════════ */}
+      {showCombatStats && (
+        <div
+          style={{
+            position: 'absolute',
+            bottom: 50,
+            left: 30,
+            right: 30,
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'flex-end',
+            zIndex: 20,
+            pointerEvents: 'none',
+          }}
+        >
+          {/* BADGE DE ATK (Izquierda - Medallón con Hacha) */}
+          <StatBadge kind="atk" value={(stats.poder as number) ?? 500} />
+
+          {/* BADGE DE RES (Derecha - Escudo Rúnico Cian) */}
+          <StatBadge kind="res" value={(stats.resistencia as number) ?? 700} />
+        </div>
+      )}
+
+      {/* ════════════ PIE DE CARTA / CÓDIGO DE SET ════════════ */}
+      <div
+        style={{
+          position: 'absolute',
+          bottom: 22,
+          right: 40,
+          zIndex: 15,
+        }}
+      >
+        <span
+          style={{
+            fontFamily: '"Inter", monospace',
+            fontSize: 10,
+            fontWeight: 600,
+            color: '#94a3b8',
+            letterSpacing: '1px',
+          }}
+        >
+          {(card.id ?? 'CARD-001').slice(0, 8).toUpperCase()}
+        </span>
+      </div>
+    </div>
+  )
+}
+
 /* ───────── component ───────── */
 
 interface CardPreviewProps {
@@ -147,21 +744,6 @@ export function CardPreview({
     )
   }
 
-  const theme = TYPE_THEME[displayCard.type] ?? TYPE_THEME['Campeón']
-  const rarityBorder = RARITY_BORDERS[displayCard.rarity] ?? '#4a4a5a'
-  const showCombatStats = displayCard.type === 'Campeón'
-  const stats = displayCard.stats as Record<string, any>
-  const hasFlavorText = !!displayCard.flavorText
-
-  /** Auto-escala el fontSize: texto corto → más grande (hasta 2x), texto largo → más chico (hasta minSize) */
-  const fluidSize = (text: string | undefined | null, minSize: number): number => {
-    const len = (text ?? '').length
-    if (len <= 35) return +(minSize * 2).toFixed(1)
-    if (len >= 220) return +minSize.toFixed(1)
-    const t = (len - 35) / (220 - 35)
-    return +(minSize * (2 - t)).toFixed(1)
-  }
-
   const handleExport = async () => {
     if (previewRef.current) {
       await exportCardToPng(
@@ -177,623 +759,85 @@ export function CardPreview({
     <div
       ref={previewRef}
       id="card-preview"
+      onMouseEnter={() => editable && setImageHover(true)}
+      onMouseLeave={() => editable && setImageHover(false)}
       style={{
         width: 744,
         height: 1038,
         position: 'relative',
-        overflow: 'hidden',
-        borderRadius: 28,
-        background: '#0d0f14',
-        boxSizing: 'border-box',
-        boxShadow: `0 0 30px rgba(0,0,0,0.9)`,
-        fontFamily: '"Cinzel", serif',
       }}
       className="select-none"
     >
-      {/* ── Capa de Fondo / Arte Principal Difuminado ── */}
-      <div
-        onMouseEnter={() => editable && setImageHover(true)}
-        onMouseLeave={() => editable && setImageHover(false)}
-        onClick={handleImageClick}
-        style={{
-          position: 'absolute',
-          inset: 0,
-          cursor: editable ? 'pointer' : 'default',
-        }}
-      >
-        {/* Imagen de arte limitada en altura */}
-        <div
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            height: 586,
-            background: resolvedImageUrl
-              ? `url(${resolvedImageUrl}) center top / cover no-repeat`
-              : `radial-gradient(circle at 50% 35%, ${theme.color}44 0%, #0d0f14 70%)`,
-          }}
-        />
-        {/* Sombras y Difuminado Progresivo para integrar el Arte con el Marco */}
-        <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            background: `
-              linear-gradient(180deg, 
-                ${theme.color}E6 0%, 
-                ${theme.color}99 7%, 
-                transparent 10%, 
-                transparent 58%, 
-                ${theme.color}88 62%, 
-                ${theme.color}E6 100%
-              )
-            `,
-            pointerEvents: 'none',
-          }}
-        />
-        {/* Sombra oscura extra para legibilidad */}
-        <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            background: `
-              linear-gradient(180deg, 
-                rgba(0,0,0,0.85) 0%, 
-                rgba(0,0,0,0.3) 7%, 
-                transparent 10%, 
-                transparent 58%, 
-                rgba(0,0,0,0.7) 64%, 
-                rgba(0,0,0,0.95) 100%
-              )
-            `,
-            pointerEvents: 'none',
-          }}
-        />
-
-        {/* Hover overlay para imagen editable */}
-        {editable && imageHover && (
-          <div
-            style={{
-              position: 'absolute',
-              inset: 0,
-              background: 'rgba(0,0,0,0.6)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              zIndex: 30,
-            }}
-          >
-            <span
-              style={{
-                color: '#38bdf8',
-                fontFamily: '"Inter", sans-serif',
-                fontSize: 16,
-                fontWeight: 600,
-                letterSpacing: '1px',
-                textTransform: 'uppercase',
-                background: 'rgba(0,0,0,0.75)',
-                padding: '10px 20px',
-                borderRadius: 8,
-                border: '1px solid #38bdf866',
-              }}
-            >
-              {resolvedImageUrl ? 'Cambiar imagen de arte' : 'Cargar imagen de arte (Rec. 744x1038)'}
-            </span>
-          </div>
-        )}
-
-        {/* hidden file input */}
-        {editable && (
-          <input
-            ref={imageInputRef}
-            type="file"
-            accept="image/png,image/jpeg,image/webp,image/avif"
-            onChange={handleImageFile}
-            style={{ display: 'none' }}
-          />
-        )}
-
-        {imageError && (
-          <div
-            style={{
-              position: 'absolute',
-              top: 80,
-              left: 20,
-              right: 20,
-              background: 'rgba(239,68,68,0.95)',
-              color: '#fff',
-              fontSize: 12,
-              padding: '6px 12px',
-              borderRadius: 6,
-              textAlign: 'center',
-              zIndex: 30,
-            }}
-          >
-            {imageError}
-          </div>
-        )}
-      </div>
-
-      {/* ── Marco Rúnico y Adornos Metalicos de la Carta ── */}
-      <CardFrame accent={theme.color} rarityColor={rarityBorder} variant={displayCard.type} />
-
-      {/* ── Marco Inferior (public/marco_bajo.png) — 75% del ancho, centrado ── */}
-      <img
-        src="/marco_bajo.png"
-        alt=""
-        draggable={false}
-        style={{
-          position: 'absolute',
-          left: 48,
-          right: 48,
-          bottom: 40,
-          height: 100,
-          objectFit: 'fill',
-          zIndex: 6,
-          pointerEvents: 'none',
-          userSelect: 'none',
-        }}
+      <RenderCarta
+        card={displayCard}
+        imageUrl={resolvedImageUrl}
+        onArtClick={handleImageClick}
+        artCursor={editable ? 'pointer' : 'default'}
       />
 
-        {/* ════════════ HEADER BAR & TITLE ════════════ */}
+      {/* Hover overlay para imagen editable */}
+      {editable && imageHover && (
         <div
           style={{
             position: 'absolute',
-            top: 24,
-            left: 24,
-            right: 18,
-            height: 80,
-            display: 'flex',
-            alignItems: 'center',
-            zIndex: 10,
-          }}
-        >
-          {/* ── GEMA HEXAGONAL DE COSTE (Esquina Izquierda) ── */}
-          {displayCard.type === 'Táctica' || displayCard.type === 'Combate' || displayCard.type === 'Éter' || displayCard.type === 'Vínculo' ? null : (
-            <div
-              style={{
-                position: 'absolute',
-                left: 0,
-                top: -6,
-                width: 150,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                zIndex: 15,
-              }}
-            >
-              {/* Hexágono Éter — imagen public/hexagono_eter.png (doble de tamaño) */}
-              <CostGem cost={(stats.cost as number) ?? 0} size={128} />
-            </div>
-          )}
-
-          {/* ── PLACA PRINCIPAL DEL NOMBRE (Centro/Derecha) ── */}
-          <NamePlate
-            name={displayCard.name}
-            accent={theme.color}
-            marginLeft={-6}
-            paddingLeft={(displayCard.type === 'Táctica' || displayCard.type === 'Combate' || displayCard.type === 'Éter' || displayCard.type === 'Vínculo') ? 16 : 20}
-            hasHexagon={!(displayCard.type === 'Táctica' || displayCard.type === 'Combate' || displayCard.type === 'Éter' || displayCard.type === 'Vínculo')}
-          />
-        </div>
-
-        {displayCard.type === 'Éter' && (
-          /* ── SÍMBOLO DE ÉTER CENTRAL (debajo del nombre) ── */
-          <div
-            style={{
-              position: 'absolute',
-              top: 80,
-              left: '50%',
-              transform: 'translateX(-50%)',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              zIndex: 15,
-            }}
-          >
-            {/* Hexágono ÉTER — asset public/eter_solo.png (solo cartas de Éter) */}
-            <EtherHexagon value={(stats.cost as number) ?? 0} size={90} />
-            {/* Etiqueta ÉTER (azul cielo) */}
-            <div style={{ marginTop: 6 }}>
-              <span
-                style={{
-                  fontFamily: '"Cinzel", serif',
-                  fontSize: 27,
-                  fontWeight: 900,
-                  color: '#7dd3fc',
-                  letterSpacing: '2px',
-                  textShadow: '0 2px 4px rgba(0,0,0,0.9)',
-                }}
-              >
-                ÉTER
-              </span>
-            </div>
-          </div>
-        )}
-
-        {(() => {
-          const facs = displayCard.facciones
-          if (!facs?.length) return null
-          return (
-            <div
-              style={{
-                position: 'absolute',
-                right: 28,
-                top: 120,
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 10,
-                zIndex: 15,
-              }}
-            >
-              {facs.slice(0, 3).map((fac) => (
-                <div
-                  key={fac}
-                  title={fac}
-                  style={{
-                    position: 'relative',
-                    width: 110,
-                    height: 110,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <img
-                    src={FACCION_IMAGES[fac]}
-                    alt={fac}
-                    style={{
-                      position: 'absolute',
-                      inset: 0,
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'contain',
-                      borderRadius: '50%',
-                      filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.6))',
-                    }}
-                  />
-                  {/* Runa de la cosmología (FACCION_RUNES) superpuesta al medallón */}
-                  <div
-                    style={{
-                      position: 'absolute',
-                      inset: 0,
-                      zIndex: 2,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.9))',
-                    }}
-                  >
-                    <RuneIcon
-                      faccion={fac}
-                      color={FACCION_COLORS[fac]}
-                      size={62}
-                      strokeWidth={2.5}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          )
-        })()}
-
-        {/* ════════════ BARRA DE CLASIFICACIÓN / SUBTIPOS ════════════ */}
-        <div
-          style={{
-            position: 'absolute',
-            top: 586,
-            left: 18,
-            right: 18,
-            height: 40,
+            inset: 0,
+            background: 'rgba(0,0,0,0.6)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            zIndex: 15,
-            boxShadow: '0 2px 4px rgba(0,0,0,0.5)',
+            zIndex: 30,
           }}
         >
-          {/* Fondo — imagen public/esencia_text.png */}
-          <img
-            src="/esencia_text.png"
-            alt=""
-            draggable={false}
-            style={{
-              position: 'absolute',
-              inset: 0,
-              width: '100%',
-              height: '100%',
-              objectFit: 'fill',
-              userSelect: 'none',
-            }}
-          />
           <span
             style={{
-              position: 'relative',
-              zIndex: 2,
-              fontFamily: '"Cinzel", serif',
-              fontSize: 14,
-              fontWeight: 800,
-              color: '#fef08a',
-              letterSpacing: '1.5px',
+              color: '#38bdf8',
+              fontFamily: '"Inter", sans-serif',
+              fontSize: 16,
+              fontWeight: 600,
+              letterSpacing: '1px',
               textTransform: 'uppercase',
-              textShadow: '0 2px 4px rgba(0,0,0,0.9)',
+              background: 'rgba(0,0,0,0.75)',
+              padding: '10px 20px',
+              borderRadius: 8,
+              border: '1px solid #38bdf866',
             }}
           >
-            {displayCard.type === 'Campeón'
-              ? [
-                displayCard.esencia || 'SIN ESENCIA',
-                displayCard.roles?.join(' / ') || 'SIN ROL',
-                displayCard.catHabilidad || 'NORML',
-              ].join(' / ')
-              : displayCard.type.toUpperCase()
-            }
+            {resolvedImageUrl ? 'Cambiar imagen de arte' : 'Cargar imagen de arte (Rec. 744x1038)'}
           </span>
         </div>
+      )}
 
-        {/* ════════════ CAJA DE TEXTO Y HABILIDADES (PERGAMINO ENVEJECIDO) ════════════ */}
-        <TextScroll
-          style={{
-            top: 624,
-            left: 48,
-            right: 48,
-            height: 330,
-          }}
-        >
-          {/* Palabras clave (Keywords) */}
-          {displayCard.keywords && displayCard.keywords.length > 0 && (
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 4 }}>
-              {displayCard.keywords.map((kw) => (
-                <span
-                  key={kw}
-                  style={{
-                    background: '#4a3722',
-                    border: '1px solid #8c6d47',
-                    borderRadius: 3,
-                    padding: '2px 8px',
-                    fontFamily: '"Cinzel", serif',
-                    fontSize: 10,
-                    fontWeight: 700,
-                    color: '#fef3c7',
-                    letterSpacing: '0.5px',
-                  }}
-                >
-                  {kw}
-                </span>
-              ))}
-            </div>
-          )}
+      {/* hidden file input */}
+      {editable && (
+        <input
+          ref={imageInputRef}
+          type="file"
+          accept="image/png,image/jpeg,image/webp,image/avif"
+          onChange={handleImageFile}
+          style={{ display: 'none' }}
+        />
+      )}
 
-          {/* Habilidades según tipo */}
-          {(() => {
-            const c = displayCard
-            switch (c.type) {
-              case 'Campeón': {
-                const cm = c
-                const parts: React.ReactNode[] = []
-                if (cm.tipoEfecto === 'Pasivo' || cm.tipoEfecto === 'Especial') {
-                  if (cm.efectoPasivo) {
-                    parts.push(
-                      <p key="pasivo" style={{ fontFamily: '"Inter", sans-serif', fontSize: fluidSize(cm.efectoPasivo, 13.5), lineHeight: 1.35, fontWeight: 500, color: '#261a0e', margin: 0 }}>
-                        <strong>Pasivo:</strong> {cm.efectoPasivo}
-                      </p>
-                    )
-                  }
-                }
-                if (cm.tipoEfecto === 'Activo' || cm.tipoEfecto === 'Especial') {
-                  if (cm.efectoActivo) {
-                    parts.push(
-                      <p key="activo" style={{ fontFamily: '"Inter", sans-serif', fontSize: fluidSize(cm.efectoActivo, 13.5), lineHeight: 1.35, fontWeight: 500, color: '#261a0e', margin: 0, marginTop: parts.length > 0 ? 8 : 0 }}>
-                        <strong>Activo:</strong> {cm.efectoActivo}
-                      </p>
-                    )
-                  }
-                }
-                return parts.length > 0 ? <>{parts}</> : null
-              }
-
-              case 'Mística':
-                return c.efecto ? (
-                  <p
-                    style={{
-                      fontFamily: '"Inter", sans-serif',
-                      fontSize: fluidSize(c.efecto, 14),
-                      lineHeight: 1.4,
-                      color: '#1c130b',
-                      margin: 0,
-                    }}
-                  >
-                    <strong>Efecto:</strong> {c.efecto}
-                  </p>
-                ) : null
-
-              case 'Táctica':
-                return (
-                  <>
-                    {c.descripcion ? (
-                      <p
-                        style={{
-                          fontFamily: '"Inter", sans-serif',
-                          fontSize: fluidSize(c.descripcion, 14),
-                          lineHeight: 1.4,
-                          color: '#1c130b',
-                          margin: 0,
-                        }}
-                      >
-                        {c.descripcion}
-                      </p>
-                    ) : null}
-                    {c.stats.duracion ? (
-                      <p
-                        style={{
-                          fontFamily: '"Cinzel", serif',
-                          fontSize: 12,
-                          color: '#7c2d12',
-                          fontWeight: 700,
-                          margin: '4px 0 0',
-                        }}
-                      >
-                        Duración: {c.stats.duracion} turnos
-                      </p>
-                    ) : null}
-                  </>
-                )
-
-              case 'Arcana':
-                return (
-                  <>
-                    {c.condicion ? (
-                      <p
-                        style={{
-                          fontFamily: '"Inter", sans-serif',
-                          fontSize: fluidSize(c.condicion, 13.5),
-                          lineHeight: 1.4,
-                          color: '#1c130b',
-                          margin: 0,
-                        }}
-                      >
-                        <strong>Condición:</strong> {c.condicion}
-                      </p>
-                    ) : null}
-                    {c.recompensa ? (
-                      <p
-                        style={{
-                          fontFamily: '"Inter", sans-serif',
-                          fontSize: fluidSize(c.recompensa, 13.5),
-                          lineHeight: 1.4,
-                          color: '#1c130b',
-                          margin: '4px 0 0',
-                        }}
-                      >
-                        <strong>Recompensa:</strong> {c.recompensa}
-                      </p>
-                    ) : null}
-                  </>
-                )
-
-              case 'Combate':
-                return c.descripcion ? (
-                  <p
-                    style={{
-                      fontFamily: '"Inter", sans-serif',
-                      fontSize: fluidSize(c.descripcion, 14),
-                      lineHeight: 1.4,
-                      color: '#1c130b',
-                      margin: 0,
-                    }}
-                  >
-                    {c.descripcion}
-                  </p>
-                ) : null
-
-              case 'Éter': {
-                const et = c
-                const parts: React.ReactNode[] = []
-                if (et.efectoReserva) {
-                  parts.push(
-                    <p key="reserva" style={{ fontFamily: '"Inter", sans-serif', fontSize: fluidSize(et.efectoReserva, 14), lineHeight: 1.4, color: '#1c130b', margin: 0 }}>
-                      <strong>Reserva (2A):</strong> {et.efectoReserva}
-                    </p>
-                  )
-                }
-                if (et.efectoPago) {
-                  parts.push(
-                    <p key="pago" style={{ fontFamily: '"Inter", sans-serif', fontSize: fluidSize(et.efectoPago, 14), lineHeight: 1.4, color: '#1c130b', margin: 0, marginTop: parts.length > 0 ? 8 : 0 }}>
-                      <strong>Pago (1A{et.variantePago ? `, ${et.variantePago}` : ''}):</strong> {et.efectoPago}
-                    </p>
-                  )
-                }
-                if (et.efectoBloqueo) {
-                  parts.push(
-                    <p key="bloqueo" style={{ fontFamily: '"Inter", sans-serif', fontSize: fluidSize(et.efectoBloqueo, 14), lineHeight: 1.4, color: '#1c130b', margin: 0, marginTop: parts.length > 0 ? 8 : 0 }}>
-                      <strong>Bloqueo (1B-1F):</strong> {et.efectoBloqueo}
-                    </p>
-                  )
-                }
-                return parts.length > 0 ? <>{parts}</> : null
-              }
-
-              case 'Vínculo':
-                return c.efecto ? (
-                  <p
-                    style={{
-                      fontFamily: '"Inter", sans-serif',
-                      fontSize: fluidSize(c.efecto, 14),
-                      lineHeight: 1.4,
-                      color: '#1c130b',
-                      margin: 0,
-                    }}
-                  >
-                    <strong>Efecto Permanente:</strong> {c.efecto}
-                  </p>
-                ) : null
-            }
-          })()}
-
-          {/* Texto de ambientación (Flavor Text) */}
-          {hasFlavorText && (
-            <div style={{ marginTop: 'auto', marginBottom: 40, paddingTop: 6, borderTop: '1px solid #a3825866' }}>
-              <p
-                style={{
-                  fontFamily: '"Inter", serif',
-                  fontSize: fluidSize(displayCard.flavorText, 11.5),
-                  fontStyle: 'italic',
-                  lineHeight: 1.35,
-                  color: '#4a3722',
-                  margin: 0,
-                }}
-              >
-                &ldquo;{displayCard.flavorText as string}&rdquo;
-              </p>
-            </div>
-          )}
-        </TextScroll>
-
-        {/* ════════════ BADGES INFERIORES DE ATK Y DEF ════════════ */}
-        {showCombatStats && (
-          <div
-            style={{
-              position: 'absolute',
-              bottom: 50,
-              left: 30,
-              right: 30,
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'flex-end',
-              zIndex: 20,
-              pointerEvents: 'none',
-            }}
-          >
-            {/* BADGE DE ATK (Izquierda - Medallón con Hacha) */}
-            <StatBadge kind="atk" value={(stats.poder as number) ?? 500} />
-
-            {/* BADGE DE RES (Derecha - Escudo Rúnico Cian) */}
-            <StatBadge kind="res" value={(stats.resistencia as number) ?? 700} />
-          </div>
-        )}
-
-        {/* ════════════ PIE DE CARTA / CÓDIGO DE SET ════════════ */}
+      {imageError && (
         <div
           style={{
             position: 'absolute',
-            bottom: 22,
-            right: 40,
-            zIndex: 15,
+            top: 80,
+            left: 20,
+            right: 20,
+            background: 'rgba(239,68,68,0.95)',
+            color: '#fff',
+            fontSize: 12,
+            padding: '6px 12px',
+            borderRadius: 6,
+            textAlign: 'center',
+            zIndex: 30,
           }}
         >
-          <span
-            style={{
-              fontFamily: '"Inter", monospace',
-              fontSize: 10,
-              fontWeight: 600,
-              color: '#94a3b8',
-              letterSpacing: '1px',
-            }}
-          >
-            {(displayCard.id ?? 'CARD-001').slice(0, 8).toUpperCase()}
-          </span>
+          {imageError}
         </div>
-      </div>
+      )}
+    </div>
   )
 
   if (standalone) {
