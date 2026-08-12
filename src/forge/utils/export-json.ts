@@ -38,3 +38,37 @@ export function importCollectionFromJson(file: File): Promise<AnyCard[]> {
     reader.readAsText(file)
   })
 }
+
+/** Quita el arte embebido (imageUrl + hasImage). El resto de la carta queda intacto. */
+function sinArte(card: AnyCard): AnyCard {
+  if (!card.imageUrl && !card.hasImage) return card
+  const { imageUrl: _imageUrl, hasImage: _hasImage, ...datos } = card
+  void _imageUrl
+  void _hasImage
+  return datos as AnyCard
+}
+
+/**
+ * Importa cartas TERMINADAS: extrae TODO de cada carta menos el arte.
+ *
+ * El JSON exportado desde Éter Forge embebe el arte como data URL base64
+ * (coleccion-eter.json puede pesar MBs). Esta variante descarta imageUrl y
+ * hasImage: el arte de las cartas terminadas ya vive en IndexedDB o en las
+ * rutas estáticas /cartas/*.png, así que el import queda liviano y los datos
+ * (stats, texto, taxonomía) se fusionan sin pisar imágenes existentes.
+ */
+export function importCardDataFromJson(file: File): Promise<AnyCard[]> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      try {
+        const data = JSON.parse(e.target?.result as string) as AnyCard[]
+        resolve(data.map(sinArte))
+      } catch {
+        reject(new Error('Archivo JSON inválido'))
+      }
+    }
+    reader.onerror = () => reject(new Error('Error al leer el archivo'))
+    reader.readAsText(file)
+  })
+}
