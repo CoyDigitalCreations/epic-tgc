@@ -3,8 +3,8 @@ import type { Ctx, GameState, PlayerId } from './types'
 
 /**
  * Economía de Éter (manual §7.3 + bloqueo facción v2.1):
- * - Aporte base 2: un Éter que comparte facción con la carta pagada vale 1 (2),
- *   el de facción ajena vale ½ (1). Se paga cuando Σ(base 2) ≥ coste × 2.
+ * - Aporte real: un Éter que comparte facción con la carta pagada vale 1,
+ *   el de facción ajena vale ½. Se paga cuando Σ aporte ≥ coste.
  * - No hay vuelto: el excedente se pierde (eter_pagado.excedente, manual 7.3).
  * - Bloquear (v2.1): solo Éter de facción compartida con el Campeón; 2A → Campeón.
  * - Reagrupar: en tu Alba, 1A → 2A; el Éter bloqueado permanece en el Campeón.
@@ -22,15 +22,15 @@ export interface ResultadoPago {
   excedente?: number
 }
 
-/** Aporte de un Éter en base 2: 2 si comparte facción con la carta pagada (1), 1 si no (½). */
+/** Aporte de un Éter en unidades reales: 1 si comparte facción con la carta pagada, ½ si no. */
 export function aporteDe(eterCardId: string, objetivoCardId: string): number {
   const eter = getCardMeta(eterCardId)
   const objetivo = getCardMeta(objetivoCardId)
   if (!eter || !objetivo) return 0
-  return faccionesCompartidas(eter.facciones, objetivo.facciones) ? 2 : 1
+  return faccionesCompartidas(eter.facciones, objetivo.facciones) ? 1 : 0.5
 }
 
-/** Validación read-only (sin mutar, sin RNG): eterIds en 2A, sin duplicados, Σ ≥ coste × 2. */
+/** Validación read-only (sin mutar, sin RNG): eterIds en 2A, sin duplicados, Σ ≥ coste. */
 export function validarPago(
   state: GameState,
   jugador: PlayerId,
@@ -52,9 +52,8 @@ export function validarPago(
     if (!p.eterReserva.includes(id)) return { ok: false, error: `el Éter no está en tu Reserva: ${id}` }
     suma += aporteDe(meta.id, objetivoCardId)
   }
-  if (suma < objetivo.stats.cost * 2) return { ok: false, error: 'pago insuficiente' }
-  const aportado = suma / 2
-  return { ok: true, aportado, excedente: aportado - objetivo.stats.cost }
+  if (suma < objetivo.stats.cost) return { ok: false, error: 'pago insuficiente' }
+  return { ok: true, aportado: suma, excedente: suma - objetivo.stats.cost }
 }
 
 /** Paga: mueve eterIds 2A → 1A y emite eter_pagado {jugador, eterIds, costo, aportado, excedente}. */
@@ -87,7 +86,7 @@ export function aplicarPago(
 
 /**
  * Éteres de la Reserva (en orden) que cubren el coste de la carta objetivo,
- * o null si la Reserva completa no alcanza. Base 2 (aporteDe). Read-only.
+ * o null si la Reserva completa no alcanza (aporteDe). Read-only.
  * Usado por getValidActions/bot para generar pagos "nunca fallarán".
  */
 export function etersParaPagar(state: GameState, jugador: PlayerId, objetivoCardId: string): string[] | null {
@@ -102,7 +101,7 @@ export function etersParaPagar(state: GameState, jugador: PlayerId, objetivoCard
     if (!meta) continue
     elegidos.push(id)
     suma += aporteDe(meta.id, objetivoCardId)
-    if (suma >= objetivo.stats.cost * 2) return elegidos
+    if (suma >= objetivo.stats.cost) return elegidos
   }
   return null
 }
