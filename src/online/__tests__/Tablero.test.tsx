@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { ESTASIS_CARDS } from '../../shared/data/paquetes'
@@ -65,25 +65,22 @@ describe('Selección de Éter en el tablero 4×7', () => {
       />,
     )
 
-    // 1. Hay al menos una carta con badge "Pagar" (coste) en la mano
-    expect(screen.getAllByText('Pagar').length).toBeGreaterThan(0)
+    // 1. Hay al menos un botón "Pagar" (carta con coste en la mano)
+    expect(screen.getAllByRole('button', { name: 'Pagar' }).length).toBeGreaterThan(0)
 
-    // 2. Click en esa carta (MiniCard con title = nombre) → abre el selector.
-    //    El badge "Pagar" tiene pointer-events: none, así que el click va al
-    //    contenedor con onClick (el mismo div que lleva el title).
-    const conCoste = acciones.find(
-      (a) => a.type === 'jugar_campeon' || a.type === 'jugar_mistica' || a.type === 'colocar_arcana',
-    ) as Extract<Action, { cardInstanceId: string }> | undefined
-    expect(conCoste).toBeDefined()
-    const nombreCarta = getCardMeta(vista.instances[conCoste!.cardInstanceId].cardId ?? '')?.name!
-    await user.click(screen.getAllByTitle(nombreCarta)[0])
+    // 2. Click en el botón Pagar de la primera carta con coste → abre el selector
+    await user.click(screen.getAllByRole('button', { name: 'Pagar' })[0])
     expect(screen.getByText(/Elegí los Éteres de tu Reserva/)).toBeInTheDocument()
 
-    const coste = Number((screen.getByText(/Coste: \d+/).textContent ?? '').replace(/[^\d]/g, ''))
+    // Si el Campeón exige sacrificio (Soberano/Emperador), elegir uno antes de pagar
+    const sacrificables = screen
+      .getAllByRole('button')
+      .filter((b) => b.getAttribute('title') && !b.textContent?.includes('aporte'))
+    if (sacrificables.length > 0) await user.click(sacrificables[0])
 
-    // 3. Toggle de Éteres de la Reserva hasta que el pago alcance (Σ aporte ≥ coste×2)
+    // 3. Toggle de Éteres de la Reserva hasta que el pago alcance (Σ aporte ≥ coste)
     const confirmar = () => screen.getByRole('button', { name: 'Pagar y jugar' })
-    const botonesEter = screen.getAllByRole('button').filter((b) => b.getAttribute('title'))
+    const botonesEter = screen.getAllByRole('button').filter((b) => b.textContent?.includes('aporte'))
     expect(botonesEter.length).toBeGreaterThan(0)
     const titulosElegidos: string[] = []
     for (let i = 0; i < botonesEter.length && (confirmar() as HTMLButtonElement).disabled; i++) {
@@ -157,5 +154,473 @@ describe('Selección de Éter en el tablero 4×7', () => {
     expect(accion.campeonSlot).toBe(0)
     expect(accion.eterIds.length).toBe(1)
     expect(estado.players.A.eterReserva).toContain(accion.eterIds[0])
+  })
+})
+
+describe('Zoom de carta (CartaZoom)', () => {
+  /** Forja con turno de A y un Campeón propio en 2B (slot 0) en la mesa. */
+  function forjaDeAConCampeonEnMesa(): { estado: GameState; campeon: (typeof ESTASIS_CARDS)[number] } {
+    const estado = forjaDeA()
+    const campeon = ESTASIS_CARDS.find(
+      (c) =>
+        c.type === 'Campeón' &&
+        estado.players.A.eterReserva.some((id) => {
+          const meta = getCardMeta(estado.instances[id].cardId ?? '')
+          return meta !== null && faccionesCompartidas(meta.facciones, c.facciones)
+        }),
+    )
+    expect(campeon).toBeDefined()
+    estado.instances['inst-camp'] = { cardInstanceId: 'inst-camp', cardId: campeon!.id, owner: 'A' }
+    estado.players.A.campo.campeones[0] = 'inst-camp'
+    return { estado, campeon: campeon! }
+  }
+
+  it('clic en un campeón de la mesa abre la carta en grande y Escape la cierra', async () => {
+    const user = userEvent.setup()
+    const { estado, campeon } = forjaDeAConCampeonEnMesa()
+    const vista = visibleState(estado, 'A')
+    const acciones = getValidActions(estado, 'A')
+    const onAccion = vi.fn()
+    render(
+      <Tablero
+        vista={vista}
+        acciones={acciones}
+        leTocaA={true}
+        log={[]}
+        onAccion={onAccion}
+        onAbandonar={vi.fn()}
+      />,
+    )
+
+    // Click en la miniatura del campeón → se abre el diálogo de la carta en grande.
+    // Si el campeón también está en la mano (jugable → lupita), elijo el de la mesa.
+    const nombre = campeon.name
+    const miniatura = screen
+      .getAllByTitle(nombre)
+      .find((el) => !el.querySelector('[aria-label="Ver carta grande"]'))
+    expect(miniatura).toBeDefined()
+    await user.click(miniatura!)
+
+    const dialogo = screen.getByRole('dialog', { name: `Carta en grande: ${nombre}` })
+    expect(dialogo).toBeInTheDocument()
+    // El zoom NO ejecuta ninguna acción
+    expect(onAccion).not.toHaveBeenCalled()
+
+    // Escape → cierra el zoom sin tocar el tablero
+    await user.keyboard('{Escape}')
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  it('la lupita de una carta jugable abre el zoom sin ejecutar la acción', async () => {
+    const user = userEvent.setup()
+    const estado = forjaDeAConCoste()
+    const vista = visibleState(estado, 'A')
+    const acciones = getValidActions(estado, 'A')
+    const onAccion = vi.fn()
+    render(
+      <Tablero
+        vista={vista}
+        acciones={acciones}
+        leTocaA={true}
+        log={[]}
+        onAccion={onAccion}
+        onAbandonar={vi.fn()}
+      />,
+    )
+
+    // Hay al menos una lupita (carta jugable con clic ya asignado a pagar/jugar)
+    const lupita = screen.getAllByRole('button', { name: 'Ver carta grande' })[0]
+    expect(lupita).toBeInTheDocument()
+
+    await user.click(lupita)
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+    // El clic en la lupita NO ejecuta la acción de la carta
+    expect(onAccion).not.toHaveBeenCalled()
+
+    // Cerrar con el botón ✕ del modal
+    await user.click(screen.getByRole('button', { name: 'Cerrar' }))
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+})
+
+describe('Reserva de Éter (2A) y aporte real (1 / ½)', () => {
+  it('la Reserva muestra solo el tope y el clic abre el panel inferior con la lista completa', async () => {
+    const user = userEvent.setup()
+    const estado = forjaDeA()
+    const vista = visibleState(estado, 'A')
+    const acciones = getValidActions(estado, 'A')
+    render(
+      <Tablero
+        vista={vista}
+        acciones={acciones}
+        leTocaA={true}
+        log={[]}
+        onAccion={vi.fn()}
+        onAbandonar={vi.fn()}
+      />,
+    )
+
+    // El tope de la Reserva lleva el contador "+14" (15 éteres al inicio, se muestra 1)
+    const topeId = estado.players.A.eterReserva[estado.players.A.eterReserva.length - 1]
+    const nombreTope = getCardMeta(vista.instances[topeId].cardId ?? '')?.name ?? ''
+    const topes = screen.getAllByTitle(nombreTope).filter((el) => el.textContent?.includes('+14'))
+    expect(topes.length).toBeGreaterThan(0)
+
+    // Click en el tope → panel inferior con la lista completa
+    await user.click(topes[0])
+    expect(screen.getByText(/Reserva de Éter/)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Cerrar' })).toBeInTheDocument()
+
+    // Cerrar → el panel desaparece
+    await user.click(screen.getByRole('button', { name: 'Cerrar' }))
+    expect(screen.queryByText(/Reserva de Éter/)).not.toBeInTheDocument()
+  })
+
+  it('el selector de pago muestra el aporte real (1 propia / ½ ajena) y no el doble', async () => {
+    const user = userEvent.setup()
+    const estado = forjaDeAConCoste()
+    const vista = visibleState(estado, 'A')
+    const acciones = getValidActions(estado, 'A')
+    render(
+      <Tablero
+        vista={vista}
+        acciones={acciones}
+        leTocaA={true}
+        log={[]}
+        onAccion={vi.fn()}
+        onAbandonar={vi.fn()}
+      />,
+    )
+
+    const conCoste = acciones.find(
+      (a) => a.type === 'jugar_campeon' || a.type === 'jugar_mistica' || a.type === 'colocar_arcana',
+    ) as Extract<Action, { cardInstanceId: string }> | undefined
+    expect(conCoste).toBeDefined()
+    // Click en el botón Pagar de esa carta → abre el selector
+    await user.click(screen.getAllByRole('button', { name: 'Pagar' })[0])
+    expect(screen.getByText(/Elegí los Éteres de tu Reserva/)).toBeInTheDocument()
+
+    // Aporte en unidades reales: 1 (fación compartida) o 0.5 (ajena), NUNCA 2
+    const aportes = screen.getAllByText(/^aporte (1|0\.5)$/)
+    expect(aportes.length).toBeGreaterThan(0)
+    expect(screen.queryByText('aporte 2')).not.toBeInTheDocument()
+
+    // El umbral mostrado es el coste, no el doble
+    const coste = Number((screen.getByText(/Coste: \d+/).textContent ?? '').replace(/[^\d]/g, ''))
+    const textoAportado = screen.getByText(/Aportado:/).textContent ?? ''
+    expect(textoAportado).toMatch(new RegExp(`/\\s*${coste}$`))
+  })
+})
+
+describe('Grilla rival invertida y Éteres pagados (1A)', () => {
+  it('la grilla del rival se muestra de cabeza (180°) y la propia no', () => {
+    const estado = forjaDeA()
+    render(
+      <Tablero
+        vista={visibleState(estado, 'A')}
+        acciones={getValidActions(estado, 'A')}
+        leTocaA={true}
+        log={[]}
+        onAccion={vi.fn()}
+        onAbandonar={vi.fn()}
+      />,
+    )
+    expect(screen.getByTestId('grilla-B')).toHaveStyle({ transform: 'rotate(180deg)' })
+    expect(screen.getByTestId('grilla-A')).not.toHaveStyle({ transform: 'rotate(180deg)' })
+  })
+
+  it('el clic en el Éter pagado (1A) propio abre el panel con la lista completa', async () => {
+    const user = userEvent.setup()
+    const estado = forjaDeA()
+    // Simula pagos previos: 2 Éteres de la Reserva pasan a 1A
+    estado.players.A.eterPagado.push(...estado.players.A.eterReserva.splice(0, 2))
+    const vista = visibleState(estado, 'A')
+    render(
+      <Tablero
+        vista={vista}
+        acciones={getValidActions(estado, 'A')}
+        leTocaA={true}
+        log={[]}
+        onAccion={vi.fn()}
+        onAbandonar={vi.fn()}
+      />,
+    )
+
+    // El tope de 1A lleva "×2"; clic → panel con la lista completa
+    const topeId = estado.players.A.eterPagado[estado.players.A.eterPagado.length - 1]
+    const nombreTope = getCardMeta(vista.instances[topeId].cardId ?? '')?.name!
+    const tope = screen.getAllByTitle(nombreTope).find((el) => el.textContent?.includes('×2'))
+    expect(tope).toBeDefined()
+    await user.click(tope!)
+
+    expect(screen.getByText(/Éteres pagados/)).toBeInTheDocument()
+    // Cada Éter pagado figura listado (nombre bajo su miniatura)
+    const totalListados = estado.players.A.eterPagado.reduce((acc, id) => {
+      const nombre = getCardMeta(estado.instances[id].cardId ?? '')?.name ?? ''
+      return acc + screen.getAllByText(nombre).length
+    }, 0)
+    expect(totalListados).toBeGreaterThanOrEqual(2)
+
+    await user.click(screen.getByRole('button', { name: 'Cerrar' }))
+    expect(screen.queryByText(/Éteres pagados/)).not.toBeInTheDocument()
+  })
+
+  it('el panel de Éteres pagados también funciona en la grilla del rival (invertida)', async () => {
+    const user = userEvent.setup()
+    const estado = forjaDeA()
+    // El rival también tiene Éteres pagados (3)
+    estado.players.B.eterPagado.push(...estado.players.B.eterReserva.splice(0, 3))
+    const vista = visibleState(estado, 'A')
+    render(
+      <Tablero
+        vista={vista}
+        acciones={getValidActions(estado, 'A')}
+        leTocaA={true}
+        log={[]}
+        onAccion={vi.fn()}
+        onAbandonar={vi.fn()}
+      />,
+    )
+
+    const topeId = estado.players.B.eterPagado[estado.players.B.eterPagado.length - 1]
+    const nombreTope = getCardMeta(vista.instances[topeId].cardId ?? '')?.name!
+    const tope = screen.getAllByTitle(nombreTope).find((el) => el.textContent?.includes('×3'))
+    expect(tope).toBeDefined()
+    await user.click(tope!)
+
+    expect(screen.getByText(/Éteres pagados/)).toBeInTheDocument()
+    expect(screen.getByText(/del rival/)).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Cerrar' }))
+    expect(screen.queryByText(/Éteres pagados/)).not.toBeInTheDocument()
+  })
+})
+
+describe('Botones de acción en la mano y zoom', () => {
+  it('clic en una carta de la mano abre el zoom; el botón Pagar abre el selector', async () => {
+    const user = userEvent.setup()
+    const estado = forjaDeAConCoste()
+    const vista = visibleState(estado, 'A')
+    const acciones = getValidActions(estado, 'A')
+    const onAccion = vi.fn()
+    render(
+      <Tablero
+        vista={vista}
+        acciones={acciones}
+        leTocaA={true}
+        log={[]}
+        onAccion={onAccion}
+        onAbandonar={vi.fn()}
+      />,
+    )
+
+    const boton = screen.getAllByRole('button', { name: 'Pagar' })[0]
+    const carta = boton.previousElementSibling as HTMLElement
+    const nombre = carta.getAttribute('title')!
+    expect(nombre).toBeTruthy()
+
+    // Clic en la carta → zoom (sin ejecutar ninguna acción)
+    await user.click(carta)
+    expect(screen.getByRole('dialog', { name: `Carta en grande: ${nombre}` })).toBeInTheDocument()
+    expect(onAccion).not.toHaveBeenCalled()
+    await user.keyboard('{Escape}')
+
+    // Clic en el botón Pagar → selector de pago
+    await user.click(boton)
+    expect(screen.getByText(/Elegí los Éteres de tu Reserva/)).toBeInTheDocument()
+  })
+})
+
+describe('Sacrificio de Campeones (rol Soberano/Emperador)', () => {
+  it('permite elegir qué Campeón sacrificar y lo envía en la acción', async () => {
+    const user = userEvent.setup()
+    const estado = forjaDeA()
+    // Vaela (FB-011, Orden) en 2B (slot 0) como sacrificable
+    estado.instances['inst-sac'] = { cardInstanceId: 'inst-sac', cardId: 'FB-011', owner: 'A' }
+    estado.players.A.campo.campeones[0] = 'inst-sac'
+    // Aurora (FB-010, Soberano Orden, coste 4) en mano
+    estado.instances['inst-aurora'] = { cardInstanceId: 'inst-aurora', cardId: 'FB-010', owner: 'A' }
+    estado.players.A.mano.push('inst-aurora')
+
+    const vista = visibleState(estado, 'A')
+    const acciones = getValidActions(estado, 'A')
+    // El motor genera la acción con sacrificio automático; la UI lo reemplaza por la elección
+    const jugar = acciones.find((a) => a.type === 'jugar_campeon' && a.cardInstanceId === 'inst-aurora')
+    expect(jugar).toBeDefined()
+
+    const onAccion = vi.fn()
+    render(
+      <Tablero
+        vista={vista}
+        acciones={acciones}
+        leTocaA={true}
+        log={[]}
+        onAccion={onAccion}
+        onAbandonar={vi.fn()}
+      />,
+    )
+
+    // Abrir el selector desde el botón Pagar de Aurora (hermano del div con title)
+    const auroras = screen.getAllByTitle('Aurora, La Primogénita')
+    const botonAurora = auroras
+      .map((el) => el.nextElementSibling)
+      .find((el) => el?.textContent === 'Pagar')
+    expect(botonAurora).toBeDefined()
+    await user.click(botonAurora!)
+    expect(screen.getByText(/Elegí 1 Campeón de tu campo para sacrificar/)).toBeInTheDocument()
+
+    // Elegir Vaela: la miniatura del selector está envuelta en un <button>
+    const vaelaSelector = screen
+      .getAllByTitle('Vaela, Sed de Alba')
+      .find((el) => el.closest('button'))
+    expect(vaelaSelector).toBeDefined()
+    await user.click(vaelaSelector!)
+
+    // Pagar el coste (4) con Éteres de la Reserva
+    const confirmar = () => screen.getByRole('button', { name: 'Pagar y jugar' })
+    const botonesEter = screen.getAllByRole('button').filter((b) => b.textContent?.includes('aporte'))
+    for (let i = 0; i < botonesEter.length && (confirmar() as HTMLButtonElement).disabled; i++) {
+      await user.click(botonesEter[i])
+    }
+    expect((confirmar() as HTMLButtonElement).disabled).toBe(false)
+
+    await user.click(confirmar())
+    expect(onAccion).toHaveBeenCalledTimes(1)
+    const accion = onAccion.mock.calls[0][0] as Action & { eterIds: string[]; sacrificios: string[] }
+    expect(accion.sacrificios).toEqual(['inst-sac'])
+  })
+})
+
+describe('Campeón cansado (agotado)', () => {
+  it('se muestra rotado 90° y con el MISMO tamaño que las cartas verticales', () => {
+    const estado = forjaDeA()
+    const campeones = ESTASIS_CARDS.filter((c) => c.type === 'Campeón')
+    const cansado = campeones[0]
+    const normal = campeones[1]
+    estado.instances['inst-cansado'] = {
+      cardInstanceId: 'inst-cansado',
+      cardId: cansado.id,
+      owner: 'A',
+      agotado: true,
+    }
+    estado.instances['inst-normal'] = { cardInstanceId: 'inst-normal', cardId: normal.id, owner: 'A' }
+    estado.players.A.campo.campeones[0] = 'inst-cansado'
+    estado.players.A.campo.campeones[1] = 'inst-normal'
+    const vista = visibleState(estado, 'A')
+    render(
+      <Tablero
+        vista={vista}
+        acciones={getValidActions(estado, 'A')}
+        leTocaA={true}
+        log={[]}
+        onAccion={vi.fn()}
+        onAbandonar={vi.fn()}
+      />,
+    )
+
+    // Rotado 90° (parte de arriba hacia la izquierda) sin el tenue anterior
+    const contenedorCansado = screen
+      .getAllByTitle(cansado.name)
+      .find((el) => el.querySelector('[style*="rotate(-90deg)"]'))
+    expect(contenedorCansado).toBeDefined()
+    expect(contenedorCansado!.querySelector('[style*="opacity: 0.55"]')).toBeNull()
+    expect(contenedorCansado!.querySelector('[style*="grayscale"]')).toBeNull()
+
+    // El cansado ocupa el área de la carta vertical girada: altoCarta × ancho
+    const altoCarta = 1038 * (92 / 744) // ≈ 128.35 px (mismo cálculo que MiniCard)
+    expect(contenedorCansado!.getAttribute('style')).toContain(`width: ${altoCarta}px`)
+    expect(contenedorCansado!.getAttribute('style')).toContain('height: 92px')
+
+    // La vertical (boca arriba) sigue en su tamaño normal: ancho × altoCarta
+    const contenedorNormal = screen
+      .getAllByTitle(normal.name)
+      .find((el) => !el.querySelector('[style*="rotate(-90deg)"]'))
+    expect(contenedorNormal).toBeDefined()
+    expect(contenedorNormal!.getAttribute('style')).toContain('width: 92px')
+    expect(contenedorNormal!.getAttribute('style')).toContain(`height: ${altoCarta}px`)
+  })
+})
+
+describe('Cartas boca abajo (Arcanas/Combate/Vínculos)', () => {
+  /** Monta el tablero desde un estado ya preparado. */
+  function renderTablero(estado: GameState) {
+    return render(
+      <Tablero
+        vista={visibleState(estado, 'A')}
+        acciones={getValidActions(estado, 'A')}
+        leTocaA={true}
+        log={[]}
+        onAccion={vi.fn()}
+        onAbandonar={vi.fn()}
+      />,
+    )
+  }
+
+  /** Dorso dentro de una celda con data-zona (las grillas van B primero, A después). */
+  function dorsoEnCelda(zona: string, grillaA: boolean): HTMLElement {
+    const celdas = document.querySelectorAll(`[data-zona="${zona}"]`)
+    const celda = celdas[grillaA ? 1 : 0] as HTMLElement
+    expect(celda).toBeDefined()
+    return within(celda).getByLabelText('Carta boca abajo')
+  }
+
+  it('la Arcana propia se ve boca abajo y el clic muestra la carta', async () => {
+    const user = userEvent.setup()
+    const estado = forjaDeA()
+    const arcana = ESTASIS_CARDS.find((c) => c.type === 'Arcana')!
+    estado.instances['inst-arcana'] = { cardInstanceId: 'inst-arcana', cardId: arcana.id, owner: 'A' }
+    estado.players.A.campo.arcanasCombate[0] = 'inst-arcana'
+    renderTablero(estado)
+
+    // En SU casilla (3D de la grilla propia) se ve como DORSO, no la carta boca arriba
+    const celdas = document.querySelectorAll('[data-zona="3D"]')
+    const celda = celdas[1] as HTMLElement
+    const dorso = within(celda).getByLabelText('Carta boca abajo')
+    expect(within(celda).queryByTitle(arcana.name)).toBeNull()
+
+    // Clic → zoom con la carta real (es mía: puedo inspeccionarla)
+    await user.click(dorso)
+    expect(screen.getByRole('dialog', { name: `Carta en grande: ${arcana.name}` })).toBeInTheDocument()
+    await user.keyboard('{Escape}')
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  it('la Arcana del rival se ve boca abajo y NO se puede inspeccionar', async () => {
+    const user = userEvent.setup()
+    const estado = forjaDeA()
+    const arcana = ESTASIS_CARDS.find((c) => c.type === 'Arcana')!
+    estado.instances['inst-arcana-rival'] = {
+      cardInstanceId: 'inst-arcana-rival',
+      cardId: arcana.id,
+      owner: 'B',
+    }
+    estado.players.B.campo.arcanasCombate[0] = 'inst-arcana-rival'
+    renderTablero(estado)
+
+    // En la grilla rival (3D) se ve como DORSO
+    const dorso = dorsoEnCelda('3D', false)
+    expect(dorso).toBeInTheDocument()
+
+    // El clic NO revela la carta del oponente
+    await user.click(dorso)
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  it('el Vínculo propio se ve boca abajo y el clic muestra la carta', async () => {
+    const user = userEvent.setup()
+    const estado = forjaDeA()
+    const vinculo = ESTASIS_CARDS.find((c) => c.type === 'Vínculo')!
+    estado.instances['inst-vinculo'] = { cardInstanceId: 'inst-vinculo', cardId: vinculo.id, owner: 'A' }
+    estado.players.A.vinculos[0] = 'inst-vinculo'
+    renderTablero(estado)
+
+    const celdas = document.querySelectorAll('[data-zona="4A"]')
+    const celda = celdas[1] as HTMLElement
+    const dorso = within(celda).getByLabelText('Carta boca abajo')
+    expect(within(celda).queryByTitle(vinculo.name)).toBeNull()
+
+    await user.click(dorso)
+    expect(screen.getByRole('dialog', { name: `Carta en grande: ${vinculo.name}` })).toBeInTheDocument()
+    await user.keyboard('{Escape}')
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 })

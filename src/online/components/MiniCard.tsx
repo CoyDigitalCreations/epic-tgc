@@ -8,7 +8,7 @@ import type { CardInstance } from '../game'
 const ANCHO_CARTA = 744
 const ALTO_CARTA = 1038
 
-const TAMANOS = { xs: 44, sm: 64, md: 92, lg: 128 } as const
+export const TAMANOS = { xs: 44, sm: 64, md: 92, lg: 128 } as const
 export type TamanoMini = keyof typeof TAMANOS
 
 interface MiniCardProps {
@@ -22,7 +22,19 @@ interface MiniCardProps {
   carta?: AnyCard
   agotado?: boolean
   seleccionada?: boolean
+  /**
+   * Muestra la carta como DORSO (boca abajo) aunque su cardId sea visible
+   * para el jugador (Arcanas/Combate/Vínculos propios). El clic/zoom siguen
+   * funcionando: el dueño puede inspeccionar su propia carta.
+   */
+  bocaAbajo?: boolean
   onClick?: () => void
+  /**
+   * Abre la carta en grande (CartaZoom) para revisar su efecto. Si `onClick`
+   * también está definido, el clic de la carta hace lo suyo y aparece una
+   * lupita para el zoom; si no, el clic directo abre el zoom.
+   */
+  onZoom?: () => void
   title?: string
   /** Marcador extra superpuesto (badges de estado de zona). */
   marca?: ReactNode
@@ -42,7 +54,9 @@ export function MiniCard({
   carta,
   agotado,
   seleccionada,
+  bocaAbajo,
   onClick,
+  onZoom,
   title,
   marca,
   children,
@@ -54,9 +68,18 @@ export function MiniCard({
   const escala = ancho / ANCHO_CARTA
   const agotada = agotado ?? inst.agotado === true
   const eteres = inst.eterBloqueado?.length ?? 0
+  /**
+   * Campeón cansado: la carta se gira 90° (parte de arriba hacia la IZQUIERDA)
+   * con la MISMA escala que la vertical: la rotada ocupa altoCarta × ancho,
+   * exactamente el tamaño de la carta vertical girada. Las casillas del tablero
+   * son tan anchas como el alto de una carta (ANCHO_CELDA) para acomodarla.
+   */
+  const altoCarta = ALTO_CARTA * escala
 
-  if (!cardId || !meta) {
-    // Dorso: boca abajo (mano rival, mazos, Arcanas/Vínculos rivales)
+  if (!cardId || !meta || bocaAbajo) {
+    // Dorso: boca abajo (mano rival, mazos, Arcanas/Vínculos rivales o
+    // Arcanas/Combate/Vínculos PROPIOS que el dueño prefiere ver como dorso).
+    // Si hay onClick/onZoom (carta propia) el clic abre la carta en grande.
     return (
       <div className="flex flex-col items-center gap-1" style={{ width: ancho }}>
         <div
@@ -69,9 +92,9 @@ export function MiniCard({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            cursor: onClick ? 'pointer' : 'default',
+            cursor: onClick ?? onZoom ? 'pointer' : 'default',
           }}
-          onClick={onClick}
+          onClick={onClick ?? onZoom}
           aria-label="Carta boca abajo"
         >
           <span
@@ -104,27 +127,49 @@ export function MiniCard({
     <div className="flex flex-col items-center gap-1" style={{ width: ancho }}>
       <div
         style={{
-          width: ancho,
-          height: ALTO_CARTA * escala,
+          width: agotada ? altoCarta : ancho,
+          height: agotada ? ancho : altoCarta,
           position: 'relative',
-          cursor: onClick ? 'pointer' : 'default',
+          cursor: onClick ?? onZoom ? 'pointer' : 'default',
           transition: 'transform 150ms ease, box-shadow 150ms ease',
         }}
-        onClick={onClick}
+        onClick={onClick ?? onZoom}
         title={title ?? meta.name}
       >
-        <div
-          style={{
-            transform: `scale(${escala})`,
-            transformOrigin: 'top left',
-            width: ANCHO_CARTA,
-            height: ALTO_CARTA,
-            opacity: agotada ? 0.55 : 1,
-            filter: agotada ? 'grayscale(0.6)' : 'none',
-          }}
-        >
-          <RenderCarta card={aRenderizar} imageUrl={imageUrl} />
-        </div>
+        {agotada ? (
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              pointerEvents: 'none',
+            }}
+          >
+            <div
+              style={{
+                transform: `scale(${escala}) rotate(-90deg)`,
+                transformOrigin: 'center',
+                width: ANCHO_CARTA,
+                height: ALTO_CARTA,
+              }}
+            >
+              <RenderCarta card={aRenderizar} imageUrl={imageUrl} />
+            </div>
+          </div>
+        ) : (
+          <div
+            style={{
+              transform: `scale(${escala})`,
+              transformOrigin: 'top left',
+              width: ANCHO_CARTA,
+              height: ALTO_CARTA,
+            }}
+          >
+            <RenderCarta card={aRenderizar} imageUrl={imageUrl} />
+          </div>
+        )}
 
         {/* Anillo de selección (éteres elegidos para pagar, carta en modo selección) */}
         {seleccionada && (
@@ -191,6 +236,40 @@ export function MiniCard({
         )}
 
         {marca}
+
+        {/* Lupita de zoom: solo cuando el clic de la carta ya hace otra cosa
+            (pagar éter, responder…). Sin onClick, el clic directo abre el zoom. */}
+        {onClick && onZoom && (
+          <span
+            role="button"
+            aria-label="Ver carta grande"
+            onClick={(e) => {
+              e.stopPropagation()
+              onZoom()
+            }}
+            style={{
+              position: 'absolute',
+              bottom: 2,
+              right: 2,
+              zIndex: 5,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: Math.max(14, ancho * 0.09),
+              height: Math.max(14, ancho * 0.09),
+              borderRadius: 6,
+              background: 'rgba(0,0,0,0.7)',
+              border: '1px solid #4b4b7a',
+              color: '#e5e7eb',
+              cursor: 'pointer',
+            }}
+          >
+            <svg width={Math.max(7, ancho * 0.045)} height={Math.max(7, ancho * 0.045)} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+              <circle cx="11" cy="11" r="7" />
+              <line x1="16.5" y1="16.5" x2="21" y2="21" />
+            </svg>
+          </span>
+        )}
       </div>
       {children}
     </div>
