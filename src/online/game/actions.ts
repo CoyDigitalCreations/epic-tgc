@@ -1,4 +1,5 @@
 import type { GameEvent } from './events'
+import { purgarEfectosTemporales, purgarKeywordsTemporales } from './efectos'
 import { limpiarCombate, resolverAlba } from './phases'
 import { shuffleFisherYates } from './rng'
 import type { Ctx, FaseNombre, GameState, PlayerId } from './types'
@@ -368,7 +369,13 @@ function iniciarPartida(s: GameState, ctx: Ctx): void {
 function ejecutarPasarTurno(s: GameState, ctx: Ctx): void {
   if (s.fase === 'forja' || s.fase === 'choque') {
     const siguiente: FaseNombre = s.fase === 'forja' ? 'choque' : 'ocaso'
-    if (s.fase === 'choque') limpiarCombate(s) // ADR-11: limpieza defensiva al salir de Choque
+    if (s.fase === 'choque') {
+      limpiarCombate(s) // ADR-11: limpieza defensiva al salir de Choque
+      // C1 (ADR-22): al llegar el Ocaso expiran los efectos 'ocaso' del turno
+      // en curso (ambos jugadores) y las keywordsTemporales otorgadas.
+      purgarEfectosTemporales(s, 'ocaso')
+      purgarKeywordsTemporales(s)
+    }
     s.fase = siguiente
     ctx.emit({ type: 'fase_iniciada', fase: siguiente, jugador: s.turno })
     return

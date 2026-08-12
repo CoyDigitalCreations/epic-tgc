@@ -1,14 +1,20 @@
 import { reagruparEter } from './payments'
+import { purgarEfectosTemporales } from './efectos'
 import type { Ctx, GameState, PlayerId } from './types'
 
 /**
  * Alba AUTO-RESUELTA (ADR-3): nunca es un estado observable; se ejecuta dentro
- * de la acción que la dispara. Orden: enderezar (silencioso) → reagrupar
- * 1A→2A (eter_reagrupado) → robar 1 (carta_robada; mazo vacío → derrota).
+ * de la acción que la dispara. Orden: purga 'alba-dueño' (C1, ADR-22) →
+ * enderezar (silencioso) → reagrupar 1A→2A (eter_reagrupado) → robar 1
+ * (carta_robada; mazo vacío → derrota).
  * Las transiciones forja→choque→ocaso→alba viven en actions.ts (C4).
  */
 export function resolverAlba(s: GameState, ctx: Ctx, jugador: PlayerId): void {
   const p = s.players[jugador]
+
+  // 0. Expiran los efectos 'alba-dueño' del jugador (ADR-22): la Alba del
+  // dueño purga sus modificadores antes de enderezar/reagrupar/robar.
+  purgarEfectosTemporales(s, 'alba-dueño', jugador)
 
   // 1. Enderezar Campeones (silencioso)
   for (const slot of p.campo.campeones) {

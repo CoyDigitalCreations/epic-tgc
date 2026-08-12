@@ -1,30 +1,20 @@
-import { esCampeon, getCardMeta } from './cards'
 import { abrirCadena } from './chain'
+import { keywordsDe, statsDe } from './efectos'
 import { destruirCarta } from './replacements'
 import type { Ctx, GameState, PlayerId } from './types'
 
 /**
  * Sub-máquina de combate en Choque (9.1, ADR-11): `GameState.combate?` se crea
  * con la PRIMERA declarar_ataque en paso 'bloqueo' y auto-avanza a 'resolucion'
- * si el defensor no tiene enderezados (9.3) — sin evento bloqueo_declarado.
+ * si el defensor no tiene enderezados (9.3) - sin evento bloqueo_declarado.
  * Validadores read-only + ejecutores puros sobre el clon (patrón ADR-5).
  * La resolución (daño simultáneo) y la Ruptura se aplican en el commit C3.
  * Combate = 0 extracciones RNG (contrato 89 intacto).
+ * Stats consultados vía statsDe/keywordsDe de efectos.ts (C1, ADR-20/22): el
+ * combate ve los modificadores (Σ aditivo) con la MISMA semántica pre-auras.
  */
 
-const keywordsDe = (state: GameState, id: string): readonly string[] => {
-  const inst = state.instances[id]
-  const cardId = inst?.cardId
-  const meta = cardId ? getCardMeta(cardId) : null
-  const deData = meta && esCampeon(meta) ? meta.keywords : []
-  // Override aditivo de la instancia (types.ts): el test inyecta keywords que
-  // la data de paquetes.ts aún no tiene (p.ej. Vigor); efectos futuros que
-  // otorgan keywords usarán el mismo canal.
-  const deInstancia = inst?.keywords ?? []
-  return [...new Set([...deData, ...deInstancia])]
-}
-
-/** Consulta de keyword genérica (data paquetes.ts, sin hardcode por cardId). */
+/** Consulta de keyword genérica (data paquetes.ts + overrides, sin hardcode por cardId). */
 export const tieneKeyword = (state: GameState, id: string, kw: string): boolean =>
   keywordsDe(state, id).includes(kw)
 
@@ -173,24 +163,13 @@ export function ejecutarDeclararBloqueo(s: GameState, asignaciones: Record<strin
 
 /* ─────────────────── resolución: daño simultáneo (9.4-B, ADR-14) ─────────────────── */
 
-const poderDe = (s: GameState, id: string): number => {
-  const inst = s.instances[id]
-  const meta = inst?.cardId ? getCardMeta(inst.cardId) : null
-  return inst?.poder ?? (meta && esCampeon(meta) ? meta.stats.poder : 0)
-}
-
-const resistenciaDe = (s: GameState, id: string): number => {
-  const inst = s.instances[id]
-  const meta = inst?.cardId ? getCardMeta(inst.cardId) : null
-  return inst?.resistencia ?? (meta && esCampeon(meta) ? meta.stats.resistencia : 0)
-}
-
 /**
  * Daño simultáneo (9.4-B, L1119-1124): con los pares atacante→bloqueador ya
  * fijados, decide TODAS las muertes sobre el estado PRE-daño (sin cascadas,
  * ADR-14; el daño no persiste, L1122) y las aplica en orden determinista
  * (atacantes, luego bloqueadores) vía destruirCarta('combate') → 2G + Éter
- * 1A + carta_muerta + destruccion.
+ * 1A + carta_muerta + destruccion. Stats consultados vía statsDe (C1, ADR-20):
+ * base meta + override de instancia + Σ modificadores (misma semántica pre-auras).
  */
 function resolverCombate(s: GameState, ctx: Ctx): void {
   const combate = s.combate
@@ -201,8 +180,10 @@ function resolverCombate(s: GameState, ctx: Ctx): void {
     const bloqueador = combate.bloqueos[atacante]
     if (!bloqueador) continue // sin bloquear: no hay daño (Ruptura, no muerte)
     // Ambos deciden con el estado PRE-daño (los stats no cambian: sin marcas)
-    if (poderDe(s, atacante) >= resistenciaDe(s, bloqueador)) muertosBloqueadores.push(bloqueador)
-    if (poderDe(s, bloqueador) >= resistenciaDe(s, atacante)) muertosAtacantes.push(atacante)
+    const statsAtacante = statsDe(s, atacante)
+    const statsBloqueador = statsDe(s, bloqueador)
+    if (statsAtacante.poder >= statsBloqueador.resistencia) muertosBloqueadores.push(bloqueador)
+    if (statsBloqueador.poder >= statsAtacante.resistencia) muertosAtacantes.push(atacante)
   }
   for (const id of [...muertosAtacantes, ...muertosBloqueadores]) {
     destruirCarta(s, ctx, id, 'combate')

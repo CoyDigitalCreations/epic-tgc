@@ -49,3 +49,20 @@ export { CATALOGO_EVENTOS, validarExhaustividadEventos } from './events'
 // Bot y simulación
 export { botTonto, simularPartida } from './bot'
 export type { ResultadoSimulacion } from './bot'
+
+// Efectos de carta (change 3, ADR-20..29): infraestructura + handlers
+export {
+  registrarEfecto,
+  limpiarRegistroEfectos,
+  dispararTrigger,
+  statsDe,
+  keywordsDe,
+  aplicarMod,
+  otorgarKeyword,
+  purgarEfectosTemporales,
+  purgarKeywordsTemporales,
+} from './efectos'
+export type { TriggerEfecto, PayloadEfecto, HandlerEfecto } from './efectos'
+export type { Modificador, ExpiraModificador } from './types'
+import { registrarEfectos } from './handlers'
+registrarEfectos() // C1 (ADR-20): registra los handlers de efectos al importar el motor

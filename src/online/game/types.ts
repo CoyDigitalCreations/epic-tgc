@@ -14,6 +14,19 @@ export type MotivoFin = 'mazo_vacio' | 'rendicion' | 'vinculos'
 /** Causa de destrucción para destruirCarta (ADR-15) y eventos de destrucción. */
 export type CausaDestruccion = 'combate' | 'efecto' | 'ruptura'
 
+/**
+ * Expiración de un modificador (ADR-22): 'ocaso' al fin del turno en curso,
+ * 'alba-dueño' en la próxima Alba del DUEÑO de la instancia, 'permanente' nunca.
+ */
+export type ExpiraModificador = 'ocaso' | 'alba-dueño' | 'permanente'
+
+/** Modificador aditivo de stats aplicado a una instancia (ADR-22). */
+export interface Modificador {
+  stat: 'poder' | 'resistencia'
+  valor: number
+  expira: ExpiraModificador
+}
+
 /** Pasos de la sub-máquina de combate en Choque (9.1, ADR-11). */
 export type CombatePaso = 'ataque' | 'bloqueo' | 'resolucion'
 
@@ -62,6 +75,10 @@ export interface CardInstance {
   poder?: number
   /** Override aditivo de resistencia (tests de combate; efectos que modifican resistencia, patrón keywords). */
   resistencia?: number
+  /** Modificadores de stats activos (ADR-22): Σ aditivo en statsDe (efectos.ts). */
+  modificadores?: Modificador[]
+  /** Keywords TEMPORALES (ADR-22): expiran en Ocaso (p.ej. Carga/Vigor otorgados por efectos). */
+  keywordsTemporales?: string[]
   bocaArriba?: boolean
 }
 
