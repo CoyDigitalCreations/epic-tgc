@@ -13,7 +13,7 @@ export const PAQUETES: Paquete[] = [
     color: FACCION_COLORS.Orden,
     facciones: ['Orden'],
     entrega: 'Primogénitos',
-    distribucion: { eter: 15, principal: 40, vinculos: 6 },
+    distribucion: { eter: 15, principal: 45, vinculos: 6 },
     lore:
       'Estásis ("El Ancla") es el mazo temático de la facción Orden y la primera ' +
       'entrega de Los Primogénitos. Antes de la Gran Escisión, cuando las facciones aún ' +
@@ -38,7 +38,7 @@ export const PAQUETES: Paquete[] = [
     color: FACCION_COLORS.Caos,
     facciones: ['Caos'],
     entrega: 'Primogénitos',
-    distribucion: { eter: 15, principal: 40, vinculos: 6 },
+    distribucion: { eter: 15, principal: 45, vinculos: 6 },
     lore:
       'Disonancia ("La Tormenta") es el mazo temático de la facción Caos y la segunda ' +
       'entrega de Los Primogénitos. En el sur, donde el Eje termina en un Nudo, los ' +
@@ -56,12 +56,13 @@ export const PAQUETES: Paquete[] = [
 export const getPaquete = (id?: string) => PAQUETES.find((p) => p.id === id)
 
 /* ─────────────────────────────────────────────
-   Mazo Estásis (entrega Primogénitos) — 30 diseños / 61 cartas
-   (15 Éter + 40 Principal + 6 Vínculos)
+   Mazo Estásis (entrega Primogénitos) — 32 diseños / 66 cartas
+   (15 Éter + 45 Principal + 6 Vínculos)
    Todas las cartas son de la facción Orden.
    ───────────────────────────────────────────── */
 
 const FB_TS = '2026-08-03T00:00:00.000Z'
+const C4_TS = '2026-08-12T00:00:00.000Z'
 
 export const ESTASIS_CARDS: AnyCard[] = [
   /* ── ÉTER (9 diseños → 15 copias) ─────────────────────────────── */
@@ -205,7 +206,7 @@ export const ESTASIS_CARDS: AnyCard[] = [
     efectoBloqueo: 'Mientras esté bloqueado en un Campeón, ese Campeón gana +1 de RES.',
   },
 
-  /* ── PRINCIPAL (15 diseños → 40 copias) ────────────────────────── */
+  /* ── PRINCIPAL (15 diseños → 40 copias; + FB-031/32 → 45) ────── */
   {
     id: 'FB-010',
     name: 'Aurora, La Primogénita',
@@ -561,6 +562,43 @@ export const ESTASIS_CARDS: AnyCard[] = [
     stats: { cost: 0 },
     efecto: 'El Campeón que controla el rival con mayor ATQ pierde 2 de ATQ de forma permanente.',
   },
+
+  /* ── CHANGE 4 — Mazo 45: campeona ×3 (FB-031) + mística ×2 (FB-032) ── */
+  {
+    id: 'FB-031',
+    name: 'Enviada de las Casas, Voz del Este',
+    type: 'Campeón',
+    rarity: 'Común',
+    keywords: [],
+    flavorText: 'Cae una enviada; llegan las casas.',
+    paqueteId: 'estasis',
+    limiteCopias: '3',
+    createdAt: C4_TS,
+    updatedAt: C4_TS,
+    facciones: ['Orden'],
+    esencia: 'Céleste',
+    roles: ['Normal'],
+    catHabilidad: 'Efecto',
+    stats: { cost: 2, poder: 4, resistencia: 3 },
+    tipoEfecto: 'Pasivo',
+    efectoPasivo:
+      'Al ser enviada al Cementerio desde cualquier zona: agrega de tu mazo a tu mano 1 carta Campeón de coste 2 o menos.',
+  },
+  {
+    id: 'FB-032',
+    name: 'Rito del Alba',
+    type: 'Mística',
+    rarity: 'Poco Común',
+    keywords: [],
+    flavorText: 'El alba devuelve lo que la noche escondió.',
+    paqueteId: 'estasis',
+    limiteCopias: '2',
+    createdAt: C4_TS,
+    updatedAt: C4_TS,
+    facciones: ['Orden'],
+    stats: { cost: 2 },
+    efecto: 'Agrega de tu mazo a tu mano 1 carta de coste 2 o menos.',
+  },
 ]
 
 /** Distribución de copias por tipo de carta (para tests e integridad) */
@@ -621,7 +659,7 @@ export function progresoPaquete(
 
 /* ─────────────────────────────────────────────
    Mazo Disonancia (entrega Primogénitos) — contraparte de Estásis
-   (15 Éter + 40 Principal + 6 Vínculos)
+   (15 Éter + 45 Principal + 6 Vínculos)
    Todas las cartas son de la facción Caos.
    ───────────────────────────────────────────── */
 
@@ -791,7 +829,7 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     efectoBloqueo: 'Mientras esté bloqueado en un Campeón, ese Campeón gana +1 de ATQ.',
   },
 
-  /* ── PRINCIPAL (14 diseños → 39 copias; +Ragnar = 40) ─────── */
+  /* ── PRINCIPAL (17 diseños → 44 copias; +Ragnar = 45) ─────── */
   {
     id: 'DS-011',
     name: 'Kael, Filo del Nudo',
@@ -1127,6 +1165,59 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     stats: { cost: 0 },
     efecto: 'El Campeón que controla el rival con mayor RES pierde 2 de RES de forma permanente.',
   },
+
+  /* ── CHANGE 4 — Mazo 45: campeón ×2 (DS-031) + arcana ×2 (DS-032) + mística ×1 (DS-033) ── */
+  {
+    id: 'DS-031',
+    name: 'Emisario del Nudo, Voz del Sur',
+    type: 'Campeón',
+    rarity: 'Poco Común',
+    keywords: [],
+    flavorText: 'El Nudo cobra, y el Nudo reparte.',
+    paqueteId: 'disonancia',
+    limiteCopias: '2',
+    createdAt: C4_TS,
+    updatedAt: C4_TS,
+    facciones: ['Caos'],
+    esencia: 'Abisal',
+    roles: ['Normal'],
+    catHabilidad: 'Efecto',
+    stats: { cost: 2, poder: 4, resistencia: 3 },
+    tipoEfecto: 'Pasivo',
+    efectoPasivo:
+      'Al ser enviada al Cementerio desde cualquier zona: agrega de tu mazo a tu mano 1 carta Campeón de coste 2 o menos.',
+  },
+  {
+    id: 'DS-032',
+    name: 'El Nudo Desata',
+    type: 'Arcana',
+    rarity: 'Poco Común',
+    keywords: [],
+    flavorText: 'El Nudo se desata cuando la tormenta aprieta.',
+    paqueteId: 'disonancia',
+    limiteCopias: '2',
+    createdAt: C4_TS,
+    updatedAt: C4_TS,
+    facciones: ['Caos'],
+    stats: { cost: 3 },
+    condicion: 'Al inicio de tu Choque, si controlas 2 o más Campeones con Éter bloqueado.',
+    recompensa: 'Agrega de tu mazo a tu mano 1 carta de coste 3 o menos.',
+  },
+  {
+    id: 'DS-033',
+    name: 'Invocación del Sur',
+    type: 'Mística',
+    rarity: 'Rara',
+    keywords: [],
+    flavorText: 'El sur no llama dos veces.',
+    paqueteId: 'disonancia',
+    limiteCopias: '1',
+    createdAt: C4_TS,
+    updatedAt: C4_TS,
+    facciones: ['Caos'],
+    stats: { cost: 3 },
+    efecto: 'Agrega de tu mazo a tu mano 1 carta Campeón.',
+  },
 ]
 
 /* ─────────────────────────────────────────────
@@ -1145,9 +1236,13 @@ export const ALL_CARDS: AnyCard[] = [...ESTASIS_CARDS, ...DISONANCIA_CARDS]
    Al agregar un set nuevo con arte, sumar sus IDs acá.
    ───────────────────────────────────────────── */
 
-/** IDs que tienen arte oficial en public/cartas/{cardId}.png */
+/**
+ * IDs que tienen arte oficial en public/cartas/{cardId}.png.
+ * Solo los que tienen PNG versionado: las cartas nuevas sin arte (C4)
+ * quedan fuera y la UI muestra su placeholder.
+ */
 export const CARD_ART_IDS: ReadonlySet<string> = new Set(
-  ESTASIS_CARDS.map((c) => c.id),
+  ESTASIS_CARDS.filter((c) => c.createdAt !== C4_TS).map((c) => c.id),
 )
 
 /** Ruta del arte oficial de una carta, o undefined si no tiene */

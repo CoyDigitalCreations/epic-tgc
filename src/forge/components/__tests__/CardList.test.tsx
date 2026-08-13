@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { render, screen, fireEvent } from '@testing-library/react'
 import { CardList } from '../CardList'
 import { useCardStore } from '../../store/useCardStore'
 
@@ -72,5 +72,17 @@ describe('CardList', () => {
     render(<CardList />)
     expect(screen.getByText('Exportar JSON')).toBeInTheDocument()
     expect(screen.getByText('Importar JSON')).toBeInTheDocument()
+  })
+
+  it('importa el paquete Disonancia (DS-031, DS-032, DS-033) a la colección', () => {
+    vi.spyOn(window, 'alert').mockImplementation(() => {})
+    render(<CardList />)
+    // Los botones "Importar" de paquetes van en el orden de PAQUETES: [estasis, disonancia]
+    const botonesImportar = screen.getAllByText('Importar')
+    fireEvent.click(botonesImportar[1])
+    const ids = useCardStore.getState().cards.map((c) => c.id)
+    expect(ids).toContain('DS-031')
+    expect(ids).toContain('DS-032')
+    expect(ids).toContain('DS-033')
   })
 })

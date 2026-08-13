@@ -2,15 +2,17 @@ import { useState, useMemo, useRef } from 'react'
 import { useCardStore } from '../store/useCardStore'
 import { exportCollectionToJson, importCollectionFromJson } from '../utils/export-json'
 import { CARD_TYPES, type CardType } from '../../shared/types'
-import { PAQUETES, ESTASIS_CARDS, progresoPaquete } from '../../shared/data/paquetes'
+import { PAQUETES, ESTASIS_CARDS, DISONANCIA_CARDS, progresoPaquete } from '../../shared/data/paquetes'
 import { RuneIcon } from './card-art'
 import { ConfirmModal } from './modals/ConfirmModal'
+import { ColeccionModal } from './modals/ColeccionModal'
 import { useCardImage } from '../hooks/useCardImage'
 import type { AnyCard } from '../../shared/types'
 
 /** Cartas disponibles por paquete (clave = paquete.id) — el import los agrega a la colección */
 const CARTAS_POR_PAQUETE: Record<string, AnyCard[]> = {
   estasis: ESTASIS_CARDS,
+  disonancia: DISONANCIA_CARDS,
 }
 
 interface CardGridItemProps {
@@ -165,6 +167,20 @@ export function CardList() {
   const selectedCardId = useCardStore((s) => s.selectedCardId)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  // Colecciones múltiples (A3)
+  const colecciones = useCardStore((s) => s.colecciones)
+  const coleccionActivaId = useCardStore((s) => s.coleccionActivaId)
+  const setColeccionActiva = useCardStore((s) => s.setColeccionActiva)
+  const crearColeccion = useCardStore((s) => s.crearColeccion)
+  const renombrarColeccion = useCardStore((s) => s.renombrarColeccion)
+  const eliminarColeccion = useCardStore((s) => s.eliminarColeccion)
+  const [modalModo, setModalModo] = useState<'crear' | 'renombrar' | null>(null)
+  const [showEliminarModal, setShowEliminarModal] = useState(false)
+  const coleccionActiva = useMemo(
+    () => colecciones.find((c) => c.id === coleccionActivaId),
+    [colecciones, coleccionActivaId],
+  )
+
   // Filters
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState<CardType | 'Todas'>('Todas')
@@ -235,6 +251,53 @@ export function CardList() {
 
   return (
     <div>
+      {/* Selector de colección (A3) */}
+      <div className="flex items-center gap-2 flex-wrap mb-3">
+        <label className="text-[10px] uppercase tracking-wider text-gray-500 mr-1">
+          Colección:
+        </label>
+        <select
+          value={coleccionActivaId}
+          onChange={(e) => setColeccionActiva(e.target.value)}
+          title="Colección activa (la ve el juego online)"
+          className="bg-surface-2 border border-card-border rounded-lg px-3 py-1.5 text-xs
+                     text-gray-100 focus:outline-none focus:border-ether-400
+                     transition-colors cursor-pointer"
+        >
+          {colecciones.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.nombre} ({c.cards.length})
+            </option>
+          ))}
+        </select>
+        <button
+          onClick={() => setModalModo('crear')}
+          title="Crear colección nueva"
+          className="text-xs bg-ether-600/30 hover:bg-ether-600/50 text-ether-300 px-2.5 py-1.5 rounded
+                     transition-colors cursor-pointer"
+        >
+          + Nueva
+        </button>
+        <button
+          onClick={() => setModalModo('renombrar')}
+          title="Renombrar colección activa"
+          className="text-xs bg-surface-2 hover:bg-card-border text-gray-300 px-2.5 py-1.5 rounded
+                     transition-colors cursor-pointer"
+        >
+          Renombrar
+        </button>
+        {colecciones.length > 1 && (
+          <button
+            onClick={() => setShowEliminarModal(true)}
+            title={`Eliminar "${coleccionActiva?.nombre ?? ''}" con todas sus cartas`}
+            className="text-xs bg-red-600/30 hover:bg-red-600/50 text-red-300 px-2.5 py-1.5 rounded
+                       transition-colors cursor-pointer"
+          >
+            Eliminar
+          </button>
+        )}
+      </div>
+
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-display text-gray-100">
@@ -248,7 +311,7 @@ export function CardList() {
             <>
               <button
                 onClick={() => {
-                  void exportCollectionToJson(cards).catch((err) => {
+                  void exportCollectionToJson(cards, coleccionActiva?.nombre).catch((err) => {
                     console.error('Error al exportar JSON:', err)
                   })
                 }}
@@ -456,6 +519,38 @@ export function CardList() {
           setShowClearModal(false)
         }}
         onCancel={() => setShowClearModal(false)}
+      />
+
+      {/* Modal crear/renombrar colección */}
+      <ColeccionModal
+        isOpen={modalModo !== null}
+        nombreInicial={modalModo === 'renombrar' ? coleccionActiva?.nombre : undefined}
+        faccionInicial={modalModo === 'renombrar' ? coleccionActiva?.faccion : undefined}
+        onConfirm={(nombre, faccion) => {
+          if (modalModo === 'crear') {
+            crearColeccion(nombre, faccion)
+          } else if (coleccionActiva) {
+            renombrarColeccion(coleccionActiva.id, nombre)
+          }
+          setModalModo(null)
+        }}
+        onCancel={() => setModalModo(null)}
+      />
+
+      {/* Confirmación eliminar colección */}
+      <ConfirmModal
+        isOpen={showEliminarModal}
+        title="¿Eliminar colección?"
+        message={`Se van a eliminar TODAS las cartas de "${coleccionActiva?.nombre ?? ''}"` +
+          ` (${coleccionActiva?.cards.length ?? 0} cartas). No se puede deshacer.`}
+        confirmLabel="Sí, eliminar"
+        cancelLabel="Cancelar"
+        variant="danger"
+        onConfirm={() => {
+          if (coleccionActiva) eliminarColeccion(coleccionActiva.id)
+          setShowEliminarModal(false)
+        }}
+        onCancel={() => setShowEliminarModal(false)}
       />
     </div>
   )
