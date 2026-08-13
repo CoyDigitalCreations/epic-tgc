@@ -20,6 +20,7 @@ export { visibleState } from './visibleState'
 
 // Economía de Éter
 export { aporteDe, validarPago, aplicarPago, bloquearEter, reagruparEter } from './payments'
+export type { ContextoUso } from './payments'
 
 // Fases
 export { resolverAlba, robarCarta } from './phases'
@@ -62,6 +63,7 @@ export {
   purgarEfectosTemporales,
   purgarKeywordsTemporales,
 } from './efectos'
+export { registrarEfectos } from './handlers'
 export type { TriggerEfecto, PayloadEfecto, HandlerEfecto } from './efectos'
 export type { Modificador, ExpiraModificador } from './types'
 import { registrarEfectos } from './handlers'

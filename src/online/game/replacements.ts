@@ -42,18 +42,25 @@ function keywordsDe(s: GameState, id: string): readonly string[] {
  * Mueve una instancia a 2G (cementerio de su dueño). Remueve del grupo de
  * campo donde esté (Campeones/Místicas-Tácticas/Arcanas-Combate); defensivo
  * contra dobles llamadas (no duplica en 2G).
+ *
+ * C3c (D2): con control prestado (Aurora FB-010) la instancia puede estar en
+ * el campo del RIVAL (owner ≠ campo). Se barren AMBOS campos; el destino 2G
+ * sigue siendo del DUEÑO (inst.owner).
  */
 export function moverAlCementerio(s: GameState, cardInstanceId: string): void {
   const inst = s.instances[cardInstanceId]
   if (!inst) return
-  const p = s.players[inst.owner]
-  for (const grupo of ['campeones', 'misticasTacticas', 'arcanasCombate'] as const) {
-    const idx = p.campo[grupo].indexOf(cardInstanceId)
-    if (idx !== -1) {
-      p.campo[grupo][idx] = null
-      break
+  for (const j of ['A', 'B'] as PlayerId[]) {
+    const p = s.players[j]
+    for (const grupo of ['campeones', 'misticasTacticas', 'arcanasCombate'] as const) {
+      const idx = p.campo[grupo].indexOf(cardInstanceId)
+      if (idx !== -1) {
+        p.campo[grupo][idx] = null
+        break
+      }
     }
   }
+  const p = s.players[inst.owner]
   if (!p.cementerio.includes(cardInstanceId)) p.cementerio.push(cardInstanceId)
 }
 
@@ -109,10 +116,13 @@ export function verificarDerrotaVinculos(s: GameState, ctx: Ctx, owner: PlayerId
  * destruccion; Vínculo → bocaArriba=true (permanece en su slot, L848) + solo
  * destruccion. Prevenido (keywords según causa o reemplazo registrado) →
  * SOLO destruccion_prevenida, sin movimiento.
+ * @returns true si la carta se destruyó; false si se previno (keyword/reemplazo)
+ * o la instancia no existe. Aditivo (C3 D5): los callers actuales ignoran el
+ * retorno; al-matar-en-combate lo usa para confirmar la muerte.
  */
-export function destruirCarta(s: GameState, ctx: Ctx, cardInstanceId: string, causa: CausaDestruccion): void {
+export function destruirCarta(s: GameState, ctx: Ctx, cardInstanceId: string, causa: CausaDestruccion): boolean {
   const inst = s.instances[cardInstanceId]
-  if (!inst) return
+  if (!inst) return false
   const cardId = inst.cardId
   const meta = cardId ? getCardMeta(cardId) : null
   const esCampeonCard = meta !== null && esCampeon(meta)
@@ -123,7 +133,7 @@ export function destruirCarta(s: GameState, ctx: Ctx, cardInstanceId: string, ca
     const kw = keywordsDe(s, cardInstanceId)
     if ((causa === 'efecto' && kw.includes('Inmortal')) || (causa === 'combate' && kw.includes('Indestructible'))) {
       ctx.emit({ type: 'destruccion_prevenida', cardInstanceId, jugador: inst.owner, causa })
-      return
+      return false
     }
   }
 
@@ -131,7 +141,7 @@ export function destruirCarta(s: GameState, ctx: Ctx, cardInstanceId: string, ca
   const fn = cardId ? reemplazos.get(cardId) : undefined
   if (fn && fn(s, ctx, cardInstanceId, causa)) {
     ctx.emit({ type: 'destruccion_prevenida', cardInstanceId, jugador: inst.owner, causa })
-    return
+    return false
   }
 
   if (esVinculoCard) {
@@ -148,7 +158,7 @@ export function destruirCarta(s: GameState, ctx: Ctx, cardInstanceId: string, ca
     inst.bocaArriba = true
     ctx.emit({ type: 'destruccion', cardInstanceId, jugador: inst.owner, causa })
     verificarDerrotaVinculos(s, ctx, inst.owner)
-    return
+    return true
   }
 
   // Campeón: → 2G + Éter 1A + carta_muerta + destruccion (ADR-14)
@@ -156,4 +166,5 @@ export function destruirCarta(s: GameState, ctx: Ctx, cardInstanceId: string, ca
   liberarEterBloqueado(s, ctx, cardInstanceId, '1A')
   ctx.emit({ type: 'carta_muerta', cardInstanceId, jugador: inst.owner, causa })
   ctx.emit({ type: 'destruccion', cardInstanceId, jugador: inst.owner, causa })
+  return true
 }

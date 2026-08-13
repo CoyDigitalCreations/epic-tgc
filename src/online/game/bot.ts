@@ -13,6 +13,9 @@ import type { GameState, PlayerId } from './types'
  * activo) — el bot del rival decide el bloqueo forzoso.
  * Excepción (9.6, ADR-19): con la cadena abierta el bot NUNCA responde — si
  * tiene la prioridad, pasa (pasar_prioridad directo); si no, null.
+ * Excepción (C3d, D4): no activa habilidades opcionales que SACRIFICAN su
+ * propia carta (usar_transmutar) — consistente con elegir_ruptura, donde
+ * elige la variante null ("no romper").
  */
 export function botTonto(state: GameState, playerId: PlayerId): Action | null {
   // Cadena 9.6 (C4, ADR-19): el bot nunca encadena cartas
@@ -23,7 +26,7 @@ export function botTonto(state: GameState, playerId: PlayerId): Action | null {
   const esDefensor = state.fase === 'choque' && state.combate?.paso === 'bloqueo' && playerId !== state.turno
   if (state.turno !== playerId && !esDefensor) return null
   const acciones = getValidActions(state, playerId)
-  return acciones.find((a) => a.type !== 'rendirse') ?? null
+  return acciones.find((a) => a.type !== 'rendirse' && a.type !== 'usar_transmutar') ?? null
 }
 
 export interface ResultadoSimulacion {

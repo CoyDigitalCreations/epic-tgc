@@ -1,4 +1,5 @@
 import { esEter, faccionesCompartidas, getCardMeta } from './cards'
+import { dispararTrigger } from './efectos'
 import type { Ctx, GameState, PlayerId } from './types'
 
 /**
@@ -12,6 +13,13 @@ import type { Ctx, GameState, PlayerId } from './types'
  * Las funciones mutan el estado YA clonado (ADR-5) y devuelven `s` para encadenar;
  * `validarPago` es read-only y no muta ni consume RNG.
  */
+
+/** Contexto de uso del Éter pagado (C2): gatillos dependen de cómo se pagó. */
+export interface ContextoUso {
+  tipo: 'invocar' | 'jugar' | 'habilidad'
+  /** Instancia del Campeón/Mística/Arcana que se está invocando/jugando. */
+  cardInstanceId?: string
+}
 
 export interface ResultadoPago {
   ok: boolean
@@ -56,13 +64,14 @@ export function validarPago(
   return { ok: true, aportado: suma, excedente: suma - objetivo.stats.cost }
 }
 
-/** Paga: mueve eterIds 2A → 1A y emite eter_pagado {jugador, eterIds, costo, aportado, excedente}. */
+/** Paga: mueve eterIds 2A → 1A, emite eter_pagado y dispara gatillos al-pagar-eter (C2). */
 export function aplicarPago(
   s: GameState,
   ctx: Ctx,
   jugador: PlayerId,
   eterIds: string[],
   objetivoCardId: string,
+  contextoUso?: ContextoUso,
 ): GameState {
   const validado = validarPago(s, jugador, eterIds, objetivoCardId)
   if (!validado.ok || validado.aportado === undefined || validado.excedente === undefined) return s
@@ -81,6 +90,19 @@ export function aplicarPago(
     aportado: validado.aportado,
     excedente: validado.excedente,
   })
+
+  // C2 (ADR-25): gatillos al-pagar-eter por cada Éter con variantePago='Gatillo'
+  const gatillos = eterIds.filter((id) => {
+    const inst = s.instances[id]
+    const meta = inst?.cardId ? getCardMeta(inst.cardId) : null
+    return meta !== null && esEter(meta) && meta.variantePago === 'Gatillo'
+  })
+  for (const id of gatillos) {
+    dispararTrigger(s, ctx, 'al-pagar-eter', jugador, [id], {
+      contextoUso: contextoUso?.tipo,
+      objetivoId: contextoUso?.cardInstanceId,
+    })
+  }
   return s
 }
 

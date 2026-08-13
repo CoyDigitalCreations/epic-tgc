@@ -77,9 +77,11 @@ export interface CardInstance {
   resistencia?: number
   /** Modificadores de stats activos (ADR-22): Σ aditivo en statsDe (efectos.ts). */
   modificadores?: Modificador[]
-  /** Keywords TEMPORALES (ADR-22): expiran en Ocaso (p.ej. Carga/Vigor otorgados por efectos). */
-  keywordsTemporales?: string[]
-  bocaArriba?: boolean
+   /** Keywords TEMPORALES (ADR-22): expiran en Ocaso (p.ej. Carga/Vigor otorgados por efectos). */
+   keywordsTemporales?: string[]
+   bocaArriba?: boolean
+   /** C2: flag 1/turno para Pasivo 1A (FB-005/DS-006) — se resetea en al-inicio-alba. */
+   opcionUsadaEsteTurno?: boolean
 }
 
 export interface PlayerState {
@@ -150,6 +152,14 @@ export interface GameState {
   combate?: CombateState
   /** Flag anti-bucle del sexto Vínculo (5.7/13, ADR-16): el hook NO-OP se resuelve UNA vez. */
   sextoVinculoResuelto?: boolean
+  /** C2: opciones pendientes de elegir_opcion (Pasivo 1A FB-005/DS-006). */
+  opcionesPendientes?: { jugador: PlayerId; eterId: string }[]
+  /**
+   * C3 (D1): objetivos pendientes de elegir_objetivo — cola FIFO (Vaela+Kael
+   * atacan juntos → 2 pendientes). `trigger` guarda el trigger que originó el
+   * pendiente; la resolución re-despacha con contextoUso 'objetivo-elegido'.
+   */
+  objetivosPendientes?: { jugador: PlayerId; instId: string; trigger: string; opciones: string[] }[]
   ganador?: PlayerId
   motivo?: MotivoFin
 }

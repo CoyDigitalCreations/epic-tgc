@@ -1,5 +1,5 @@
 import { abrirCadena } from './chain'
-import { keywordsDe, statsDe } from './efectos'
+import { dispararTrigger, keywordsDe, statsDe } from './efectos'
 import { destruirCarta } from './replacements'
 import type { Ctx, GameState, PlayerId } from './types'
 
@@ -11,7 +11,8 @@ import type { Ctx, GameState, PlayerId } from './types'
  * La resolución (daño simultáneo) y la Ruptura se aplican en el commit C3.
  * Combate = 0 extracciones RNG (contrato 89 intacto).
  * Stats consultados vía statsDe/keywordsDe de efectos.ts (C1, ADR-20/22): el
- * combate ve los modificadores (Σ aditivo) con la MISMA semántica pre-auras.
+ * combate ve los modificadores (Σ aditivo) Y las auras de campo (C3b, D6:
+ * Isolde/Thane/Elena/Marek se suman vía aurasDe en statsDe).
  */
 
 /** Consulta de keyword genérica (data paquetes.ts + overrides, sin hardcode por cardId). */
@@ -20,6 +21,19 @@ export const tieneKeyword = (state: GameState, id: string, kw: string): boolean 
 
 /** Rival del jugador activo: el DEFENSOR en el Choque del turno en curso. */
 export const rivalDe = (state: GameState): PlayerId => (state.turno === 'A' ? 'B' : 'A')
+
+/**
+ * Controlador actual de una instancia = jugador en cuyo campo de Campeones está
+ * (D2: al robar control la instancia se MUEVE de campo; owner NO cambia).
+ * Necesario para al-matar-en-combate: el killer puede morir en la MISMA
+ * resolución y dejar el campo antes de su dispatch (snapshot pre-muertes).
+ */
+function controladorDe(s: GameState, id: string): PlayerId | null {
+  for (const j of ['A', 'B'] as PlayerId[]) {
+    if (s.players[j].campo.campeones.includes(id)) return j
+  }
+  return null
+}
 
 /**
  * Atacantes elegibles del jugador activo (9.2): Campeones enderezados (no
@@ -113,6 +127,8 @@ export function ejecutarDeclararAtaque(s: GameState, atacanteIds: string[], ctx:
     }
   }
   ctx.emit({ type: 'ataque_declarado', jugador: s.turno, atacanteIds })
+  // C3 (D5): al-atacar se dispara con los atacantes YA declarados (antes de la cadena)
+  dispararTrigger(s, ctx, 'al-atacar', s.turno, atacanteIds)
   // C4 (9.6): el DEFENSOR responde primero (L1181) — si tiene respondibles la
   // cadena se abre y el auto-avance 9.3 queda DIFERIDO hasta cerrarla.
   if (abrirCadena(s, rivalDe(s))) return
@@ -169,24 +185,50 @@ export function ejecutarDeclararBloqueo(s: GameState, asignaciones: Record<strin
  * ADR-14; el daño no persiste, L1122) y las aplica en orden determinista
  * (atacantes, luego bloqueadores) vía destruirCarta('combate') → 2G + Éter
  * 1A + carta_muerta + destruccion. Stats consultados vía statsDe (C1, ADR-20):
- * base meta + override de instancia + Σ modificadores (misma semántica pre-auras).
+ * base meta + override de instancia + Σ modificadores + auras de campo (C3b).
+ * C3 (D5): por cada muerte CONFIRMADA se dispara al-matar-en-combate con
+ * payloadExtra { killerId, victimaId } y jugador = controlador del killer.
  */
 function resolverCombate(s: GameState, ctx: Ctx): void {
   const combate = s.combate
   if (!combate) return
   const muertosAtacantes: string[] = []
   const muertosBloqueadores: string[] = []
+  const killerDe = new Map<string, string>() // victimaId → killerId (C3 D5)
   for (const atacante of combate.atacantes) {
     const bloqueador = combate.bloqueos[atacante]
     if (!bloqueador) continue // sin bloquear: no hay daño (Ruptura, no muerte)
     // Ambos deciden con el estado PRE-daño (los stats no cambian: sin marcas)
     const statsAtacante = statsDe(s, atacante)
     const statsBloqueador = statsDe(s, bloqueador)
-    if (statsAtacante.poder >= statsBloqueador.resistencia) muertosBloqueadores.push(bloqueador)
-    if (statsBloqueador.poder >= statsAtacante.resistencia) muertosAtacantes.push(atacante)
+    if (statsAtacante.poder >= statsBloqueador.resistencia) {
+      muertosBloqueadores.push(bloqueador)
+      killerDe.set(bloqueador, atacante)
+    }
+    if (statsBloqueador.poder >= statsAtacante.resistencia) {
+      muertosAtacantes.push(atacante)
+      killerDe.set(atacante, bloqueador)
+    }
+  }
+  // C3 (D5): snapshot del controlador del killer PRE-muertes — el killer puede
+  // morir en la misma resolución y quedar fuera del campo antes de su dispatch.
+  const controladores = new Map<string, PlayerId>()
+  for (const id of [...muertosAtacantes, ...muertosBloqueadores]) {
+    const killerId = killerDe.get(id)
+    if (killerId && !controladores.has(killerId)) {
+      const c = controladorDe(s, killerId)
+      if (c) controladores.set(killerId, c)
+    }
   }
   for (const id of [...muertosAtacantes, ...muertosBloqueadores]) {
-    destruirCarta(s, ctx, id, 'combate')
+    const killerId = killerDe.get(id)
+    const jugador = killerId ? controladores.get(killerId) : undefined
+    // C3 (D5): al-matar-en-combate SOLO si la muerte se CONFIRMÓ (post-muerte).
+    // Instancias = [víctima, killer]: los handlers keyed por el cardId del
+    // ASESINO (C3c DS-012 Draven) también deben disparar.
+    if (destruirCarta(s, ctx, id, 'combate') && killerId && jugador) {
+      dispararTrigger(s, ctx, 'al-matar-en-combate', jugador, [id, killerId], { killerId, victimaId: id })
+    }
   }
 }
 

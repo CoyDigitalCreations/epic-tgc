@@ -1,19 +1,19 @@
 import { reagruparEter } from './payments'
-import { purgarEfectosTemporales } from './efectos'
+import { purgarEfectosTemporales, dispararTrigger } from './efectos'
 import type { Ctx, GameState, PlayerId } from './types'
 
 /**
  * Alba AUTO-RESUELTA (ADR-3): nunca es un estado observable; se ejecuta dentro
- * de la acción que la dispara. Orden: purga 'alba-dueño' (C1, ADR-22) →
- * enderezar (silencioso) → reagrupar 1A→2A (eter_reagrupado) → robar 1
- * (carta_robada; mazo vacío → derrota).
+ * de la acción que la dispara. Orden C2: purga 'alba-dueño' → enderezar →
+ * DISPARO al-inicio-alba ANTES de reagrupar (para que Pasivo 1A evalúe 1A) →
+ * reagrupar 1A→2A → robar 1.
+ * Desviación: ADR-23 ordenaba tras reagrupar; Pasivo necesita 1A vivo.
  * Las transiciones forja→choque→ocaso→alba viven en actions.ts (C4).
  */
 export function resolverAlba(s: GameState, ctx: Ctx, jugador: PlayerId): void {
   const p = s.players[jugador]
 
-  // 0. Expiran los efectos 'alba-dueño' del jugador (ADR-22): la Alba del
-  // dueño purga sus modificadores antes de enderezar/reagrupar/robar.
+  // 0. Expiran los efectos 'alba-dueño' del jugador (ADR-22)
   purgarEfectosTemporales(s, 'alba-dueño', jugador)
 
   // 1. Enderezar Campeones (silencioso)
@@ -24,16 +24,22 @@ export function resolverAlba(s: GameState, ctx: Ctx, jugador: PlayerId): void {
       if (inst.atacoEsteTurno) delete inst.atacoEsteTurno
     }
   }
-  // 1b. Activación diferida (§5.5, C4): Tácticas/Arcanas colocadas el turno
-  // anterior ya pueden responder en la cadena 9.6 (el flag no existe en Campeones).
+  // 1b. Activación diferida (§5.5, C4)
   for (const id of [...p.campo.misticasTacticas, ...p.campo.arcanasCombate]) {
     if (id && s.instances[id]?.entradaEsteTurno) delete s.instances[id].entradaEsteTurno
   }
 
-  // 2. Reagrupar Éter pagado 1A → 2A (los bloqueados permanecen en el Campeón)
+  // 2. C2: Disparo al-inicio-alba ANTES de reagrupar (instancias = eterPagado del jugador)
+  //    El Pasivo 1A (FB-005/DS-006) evalúa su condición en zona 1A viva.
+  const eterPagadoSnapshot = [...p.eterPagado]
+  if (eterPagadoSnapshot.length > 0) {
+    dispararTrigger(s, ctx, 'al-inicio-alba', jugador, eterPagadoSnapshot)
+  }
+
+  // 3. Reagrupar Éter pagado 1A → 2A (los bloqueados permanecen en el Campeón)
   reagruparEter(s, ctx, jugador)
 
-  // 3. Robar 1 (no consume RNG: toma del tope)
+  // 4. Robar 1 (no consume RNG: toma del tope)
   robarCarta(s, ctx, jugador)
 }
 

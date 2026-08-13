@@ -1,7 +1,7 @@
 import { getCardMeta, faccionesCompartidas } from './cards'
 import type { Action } from './actions'
 import { generarAccionesForja } from './actions'
-import { atacantesElegibles, asignacionForzada, ataquesSinBloquear, rivalDe } from './combat'
+import { atacantesElegibles, asignacionForzada, ataquesSinBloquear, rivalDe, tieneKeyword } from './combat'
 import { respondiblesDe } from './chain'
 import type { GameState, PlayerId } from './types'
 
@@ -49,6 +49,28 @@ export function getValidActions(state: GameState, playerId: PlayerId): Action[] 
 
   if (state.turno === playerId) {
     const p = state.players[playerId]
+    // C3 (D1): elegir_objetivo — frente de la cola FIFO del jugador activo
+    // (patrón de elegir_opcion, pero aplica en forja Y choque: al-invocar y
+    // al-atacar arman pendientes). Las opciones YA vienen filtradas.
+    const pendiente = state.objetivosPendientes?.[0]
+    if (pendiente && pendiente.jugador === playerId) {
+      for (const objetivoId of pendiente.opciones) {
+        acciones.push({ type: 'elegir_objetivo', objetivoId })
+      }
+    }
+    // C3d (D4): usar_transmutar — Campeón propio con keyword `Transmutar` en
+    // campo (forja o choque): regresa hasta 2 Éteres pagados (1A) a la
+    // Reserva. Solo se expone con 1A disponible y la variante de retorno
+    // máximo (la vacía es una acción estrictamente dominada; el validador la
+    // acepta igual, pero getValidActions nunca la sugiere).
+    if (state.fase === 'forja' || state.fase === 'choque') {
+      for (const champId of p.campo.campeones) {
+        if (!champId || !tieneKeyword(state, champId, 'Transmutar')) continue
+        if (p.eterPagado.length > 0) {
+          acciones.push({ type: 'usar_transmutar', cardInstanceId: champId, eterIds: p.eterPagado.slice(0, 2) })
+        }
+      }
+    }
     if (state.fase === 'forja') {
       // Jugadas por carta en mano (el generador garantiza payloads válidos)
       for (const id of p.mano) {
@@ -70,6 +92,12 @@ export function getValidActions(state: GameState, playerId: PlayerId): Action[] 
           acciones.push({ type: 'bloquear_eter', eterIds: [eterId], campeonSlot: slot })
         }
       })
+      // C2: elegir_opcion — opciones pendientes del Pasivo 1A (FB-005/DS-006)
+      for (const opcion of state.opcionesPendientes ?? []) {
+        if (opcion.jugador === playerId) {
+          acciones.push({ type: 'elegir_opcion', opcionId: opcion.eterId })
+        }
+      }
       acciones.push({ type: 'pasar_turno' })
     } else if (state.fase === 'choque') {
       const combate = state.combate

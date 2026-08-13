@@ -1,14 +1,14 @@
 import type { GameEvent } from './events'
-import { purgarEfectosTemporales, purgarKeywordsTemporales } from './efectos'
+import { purgarEfectosTemporales, purgarKeywordsTemporales, dispararTrigger, type TriggerEfecto } from './efectos'
 import { limpiarCombate, resolverAlba } from './phases'
 import { shuffleFisherYates } from './rng'
 import type { Ctx, FaseNombre, GameState, PlayerId } from './types'
 import { esCampeon, esMistica, esTactica, esArcana, esCombate, faccionesCompartidas, getCardMeta } from './cards'
 import { esSingular, sacrificiosRequeridos, copiasEnCampo, campeonesSacrificables } from './campo'
-import { aplicarPago, validarPago, validarBloqueo, etersParaPagar } from './payments'
+import { aplicarPago, validarPago, validarBloqueo, etersParaPagar, type ContextoUso } from './payments'
 import { SLOTS_CAMPEONES, SLOTS_MISTICAS_TACTICAS, SLOTS_ARCANAS_COMBATE, slotAZona } from './zones'
 import type { CardInstance } from './types'
-import { ejecutarDeclararAtaque, ejecutarDeclararBloqueo, validarDeclararAtaque, validarDeclararBloqueo, validarElegirRuptura, ejecutarElegirRuptura } from './combat'
+import { ejecutarDeclararAtaque, ejecutarDeclararBloqueo, validarDeclararAtaque, validarDeclararBloqueo, validarElegirRuptura, ejecutarElegirRuptura, tieneKeyword } from './combat'
 import { liberarEterBloqueado } from './replacements'
 import { validarResponderCadena, validarPasarPrioridad, ejecutarResponderCadena, ejecutarPasarPrioridad } from './chain'
 
@@ -37,6 +37,8 @@ export type Action =
   | { type: 'bloquear_eter'; eterIds: string[]; campeonSlot: number }
   | { type: 'descartar_carta'; cardInstanceIds: string[] }
   | { type: 'elegir_opcion'; opcionId: string }
+  | { type: 'elegir_objetivo'; objetivoId: string }
+  | { type: 'usar_transmutar'; cardInstanceId: string; eterIds: string[] }
   // Apéndice de combate (change 2, spec #1227 R15): declarar_ataque,
   // declarar_bloqueo y elegir_ruptura (C3) ya despachan en el core;
   // responder_cadena y pasar_prioridad (C4) entran a la unión como stub
@@ -92,6 +94,12 @@ function validarAccion(state: GameState, action: Action): string | null {
       return validarColocarCombate(state, action)
     case 'bloquear_eter':
       return validarBloquearEter(state, action)
+    case 'elegir_opcion':
+      return validarElegirOpcion(state, action)
+    case 'elegir_objetivo':
+      return validarElegirObjetivo(state, action)
+    case 'usar_transmutar':
+      return validarUsarTransmutar(state, action)
     case 'declarar_ataque':
       return validarDeclararAtaque(state, action.atacanteIds)
     case 'declarar_bloqueo':
@@ -253,6 +261,50 @@ function validarBloquearEter(state: GameState, action: Extract<Action, { type: '
   return validarBloqueo(state, state.turno, action.eterIds, action.campeonSlot)
 }
 
+/** C2: validar elegir_opcion — solo en forja del jugador con opción pendiente. */
+function validarElegirOpcion(state: GameState, action: Extract<Action, { type: 'elegir_opcion' }>): string | null {
+  if (state.fase !== 'forja') return 'elegir_opcion solo en Forja'
+  const pendiente = state.opcionesPendientes?.find(
+    (o) => o.jugador === state.turno && o.eterId === action.opcionId
+  )
+  if (!pendiente) return 'no hay opción pendiente para este jugador'
+  return null
+}
+
+/**
+ * C3 (D1): validar elegir_objetivo — el FRENTE de la cola (FIFO) debe pertenecer
+ * al jugador activo y el objetivo elegido estar entre las opciones YA filtradas
+ * (el motor nunca expone objetivos inválidos). Aplica en forja y choque:
+ * al-invocar y al-atacar arman pendientes (a diferencia de elegir_opcion, C2).
+ */
+function validarElegirObjetivo(state: GameState, action: Extract<Action, { type: 'elegir_objetivo' }>): string | null {
+  const pendiente = state.objetivosPendientes?.[0]
+  if (!pendiente) return 'no hay objetivo pendiente'
+  if (pendiente.jugador !== state.turno) return 'no es tu turno para elegir objetivo'
+  if (!pendiente.opciones.includes(action.objetivoId)) return 'el objetivo no está entre las opciones válidas'
+  return null
+}
+
+/**
+ * C3d (D4): validar usar_transmutar — Campeón con keyword `Transmutar` del
+ * jugador ACTIVO en su campo (forja o choque); eterIds ⊆ p.eterPagado (1A),
+ * únicos y ≤ 2. Genérico por keyword (no hardcodea FB-012).
+ */
+function validarUsarTransmutar(state: GameState, action: Extract<Action, { type: 'usar_transmutar' }>): string | null {
+  if (state.fase !== 'forja' && state.fase !== 'choque') return 'usar_transmutar solo en Forja o Choque'
+  const p = state.players[state.turno]
+  const inst = state.instances[action.cardInstanceId]
+  if (!inst) return 'la carta no existe'
+  if (!tieneKeyword(state, action.cardInstanceId, 'Transmutar')) return 'la carta no tiene Transmutar'
+  if (!p.campo.campeones.includes(action.cardInstanceId)) return 'la carta no está en tu campo'
+  if (action.eterIds.length > 2) return 'máximo 2 Éteres pagados'
+  if (new Set(action.eterIds).size !== action.eterIds.length) return 'éteres repetidos'
+  for (const eterId of action.eterIds) {
+    if (!p.eterPagado.includes(eterId)) return 'un Éter no está pagado (1A)'
+  }
+  return null
+}
+
 function ejecutarAccion(s: GameState, action: Action, ctx: Ctx): void {
   switch (action.type) {
     case 'rendirse': {
@@ -310,6 +362,18 @@ function ejecutarAccion(s: GameState, action: Action, ctx: Ctx): void {
     }
     case 'bloquear_eter': {
       ejecutarBloquearEter(s, action, ctx)
+      return
+    }
+    case 'elegir_opcion': {
+      ejecutarElegirOpcion(s, action, ctx)
+      return
+    }
+    case 'elegir_objetivo': {
+      ejecutarElegirObjetivo(s, action, ctx)
+      return
+    }
+    case 'usar_transmutar': {
+      ejecutarUsarTransmutar(s, action, ctx)
       return
     }
     case 'declarar_ataque': {
@@ -376,6 +440,14 @@ function ejecutarPasarTurno(s: GameState, ctx: Ctx): void {
       purgarEfectosTemporales(s, 'ocaso')
       purgarKeywordsTemporales(s)
     }
+    if (s.fase === 'forja') {
+      // C2 (ADR-24): al inicio del Choque del jugador activo se disparan
+      // efectos de inicio-choque (Éteres FB-002/DS-003 en Reserva).
+      const p = s.players[s.turno]
+      if (p.eterReserva.length > 0) {
+        dispararTrigger(s, ctx, 'al-inicio-choque', s.turno, p.eterReserva)
+      }
+    }
     s.fase = siguiente
     ctx.emit({ type: 'fase_iniciada', fase: siguiente, jugador: s.turno })
     return
@@ -416,8 +488,9 @@ function ejecutarJugarCampeon(s: GameState, action: Extract<Action, { type: 'jug
   const p = s.players[s.turno]
   const id = action.cardInstanceId
   const cardId = s.instances[id]!.cardId!
-  // 1. Pago
-  aplicarPago(s, ctx, s.turno, action.eterIds, cardId)
+  // 1. Pago (con contextoUso para gatillos FB-004/DS-005)
+  const contextoUso: ContextoUso = { tipo: 'invocar', cardInstanceId: id }
+  aplicarPago(s, ctx, s.turno, action.eterIds, cardId, contextoUso)
   // 2. Sacrificios: salen de su slot → 2G (liberan slot para el Campeón)
   for (const sacId of action.sacrificios ?? []) {
     const slotIdx = p.campo.campeones.indexOf(sacId)
@@ -439,13 +512,16 @@ function ejecutarJugarCampeon(s: GameState, action: Extract<Action, { type: 'jug
   s.instances[id]!.agotado = true
   ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: id, zona, jugador: s.turno, bocaArriba: true })
   ctx.emit({ type: 'carta_invocada', cardInstanceId: id, tipo: 'Campeón', slot: action.slot })
+  // C3 (D5): al-invocar se dispara con la instancia YA en campo (post-invocación)
+  dispararTrigger(s, ctx, 'al-invocar', s.turno, [id])
 }
 
 /** Paga y coloca la Mística boca arriba en 3A-3C. */
 function ejecutarJugarMistica(s: GameState, action: Extract<Action, { type: 'jugar_mistica' }>, ctx: Ctx): void {
   const p = s.players[s.turno]
   const id = action.cardInstanceId
-  aplicarPago(s, ctx, s.turno, action.eterIds, s.instances[id]!.cardId!)
+  const contextoUso: ContextoUso = { tipo: 'jugar', cardInstanceId: id }
+  aplicarPago(s, ctx, s.turno, action.eterIds, s.instances[id]!.cardId!, contextoUso)
   p.mano.splice(p.mano.indexOf(id), 1)
   const zona = slotAZona('misticasTacticas', action.slot) ?? '3A'
   ctx.emit({ type: 'carta_salida_de_zona', cardInstanceId: id, zona: 'mano', jugador: s.turno })
@@ -472,7 +548,8 @@ function ejecutarColocarTactica(s: GameState, action: Extract<Action, { type: 'c
 function ejecutarColocarArcana(s: GameState, action: Extract<Action, { type: 'colocar_arcana' }>, ctx: Ctx): void {
   const p = s.players[s.turno]
   const id = action.cardInstanceId
-  aplicarPago(s, ctx, s.turno, action.eterIds, s.instances[id]!.cardId!)
+  const contextoUso: ContextoUso = { tipo: 'habilidad', cardInstanceId: id }
+  aplicarPago(s, ctx, s.turno, action.eterIds, s.instances[id]!.cardId!, contextoUso)
   p.mano.splice(p.mano.indexOf(id), 1)
   const zona = slotAZona('arcanasCombate', action.slot) ?? '3D'
   ctx.emit({ type: 'carta_salida_de_zona', cardInstanceId: id, zona: 'mano', jugador: s.turno })
@@ -507,6 +584,101 @@ function ejecutarBloquearEter(s: GameState, action: Extract<Action, { type: 'blo
     p.eterReserva.splice(p.eterReserva.indexOf(id), 1)
   }
   ctx.emit({ type: 'eter_bloqueado', jugador: s.turno, eterIds: action.eterIds, campeonId })
+}
+
+/** C2: ejecutar elegir_opcion — greedy determinista (anti-cheat 6.2). */
+function ejecutarElegirOpcion(s: GameState, action: Extract<Action, { type: 'elegir_opcion' }>, ctx: Ctx): void {
+  const j = s.turno
+  const p = s.players[j]
+  const pendiente = s.opcionesPendientes!.find((o) => o.jugador === j && o.eterId === action.opcionId)
+  if (!pendiente) return // ya validado
+
+  // Greedy determinista: primer Campeón con facción compartida + primer Éter Reserva compatible
+  let elegido: { campeonSlot: number; eterId: string } | null = null
+  for (let slot = 0; slot < SLOTS_CAMPEONES && !elegido; slot++) {
+    const campeonId = p.campo.campeones[slot]
+    if (!campeonId) continue
+    const metaC = s.instances[campeonId]?.cardId ? getCardMeta(s.instances[campeonId]!.cardId!) : null
+    if (!metaC) continue
+    for (const eterId of p.eterReserva) {
+      const metaE = s.instances[eterId]?.cardId ? getCardMeta(s.instances[eterId]!.cardId!) : null
+      if (metaE && faccionesCompartidas(metaE.facciones, metaC.facciones)) {
+        elegido = { campeonSlot: slot, eterId }
+        break
+      }
+    }
+  }
+  if (!elegido) {
+    // No hay pareja válida (no debería pasar si validación correcta)
+    s.opcionesPendientes = s.opcionesPendientes!.filter((o) => !(o.jugador === j && o.eterId === action.opcionId))
+    return
+  }
+  const error = validarBloqueo(s, j, [elegido.eterId], elegido.campeonSlot)
+  if (error) {
+    s.opcionesPendientes = s.opcionesPendientes!.filter((o) => !(o.jugador === j && o.eterId === action.opcionId))
+    return
+  }
+  // Ejecutar bloqueo (reutiliza lógica de ejecutarBloquearEter)
+  const campeonId = p.campo.campeones[elegido.campeonSlot]!
+  const instCampeon = s.instances[campeonId]
+  instCampeon.eterBloqueado = [...(instCampeon.eterBloqueado ?? []), elegido.eterId]
+  p.eterReserva.splice(p.eterReserva.indexOf(elegido.eterId), 1)
+  ctx.emit({ type: 'eter_bloqueado', jugador: j, eterIds: [elegido.eterId], campeonId })
+
+  // Marcar opción usada en el Éter Pasivo
+  const eterPasivo = s.instances[pendiente.eterId]
+  if (eterPasivo) eterPasivo.opcionUsadaEsteTurno = true
+
+  // Limpiar pendiente
+  s.opcionesPendientes = s.opcionesPendientes!.filter((o) => !(o.jugador === j && o.eterId === action.opcionId))
+}
+
+/**
+ * C3 (D1): resolución por re-dispatch (patrón C2 contextoUso) — saca el FRENTE
+ * de la cola FIFO y re-dispara el trigger que originó el pendiente con
+ * contextoUso 'objetivo-elegido' + objetivoId. El handler registrado distingue:
+ * si ya viene con ese contextoUso, APLICA el efecto sobre objetivoId; si no,
+ * ARMA el pendiente. Así el estado es serializable (sin callbacks).
+ */
+function ejecutarElegirObjetivo(s: GameState, action: Extract<Action, { type: 'elegir_objetivo' }>, ctx: Ctx): void {
+  const pendiente = s.objetivosPendientes?.[0]
+  if (!pendiente) return // defensivo: ya validado en validarAccion
+  s.objetivosPendientes = s.objetivosPendientes!.slice(1)
+  dispararTrigger(s, ctx, pendiente.trigger as TriggerEfecto, pendiente.jugador, [pendiente.instId], {
+    contextoUso: 'objetivo-elegido',
+    objetivoId: action.objetivoId,
+  })
+}
+
+/**
+ * C3d (D4): ejecutar usar_transmutar — 1) eterIds (1A) → 2A Reserva del
+ * activo (eter_reagrupado); 2) auto-sacrificio: la carta sale del campo →
+ * 2G del DUEÑO (patrón sacrificio actions.ts) + libera su Éter bloqueado a
+ * 1A. NO pasa por `destruirCarta` (Inmortal/Indestructible no lo previenen:
+ * es coste, no destrucción).
+ */
+function ejecutarUsarTransmutar(s: GameState, action: Extract<Action, { type: 'usar_transmutar' }>, ctx: Ctx): void {
+  const p = s.players[s.turno]
+  const id = action.cardInstanceId
+  const inst = s.instances[id]!
+  // 1. Coste: eterIds (1A) → 2A Reserva (patrón eter_reagrupado combat.ts:112)
+  for (const eterId of action.eterIds) {
+    const idx = p.eterPagado.indexOf(eterId)
+    if (idx !== -1) p.eterPagado.splice(idx, 1)
+  }
+  p.eterReserva.push(...action.eterIds)
+  if (action.eterIds.length > 0) {
+    ctx.emit({ type: 'eter_reagrupado', jugador: s.turno, eterIds: action.eterIds })
+  }
+  // 2. Auto-sacrificio: campo → 2G (cementerio del dueño), libera el slot
+  const slotIdx = p.campo.campeones.indexOf(id)
+  const zona = slotAZona('campeones', slotIdx) ?? '2B'
+  ctx.emit({ type: 'carta_salida_de_zona', cardInstanceId: id, zona, jugador: s.turno })
+  p.campo.campeones[slotIdx] = null
+  liberarEterBloqueado(s, ctx, id, '1A')
+  const cementerio = s.players[inst.owner].cementerio
+  if (!cementerio.includes(id)) cementerio.push(id)
+  ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: id, zona: '2G', jugador: inst.owner, bocaArriba: true })
 }
 
 /* ─────────────────── Generador de acciones de Forja ─────────────────── */

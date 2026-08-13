@@ -1,6 +1,8 @@
 import { ALL_CARDS } from '../../shared/data/paquetes'
 import type { AnyCard, ArcanaCard, CampeonCard, CombateCard, EterCard, MisticaCard, TacticaCard, VinculoCard, Faccion } from '../../shared/types'
 
+export type { AnyCard }
+
 /**
  * Índice cardId → AnyCard sobre ALL_CARDS (60 diseños).
  * Construido UNA vez al cargar el módulo: getCardMeta no re-indexa por llamada.
