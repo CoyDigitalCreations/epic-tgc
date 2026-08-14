@@ -19,7 +19,7 @@ export interface Paquete {
   facciones: Faccion[]
   /** Entrega/set comercial al que pertenece el mazo (p.ej. la entrega "Primogénitos") */
   entrega?: string
-  /** Distribución oficial del mazo: 15 Éter + 40 Principal + 6 Vínculos */
+  /** Distribución oficial del mazo: 15 Éter + 45 Principal + 6 Vínculos */
   distribucion: {
     eter: number
     principal: number
@@ -28,5 +28,5 @@ export interface Paquete {
   lore: string
 }
 
-/** Total de cartas que debe sumar un paquete (61) */
-export const MAZO_TOTAL = 61
+/** Total de cartas que debe sumar un paquete (66) */
+export const MAZO_TOTAL = 66

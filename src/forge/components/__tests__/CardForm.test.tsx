@@ -86,3 +86,114 @@ describe('CardForm', () => {
     expect(screen.getByText('Efecto')).toBeInTheDocument()
   })
 })
+
+describe('CardForm — metadata de autoría (A1/A2)', () => {
+  it('muestra los campos Variante y Comentario', () => {
+    render(<CardForm />)
+    expect(screen.getByText('Variante')).toBeInTheDocument()
+    expect(screen.getByText('Comentario')).toBeInTheDocument()
+  })
+
+  it('el select de variante por defecto es normal', () => {
+    render(<CardForm />)
+    const select = screen.getByLabelText('Variante')
+    expect((select as HTMLSelectElement).value).toBe('normal')
+  })
+
+  it('cambiar la variante actualiza el draft', () => {
+    render(<CardForm />)
+    const select = screen.getByLabelText('Variante')
+    fireEvent.change(select, { target: { value: 'full-art' } })
+    expect(useCardStore.getState().draft.variante).toBe('full-art')
+  })
+
+  it('escribir el comentario actualiza el draft', () => {
+    render(<CardForm />)
+    const textarea = screen.getByPlaceholderText(/Notas del diseñador/)
+    fireEvent.change(textarea, { target: { value: 'Revisar balance del tutor' } })
+    expect(useCardStore.getState().draft.comentario).toBe('Revisar balance del tutor')
+  })
+})
+
+describe('CardForm — campo Paquete (paquetes personalizados)', () => {
+  it('renderiza el select de Paquete con Sin paquete + estáticos + userPacks', () => {
+    useCardStore.setState({
+      userPacks: [
+        {
+          id: 'mutantes',
+          nombre: 'Mutantes',
+          tipo: 'Mazo Temático',
+          color: '#6b7280',
+          facciones: [],
+          distribucion: { eter: 15, principal: 45, vinculos: 6 },
+          lore: '',
+        },
+      ],
+    })
+    render(<CardForm />)
+    const select = screen.getByLabelText('Paquete')
+    expect(select).toBeInTheDocument()
+    const options = screen.getAllByRole('option').map((o) => o.textContent)
+    expect(options).toContain('Sin paquete')
+    expect(options).toContain('Estásis')
+    expect(options).toContain('Disonancia')
+    expect(options).toContain('Mutantes')
+  })
+
+  it('seleccionar un paquete actualiza draft.paqueteId', () => {
+    render(<CardForm />)
+    const select = screen.getByLabelText('Paquete')
+    fireEvent.change(select, { target: { value: 'estasis' } })
+    expect(useCardStore.getState().draft.paqueteId).toBe('estasis')
+  })
+
+  it('elegir "Sin paquete" guarda undefined', () => {
+    useCardStore.setState({
+      draft: {
+        name: '',
+        type: 'Campeón',
+        rarity: 'Común',
+        keywords: [],
+        flavorText: '',
+        stats: { cost: 0, poder: 0, resistencia: 0 },
+        paqueteId: 'estasis',
+      },
+    })
+    render(<CardForm />)
+    const select = screen.getByLabelText('Paquete')
+    fireEvent.change(select, { target: { value: '' } })
+    expect(useCardStore.getState().draft.paqueteId).toBeUndefined()
+  })
+
+  it('al editar una carta con paquete, el select muestra el paquete asignado', () => {
+    useCardStore.setState({
+      cards: [
+        {
+          id: 'test-1',
+          name: 'Test',
+          type: 'Campeón',
+          rarity: 'Común',
+          keywords: [],
+          flavorText: '',
+          createdAt: '2024-01-01',
+          updatedAt: '2024-01-01',
+          stats: { cost: 0, poder: 0, resistencia: 0 },
+          paqueteId: 'disonancia',
+        } as import('../../../shared/types').CampeonCard,
+      ],
+      draft: {
+        id: 'test-1',
+        name: 'Test',
+        type: 'Campeón',
+        rarity: 'Común',
+        keywords: [],
+        flavorText: '',
+        stats: { cost: 0, poder: 0, resistencia: 0 },
+        paqueteId: 'disonancia',
+      },
+    })
+    render(<CardForm />)
+    const select = screen.getByLabelText('Paquete')
+    expect((select as HTMLSelectElement).value).toBe('disonancia')
+  })
+})

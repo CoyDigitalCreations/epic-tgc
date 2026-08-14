@@ -21,7 +21,7 @@ describe('Paquetes', () => {
     expect(estasis?.entrega).toBe('Primogénitos')
     expect(estasis?.tipo).toBe('Mazo Temático')
     expect(estasis?.facciones).toEqual(['Orden'])
-    expect(estasis?.distribucion).toEqual({ eter: 15, principal: 40, vinculos: 6 })
+    expect(estasis?.distribucion).toEqual({ eter: 15, principal: 45, vinculos: 6 })
   })
 
   it('registra el mazo temático Disonancia de la entrega Primogénitos con distribución oficial', () => {
@@ -31,20 +31,20 @@ describe('Paquetes', () => {
     expect(disonancia?.entrega).toBe('Primogénitos')
     expect(disonancia?.tipo).toBe('Mazo Temático')
     expect(disonancia?.facciones).toEqual(['Caos'])
-    expect(disonancia?.distribucion).toEqual({ eter: 15, principal: 40, vinculos: 6 })
+    expect(disonancia?.distribucion).toEqual({ eter: 15, principal: 45, vinculos: 6 })
   })
 
-  describe('Estásis (entrega Primogénitos) — 30 diseños / 61 cartas', () => {
-    it('tiene 30 diseños con IDs únicos y prefijo FB-', () => {
-      expect(ESTASIS_CARDS).toHaveLength(30)
+  describe('Estásis (entrega Primogénitos) — 32 diseños / 66 cartas', () => {
+    it('tiene 32 diseños con IDs únicos y prefijo FB-', () => {
+      expect(ESTASIS_CARDS).toHaveLength(32)
       const ids = ESTASIS_CARDS.map((c) => c.id)
       expect(new Set(ids).size).toBe(ids.length)
       expect(ids.every((id) => /^FB-\d{3}$/.test(id))).toBe(true)
     })
 
-    it('cumple la distribución oficial: 15 Éter + 40 Principal + 6 Vínculos = 61', () => {
+    it('cumple la distribución oficial: 15 Éter + 45 Principal + 6 Vínculos = 66', () => {
       const dist = estasisDistribucion()
-      expect(dist).toEqual({ eter: 15, principal: 40, vinculos: 6, total: 61 })
+      expect(dist).toEqual({ eter: 15, principal: 45, vinculos: 6, total: 66 })
     })
 
     it('las cartas con facción son de Orden; Táctica y Combate no tienen facción', () => {
@@ -114,16 +114,16 @@ describe('Paquetes', () => {
   })
 
   describe('Disonancia (entrega Primogénitos) — contraparte de Estásis', () => {
-    it('tiene 30 diseños con IDs únicos y prefijo DS-', () => {
-      expect(DISONANCIA_CARDS).toHaveLength(30)
+    it('tiene 33 diseños con IDs únicos y prefijo DS-', () => {
+      expect(DISONANCIA_CARDS).toHaveLength(33)
       const ids = DISONANCIA_CARDS.map((c) => c.id)
       expect(new Set(ids).size).toBe(ids.length)
       expect(ids.every((id) => /^DS-\d{3}$/.test(id))).toBe(true)
     })
 
-    it('cumple la distribución oficial: 15 Éter + 40 Principal + 6 Vínculos = 61', () => {
+    it('cumple la distribución oficial: 15 Éter + 45 Principal + 6 Vínculos = 66', () => {
       const dist = disonanciaDistribucion()
-      expect(dist).toEqual({ eter: 15, principal: 40, vinculos: 6, total: 61 })
+      expect(dist).toEqual({ eter: 15, principal: 45, vinculos: 6, total: 66 })
     })
 
     it('las cartas con facción son de Caos; Táctica y Combate no tienen facción', () => {
@@ -218,10 +218,10 @@ describe('Paquetes', () => {
       expect(DISONANCIA_CARDS.find((c) => c.id === 'DS-028')?.efecto).toContain('Indestructible')
     })
 
-    it('la colección completa del paquete alcanza las 61 copias (mazo jugable)', () => {
+    it('la colección completa del paquete alcanza las 66 copias (mazo jugable)', () => {
       const prog = progresoPaquete(DISONANCIA_CARDS, 'disonancia')
-      expect(prog?.total).toBe(61)
-      expect(prog?.coleccionadas).toBe(61)
+      expect(prog?.total).toBe(66)
+      expect(prog?.coleccionadas).toBe(66)
       expect(prog?.completo).toBe(true)
     })
   })
@@ -243,14 +243,18 @@ describe('Paquetes', () => {
   })
 
   describe('Arte versionado (public/cartas) — convención automática', () => {
-    it('todas las cartas de Estásis tienen arte oficial mapeado', () => {
+    it('todas las cartas de Estásis con arte tienen arte oficial mapeado', () => {
       for (const card of ESTASIS_CARDS) {
-        expect(CARD_ART_IDS.has(card.id)).toBe(true)
+        if (!CARD_ART_IDS.has(card.id)) continue
         expect(cardArtPath(card.id)).toBe(`/cartas/${card.id}.png`)
       }
     })
 
-    it('las cartas de Disonancia aún no tienen arte (pendiente)', () => {
+    it('las cartas nuevas (C4) y las de Disonancia aún no tienen arte (placeholder)', () => {
+      for (const id of ['FB-031', 'FB-032']) {
+        expect(CARD_ART_IDS.has(id)).toBe(false)
+        expect(cardArtPath(id)).toBeUndefined()
+      }
       for (const card of DISONANCIA_CARDS) {
         expect(CARD_ART_IDS.has(card.id)).toBe(false)
         expect(cardArtPath(card.id)).toBeUndefined()
@@ -264,11 +268,11 @@ describe('Paquetes', () => {
   })
 
   describe('progresoPaquete — contador de colección', () => {
-    it('devuelve 0/61 cuando la colección no tiene cartas del paquete', () => {
+    it('devuelve 0/66 cuando la colección no tiene cartas del paquete', () => {
       expect(progresoPaquete([], 'estasis')).toEqual({
         paqueteId: 'estasis',
         coleccionadas: 0,
-        total: 61,
+        total: 66,
         completo: false,
       })
     })
@@ -281,9 +285,9 @@ describe('Paquetes', () => {
       expect(prog?.completo).toBe(false)
     })
 
-    it('marca completo cuando la colección tiene las 61 copias', () => {
+    it('marca completo cuando la colección tiene las 66 copias', () => {
       const prog = progresoPaquete(ESTASIS_CARDS, 'estasis')
-      expect(prog?.coleccionadas).toBe(61)
+      expect(prog?.coleccionadas).toBe(66)
       expect(prog?.completo).toBe(true)
     })
 

@@ -3,10 +3,10 @@ import { createCtx, shuffleFisherYates } from './rng'
 import type { CardInstance, Ctx, GameState, PlayerId, PlayerState, SetupOptions } from './types'
 
 const DIST_ETER = 15
-const DIST_PRINCIPAL = 40
+const DIST_PRINCIPAL = 45
 const DIST_VINCULOS = 6
 const MANO_INICIAL = 5
-const TOTAL_MAZO = DIST_ETER + DIST_PRINCIPAL + DIST_VINCULOS // 61
+const TOTAL_MAZO = DIST_ETER + DIST_PRINCIPAL + DIST_VINCULOS // 66
 
 function crearPlayerState(id: PlayerId): PlayerState {
   return {
@@ -31,7 +31,7 @@ function tipoDe(cardId: string): string | undefined {
   return getCardMeta(cardId)?.type
 }
 
-/** Valida la distribución del mazo (15 Éter + 40 Principal + 6 Vínculos = 61) y que todo cardId exista. */
+/** Valida la distribución del mazo (15 Éter + 45 Principal + 6 Vínculos = 66) y que todo cardId exista. */
 function validarDeck(deck: string[], nombre: string): void {
   if (deck.length !== TOTAL_MAZO) {
     throw new Error(`Mazo ${nombre} inválido: ${deck.length} cartas (se esperaban ${TOTAL_MAZO})`)
@@ -41,7 +41,7 @@ function validarDeck(deck: string[], nombre: string): void {
   const principal = deck.length - eter - vinculos
   if (eter !== DIST_ETER || principal !== DIST_PRINCIPAL || vinculos !== DIST_VINCULOS) {
     throw new Error(
-      `Mazo ${nombre} inválido: ${eter} Éter + ${principal} Principal + ${vinculos} Vínculos (se esperaban 15/40/6)`,
+      `Mazo ${nombre} inválido: ${eter} Éter + ${principal} Principal + ${vinculos} Vínculos (se esperaban 15/45/6)`,
     )
   }
   for (const id of deck) {
@@ -74,10 +74,10 @@ function validarOrdenVinculos(orden: string[], vinculoIdsDeck: string[], instanc
  *      el orden final es la elección del jugador, spec R3)
  *   4. Fisher-Yates Vínculos B (6) → 5 (ídem)
  *   5. Moneda primer jugador → 1 (A si < 0.5, si no B)
- * Sin mulligans: 89 extracciones. Robar NO consume RNG (toma del tope).
+ * Sin mulligans: 99 extracciones. Robar NO consume RNG (toma del tope).
  *
- * cardInstanceId 'c1'..'c122' se asignan en orden de entrada de deckA (61)
- * luego deckB (61): estables por construcción, sin dependencia del seed.
+ * cardInstanceId 'c1'..'c132' se asignan en orden de entrada de deckA (66)
+ * luego deckB (66): estables por construcción, sin dependencia del seed.
  */
 export function createInitialState(
   deckA: string[],
@@ -94,13 +94,13 @@ export function createInitialState(
     seed,
     fase: 'pre_partida',
     turno: 'A',
-    primerJugador: 'A', // se decide con la moneda (extracción 89)
+    primerJugador: 'A', // se decide con la moneda (extracción 99)
     primerTurno: true,
     instances: {},
     players: { A: crearPlayerState('A'), B: crearPlayerState('B') },
   }
 
-  // Registro de instancias: c1..c61 = deckA en orden, c62..c122 = deckB en orden
+  // Registro de instancias: c1..c66 = deckA en orden, c67..c132 = deckB en orden
   let n = 1
   const registrarDeck = (owner: PlayerId, deck: string[]): string[] => {
     const ids: string[] = []
@@ -138,7 +138,7 @@ export function createInitialState(
   shuffleFisherYates(ctx, a.vinculo)
   shuffleFisherYates(ctx, b.vinculo)
 
-  // 5. Moneda del primer jugador (extracción 89)
+  // 5. Moneda del primer jugador (extracción 99)
   state.primerJugador = ctx.next() < 0.5 ? 'A' : 'B'
 
   // Zonas (sin RNG): 2A, 4A-4F (orden elegido), 3G + mano inicial de 5

@@ -52,7 +52,6 @@ export const PAQUETES: Paquete[] = [
       'la tormenta que no se detiene.',
   },
 ]
-
 export const getPaquete = (id?: string) => PAQUETES.find((p) => p.id === id)
 
 /* ─────────────────────────────────────────────

@@ -8,7 +8,7 @@ import type { Action } from '../actions'
 import type { Ctx, GameState, PlayerId } from '../types'
 import { expandirMazo } from './helpers'
 
-const deckA = expandirMazo(ESTASIS_CARDS) // 61: 15 Éter + 40 Principal + 6 Vínculos
+const deckA = expandirMazo(ESTASIS_CARDS) // 66: 15 Éter + 45 Principal + 6 Vínculos
 const deckB = expandirMazo(DISONANCIA_CARDS)
 
 /** Arranca la partida con ambos mulligans pasados: fase forja, turno = primerJugador. */
@@ -56,7 +56,7 @@ describe('máquina de fases y turnos (R7)', () => {
     expect(s.turno).toBe(b)
     expect(s.primerTurno).toBe(false)
     expect(s.players[b].mano).toHaveLength(6) // robó 1 en su Alba
-    expect(s.players[b].mazo).toHaveLength(34)
+    expect(s.players[b].mazo).toHaveLength(39)
     const tipos = ctx.events.map((e) => e.type)
     expect(tipos).toEqual(['turno_iniciado', 'fase_iniciada', 'carta_robada', 'fase_iniciada'])
     const [turno, alba, robo, forja] = ctx.events

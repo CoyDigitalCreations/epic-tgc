@@ -2,7 +2,7 @@ import { ESTASIS_CARDS, DISONANCIA_CARDS, getPaquete } from '../shared/data/paqu
 import type { AnyCard } from '../shared/types'
 import { getCardMeta } from './game/cards'
 
-/** Expande diseños a copias según limiteCopias (mazo jugable de 61 cardIds). */
+/** Expande diseños a copias según limiteCopias (mazo jugable de 66 cardIds). */
 function expandirMazo(cards: AnyCard[]): string[] {
   return cards.flatMap((c) => Array.from({ length: Number(c.limiteCopias ?? 1) }, () => c.id))
 }
@@ -11,7 +11,7 @@ export interface MazoJugable {
   id: 'estasis' | 'disonancia'
   nombre: string
   color: string
-  /** 61 cardIds (15 Éter + 40 Principal + 6 Vínculos) — listo para createInitialState. */
+  /** 66 cardIds (15 Éter + 45 Principal + 6 Vínculos) — listo para createInitialState. */
   cardIds: string[]
 }
 
@@ -40,7 +40,7 @@ export const mazoPorId = (id: string): MazoJugable | undefined => MAZOS.find((m)
    nombre que el diseño del paquete (el usuario las rediseña y exporta con el
    mismo nombre). Armar el mazo desde la colección reemplaza cada diseño por
    su versión personalizada (match case-insensitive por nombre y MISMO type:
-   solo se reemplaza 1:1, la distribución 15/40/6 del paquete se conserva).
+   solo se reemplaza 1:1, la distribución 15/45/6 del paquete se conserva).
    ───────────────────────────────────────────── */
 
 export interface MazoConColeccion {

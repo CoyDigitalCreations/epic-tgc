@@ -86,3 +86,85 @@ describe('CardList', () => {
     expect(ids).toContain('DS-033')
   })
 })
+
+describe('CardList — paquetes personalizados', () => {
+  const paqueteMutantes = {
+    id: 'mutantes',
+    nombre: 'Mutantes',
+    tipo: 'Mazo Temático',
+    color: '#6b7280',
+    facciones: [],
+    entrega: 'Personalizado',
+    distribucion: { eter: 15, principal: 45, vinculos: 6 },
+    lore: '',
+  } as import('../../../shared/types').Paquete
+
+  const cartaMutante = (id: string, paqueteId = 'mutantes') =>
+    ({
+      id,
+      name: `Mutante ${id}`,
+      type: 'Campeón',
+      rarity: 'Común',
+      keywords: [],
+      flavorText: '',
+      createdAt: '2026-01-01',
+      updatedAt: '2026-01-01',
+      stats: { cost: 2, poder: 4, resistencia: 3 },
+      paqueteId,
+    }) as import('../../../shared/types').CampeonCard
+
+  beforeEach(() => {
+    useCardStore.setState({ userPacks: [] })
+  })
+
+  it('muestra la pill dinámica con runa, nombre y badge "N cartas"', () => {
+    useCardStore.setState({
+      userPacks: [paqueteMutantes],
+      cards: [
+        { ...cartaMutante('m-1'), limiteCopias: '3' },
+        cartaMutante('m-2'),
+        cartaMutante('o-1', 'estasis'),
+      ],
+    })
+    render(<CardList />)
+    expect(screen.getByText('Mutantes')).toBeInTheDocument()
+    // 3 + 1 = 4 copias del paquete mutantes en la colección
+    expect(screen.getByText('4 cartas')).toBeInTheDocument()
+  })
+
+  it('la pill dinámica tiene botón Exportar', () => {
+    useCardStore.setState({ userPacks: [paqueteMutantes] })
+    render(<CardList />)
+    expect(screen.getByText('Exportar')).toBeInTheDocument()
+  })
+
+  it('el header de paquetes tiene "Nuevo paquete" e "Importar paquete (JSON)"', () => {
+    render(<CardList />)
+    expect(screen.getByText('Nuevo paquete')).toBeInTheDocument()
+    expect(screen.getByText('Importar paquete (JSON)')).toBeInTheDocument()
+  })
+
+  it('eliminar paquete lo quita y desasigna sus cartas (confirm)', () => {
+    vi.spyOn(window, 'confirm').mockImplementation(() => true)
+    useCardStore.setState({
+      userPacks: [paqueteMutantes],
+      cards: [cartaMutante('m-1')],
+    })
+    render(<CardList />)
+    fireEvent.click(screen.getByTitle('Eliminar paquete'))
+    expect(useCardStore.getState().userPacks).toHaveLength(0)
+    expect(useCardStore.getState().cards[0].paqueteId).toBeUndefined()
+  })
+
+  it('la pill estática conserva el badge de progreso y el botón Importar', () => {
+    useCardStore.setState({
+      userPacks: [paqueteMutantes],
+      cards: [cartaMutante('m-1', 'estasis')],
+    })
+    render(<CardList />)
+    // Progreso de Estásis: 1 copia / 66 total
+    expect(screen.getByText(/1\/66/)).toBeInTheDocument()
+    // Los dos paquetes estáticos mantienen su botón Importar
+    expect(screen.getAllByText('Importar')).toHaveLength(2)
+  })
+})

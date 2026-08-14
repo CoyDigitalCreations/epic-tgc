@@ -9,7 +9,7 @@ import { aplicarPago, validarPago, validarBloqueo, etersParaPagar, type Contexto
 import { SLOTS_CAMPEONES, SLOTS_MISTICAS_TACTICAS, SLOTS_ARCANAS_COMBATE, slotAZona } from './zones'
 import type { CardInstance } from './types'
 import { ejecutarDeclararAtaque, ejecutarDeclararBloqueo, validarDeclararAtaque, validarDeclararBloqueo, validarElegirRuptura, ejecutarElegirRuptura, tieneKeyword } from './combat'
-import { liberarEterBloqueado } from './replacements'
+import { liberarEterBloqueado, enviarAlCementerio } from './replacements'
 import { validarResponderCadena, validarPasarPrioridad, ejecutarResponderCadena, ejecutarPasarPrioridad } from './chain'
 
 /**
@@ -442,10 +442,12 @@ function ejecutarPasarTurno(s: GameState, ctx: Ctx): void {
     }
     if (s.fase === 'forja') {
       // C2 (ADR-24): al inicio del Choque del jugador activo se disparan
-      // efectos de inicio-choque (Éteres FB-002/DS-003 en Reserva).
+      // efectos de inicio-choque: Éteres en Reserva (FB-002/DS-003) Y Arcanas
+      // propias en campo (DS-032 al-inicio-choque, change 4).
       const p = s.players[s.turno]
-      if (p.eterReserva.length > 0) {
-        dispararTrigger(s, ctx, 'al-inicio-choque', s.turno, p.eterReserva)
+      const arcanas = p.campo.arcanasCombate.filter((x): x is string => x !== null)
+      if (p.eterReserva.length > 0 || arcanas.length > 0) {
+        dispararTrigger(s, ctx, 'al-inicio-choque', s.turno, [...p.eterReserva, ...arcanas])
       }
     }
     s.fase = siguiente
@@ -473,7 +475,8 @@ function ejecutarDescartarCarta(s: GameState, action: Extract<Action, { type: 'd
     const idx = p.mano.indexOf(id)
     if (idx === -1) continue // validado antes (defensivo)
     p.mano.splice(idx, 1)
-    p.cementerio.push(id)
+    // C5 (change 4): 2G con trigger al-ser-enviado-al-cementerio
+    enviarAlCementerio(s, ctx, id)
     descartadas.push(id)
   }
   if (descartadas.length > 0) {
@@ -501,7 +504,8 @@ function ejecutarJugarCampeon(s: GameState, action: Extract<Action, { type: 'jug
     // vuelve a la Reserva 2A INMEDIATO (glosario L1351, manual 7.2 L937).
     // Fix del gap #1223: antes quedaba atascado en la instancia que iba a 2G.
     liberarEterBloqueado(s, ctx, sacId, '2A')
-    p.cementerio.push(sacId)
+    // C5 (change 4): sacrificio → 2G con trigger al-ser-enviado-al-cementerio
+    enviarAlCementerio(s, ctx, sacId)
     ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: sacId, zona: '2G', jugador: s.turno, bocaArriba: true })
   }
   // 3. Invocar: mano → slot, CANSADO (agotado)
@@ -528,6 +532,8 @@ function ejecutarJugarMistica(s: GameState, action: Extract<Action, { type: 'jug
   p.campo.misticasTacticas[action.slot] = id
   ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: id, zona, jugador: s.turno, bocaArriba: true })
   ctx.emit({ type: 'carta_invocada', cardInstanceId: id, tipo: 'Mística', slot: action.slot })
+  // C5 (change 4): al-jugar-mística se dispara con la instancia YA en campo
+  dispararTrigger(s, ctx, 'al-jugar-mistica', s.turno, [id])
 }
 
 /** Coloca la Táctica en 3A-3C SIN pagar (5.4). */
@@ -676,8 +682,8 @@ function ejecutarUsarTransmutar(s: GameState, action: Extract<Action, { type: 'u
   ctx.emit({ type: 'carta_salida_de_zona', cardInstanceId: id, zona, jugador: s.turno })
   p.campo.campeones[slotIdx] = null
   liberarEterBloqueado(s, ctx, id, '1A')
-  const cementerio = s.players[inst.owner].cementerio
-  if (!cementerio.includes(id)) cementerio.push(id)
+  // C5 (change 4): auto-sacrificio → 2G del dueño con trigger
+  enviarAlCementerio(s, ctx, id)
   ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: id, zona: '2G', jugador: inst.owner, bocaArriba: true })
 }
 

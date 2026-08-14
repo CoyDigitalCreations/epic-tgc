@@ -33,6 +33,7 @@ export type TriggerEfecto =
   | 'al-inicio-choque'
   | 'al-pagar-eter'
   | 'al-jugar-mistica'
+  | 'al-ser-enviado-al-cementerio'
   | 'al-ser-destruido-vinculo'
   | 'al-resolver-cadena'
   | 'activable'

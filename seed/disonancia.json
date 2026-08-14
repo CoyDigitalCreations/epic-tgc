@@ -652,5 +652,71 @@
       "cost": 0
     },
     "efecto": "El Campeón que controla el rival con mayor RES pierde 2 de RES de forma permanente."
+  },
+  {
+    "id": "DS-031",
+    "name": "Emisario del Nudo, Voz del Sur",
+    "type": "Campeón",
+    "rarity": "Poco Común",
+    "keywords": [],
+    "flavorText": "El Nudo cobra, y el Nudo reparte.",
+    "paqueteId": "disonancia",
+    "limiteCopias": "2",
+    "createdAt": "2026-08-12T00:00:00.000Z",
+    "updatedAt": "2026-08-12T00:00:00.000Z",
+    "facciones": [
+      "Caos"
+    ],
+    "esencia": "Abisal",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": "Efecto",
+    "stats": {
+      "cost": 2,
+      "poder": 4,
+      "resistencia": 3
+    },
+    "tipoEfecto": "Pasivo",
+    "efectoPasivo": "Al ser enviada al Cementerio desde cualquier zona: añadí de tu mazo a tu mano 1 carta Campeón de coste 2 o menos."
+  },
+  {
+    "id": "DS-032",
+    "name": "El Nudo Desata",
+    "type": "Arcana",
+    "rarity": "Poco Común",
+    "keywords": [],
+    "flavorText": "El Nudo se desata cuando la tormenta aprieta.",
+    "paqueteId": "disonancia",
+    "limiteCopias": "2",
+    "createdAt": "2026-08-12T00:00:00.000Z",
+    "updatedAt": "2026-08-12T00:00:00.000Z",
+    "facciones": [
+      "Caos"
+    ],
+    "stats": {
+      "cost": 3
+    },
+    "condicion": "Al inicio de tu Choque, si controlás 2 o más Campeones con Éter bloqueado.",
+    "recompensa": "Añadí de tu mazo a tu mano 1 carta de coste 3 o menos."
+  },
+  {
+    "id": "DS-033",
+    "name": "Invocación del Sur",
+    "type": "Mística",
+    "rarity": "Rara",
+    "keywords": [],
+    "flavorText": "El sur no llama dos veces.",
+    "paqueteId": "disonancia",
+    "limiteCopias": "1",
+    "createdAt": "2026-08-12T00:00:00.000Z",
+    "updatedAt": "2026-08-12T00:00:00.000Z",
+    "facciones": [
+      "Caos"
+    ],
+    "stats": {
+      "cost": 3
+    },
+    "efecto": "Añadí de tu mazo a tu mano 1 carta Campeón."
   }
 ]

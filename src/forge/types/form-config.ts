@@ -4,13 +4,40 @@ import { FACCIONES, ESENCIAS, ROLES, CAT_HABILIDAD } from '../../shared/types/en
 export interface FieldDef {
   name: string
   label: string
-  type: 'text' | 'number' | 'select' | 'textarea' | 'multi-select'
+  type: 'text' | 'number' | 'select' | 'textarea' | 'multi-select' | 'paquete'
   required: boolean
   options?: string[]
   min?: number
   max?: number
   placeholder?: string
+  /** Valor mostrado cuando el campo no tiene valor en el draft */
+  defaultValue?: string
 }
+
+/** Campos comunes a todos los tipos (metadata de autoría) */
+export const META_FIELDS: FieldDef[] = [
+  {
+    name: 'paqueteId',
+    label: 'Paquete',
+    type: 'paquete',
+    required: false,
+  },
+  {
+    name: 'variante',
+    label: 'Variante',
+    type: 'select',
+    required: false,
+    options: ['normal', 'full-art'],
+    defaultValue: 'normal',
+  },
+  {
+    name: 'comentario',
+    label: 'Comentario',
+    type: 'textarea',
+    required: false,
+    placeholder: 'Notas del diseñador (no aparecen en la carta)...',
+  },
+]
 
 export interface CardFormConfig {
   type: CardType
@@ -36,6 +63,7 @@ export const FORM_CONFIGS: CardFormConfig[] = [
       { name: 'keywords', label: 'Palabras Clave', type: 'multi-select', required: false },
       { name: 'flavorText', label: 'Texto de Sabor', type: 'textarea', required: false, placeholder: 'Ambientación...' },
       { name: 'limiteCopias', label: 'Límite por Mazo', type: 'select', required: false, options: ['1', '2', '3'] },
+      ...META_FIELDS,
     ],
   },
   {
@@ -48,6 +76,7 @@ export const FORM_CONFIGS: CardFormConfig[] = [
       { name: 'keywords', label: 'Palabras Clave', type: 'multi-select', required: false },
       { name: 'flavorText', label: 'Texto de Sabor', type: 'textarea', required: false },
       { name: 'limiteCopias', label: 'Límite por Mazo', type: 'select', required: false, options: ['1', '2', '3'] },
+      ...META_FIELDS,
     ],
   },
   {
@@ -60,6 +89,7 @@ export const FORM_CONFIGS: CardFormConfig[] = [
       { name: 'keywords', label: 'Palabras Clave', type: 'multi-select', required: false },
       { name: 'flavorText', label: 'Texto de Sabor', type: 'textarea', required: false },
       { name: 'limiteCopias', label: 'Límite por Mazo', type: 'select', required: false, options: ['1', '2', '3'] },
+      ...META_FIELDS,
     ],
   },
   {
@@ -73,6 +103,7 @@ export const FORM_CONFIGS: CardFormConfig[] = [
       { name: 'keywords', label: 'Palabras Clave', type: 'multi-select', required: false },
       { name: 'flavorText', label: 'Texto de Sabor', type: 'textarea', required: false },
       { name: 'limiteCopias', label: 'Límite por Mazo', type: 'select', required: false, options: ['1', '2', '3'] },
+      ...META_FIELDS,
     ],
   },
   {
@@ -84,6 +115,7 @@ export const FORM_CONFIGS: CardFormConfig[] = [
       { name: 'keywords', label: 'Palabras Clave', type: 'multi-select', required: false },
       { name: 'flavorText', label: 'Texto de Sabor', type: 'textarea', required: false },
       { name: 'limiteCopias', label: 'Límite por Mazo', type: 'select', required: false, options: ['1', '2', '3'] },
+      ...META_FIELDS,
     ],
   },
   {
@@ -99,6 +131,7 @@ export const FORM_CONFIGS: CardFormConfig[] = [
       { name: 'keywords', label: 'Palabras Clave', type: 'multi-select', required: false },
       { name: 'flavorText', label: 'Texto de Sabor', type: 'textarea', required: false },
       { name: 'limiteCopias', label: 'Límite por Mazo', type: 'select', required: false, options: ['1', '2', '3'] },
+      ...META_FIELDS,
     ],
   },
   {
@@ -110,6 +143,7 @@ export const FORM_CONFIGS: CardFormConfig[] = [
       { name: 'keywords', label: 'Palabras Clave', type: 'multi-select', required: false },
       { name: 'flavorText', label: 'Texto de Sabor', type: 'textarea', required: false },
       { name: 'limiteCopias', label: 'Límite por Mazo', type: 'select', required: false, options: ['1', '2', '3'] },
+      ...META_FIELDS,
     ],
   },
 ]

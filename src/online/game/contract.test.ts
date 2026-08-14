@@ -172,8 +172,8 @@ describe('contrato de eventos (ADR-10)', () => {
   })
 })
 
-const deckA = expandirMazo(ESTASIS_CARDS) // 61 cartas
-const deckB = expandirMazo(DISONANCIA_CARDS) // 61 cartas
+const deckA = expandirMazo(ESTASIS_CARDS) // 66 cartas
+const deckB = expandirMazo(DISONANCIA_CARDS) // 66 cartas
 
 describe('integración bot ↔ contrato (5.8)', () => {
   it('todo evento emitido por el bot en una partida cumple la forma del contrato (5.7 + ADR-10)', () => {

@@ -10,6 +10,7 @@
  * compartidos `moverAlCementerio` + `liberarEterBloqueado('2A')`.
  */
 import { esCampeon, esVinculo, getCardMeta } from './cards'
+import { dispararTrigger } from './efectos'
 import type { CausaDestruccion, Ctx, GameState, PlayerId } from './types'
 
 /** Registro de reemplazos anti-destrucción (ADR-15): vacío consultable. */
@@ -62,6 +63,21 @@ export function moverAlCementerio(s: GameState, cardInstanceId: string): void {
   }
   const p = s.players[inst.owner]
   if (!p.cementerio.includes(cardInstanceId)) p.cementerio.push(cardInstanceId)
+}
+
+/**
+ * Primitiva C5 (change 4): envía una instancia a 2G (cementerio de su dueño)
+ * y dispara `al-ser-enviado-al-cementerio` con la carta YA en 2G (glosario
+ * L1351). Es la vía ÚNICA de descarte/sacrificio/coste/consumo → 2G con
+ * trigger. NO consulta overrides (Inmortal/Indestructible): eso es
+ * responsabilidad del caller (destruirCarta lo hace ANTES; el sacrificio y el
+ * coste no son evitables por diseño, campeones.test.ts L591).
+ */
+export function enviarAlCementerio(s: GameState, ctx: Ctx, cardInstanceId: string): void {
+  const inst = s.instances[cardInstanceId]
+  if (!inst) return
+  moverAlCementerio(s, cardInstanceId)
+  dispararTrigger(s, ctx, 'al-ser-enviado-al-cementerio', inst.owner, [cardInstanceId])
 }
 
 /**
@@ -164,6 +180,8 @@ export function destruirCarta(s: GameState, ctx: Ctx, cardInstanceId: string, ca
   // Campeón: → 2G + Éter 1A + carta_muerta + destruccion (ADR-14)
   moverAlCementerio(s, cardInstanceId)
   liberarEterBloqueado(s, ctx, cardInstanceId, '1A')
+  // C5 (change 4): trigger al-ser-enviado-al-cementerio (carta YA en 2G)
+  dispararTrigger(s, ctx, 'al-ser-enviado-al-cementerio', inst.owner, [cardInstanceId])
   ctx.emit({ type: 'carta_muerta', cardInstanceId, jugador: inst.owner, causa })
   ctx.emit({ type: 'destruccion', cardInstanceId, jugador: inst.owner, causa })
   return true

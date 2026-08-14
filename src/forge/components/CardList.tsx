@@ -1,11 +1,13 @@
 import { useState, useMemo, useRef } from 'react'
 import { useCardStore } from '../store/useCardStore'
 import { exportCollectionToJson, importCollectionFromJson } from '../utils/export-json'
+import { exportPaqueteToJson, importPaqueteFromJson } from '../utils/export-paquete'
 import { CARD_TYPES, type CardType } from '../../shared/types'
 import { PAQUETES, ESTASIS_CARDS, DISONANCIA_CARDS, progresoPaquete } from '../../shared/data/paquetes'
 import { RuneIcon } from './card-art'
 import { ConfirmModal } from './modals/ConfirmModal'
 import { ColeccionModal } from './modals/ColeccionModal'
+import { PaqueteModal } from './modals/PaqueteModal'
 import { useCardImage } from '../hooks/useCardImage'
 import type { AnyCard } from '../../shared/types'
 
@@ -167,6 +169,13 @@ export function CardList() {
   const selectedCardId = useCardStore((s) => s.selectedCardId)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  // Paquetes personalizados (creados desde el card maker)
+  const userPacks = useCardStore((s) => s.userPacks)
+  const crearPaquete = useCardStore((s) => s.crearPaquete)
+  const eliminarPaquete = useCardStore((s) => s.eliminarPaquete)
+  const [showPaqueteModal, setShowPaqueteModal] = useState(false)
+  const paqueteFileInputRef = useRef<HTMLInputElement>(null)
+
   // Colecciones múltiples (A3)
   const colecciones = useCardStore((s) => s.colecciones)
   const coleccionActivaId = useCardStore((s) => s.coleccionActivaId)
@@ -226,6 +235,50 @@ export function CardList() {
         `(ya tenías ${cartas.length - nuevas.length} en la colección).`,
       )
     }
+  }
+
+  /** Paquetes visibles: oficiales + personalizados del usuario. */
+  const paquetesVisibles = useMemo(
+    () => [...PAQUETES, ...userPacks],
+    [userPacks],
+  )
+
+  /** Copias (limiteCopias sumado) de un paquete en la colección activa. */
+  const conteoCartasPaquete = (paqueteId: string) =>
+    cards
+      .filter((c) => c.paqueteId === paqueteId)
+      .reduce((acc, c) => acc + Number(c.limiteCopias ?? 1), 0)
+
+  const handleImportPaqueteJson = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    try {
+      const { paquete, cards: cartas } = await importPaqueteFromJson(file)
+      const existente = [...PAQUETES, ...useCardStore.getState().userPacks].find(
+        (p) => p.id === paquete.id,
+      )
+      if (existente) {
+        alert(`El paquete "${paquete.nombre}" ya existe en tu colección.`)
+      } else {
+        crearPaquete({
+          nombre: paquete.nombre,
+          tipo: paquete.tipo,
+          facciones: paquete.facciones,
+          lore: paquete.lore || undefined,
+          entrega: paquete.entrega,
+          id: paquete.id,
+        })
+        loadCards(cartas)
+        alert(
+          `Paquete "${paquete.nombre}" importado con ${cartas.length} cartas.`,
+        )
+      }
+    } catch (err) {
+      alert('Error al importar paquete: ' + (err as Error).message)
+    }
+    e.target.value = ''
   }
 
   // Progreso de colección por paquete (copias / total)
@@ -401,8 +454,8 @@ export function CardList() {
         ))}
       </div>
 
-      {/* Paquete filter pills */}
-      {PAQUETES.length > 0 && (
+      {/* Paquete filter pills (oficiales + personalizados) */}
+      {paquetesVisibles.length > 0 && (
         <div className="flex gap-1.5 flex-wrap items-center mb-4">
           <span className="text-[10px] uppercase tracking-wider text-gray-500 mr-1">
             Paquete:
@@ -417,8 +470,10 @@ export function CardList() {
           >
             Todos
           </button>
-          {PAQUETES.map((paquete) => {
-            const prog = progresoPorPaquete.get(paquete.id)
+          {paquetesVisibles.map((paquete) => {
+            const esDinamico = !PAQUETES.some((p) => p.id === paquete.id)
+            const prog = esDinamico ? null : progresoPorPaquete.get(paquete.id)
+            const conteo = conteoCartasPaquete(paquete.id)
             return (
               <span key={paquete.id} className="flex items-center gap-1">
                 <button
@@ -433,7 +488,15 @@ export function CardList() {
                   <RuneIcon faccion={paquete.facciones[0]} color={paquete.color} size={12} />
                   {paquete.nombre}
                 </button>
-                {prog && (
+                {esDinamico ? (
+                  <span
+                    title={`Cartas de ${paquete.nombre} en la colección`}
+                    className="px-1.5 py-0.5 rounded-full text-[10px] font-mono leading-none shrink-0
+                      bg-surface text-gray-400 border border-card-border"
+                  >
+                    {conteo} carta{conteo === 1 ? '' : 's'}
+                  </span>
+                ) : prog ? (
                   <span
                     title={`Coleccionado: ${prog.coleccionadas}/${prog.total} copias`}
                     className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono leading-none shrink-0
@@ -445,18 +508,77 @@ export function CardList() {
                     {prog.coleccionadas}/{prog.total}
                     {prog.completo && ' ✓'}
                   </span>
+                ) : null}
+                {esDinamico ? (
+                  <>
+                    <button
+                      onClick={() => {
+                        void exportPaqueteToJson(paquete, cards).catch((err) => {
+                          console.error('Error al exportar paquete JSON:', err)
+                        })
+                      }}
+                      title={`Exportar paquete ${paquete.nombre}`}
+                      className="px-2 py-1 rounded-full text-xs bg-ether-600/20 hover:bg-ether-600/40 
+                                 text-ether-300 transition-colors cursor-pointer"
+                    >
+                      Exportar
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (
+                          confirm(
+                            `¿Eliminar el paquete "${paquete.nombre}"? ` +
+                              'Las cartas quedarán sin paquete (no se borran).',
+                          )
+                        ) {
+                          eliminarPaquete(paquete.id)
+                        }
+                      }}
+                      title="Eliminar paquete"
+                      className="px-2 py-1 rounded-full text-xs bg-red-600/20 hover:bg-red-600/40 
+                                 text-red-300 transition-colors cursor-pointer"
+                    >
+                      Eliminar
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    onClick={() => handleImportPaquete(paquete.id)}
+                    title={`Importar paquete ${paquete.nombre} (${paquete.distribucion.eter + paquete.distribucion.principal + paquete.distribucion.vinculos} cartas)`}
+                    className="px-2 py-1 rounded-full text-xs bg-ether-600/20 hover:bg-ether-600/40 
+                               text-ether-300 transition-colors cursor-pointer"
+                  >
+                    Importar
+                  </button>
                 )}
-                <button
-                  onClick={() => handleImportPaquete(paquete.id)}
-                  title={`Importar paquete ${paquete.nombre} (${paquete.distribucion.eter + paquete.distribucion.principal + paquete.distribucion.vinculos} cartas)`}
-                  className="px-2 py-1 rounded-full text-xs bg-ether-600/20 hover:bg-ether-600/40 
-                             text-ether-300 transition-colors cursor-pointer"
-                >
-                  Importar
-                </button>
               </span>
             )
           })}
+          <div className="ml-auto flex gap-1.5">
+            <button
+              onClick={() => setShowPaqueteModal(true)}
+              title="Crear paquete personalizado sin escribir código"
+              className="px-3 py-1 rounded-full text-xs bg-ether-600/30 hover:bg-ether-600/50 
+                         text-ether-300 transition-colors cursor-pointer"
+            >
+              Nuevo paquete
+            </button>
+            <button
+              onClick={() => paqueteFileInputRef.current?.click()}
+              title="Importar un paquete exportado (.paquete.json)"
+              className="px-3 py-1 rounded-full text-xs bg-surface-2 hover:bg-card-border 
+                         text-gray-300 transition-colors cursor-pointer"
+            >
+              Importar paquete (JSON)
+            </button>
+          </div>
+          <input
+            ref={paqueteFileInputRef}
+            type="file"
+            accept=".json"
+            onChange={handleImportPaqueteJson}
+            className="hidden"
+          />
         </div>
       )}
 
@@ -551,6 +673,16 @@ export function CardList() {
           setShowEliminarModal(false)
         }}
         onCancel={() => setShowEliminarModal(false)}
+      />
+
+      {/* Modal crear paquete personalizado */}
+      <PaqueteModal
+        isOpen={showPaqueteModal}
+        onConfirm={(datos) => {
+          crearPaquete(datos)
+          setShowPaqueteModal(false)
+        }}
+        onCancel={() => setShowPaqueteModal(false)}
       />
     </div>
   )

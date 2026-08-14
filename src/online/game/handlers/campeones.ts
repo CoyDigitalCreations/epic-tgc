@@ -104,8 +104,8 @@ export function registrarEfectosCampeones(): void {
     const rival: PlayerId = payload.jugador === 'A' ? 'B' : 'A'
     if (!s.players[payload.jugador].campo.campeones.includes(null)) return
     const opciones = objetivosCampeonesValidos(s, rival).filter((id) => {
-      const m = s.instances[id]?.cardId
-      return m !== undefined && copiasEnCampo(s, payload.jugador, m) < 1
+      const m = s.instances[id]?.cardId ?? null // undefined (instancia ausente) → null
+      return m !== null && copiasEnCampo(s, payload.jugador, m) < 1
     })
     armarPendiente(s, payload.jugador, inst.cardInstanceId, 'al-invocar', opciones)
   })

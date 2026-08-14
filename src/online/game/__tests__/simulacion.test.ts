@@ -5,7 +5,7 @@ import { simularPartida, botTonto } from '../bot'
 import { verificarInvariantes } from '../invariants'
 import { expandirMazo } from './helpers'
 
-const deckA = expandirMazo(ESTASIS_CARDS) // 61: 15 Éter + 40 Principal + 6 Vínculos
+const deckA = expandirMazo(ESTASIS_CARDS) // 66: 15 Éter + 45 Principal + 6 Vínculos
 const deckB = expandirMazo(DISONANCIA_CARDS)
 
 describe('bot tonto (5.7)', () => {
@@ -29,7 +29,7 @@ describe('simularPartida (5.7) — invariantes en 10 seeds', () => {
       expect(['mazo_vacio', 'rendicion']).toContain(estado.motivo)
     }
     // Invariantes centralizadas (invariants.ts, C4): mano ≤ 6, 15 Éter,
-    // límites de campo y las 61 cartas en zonas del dueño.
+    // límites de campo y las 66 cartas en zonas del dueño.
     expect(verificarInvariantes(estado)).toEqual([])
   })
 })

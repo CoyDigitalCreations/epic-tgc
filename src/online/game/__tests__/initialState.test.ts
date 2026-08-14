@@ -9,7 +9,7 @@ import { getValidActions } from '../validActions'
 import type { Action } from '../actions'
 import { expandirMazo, fisherYatesReferencia } from './helpers'
 
-const deckA = expandirMazo(ESTASIS_CARDS) // 61: 15 Éter + 40 Principal + 6 Vínculos
+const deckA = expandirMazo(ESTASIS_CARDS) // 66: 15 Éter + 45 Principal + 6 Vínculos
 const deckB = expandirMazo(DISONANCIA_CARDS)
 
 const esPrincipal = (cardId: string | null) => {
@@ -20,16 +20,16 @@ const esPrincipal = (cardId: string | null) => {
 const vinculosDe = (deck: string[]) => deck.filter((id) => getCardMeta(id)?.type === 'Vínculo')
 
 describe('createInitialState (R3, R4, R6)', () => {
-  it('monta el setup completo de zonas: 2A=15 Éter, 4A-4F=6 Vínculos, mano=5, 3G=35 (40 principales en 3G+mano)', () => {
+  it('monta el setup completo de zonas: 2A=15 Éter, 4A-4F=6 Vínculos, mano=5, 3G=40 (45 principales en 3G+mano)', () => {
     const { state } = createInitialState(deckA, deckB, 123)
     for (const id of ['A', 'B'] as const) {
       const p = state.players[id]
       expect(p.eterReserva).toHaveLength(15)
       expect(p.vinculos.filter((v): v is string => v !== null)).toHaveLength(6)
       expect(p.mano).toHaveLength(5)
-      expect(p.mazo).toHaveLength(35)
-      // Las 40 cartas principales del mazo se reparten entre 3G (35) y mano (5)
-      expect(p.mazo.length + p.mano.length).toBe(40)
+      expect(p.mazo).toHaveLength(40)
+      // Las 45 cartas principales del mazo se reparten entre 3G (40) y mano (5)
+      expect(p.mazo.length + p.mano.length).toBe(45)
     }
   })
 
@@ -56,19 +56,19 @@ describe('createInitialState (R3, R4, R6)', () => {
     expect(JSON.parse(JSON.stringify(state))).toEqual(state)
   })
 
-  it('asigna cardInstanceId c1..c122 estables: c1..c61 de A, c62..c122 de B, sin dependencia del seed', () => {
+  it('asigna cardInstanceId c1..c132 estables: c1..c66 de A, c67..c132 de B, sin dependencia del seed', () => {
     const a = createInitialState(deckA, deckB, 123)
     const b = createInitialState(deckA, deckB, 123)
     const c = createInitialState(deckA, deckB, 999)
-    expect(Object.keys(a.state.instances)).toHaveLength(122)
+    expect(Object.keys(a.state.instances)).toHaveLength(132)
     expect(Object.keys(a.state.instances)[0]).toBe('c1')
-    expect(Object.keys(a.state.instances)[121]).toBe('c122')
+    expect(Object.keys(a.state.instances)[131]).toBe('c132')
     expect(Object.keys(a.state.instances)).toEqual(Object.keys(b.state.instances))
     expect(Object.keys(a.state.instances)).toEqual(Object.keys(c.state.instances))
     expect(a.state.instances['c1'].owner).toBe('A')
-    expect(a.state.instances['c61'].owner).toBe('A')
-    expect(a.state.instances['c62'].owner).toBe('B')
-    expect(a.state.instances['c122'].owner).toBe('B')
+    expect(a.state.instances['c66'].owner).toBe('A')
+    expect(a.state.instances['c67'].owner).toBe('B')
+    expect(a.state.instances['c132'].owner).toBe('B')
   })
 
   it('baraja 3G determinísticamente: mismo seed → mismo mazo; seed distinto → mazo distinto', () => {
@@ -81,7 +81,7 @@ describe('createInitialState (R3, R4, R6)', () => {
     expect(a.state.players.B.mazo).not.toEqual(c.state.players.B.mazo)
   })
 
-  it('consume el stream en el orden documentado: mazoA 39 → mazoB 39 → vínculosA 5 → vínculosB 5 → moneda 1', () => {
+  it('consume el stream en el orden documentado: mazoA 44 → mazoB 44 → vínculosA 5 → vínculosB 5 → moneda 1', () => {
     const seed = 123
     const { state, ctx } = createInitialState(deckA, deckB, seed)
     const rand = mulberry32(seed)
@@ -93,7 +93,7 @@ describe('createInitialState (R3, R4, R6)', () => {
         .filter((inst) => inst.owner === owner && esPrincipal(inst.cardId))
         .map((inst) => inst.cardInstanceId)
 
-    // 1-2. Fisher-Yates de los mazos (39 extracciones c/u) → define 3G + mano
+    // 1-2. Fisher-Yates de los mazos (44 extracciones c/u) → define 3G + mano
     expect([...state.players.A.mano, ...state.players.A.mazo]).toEqual(
       fisherYatesReferencia(instanciasPrincipal('A'), rand),
     )
@@ -105,12 +105,12 @@ describe('createInitialState (R3, R4, R6)', () => {
     fisherYatesReferencia(vinculosDe(deckA), rand)
     fisherYatesReferencia(vinculosDe(deckB), rand)
 
-    // 5. moneda: la 89ª extracción decide el primer jugador (A si < 0.5)
+    // 5. moneda: la 99ª extracción decide el primer jugador (A si < 0.5)
     const moneda = rand()
     expect(moneda < 0.5 ? 'A' : 'B').toBe(state.primerJugador)
     expect(state.primerTurno).toBe(true)
 
-    // El ctx continúa el MISMO stream: su siguiente valor es la extracción 90
+    // El ctx continúa el MISMO stream: su siguiente valor es la extracción 100
     expect(ctx.next()).toBe(rand())
   })
 
@@ -134,7 +134,7 @@ describe('createInitialState (R3, R4, R6)', () => {
     expect(idsA).toEqual(ordenElegido)
   })
 
-  it('rechaza mazos con distribución inválida (no 15/40/6)', () => {
+  it('rechaza mazos con distribución inválida (no 15/45/6)', () => {
     const incompleto = deckA.slice(0, 60)
     expect(() => createInitialState(incompleto, deckB, 1)).toThrow()
   })
@@ -155,13 +155,13 @@ describe('mulligan y arranque de partida (R5)', () => {
     expect(s.players.A.mulliganUsado).toBe(true)
     expect(s.turno).toBe('B')
     expect(s.players.A.mano).toHaveLength(5)
-    expect(s.players.A.mazo).toHaveLength(35)
+    expect(s.players.A.mazo).toHaveLength(40)
     expect(s.players.A.mano).not.toEqual(manoAntigua)
-    expect([...s.players.A.mano, ...s.players.A.mazo]).toHaveLength(40)
+    expect([...s.players.A.mano, ...s.players.A.mazo]).toHaveLength(45)
     expect(ctx.events.map((e) => e.type)).toContain('mulligan_realizado')
   })
 
-  it('el mulligan consume exactamente 39 extracciones (posiciones 90-128) y el resultado es el barajado de mano+mazo', () => {
+  it('el mulligan consume exactamente 44 extracciones (posiciones 100-143) y el resultado es el barajado de mano+mazo', () => {
     const seed = 123
     const { state, ctx } = createInitialState(deckA, deckB, seed)
     const manoAntigua = state.players.A.mano
@@ -171,7 +171,7 @@ describe('mulligan y arranque de partida (R5)', () => {
     if (!r.ok) throw new Error('mulligan falló')
 
     const rand = mulberry32(seed)
-    for (let i = 0; i < 89; i++) rand() // posición del stream tras el setup
+    for (let i = 0; i < 99; i++) rand() // posición del stream tras el setup
     const barajado = fisherYatesReferencia([...manoAntigua, ...state.players.A.mazo], rand)
     expect(r.state.players.A.mano).toEqual(barajado.slice(0, 5))
     expect(r.state.players.A.mazo).toEqual(barajado.slice(5))
@@ -185,8 +185,8 @@ describe('mulligan y arranque de partida (R5)', () => {
     if (!r.ok) throw new Error('pasar_mulligan falló')
     expect(r.state.turno).toBe('B')
     const rand = mulberry32(seed)
-    for (let i = 0; i < 89; i++) rand()
-    expect(ctx.next()).toBe(rand()) // posición 90: pasar_mulligan no consumió
+    for (let i = 0; i < 99; i++) rand()
+    expect(ctx.next()).toBe(rand()) // posición 100: pasar_mulligan no consumió
   })
 
   it('el mulligan es una vez POR JUGADOR: tras el de A, B aún puede usar el suyo', () => {
@@ -222,7 +222,7 @@ describe('mulligan y arranque de partida (R5)', () => {
     expect(s.primerTurno).toBe(true)
     // el primer jugador robó 1 en su Alba → mano 6
     expect(s.players[s.primerJugador].mano).toHaveLength(6)
-    expect(s.players[s.primerJugador].mazo).toHaveLength(34)
+    expect(s.players[s.primerJugador].mazo).toHaveLength(39)
 
     const tipos = ctx.events.map((e) => e.type)
     expect(tipos).toEqual([

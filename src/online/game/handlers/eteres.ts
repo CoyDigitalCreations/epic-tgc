@@ -14,6 +14,7 @@ import {
 import type { Ctx, GameState, PlayerId } from '../types'
 import { robarCarta } from '../phases'
 import { getCardMeta, faccionesCompartidas } from '../cards'
+import { enviarAlCementerio } from '../replacements'
 import type { PayloadEfecto } from '../efectos'
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -61,6 +62,7 @@ registrarAuraBloqueo('DS-010', () => ({ poder: 1, resistencia: 0, keywords: [] }
 // dispararTrigger(s, ctx, 'al-pagar-eter', jugador, [eterId], { contextoUso, objetivoId })
 // ──────────────────────────────────────────────────────────────────────────────
 
+function registrarGatillos(): void {
 // FB-003: "Cuando pagues esta carta, robá 1 carta"
 registrarEfecto('al-pagar-eter', 'FB-003', (s: GameState, ctx: Ctx, _inst, payload: PayloadEfecto) => {
   robarCarta(s, ctx, payload.jugador)
@@ -108,9 +110,11 @@ registrarEfecto('al-pagar-eter', 'DS-004', (s: GameState, ctx: Ctx, _inst, paylo
   if (p.mano.length === 0) return
   const idx = Math.floor(ctx.next() * p.mano.length)
   const [id] = p.mano.splice(idx, 1)
-  p.cementerio.push(id)
+  // C5 (change 4): 2G con trigger al-ser-enviado-al-cementerio (carta descartada)
+  enviarAlCementerio(s, ctx, id)
   ctx.emit({ type: 'carta_descartada', jugador: rival, cardInstanceIds: [id] })
 })
+}
 
 // ──────────────────────────────────────────────────────────────────────────────
 // PASIVO 1A — FB-005 / DS-006: "Mientras esté en tu zona de Éter pagado, una vez
@@ -143,8 +147,6 @@ function registrarPasivo(cardId: string) {
     s.opcionesPendientes = [...(s.opcionesPendientes ?? []), { jugador: j, eterId: inst.cardInstanceId }]
   })
 }
-registrarPasivo('FB-005')
-registrarPasivo('DS-006')
 
 // ──────────────────────────────────────────────────────────────────────────────
 // INICIO-CHOQUE — FB-002 / DS-003: en 2A al inicio de tu Choque otorgan
@@ -161,13 +163,18 @@ function registrarInicioChoque(cardId: string, keyword: 'Vigor' | 'Carga') {
     otorgarKeyword(s, primerCampeon, keyword, true) // temporal = expira en ocaso
   })
 }
-registrarInicioChoque('FB-002', 'Vigor')
-registrarInicioChoque('DS-003', 'Carga')
 
 // ──────────────────────────────────────────────────────────────────────────────
-// EXPORT
+// EXPORT — registra los handlers de trigger al llamar registrarEfectos()
+// (patrón ADR-20 de familias: sobreviven a limpiarRegistroEfectos en tests).
+// Las auras por zona (reserva/bloqueo) se registran a nivel módulo porque
+// viven en mapas propios que limpiarRegistroEfectos NO toca.
 // ──────────────────────────────────────────────────────────────────────────────
 
 export function registrarEfectosEteres(): void {
-  // Registro ocurre al importar este módulo (side-effect en líneas arriba)
+  registrarGatillos()
+  registrarPasivo('FB-005')
+  registrarPasivo('DS-006')
+  registrarInicioChoque('FB-002', 'Vigor')
+  registrarInicioChoque('DS-003', 'Carga')
 }

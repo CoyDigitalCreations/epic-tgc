@@ -6,6 +6,7 @@ import type { CardType } from '../../shared/types'
 import { validateCard } from '../utils/validation'
 import { TextField, NumberField, SelectField, TextAreaField, MultiSelectField } from './fields'
 import { ImageUpload } from './ImageUpload'
+import { PAQUETES } from '../../shared/data/paquetes'
 
 export function CardForm() {
   const draft = useCardStore((s) => s.draft)
@@ -18,6 +19,7 @@ export function CardForm() {
   const getCard = useCardStore((s) => s.getCard)
   const selectedCardId = useCardStore((s) => s.selectedCardId)
   const setSelectedCardId = useCardStore((s) => s.setSelectedCardId)
+  const userPacks = useCardStore((s) => s.userPacks)
 
   const isEditing = draft.id && cards.some((c) => c.id === draft.id)
 
@@ -68,7 +70,7 @@ export function CardForm() {
     initDraft(type as CardType)
   }
 
-  const renderField = (field: { name: string; label: string; type: string; required: boolean; options?: string[]; min?: number; max?: number; placeholder?: string }) => {
+  const renderField = (field: { name: string; label: string; type: string; required: boolean; options?: string[]; min?: number; max?: number; placeholder?: string; defaultValue?: string }) => {
     const isStatsField = STATS_FIELDS.has(field.name)
     const value = isStatsField
       ? (draft.stats as Record<string, unknown>)?.[field.name] ?? ''
@@ -88,7 +90,7 @@ export function CardForm() {
           <TextField
             key={field.name}
             label={field.label}
-            value={(value as string) ?? ''}
+            value={(value as string) ?? field.defaultValue ?? ''}
             onChange={(v) => onChange(v)}
             placeholder={field.placeholder}
           />
@@ -109,7 +111,7 @@ export function CardForm() {
           <SelectField
             key={field.name}
             label={field.label}
-            value={(value as string) ?? ''}
+            value={(value as string) ?? field.defaultValue ?? ''}
             onChange={(v) => onChange(v)}
             options={field.options ?? []}
           />
@@ -119,7 +121,7 @@ export function CardForm() {
           <TextAreaField
             key={field.name}
             label={field.label}
-            value={(value as string) ?? ''}
+            value={(value as string) ?? field.defaultValue ?? ''}
             onChange={(v) => onChange(v)}
             placeholder={field.placeholder}
           />
@@ -135,6 +137,28 @@ export function CardForm() {
             options={field.options ?? [...KEYWORDS]}
             max={field.max}
           />
+        )
+      }
+      case 'paquete': {
+        // Select dedicado: value = paqueteId, label = nombre (estáticos + personalizados)
+        const packs = [...PAQUETES, ...userPacks]
+        return (
+          <label key={field.name} className="flex flex-col gap-1">
+            <span className="text-sm font-medium text-gray-300">{field.label}</span>
+            <select
+              value={(value as string) ?? ''}
+              onChange={(e) => onChange(e.target.value || undefined)}
+              className="bg-surface-2 border border-card-border rounded px-3 py-2 text-gray-100 
+                         focus:outline-none focus:border-ether-400 transition-colors"
+            >
+              <option value="">Sin paquete</option>
+              {packs.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.nombre}
+                </option>
+              ))}
+            </select>
+          </label>
         )
       }
     }

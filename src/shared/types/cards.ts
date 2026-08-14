@@ -39,6 +39,10 @@ export interface CardMeta {
   limiteCopias?: string
   /** Paquete/set al que pertenece la carta (ver types/paquetes.ts) */
   paqueteId?: string
+  /** Variante de render: 'normal' (marco estándar) o 'full-art' (arte a sangre completa) */
+  variante?: 'normal' | 'full-art'
+  /** Notas del diseñador (metadata de autoría — NO afecta el juego ni el render) */
+  comentario?: string
 }
 
 /** Card type discriminated payloads */

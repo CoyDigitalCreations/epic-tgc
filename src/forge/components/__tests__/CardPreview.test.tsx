@@ -144,3 +144,37 @@ describe('CardPreview', () => {
     expect(screen.queryByText('9')).not.toBeInTheDocument()
   })
 })
+
+describe('CardPreview — variante full-art (A2)', () => {
+  const baseDraft = {
+    name: 'Ultra',
+    type: 'Campeón',
+    rarity: 'Épica',
+    keywords: [],
+    flavorText: '',
+    stats: { cost: 4, poder: 2000, resistencia: 1500 },
+  }
+
+  it('no dibuja el marco rúnico (CardFrame) en full-art', () => {
+    useCardStore.setState({
+      draft: { ...baseDraft, variante: 'full-art' },
+    })
+    const { container } = render(<CardPreview />)
+    // CardFrame genera polygons rúnicos; en full-art no debe haber ninguno
+    expect(container.querySelectorAll('polygon')).toHaveLength(0)
+  })
+
+  it('dibuja el marco rúnico en variante normal', () => {
+    useCardStore.setState({
+      draft: { ...baseDraft, variante: 'normal' },
+    })
+    const { container } = render(<CardPreview />)
+    expect(container.querySelectorAll('polygon').length).toBeGreaterThan(0)
+  })
+
+  it('variante ausente se comporta como normal', () => {
+    useCardStore.setState({ draft: baseDraft })
+    const { container } = render(<CardPreview />)
+    expect(container.querySelectorAll('polygon').length).toBeGreaterThan(0)
+  })
+})

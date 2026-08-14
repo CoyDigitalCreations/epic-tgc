@@ -1,7 +1,7 @@
 /**
  * Invariantes del motor (extraídas de __tests__/simulacion.test.ts, C4):
  * verificaciones de zona/Éter válidas para TODO estado de partida con mazo
- * estándar (61 cartas = 15 Éter + 40 Principal + 6 Vínculos). Usadas por
+ * estándar (66 cartas = 15 Éter + 45 Principal + 6 Vínculos). Usadas por
  * bot-combat.test.ts y simulacion.test.ts; el bot nunca debe violarlas.
  */
 import type { GameState, PlayerId } from './types'
@@ -31,7 +31,7 @@ export function verificarInvariantes(estado: GameState): string[] {
     const arcanas = st.campo.arcanasCombate.filter((x): x is string => x !== null).length
     if (arcanas > 3) violaciones.push(`${p}: ${arcanas} Arcanas/Combates > 3`)
 
-    // Las 61 cartas del dueño siguen en sus zonas (nada se duplica ni se pierde)
+    // Las 66 cartas del dueño siguen en sus zonas (nada se duplica ni se pierde)
     const vinculos = st.vinculos.filter((x): x is string => x !== null).length
     const total =
       st.mano.length +
@@ -45,7 +45,7 @@ export function verificarInvariantes(estado: GameState): string[] {
       arcanas +
       vinculos +
       bloqueados
-    if (total !== 61) violaciones.push(`${p}: ${total} cartas ≠ 61`)
+    if (total !== 66) violaciones.push(`${p}: ${total} cartas ≠ 66`)
   }
   return violaciones
 }

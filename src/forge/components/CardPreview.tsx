@@ -81,6 +81,7 @@ export function RenderCarta({
   const theme = TYPE_THEME[card.type] ?? TYPE_THEME['Campeón']
   const rarityBorder = RARITY_BORDERS[card.rarity] ?? '#4a4a5a'
   const showCombatStats = card.type === 'Campeón'
+  const fullArt = card.variante === 'full-art'
   const stats = card.stats as Record<string, any>
   const hasFlavorText = !!card.flavorText
   const sinGem =
@@ -113,7 +114,7 @@ export function RenderCarta({
       }}
       className="select-none"
     >
-      {/* ── Capa de Fondo / Arte Principal Difuminado ── */}
+      {/* ── Capa de Fondo / Arte Principal ── */}
       <div
         onClick={onArtClick}
         style={{
@@ -122,14 +123,14 @@ export function RenderCarta({
           cursor: artCursor,
         }}
       >
-        {/* Imagen de arte limitada en altura */}
+        {/* Arte: limitado en altura (normal) o a sangre completa (full-art) */}
         <div
           style={{
             position: 'absolute',
             top: 0,
             left: 0,
             right: 0,
-            height: 586,
+            height: fullArt ? 1038 : 586,
             background: imageUrl
               ? `url(${imageUrl}) center top / cover no-repeat`
               : `radial-gradient(circle at 50% 35%, ${theme.color}44 0%, #0d0f14 70%)`,
@@ -140,16 +141,28 @@ export function RenderCarta({
           style={{
             position: 'absolute',
             inset: 0,
-            background: `
-              linear-gradient(180deg, 
-                ${theme.color}E6 0%, 
-                ${theme.color}99 7%, 
-                transparent 10%, 
-                transparent 58%, 
-                ${theme.color}88 62%, 
-                ${theme.color}E6 100%
-              )
-            `,
+            background: fullArt
+              ? // Full art: oscurecer arriba (nombre) y abajo (texto), arte libre al centro
+                `
+                linear-gradient(180deg, 
+                  rgba(0,0,0,0.92) 0%, 
+                  rgba(0,0,0,0.35) 12%, 
+                  transparent 28%, 
+                  transparent 55%, 
+                  rgba(0,0,0,0.7) 72%, 
+                  rgba(0,0,0,0.96) 100%
+                )
+              `
+              : `
+                linear-gradient(180deg, 
+                  ${theme.color}E6 0%, 
+                  ${theme.color}99 7%, 
+                  transparent 10%, 
+                  transparent 58%, 
+                  ${theme.color}88 62%, 
+                  ${theme.color}E6 100%
+                )
+              `,
             pointerEvents: 'none',
           }}
         />
@@ -158,41 +171,45 @@ export function RenderCarta({
           style={{
             position: 'absolute',
             inset: 0,
-            background: `
-              linear-gradient(180deg, 
-                rgba(0,0,0,0.85) 0%, 
-                rgba(0,0,0,0.3) 7%, 
-                transparent 10%, 
-                transparent 58%, 
-                rgba(0,0,0,0.7) 64%, 
-                rgba(0,0,0,0.95) 100%
-              )
-            `,
+            background: fullArt
+              ? 'none'
+              : `
+                linear-gradient(180deg, 
+                  rgba(0,0,0,0.85) 0%, 
+                  rgba(0,0,0,0.3) 7%, 
+                  transparent 10%, 
+                  transparent 58%, 
+                  rgba(0,0,0,0.7) 64%, 
+                  rgba(0,0,0,0.95) 100%
+                )
+              `,
             pointerEvents: 'none',
           }}
         />
       </div>
 
-      {/* ── Marco Rúnico y Adornos Metalicos de la Carta ── */}
-      <CardFrame accent={theme.color} rarityColor={rarityBorder} variant={card.type} />
+      {/* ── Marco Rúnico y Adornos Metálicos de la Carta (se omite en full-art) ── */}
+      {!fullArt && <CardFrame accent={theme.color} rarityColor={rarityBorder} variant={card.type} />}
 
-      {/* ── Marco Inferior (public/marco_bajo.png) — 75% del ancho, centrado ── */}
-      <img
-        src="/marco_bajo.png"
-        alt=""
-        draggable={false}
-        style={{
-          position: 'absolute',
-          left: 48,
-          right: 48,
-          bottom: 40,
-          height: 100,
-          objectFit: 'fill',
-          zIndex: 6,
-          pointerEvents: 'none',
-          userSelect: 'none',
-        }}
-      />
+      {/* ── Marco Inferior (public/marco_bajo.png) — se omite en full-art ── */}
+      {!fullArt && (
+        <img
+          src="/marco_bajo.png"
+          alt=""
+          draggable={false}
+          style={{
+            position: 'absolute',
+            left: 48,
+            right: 48,
+            bottom: 40,
+            height: 100,
+            objectFit: 'fill',
+            zIndex: 6,
+            pointerEvents: 'none',
+            userSelect: 'none',
+          }}
+        />
+      )}
 
       {/* ════════════ HEADER BAR & TITLE ════════════ */}
       <div

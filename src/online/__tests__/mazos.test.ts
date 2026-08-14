@@ -32,7 +32,7 @@ describe('armarMazoConColeccion', () => {
     expect(reemplazadas).toBe(Number(diseno.limiteCopias ?? 1))
   })
 
-  it('NO reemplaza si el type difiere aunque el nombre coincida (preserva la distribución 15/40/6)', () => {
+  it('NO reemplaza si el type difiere aunque el nombre coincida (preserva la distribución 15/45/6)', () => {
     const diseno = ESTASIS_CARDS.find((c) => c.type !== 'Éter')!
     const custom = {
       ...diseno,
@@ -45,7 +45,7 @@ describe('armarMazoConColeccion', () => {
     expect(MAZOS[0].cardIds).toContain(diseno.id)
   })
 
-  it('la distribución del mazo resultante se conserva (15 Éter + 40 Principal + 6 Vínculos)', () => {
+  it('la distribución del mazo resultante se conserva (15 Éter + 45 Principal + 6 Vínculos)', () => {
     const coleccion = ESTASIS_CARDS.map((c) => ({ ...c, id: `custom-${c.id}` }))
     registrarCartas(coleccion) // el catálogo debe resolver los ids custom para el conteo
     const { mazo } = armarMazoConColeccion(MAZOS[0], coleccion)
@@ -59,7 +59,7 @@ describe('armarMazoConColeccion', () => {
     }
     expect(porTipo['Éter']).toBe(15)
     expect(porTipo['Vínculo']).toBe(6)
-    expect(porTipo.principal).toBe(40)
+    expect(porTipo.principal).toBe(45)
   })
 })
 
