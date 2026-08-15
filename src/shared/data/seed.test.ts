@@ -6,7 +6,7 @@ import type { AnyCard } from '../types'
 
 /**
  * Integridad seeds ↔ código.
- * Si agregás cartas a src/data/paquetes.ts, corré `npm run seed`
+ * Si agregas cartas a src/data/paquetes.ts, corre `npm run seed`
  * para regenerar seed/*.json. Estos tests avisan si se desincronizan.
  */
 const readSeed = (file: string): AnyCard[] =>

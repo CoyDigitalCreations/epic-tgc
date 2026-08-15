@@ -109,7 +109,7 @@ export const ESTASIS_CARDS: AnyCard[] = [
     facciones: ['Orden'],
     stats: { cost: 1 },
     variantePago: 'Gatillo',
-    efectoPago: 'Cuando pagues esta carta, robá 1 carta.',
+    efectoPago: 'Cuando pagues esta carta, roba 1 carta.',
   },
   {
     id: 'FB-004',
@@ -141,7 +141,7 @@ export const ESTASIS_CARDS: AnyCard[] = [
     facciones: ['Orden'],
     stats: { cost: 1 },
     variantePago: 'Pasivo',
-    efectoPago: 'Mientras esté en tu zona de Éter pagado, una vez por turno podés bloquear 1 Éter de tu Reserva sobre un Campeón sin agotarlo.',
+    efectoPago: 'Mientras esté en tu zona de Éter pagado, una vez por turno puedes bloquear 1 Éter de tu Reserva sobre un Campeón sin agotarlo.',
   },
   {
     id: 'FB-006',
@@ -243,7 +243,7 @@ export const ESTASIS_CARDS: AnyCard[] = [
     catHabilidad: 'Efecto',
     stats: { cost: 2, poder: 5, resistencia: 3 },
     tipoEfecto: 'Pasivo',
-    efectoPasivo: 'Al atacar, agotá un Campeón que controla el rival.',
+    efectoPasivo: 'Al atacar, agota un Campeón que controla el rival.',
   },
   {
     id: 'FB-012',
@@ -282,7 +282,7 @@ export const ESTASIS_CARDS: AnyCard[] = [
     stats: { cost: 3, poder: 4, resistencia: 3 },
     tipoEfecto: 'Activo',
     tipoHabilidad: 'Un Solo Uso',
-    efectoActivo: 'Una vez por turno, pagá 1 Éter y agotá esta carta: cambiá el agotamiento de un Campeón que controla el rival (de agotado a no agotado, o viceversa).',
+    efectoActivo: 'Una vez por turno, paga 1 Éter y agota esta carta: cambia el agotamiento de un Campeón que controla el rival (de agotado a no agotado, o viceversa).',
   },
   {
     id: 'FB-014',
@@ -360,7 +360,7 @@ export const ESTASIS_CARDS: AnyCard[] = [
     stats: { cost: 4, poder: 4, resistencia: 5 },
     tipoEfecto: 'Activo',
     tipoHabilidad: 'Un Solo Uso',
-    efectoActivo: 'Una vez por turno, pagá 1 Éter y agotá esta carta: liberá hasta 2 Éter bloqueados de Campeones que controla el rival (van a la zona de pago de su dueño).',
+    efectoActivo: 'Una vez por turno, paga 1 Éter y agota esta carta: libera hasta 2 Éter bloqueados de Campeones que controla el rival (van a la zona de pago de su dueño).',
   },
   {
     id: 'FB-018',
@@ -423,7 +423,7 @@ export const ESTASIS_CARDS: AnyCard[] = [
     createdAt: FB_TS,
     updatedAt: FB_TS,
     stats: { cost: 0, duracion: 2 },
-    descripcion: 'Mientras dure, al inicio de tu Alba podés bloquear 1 Éter de tu Reserva sobre un Campeón sin agotarlo.',
+    descripcion: 'Mientras dure, al inicio de tu Alba puedes bloquear 1 Éter de tu Reserva sobre un Campeón sin agotarlo.',
   },
   {
     id: 'FB-022',
@@ -452,8 +452,8 @@ export const ESTASIS_CARDS: AnyCard[] = [
     updatedAt: FB_TS,
     facciones: ['Orden'],
     stats: { cost: 3 },
-    condicion: 'Al inicio de tu Choque, si controlás 2 o más Campeones con Éter bloqueado.',
-    recompensa: 'Robá 2 cartas y un Campeón que controles gana +3 de Poder hasta el final del turno.',
+    condicion: 'Al inicio de tu Choque, si controlas 2 o más Campeones con Éter bloqueado.',
+    recompensa: 'Roba 2 cartas y un Campeón que controles gana +3 de Poder hasta el final del turno.',
   },
   {
     id: 'FB-024',
@@ -484,7 +484,7 @@ export const ESTASIS_CARDS: AnyCard[] = [
     updatedAt: FB_TS,
     facciones: ['Orden'],
     stats: { cost: 0 },
-    efecto: 'Una vez por turno, al inicio de tu Alba, podés bloquear 1 Éter de tu Reserva sobre un Campeón sin agotarlo.',
+    efecto: 'Una vez por turno, al inicio de tu Alba, puedes bloquear 1 Éter de tu Reserva sobre un Campeón sin agotarlo.',
   },
   {
     id: 'FB-026',
@@ -514,7 +514,7 @@ export const ESTASIS_CARDS: AnyCard[] = [
     updatedAt: FB_TS,
     facciones: ['Orden'],
     stats: { cost: 0 },
-    efecto: 'Regresá hasta 3 Éter pagados (1A) a tu Reserva.',
+    efecto: 'Regresa hasta 3 Éter pagados (1A) a tu Reserva.',
   },
   {
     id: 'FB-028',
@@ -544,7 +544,7 @@ export const ESTASIS_CARDS: AnyCard[] = [
     updatedAt: FB_TS,
     facciones: ['Orden'],
     stats: { cost: 0 },
-    efecto: 'Una vez por turno, al inicio de tu Alba, podés devolver un Campeón de tu Cementerio a tu mano.',
+    efecto: 'Una vez por turno, al inicio de tu Alba, puedes devolver un Campeón de tu Cementerio a tu mano.',
   },
   {
     id: 'FB-030',
