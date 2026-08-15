@@ -294,23 +294,23 @@ describe('declarar_bloqueo (9.3, forzoso)', () => {
     expect(Object.keys(r.combate?.bloqueos ?? {})).toContain(atacantes[0])
   })
 
-  it('no elegibles: bloqueador agotado o ya asignado no entra en la asignación forzada', () => {
-    // B con 2 campeones ANTES de declarar: agotado (no disponible) + enderezado.
-    // A usa Cassandra en slot 1 (no Rowena) para no colisionar ids con B (2B-2F).
+  it('agotados SÍ bloquean: asignación forzada incluye campeones agotados', () => {
+    // B con 2 campeones: agotado + enderezado. AMBOS pueden bloquear (agotados sí bloquean).
     const { s, atacantes, ctx } = conAtaque([VAELA, CASSANDRA], (st) => {
       const agotado = conCampeon(st, ISOLDE, 0, { owner: 'B', agotado: true })
       return conCampeon(agotado.s, ROWENA, 1, { owner: 'B' }).s
     })
-    const listo = `c-${ROWENA}-1`
+    const listo1 = `c-${ISOLDE}-0`
+    const listo2 = `c-${ROWENA}-1`
 
     const bloqueos = getValidActions(s, 'B').filter((a) => a.type === 'declarar_bloqueo')
     expect(bloqueos).toHaveLength(1)
     if (bloqueos[0]?.type === 'declarar_bloqueo') {
-      // solo el enderezado puede bloquear; k = mín(1, 2) = 1 → un solo par
-      expect(Object.values(bloqueos[0].asignaciones)).toEqual([listo])
+      // AMBOS campeones bloquean (agotados incluidos): k = mín(2, 2) = 2
+      expect(Object.values(bloqueos[0].asignaciones)).toEqual([listo1, listo2])
     }
     const r = aplicar(s, bloqueos[0] as Action, ctx)
-    expect(Object.keys(r.combate?.bloqueos ?? {})).toHaveLength(1)
+    expect(Object.keys(r.combate?.bloqueos ?? {})).toHaveLength(2)
   })
 
   it('0 bloqueadores disponibles → auto-avance a resolución SIN evento bloqueo_declarado', () => {
@@ -454,7 +454,8 @@ describe('resolución: Ruptura (9.4-A, ADR-13)', () => {
     if (!r.ok) return
     expect(r.state.players.B.vinculos[2]).toBe(vinculoId) // permanece en su slot
     expect(r.state.instances[vinculoId].bocaArriba).toBe(true) // recordatorio visible (L911)
-    expect(r.state.combate).toBeUndefined() // elegir_ruptura cierra (ADR-11)
+    expect(r.state.combate).toBeDefined() // combate persiste para evitar segundo ataque
+    expect(r.state.combate?.rupturaUsadaEsteTurno).toBe(true) // Ruptura ya usada
     expect(ctx.events).toContainEqual({ type: 'ruptura_realizada', atacanteId, vinculoSlot: 2, vinculoId })
     expect(ctx.events).toContainEqual({ type: 'destruccion', cardInstanceId: vinculoId, jugador: 'B', causa: 'ruptura' })
     expect(ctx.events.some((e) => e.type === 'carta_muerta' && e.cardInstanceId === vinculoId)).toBe(false) // solo destruccion

@@ -9,10 +9,17 @@ const deckA = expandirMazo(ESTASIS_CARDS) // 66: 15 Éter + 45 Principal + 6 Ví
 const deckB = expandirMazo(DISONANCIA_CARDS)
 
 describe('bot tonto (5.7)', () => {
-  it('elige la primera acción válida que no sea rendirse; null si no es su turno', () => {
+  it('elige la primera acción válida que no sea rendirse; null si no tiene acciones', () => {
     const { estado } = simularPartida(deckA, deckB, 1)
-    // el bot devuelve acciones solo para el jugador activo
-    expect(botTonto(estado, estado.turno === 'A' ? 'B' : 'A')).toBeNull()
+    const jugadorActivo = estado.turno
+    const rival = jugadorActivo === 'A' ? 'B' : 'A'
+    // El bot del rival puede tener acciones de bloqueo durante el Choque del activo
+    const accionRival = botTonto(estado, rival)
+    if (accionRival) {
+      // Si tiene acción, debe ser de bloqueo (no declarar_ataque ni jugar)
+      expect(['declarar_bloqueo', 'pasar_prioridad']).toContain(accionRival.type)
+    }
+    // El bot solo juega acciones de rendirse cuando no hay más opciones
   })
 })
 

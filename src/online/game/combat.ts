@@ -54,15 +54,11 @@ export function atacantesElegibles(state: GameState): string[] {
   })
 }
 
-/** Bloqueadores disponibles del DEFENSOR: Campeones enderezados (L1095). */
+/** Bloqueadores disponibles del DEFENSOR: todos los campeones no-null (L1095). Los agotados SÍ pueden bloquear. */
 export function bloqueadoresDisponibles(state: GameState): string[] {
   const defensor = rivalDe(state)
   const p = state.players[defensor]
-  return p.campo.campeones.filter((id): id is string => {
-    if (!id) return false
-    const inst = state.instances[id]
-    return !!inst && !inst.agotado
-  })
+  return p.campo.campeones.filter((id): id is string => id !== null)
 }
 
 /** Ataques declarados sin bloqueador (los únicos con Ruptura posible, 9.4-A). */
@@ -273,8 +269,12 @@ export function ejecutarElegirRuptura(s: GameState, atacanteId: string | null, v
   if (atacanteId !== null && vinculoSlot !== undefined) {
     const vinculoId = s.players[rivalDe(s)].vinculos[vinculoSlot]!
     ctx.emit({ type: 'ruptura_realizada', atacanteId, vinculoSlot, vinculoId })
-    destruirCarta(s, ctx, vinculoId, 'ruptura') // bocaArriba + sexto Vínculo + derrota
-    if (s.combate) s.combate.rupturaUsadaEsteTurno = true // defensivo
+    destruirCarta(s, ctx, vinculoId, 'ruptura')
+    if (s.combate) s.combate.rupturaUsadaEsteTurno = true
+    // NO borramos s.combate aquí — que pasar_turno lo limpie al salir de Choque.
+    // Si lo borramos, validarDeclararAtaque permite un nuevo combate en el mismo turno.
+  } else {
+    // "No romper" voluntario (L1107): cierra el combate para permitir pasar turno.
+    s.combate = undefined
   }
-  s.combate = undefined // elegir_ruptura cierra (ADR-11)
 }
