@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { aporteDe, campeonesSacrificables, faccionesCompartidas, getCardMeta, sacrificiosRequeridos } from '../game'
-import type { Action, CardInstance, GameState } from '../game'
+import type { Action, CardInstance, GameState, PlayerId } from '../game'
 import { useCardImage } from '../../forge/hooks/useCardImage'
 import { MiniCard, TAMANOS } from './MiniCard'
 import { CartaZoom } from './CartaZoom'
+import { ChampionStatus, FocosChampion } from './ChampionStatus'
 
 interface TableroProps {
   /** Proyección 6.2 del estado para el jugador A (cartas ocultas con cardId null). */
@@ -15,6 +16,8 @@ interface TableroProps {
   log: string[]
   onAccion: (a: Action) => void
   onAbandonar: () => void
+  /** Animaciones de movimiento de cartas (glow en celda destino). */
+  animaciones?: Array<{ zona: string; jugador: PlayerId; key: number }>
 }
 
 /* ─────────────────────────────────────────────
@@ -170,9 +173,17 @@ function OpcionTutor({
 const ANCHO_CELDA = TAMANOS.md * (1038 / 744)
 
 /** Celda de la grilla: rótulo de zona (1A…) + contenido. Los huecos vacíos muestran el límite (6.1). */
-function Celda({ zona, children }: { zona: string; children?: ReactNode }) {
+function Celda({ zona, children, glow }: { zona: string; children?: ReactNode; glow?: boolean }) {
   return (
-    <div className="flex flex-col items-center gap-0.5" data-zona={zona} style={{ minWidth: ANCHO_CELDA }}>
+    <div
+      className={`flex flex-col items-center gap-0.5 relative ${glow ? 'animate-pulse-ring' : ''}`}
+      data-zona={zona}
+      style={{
+        minWidth: ANCHO_CELDA,
+        overflow: 'visible',
+        ...(glow ? { boxShadow: '0 0 12px 4px rgba(74, 222, 128, 0.5)', borderRadius: 8 } : undefined),
+      }}
+    >
       <span className="text-[7px] font-mono text-gray-600 uppercase leading-none tracking-wider">{zona}</span>
       {children ?? (
         <div
@@ -247,6 +258,8 @@ interface GrillaProps {
   /** Grilla del rival: se renderiza de cabeza (vista desde el otro lado de la mesa). */
   invertida?: boolean
   seleccion: Seleccion
+  /** Animaciones de movimiento (glow en celda destino). */
+  animaciones?: Array<{ zona: string; jugador: PlayerId; key: number }>
 }
 
 /** Grilla 4×7 de un jugador, fiel a la vista desde arriba del manual. */
@@ -261,6 +274,7 @@ function GrillaJugador({
   abrirPanel,
   invertida,
   seleccion,
+  animaciones,
 }: GrillaProps) {
   const p = vista.players[jugador]
   const soy = jugador === 'A'
@@ -414,14 +428,15 @@ function GrillaJugador({
   for (let slot = 0; slot < 5; slot++) {
     const zona = `2${String.fromCharCode(66 + slot)}` // 2B…2F
     const id = p.campo.campeones[slot]
+    const hayGlow = animaciones?.some((a) => a.zona === zona && a.jugador === jugador) ?? false
     celdas.push(
-      <Celda key={zona} zona={zona}>
+      <Celda key={zona} zona={zona} glow={hayGlow}>
         {id ? (
-          soy && leTocaA ? (
-            campeonPropio(slot, id)
-          ) : (
-            <MiniCard inst={vista.instances[id]} tamano="md" onZoom={() => abrirZoom(vista.instances[id])} />
-          )
+          <div className="relative">
+            {soy && leTocaA ? campeonPropio(slot, id) : <MiniCard inst={vista.instances[id]} tamano="md" onZoom={() => abrirZoom(vista.instances[id])} />}
+            <ChampionStatus s={vista} id={id} />
+            <FocosChampion s={vista} id={id} />
+          </div>
         ) : undefined}
       </Celda>,
     )
@@ -514,7 +529,7 @@ function GrillaJugador({
   )
 }
 
-export function Tablero({ vista, acciones, leTocaA, log, onAccion, onAbandonar }: TableroProps) {
+export function Tablero({ vista, acciones, leTocaA, log, onAccion, onAbandonar, animaciones }: TableroProps) {
   const yo = vista.players.A
   const rival = vista.players.B
   const fase = vista.fase
@@ -721,6 +736,7 @@ export function Tablero({ vista, acciones, leTocaA, log, onAccion, onAbandonar }
             abrirPanel={(j, z) => setPanelAbierto({ jugador: j, zona: z })}
             invertida
             seleccion={null}
+            animaciones={animaciones}
           />
         </section>
 
@@ -785,6 +801,7 @@ export function Tablero({ vista, acciones, leTocaA, log, onAccion, onAbandonar }
             abrirZoom={abrirZoom}
             abrirPanel={(j, z) => setPanelAbierto({ jugador: j, zona: z })}
             seleccion={seleccion}
+            animaciones={animaciones}
           />
 
           {/* ── Tu mano (fuera de la grilla) ─────────────────────── */}

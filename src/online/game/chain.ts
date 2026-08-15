@@ -17,6 +17,7 @@
  */
 import { esArcana, esCombate, esTactica, getCardMeta } from './cards'
 import { continuarCombateTrasCadena } from './combat'
+import { dispararTrigger } from './efectos'
 import { enviarAlCementerio } from './replacements'
 import type { Ctx, GameState, PlayerId } from './types'
 import { slotAZona } from './zones'
@@ -132,6 +133,8 @@ function resolverCadena(s: GameState, ctx: Ctx): void {
       // C5 (change 4): 2G con trigger al-ser-enviado-al-cementerio
       enviarAlCementerio(s, ctx, id)
       ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: id, zona: '2G', jugador: inst.owner, bocaArriba: true })
+      // Perfeccionamiento-tablero: dispatch al-resolver-cadena para efectos de Combate/Arcana
+      dispararTrigger(s, ctx, 'al-resolver-cadena', inst.owner, [id])
     }
     // Táctica: permanece (sus efectos se resuelven en change 3)
   }

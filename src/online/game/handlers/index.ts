@@ -1,4 +1,5 @@
 import { registrarEfectosCampeones } from './campeones'
+import { registrarEfectosCombate } from './combate'
 import { registrarEfectosEteres } from './eteres'
 import { registrarEfectosHabilidades } from './habilidades'
 import { registrarEfectosSoporte } from './soporte'
@@ -15,4 +16,5 @@ export function registrarEfectos(): void {
   registrarEfectosHabilidades()
   registrarEfectosSoporte()
   registrarEfectosVinculos()
+  registrarEfectosCombate()
 }

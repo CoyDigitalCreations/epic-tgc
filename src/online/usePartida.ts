@@ -13,8 +13,18 @@ export interface PartidaConfig {
   delayMs?: number
 }
 
+/** Entrada de animación: glow en celda destino por ~500ms. */
+export interface AnimacionEntrada {
+  zona: string
+  jugador: PlayerId
+  key: number
+}
+
 /** Salvaguarda anti-bucle: si el bot acumula más jugadas que esto sin terminar, se rinde. */
 const MAX_JUGADAS_BOT = 2000
+
+/** Duración del glow de destino (ms). */
+const GLOW_DURATION_MS = 500
 
 /**
  * El actor de la jugada actual NO es siempre `estado.turno`:
@@ -55,6 +65,7 @@ export function usePartida(config: PartidaConfig) {
   }
   const [estado, setEstado] = useState<GameState>(estadoRef.current)
   const [log, setLog] = useState<string[]>(logRef.current)
+  const [animaciones, setAnimaciones] = useState<AnimacionEntrada[]>([])
   const delayRef = useRef(config.delayMs ?? 350)
   const jugadasBotRef = useRef(0)
 
@@ -63,7 +74,7 @@ export function usePartida(config: PartidaConfig) {
     setLog(logRef.current)
   }, [])
 
-  /** Aplica una acción del humano. Los eventos del motor se suman al log. */
+  /** Aplica una acción del humano. Los eventos del motor se suman al log y disparan animaciones. */
   const ejecutar = useCallback(
     (accion: Action) => {
       const s = estadoRef.current
@@ -77,10 +88,26 @@ export function usePartida(config: PartidaConfig) {
       }
       estadoRef.current = r.state
       logRef.current = [...logRef.current, ...eventosParaLog(r.state, r.events)]
+      // Animaciones: capturar entradas de zona para glow
+      const entradas = r.events
+        .filter((e): e is Extract<typeof e, { type: 'carta_entrada_a_zona' }> => e.type === 'carta_entrada_a_zona')
+        .map((e) => ({ zona: e.zona, jugador: e.jugador, key: Date.now() + Math.random() }))
+      if (entradas.length > 0) {
+        setAnimaciones((prev) => [...prev, ...entradas])
+      }
       sincronizar()
     },
     [sincronizar],
   )
+
+  // Limpiar animaciones expiradas
+  useEffect(() => {
+    if (animaciones.length === 0) return
+    const timeout = window.setTimeout(() => {
+      setAnimaciones((prev) => prev.filter((a) => Date.now() - a.key < GLOW_DURATION_MS))
+    }, GLOW_DURATION_MS + 50)
+    return () => window.clearTimeout(timeout)
+  }, [animaciones])
 
   /** El bot juega solo cuando el actor actual es B, con delay, hasta devolverle el turno al humano. */
   useEffect(() => {
@@ -117,5 +144,5 @@ export function usePartida(config: PartidaConfig) {
     sincronizar()
   }, [config, sincronizar])
 
-  return { estado, log, leTocaA, acciones, ejecutar, reiniciar }
+  return { estado, log, leTocaA, acciones, ejecutar, reiniciar, animaciones }
 }

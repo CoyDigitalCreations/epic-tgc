@@ -119,6 +119,7 @@ function Partida({ config, onAbandonar }: { config: PartidaConfig; onAbandonar: 
       log={partida.log}
       onAccion={partida.ejecutar}
       onAbandonar={onAbandonar}
+      animaciones={partida.animaciones}
     />
   )
 }

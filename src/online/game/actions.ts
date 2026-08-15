@@ -11,6 +11,7 @@ import type { CardInstance } from './types'
 import { ejecutarDeclararAtaque, ejecutarDeclararBloqueo, validarDeclararAtaque, validarDeclararBloqueo, validarElegirRuptura, ejecutarElegirRuptura, tieneKeyword } from './combat'
 import { liberarEterBloqueado, enviarAlCementerio } from './replacements'
 import { validarResponderCadena, validarPasarPrioridad, ejecutarResponderCadena, ejecutarPasarPrioridad } from './chain'
+import { validarRequisito } from './effects-guards'
 
 /**
  * Acciones atómicas del jugador (superficie de applyAction/getValidActions).
@@ -253,6 +254,9 @@ function validarColocarCombate(state: GameState, action: Extract<Action, { type:
   if (!meta || !esCombate(meta)) return 'no es un Combate'
   if (action.slot < 0 || action.slot >= SLOTS_ARCANAS_COMBATE) return 'slot inválido'
   if (state.players[state.turno].campo.arcanasCombate[action.slot] !== null) return 'slot ocupado'
+  // Guard de resolubilidad: el efecto de la carta debe poder resolverse
+  const reqError = validarRequisito(state, state.turno, meta.id)
+  if (reqError) return reqError
   return null // Combate no cuesta Éter
 }
 
@@ -711,7 +715,9 @@ export function generarAccionesForja(state: GameState, playerId: PlayerId, cardI
       const libre = p.campo.campeones.findIndex((c) => c === null)
       const slot = libre !== -1 ? libre : p.campo.campeones.indexOf(sacrificios[0])
       const accion: Action = { type: 'jugar_campeon', cardInstanceId, slot, eterIds, sacrificios }
-      return validarJugarCampeon(state, accion) === null ? accion : null
+      if (validarJugarCampeon(state, accion) !== null) return null
+      if (validarRequisito(state, playerId, meta.id) !== null) return null
+      return accion
     }
     case 'Mística': {
       const eterIds = etersParaPagar(state, playerId, meta.id)
@@ -719,13 +725,17 @@ export function generarAccionesForja(state: GameState, playerId: PlayerId, cardI
       const slot = p.campo.misticasTacticas.findIndex((c) => c === null)
       if (slot === -1) return null
       const accion: Action = { type: 'jugar_mistica', cardInstanceId, slot, eterIds }
-      return validarJugarMistica(state, accion) === null ? accion : null
+      if (validarJugarMistica(state, accion) !== null) return null
+      if (validarRequisito(state, playerId, meta.id) !== null) return null
+      return accion
     }
     case 'Táctica': {
       const slot = p.campo.misticasTacticas.findIndex((c) => c === null)
       if (slot === -1) return null
       const accion: Action = { type: 'colocar_tactica', cardInstanceId, slot }
-      return validarColocarTactica(state, accion) === null ? accion : null
+      if (validarColocarTactica(state, accion) !== null) return null
+      if (validarRequisito(state, playerId, meta.id) !== null) return null
+      return accion
     }
     case 'Arcana': {
       const eterIds = etersParaPagar(state, playerId, meta.id)
@@ -733,13 +743,17 @@ export function generarAccionesForja(state: GameState, playerId: PlayerId, cardI
       const slot = p.campo.arcanasCombate.findIndex((c) => c === null)
       if (slot === -1) return null
       const accion: Action = { type: 'colocar_arcana', cardInstanceId, slot, eterIds }
-      return validarColocarArcana(state, accion) === null ? accion : null
+      if (validarColocarArcana(state, accion) !== null) return null
+      if (validarRequisito(state, playerId, meta.id) !== null) return null
+      return accion
     }
     case 'Combate': {
       const slot = p.campo.arcanasCombate.findIndex((c) => c === null)
       if (slot === -1) return null
       const accion: Action = { type: 'colocar_combate', cardInstanceId, slot }
-      return validarColocarCombate(state, accion) === null ? accion : null
+      if (validarColocarCombate(state, accion) !== null) return null
+      if (validarRequisito(state, playerId, meta.id) !== null) return null
+      return accion
     }
     default:
       return null // Éter y Vínculo no se juegan desde la mano

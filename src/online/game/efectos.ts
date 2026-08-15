@@ -76,6 +76,11 @@ export type AuraCampoFn = (s: GameState, fuente: string, objetivo: string) => { 
 
 const aurasCampo = new Map<string, AuraCampoFn>()
 
+/** true si hay un aura de campo registrada para este cardId (para foco "rojo"). */
+export function hasAuraCampoRegistrada(cardId: string): boolean {
+  return aurasCampo.has(cardId)
+}
+
 /** Registra un aura de campo para un Campeón (D6): fuentes en el campo del
  * mismo jugador que el objetivo ("otros campeones que controles"). */
 export function registrarAuraCampo(cardId: string, fn: AuraCampoFn): void {
