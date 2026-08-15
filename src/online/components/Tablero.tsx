@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { aporteDe, campeonesSacrificables, faccionesCompartidas, getCardMeta, sacrificiosRequeridos } from '../game'
 import type { Action, CardInstance, GameState } from '../game'
+import { useCardImage } from '../../forge/hooks/useCardImage'
 import { MiniCard, TAMANOS } from './MiniCard'
 import { CartaZoom } from './CartaZoom'
 
@@ -93,6 +94,61 @@ function Boton({ accion, onClick }: { accion: Action; onClick: (a: Action) => vo
                  transition-colors cursor-pointer whitespace-nowrap"
     >
       {labelAccion(accion)}
+    </button>
+  )
+}
+
+/**
+ * Opción de búsqueda de mazo (mecánica tutor, soporte.ts): una carta del
+ * propio mazo que cumple el filtro del efecto. Muestra arte, nombre, coste
+ * y ATQ/RES para que el jugador VEA qué cartas puede elegir (bug reportado:
+ * antes eran botones genéricos "elegir_objetivo" sin nombre).
+ */
+function OpcionTutor({
+  inst,
+  onAccion,
+}: {
+  inst: CardInstance
+  onAccion: (a: Action) => void
+}) {
+  const cardId = inst.cardId ?? undefined
+  const meta = cardId ? getCardMeta(cardId) : null
+  const imageUrl = useCardImage(cardId, meta?.hasImage, meta?.imageUrl)
+  const combate =
+    meta?.type === 'Campeón' && 'poder' in meta.stats
+      ? `ATQ ${meta.stats.poder} RES ${meta.stats.resistencia}`
+      : null
+  return (
+    <button
+      onClick={() => onAccion({ type: 'elegir_objetivo', objetivoId: inst.cardInstanceId })}
+      title={meta?.flavorText}
+      className="flex items-center gap-2 bg-surface-2 hover:bg-card-border border border-card-border rounded-lg
+                 px-2 py-1.5 transition-colors cursor-pointer text-left max-w-[200px]"
+    >
+      <div
+        className="shrink-0 rounded-sm border border-card-border overflow-hidden flex items-center justify-center"
+        style={{
+          width: 26,
+          aspectRatio: '744/1038',
+          background: 'linear-gradient(135deg, #14142b 0%, #1e1e3a 60%, #2a2a4e 100%)',
+        }}
+      >
+        {imageUrl ? (
+          <img src={imageUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        ) : (
+          <span style={{ color: '#4b4b7a', fontFamily: '"Cinzel", serif', fontSize: 8, fontWeight: 700 }}>
+            ✦
+          </span>
+        )}
+      </div>
+      <div className="min-w-0">
+        <p className="text-[11px] text-gray-100 truncate">{meta?.name ?? 'Carta'}</p>
+        <p className="text-[9px] text-gray-500">
+          {meta?.type}
+          {meta ? ` · Coste ${meta.stats.cost}` : ''}
+          {combate ? ` · ${combate}` : ''}
+        </p>
+      </div>
     </button>
   )
 }
@@ -560,6 +616,7 @@ export function Tablero({ vista, acciones, leTocaA, log, onAccion, onAbandonar }
   // Acciones generales (no van sobre una carta ni son de la mano)
   const generales = acciones.filter((a) => {
     if (a.type === 'rendirse') return false // va en el header
+    if (a.type === 'elegir_objetivo') return false // búsqueda de mazo: se lista como opciones (OpcionTutor)
     if (esDeMano(a)) return false // va sobre la carta de la mano
     if (conCarta(a)) return false // va sobre la carta en la pila
     if (a.type === 'declarar_ataque') return a.atacanteIds.length > 1 // individual va en el campeón
@@ -567,6 +624,10 @@ export function Tablero({ vista, acciones, leTocaA, log, onAccion, onAbandonar }
     if (a.type === 'elegir_ruptura' && a.atacanteId !== null) return false // se resume en un botón aparte
     return true
   })
+  /** Búsqueda de mazo (tutor): una acción por carta que cumple el filtro. */
+  const tutores = acciones.filter(
+    (a): a is Extract<Action, { type: 'elegir_objetivo' }> => a.type === 'elegir_objetivo',
+  )
   const ruptura = acciones.find((a) => a.type === 'elegir_ruptura' && a.atacanteId !== null)
   const pila = vista.combate?.cadena?.pila ?? []
   const responderDe = (id: string) => acciones.find((a) => a.type === 'responder_cadena' && a.cardInstanceId === id)
@@ -754,6 +815,21 @@ export function Tablero({ vista, acciones, leTocaA, log, onAccion, onAbandonar }
                 <Boton key={i} accion={a} onClick={onAccion} />
               ))}
               {ruptura && <Boton accion={ruptura} onClick={onAccion} />}
+            </div>
+          )}
+
+          {/* ── Búsqueda de mazo (tutor): opciones con nombre y arte ── */}
+          {leTocaA && tutores.length > 0 && (
+            <div className="border border-ether-600/40 rounded-lg p-2 bg-ether-600/10">
+              <p className="text-[9px] uppercase tracking-wider text-ether-300 mb-1.5">
+                Búsqueda de mazo — elegí una carta
+              </p>
+              <div className="flex gap-2 flex-wrap">
+                {tutores.map((a) => {
+                  const inst = vista.instances[a.objetivoId]
+                  return inst ? <OpcionTutor key={a.objetivoId} inst={inst} onAccion={onAccion} /> : null
+                })}
+              </div>
             </div>
           )}
         </section>

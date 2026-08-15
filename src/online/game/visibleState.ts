@@ -33,6 +33,15 @@ export function visibleState(state: GameState, playerId: PlayerId): GameState {
   const pila = v.combate?.cadena?.pila ?? []
   for (const id of pila) ocultar.delete(id)
 
+  // Búsqueda de mazo (C3/D1): mientras un pendiente de elegir_objetivo espera
+  // respuesta del jugador, sus cartas opción se muestran — necesita VER qué
+  // cartas puede elegir (misma lógica que la pila de la cadena: la visibilidad
+  // cubre lo necesario para decidir). El resto del mazo sigue opaco.
+  const pendiente = v.objetivosPendientes?.[0]
+  if (pendiente && pendiente.jugador === playerId) {
+    for (const id of pendiente.opciones) ocultar.delete(id)
+  }
+
   for (const id of ocultar) {
     const inst = v.instances[id]
     if (inst) inst.cardId = null

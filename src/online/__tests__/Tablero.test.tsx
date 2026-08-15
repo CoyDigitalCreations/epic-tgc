@@ -624,3 +624,73 @@ describe('Cartas boca abajo (Arcanas/Combate/Vínculos)', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 })
+
+describe('Búsqueda de mazo (tutores)', () => {
+  /** Estado mínimo con pendiente de búsqueda (FB-031 al cementerio) y 2 opciones en el mazo de A. */
+  function estadoConBusqueda(): GameState {
+    const jugador = (id: 'A' | 'B') => ({
+      id,
+      mano: [],
+      mazo: ['m-ds031', 'm-fb031'],
+      cementerio: [],
+      exilio: [],
+      eterReserva: [],
+      eterPagado: [],
+      campo: { campeones: [null, null, null, null, null], misticasTacticas: [null, null, null], arcanasCombate: [null, null, null] },
+      vinculos: [null, null, null, null, null, null],
+      mulliganUsado: true,
+    })
+    return {
+      version: 1,
+      seed: 7,
+      fase: 'choque' as const,
+      turno: 'A' as const,
+      primerJugador: 'A' as const,
+      primerTurno: false,
+      players: { A: jugador('A'), B: jugador('B') },
+      instances: {
+        'm-ds031': { cardInstanceId: 'm-ds031', cardId: 'DS-031', owner: 'A' },
+        'm-fb031': { cardInstanceId: 'm-fb031', cardId: 'FB-031', owner: 'A' },
+      },
+      objetivosPendientes: [
+        {
+          jugador: 'A',
+          instId: 'c-FB-031-0-A',
+          trigger: 'al-ser-enviado-al-cementerio',
+          opciones: ['m-ds031', 'm-fb031'],
+        },
+      ],
+    }
+  }
+
+  it('muestra las cartas opción con su nombre y dispara elegir_objetivo', async () => {
+    const user = userEvent.setup()
+    const estado = estadoConBusqueda()
+    const onAccion = vi.fn()
+    render(
+      <Tablero
+        vista={visibleState(estado, 'A')}
+        acciones={getValidActions(estado, 'A')}
+        leTocaA={true}
+        log={[]}
+        onAccion={onAccion}
+        onAbandonar={vi.fn()}
+      />,
+    )
+
+    // Título del bloque de búsqueda y los NOMBRES de las cartas seleccionables
+    expect(screen.getByText(/Búsqueda de mazo — elegí una carta/)).toBeInTheDocument()
+    const nombreDs = getCardMeta('DS-031')?.name!
+    const nombreFb = getCardMeta('FB-031')?.name!
+    expect(screen.getByText(nombreDs)).toBeInTheDocument()
+    expect(screen.getByText(nombreFb)).toBeInTheDocument()
+    // No aparece el botón genérico sin nombre (bug reportado)
+    expect(screen.queryByRole('button', { name: /elegir_objetivo/ })).not.toBeInTheDocument()
+
+    // Click en la opción DS-031 → la acción llega con su objetivoId
+    const boton = screen.getAllByRole('button', { name: (n) => n.includes(nombreDs) })[0]
+    await user.click(boton)
+    expect(onAccion).toHaveBeenCalledTimes(1)
+    expect(onAccion).toHaveBeenCalledWith({ type: 'elegir_objetivo', objetivoId: 'm-ds031' })
+  })
+})
