@@ -15,10 +15,10 @@ export default function Landing() {
             </p>
           </div>
           <nav className="flex items-center gap-4 text-xs text-gray-400">
-            <a href="Manual.html" className="hover:text-ether-200">
+            <a href="/manual.html" className="hover:text-ether-200">
               Manual
             </a>
-            <a href="primogenitos.html" className="hover:text-ether-200">
+            <a href="/primogenitos.html" className="hover:text-ether-200">
               Primogénitos
             </a>
           </nav>
@@ -50,6 +50,28 @@ export default function Landing() {
               Juega partidas de Éter TCG en línea
             </p>
           </Link>
+          <a
+            href="/manual.html"
+            className="bg-surface border border-card-border rounded-xl p-8 hover:border-ether-400 transition-colors"
+          >
+            <h2 className="font-display text-xl font-bold text-gray-300 tracking-wider">
+              Manual de reglas
+            </h2>
+            <p className="text-sm text-gray-400 mt-2">
+              Reglas completas de Éter TCG v2.0
+            </p>
+          </a>
+          <a
+            href="/primogenitos.html"
+            className="bg-surface border border-card-border rounded-xl p-8 hover:border-ether-400 transition-colors"
+          >
+            <h2 className="font-display text-xl font-bold text-gray-300 tracking-wider">
+              Los Primogénitos
+            </h2>
+            <p className="text-sm text-gray-400 mt-2">
+              El lore y la cosmología del Eje
+            </p>
+          </a>
         </div>
       </main>
     </div>

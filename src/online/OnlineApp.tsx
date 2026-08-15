@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router'
 import { useCardStore } from '../forge/store/useCardStore'
 import { ALL_CARDS } from '../shared/data/paquetes'
 import { registrarCartas, visibleState } from './game'
@@ -148,9 +149,17 @@ function Menu({
   return (
     <div className="min-h-screen bg-[#0d0d14] text-gray-100 font-body">
       <header className="border-b border-card-border bg-surface">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <h1 className="text-2xl font-display font-bold text-gray-100 tracking-wider">Éter Online</h1>
-          <p className="text-xs text-gray-500 font-body">Modo en línea · partida local vs bot</p>
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-display font-bold text-gray-100 tracking-wider">Éter Online</h1>
+            <p className="text-xs text-gray-500 font-body">Modo en línea · partida local vs bot</p>
+          </div>
+          <Link
+            to="/"
+            className="bg-ether-600/20 hover:bg-ether-600/40 text-ether-200 px-3 py-1.5 rounded transition-colors text-xs"
+          >
+            ← Inicio
+          </Link>
         </div>
       </header>
 

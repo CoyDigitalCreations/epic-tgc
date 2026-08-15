@@ -1,3 +1,4 @@
+import { Link } from 'react-router'
 import { CardForm } from './components/CardForm'
 import { CardPreview } from './components/CardPreview'
 import { CardList } from './components/CardList'
@@ -24,6 +25,13 @@ function App() {
             <span>744 × 1038 px</span>
             <span className="w-1 h-1 bg-gray-600 rounded-full" />
             <span>Éter Engine</span>
+            <span className="w-1 h-1 bg-gray-600 rounded-full" />
+            <Link
+              to="/"
+              className="bg-ether-600/20 hover:bg-ether-600/40 text-ether-200 px-3 py-1.5 rounded transition-colors"
+            >
+              ← Inicio
+            </Link>
           </div>
         </div>
       </header>
