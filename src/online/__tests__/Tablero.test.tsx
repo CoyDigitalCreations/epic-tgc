@@ -694,3 +694,144 @@ describe('Búsqueda de mazo (tutores)', () => {
     expect(onAccion).toHaveBeenCalledWith({ type: 'elegir_objetivo', objetivoId: 'm-ds031' })
   })
 })
+
+describe('Panel de Cementerio y Exilio (lista completa)', () => {
+  /** Mueve `n` cartas del mazo del jugador a la zona dada, con nombres ÚNICOS entre sí y sin repetir ninguna zona visible del tablero. */
+  function moverAlMazo(
+    n: number,
+    zona: 'cementerio' | 'exilio',
+    estado: GameState,
+    jugador: 'A' | 'B' = 'A',
+  ): string[] {
+    const p = estado.players[jugador]
+    const visibles = [
+      ...p.mano,
+      ...p.eterReserva,
+      ...p.eterPagado,
+      ...p.campo.campeones,
+      ...p.campo.misticasTacticas,
+      ...p.campo.arcanasCombate,
+      ...p.vinculos,
+      ...p.cementerio,
+      ...p.exilio,
+    ]
+    const nombresVisibles = new Set(
+      visibles
+        .map((id) => (id ? getCardMeta(estado.instances[id].cardId ?? '')?.name : undefined))
+        .filter((n): n is string => !!n),
+    )
+    const usados = new Set<string>()
+    const ids: string[] = []
+    for (const id of p.mazo) {
+      if (ids.length >= n) break
+      const nombre = getCardMeta(estado.instances[id].cardId ?? '')?.name
+      if (nombre === undefined || nombresVisibles.has(nombre) || usados.has(nombre)) continue
+      usados.add(nombre)
+      ids.push(id)
+    }
+    p.mazo = p.mazo.filter((id) => !ids.includes(id))
+    p[zona] = [...ids]
+    return ids
+  }
+
+  /** El <p> con el título del panel abierto (contiene la zona y el posesivo). */
+  const tituloPanel = (posesivo: string): HTMLElement => {
+    const span = screen.getByText(new RegExp(`— ${posesivo}`))
+    const p = span.closest('p')
+    if (!p) throw new Error('Panel abierto sin título')
+    return p
+  }
+
+  /** Cada MiniCard del panel pinta el nombre dentro del arte Y tiene el label debajo → ≥1 match. */
+  const nombresListados = (nombres: string[]) => {
+    for (const n of nombres) {
+      expect(screen.getAllByText(n).length).toBeGreaterThan(0)
+    }
+  }
+
+  it('clic en el cementerio (2G): lista completa abajo y clic en una carta la agranda', async () => {
+    const user = userEvent.setup()
+    const estado = forjaDeA()
+    const ids = moverAlMazo(3, 'cementerio', estado)
+    const vista = visibleState(estado, 'A')
+    const nombres = ids.map((id) => getCardMeta(vista.instances[id].cardId ?? '')?.name!)
+    const onAccion = vi.fn()
+    render(
+      <Tablero
+        vista={vista}
+        acciones={getValidActions(estado, 'A')}
+        leTocaA={true}
+        log={[]}
+        onAccion={onAccion}
+        onAbandonar={vi.fn()}
+      />,
+    )
+
+    // Tope con ×3; clic → panel con la lista completa
+    const tope = screen.getAllByTitle(nombres[2]).find((el) => el.textContent?.includes('×3'))
+    expect(tope).toBeDefined()
+    await user.click(tope!)
+
+    expect(tituloPanel('tuyo').textContent).toContain('Cementerio')
+    nombresListados(nombres)
+
+    // Clic en una carta de la lista → se ve en grande
+    await user.click(screen.getAllByTitle(nombres[0])[0])
+    expect(screen.getByRole('dialog', { name: `Carta en grande: ${nombres[0]}` })).toBeInTheDocument()
+    await user.keyboard('{Escape}')
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  it('clic en el exilio (1G): lista completa abajo y clic en una carta la agranda', async () => {
+    const user = userEvent.setup()
+    const estado = forjaDeA()
+    const ids = moverAlMazo(2, 'exilio', estado)
+    const vista = visibleState(estado, 'A')
+    const nombres = ids.map((id) => getCardMeta(vista.instances[id].cardId ?? '')?.name!)
+    const onAccion = vi.fn()
+    render(
+      <Tablero
+        vista={vista}
+        acciones={getValidActions(estado, 'A')}
+        leTocaA={true}
+        log={[]}
+        onAccion={onAccion}
+        onAbandonar={vi.fn()}
+      />,
+    )
+
+    const tope = screen.getAllByTitle(nombres[1]).find((el) => el.textContent?.includes('×2'))
+    expect(tope).toBeDefined()
+    await user.click(tope!)
+
+    expect(tituloPanel('tuyo').textContent).toContain('Exilio')
+    nombresListados(nombres)
+    await user.click(screen.getAllByTitle(nombres[0])[0])
+    expect(screen.getByRole('dialog', { name: `Carta en grande: ${nombres[0]}` })).toBeInTheDocument()
+  })
+
+  it('el cementerio del rival también abre el panel (visible, "del rival")', async () => {
+    const user = userEvent.setup()
+    const estado = forjaDeA()
+    const ids = moverAlMazo(2, 'cementerio', estado, 'B')
+    const vista = visibleState(estado, 'A')
+    const nombres = ids.map((id) => getCardMeta(vista.instances[id].cardId ?? '')?.name!)
+    render(
+      <Tablero
+        vista={vista}
+        acciones={getValidActions(estado, 'A')}
+        leTocaA={true}
+        log={[]}
+        onAccion={vi.fn()}
+        onAbandonar={vi.fn()}
+      />,
+    )
+
+    const tope = screen.getAllByTitle(nombres[1]).find((el) => el.textContent?.includes('×2'))
+    expect(tope).toBeDefined()
+    await user.click(tope!)
+
+    expect(tituloPanel('del rival').textContent).toContain('Cementerio')
+    nombresListados(nombres)
+  })
+})

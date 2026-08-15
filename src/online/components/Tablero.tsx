@@ -38,6 +38,14 @@ type Seleccion =
   | { tipo: 'bloquear'; accionBase: Action; objetivoCardId: string; campeonSlot: number }
   | null
 
+/** Zonas que abren el panel inferior con su lista completa. */
+type ZonaPanel = 'reserva' | 'pagado' | 'cementerio' | 'exilio'
+/** Panel inferior abierto: zona de un jugador (2A Reserva / 1A Pagado / 2G Cementerio / 1G Exilio). */
+interface PanelAbierto {
+  jugador: 'A' | 'B'
+  zona: ZonaPanel
+}
+
 const FASE_LABEL: Record<string, string> = {
   pre_partida: 'Mulligan',
   forja: 'Forja',
@@ -234,8 +242,8 @@ interface GrillaProps {
   abrirSelector: (accionBase: Action, objetivoCardId: string, campeonSlot?: number) => void
   /** Abre la carta en grande (CartaZoom) para revisar su efecto. */
   abrirZoom: (inst: CardInstance) => void
-  /** Abre el panel inferior con la lista completa de una zona de Éter (2A Reserva / 1A Pagado). */
-  abrirPanel: (jugador: 'A' | 'B', zona: 'reserva' | 'pagado') => void
+  /** Abre el panel inferior con la lista completa de una zona (Éter 2A/1A, Cementerio 2G, Exilio 1G). */
+  abrirPanel: (jugador: 'A' | 'B', zona: ZonaPanel) => void
   /** Grilla del rival: se renderiza de cabeza (vista desde el otro lado de la mesa). */
   invertida?: boolean
   seleccion: Seleccion
@@ -391,6 +399,7 @@ function GrillaJugador({
       <Pila
         vista={vista}
         insts={p.exilio}
+        onClick={() => abrirPanel(jugador, 'exilio')}
         onZoom={() => abrirZoom(vista.instances[p.exilio[p.exilio.length - 1]])}
       />
     </Celda>,
@@ -422,6 +431,7 @@ function GrillaJugador({
       <Pila
         vista={vista}
         insts={p.cementerio}
+        onClick={() => abrirPanel(jugador, 'cementerio')}
         onZoom={() => abrirZoom(vista.instances[p.cementerio[p.cementerio.length - 1]])}
       />
     </Celda>,
@@ -515,8 +525,8 @@ export function Tablero({ vista, acciones, leTocaA, log, onAccion, onAbandonar }
   /** Campeones propios elegidos como sacrificio (rol Soberano/Emperador). */
   const [sacrificiosElegidos, setSacrificiosElegidos] = useState<string[]>([])
   const [zoom, setZoom] = useState<CardInstance | null>(null)
-  /** Panel inferior con la lista completa de una zona de Éter (2A Reserva / 1A Pagado). */
-  const [panelAbierto, setPanelAbierto] = useState<{ jugador: 'A' | 'B'; zona: 'reserva' | 'pagado' } | null>(null)
+  /** Panel inferior con la lista completa de una zona (2A Reserva / 1A Pagado / 2G Cementerio / 1G Exilio). */
+  const [panelAbierto, setPanelAbierto] = useState<PanelAbierto | null>(null)
   const abrirZoom = (inst: CardInstance) => setZoom(inst)
 
   const abrirSelector = (accionBase: Action, objetivoCardId: string, campeonSlot?: number) => {
@@ -954,24 +964,42 @@ export function Tablero({ vista, acciones, leTocaA, log, onAccion, onAbandonar }
         </div>
       )}
 
-      {/* ── Panel de Éteres: lista completa (2A Reserva / 1A Pagado) ── */}
+      {/* ── Panel inferior: lista completa de una zona (2A Reserva / 1A Pagado / 2G Cementerio / 1G Exilio) ── */}
       {panelAbierto && (() => {
+        const pj = vista.players[panelAbierto.jugador]
         const insts =
           panelAbierto.zona === 'reserva'
-            ? vista.players[panelAbierto.jugador].eterReserva
-            : vista.players[panelAbierto.jugador].eterPagado
-        const posesivo = panelAbierto.jugador === 'A'
-          ? panelAbierto.zona === 'reserva' ? 'tuyo' : 'tuyos'
-          : panelAbierto.zona === 'reserva' ? 'tu rival' : 'del rival'
+            ? pj.eterReserva
+            : panelAbierto.zona === 'pagado'
+              ? pj.eterPagado
+              : panelAbierto.zona === 'cementerio'
+                ? pj.cementerio
+                : pj.exilio
+        const titulo =
+          panelAbierto.zona === 'reserva'
+            ? 'Reserva de Éter'
+            : panelAbierto.zona === 'pagado'
+              ? 'Éteres pagados'
+              : panelAbierto.zona === 'cementerio'
+                ? 'Cementerio'
+                : 'Exilio'
+        const posesivo =
+          panelAbierto.jugador === 'A'
+            ? panelAbierto.zona === 'pagado'
+              ? 'tuyos'
+              : 'tuyo'
+            : panelAbierto.zona === 'reserva'
+              ? 'tu rival'
+              : 'del rival'
         return (
           <div className="fixed inset-x-0 bottom-0 z-40 bg-[#0d0d14]/95 border-t border-card-border p-4 shadow-2xl">
             <div className="max-w-7xl mx-auto">
               <div className="flex items-center gap-3 mb-3 flex-wrap">
                 <p className="text-sm text-gray-200">
-                  {panelAbierto.zona === 'reserva' ? 'Reserva de Éter' : 'Éteres pagados'}
+                  {titulo}
                   <span className="text-gray-500"> — {posesivo}</span> ({insts.length})
                 </p>
-                <p className="text-[10px] text-gray-500">Clic en un Éter para verlo en grande.</p>
+                <p className="text-[10px] text-gray-500">Clic en una carta para verla en grande.</p>
                 <button
                   onClick={() => setPanelAbierto(null)}
                   className="ml-auto text-xs bg-surface-2 hover:bg-card-border text-gray-300 px-3 py-1.5 rounded transition-colors cursor-pointer"
