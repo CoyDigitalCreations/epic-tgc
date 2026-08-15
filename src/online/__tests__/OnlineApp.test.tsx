@@ -3,9 +3,26 @@ import userEvent from '@testing-library/user-event'
 import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest'
 import OnlineApp from '../OnlineApp'
 import { useCardStore } from '../../forge/store/useCardStore'
+import { useMazosStore } from '../useMazosStore'
+import { MAZOS } from '../mazos'
 import type { AnyCard } from '../../shared/types'
 
 describe('OnlineApp', () => {
+  beforeEach(() => {
+    useMazosStore.setState({ mazosPersonalizados: [] })
+    localStorage.removeItem('epic-tgc-mazos-personalizados')
+    useCardStore.getState().clearCards()
+    localStorage.removeItem('epic-tgc-collection')
+  })
+
+  afterEach(() => {
+    useMazosStore.setState({ mazosPersonalizados: [] })
+    localStorage.removeItem('epic-tgc-mazos-personalizados')
+    useCardStore.getState().clearCards()
+    localStorage.removeItem('epic-tgc-collection')
+    vi.restoreAllMocks()
+  })
+
   it('muestra el menú con los mazos y el botón de comenzar', () => {
     render(<OnlineApp />)
     expect(screen.getByRole('heading', { name: 'Éter Online' })).toBeInTheDocument()
@@ -61,86 +78,67 @@ describe('OnlineApp', () => {
   })
 })
 
-describe('OnlineApp — añadir cartas terminadas (datos sin arte)', () => {
-  const carta: AnyCard = {
-    id: 'terminada-1',
-    name: 'Heraldo del Alba',
-    type: 'Campeón',
-    rarity: 'Rara',
-    keywords: [],
-    flavorText: 'Anuncia el primer rayo.',
-    createdAt: '2026-01-01T00:00:00.000Z',
-    updatedAt: '2026-01-01T00:00:00.000Z',
-    stats: { cost: 2, poder: 3, resistencia: 3 },
-  }
-
+describe('OnlineApp — mazo personalizado', () => {
   beforeEach(() => {
-    localStorage.removeItem('epic-tgc-collection')
+    useMazosStore.setState({ mazosPersonalizados: [] })
+    localStorage.removeItem('epic-tgc-mazos-personalizados')
     useCardStore.getState().clearCards()
+    localStorage.removeItem('epic-tgc-collection')
   })
 
   afterEach(() => {
-    localStorage.removeItem('epic-tgc-collection')
+    useMazosStore.setState({ mazosPersonalizados: [] })
+    localStorage.removeItem('epic-tgc-mazos-personalizados')
     useCardStore.getState().clearCards()
-    vi.restoreAllMocks()
+    localStorage.removeItem('epic-tgc-collection')
   })
 
-  it('muestra el botón para añadir cartas terminadas en el menú', () => {
+  it('ya no ofrece importar colección ni añadir cartas terminadas', () => {
     render(<OnlineApp />)
     expect(
-      screen.getByRole('button', { name: 'Añadir cartas terminadas (JSON)' }),
+      screen.queryByRole('button', { name: 'Importar colección (JSON)' }),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'Añadir cartas terminadas (JSON)' }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('abre el editor con "Nuevo mazo personalizado"', async () => {
+    const user = userEvent.setup()
+    render(<OnlineApp />)
+    await user.click(screen.getByRole('button', { name: /Nuevo mazo personalizado/ }))
+    expect(
+      screen.getByRole('heading', { name: 'Nuevo mazo personalizado' }),
     ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Volver al menú' })).toBeInTheDocument()
   })
 
-  it('importa los datos de la carta terminada descartando el arte embebido', async () => {
+  it('volver al menú desde el editor cancela sin guardar', async () => {
     const user = userEvent.setup()
-    vi.spyOn(window, 'alert').mockImplementation(() => {})
-    const conArte = { ...carta, imageUrl: 'data:image/webp;base64,XXXX', hasImage: true }
-    const file = new File([JSON.stringify([conArte])], 'terminadas.json', {
-      type: 'application/json',
-    })
-
-    const { container } = render(<OnlineApp />)
-    const input = container.querySelector('input[type="file"][multiple]') as HTMLInputElement
-    expect(input).not.toBeNull()
-
-    await user.upload(input, file)
-
-    await waitFor(() => {
-      expect(useCardStore.getState().cards.length).toBe(1)
-    })
-    const guardada = useCardStore.getState().cards[0]
-    // Datos importados intactos
-    expect(guardada.id).toBe('terminada-1')
-    expect(guardada.name).toBe('Heraldo del Alba')
-    expect(guardada.stats).toEqual({ cost: 2, poder: 3, resistencia: 3 })
-    // El arte embebido se descartó: ni inline ni hasImage
-    expect(guardada.imageUrl).toBeUndefined()
-    expect(guardada.hasImage).toBeUndefined()
-    expect(useCardStore.getState().cards.some((c) => c.imageUrl)).toBe(false)
+    render(<OnlineApp />)
+    await user.click(screen.getByRole('button', { name: /Nuevo mazo personalizado/ }))
+    await user.type(screen.getByLabelText('Nombre del mazo'), 'Los Mutantes')
+    await user.click(screen.getByRole('button', { name: 'Volver al menú' }))
+    // Sin selección válida: no se guarda al volver
+    expect(useMazosStore.getState().mazosPersonalizados).toHaveLength(0)
   })
 
-  it('reemplaza la carta existente por id y conserva su arte (hasImage)', async () => {
+  it('elige un mazo personalizado guardado y comienza la partida', async () => {
     const user = userEvent.setup()
-    vi.spyOn(window, 'alert').mockImplementation(() => {})
-    useCardStore.getState().loadCards([{ ...carta, hasImage: true }])
+    // Deck custom válido (reutiliza el mazo de Estásis como ejemplo)
+    useMazosStore.getState().agregarMazo({ nombre: 'Los Mutantes', cardIds: MAZOS[0].cardIds })
+    render(<OnlineApp />)
+    await user.click(screen.getByRole('button', { name: /Los Mutantes/ }))
+    await user.click(screen.getByRole('button', { name: 'Comenzar partida' }))
+    // Tablero montado con las dos zonas
+    expect(screen.getByText('Rival (B)')).toBeInTheDocument()
+    expect(screen.getByText(/Vos decidís el mulligan/)).toBeInTheDocument()
+  })
 
-    const { container } = render(<OnlineApp />)
-    const input = container.querySelector('input[type="file"][multiple]') as HTMLInputElement
-    await user.upload(
-      input,
-      new File([JSON.stringify([{ ...carta, stats: { cost: 3, poder: 4, resistencia: 4 } }])], 'v2.json', {
-        type: 'application/json',
-      }),
-    )
-
-    await waitFor(() => {
-      expect(useCardStore.getState().cards[0]?.stats).toEqual({ cost: 3, poder: 4, resistencia: 4 })
-    })
-    const guardada = useCardStore.getState().cards[0]
-    expect(guardada.name).toBe('Heraldo del Alba')
-    // El arte pre-existente (IndexedDB) se conserva aunque el JSON no lo traiga
-    expect(guardada.hasImage).toBe(true)
-    expect(guardada.imageUrl).toBeUndefined()
+  it('un mazo personalizado no pisa los sets (los sets siguen con diseños originales)', () => {
+    render(<OnlineApp />)
+    // Ambos sets preestablecidos siguen en el menú
+    expect(screen.getByText('Estásis')).toBeInTheDocument()
+    expect(screen.getByText('Disonancia')).toBeInTheDocument()
   })
 })

@@ -1,39 +1,48 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useCardStore } from '../forge/store/useCardStore'
-import { importCardDataFromJson, importCollectionFromJson } from '../forge/utils/export-json'
-import type { AnyCard } from '../shared/types'
+import { ALL_CARDS } from '../shared/data/paquetes'
 import { registrarCartas, visibleState } from './game'
-import { armarMazoConColeccion, MAZOS, type MazoConColeccion, type MazoJugable } from './mazos'
+import { MAZOS, mazoParaBot } from './mazos'
+import { useMazosStore, type MazoPersonalizado } from './useMazosStore'
 import { usePartida, type PartidaConfig } from './usePartida'
 import { Tablero } from './components/Tablero'
+import { MazoEditor } from './components/MazoEditor'
+
+/** Selección del humano: un set preestablecido o un mazo personalizado guardado. */
+type MazoSeleccionado =
+  | { tipo: 'set'; id: 'estasis' | 'disonancia' }
+  | { tipo: 'custom'; id: string }
 
 /**
  * Éter Online — modo vs bot (local).
- * Menú: elegir mazo (el bot usa el otro) y seed (reproducibilidad).
- * La colección de Éter Forge se integra automáticamente: si creaste/importaste
- * cartas con el MISMO nombre que un diseño del paquete, ese diseño se reemplaza
- * por tu versión (mismo arte, mismo render que el creador). También podés
- * importar un JSON exportado desde la forja (coleccion-eter.json) o añadir
- * cartas terminadas por nombre (importa solo los datos, sin el arte embebido).
+ * Menú: elegir mazo (set preestablecido o personalizado armado en el editor) y
+ * seed (reproducibilidad). Los sets juegan SIEMPRE con los diseños originales
+ * (efectos keyed por cardId); la colección local de la forja solo alimenta el
+ * editor del mazo personalizado (las cartas custom con id nuevo juegan sin su
+ * texto de efecto hasta que el motor soporte efectos dinámicos).
  * Partida: el humano es SIEMPRE el jugador A; el bot (B) juega solo.
  */
 export default function OnlineApp() {
   const [enPartida, setEnPartida] = useState(false)
-  const [mazoHumano, setMazoHumano] = useState<MazoJugable>(MAZOS[0])
+  const [enEditor, setEnEditor] = useState(false)
+  const [mazoHumano, setMazoHumano] = useState<MazoSeleccionado>({ tipo: 'set', id: 'estasis' })
+  const [mazoEditando, setMazoEditando] = useState<MazoPersonalizado | undefined>(undefined)
   const [seed, setSeed] = useState(() => Math.floor(Math.random() * 100_000))
   const coleccion = useCardStore((s) => s.cards)
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const fileInputTerminadasRef = useRef<HTMLInputElement>(null)
+  const mazosPersonalizados = useMazosStore((s) => s.mazosPersonalizados)
 
-  // El catálogo del motor debe conocer las cartas custom ANTES de la partida.
+  // El catálogo del motor debe resolver las cartas custom ANTES de la partida.
+  // Solo las custom con id FUERA de ALL_CARDS se registran: los sets quedan
+  // puros (un rediseño con id de diseño no debe contaminar el set original).
   useEffect(() => {
-    registrarCartas(coleccion)
+    const idsDiseno = new Set(ALL_CARDS.map((c) => c.id))
+    registrarCartas(coleccion.filter((c) => !idsDiseno.has(c.id)))
   }, [coleccion])
 
-  const mazosConColeccion = useMemo<MazoConColeccion[]>(
-    () => MAZOS.map((m) => armarMazoConColeccion(m, coleccion)),
-    [coleccion],
-  )
+  const mazoCustomElegido: MazoPersonalizado | undefined =
+    mazoHumano.tipo === 'custom'
+      ? mazosPersonalizados.find((m) => m.id === mazoHumano.id)
+      : undefined
 
   const empezar = () => setEnPartida(true)
   const salir = () => {
@@ -41,37 +50,59 @@ export default function OnlineApp() {
     setSeed(Math.floor(Math.random() * 100_000))
   }
 
+  if (enEditor) {
+    return (
+      <MazoEditor
+        inicial={mazoEditando}
+        onGuardar={(mazo) => {
+          if (mazoEditando) {
+            useMazosStore.getState().actualizarMazo(mazoEditando.id, mazo.cardIds)
+            useMazosStore.getState().renombrarMazo(mazoEditando.id, mazo.nombre)
+          } else {
+            useMazosStore.getState().agregarMazo(mazo)
+          }
+          setMazoEditando(undefined)
+          setEnEditor(false)
+        }}
+        onCancelar={() => {
+          setMazoEditando(undefined)
+          setEnEditor(false)
+        }}
+      />
+    )
+  }
+
   if (!enPartida) {
     return (
       <Menu
         mazoHumano={mazoHumano}
         onMazo={setMazoHumano}
-        mazos={mazosConColeccion}
-        coleccion={coleccion}
+        mazosPersonalizados={mazosPersonalizados}
+        onNuevoMazo={() => {
+          setMazoEditando(undefined)
+          setEnEditor(true)
+        }}
+        onEditarMazo={(m) => {
+          setMazoEditando(m)
+          setEnEditor(true)
+        }}
         seed={seed}
         onSeed={setSeed}
         onEmpezar={empezar}
-        fileRef={fileInputRef}
-        fileTerminadasRef={fileInputTerminadasRef}
       />
     )
   }
 
-  const mazoA = mazosConColeccion.find((m) => m.mazo.id === mazoHumano.id) ?? mazosConColeccion[0]
-  const mazoB =
-    mazosConColeccion.find((m) => m.mazo.id !== mazoHumano.id) ?? mazosConColeccion[1]
-  const config: PartidaConfig = {
-    deckA: mazoA.mazo.cardIds,
-    deckB: mazoB.mazo.cardIds,
-    seed,
-    delayMs: 350,
-  }
+  const deckA =
+    mazoCustomElegido?.cardIds ??
+    MAZOS.find((m) => m.id === mazoHumano.id)?.cardIds ??
+    MAZOS[0].cardIds
+  const setHumano = mazoHumano.tipo === 'custom' ? 'custom' : mazoHumano.id
+  const deckB = mazoParaBot(seed, setHumano).cardIds
+  const config: PartidaConfig = { deckA, deckB, seed, delayMs: 350 }
+  const keyPartida = `${mazoHumano.tipo}:${mazoHumano.id}-${seed}-${mazoCustomElegido?.cardIds.length ?? 0}`
   return (
-    <Partida
-      key={`${mazoHumano.id}-${seed}-${coleccion.length}`}
-      config={config}
-      onAbandonar={salir}
-    />
+    <Partida key={keyPartida} config={config} onAbandonar={salir} />
   )
 }
 
@@ -91,28 +122,29 @@ function Partida({ config, onAbandonar }: { config: PartidaConfig; onAbandonar: 
 }
 
 interface MenuProps {
-  mazoHumano: MazoJugable
-  onMazo: (m: MazoJugable) => void
-  mazos: MazoConColeccion[]
-  coleccion: AnyCard[]
+  mazoHumano: MazoSeleccionado
+  onMazo: (m: MazoSeleccionado) => void
+  mazosPersonalizados: MazoPersonalizado[]
+  onNuevoMazo: () => void
+  onEditarMazo: (m: MazoPersonalizado) => void
   seed: number
   onSeed: (n: number) => void
   onEmpezar: () => void
-  fileRef: React.RefObject<HTMLInputElement | null>
-  fileTerminadasRef: React.RefObject<HTMLInputElement | null>
 }
 
 function Menu({
   mazoHumano,
   onMazo,
-  mazos,
-  coleccion,
+  mazosPersonalizados,
+  onNuevoMazo,
+  onEditarMazo,
   seed,
   onSeed,
   onEmpezar,
-  fileRef,
-  fileTerminadasRef,
 }: MenuProps) {
+  const seleccionado = (id: string) =>
+    mazoHumano.tipo === 'set' ? mazoHumano.id === id : false
+
   return (
     <div className="min-h-screen bg-[#0d0d14] text-gray-100 font-body">
       <header className="border-b border-card-border bg-surface">
@@ -125,74 +157,66 @@ function Menu({
       <main className="max-w-7xl mx-auto px-6 py-10">
         <h2 className="font-display text-xl text-ether-200 mb-6">Nueva partida</h2>
 
-        <p className="text-sm text-gray-400 mb-3">Elegí tu mazo — el bot usa el otro:</p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl mb-8">
-          {mazos.map(({ mazo, reemplazadas }) => {
-            const seleccionado = mazo.id === mazoHumano.id
+        <p className="text-sm text-gray-400 mb-3">Elegí tu mazo:</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl mb-4">
+          {MAZOS.map((mazo) => {
+            const sel = seleccionado(mazo.id)
             return (
               <button
                 key={mazo.id}
-                onClick={() => onMazo(mazo)}
+                onClick={() => onMazo({ tipo: 'set', id: mazo.id })}
                 className={`text-left bg-surface-2 border rounded-lg p-5 transition-all cursor-pointer
-                  ${seleccionado ? 'border-ether-400 ring-1 ring-ether-400' : 'border-card-border hover:border-gray-500'}`}
+                  ${sel ? 'border-ether-400 ring-1 ring-ether-400' : 'border-card-border hover:border-gray-500'}`}
               >
                 <p className="font-display text-lg font-bold" style={{ color: mazo.color }}>
                   {mazo.nombre}
                 </p>
                 <p className="text-[11px] text-gray-500 mt-1">
                   {mazo.cardIds.length} cartas · facción {mazo.id === 'estasis' ? 'Orden' : 'Caos'}
-                  {reemplazadas > 0 && (
-                    <span className="text-ether-300"> · {reemplazadas} de tu colección</span>
-                  )}
                 </p>
               </button>
             )
           })}
         </div>
 
-        {/* ── Colección de la forja ─────────────────────────────── */}
-        <div className="flex items-center gap-3 mb-8 max-w-2xl flex-wrap">
-          <p className="text-sm text-gray-400">
-            {coleccion.length > 0
-              ? `Colección de la forja: ${coleccion.length} cartas (se usan las que coinciden por nombre).`
-              : 'Sin cartas de la forja: se juega con los diseños originales del paquete.'}
-          </p>
-          <button
-            onClick={() => fileRef.current?.click()}
-            className="text-xs bg-surface-2 hover:bg-card-border text-gray-300 px-3 py-1.5 rounded transition-colors cursor-pointer"
-          >
-            Importar colección (JSON)
-          </button>
-          <input
-            ref={fileRef}
-            type="file"
-            accept="application/json,.json"
-            className="hidden"
-            onChange={(e) => {
-              const file = e.target.files?.[0]
-              if (file) void importar(file)
-              e.target.value = ''
-            }}
-          />
-          <button
-            onClick={() => fileTerminadasRef.current?.click()}
-            className="text-xs bg-ether-600/20 hover:bg-ether-600/40 text-ether-200 px-3 py-1.5 rounded transition-colors cursor-pointer"
-          >
-            Añadir cartas terminadas (JSON)
-          </button>
-          <input
-            ref={fileTerminadasRef}
-            type="file"
-            accept="application/json,.json"
-            multiple
-            className="hidden"
-            onChange={(e) => {
-              const files = e.target.files
-              if (files && files.length > 0) void importarTerminadas(Array.from(files))
-              e.target.value = ''
-            }}
-          />
-        </div>
+        {/* Mazos personalizados guardados */}
+        {mazosPersonalizados.length > 0 && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl mb-4">
+            {mazosPersonalizados.map((mazo) => {
+              const sel = mazoHumano.tipo === 'custom' && mazoHumano.id === mazo.id
+              return (
+                <div
+                  key={mazo.id}
+                  className={`bg-surface-2 border rounded-lg p-5 transition-all
+                    ${sel ? 'border-ether-400 ring-1 ring-ether-400' : 'border-card-border'}`}
+                >
+                  <button
+                    onClick={() => onMazo({ tipo: 'custom', id: mazo.id })}
+                    className="text-left w-full cursor-pointer"
+                  >
+                    <p className="font-display text-lg font-bold text-ether-200">{mazo.nombre}</p>
+                    <p className="text-[11px] text-gray-500 mt-1">
+                      {mazo.cardIds.length} cartas · personalizado
+                    </p>
+                  </button>
+                  <button
+                    onClick={() => onEditarMazo(mazo)}
+                    className="mt-2 text-xs bg-surface hover:bg-card-border text-gray-300 px-3 py-1.5 rounded transition-colors cursor-pointer"
+                  >
+                    Editar
+                  </button>
+                </div>
+              )
+            })}
+          </div>
+        )}
+
+        <button
+          onClick={onNuevoMazo}
+          className="mb-8 text-xs bg-ether-600/20 hover:bg-ether-600/40 text-ether-200 px-4 py-2 rounded transition-colors cursor-pointer"
+        >
+          + Nuevo mazo personalizado
+        </button>
 
         <div className="flex items-center gap-3 mb-8 max-w-2xl">
           <label htmlFor="seed" className="text-sm text-gray-400">
@@ -206,7 +230,10 @@ function Menu({
             className="bg-surface-2 border border-card-border rounded-lg px-3 py-2 text-sm text-gray-100 w-40
                        focus:outline-none focus:border-ether-400 transition-colors"
           />
-          <p className="text-[11px] text-gray-600">Mismo seed + mismas decisiones → misma partida.</p>
+          <p className="text-[11px] text-gray-600">
+            Mismo seed + mismas decisiones → misma partida.
+            {mazoHumano.tipo === 'custom' && ' Con mazo personalizado el bot elige su set según el seed.'}
+          </p>
         </div>
 
         <button
@@ -218,47 +245,4 @@ function Menu({
       </main>
     </div>
   )
-}
-
-/** Importa un JSON de colección exportado desde Éter Forge (coleccion-eter.json). */
-async function importar(file: File): Promise<void> {
-  try {
-    const cartas = await importCollectionFromJson(file)
-    useCardStore.getState().loadCards(cartas)
-  } catch {
-    alert('No se pudo importar la colección: el archivo no es un JSON válido de Éter Forge.')
-  }
-}
-
-/**
- * Añade cartas terminadas a la colección importando SOLO los datos (sin arte).
- * De cada JSON se extrae todo menos el arte embebido (imageUrl/hasImage); si la
- * carta ya existía con arte (IndexedDB), ese arte se conserva al mergear.
- */
-async function importarTerminadas(files: File[]): Promise<void> {
-  const conArte = new Map(
-    useCardStore.getState().cards.filter((c) => c.hasImage).map((c) => [c.id, c]),
-  )
-  const cartas: AnyCard[] = []
-  let errores = 0
-  for (const file of files) {
-    try {
-      cartas.push(...(await importCardDataFromJson(file)))
-    } catch {
-      errores += 1
-    }
-  }
-  if (cartas.length === 0) {
-    alert(
-      errores > 0
-        ? 'No se pudo importar: ningún archivo es un JSON válido de Éter Forge.'
-        : 'El JSON no contiene cartas.',
-    )
-    return
-  }
-  useCardStore
-    .getState()
-    .loadCards(cartas.map((c) => (conArte.has(c.id) ? { ...c, hasImage: true } : c)))
-  const ignorados = errores > 0 ? ` (${errores} archivo(s) inválido(s) ignorado(s))` : ''
-  alert(`Se añadieron ${cartas.length} cartas terminadas (solo datos; el arte embebido se descartó).${ignorados}`)
 }

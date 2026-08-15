@@ -32,7 +32,7 @@ function tipoDe(cardId: string): string | undefined {
 }
 
 /** Valida la distribución del mazo (15 Éter + 45 Principal + 6 Vínculos = 66) y que todo cardId exista. */
-function validarDeck(deck: string[], nombre: string): void {
+export function validarDeck(deck: string[], nombre: string): void {
   if (deck.length !== TOTAL_MAZO) {
     throw new Error(`Mazo ${nombre} inválido: ${deck.length} cartas (se esperaban ${TOTAL_MAZO})`)
   }

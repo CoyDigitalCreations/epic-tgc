@@ -1,65 +1,86 @@
 import { describe, expect, it } from 'vitest'
-import { ESTASIS_CARDS } from '../../shared/data/paquetes'
+import { ALL_CARDS, ESTASIS_CARDS } from '../../shared/data/paquetes'
 import type { AnyCard } from '../../shared/types'
 import { getCardMeta, registrarCartas } from '../game'
-import { armarMazoConColeccion, MAZOS } from '../mazos'
+import { buildDeck, cartasDisponibles, conteosDe, MAZOS, mazoParaBot } from '../mazos'
+import { validarDeck } from '../game/initialState'
 
-describe('armarMazoConColeccion', () => {
-  it('colección vacía → el mazo del paquete queda intacto', () => {
-    const { mazo, reemplazadas } = armarMazoConColeccion(MAZOS[0], [])
-    expect(mazo.cardIds).toEqual(MAZOS[0].cardIds)
-    expect(reemplazadas).toBe(0)
+describe('cartasDisponibles', () => {
+  it('sin colección devuelve solo los diseños del catálogo (ALL_CARDS)', () => {
+    const disponibles = cartasDisponibles([])
+    expect(disponibles.length).toBe(ALL_CARDS.length)
+    expect(disponibles).toEqual(ALL_CARDS)
   })
 
-  it('reemplaza cada copia de un diseño por la versión de la colección (mismo nombre y type)', () => {
-    const diseno = ESTASIS_CARDS[0]
-    const custom: AnyCard = { ...diseno, id: 'custom-estasis-1', name: diseno.name }
-    const copias = Number(diseno.limiteCopias ?? 1)
-
-    const { mazo, reemplazadas } = armarMazoConColeccion(MAZOS[0], [custom])
-
-    expect(reemplazadas).toBe(copias)
-    const apariciones = mazo.cardIds.filter((id) => id === custom.id)
-    expect(apariciones.length).toBe(copias)
-    // El diseño original ya no aparece
-    expect(mazo.cardIds.filter((id) => id === diseno.id).length).toBe(0)
-  })
-
-  it('el match por nombre es case-insensitive y con espacios', () => {
-    const diseno = ESTASIS_CARDS[1]
-    const custom: AnyCard = { ...diseno, id: 'custom-2', name: `  ${diseno.name.toUpperCase()}  ` }
-    const { reemplazadas } = armarMazoConColeccion(MAZOS[0], [custom])
-    expect(reemplazadas).toBe(Number(diseno.limiteCopias ?? 1))
-  })
-
-  it('NO reemplaza si el type difiere aunque el nombre coincida (preserva la distribución 15/45/6)', () => {
-    const diseno = ESTASIS_CARDS.find((c) => c.type !== 'Éter')!
-    const custom = {
-      ...diseno,
-      id: 'custom-mal',
-      type: diseno.type === 'Campeón' ? ('Mística' as const) : ('Campeón' as const),
-    } as unknown as AnyCard
-
-    const { reemplazadas } = armarMazoConColeccion(MAZOS[0], [custom])
-    expect(reemplazadas).toBe(0)
-    expect(MAZOS[0].cardIds).toContain(diseno.id)
-  })
-
-  it('la distribución del mazo resultante se conserva (15 Éter + 45 Principal + 6 Vínculos)', () => {
-    const coleccion = ESTASIS_CARDS.map((c) => ({ ...c, id: `custom-${c.id}` }))
-    registrarCartas(coleccion) // el catálogo debe resolver los ids custom para el conteo
-    const { mazo } = armarMazoConColeccion(MAZOS[0], coleccion)
-    const porTipo = { 'Éter': 0, 'Vínculo': 0, principal: 0 }
-    for (const id of mazo.cardIds) {
-      const meta = getCardMeta(id)
-      if (!meta) continue
-      if (meta.type === 'Éter') porTipo['Éter'] += 1
-      else if (meta.type === 'Vínculo') porTipo['Vínculo'] += 1
-      else porTipo.principal += 1
+  it('agrega cartas custom con id nuevo (no registrado en ALL_CARDS)', () => {
+    const custom: AnyCard = {
+      ...ESTASIS_CARDS[0],
+      id: 'custom-nueva-1',
+      name: 'Custom Nueva',
     }
-    expect(porTipo['Éter']).toBe(15)
-    expect(porTipo['Vínculo']).toBe(6)
-    expect(porTipo.principal).toBe(45)
+    const disponibles = cartasDisponibles([custom])
+    expect(disponibles.length).toBe(ALL_CARDS.length + 1)
+    expect(disponibles[disponibles.length - 1].id).toBe('custom-nueva-1')
+  })
+
+  it('una custom que repite el id de un diseño NO pisa el diseño (sets puros)', () => {
+    const diseno = ESTASIS_CARDS[0]
+    const custom: AnyCard = { ...diseno, id: diseno.id, name: 'Nombre editado' }
+    const disponibles = cartasDisponibles([custom])
+    expect(disponibles.filter((c) => c.id === diseno.id)).toHaveLength(1)
+    expect(disponibles.find((c) => c.id === diseno.id)?.name).toBe(diseno.name)
+  })
+})
+
+describe('conteosDe / buildDeck', () => {
+  it('conteosDe sobre el mazo de Estásis da 15 Éter + 45 Principal + 6 Vínculos', () => {
+    const conteos = conteosDe(MAZOS[0].cardIds)
+    expect(conteos).toEqual({ eter: 15, principal: 45, vinculos: 6 })
+  })
+
+  it('buildDeck expande copias respetando limiteCopias en orden estable', () => {
+    const a = ESTASIS_CARDS[0]
+    const b = ESTASIS_CARDS[1]
+    const seleccion = new Map<string, number>([
+      [a.id, Number(a.limiteCopias ?? 1)],
+      [b.id, 1],
+    ])
+    const deck = buildDeck(seleccion)
+    const copiasA = Number(a.limiteCopias ?? 1)
+    expect(deck.length).toBe(copiasA + 1)
+    // Orden estable: todas las copias de a, luego la de b
+    expect(deck.slice(0, copiasA).every((id) => id === a.id)).toBe(true)
+    expect(deck[copiasA]).toBe(b.id)
+  })
+
+  it('un mazo armado con buildDeck pasa validarDeck (exportada)', () => {
+    const seleccion = new Map<string, number>()
+    for (const c of ESTASIS_CARDS) {
+      seleccion.set(c.id, Number(c.limiteCopias ?? 1))
+    }
+    const deck = buildDeck(seleccion)
+    expect(deck).toHaveLength(66)
+    expect(() => validarDeck(deck, 'test')).not.toThrow()
+  })
+
+  it('validarDeck exportada rechaza un mazo con distribución inválida', () => {
+    const deckInvalido = Array.from({ length: 66 }, (_, i) => ESTASIS_CARDS[i % ESTASIS_CARDS.length].id)
+    expect(() => validarDeck(deckInvalido, 'test')).toThrow(/15\/45\/6|se esperaban|inválido/)
+  })
+})
+
+describe('mazoParaBot (elección determinista del mazo del bot)', () => {
+  it('con humano custom usa MAZOS[seed % 2]', () => {
+    expect(mazoParaBot(0, 'custom').id).toBe('estasis')
+    expect(mazoParaBot(1, 'custom').id).toBe('disonancia')
+    expect(mazoParaBot(42, 'custom').id).toBe('estasis')
+  })
+
+  it('con humano set usa el otro set (sin importar el seed)', () => {
+    expect(mazoParaBot(0, 'estasis').id).toBe('disonancia')
+    expect(mazoParaBot(1, 'estasis').id).toBe('disonancia')
+    expect(mazoParaBot(0, 'disonancia').id).toBe('estasis')
+    expect(mazoParaBot(99, 'disonancia').id).toBe('estasis')
   })
 })
 

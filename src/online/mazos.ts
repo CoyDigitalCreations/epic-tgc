@@ -1,4 +1,4 @@
-import { ESTASIS_CARDS, DISONANCIA_CARDS, getPaquete } from '../shared/data/paquetes'
+import { ALL_CARDS, ESTASIS_CARDS, DISONANCIA_CARDS, getPaquete } from '../shared/data/paquetes'
 import type { AnyCard } from '../shared/types'
 import { getCardMeta } from './game/cards'
 
@@ -33,54 +33,58 @@ export const MAZOS: MazoJugable[] = [
 
 export const mazoPorId = (id: string): MazoJugable | undefined => MAZOS.find((m) => m.id === id)
 
-/* ─────────────────────────────────────────────
-   Mazos con la colección de la forja.
+/**
+ * Mazo del bot:
+ * - humano con set preestablecido → el otro set (el humano elige con qué rival jugar).
+ * - humano con mazo personalizado → uno de los 2 sets, DETERMINISTA desde el seed
+ *   (`seed % 2`): mismo seed → mismo rival (reproducibilidad).
+ */
+export function mazoParaBot(seed: number, humano: 'estasis' | 'disonancia' | 'custom'): MazoJugable {
+  if (humano === 'custom') return MAZOS[seed % MAZOS.length]
+  return humano === 'estasis' ? MAZOS[1] : MAZOS[0]
+}
 
-   La colección guarda cartas creadas/importadas en Éter Forge con el MISMO
-   nombre que el diseño del paquete (el usuario las rediseña y exporta con el
-   mismo nombre). Armar el mazo desde la colección reemplaza cada diseño por
-   su versión personalizada (match case-insensitive por nombre y MISMO type:
-   solo se reemplaza 1:1, la distribución 15/45/6 del paquete se conserva).
+/* ─────────────────────────────────────────────
+   Mazos personalizados (editor del Online).
+
+   Los sets preestablecidos juegan SIEMPRE con los diseños originales
+   (efectos keyed por cardId). La colección local de la forja solo alimenta
+   el editor: las cartas custom con id nuevo se pueden incluir en un mazo
+   personalizado (juegan sin efectos de texto hasta que el motor los soporte).
    ───────────────────────────────────────────── */
 
-export interface MazoConColeccion {
-  mazo: MazoJugable
-  /** Cuántas cartas del mazo fueron reemplazadas por versiones de la colección. */
-  reemplazadas: number
-}
-
-/** Índice nombre→carta de la colección, para match por nombre + type. */
-function indiceColeccion(coleccion: AnyCard[]): Map<string, AnyCard> {
-  const idx = new Map<string, AnyCard>()
-  for (const c of coleccion) {
-    if (!c?.name) continue
-    const clave = c.name.trim().toLowerCase()
-    if (!idx.has(clave)) idx.set(clave, c)
-  }
-  return idx
-}
-
 /**
- * Arma el mazo del paquete reemplazando cada diseño por su versión de la
- * colección (si existe con el mismo nombre y type). Los ids custom se usan
- * tal cual: el catálogo debe tenerlas registradas (registrarCartas) para que
- * getCardMeta las resuelva durante la partida.
+ * Catálogo completo para el editor: diseños de ALL_CARDS + cartas custom de la
+ * colección con id NO registrado. Una custom que repite el id de un diseño NO
+ * lo pisa (los sets quedan puros): el editor muestra la versión de diseño.
  */
-export function armarMazoConColeccion(
-  paquete: MazoJugable,
-  coleccion: AnyCard[],
-): MazoConColeccion {
-  const porNombre = indiceColeccion(coleccion)
-  let reemplazadas = 0
-  const cardIds = paquete.cardIds.map((id) => {
-    const meta = getCardMeta(id)
-    if (!meta) return id
-    const custom = porNombre.get(meta.name.trim().toLowerCase())
-    if (custom && custom.type === meta.type) {
-      reemplazadas += 1
-      return custom.id
-    }
-    return id
-  })
-  return { mazo: { ...paquete, cardIds }, reemplazadas }
+export function cartasDisponibles(coleccion: AnyCard[]): AnyCard[] {
+  const idsDiseno = new Set(ALL_CARDS.map((c) => c.id))
+  const customNuevas = coleccion.filter((c) => !idsDiseno.has(c.id))
+  return [...ALL_CARDS, ...customNuevas]
+}
+
+/** Conteo por tipo de un deck (para los contadores en vivo del editor). */
+export function conteosDe(cardIds: string[]): {
+  eter: number
+  principal: number
+  vinculos: number
+} {
+  let eter = 0
+  let vinculos = 0
+  for (const id of cardIds) {
+    const tipo = getCardMeta(id)?.type
+    if (tipo === 'Éter') eter += 1
+    else if (tipo === 'Vínculo') vinculos += 1
+  }
+  return { eter, principal: cardIds.length - eter - vinculos, vinculos }
+}
+
+/** Expande una selección `cardId → copias` a un deck de cardIds en orden estable. */
+export function buildDeck(seleccion: Map<string, number>): string[] {
+  const deck: string[] = []
+  for (const [cardId, copias] of seleccion) {
+    for (let i = 0; i < copias; i++) deck.push(cardId)
+  }
+  return deck
 }
