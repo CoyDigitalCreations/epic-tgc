@@ -250,14 +250,17 @@ describe('Paquetes', () => {
       }
     })
 
-    it('las cartas nuevas (C4) y las de Disonancia aún no tienen arte (placeholder)', () => {
-      for (const id of ['FB-031', 'FB-032']) {
-        expect(CARD_ART_IDS.has(id)).toBe(false)
-        expect(cardArtPath(id)).toBeUndefined()
-      }
+    it('todas las cartas de Disonancia tienen arte oficial mapeado', () => {
       for (const card of DISONANCIA_CARDS) {
-        expect(CARD_ART_IDS.has(card.id)).toBe(false)
-        expect(cardArtPath(card.id)).toBeUndefined()
+        expect(CARD_ART_IDS.has(card.id)).toBe(true)
+        expect(cardArtPath(card.id)).toBe(`/cartas/${card.id}.png`)
+      }
+    })
+
+    it('las cartas nuevas (C4) con arte versionado tienen arte oficial mapeado', () => {
+      for (const id of ['FB-031', 'FB-032', 'DS-031', 'DS-032', 'DS-033']) {
+        expect(CARD_ART_IDS.has(id)).toBe(true)
+        expect(cardArtPath(id)).toBe(`/cartas/${id}.png`)
       }
     })
 

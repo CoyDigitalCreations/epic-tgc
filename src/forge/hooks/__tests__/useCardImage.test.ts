@@ -24,8 +24,8 @@ describe('useCardImage — resolución de arte', () => {
     expect(result.current).toBe(inline)
   })
 
-  it('NO inventa rutas para cartas sin arte oficial (p.ej. Disonancia)', () => {
-    const { result } = renderHook(() => useCardImage('DS-001', undefined, undefined))
+  it('NO inventa rutas para cartas sin arte oficial (p.ej. una custom sin arte)', () => {
+    const { result } = renderHook(() => useCardImage('custom-abc-123', undefined, undefined))
     expect(result.current).toBeUndefined()
   })
 
@@ -57,7 +57,7 @@ describe('useCardImage — efectos colaterales', () => {
       ({ id }) => useCardImage(id, undefined, undefined),
       { initialProps: { id: 'FB-001' } },
     )
-    rerender({ id: 'DS-001' })
+    rerender({ id: 'custom-abc-123' })
     expect(result.current).toBeUndefined()
   })
 })

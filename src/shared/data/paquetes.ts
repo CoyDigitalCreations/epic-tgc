@@ -1232,17 +1232,18 @@ export const ALL_CARDS: AnyCard[] = [...ESTASIS_CARDS, ...DISONANCIA_CARDS]
    Los PNGs viven en public/cartas/{cardId}.png.
    La ruta se deriva del ID: no hay que cargar el
    base64 en las cartas (el store los conservaría).
-   Al agregar un set nuevo con arte, sumar sus IDs acá.
    ───────────────────────────────────────────── */
 
 /**
  * IDs que tienen arte oficial en public/cartas/{cardId}.png.
- * Solo los que tienen PNG versionado: las cartas nuevas sin arte (C4)
- * quedan fuera y la UI muestra su placeholder.
+ * Ambos sets (Estásis y Disonancia) tienen PNG versionado.
+ * Al agregar una carta nueva SIN arte, no la sumes acá:
+ * la UI mostrará su placeholder ✦.
  */
-export const CARD_ART_IDS: ReadonlySet<string> = new Set(
-  ESTASIS_CARDS.filter((c) => c.createdAt !== C4_TS).map((c) => c.id),
-)
+export const CARD_ART_IDS: ReadonlySet<string> = new Set([
+  ...ESTASIS_CARDS.map((c) => c.id),
+  ...DISONANCIA_CARDS.map((c) => c.id),
+])
 
 /** Ruta del arte oficial de una carta, o undefined si no tiene */
 export function cardArtPath(cardId: string | undefined): string | undefined {

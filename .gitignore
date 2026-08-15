@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# Datos de exportación local (colecciones con arte en base64 — ~130MB)
+seed/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
