@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router'
 import { useCardStore } from '../forge/store/useCardStore'
+import { useCardImage } from '../forge/hooks/useCardImage'
 import { ALL_CARDS } from '../shared/data/paquetes'
-import { registrarCartas, visibleState } from './game'
+import { registrarCartas, visibleState, getCardMeta } from './game'
 import { MAZOS, mazoParaBot } from './mazos'
 import { useMazosStore, type MazoPersonalizado } from './useMazosStore'
 import { usePartida, type PartidaConfig } from './usePartida'
@@ -133,6 +134,44 @@ interface MenuProps {
   onEmpezar: () => void
 }
 
+/** Miniatura de una carta del deck (arte real: diseño → /cartas, custom → IndexedDB). */
+function MiniArte({ cardId }: { cardId: string }) {
+  const meta = getCardMeta(cardId)
+  const imageUrl = useCardImage(cardId, meta?.hasImage, meta?.imageUrl)
+  return (
+    <div
+      className="shrink-0 rounded-sm border border-card-border overflow-hidden flex items-center justify-center"
+      style={{
+        width: 28,
+        aspectRatio: '744/1038',
+        background: 'linear-gradient(135deg, #14142b 0%, #1e1e3a 60%, #2a2a4e 100%)',
+      }}
+    >
+      {imageUrl ? (
+        <img
+          src={imageUrl}
+          alt={meta?.name ?? ''}
+          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+        />
+      ) : (
+        <span style={{ color: '#4b4b7a', fontFamily: '"Cinzel", serif', fontSize: 9, fontWeight: 700 }}>✦</span>
+      )}
+    </div>
+  )
+}
+
+/** Vista previa del deck: miniaturas de las primeras cartas únicas del mazo. */
+function MazoMiniaturas({ cardIds }: { cardIds: string[] }) {
+  const unicas = Array.from(new Set(cardIds)).slice(0, 8)
+  return (
+    <div className="flex gap-1 mt-2">
+      {unicas.map((id) => (
+        <MiniArte key={id} cardId={id} />
+      ))}
+    </div>
+  )
+}
+
 function Menu({
   mazoHumano,
   onMazo,
@@ -207,6 +246,7 @@ function Menu({
                     <p className="text-[11px] text-gray-500 mt-1">
                       {mazo.cardIds.length} cartas · personalizado
                     </p>
+                    <MazoMiniaturas cardIds={mazo.cardIds} />
                   </button>
                   <button
                     onClick={() => onEditarMazo(mazo)}

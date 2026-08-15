@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
 import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest'
@@ -6,6 +6,8 @@ import OnlineApp from '../OnlineApp'
 import { useCardStore } from '../../forge/store/useCardStore'
 import { useMazosStore } from '../useMazosStore'
 import { MAZOS } from '../mazos'
+import { getCardMeta } from '../game'
+import { cardArtPath } from '../../shared/data/paquetes'
 import type { AnyCard } from '../../shared/types'
 
 function renderApp() {
@@ -155,5 +157,20 @@ describe('OnlineApp — mazo personalizado', () => {
     // Ambos sets preestablecidos siguen en el menú
     expect(screen.getByText('Estásis')).toBeInTheDocument()
     expect(screen.getByText('Disonancia')).toBeInTheDocument()
+  })
+
+  it('la card del mazo personalizado muestra miniaturas de sus cartas', async () => {
+    useMazosStore.getState().agregarMazo({ nombre: 'Vista Previa', cardIds: MAZOS[0].cardIds })
+    renderApp()
+    const card = screen.getByRole('button', { name: /Vista Previa/ })
+    // El arte se resuelve en el useEffect → esperar el re-render
+    const imgs = await within(card).findAllByRole('img')
+    // Hasta 8 miniaturas de las cartas únicas del deck
+    expect(imgs.length).toBeGreaterThan(0)
+    expect(imgs.length).toBeLessThanOrEqual(8)
+    // El arte de la primera carta del deck (diseño con PNG oficial)
+    expect(imgs[0]).toHaveAttribute('src', cardArtPath(MAZOS[0].cardIds[0]))
+    // El alt anuncia el nombre de la carta (deck preview accesible)
+    expect(imgs[0]).toHaveAttribute('alt', getCardMeta(MAZOS[0].cardIds[0])?.name)
   })
 })

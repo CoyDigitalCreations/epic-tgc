@@ -1,15 +1,32 @@
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import 'fake-indexeddb/auto'
 import { MazoEditor } from '../MazoEditor'
-import { ESTASIS_CARDS } from '../../../shared/data/paquetes'
+import { ESTASIS_CARDS, cardArtPath } from '../../../shared/data/paquetes'
 import { useCardStore } from '../../../forge/store/useCardStore'
+import { clearCardImages, saveCardImage } from '../../../forge/utils/image-store'
+import type { AnyCard } from '../../../shared/types'
 import type { MazoPersonalizado } from '../../useMazosStore'
 
 function limpiarColeccion() {
   useCardStore.getState().clearCards()
   localStorage.removeItem('epic-tgc-collection')
 }
+
+const campeonCustom = (overrides: Partial<AnyCard> = {}): AnyCard => ({
+  id: 'custom-1',
+  name: 'Guardián Estelar',
+  type: 'Campeón',
+  rarity: 'Rara',
+  keywords: [],
+  flavorText: 'Brilla en la oscuridad.',
+  limiteCopias: 3,
+  stats: { cost: 3, poder: 4, resistencia: 4 },
+  createdAt: '2026-01-01T00:00:00.000Z',
+  updatedAt: '2026-01-01T00:00:00.000Z',
+  ...overrides,
+})
 
 const mazoValido = (nombre = 'Mi mazo'): MazoPersonalizado => ({
   id: 'mi-mazo',
@@ -29,7 +46,10 @@ async function seleccionarEstasisCompleto(user: ReturnType<typeof userEvent.setu
 }
 
 describe('MazoEditor', () => {
-  beforeEach(limpiarColeccion)
+  beforeEach(async () => {
+    await clearCardImages()
+    limpiarColeccion()
+  })
 
   it('muestra el título, el input de nombre, filtros, contadores y el botón guardar deshabilitado', () => {
     render(<MazoEditor onGuardar={vi.fn()} onCancelar={vi.fn()} />)
@@ -49,6 +69,78 @@ describe('MazoEditor', () => {
   it('lista las cartas del catálogo (diseños) en el editor', () => {
     render(<MazoEditor onGuardar={vi.fn()} onCancelar={vi.fn()} />)
     expect(screen.getByText(ESTASIS_CARDS[0].name)).toBeInTheDocument()
+  })
+
+  it('muestra el arte estático de los diseños en cada fila', async () => {
+    render(<MazoEditor onGuardar={vi.fn()} onCancelar={vi.fn()} />)
+    const img = await screen.findByRole('img', { name: ESTASIS_CARDS[0].name })
+    expect(img).toHaveAttribute('src', cardArtPath(ESTASIS_CARDS[0].id))
+  })
+
+  it('muestra el arte de una carta custom desde IndexedDB (hasImage)', async () => {
+    useCardStore.getState().loadCards([campeonCustom({ hasImage: true })])
+    await saveCardImage('custom-1', 'data:image/png;base64,ARTECUSTOM')
+    render(<MazoEditor onGuardar={vi.fn()} onCancelar={vi.fn()} />)
+
+    const img = await screen.findByRole('img', { name: 'Guardián Estelar' })
+    expect(img).toHaveAttribute('src', 'data:image/png;base64,ARTECUSTOM')
+  })
+
+  it('las custom sin arte muestran placeholder (sin img rota)', () => {
+    useCardStore.getState().loadCards([campeonCustom()])
+    render(<MazoEditor onGuardar={vi.fn()} onCancelar={vi.fn()} />)
+    expect(screen.getByText('Guardián Estelar')).toBeInTheDocument()
+    expect(screen.queryByRole('img', { name: 'Guardián Estelar' })).not.toBeInTheDocument()
+  })
+
+  it('muestra coste, ATQ/RES y efectos en la fila de un Campeón', () => {
+    useCardStore.getState().loadCards([
+      campeonCustom({
+        stats: { cost: 3, poder: 4, resistencia: 4 },
+        efectoPasivo: 'Gana +1 poder por Éter bloqueado.',
+        efectoActivo: 'Paga 1 Éter: agota un Campeón rival.',
+      }),
+    ])
+    render(<MazoEditor onGuardar={vi.fn()} onCancelar={vi.fn()} />)
+    const fila = screen.getByText('Guardián Estelar').closest('div.bg-surface-2') as HTMLElement
+
+    // Datos de la carta: coste y estadísticas de combate
+    expect(within(fila).getByText(/Coste 3/)).toBeInTheDocument()
+    expect(within(fila).getByText(/ATQ 4 RES 4/)).toBeInTheDocument()
+    // Efectos con su etiqueta (mismo criterio de nombres que CardPreview)
+    expect(within(fila).getByText('Pasivo:')).toBeInTheDocument()
+    expect(within(fila).getByText('Activo:')).toBeInTheDocument()
+    expect(within(fila).getByText(/Gana \+1 poder por Éter bloqueado\./)).toBeInTheDocument()
+    expect(within(fila).getByText(/Paga 1 Éter: agota un Campeón rival\./)).toBeInTheDocument()
+  })
+
+  it('muestra coste y efectos de un Éter (sin ATQ/RES)', () => {
+    useCardStore.getState().loadCards([
+      {
+        id: 'custom-eter',
+        name: 'Cristal Astral',
+        type: 'Éter',
+        rarity: 'Común',
+        keywords: [],
+        flavorText: '',
+        limiteCopias: 15,
+        stats: { cost: 1 },
+        efectoReserva: 'Se reserva en tu zona de Éter.',
+        efectoPago: 'Págalo para pagar costes.',
+        efectoBloqueo: 'Bloquéalo sobre un Campeón.',
+        createdAt: '2026-01-01T00:00:00.000Z',
+        updatedAt: '2026-01-01T00:00:00.000Z',
+      },
+    ])
+    render(<MazoEditor onGuardar={vi.fn()} onCancelar={vi.fn()} />)
+    const fila = screen.getByText('Cristal Astral').closest('div.bg-surface-2') as HTMLElement
+
+    expect(within(fila).getByText(/Coste 1/)).toBeInTheDocument()
+    expect(within(fila).queryByText(/ATQ /)).not.toBeInTheDocument()
+    expect(within(fila).getByText('Reserva:')).toBeInTheDocument()
+    expect(within(fila).getByText('Pago:')).toBeInTheDocument()
+    expect(within(fila).getByText('Bloqueo:')).toBeInTheDocument()
+    expect(within(fila).getByText(/Se reserva en tu zona de Éter\./)).toBeInTheDocument()
   })
 
   it('el botón + agrega copias y actualiza los contadores; no pasa de limiteCopias', () => {

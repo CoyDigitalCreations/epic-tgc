@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useCardStore } from '../../forge/store/useCardStore'
+import { useCardImage } from '../../forge/hooks/useCardImage'
 import { buildDeck, cartasDisponibles, conteosDe } from '../mazos'
 import type { MazoPersonalizado } from '../useMazosStore'
 import { CARD_TYPES, FACCION_COLORS, FACCIONES, type AnyCard, type CardType, type Faccion } from '../../shared/types'
@@ -27,6 +28,141 @@ function seleccionDesdeCardIds(cardIds: string[]): Map<string, number> {
     seleccion.set(id, (seleccion.get(id) ?? 0) + 1)
   }
   return seleccion
+}
+
+/**
+ * Efectos de una carta para el listado, con su etiqueta según el tipo
+ * (mismo criterio de nombres que CardPreview).
+ */
+function efectosDe(card: AnyCard): { etiqueta: string; texto: string }[] {
+  switch (card.type) {
+    case 'Campeón': {
+      const l: { etiqueta: string; texto: string }[] = []
+      if (card.efectoPasivo) l.push({ etiqueta: 'Pasivo', texto: card.efectoPasivo })
+      if (card.efectoActivo) l.push({ etiqueta: 'Activo', texto: card.efectoActivo })
+      return l
+    }
+    case 'Mística':
+      return card.efecto ? [{ etiqueta: 'Efecto', texto: card.efecto }] : []
+    case 'Táctica':
+      return card.descripcion ? [{ etiqueta: 'Efecto', texto: card.descripcion }] : []
+    case 'Arcana': {
+      const l: { etiqueta: string; texto: string }[] = []
+      if (card.condicion) l.push({ etiqueta: 'Condición', texto: card.condicion })
+      if (card.recompensa) l.push({ etiqueta: 'Recompensa', texto: card.recompensa })
+      return l
+    }
+    case 'Combate':
+      return card.descripcion ? [{ etiqueta: 'Efecto', texto: card.descripcion }] : []
+    case 'Éter': {
+      const l: { etiqueta: string; texto: string }[] = []
+      if (card.efectoReserva) l.push({ etiqueta: 'Reserva', texto: card.efectoReserva })
+      if (card.efectoPago) l.push({ etiqueta: 'Pago', texto: card.efectoPago })
+      if (card.efectoBloqueo) l.push({ etiqueta: 'Bloqueo', texto: card.efectoBloqueo })
+      return l
+    }
+    case 'Vínculo':
+      return card.efecto ? [{ etiqueta: 'Efecto', texto: card.efecto }] : []
+    default:
+      return []
+  }
+}
+
+/**
+ * Fila de carta del catálogo. Componente separado porque useCardImage es un
+ * hook: cada fila resuelve su arte (custom → IndexedDB; diseño → /cartas/*.png).
+ */
+function FilaCarta({
+  card,
+  copias,
+  limite,
+  tipoLleno,
+  onAgregar,
+  onQuitar,
+}: {
+  card: AnyCard
+  copias: number
+  limite: number
+  tipoLleno: boolean
+  onAgregar: () => void
+  onQuitar: () => void
+}) {
+  const imageUrl = useCardImage(card.id, card.hasImage, card.imageUrl)
+  const color = (card.facciones?.[0] && FACCION_COLORS[card.facciones[0]]) || '#9ca3af'
+  const coste = card.stats.cost > 0 ? card.stats.cost : null
+  const combate =
+    card.type === 'Campeón' && 'poder' in card.stats
+      ? { atq: card.stats.poder, res: card.stats.resistencia }
+      : null
+  const efectos = efectosDe(card)
+  return (
+    <div className="flex items-start gap-2 bg-surface-2 border border-card-border rounded-lg px-3 py-2">
+      {/* Miniatura con el arte real (custom → IndexedDB, diseño → public/cartas) */}
+      <div
+        className="shrink-0 rounded border border-card-border overflow-hidden flex items-center justify-center"
+        style={{
+          width: 38,
+          aspectRatio: '744/1038',
+          background: 'linear-gradient(135deg, #14142b 0%, #1e1e3a 60%, #2a2a4e 100%)',
+        }}
+        aria-hidden={imageUrl ? undefined : 'true'}
+      >
+        {imageUrl ? (
+          <img
+            src={imageUrl}
+            alt={card.name}
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          />
+        ) : (
+          <span style={{ color: '#4b4b7a', fontFamily: '"Cinzel", serif', fontSize: 12, fontWeight: 700 }}>
+            ✦
+          </span>
+        )}
+      </div>
+      <span
+        className="w-2 h-2 rounded-full shrink-0 mt-1"
+        style={{ backgroundColor: color }}
+        title={card.facciones?.[0] ?? 'Sin facción'}
+      />
+      <div className="flex-1 min-w-0">
+        <p className="text-sm text-gray-100 truncate">{card.name}</p>
+        <p className="text-[10px] text-gray-500">
+          {card.type}
+          {card.facciones?.[0] ? ` · ${card.facciones[0]}` : ''} · máx {limite}
+          {coste !== null ? ` · Coste ${coste}` : ''}
+          {combate ? ` · ATQ ${combate.atq} RES ${combate.res}` : ''}
+        </p>
+        {efectos.map((e) => (
+          <p
+            key={e.etiqueta}
+            title={e.texto}
+            className="text-[10px] text-gray-400 leading-snug mt-0.5 line-clamp-2"
+          >
+            <span className="text-gray-500">{e.etiqueta}:</span> {e.texto}
+          </p>
+        ))}
+      </div>
+      <button
+        aria-label={`Quitar copia de ${card.name}`}
+        onClick={onQuitar}
+        disabled={copias === 0}
+        className="w-7 h-7 rounded bg-surface hover:bg-card-border text-gray-300 disabled:opacity-30
+                   transition-colors cursor-pointer disabled:cursor-default shrink-0"
+      >
+        −
+      </button>
+      <span className="w-6 text-center text-sm font-mono text-gray-300 shrink-0">{copias}</span>
+      <button
+        aria-label={`Agregar copia de ${card.name}`}
+        onClick={onAgregar}
+        disabled={copias >= limite || tipoLleno}
+        className="w-7 h-7 rounded bg-ether-600/30 hover:bg-ether-600/50 text-ether-200 disabled:opacity-30
+                   transition-colors cursor-pointer disabled:cursor-default shrink-0"
+      >
+        +
+      </button>
+    </div>
+  )
 }
 
 /**
@@ -176,44 +312,16 @@ export function MazoEditor({ inicial, onGuardar, onCancelar }: MazoEditorProps) 
             const topeTipo = limiteTipo(c)
             const tipoLleno =
               (c.type === 'Éter' ? conteos.eter : c.type === 'Vínculo' ? conteos.vinculos : conteos.principal) >= topeTipo
-            const color = (c.facciones?.[0] && FACCION_COLORS[c.facciones[0]]) || '#9ca3af'
             return (
-              <div
+              <FilaCarta
                 key={c.id}
-                className="flex items-center gap-2 bg-surface-2 border border-card-border rounded-lg px-3 py-2"
-              >
-                <span
-                  className="w-2 h-2 rounded-full shrink-0"
-                  style={{ backgroundColor: color }}
-                  title={c.facciones?.[0] ?? 'Sin facción'}
-                />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-gray-100 truncate">{c.name}</p>
-                  <p className="text-[10px] text-gray-500">
-                    {c.type}
-                    {c.facciones?.[0] ? ` · ${c.facciones[0]}` : ''} · máx {limite}
-                  </p>
-                </div>
-                <button
-                  aria-label={`Quitar copia de ${c.name}`}
-                  onClick={() => quitar(c)}
-                  disabled={copias === 0}
-                  className="w-7 h-7 rounded bg-surface hover:bg-card-border text-gray-300 disabled:opacity-30
-                             transition-colors cursor-pointer disabled:cursor-default"
-                >
-                  −
-                </button>
-                <span className="w-6 text-center text-sm font-mono text-gray-300">{copias}</span>
-                <button
-                  aria-label={`Agregar copia de ${c.name}`}
-                  onClick={() => agregar(c)}
-                  disabled={copias >= limite || tipoLleno}
-                  className="w-7 h-7 rounded bg-ether-600/30 hover:bg-ether-600/50 text-ether-200 disabled:opacity-30
-                             transition-colors cursor-pointer disabled:cursor-default"
-                >
-                  +
-                </button>
-              </div>
+                card={c}
+                copias={copias}
+                limite={limite}
+                tipoLleno={tipoLleno}
+                onAgregar={() => agregar(c)}
+                onQuitar={() => quitar(c)}
+              />
             )
           })}
         </div>
