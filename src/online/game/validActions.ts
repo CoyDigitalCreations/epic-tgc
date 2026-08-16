@@ -115,6 +115,11 @@ export function getValidActions(state: GameState, playerId: PlayerId): Action[] 
             acciones.push({ type: 'declarar_ataque', atacanteIds: [id] })
           }
         }
+        // Tácticas jugables durante Choque (regla: se pueden jugar en cualquier fase de tu turno)
+        for (const id of p.mano) {
+          const accion = generarAccionesForja(state, playerId, id)
+          if (accion) acciones.push(accion)
+        }
         acciones.push({ type: 'pasar_turno' })
       } else if (combate.paso === 'resolucion') {
         // Resolución (9.4-A, ADR-13): Ruptura VOLUNTARIA del jugador activo —

@@ -223,7 +223,7 @@ function validarJugarMistica(state: GameState, action: Extract<Action, { type: '
 }
 
 function validarColocarTactica(state: GameState, action: Extract<Action, { type: 'colocar_tactica' }>): string | null {
-  if (state.fase !== 'forja') return 'colocar_tactica solo en Forja'
+  if (state.fase !== 'forja' && state.fase !== 'choque') return 'colocar_tactica solo en Forja o Choque'
   const base = cartaEnMano(state, action.cardInstanceId)
   if ('error' in base) return base.error
   const meta = getCardMeta(base.cardId)

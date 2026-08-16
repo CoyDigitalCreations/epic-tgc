@@ -7,6 +7,7 @@ import { MiniCard, TAMANOS } from './MiniCard'
 import { CartaZoom } from './CartaZoom'
 import { ChampionStatus, FocosChampion } from './ChampionStatus'
 import { BlockingInterface } from './BlockingInterface'
+import { ActiveAbilitiesPanel } from './ActiveAbilitiesPanel'
 
 interface TableroProps {
   /** Proyección 6.2 del estado para el jugador A (cartas ocultas con cardId null). */
@@ -747,7 +748,12 @@ export function Tablero({ vista, acciones, leTocaA, log, onAccion, onAbandonar, 
       </header>
 
       <main className="max-w-[1400px] mx-auto px-4 mt-2 flex flex-col xl:flex-row gap-4 items-start">
-        {/* ── Tableros (Columna Izquierda) ────────────────────────────── */}
+        {/* ── Panel de Habilidades Activas (Columna Izquierda) ─────────── */}
+        <div className="hidden xl:block w-[160px] flex-shrink-0">
+          <ActiveAbilitiesPanel s={vista} />
+        </div>
+
+        {/* ── Tableros (Columna Principal) ────────────────────────────── */}
         <div className="flex-1 flex flex-col gap-2 min-w-0">
           <section className="bg-surface border border-card-border rounded-lg p-3 space-y-2">
             <div className="flex items-center gap-2">
