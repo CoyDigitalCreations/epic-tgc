@@ -851,7 +851,7 @@ export function Tablero({ vista, acciones, leTocaA, log, onAccion, onAbandonar, 
             {/* ── Tu mano (fuera de la grilla) ─────────────────────── */}
             <div>
               <p className="text-[9px] uppercase tracking-wider text-gray-500 mb-1.5">
-                Tu mano ({yo.mano.length}){leTocaA ? ' — click en una carta para verla, jugá desde el botón' : ''}
+                Tu mano ({yo.mano.length}){leTocaA ? ' — click en una carta para verla, juega desde el botón' : ''}
               </p>
               <div className="flex gap-2 flex-wrap items-start">
                 {yo.mano.map((id) => {
@@ -893,7 +893,7 @@ export function Tablero({ vista, acciones, leTocaA, log, onAccion, onAbandonar, 
             {leTocaA && tutores.length > 0 && (
               <div className="mt-2 border border-ether-600/40 rounded-lg p-2 bg-ether-600/10">
                 <p className="text-[9px] uppercase tracking-wider text-ether-300 mb-1.5">
-                  Búsqueda de mazo — elegí una carta
+                  Búsqueda de mazo — elige una carta
                 </p>
                 <div className="flex gap-2 flex-wrap">
                   {tutores.map((a) => {

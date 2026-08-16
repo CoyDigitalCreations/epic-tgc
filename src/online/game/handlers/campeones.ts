@@ -145,7 +145,7 @@ export function registrarEfectosCampeones(): void {
     armarPendiente(s, payload.jugador, inst.cardInstanceId, 'al-invocar', objetivosCampeonesValidos(s, rival))
   })
 
-  // FB-011 Vaela: "Al atacar, agotá un Campeón que controla el rival".
+  // FB-011 Vaela: "Al atacar, agota un Campeón que controla el rival".
   registrarEfecto('al-atacar', 'FB-011', (s, _ctx, inst, payload) => {
     if (payload.contextoUso === 'objetivo-elegido') {
       const objetivo = s.instances[payload.objetivoId!]

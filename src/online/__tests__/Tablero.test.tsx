@@ -679,7 +679,7 @@ describe('Búsqueda de mazo (tutores)', () => {
     )
 
     // Título del bloque de búsqueda y los NOMBRES de las cartas seleccionables
-    expect(screen.getByText(/Búsqueda de mazo — elegí una carta/)).toBeInTheDocument()
+    expect(screen.getByText(/Búsqueda de mazo — elige una carta/)).toBeInTheDocument()
     const nombreDs = getCardMeta('DS-031')?.name!
     const nombreFb = getCardMeta('FB-031')?.name!
     expect(screen.getByText(nombreDs)).toBeInTheDocument()

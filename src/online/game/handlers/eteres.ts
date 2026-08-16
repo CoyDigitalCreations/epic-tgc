@@ -118,7 +118,7 @@ registrarEfecto('al-pagar-eter', 'DS-004', (s: GameState, ctx: Ctx, _inst, paylo
 
 // ──────────────────────────────────────────────────────────────────────────────
 // PASIVO 1A — FB-005 / DS-006: "Mientras esté en tu zona de Éter pagado, una vez
-// por turno podés bloquear 1 Éter de tu Reserva sobre un Campeón sin agotarlo"
+// por turno puedes bloquear 1 Éter de tu Reserva sobre un Campeón sin agotarlo"
 // Se dispara en al-inicio-alba (ANTES de reagrupar, instancias = eterPagado)
 // ──────────────────────────────────────────────────────────────────────────────
 
