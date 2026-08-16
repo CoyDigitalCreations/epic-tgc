@@ -13,10 +13,18 @@ export interface PartidaConfig {
   delayMs?: number
 }
 
-/** Entrada de animación: glow en celda destino por ~500ms. */
+/** Tipo de animación */
+export type TipoAnimacion = 'glow' | 'attack' | 'death'
+
+/** Entrada de animación: glow, ataque o destrucción. */
 export interface AnimacionEntrada {
-  zona: string
-  jugador: PlayerId
+  tipo: TipoAnimacion
+  zona?: string
+  jugador?: PlayerId
+  /** IDs de atacantes (para tipo 'attack') */
+  atacantes?: string[]
+  /** ID de la carta destruida (para tipo 'death') */
+  cardInstanceId?: string
   key: number
 }
 
@@ -25,6 +33,12 @@ const MAX_JUGADAS_BOT = 2000
 
 /** Duración del glow de destino (ms). */
 const GLOW_DURATION_MS = 500
+
+/** Duración de animación de ataque (ms). */
+const ATTACK_DURATION_MS = 600
+
+/** Duración de animación de destrucción (ms). */
+const DEATH_DURATION_MS = 500
 
 /**
  * El actor de la jugada actual NO es siempre `estado.turno`:
@@ -88,12 +102,33 @@ export function usePartida(config: PartidaConfig) {
       }
       estadoRef.current = r.state
       logRef.current = [...logRef.current, ...eventosParaLog(r.state, r.events)]
-      // Animaciones: capturar entradas de zona para glow
-      const entradas = r.events
-        .filter((e): e is Extract<typeof e, { type: 'carta_entrada_a_zona' }> => e.type === 'carta_entrada_a_zona')
-        .map((e) => ({ zona: e.zona, jugador: e.jugador, key: Date.now() + Math.random() }))
-      if (entradas.length > 0) {
-        setAnimaciones((prev) => [...prev, ...entradas])
+      // Animaciones: capturar eventos relevantes
+      const now = Date.now()
+      const nuevasAnimaciones: AnimacionEntrada[] = []
+
+      // Glow en destino de movimiento
+      for (const e of r.events) {
+        if (e.type === 'carta_entrada_a_zona') {
+          nuevasAnimaciones.push({ tipo: 'glow', zona: e.zona, jugador: e.jugador, key: now + Math.random() })
+        }
+      }
+
+      // Línea de ataque
+      for (const e of r.events) {
+        if (e.type === 'ataque_declarado') {
+          nuevasAnimaciones.push({ tipo: 'attack', atacantes: e.atacanteIds, jugador: e.jugador, key: now + Math.random() })
+        }
+      }
+
+      // Efecto de destrucción
+      for (const e of r.events) {
+        if (e.type === 'destruccion') {
+          nuevasAnimaciones.push({ tipo: 'death', cardInstanceId: e.cardInstanceId, jugador: e.jugador, key: now + Math.random() })
+        }
+      }
+
+      if (nuevasAnimaciones.length > 0) {
+        setAnimaciones((prev) => [...prev, ...nuevasAnimaciones])
       }
       sincronizar()
     },
@@ -104,7 +139,12 @@ export function usePartida(config: PartidaConfig) {
   useEffect(() => {
     if (animaciones.length === 0) return
     const timeout = window.setTimeout(() => {
-      setAnimaciones((prev) => prev.filter((a) => Date.now() - a.key < GLOW_DURATION_MS))
+      setAnimaciones((prev) => prev.filter((a) => {
+        const age = Date.now() - a.key
+        if (a.tipo === 'attack') return age < ATTACK_DURATION_MS
+        if (a.tipo === 'death') return age < DEATH_DURATION_MS
+        return age < GLOW_DURATION_MS
+      }))
     }, GLOW_DURATION_MS + 50)
     return () => window.clearTimeout(timeout)
   }, [animaciones])

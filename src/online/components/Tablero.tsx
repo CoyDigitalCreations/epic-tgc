@@ -17,7 +17,7 @@ interface TableroProps {
   onAccion: (a: Action) => void
   onAbandonar: () => void
   /** Animaciones de movimiento de cartas (glow en celda destino). */
-  animaciones?: Array<{ zona: string; jugador: PlayerId; key: number }>
+  animaciones?: Array<{ tipo: string; zona?: string; jugador?: PlayerId; atacantes?: string[]; cardInstanceId?: string; key: number }>
 }
 
 /* ─────────────────────────────────────────────
@@ -173,18 +173,24 @@ function OpcionTutor({
 const ANCHO_CELDA = TAMANOS.md * (1038 / 744)
 
 /** Celda de la grilla: rótulo de zona (1A…) + contenido. Los huecos vacíos muestran el límite (6.1). */
-function Celda({ zona, children, glow }: { zona: string; children?: ReactNode; glow?: boolean }) {
+function Celda({ zona, children, glow, glowColor, invertida }: { zona: string; children?: ReactNode; glow?: boolean; glowColor?: 'green' | 'red'; invertida?: boolean }) {
+  const glowStyles = glow ? {
+    boxShadow: `0 0 12px 4px ${glowColor === 'red' ? 'rgba(239, 68, 68, 0.6)' : 'rgba(74, 222, 128, 0.5)'}`,
+    borderRadius: 8,
+  } : undefined
+
   return (
     <div
       className={`flex flex-col items-center gap-0.5 relative ${glow ? 'animate-pulse-ring' : ''}`}
       data-zona={zona}
-      style={{
-        minWidth: ANCHO_CELDA,
-        overflow: 'visible',
-        ...(glow ? { boxShadow: '0 0 12px 4px rgba(74, 222, 128, 0.5)', borderRadius: 8 } : undefined),
-      }}
+      style={{ minWidth: ANCHO_CELDA, overflow: 'visible', ...glowStyles }}
     >
-      <span className="text-[7px] font-mono text-gray-600 uppercase leading-none tracking-wider">{zona}</span>
+      <span
+        className="text-[7px] font-mono text-gray-600 uppercase leading-none tracking-wider"
+        style={invertida ? { transform: 'rotate(180deg)' } : undefined}
+      >
+        {zona}
+      </span>
       {children ?? (
         <div
           style={{ width: TAMANOS.md, aspectRatio: '744/1038', borderRadius: 6, border: '1px dashed #23233c' }}
@@ -259,7 +265,7 @@ interface GrillaProps {
   invertida?: boolean
   seleccion: Seleccion
   /** Animaciones de movimiento (glow en celda destino). */
-  animaciones?: Array<{ zona: string; jugador: PlayerId; key: number }>
+  animaciones?: Array<{ tipo: string; zona?: string; jugador?: PlayerId; atacantes?: string[]; cardInstanceId?: string; key: number }>
 }
 
 /** Grilla 4×7 de un jugador, fiel a la vista desde arriba del manual. */
@@ -336,10 +342,11 @@ function GrillaJugador({
       (a) => a.type === 'declarar_ataque' && a.atacanteIds.length === 1 && a.atacanteIds[0] === id,
     )
     const bloquear = acciones.find((a) => a.type === 'bloquear_eter' && a.campeonSlot === slot)
+    const rotStyle = invertida ? { transform: 'rotate(180deg)' } : undefined
     return (
       <MiniCard key={id} inst={inst} tamano="md" onZoom={() => abrirZoom(inst)}>
         {leTocaA && (ataque || bloquear) && (
-          <div className="flex gap-1 flex-wrap justify-center">
+          <div className="flex gap-1 flex-wrap justify-center" style={rotStyle}>
             {ataque && <Boton accion={ataque} onClick={onAccion} />}
             {bloquear && (
               <button
@@ -365,7 +372,7 @@ function GrillaJugador({
 
   /* ── Fila 1 ── */
   celdas.push(
-    <Celda key="1A" zona="1A">
+    <Celda key="1A" zona="1A" invertida={invertida}>
       <Pila
         vista={vista}
         insts={p.eterPagado}
@@ -378,7 +385,7 @@ function GrillaJugador({
     const bloqueados = eterBloqueadoDe(slot)
     const zona = `1${String.fromCharCode(66 + slot)}` // 1B…1F
     celdas.push(
-      <Celda key={zona} zona={zona}>
+      <Celda key={zona} zona={zona} invertida={invertida}>
         {bloqueados.length > 0 ? (
           <MiniCard
             inst={bloqueados[0]}
@@ -409,7 +416,7 @@ function GrillaJugador({
     )
   }
   celdas.push(
-    <Celda key="1G" zona="1G">
+    <Celda key="1G" zona="1G" invertida={invertida}>
       <Pila
         vista={vista}
         insts={p.exilio}
@@ -421,28 +428,29 @@ function GrillaJugador({
 
   /* ── Fila 2 ── */
   celdas.push(
-    <Celda key="2A" zona="2A">
+    <Celda key="2A" zona="2A" invertida={invertida}>
       {reservaCol()}
     </Celda>,
   )
   for (let slot = 0; slot < 5; slot++) {
     const zona = `2${String.fromCharCode(66 + slot)}` // 2B…2F
     const id = p.campo.campeones[slot]
-    const hayGlow = animaciones?.some((a) => a.zona === zona && a.jugador === jugador) ?? false
+    const hayGlow = animaciones?.some((a) => a.tipo === 'glow' && a.zona === zona && a.jugador === jugador) ?? false
+    const hayAtaque = id !== null && (animaciones?.some((a) => a.tipo === 'attack' && a.atacantes?.includes(id)) ?? false)
     celdas.push(
-      <Celda key={zona} zona={zona} glow={hayGlow}>
+      <Celda key={zona} zona={zona} glow={hayGlow || hayAtaque} glowColor={hayAtaque ? 'red' : 'green'} invertida={invertida}>
         {id ? (
           <div className="relative">
             {soy && leTocaA ? campeonPropio(slot, id) : <MiniCard inst={vista.instances[id]} tamano="md" onZoom={() => abrirZoom(vista.instances[id])} />}
-            <ChampionStatus s={vista} id={id} />
-            <FocosChampion s={vista} id={id} />
+            <ChampionStatus s={vista} id={id} invertida={invertida} />
+            <FocosChampion s={vista} id={id} invertida={invertida} />
           </div>
         ) : undefined}
       </Celda>,
     )
   }
   celdas.push(
-    <Celda key="2G" zona="2G">
+    <Celda key="2G" zona="2G" invertida={invertida}>
       <Pila
         vista={vista}
         insts={p.cementerio}
@@ -457,7 +465,7 @@ function GrillaJugador({
     const zona = `3${String.fromCharCode(65 + slot)}` // 3A…3C (Místicas/Tácticas)
     const id = p.campo.misticasTacticas[slot]
     celdas.push(
-      <Celda key={zona} zona={zona}>
+      <Celda key={zona} zona={zona} invertida={invertida}>
         {id ? (
           <MiniCard inst={vista.instances[id]} tamano="md" onZoom={() => abrirZoom(vista.instances[id])} />
         ) : undefined}
@@ -469,7 +477,7 @@ function GrillaJugador({
     const id = p.campo.arcanasCombate[slot]
     const inst = id ? vista.instances[id] : null
     celdas.push(
-      <Celda key={zona} zona={zona}>
+      <Celda key={zona} zona={zona} invertida={invertida}>
         {inst ? (
           <MiniCard
             inst={inst}
@@ -486,7 +494,7 @@ function GrillaJugador({
     )
   }
   celdas.push(
-    <Celda key="3G" zona="3G">
+    <Celda key="3G" zona="3G" invertida={invertida}>
       <MiniCard inst={{ cardInstanceId: 'mazo', cardId: null, owner: jugador }} tamano="md" />
       <span className="text-[8px] text-gray-500 font-mono -mt-0.5">{p.mazo.length}</span>
     </Celda>,
@@ -498,7 +506,7 @@ function GrillaJugador({
     const id = p.vinculos[slot]
     const inst = id ? vista.instances[id] : null
     celdas.push(
-      <Celda key={zona} zona={zona}>
+      <Celda key={zona} zona={zona} invertida={invertida}>
         {inst ? (
           <MiniCard
             inst={inst}
@@ -514,7 +522,7 @@ function GrillaJugador({
       </Celda>,
     )
   }
-  celdas.push(<Celda key="4G" zona="4G" />)
+  celdas.push(<Celda key="4G" zona="4G" invertida={invertida} />)
 
   return (
     <div className="overflow-x-auto pb-1">

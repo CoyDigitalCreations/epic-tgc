@@ -22,15 +22,18 @@ const FOCO_CLASSES: Record<string, string> = {
 interface ChampionStatusProps {
   s: GameState
   id: string
+  invertida?: boolean
 }
 
 /** Stats debajo de la carta: X-ATQ Y-RES con colores. */
-export function ChampionStatus({ s, id }: ChampionStatusProps) {
+export function ChampionStatus({ s, id, invertida }: ChampionStatusProps) {
   const stats = statsComparativos(s, id)
   if (!stats) return null
 
+  const rotStyle = invertida ? { transform: 'rotate(180deg)' } : undefined
+
   return (
-    <div className="flex items-center gap-1.5 mt-0.5 px-1" data-testid={`status-${id}`}>
+    <div className="flex items-center gap-1.5 mt-0.5 px-1" data-testid={`status-${id}`} style={rotStyle}>
       <span className={`text-[10px] font-mono font-bold ${COLOR_CLASSES[stats.atq.color]}`}>
         {stats.atq.actual}-ATQ
       </span>
@@ -42,14 +45,16 @@ export function ChampionStatus({ s, id }: ChampionStatusProps) {
 }
 
 /** Focos de estado a la derecha de la celda: ∞ continuo + ★ activación. */
-export function FocosChampion({ s, id }: ChampionStatusProps) {
+export function FocosChampion({ s, id, invertida }: ChampionStatusProps) {
   const focos = focosState(s, id)
   if (!focos) return null
+
+  const rotStyle = invertida ? { transform: 'rotate(180deg)' } : undefined
 
   return (
     <div className="flex flex-col items-center gap-1 absolute -right-5 top-1" data-testid={`focos-${id}`}>
       {/* Continuo: ∞ + dot */}
-      <div className="flex items-center gap-0.5">
+      <div className="flex items-center gap-0.5" style={rotStyle}>
         <span className="text-[9px] text-gray-400 leading-none">∞</span>
         <span
           className={`inline-block w-2 h-2 rounded-full ${FOCO_CLASSES[focos.continuo]}`}
@@ -57,7 +62,7 @@ export function FocosChampion({ s, id }: ChampionStatusProps) {
         />
       </div>
       {/* Activación: ★ + dot */}
-      <div className="flex items-center gap-0.5">
+      <div className="flex items-center gap-0.5" style={rotStyle}>
         <span className="text-[9px] text-gray-400 leading-none">★</span>
         <span
           className={`inline-block w-2 h-2 rounded-full ${FOCO_CLASSES[focos.temporal]}`}
