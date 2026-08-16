@@ -38,6 +38,8 @@ interface MiniCardProps {
   title?: string
   /** Marcador extra superpuesto (badges de estado de zona). */
   marca?: ReactNode
+  /** Tablero invertido: counter-rotate la lupita de zoom. */
+  invertida?: boolean
   children?: ReactNode
 }
 
@@ -59,6 +61,7 @@ export function MiniCard({
   onZoom,
   title,
   marca,
+  invertida,
   children,
 }: MiniCardProps) {
   const cardId = inst.cardId ?? undefined
@@ -261,6 +264,7 @@ export function MiniCard({
               background: 'rgba(0,0,0,0.7)',
               border: '1px solid #4b4b7a',
               color: '#e5e7eb',
+              ...(invertida ? { transform: 'rotate(180deg)' } : undefined),
               cursor: 'pointer',
             }}
           >

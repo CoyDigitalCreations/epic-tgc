@@ -208,21 +208,25 @@ function Pila({
   marca,
   onClick,
   onZoom,
+  invertida,
 }: {
   vista: GameState
   insts: string[]
   marca?: ReactNode
   onClick?: () => void
   onZoom?: () => void
+  invertida?: boolean
 }) {
   if (insts.length === 0) return null
   const tope = insts[insts.length - 1]
+  const rotStyle = invertida ? { transform: 'rotate(180deg)' } : undefined
   return (
     <MiniCard
       inst={vista.instances[tope]}
       tamano="md"
       onClick={onClick}
       onZoom={onZoom}
+      invertida={invertida}
       marca={
         insts.length > 1 ? (
           <span
@@ -237,6 +241,7 @@ function Pila({
               padding: '1px 4px',
               borderRadius: 4,
               pointerEvents: 'none',
+              ...rotStyle,
             }}
           >
             ×{insts.length}
@@ -378,6 +383,7 @@ function GrillaJugador({
         insts={p.eterPagado}
         onClick={() => abrirPanel(jugador, 'pagado')}
         onZoom={() => abrirZoom(vista.instances[p.eterPagado[p.eterPagado.length - 1]])}
+        invertida={invertida}
       />
     </Celda>,
   )
@@ -422,6 +428,7 @@ function GrillaJugador({
         insts={p.exilio}
         onClick={() => abrirPanel(jugador, 'exilio')}
         onZoom={() => abrirZoom(vista.instances[p.exilio[p.exilio.length - 1]])}
+        invertida={invertida}
       />
     </Celda>,
   )
@@ -456,6 +463,7 @@ function GrillaJugador({
         insts={p.cementerio}
         onClick={() => abrirPanel(jugador, 'cementerio')}
         onZoom={() => abrirZoom(vista.instances[p.cementerio[p.cementerio.length - 1]])}
+        invertida={invertida}
       />
     </Celda>,
   )
@@ -496,7 +504,12 @@ function GrillaJugador({
   celdas.push(
     <Celda key="3G" zona="3G" invertida={invertida}>
       <MiniCard inst={{ cardInstanceId: 'mazo', cardId: null, owner: jugador }} tamano="md" />
-      <span className="text-[8px] text-gray-500 font-mono -mt-0.5">{p.mazo.length}</span>
+      <span
+        className="text-[8px] text-gray-500 font-mono -mt-0.5"
+        style={invertida ? { transform: 'rotate(180deg)' } : undefined}
+      >
+        {p.mazo.length}
+      </span>
     </Celda>,
   )
 
