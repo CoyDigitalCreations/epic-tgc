@@ -67,11 +67,15 @@ const TIPO_LABEL: Record<string, string> = {
   responder_cadena: 'Responder',
 }
 
-function labelAccion(a: Action): string {
+function labelAccion(a: Action, fase?: string): string {
   switch (a.type) {
     case 'mulligan': return 'Hacer mulligan'
     case 'pasar_mulligan': return 'Pasar mulligan'
-    case 'pasar_turno': return 'Pasar turno'
+    case 'pasar_turno':
+      if (fase === 'forja') return 'Pasar a Choque'
+      if (fase === 'choque') return 'Pasar a Ocaso'
+      if (fase === 'ocaso') return 'Terminar Turno'
+      return 'Pasar turno'
     case 'declarar_ataque': return a.atacanteIds.length > 1 ? 'Atacar con todos' : 'Atacar'
     case 'declarar_bloqueo': return 'Bloquear (automático)'
     case 'elegir_ruptura': return a.atacanteId === null ? 'No romper Vínculo' : 'Romper Vínculo'
@@ -97,14 +101,14 @@ function conCarta(a: Action): a is Extract<Action, { cardInstanceId: string }> {
   return 'cardInstanceId' in a && !esDeMano(a)
 }
 
-function Boton({ accion, onClick }: { accion: Action; onClick: (a: Action) => void }) {
+function Boton({ accion, onClick, fase }: { accion: Action; onClick: (a: Action) => void; fase?: string }) {
   return (
     <button
       onClick={() => onClick(accion)}
       className="text-[10px] bg-ether-600/30 hover:bg-ether-600/50 text-ether-200 px-1.5 py-0.5 rounded 
                  transition-colors cursor-pointer whitespace-nowrap"
     >
-      {labelAccion(accion)}
+      {labelAccion(accion, fase)}
     </button>
   )
 }
@@ -860,9 +864,9 @@ export function Tablero({ vista, acciones, leTocaA, log, onAccion, onAbandonar, 
             <div className="flex gap-1.5 flex-wrap items-center pt-1">
               <p className="text-[9px] uppercase tracking-wider text-gray-500 mr-1">Acciones</p>
               {generales.map((a, i) => (
-                <Boton key={i} accion={a} onClick={onAccion} />
+                <Boton key={i} accion={a} onClick={onAccion} fase={fase} />
               ))}
-              {ruptura && <Boton accion={ruptura} onClick={onAccion} />}
+              {ruptura && <Boton accion={ruptura} onClick={onAccion} fase={fase} />}
             </div>
           )}
 
