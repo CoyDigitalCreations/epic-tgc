@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { aporteDe, campeonesSacrificables, faccionesCompartidas, getCardMeta, sacrificiosRequeridos } from '../game'
 import type { Action, CardInstance, GameState, PlayerId } from '../game'
@@ -6,6 +6,7 @@ import { useCardImage } from '../../forge/hooks/useCardImage'
 import { MiniCard, TAMANOS } from './MiniCard'
 import { CartaZoom } from './CartaZoom'
 import { ChampionStatus, FocosChampion } from './ChampionStatus'
+import { BlockingInterface } from './BlockingInterface'
 
 interface TableroProps {
   /** Proyección 6.2 del estado para el jugador A (cartas ocultas con cardId null). */
@@ -567,7 +568,21 @@ export function Tablero({ vista, acciones, leTocaA, log, onAccion, onAbandonar, 
   const [zoom, setZoom] = useState<CardInstance | null>(null)
   /** Panel inferior con la lista completa de una zona (2A Reserva / 1A Pagado / 2G Cementerio / 1G Exilio). */
   const [panelAbierto, setPanelAbierto] = useState<PanelAbierto | null>(null)
+  /** Interfaz de bloqueo manual abierta */
+  const [bloqueoAbierto, setBloqueoAbierto] = useState(false)
   const abrirZoom = (inst: CardInstance) => setZoom(inst)
+
+  // Abrir interfaz de bloqueo automáticamente cuando es turno del defensor y hay bloqueo pendiente
+  useEffect(() => {
+    if (vista.fase === 'choque' && vista.combate?.paso === 'bloqueo') {
+      const defensor = vista.turno === 'A' ? 'B' : 'A'
+      const soyElDefensor = defensor === 'A'
+      if (soyElDefensor && !bloqueoAbierto) {
+        const sinBloquear = vista.combate.atacantes.filter((a) => !(a in vista.combate!.bloqueos))
+        if (sinBloquear.length > 0) setBloqueoAbierto(true)
+      }
+    }
+  }, [vista.fase, vista.combate, bloqueoAbierto])
 
   const abrirSelector = (accionBase: Action, objetivoCardId: string, campeonSlot?: number) => {
     const meta = getCardMeta(objetivoCardId)
@@ -731,160 +746,165 @@ export function Tablero({ vista, acciones, leTocaA, log, onAccion, onAbandonar, 
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 mt-4 space-y-4">
-        {/* ── Tablero rival (arriba) ────────────────────────────── */}
-        <section className="bg-surface border border-card-border rounded-lg p-3 space-y-2">
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-red-400" />
-            <p className="text-xs text-gray-400">Rival (B)</p>
-            <span className="text-[10px] text-gray-600 font-mono">
-              mazo {rival.mazo.length} · ce {rival.cementerio.length} · ex {rival.exilio.length}
-            </span>
-            <span className="ml-auto text-[10px] text-gray-600 font-mono">
-              mano {rival.mano.length}
-            </span>
-          </div>
-          {/* Mano rival: fuera de la grilla, boca abajo */}
-          <div className="flex gap-1">
-            {rival.mano.map((id) => (
-              <MiniCard key={id} inst={vista.instances[id]} tamano="xs" />
-            ))}
-          </div>
-          <GrillaJugador
-            vista={vista}
-            jugador="B"
-            leTocaA={false}
-            acciones={[]}
-            onAccion={onAccion}
-            abrirSelector={abrirSelector}
-            abrirZoom={abrirZoom}
-            abrirPanel={(j, z) => setPanelAbierto({ jugador: j, zona: z })}
-            invertida
-            seleccion={null}
-            animaciones={animaciones}
-          />
-        </section>
-
-        {/* ── Centro: cadena + log ──────────────────────────────── */}
-        <section className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-          <div className="bg-surface border border-card-border rounded-lg p-2 min-h-[72px]">
-            <p className="text-[9px] uppercase tracking-wider text-gray-500 mb-1.5">
-              Cadena 9.6 {pila.length > 0 ? `(${pila.length})` : ''}
-            </p>
-            {pila.length === 0 ? (
-              <p className="text-[11px] text-gray-600 italic">Sin cadena abierta.</p>
-            ) : (
-              <div className="flex gap-1.5 flex-wrap items-start">
-                {pila.map((id) => (
-                  <MiniCard
-                    key={id}
-                    inst={vista.instances[id]}
-                    tamano="sm"
-                    onZoom={() => abrirZoom(vista.instances[id])}
-                  >
-                    {leTocaA && responderDe(id) && <Boton accion={responderDe(id)!} onClick={onAccion} />}
-                  </MiniCard>
-                ))}
-              </div>
-            )}
-          </div>
-          <div className="bg-surface border border-card-border rounded-lg p-2 max-h-48 overflow-y-auto">
-            <p className="text-[9px] uppercase tracking-wider text-gray-500 mb-1.5">Bitácora</p>
-            {log.length === 0 ? (
-              <p className="text-[11px] text-gray-600 italic">La partida aún no empieza.</p>
-            ) : (
-              <ul className="space-y-0.5">
-                {log.map((linea, i) => (
-                  <li key={i} className="text-[11px] text-gray-300 leading-snug">
-                    {linea}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </section>
-
-        {/* ── Tablero propio (abajo) ────────────────────────────── */}
-        <section className="bg-surface border border-card-border rounded-lg p-3 space-y-2">
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-ether-400" />
-            <p className="text-xs text-gray-400">Tú (A)</p>
-            <span className="text-[10px] text-gray-600 font-mono">
-              mazo {yo.mazo.length} · ce {yo.cementerio.length} · ex {yo.exilio.length}
-            </span>
-            <span className="ml-auto text-[10px] text-gray-600 font-mono">
-              reserva {yo.eterReserva.length} · pagado {yo.eterPagado.length}
-            </span>
-          </div>
-          <GrillaJugador
-            vista={vista}
-            jugador="A"
-            leTocaA={leTocaA}
-            acciones={acciones}
-            onAccion={onAccion}
-            abrirSelector={abrirSelector}
-            abrirZoom={abrirZoom}
-            abrirPanel={(j, z) => setPanelAbierto({ jugador: j, zona: z })}
-            seleccion={seleccion}
-            animaciones={animaciones}
-          />
-
-          {/* ── Tu mano (fuera de la grilla) ─────────────────────── */}
-          <div className="pt-2 border-t border-card-border/50">
-            <p className="text-[9px] uppercase tracking-wider text-gray-500 mb-1.5">
-              Tu mano ({yo.mano.length}){leTocaA ? ' — click en una carta para verla, jugá desde el botón' : ''}
-            </p>
-            <div className="flex gap-2 flex-wrap items-start">
-              {yo.mano.map((id) => {
-                const acc = acciones.find((a) => esDeMano(a) && a.cardInstanceId === id)
-                const jugable = leTocaA && !!acc
-                return (
-                  <MiniCard
-                    key={id}
-                    inst={vista.instances[id]}
-                    tamano="md"
-                    onClick={() => abrirZoom(vista.instances[id])}
-                  >
-                    {jugable && (
-                      <button
-                        onClick={() => onClickMano(id)}
-                        className="text-[10px] bg-ether-600/30 hover:bg-ether-600/50 text-ether-200 px-1.5 py-0.5 rounded transition-colors cursor-pointer whitespace-nowrap"
-                      >
-                        {acc!.type === 'colocar_tactica' || acc!.type === 'colocar_combate' ? 'Jugar' : 'Pagar'}
-                      </button>
-                    )}
-                  </MiniCard>
-                )
-              })}
+      <main className="max-w-[1400px] mx-auto px-4 mt-2 flex flex-col xl:flex-row gap-4 items-start">
+        {/* ── Tableros (Columna Izquierda) ────────────────────────────── */}
+        <div className="flex-1 flex flex-col gap-2 min-w-0">
+          <section className="bg-surface border border-card-border rounded-lg p-3 space-y-2">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-red-400" />
+              <p className="text-xs text-gray-400">Rival (B)</p>
+              <span className="text-[10px] text-gray-600 font-mono">
+                mazo {rival.mazo.length} · ce {rival.cementerio.length} · ex {rival.exilio.length}
+              </span>
+              <span className="ml-auto text-[10px] text-gray-600 font-mono">
+                mano {rival.mano.length}
+              </span>
             </div>
-          </div>
-
-          {/* ── Acciones generales ───────────────────────────────── */}
-          {leTocaA && (generales.length > 0 || ruptura) && (
-            <div className="flex gap-1.5 flex-wrap items-center pt-1">
-              <p className="text-[9px] uppercase tracking-wider text-gray-500 mr-1">Acciones</p>
-              {generales.map((a, i) => (
-                <Boton key={i} accion={a} onClick={onAccion} fase={fase} />
+            {/* Mano rival: fuera de la grilla, boca abajo */}
+            <div className="flex gap-1">
+              {rival.mano.map((id) => (
+                <MiniCard key={id} inst={vista.instances[id]} tamano="xs" />
               ))}
-              {ruptura && <Boton accion={ruptura} onClick={onAccion} fase={fase} />}
             </div>
-          )}
+            <GrillaJugador
+              vista={vista}
+              jugador="B"
+              leTocaA={false}
+              acciones={[]}
+              onAccion={onAccion}
+              abrirSelector={abrirSelector}
+              abrirZoom={abrirZoom}
+              abrirPanel={(j, z) => setPanelAbierto({ jugador: j, zona: z })}
+              invertida
+              seleccion={null}
+              animaciones={animaciones}
+            />
+          </section>
 
-          {/* ── Búsqueda de mazo (tutor): opciones con nombre y arte ── */}
-          {leTocaA && tutores.length > 0 && (
-            <div className="border border-ether-600/40 rounded-lg p-2 bg-ether-600/10">
-              <p className="text-[9px] uppercase tracking-wider text-ether-300 mb-1.5">
-                Búsqueda de mazo — elegí una carta
+          <section className="bg-surface border border-card-border rounded-lg p-3 space-y-2">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-ether-400" />
+              <p className="text-xs text-gray-400">Tú (A)</p>
+              <span className="text-[10px] text-gray-600 font-mono">
+                mazo {yo.mazo.length} · ce {yo.cementerio.length} · ex {yo.exilio.length}
+              </span>
+              <span className="ml-auto text-[10px] text-gray-600 font-mono">
+                reserva {yo.eterReserva.length} · pagado {yo.eterPagado.length}
+              </span>
+            </div>
+            <GrillaJugador
+              vista={vista}
+              jugador="A"
+              leTocaA={leTocaA}
+              acciones={acciones}
+              onAccion={onAccion}
+              abrirSelector={abrirSelector}
+              abrirZoom={abrirZoom}
+              abrirPanel={(j, z) => setPanelAbierto({ jugador: j, zona: z })}
+              seleccion={seleccion}
+              animaciones={animaciones}
+            />
+          </section>
+        </div>
+
+        {/* ── Panel Lateral (Columna Derecha) ────────────────────────────── */}
+        <div className="w-full xl:w-[340px] flex flex-col gap-3 shrink-0">
+          <section className="grid grid-cols-1 gap-3">
+            <div className="bg-surface border border-card-border rounded-lg p-2 min-h-[72px]">
+              <p className="text-[9px] uppercase tracking-wider text-gray-500 mb-1.5">
+                Cadena 9.6 {pila.length > 0 ? `(${pila.length})` : ''}
               </p>
-              <div className="flex gap-2 flex-wrap">
-                {tutores.map((a) => {
-                  const inst = vista.instances[a.objetivoId]
-                  return inst ? <OpcionTutor key={a.objetivoId} inst={inst} onAccion={onAccion} /> : null
+              {pila.length === 0 ? (
+                <p className="text-[11px] text-gray-600 italic">Sin cadena abierta.</p>
+              ) : (
+                <div className="flex gap-1.5 flex-wrap items-start">
+                  {pila.map((id) => (
+                    <MiniCard
+                      key={id}
+                      inst={vista.instances[id]}
+                      tamano="sm"
+                      onZoom={() => abrirZoom(vista.instances[id])}
+                    >
+                      {leTocaA && responderDe(id) && <Boton accion={responderDe(id)!} onClick={onAccion} />}
+                    </MiniCard>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="bg-surface border border-card-border rounded-lg p-2 max-h-48 overflow-y-auto">
+              <p className="text-[9px] uppercase tracking-wider text-gray-500 mb-1.5">Bitácora</p>
+              {log.length === 0 ? (
+                <p className="text-[11px] text-gray-600 italic">La partida aún no empieza.</p>
+              ) : (
+                <ul className="space-y-0.5">
+                  {log.map((linea, i) => (
+                    <li key={i} className="text-[11px] text-gray-300 leading-snug">
+                      {linea}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </section>
+
+          <section className="bg-surface border border-card-border rounded-lg p-3 space-y-2">
+            {/* ── Tu mano (fuera de la grilla) ─────────────────────── */}
+            <div>
+              <p className="text-[9px] uppercase tracking-wider text-gray-500 mb-1.5">
+                Tu mano ({yo.mano.length}){leTocaA ? ' — click en una carta para verla, jugá desde el botón' : ''}
+              </p>
+              <div className="flex gap-2 flex-wrap items-start">
+                {yo.mano.map((id) => {
+                  const acc = acciones.find((a) => esDeMano(a) && a.cardInstanceId === id)
+                  const jugable = leTocaA && !!acc
+                  return (
+                    <MiniCard
+                      key={id}
+                      inst={vista.instances[id]}
+                      tamano="md"
+                      onClick={() => abrirZoom(vista.instances[id])}
+                    >
+                      {jugable && (
+                        <button
+                          onClick={() => onClickMano(id)}
+                          className="text-[10px] bg-ether-600/30 hover:bg-ether-600/50 text-ether-200 px-1.5 py-0.5 rounded transition-colors cursor-pointer whitespace-nowrap"
+                        >
+                          {acc!.type === 'colocar_tactica' || acc!.type === 'colocar_combate' ? 'Jugar' : 'Pagar'}
+                        </button>
+                      )}
+                    </MiniCard>
+                  )
                 })}
               </div>
             </div>
-          )}
-        </section>
+
+            {/* ── Acciones generales ───────────────────────────────── */}
+            {leTocaA && (generales.length > 0 || ruptura) && (
+              <div className="flex gap-1.5 flex-wrap items-center pt-2 border-t border-card-border/50">
+                <p className="text-[9px] uppercase tracking-wider text-gray-500 mr-1">Acciones</p>
+                {generales.map((a, i) => (
+                  <Boton key={i} accion={a} onClick={onAccion} fase={fase} />
+                ))}
+                {ruptura && <Boton accion={ruptura} onClick={onAccion} fase={fase} />}
+              </div>
+            )}
+
+            {/* ── Búsqueda de mazo (tutor): opciones con nombre y arte ── */}
+            {leTocaA && tutores.length > 0 && (
+              <div className="mt-2 border border-ether-600/40 rounded-lg p-2 bg-ether-600/10">
+                <p className="text-[9px] uppercase tracking-wider text-ether-300 mb-1.5">
+                  Búsqueda de mazo — elegí una carta
+                </p>
+                <div className="flex gap-2 flex-wrap">
+                  {tutores.map((a) => {
+                    const inst = vista.instances[a.objetivoId]
+                    return inst ? <OpcionTutor key={a.objetivoId} inst={inst} onAccion={onAccion} /> : null
+                  })}
+                </div>
+              </div>
+            )}
+          </section>
+        </div>
       </main>
 
       {/* ── Selector de Éter ────────────────────────────────────── */}
@@ -1072,6 +1092,24 @@ export function Tablero({ vista, acciones, leTocaA, log, onAccion, onAbandonar, 
 
       {/* ── Zoom de carta (revisar el efecto en grande) ─────────── */}
       {zoom && <CartaZoom inst={zoom} onClose={() => setZoom(null)} />}
+
+      {/* ── Interfaz de bloqueo manual ─────────────────────────── */}
+      {bloqueoAbierto && vista.combate?.paso === 'bloqueo' && (() => {
+        const defensor = vista.turno === 'A' ? 'B' : 'A'
+        const sinBloquear = vista.combate.atacantes.filter((a) => !(a in vista.combate!.bloqueos))
+        return (
+          <BlockingInterface
+            s={vista}
+            defensor={defensor}
+            atacantes={sinBloquear}
+            onBloquear={(asignaciones) => {
+              onAccion({ type: 'declarar_bloqueo', asignaciones })
+              setBloqueoAbierto(false)
+            }}
+            onCancelar={() => setBloqueoAbierto(false)}
+          />
+        )
+      })()}
 
       {/* ── Overlay de fin ──────────────────────────────────────── */}
       {terminada && (
