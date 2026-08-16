@@ -79,14 +79,18 @@ export function getValidActions(state: GameState, playerId: PlayerId): Action[] 
       }
       // Bloqueo de Éter: por cada Campeón propio con un Éter de facción
       // compartida disponible en la Reserva (faccionesCompartidas).
+      // Límite: máximo 2 éteres bloqueados por campeón (balance v2.1).
+      // Solo se muestra si el Éter tiene efecto de bloqueo (efectoBloqueo).
       p.campo.campeones.forEach((campeonId, slot) => {
         if (!campeonId) return
         const inst = state.instances[campeonId]
         const campeon = inst?.cardId ? getCardMeta(inst.cardId) : null
         if (!campeon) return
+        const actuales = inst.eterBloqueado?.length ?? 0
+        if (actuales >= 2) return // límite alcanzado
         const eterId = p.eterReserva.find((id) => {
           const meta = state.instances[id]?.cardId ? getCardMeta(state.instances[id]!.cardId!) : null
-          return meta !== null && faccionesCompartidas(meta.facciones, campeon.facciones)
+          return meta !== null && faccionesCompartidas(meta.facciones, campeon.facciones) && 'efectoBloqueo' in meta
         })
         if (eterId !== undefined) {
           acciones.push({ type: 'bloquear_eter', eterIds: [eterId], campeonSlot: slot })

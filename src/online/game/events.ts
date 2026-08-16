@@ -65,8 +65,6 @@ export interface EterPagadoEvent {
   costo: number
   /** Σ aportes (1 propio / ½ ajeno) en unidades reales. */
   aportado: number
-  /** Excedente desperdiciado (manual 7.3: "no hay vuelto"). */
-  excedente: number
 }
 
 export interface EterBloqueadoEvent {
@@ -194,7 +192,7 @@ export const CATALOGO_EVENTOS: readonly GameEvent[] = [
   { type: 'carta_robada', jugador: 'A', cardInstanceId: 'c1' },
   { type: 'carta_invocada', cardInstanceId: 'c1', tipo: 'Campeón', slot: 0 },
   { type: 'carta_descartada', jugador: 'A', cardInstanceIds: ['c1'] },
-  { type: 'eter_pagado', jugador: 'A', eterIds: ['c2'], costo: 3, aportado: 3, excedente: 0 },
+  { type: 'eter_pagado', jugador: 'A', eterIds: ['c2'], costo: 3, aportado: 3 },
   { type: 'eter_bloqueado', jugador: 'A', eterIds: ['c2'], campeonId: 'c1' },
   { type: 'eter_reagrupado', jugador: 'A', eterIds: ['c2'] },
   { type: 'mazo_agotado', jugador: 'A' },

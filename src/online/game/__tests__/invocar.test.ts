@@ -126,7 +126,7 @@ describe('jugar_campeon (R9)', () => {
     expect(s.players.A.eterPagado).toEqual(ids)
     expect(s.players.A.eterReserva).toHaveLength(0)
     expect(ctx.events).toEqual([
-      { type: 'eter_pagado', jugador: 'A', eterIds: ids, costo: 2, aportado: 2, excedente: 0 },
+      { type: 'eter_pagado', jugador: 'A', eterIds: ids, costo: 2, aportado: 2 },
       { type: 'carta_salida_de_zona', cardInstanceId: 'cam', zona: 'mano', jugador: 'A' },
       { type: 'carta_entrada_a_zona', cardInstanceId: 'cam', zona: '2B', jugador: 'A', bocaArriba: true },
       { type: 'carta_invocada', cardInstanceId: 'cam', tipo: 'Campeón', slot: 0 },
@@ -198,7 +198,7 @@ describe('jugar_campeon (R9)', () => {
     expect(s2.players.A.cementerio).toEqual([sac]) // sacrificio → 2G
     expect(s2.instances['aurora'].agotado).toBe(true)
     expect(ctx.events).toEqual([
-      { type: 'eter_pagado', jugador: 'A', eterIds: ids, costo: 4, aportado: 4, excedente: 0 },
+      { type: 'eter_pagado', jugador: 'A', eterIds: ids, costo: 4, aportado: 4 },
       { type: 'carta_salida_de_zona', cardInstanceId: sac, zona: '2C', jugador: 'A' },
       { type: 'carta_entrada_a_zona', cardInstanceId: sac, zona: '2G', jugador: 'A', bocaArriba: true },
       { type: 'carta_salida_de_zona', cardInstanceId: 'aurora', zona: 'mano', jugador: 'A' },
@@ -314,7 +314,7 @@ describe('jugar_mistica (R10)', () => {
     expect(s.players.A.campo.misticasTacticas[0]).toBe('mist')
     expect(s.players.A.eterPagado).toEqual(ids)
     expect(ctx.events).toEqual([
-      { type: 'eter_pagado', jugador: 'A', eterIds: ids, costo: 2, aportado: 2, excedente: 0 },
+      { type: 'eter_pagado', jugador: 'A', eterIds: ids, costo: 2, aportado: 2 },
       { type: 'carta_salida_de_zona', cardInstanceId: 'mist', zona: 'mano', jugador: 'A' },
       { type: 'carta_entrada_a_zona', cardInstanceId: 'mist', zona: '3A', jugador: 'A', bocaArriba: true },
       { type: 'carta_invocada', cardInstanceId: 'mist', tipo: 'Mística', slot: 0 },
@@ -360,7 +360,7 @@ describe('colocar_arcana (boca abajo 3D-3F, paga coste)', () => {
     expect(s.players.A.campo.arcanasCombate[0]).toBe('arc')
     expect(s.players.A.eterPagado).toEqual(ids)
     expect(ctx.events).toEqual([
-      { type: 'eter_pagado', jugador: 'A', eterIds: ids, costo: 3, aportado: 3, excedente: 0 },
+      { type: 'eter_pagado', jugador: 'A', eterIds: ids, costo: 3, aportado: 3 },
       { type: 'carta_salida_de_zona', cardInstanceId: 'arc', zona: 'mano', jugador: 'A' },
       { type: 'carta_entrada_a_zona', cardInstanceId: 'arc', zona: '3D', jugador: 'A', bocaArriba: false },
       { type: 'carta_invocada', cardInstanceId: 'arc', tipo: 'Arcana', slot: 0 },

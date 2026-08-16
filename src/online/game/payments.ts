@@ -6,8 +6,9 @@ import type { Ctx, GameState, PlayerId } from './types'
  * Economía de Éter (manual §7.3 + bloqueo facción v2.1):
  * - Aporte real: un Éter que comparte facción con la carta pagada vale 1,
  *   el de facción ajena vale ½. Se paga cuando Σ aporte ≥ coste.
- * - No hay vuelto: el excedente se pierde (eter_pagado.excedente, manual 7.3).
+ * - NO hay sobrepago: el jugador debe seleccionar exactamente el coste.
  * - Bloquear (v2.1): solo Éter de facción compartida con el Campeón; 2A → Campeón.
+ *   Límite por campeón según efecto (máx 2 para FB/DS-008, máx 3 para FB/DS-015).
  * - Reagrupar: en tu Alba, 1A → 2A; el Éter bloqueado permanece en el Campeón.
  *
  * Las funciones mutan el estado YA clonado (ADR-5) y devuelven `s` para encadenar;
@@ -26,8 +27,14 @@ export interface ResultadoPago {
   error?: string
   /** Σ aportes en unidades reales (1 propio / ½ ajeno). */
   aportado?: number
-  /** Excedente desperdiciado (manual 7.3: "no hay vuelto"). */
-  excedente?: number
+}
+
+/** Resultado de validación de pago (sin sobrepago). */
+export interface ResultadoPago {
+  ok: boolean
+  error?: string
+  /** Σ aportes en unidades reales (1 propio / ½ ajeno). */
+  aportado?: number
 }
 
 /** Aporte de un Éter en unidades reales: 1 si comparte facción con la carta pagada, ½ si no. */
@@ -38,7 +45,7 @@ export function aporteDe(eterCardId: string, objetivoCardId: string): number {
   return faccionesCompartidas(eter.facciones, objetivo.facciones) ? 1 : 0.5
 }
 
-/** Validación read-only (sin mutar, sin RNG): eterIds en 2A, sin duplicados, Σ ≥ coste. */
+/** Validación read-only: exactamente el coste, sin sobrepago. */
 export function validarPago(
   state: GameState,
   jugador: PlayerId,
@@ -61,7 +68,8 @@ export function validarPago(
     suma += aporteDe(meta.id, objetivoCardId)
   }
   if (suma < objetivo.stats.cost) return { ok: false, error: 'pago insuficiente' }
-  return { ok: true, aportado: suma, excedente: suma - objetivo.stats.cost }
+  if (suma > objetivo.stats.cost) return { ok: false, error: 'sobrepago no permitido — selecciona exactamente el coste' }
+  return { ok: true, aportado: suma }
 }
 
 /** Paga: mueve eterIds 2A → 1A, emite eter_pagado y dispara gatillos al-pagar-eter (C2). */
@@ -74,7 +82,7 @@ export function aplicarPago(
   contextoUso?: ContextoUso,
 ): GameState {
   const validado = validarPago(s, jugador, eterIds, objetivoCardId)
-  if (!validado.ok || validado.aportado === undefined || validado.excedente === undefined) return s
+  if (!validado.ok || validado.aportado === undefined) return s
   const objetivo = getCardMeta(objetivoCardId)
   if (!objetivo) return s // defensivo: validarPago ya lo comprobó
   const p = s.players[jugador]
@@ -88,7 +96,6 @@ export function aplicarPago(
     eterIds,
     costo: objetivo.stats.cost,
     aportado: validado.aportado,
-    excedente: validado.excedente,
   })
 
   // C2 (ADR-25): gatillos al-pagar-eter por cada Éter con variantePago='Gatillo'
@@ -111,22 +118,41 @@ export function aplicarPago(
  * o null si la Reserva completa no alcanza (aporteDe). Read-only.
  * Usado por getValidActions/bot para generar pagos "nunca fallarán".
  */
+/**
+ * Selecciona Éteres de la Reserva que sumen EXACTAMENTE el coste (sin sobrepago).
+ * Busca la combinación más pequeña que sume exactamente el coste.
+ */
 export function etersParaPagar(state: GameState, jugador: PlayerId, objetivoCardId: string): string[] | null {
   const objetivo = getCardMeta(objetivoCardId)
   if (!objetivo) return null
   const p = state.players[jugador]
-  const elegidos: string[] = []
-  let suma = 0
+  const coste = objetivo.stats.cost
+
+  // Preparar éteres con su contribución
+  const eteres: { id: string; contrib: number }[] = []
   for (const id of p.eterReserva) {
     const inst = state.instances[id]
     const meta = inst?.cardId ? getCardMeta(inst.cardId) : null
     if (!meta) continue
-    elegidos.push(id)
-    suma += aporteDe(meta.id, objetivoCardId)
-    if (suma >= objetivo.stats.cost) return elegidos
+    eteres.push({ id, contrib: aporteDe(meta.id, objetivoCardId) })
   }
-  return null
+
+  // Buscar combinación que sume exactamente el coste (backtrack)
+  function buscar(start: number, sumaActual: number, seleccionados: string[]): string[] | null {
+    if (sumaActual === coste) return seleccionados
+    if (sumaActual > coste) return null
+    for (let i = start; i < eteres.length; i++) {
+      const resultado = buscar(i + 1, sumaActual + eteres[i].contrib, [...seleccionados, eteres[i].id])
+      if (resultado) return resultado
+    }
+    return null
+  }
+
+  return buscar(0, 0, [])
 }
+
+/** Límite máximo de Éteres bloqueados por Campeón (balance v2.1). */
+const MAX_ETHERS_PER_CHAMPION = 2
 
 /** Validación read-only del bloqueo: null = válido, string = motivo de rechazo. */
 export function validarBloqueo(state: GameState, jugador: PlayerId, eterIds: string[], campeonSlot: number): string | null {
@@ -137,6 +163,11 @@ export function validarBloqueo(state: GameState, jugador: PlayerId, eterIds: str
   const campeon = instCampeon?.cardId ? getCardMeta(instCampeon.cardId) : null
   if (!campeon) return 'Campeón desconocido'
   if (eterIds.length === 0) return 'no indicaste Éteres para bloquear'
+  // Límite de éteres por campeón
+  const actuales = instCampeon.eterBloqueado?.length ?? 0
+  if (actuales + eterIds.length > MAX_ETHERS_PER_CHAMPION) {
+    return `máximo ${MAX_ETHERS_PER_CHAMPION} Éteres bloqueados por Campeón (tiene ${actuales})`
+  }
   for (const id of eterIds) {
     const inst = state.instances[id]
     const meta = inst?.cardId ? getCardMeta(inst.cardId) : null

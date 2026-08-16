@@ -106,8 +106,7 @@ const VALIDADORES: Record<GameEvent['type'], (e: GameEvent) => boolean> = {
     Array.isArray(e.eterIds) &&
     e.eterIds.every(esId) &&
     typeof e.costo === 'number' &&
-    typeof e.aportado === 'number' &&
-    typeof e.excedente === 'number',
+    typeof e.aportado === 'number',
   eter_bloqueado: (e) =>
     e.type === 'eter_bloqueado' &&
     esJugador(e.jugador) &&

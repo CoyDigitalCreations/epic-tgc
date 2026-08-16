@@ -146,10 +146,10 @@ describe('getValidActions en Forja (5.5)', () => {
     expect(tipos).not.toContain('jugar_campeon')
   })
 
-  it('incluye bloquear_eter por Campeón propio con Éter de facción compartida en la Reserva', () => {
+  it('incluye bloquear_eter por Campeón propio con Éter de facción compartida y efecto de bloqueo en la Reserva', () => {
     let s = conInstancias(estadoMinimo(), { cam1: { cardId: CAMPEON, owner: 'A' } })
     s = { ...s, players: { ...s.players, A: { ...s.players.A, campo: { ...s.players.A.campo, campeones: ['cam1', null, null, null, null] } } } }
-    s = conEteres(s, ETER_ORDEN, 1)
+    s = conEteres(s, 'FB-007', 1) // FB-007 tiene efectoBloqueo (+2/+2)
 
     const bloqueos = getValidActions(s, 'A').filter((a) => a.type === 'bloquear_eter')
     expect(bloqueos).toHaveLength(1)

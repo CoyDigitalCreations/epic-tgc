@@ -91,7 +91,6 @@ describe('pago de coste con Éter (R8)', () => {
     expect(r.ok).toBe(true)
     if (r.ok) {
       expect(r.aportado).toBe(3)
-      expect(r.excedente).toBe(0)
     }
 
     const ctx = crearCtx()
@@ -99,26 +98,16 @@ describe('pago de coste con Éter (R8)', () => {
     expect(s2.players.A.eterReserva).toHaveLength(0)
     expect(s2.players.A.eterPagado).toEqual(ids)
     expect(ctx.events).toEqual([
-      { type: 'eter_pagado', jugador: 'A', eterIds: ids, costo: 3, aportado: 3, excedente: 0 },
+      { type: 'eter_pagado', jugador: 'A', eterIds: ids, costo: 3, aportado: 3 },
     ])
   })
 
-  it('excedente se pierde (manual 7.3: no hay vuelto): 4 Éter para coste 3 pagan los 4', () => {
+  it('sobrepago rechazado: 4 Éter para coste 3 → inválido', () => {
     const base = estadoMinimo()
     const { s, ids } = conEteresEnReserva(base, ETER_ORDEN, 4)
     const r = validarPago(s, 'A', ids, SERAPHINA)
-    expect(r.ok).toBe(true)
-    if (r.ok) {
-      expect(r.aportado).toBe(4)
-      expect(r.excedente).toBe(1)
-    }
-
-    const ctx = crearCtx()
-    const s2 = aplicarPago(s, ctx, 'A', ids, SERAPHINA)
-    expect(s2.players.A.eterPagado).toEqual(ids) // los 4 salen de la Reserva: no hay vuelto
-    expect(ctx.events).toEqual([
-      { type: 'eter_pagado', jugador: 'A', eterIds: ids, costo: 3, aportado: 4, excedente: 1 },
-    ])
+    expect(r.ok).toBe(false)
+    if (!r.ok) expect(r.error).toMatch(/sobrepago/)
   })
 
   it('pago insuficiente: 2 Éter para coste 3 → inválido y el estado no cambia', () => {
@@ -143,7 +132,6 @@ describe('pago de coste con Éter (R8)', () => {
     expect(r.ok).toBe(true)
     if (r.ok) {
       expect(r.aportado).toBe(3)
-      expect(r.excedente).toBe(0)
     }
 
     // 1×1 + 2×½ = 2 < 3 → insuficiente

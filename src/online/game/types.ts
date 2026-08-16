@@ -69,6 +69,10 @@ export interface CardInstance {
   entradaEsteTurno?: boolean
   /** Éter bloqueado (1B-1F): ids de Éter sobre este Campeón (6.2: boca arriba). */
   eterBloqueado?: string[]
+  /** ID de la carta que robó control de este Campeón (Aurora FB-010). Si el ladrón sale del campo, el control regresa. */
+  stolenBy?: string
+  /** IDs de Éteres robados por Varek (DS-013). Si Varek sale del campo, regresan al dueño original. */
+  stolenEters?: string[]
   /** Override aditivo de keywords (tests con cartas sin la keyword en data; efectos que otorgan keywords). */
   keywords?: string[]
   /** Override aditivo de poder (tests de combate; efectos que modifican poder, patrón keywords). */

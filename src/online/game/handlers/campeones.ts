@@ -77,11 +77,9 @@ export function registrarEfectosCampeones(): void {
   }
 
   // FB-010 Aurora: "Al ser invocada, toma control de un Campeón que controla
-  // el rival. Ese Campeón queda agotado hasta el inicio de tu próxima Alba."
+  // el rival. Mientras esta carta esté en el campo, controla ese Campeón."
   registrarEfecto('al-invocar', 'FB-010', (s, ctx, inst, payload) => {
     if (payload.contextoUso === 'objetivo-elegido') {
-      // RESOLUCIÓN (D2): la instancia se MUEVE a un slot libre del campo del
-      // controlador; owner NO cambia (muere → 2G del dueño, fix moverAlCementerio).
       const objetivoId = payload.objetivoId!
       const objetivo = s.instances[objetivoId]
       if (!objetivo) return
@@ -89,10 +87,11 @@ export function registrarEfectosCampeones(): void {
       const campo = s.players[payload.jugador].campo.campeones
       const slotLibre = campo.indexOf(null)
       const idxRival = s.players[rival].campo.campeones.indexOf(objetivoId)
-      if (slotLibre === -1 || idxRival === -1) return // defensivo: opciones ya filtradas
+      if (slotLibre === -1 || idxRival === -1) return
       s.players[rival].campo.campeones[idxRival] = null
       campo[slotLibre] = objetivoId
       objetivo.agotado = true
+      objetivo.stolenBy = inst.cardInstanceId
       const zonaRival = slotAZona('campeones', idxRival)
       const zonaNueva = slotAZona('campeones', slotLibre)
       if (zonaRival) ctx.emit({ type: 'carta_salida_de_zona', cardInstanceId: objetivoId, zona: zonaRival, jugador: rival })
@@ -109,6 +108,31 @@ export function registrarEfectosCampeones(): void {
     })
     armarPendiente(s, payload.jugador, inst.cardInstanceId, 'al-invocar', opciones)
   })
+
+  // FB-010 Aurora: al salir del campo, devuelve el campeón robado a su dueño original
+  registrarEfecto('al-ser-enviado-al-cementerio', 'FB-010', (s, _ctx, inst) => {
+    const auroraId = inst.cardInstanceId
+    for (const j of ['A', 'B'] as PlayerId[]) {
+      for (const slot of s.players[j].campo.campeones) {
+        if (!slot) continue
+        const stolen = s.instances[slot]
+        if (stolen && stolen.stolenBy === auroraId) {
+          const owner = stolen.owner
+          const ownerCampo = s.players[owner].campo.campeones
+          const ownerSlot = ownerCampo.indexOf(null)
+          if (ownerSlot !== -1) {
+            s.players[j].campo.campeones[s.players[j].campo.campeones.indexOf(slot)] = null
+            ownerCampo[ownerSlot] = slot
+            stolen.stolenBy = undefined
+            stolen.agotado = true
+          }
+          return
+        }
+      }
+    }
+  })
+
+  // DS-001 Ragnar: "Al ser invocada, destruye un Campeón que controla el rival".
 
   // DS-001 Ragnar: "Al ser invocada, destruye un Campeón que controla el rival".
   registrarEfecto('al-invocar', 'DS-001', (s, ctx, inst, payload) => {

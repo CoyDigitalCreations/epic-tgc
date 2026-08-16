@@ -172,7 +172,7 @@ export const ESTASIS_CARDS: AnyCard[] = [
     updatedAt: FB_TS,
     facciones: ['Orden'],
     stats: { cost: 1 },
-    efectoBloqueo: 'Mientras esté bloqueado en un Campeón, ese Campeón gana +2 de ATQ y +2 de RES.',
+    efectoBloqueo: 'Mientras esté bloqueado en un Campeón, ese Campeón gana +2 de ATQ y +2 de RES. Máximo 2 de estos Éteres por Campeón.',
   },
   {
     id: 'FB-008',
@@ -223,7 +223,7 @@ export const ESTASIS_CARDS: AnyCard[] = [
     catHabilidad: 'Singular',
     stats: { cost: 4, poder: 9, resistencia: 9 },
     tipoEfecto: 'Especial',
-    efectoPasivo: 'Al ser invocada, toma control de un Campeón que controla el rival. Ese Campeón queda agotado hasta el inicio de tu próxima Alba.',
+    efectoPasivo: 'Al ser invocada, toma control de un Campeón que controla el rival. Mientras esta carta esté en el campo, controla ese Campeón.',
     efectoActivo: 'Paga 2 Éter (bloqueado): mientras ese Éter esté bloqueado, un Campeón que controles gana +2 de ATQ y +2 de RES. Al inicio de tu próxima Alba reagrupa el Éter usado por este efecto.',
   },
   {
@@ -320,7 +320,7 @@ export const ESTASIS_CARDS: AnyCard[] = [
     catHabilidad: 'Efecto',
     stats: { cost: 3, poder: 5, resistencia: 4 },
     tipoEfecto: 'Pasivo',
-    efectoPasivo: 'Mientras esta carta tenga al menos 1 Éter bloqueado, gana +1 de ATQ.',
+    efectoPasivo: 'Mientras esta carta tenga al menos 1 Éter bloqueado, gana +1 de ATQ (máx. +3).',
   },
   {
     id: 'FB-016',
@@ -795,7 +795,7 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     updatedAt: DS_TS,
     facciones: ['Caos'],
     stats: { cost: 1 },
-    efectoBloqueo: 'Mientras esté bloqueado en un Campeón, ese Campeón gana +2 de ATQ y +2 de RES.',
+    efectoBloqueo: 'Mientras esté bloqueado en un Campeón, ese Campeón gana +2 de ATQ y +2 de RES. Máximo 2 de estos Éteres por Campeón.',
   },
   {
     id: 'DS-009',
@@ -923,7 +923,7 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     catHabilidad: 'Efecto',
     stats: { cost: 3, poder: 5, resistencia: 4 },
     tipoEfecto: 'Pasivo',
-    efectoPasivo: 'Mientras un Campeón que controla el rival tenga al menos 1 Éter bloqueado, esta carta gana +1 de ATQ.',
+    efectoPasivo: 'Mientras un Campeón que controla el rival tenga al menos 1 Éter bloqueado, esta carta gana +1 de ATQ (máx. +3).',
   },
   {
     id: 'DS-016',
@@ -963,7 +963,7 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     stats: { cost: 4, poder: 4, resistencia: 5 },
     tipoEfecto: 'Activo',
     tipoHabilidad: 'Un Solo Uso',
-    efectoActivo: 'Una vez por turno, paga 1 Éter y agota esta carta: toma control de hasta 2 Éter bloqueados en Campeones que controla el rival (van a tu Reserva).',
+    efectoActivo: 'Una vez por turno, paga 1 Éter y agota esta carta: toma control de hasta 2 Éter bloqueados en Campeones que controla el rival (van a tu Reserva). Mientras esta carta esté en el campo, controla esos Éteres.',
   },
   {
     id: 'DS-018',
