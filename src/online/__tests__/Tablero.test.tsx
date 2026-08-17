@@ -491,7 +491,7 @@ describe('Sacrificio de Campeones (rol Soberano/Emperador)', () => {
 })
 
 describe('Campeón cansado (agotado)', () => {
-  it.skip('se muestra rotado 90° y con el MISMO tamaño que las cartas verticales', () => {
+  it('se muestra rotado 90° y con el MISMO tamaño que las cartas verticales', () => {
     const estado = forjaDeA()
     const campeones = ESTASIS_CARDS.filter((c) => c.type === 'Campeón')
     const cansado = campeones[0]
@@ -518,24 +518,24 @@ describe('Campeón cansado (agotado)', () => {
     )
 
     // Rotado 90° (parte de arriba hacia la izquierda) sin el tenue anterior
-    const contenedorCansado = screen
-      .getAllByTitle(cansado.name)
+    const contenedorCansado = screen.getAllByTitle(cansado.name)
       .find((el) => el.querySelector('[style*="rotate(-90deg)"]'))
     expect(contenedorCansado).toBeDefined()
     expect(contenedorCansado!.querySelector('[style*="opacity: 0.55"]')).toBeNull()
     expect(contenedorCansado!.querySelector('[style*="grayscale"]')).toBeNull()
 
     // El cansado ocupa el área de la carta vertical girada: altoCarta × ancho
-    const altoCarta = 1038 * (92 / 744) // ≈ 128.35 px (mismo cálculo que MiniCard)
+    const tamanoMd = 74 // TAMANOS.md
+    const altoCarta = 1038 * (tamanoMd / 744) // ≈ 103.24 px (mismo cálculo que MiniCard)
     expect(contenedorCansado!.getAttribute('style')).toContain(`width: ${altoCarta}px`)
-    expect(contenedorCansado!.getAttribute('style')).toContain('height: 92px')
+    expect(contenedorCansado!.getAttribute('style')).toContain(`height: ${tamanoMd}px`)
 
     // La vertical (boca arriba) sigue en su tamaño normal: ancho × altoCarta
     const contenedorNormal = screen
       .getAllByTitle(normal.name)
       .find((el) => !el.querySelector('[style*="rotate(-90deg)"]'))
     expect(contenedorNormal).toBeDefined()
-    expect(contenedorNormal!.getAttribute('style')).toContain('width: 92px')
+    expect(contenedorNormal!.getAttribute('style')).toContain(`width: ${tamanoMd}px`)
     expect(contenedorNormal!.getAttribute('style')).toContain(`height: ${altoCarta}px`)
   })
 })

@@ -8,7 +8,7 @@ import type { CardInstance } from '../game'
 const ANCHO_CARTA = 744
 const ALTO_CARTA = 1038
 
-export const TAMANOS = { xs: 44, sm: 64, md: 92, lg: 128 } as const
+export const TAMANOS = { xs: 44, sm: 64, md: 74, lg: 128 } as const
 export type TamanoMini = keyof typeof TAMANOS
 
 interface MiniCardProps {
