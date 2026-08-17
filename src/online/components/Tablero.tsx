@@ -8,6 +8,7 @@ import { CartaZoom } from './CartaZoom'
 import { ChampionStatus, FocosChampion } from './ChampionStatus'
 import { BlockingInterface } from './BlockingInterface'
 import { ActiveAbilitiesPanel } from './ActiveAbilitiesPanel'
+import { PriorityModal } from './PriorityModal'
 
 interface TableroProps {
   /** Proyección 6.2 del estado para el jugador A (cartas ocultas con cardId null). */
@@ -1106,6 +1107,21 @@ export function Tablero({ vista, acciones, leTocaA, log, onAccion, onAbandonar, 
               )}
             </div>
           </div>
+        )
+      })()}
+
+      {/* ── Modal de prioridad (cadena abierta) ───────────────────── */}
+      {leTocaA && (() => {
+        const cadena = vista.combate?.cadena ?? vista.cadena
+        if (!cadena) return null
+        return (
+          <PriorityModal
+            state={vista}
+            playerId="A"
+            acciones={acciones}
+            onAccion={onAccion}
+            onZoom={abrirZoom}
+          />
         )
       })()}
 
