@@ -83,24 +83,54 @@ registrarEfecto('al-pagar-eter', 'DS-005', (s: GameState, _ctx: Ctx, _inst, payl
 })
 
 // FB-006: "Cuando pagues esta carta, devuelve un Éter de tu zona de pago (1A) a tu Reserva"
-registrarEfecto('al-pagar-eter', 'FB-006', (s: GameState, ctx: Ctx, _inst, payload: PayloadEfecto) => {
+// Patrón D1: primer call arma pendiente; segundo call (objetivo-elegido) aplica.
+registrarEfecto('al-pagar-eter', 'FB-006', (s: GameState, ctx: Ctx, inst, payload: PayloadEfecto) => {
+  // RESOLUCIÓN: el jugador ya eligió el éter
+  if (payload.contextoUso === 'objetivo-elegido') {
+    const objetivoId = payload.objetivoId!
+    const p = s.players[payload.jugador]
+    const idx = p.eterPagado.indexOf(objetivoId)
+    if (idx === -1) return
+    p.eterPagado.splice(idx, 1)
+    p.eterReserva.push(objetivoId)
+    ctx.emit({ type: 'eter_reagrupado', jugador: payload.jugador, eterIds: [objetivoId] })
+    return
+  }
+  // ARMADO: armar pendiente con los éteres en zona de pago (1A)
   const p = s.players[payload.jugador]
   if (p.eterPagado.length === 0) return
-  const idx = Math.floor(ctx.next() * p.eterPagado.length)
-  const [id] = p.eterPagado.splice(idx, 1)
-  p.eterReserva.push(id)
-  ctx.emit({ type: 'eter_reagrupado', jugador: payload.jugador, eterIds: [id] })
+  s.objetivosPendientes = [...(s.objetivosPendientes ?? []), {
+    jugador: payload.jugador,
+    instId: inst.cardInstanceId,
+    trigger: 'al-pagar-eter',
+    opciones: [...p.eterPagado],
+  }]
 })
 
 // DS-007: "Cuando pagues esta carta, el rival devuelve 1 Éter de su zona de pago (1A) a su Reserva"
-registrarEfecto('al-pagar-eter', 'DS-007', (s: GameState, ctx: Ctx, _inst, payload: PayloadEfecto) => {
+// Patrón D1: primer call arma pendiente para el RIVAL; segundo call aplica.
+registrarEfecto('al-pagar-eter', 'DS-007', (s: GameState, ctx: Ctx, inst, payload: PayloadEfecto) => {
   const rival = payload.jugador === 'A' ? 'B' : 'A'
+  // RESOLUCIÓN: el rival ya eligió el éter
+  if (payload.contextoUso === 'objetivo-elegido') {
+    const objetivoId = payload.objetivoId!
+    const p = s.players[rival]
+    const idx = p.eterPagado.indexOf(objetivoId)
+    if (idx === -1) return
+    p.eterPagado.splice(idx, 1)
+    p.eterReserva.push(objetivoId)
+    ctx.emit({ type: 'eter_reagrupado', jugador: rival, eterIds: [objetivoId] })
+    return
+  }
+  // ARMADO: armar pendiente para el RIVAL con sus éteres en 1A
   const p = s.players[rival]
   if (p.eterPagado.length === 0) return
-  const idx = Math.floor(ctx.next() * p.eterPagado.length)
-  const [id] = p.eterPagado.splice(idx, 1)
-  p.eterReserva.push(id)
-  ctx.emit({ type: 'eter_reagrupado', jugador: rival, eterIds: [id] })
+  s.objetivosPendientes = [...(s.objetivosPendientes ?? []), {
+    jugador: rival,
+    instId: inst.cardInstanceId,
+    trigger: 'al-pagar-eter',
+    opciones: [...p.eterPagado],
+  }]
 })
 
 // DS-004: "Cuando pagues esta carta, el rival pierde 1 carta de su mano al azar"
@@ -150,19 +180,97 @@ function registrarPasivo(cardId: string) {
 
 // ──────────────────────────────────────────────────────────────────────────────
 // INICIO-CHOQUE — FB-002 / DS-003: en 2A al inicio de tu Choque otorgan
-// Vigor / Carga (keyword temporal, expira en ocaso) a un Campeón propio
+// Vigor / Carga (keyword temporal, expira en ocaso) a un Campeón propio.
+// Patrón D1: primer call arma pendiente; segundo call (objetivo-elegido) aplica.
 // ──────────────────────────────────────────────────────────────────────────────
 
 function registrarInicioChoque(cardId: string, keyword: 'Vigor' | 'Carga') {
-  registrarEfecto('al-inicio-choque', cardId, (s: GameState, _ctx: Ctx, _inst, payload: PayloadEfecto) => {
+  registrarEfecto('al-inicio-choque', cardId, (s: GameState, _ctx: Ctx, inst, payload: PayloadEfecto) => {
+    // RESOLUCIÓN: el jugador ya eligió el campeón
+    if (payload.contextoUso === 'objetivo-elegido') {
+      const objetivoId = payload.objetivoId!
+      if (!s.instances[objetivoId]) return
+      otorgarKeyword(s, objetivoId, keyword, true) // temporal = expira en ocaso
+      return
+    }
+    // ARMADO: armar pendiente con los campeones propios del jugador
     const p = s.players[payload.jugador]
-    const campeones = p.campo.campeones.filter(Boolean)
-    if (campeones.length === 0) return
-    // Determinista: primer Campeón propio (slot ordenado)
-    const primerCampeon = campeones[0]!
-    otorgarKeyword(s, primerCampeon, keyword, true) // temporal = expira en ocaso
+    const opciones = p.campo.campeones.filter((id): id is string => id !== null)
+    if (opciones.length === 0) return
+    s.objetivosPendientes = [...(s.objetivosPendientes ?? []), {
+      jugador: payload.jugador,
+      instId: inst.cardInstanceId,
+      trigger: 'al-inicio-choque',
+      opciones,
+    }]
   })
 }
+
+// ──────────────────────────────────────────────────────────────────────────────
+// ARCANA INICIO-CHOQUE — FB-023 / DS-023: se activan al inicio del Choque
+// si se cumple la condición. Patrón D1: primer call arma pendiente,
+// segundo call (objetivo-elegido) aplica el efecto.
+// ──────────────────────────────────────────────────────────────────────────────
+
+/** Helper: cuenta campeones de un jugador que tienen al menos 1 éter bloqueado */
+function campeonesConEterBloqueado(s: GameState, jugador: PlayerId): string[] {
+  return s.players[jugador].campo.campeones.filter((id): id is string => {
+    if (!id) return false
+    const inst = s.instances[id]
+    return (inst?.eterBloqueado?.length ?? 0) >= 1
+  })
+}
+
+// FB-023 El Reino Perdido: "Al inicio de tu Choque, si controlas 2+ Campeones con
+// Éter bloqueado → Roba 2 cartas y un Campeón que controles gana +3 de Poder
+// hasta el final del turno."
+registrarEfecto('al-inicio-choque', 'FB-023', (s, ctx, inst, payload) => {
+  // RESOLUCIÓN: el jugador ya eligió el campeón para +3 Poder
+  if (payload.contextoUso === 'objetivo-elegido') {
+    const objetivoId = payload.objetivoId!
+    if (!s.instances[objetivoId]) return
+    aplicarMod(s, objetivoId, 'poder', 3, 'turno') // expira al final del turno
+    robarCarta(s, ctx, payload.jugador, 2)
+    return
+  }
+  // ARMADO: verificar condición (2+ campeones con éter bloqueado)
+  const opciones = campeonesConEterBloqueado(s, payload.jugador)
+  if (opciones.length < 2) return // condición no cumplida
+  // armar pendiente con los campeones propios para elegir cuál gana +3
+  const campeonesPropios = s.players[payload.jugador].campo.campeones.filter((id): id is string => id !== null)
+  if (campeonesPropios.length === 0) return
+  s.objetivosPendientes = [...(s.objetivosPendientes ?? []), {
+    jugador: payload.jugador,
+    instId: inst.cardInstanceId,
+    trigger: 'al-inicio-choque',
+    opciones: campeonesPropios,
+  }]
+})
+
+// DS-023 El Nudo: "Al inicio de tu Choque, si el rival controla 2+ Campeones con
+// Éter bloqueado → un Campeón que controla el rival pierde 3 de RES de forma
+// permanente. Roba 1 carta."
+registrarEfecto('al-inicio-choque', 'DS-023', (s, ctx, inst, payload) => {
+  const rival = payload.jugador === 'A' ? 'B' : 'A'
+  // RESOLUCIÓN: el jugador ya eligió el campeón rival para -3 RES
+  if (payload.contextoUso === 'objetivo-elegido') {
+    const objetivoId = payload.objetivoId!
+    if (!s.instances[objetivoId]) return
+    aplicarMod(s, objetivoId, 'resistencia', -3, 'permanente') // permanente
+    robarCarta(s, ctx, payload.jugador, 1)
+    return
+  }
+  // ARMADO: verificar condición (rival tiene 2+ campeones con éter bloqueado)
+  const opcionesRival = campeonesConEterBloqueado(s, rival)
+  if (opcionesRival.length < 2) return // condición no cumplida
+  // armar pendiente: el JUGADOR ELIGE qué campeón rival pierde RES
+  s.objetivosPendientes = [...(s.objetivosPendientes ?? []), {
+    jugador: payload.jugador,
+    instId: inst.cardInstanceId,
+    trigger: 'al-inicio-choque',
+    opciones: opcionesRival,
+  }]
+})
 
 // ──────────────────────────────────────────────────────────────────────────────
 // EXPORT — registra los handlers de trigger al llamar registrarEfectos()

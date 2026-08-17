@@ -176,6 +176,10 @@ export function validarBloqueo(state: GameState, jugador: PlayerId, eterIds: str
     if (!faccionesCompartidas(meta.facciones, campeon.facciones)) {
       return `el Éter no comparte facción con el Campeón: ${id}`
     }
+    // Defense-in-depth: solo éteres con efecto de bloqueo pueden bloquearse
+    if (!meta.efectoBloqueo) {
+      return `el Éter no tiene efecto de bloqueo: ${id}`
+    }
   }
   return null
 }

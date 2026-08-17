@@ -157,6 +157,13 @@ export interface PrioridadPasadaEvent {
   jugador: PlayerId
 }
 
+export interface CartaActivadaEvent {
+  type: 'carta_activada'
+  cardInstanceId: string
+  jugador: PlayerId
+  slot: number
+}
+
 export type GameEvent =
   | PartidaIniciadaEvent
   | TurnoIniciadoEvent
@@ -181,6 +188,7 @@ export type GameEvent =
   | RupturaRealizadaEvent
   | RespuestaEncadenadaEvent
   | PrioridadPasadaEvent
+  | CartaActivadaEvent
 
 /** Catálogo canónico: un payload de muestra por evento (orden = orden del contrato). */
 export const CATALOGO_EVENTOS: readonly GameEvent[] = [
@@ -208,6 +216,7 @@ export const CATALOGO_EVENTOS: readonly GameEvent[] = [
   { type: 'ruptura_realizada', atacanteId: 'c1', vinculoSlot: 2, vinculoId: 'c3' },
   { type: 'respuesta_encadenada', jugador: 'B', cardInstanceId: 'c4' },
   { type: 'prioridad_pasada', jugador: 'A' },
+  { type: 'carta_activada', cardInstanceId: 'c1', jugador: 'A', slot: 0 },
 ]
 
 function assertNunca(x: never): never {
@@ -245,6 +254,7 @@ export function validarExhaustividadEventos(tipo: GameEvent['type']): void {
     case 'ruptura_realizada': return
     case 'respuesta_encadenada': return
     case 'prioridad_pasada': return
+    case 'carta_activada': return
     default: assertNunca(tipo)
   }
 }

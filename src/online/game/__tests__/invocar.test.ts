@@ -19,6 +19,7 @@ const ARCANA = 'FB-023'
 const COMBATE = 'FB-024'
 const ETER_ORDEN = 'FB-001'
 const ETER_CAOS = 'DS-002'
+const ETER_BLOQUEO_ORDEN = 'FB-007' // tiene efectoBloqueo
 const CAMPEON_CAOS = 'DS-011'
 
 function estadoMinimo(): GameState {
@@ -349,22 +350,34 @@ describe('colocar_tactica (5.4 — no cuesta Éter)', () => {
   })
 })
 
-describe('colocar_arcana (boca abajo 3D-3F, paga coste)', () => {
-  it('paga el coste y coloca la Arcana BOCA ABAJO (bocaArriba: false)', () => {
+describe('colocar_arcana (boca abajo 3D-3F, gratis) + activar_arcana (paga coste)', () => {
+  it('coloca la Arcana GRATIS boca abajo, luego activa pagando coste', () => {
     let s = conMano(estadoMinimo(), { arc: ARCANA })
     const { s: s2, ids } = conEteres(s, ETER_ORDEN, 3)
     s = s2
     const ctx = crearCtx()
-    s = aplicar(s, { type: 'colocar_arcana', cardInstanceId: 'arc', slot: 0, eterIds: ids }, ctx)
+    // Paso 1: colocar (gratis)
+    s = aplicar(s, { type: 'colocar_arcana', cardInstanceId: 'arc', slot: 0 }, ctx)
 
     expect(s.players.A.campo.arcanasCombate[0]).toBe('arc')
-    expect(s.players.A.eterPagado).toEqual(ids)
+    expect(s.players.A.eterPagado).toEqual([])
+    expect(s.players.A.eterReserva).toEqual(ids)
+    expect(s.instances['arc']!.bocaArriba).toBe(false)
     expect(ctx.events).toEqual([
-      { type: 'eter_pagado', jugador: 'A', eterIds: ids, costo: 3, aportado: 3 },
       { type: 'carta_salida_de_zona', cardInstanceId: 'arc', zona: 'mano', jugador: 'A' },
       { type: 'carta_entrada_a_zona', cardInstanceId: 'arc', zona: '3D', jugador: 'A', bocaArriba: false },
       { type: 'carta_invocada', cardInstanceId: 'arc', tipo: 'Arcana', slot: 0 },
     ])
+
+    // Paso 2: activar (paga coste)
+    ctx.events.length = 0
+    s = aplicar(s, { type: 'activar_arcana', cardInstanceId: 'arc', slot: 0, eterIds: ids }, ctx)
+
+    expect(s.players.A.eterPagado).toEqual(ids)
+    expect(s.players.A.eterReserva).toHaveLength(0)
+    expect(s.instances['arc']!.bocaArriba).toBe(true)
+    expect(ctx.events[0]).toMatchObject({ type: 'eter_pagado', jugador: 'A', eterIds: ids })
+    expect(ctx.events[1]).toMatchObject({ type: 'carta_activada', cardInstanceId: 'arc', jugador: 'A', slot: 0 })
   })
 })
 
@@ -387,10 +400,10 @@ describe('colocar_combate (3D-3F, no cuesta Éter)', () => {
 })
 
 describe('bloquear_eter (acción de forja, facción v2.1)', () => {
-  it('bloquea Éter de facción compartida sobre un Campeón propio', () => {
+  it('bloquea Éter con efectoBloqueo de facción compartida sobre un Campeón propio', () => {
     const ctx = crearCtx()
     const conCampo = conCampeonEnCampo(estadoMinimo(), CAMPEON, 0)
-    const { s, ids } = conEteres(conCampo.s, ETER_ORDEN, 1)
+    const { s, ids } = conEteres(conCampo.s, ETER_BLOQUEO_ORDEN, 1)
     const s2 = aplicar(s, { type: 'bloquear_eter', eterIds: ids, campeonSlot: 0 }, ctx)
 
     expect(s2.instances['campo-FB-011-0'].eterBloqueado).toEqual(ids)
@@ -400,7 +413,7 @@ describe('bloquear_eter (acción de forja, facción v2.1)', () => {
     ])
   })
 
-  it('rechaza Éter de facción ajena y slots vacíos', () => {
+  it('rechaza Éter de facción ajena, sin efectoBloqueo, y slots vacíos', () => {
     const ctx = crearCtx()
     const conCampo = conCampeonEnCampo(estadoMinimo(), CAMPEON, 0)
     const { s, ids } = conEteres(conCampo.s, ETER_CAOS, 1) // Caos contra Campeón Orden
@@ -411,5 +424,11 @@ describe('bloquear_eter (acción de forja, facción v2.1)', () => {
     const r2 = applyAction(s, { type: 'bloquear_eter', eterIds: ids, campeonSlot: 3 }, ctx)
     expect(r2.ok).toBe(false)
     expect(bloquearEter(s, ctx, 'A', ids, 3)).toMatch(/vacío/)
+
+    // Éter sin efectoBloqueo (FB-001) se rechaza aunque comparta facción
+    const { s: s3, ids: idsSinBloqueo } = conEteres(conCampo.s, ETER_ORDEN, 1)
+    const r3 = applyAction(s3, { type: 'bloquear_eter', eterIds: idsSinBloqueo, campeonSlot: 0 }, ctx)
+    expect(r3.ok).toBe(false)
+    if (!r3.ok) expect(r3.error).toMatch(/efecto de bloqueo/)
   })
 })

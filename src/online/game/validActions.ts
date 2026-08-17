@@ -1,8 +1,9 @@
-import { getCardMeta, faccionesCompartidas } from './cards'
+import { getCardMeta, faccionesCompartidas, esArcana } from './cards'
 import type { Action } from './actions'
-import { generarAccionesForja } from './actions'
+import { generarAccionesForja, validarActivarArcana } from './actions'
 import { atacantesElegibles, asignacionForzada, ataquesSinBloquear, rivalDe, tieneKeyword } from './combat'
 import { respondiblesDe } from './chain'
+import { etersParaPagar } from './payments'
 import type { GameState, PlayerId } from './types'
 
 /**
@@ -101,6 +102,20 @@ export function getValidActions(state: GameState, playerId: PlayerId): Action[] 
         if (opcion.jugador === playerId) {
           acciones.push({ type: 'elegir_opcion', opcionId: opcion.eterId })
         }
+      }
+      // Activar Arcanas: el jugador puede activar sus Arcanas boca abajo pagando su coste
+      for (const id of p.campo.arcanasCombate) {
+        if (!id) continue
+        const inst = state.instances[id]
+        if (!inst || inst.bocaArriba) continue // solo boca abajo
+        const meta = inst.cardId ? getCardMeta(inst.cardId) : null
+        if (!meta || !esArcana(meta)) continue
+        const eterIds = etersParaPagar(state, playerId, meta.id)
+        if (!eterIds) continue
+        const slot = p.campo.arcanasCombate.indexOf(id)
+        const accion: Action = { type: 'activar_arcana', cardInstanceId: id, slot, eterIds }
+        if (validarActivarArcana(state, accion) !== null) continue
+        acciones.push(accion)
       }
       acciones.push({ type: 'pasar_turno' })
     } else if (state.fase === 'choque') {

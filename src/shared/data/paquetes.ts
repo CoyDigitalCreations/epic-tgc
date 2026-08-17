@@ -452,7 +452,7 @@ export const ESTASIS_CARDS: AnyCard[] = [
     updatedAt: FB_TS,
     facciones: ['Orden'],
     stats: { cost: 3 },
-    condicion: 'Al inicio de tu Choque, si controlas 2 o más Campeones con Éter bloqueado.',
+    condicion: 'Al inicio del Choque, si controlas 2 o más Campeones con Éter bloqueado.',
     recompensa: 'Roba 2 cartas y un Campeón que controles gana +3 de Poder hasta el final del turno.',
   },
   {
@@ -1055,7 +1055,7 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     updatedAt: DS_TS,
     facciones: ['Caos'],
     stats: { cost: 3 },
-    condicion: 'Al inicio de tu Choque, si el rival controla 2 o más Campeones con Éter bloqueado.',
+    condicion: 'Al inicio del Choque, si el rival controla 2 o más Campeones con Éter bloqueado.',
     recompensa: 'Un Campeón que controla el rival pierde 3 de RES de forma permanente. Roba 1 carta.',
   },
   {
@@ -1199,7 +1199,7 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     updatedAt: C4_TS,
     facciones: ['Caos'],
     stats: { cost: 3 },
-    condicion: 'Al inicio de tu Choque, si controlas 2 o más Campeones con Éter bloqueado.',
+    condicion: 'Al inicio del Choque, si controlas 2 o más Campeones con Éter bloqueado.',
     recompensa: 'Agrega de tu mazo a tu mano 1 carta de coste 3 o menos.',
   },
   {

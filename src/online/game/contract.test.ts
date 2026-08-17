@@ -37,6 +37,7 @@ export const NOMBRES_EVENTOS = [
   'ruptura_realizada',
   'respuesta_encadenada',
   'prioridad_pasada',
+  'carta_activada',
 ] as const
 
 /** Guardia exhaustiva tipo-level: añadir/quitar un evento rompe `tsc -b`. */
@@ -69,6 +70,7 @@ function validarExhaustividad(tipo: GameEvent['type']): void {
     case 'ruptura_realizada': return
     case 'respuesta_encadenada': return
     case 'prioridad_pasada': return
+    case 'carta_activada': return
     default: assertNunca(tipo)
   }
 }
@@ -146,13 +148,15 @@ const VALIDADORES: Record<GameEvent['type'], (e: GameEvent) => boolean> = {
   respuesta_encadenada: (e) =>
     e.type === 'respuesta_encadenada' && esJugador(e.jugador) && esId(e.cardInstanceId),
   prioridad_pasada: (e) => e.type === 'prioridad_pasada' && esJugador(e.jugador),
+  carta_activada: (e) =>
+    e.type === 'carta_activada' && esId(e.cardInstanceId) && esJugador(e.jugador) && typeof e.slot === 'number',
 }
 
 describe('contrato de eventos (ADR-10)', () => {
   it('el catálogo expone exactamente los 23 eventos del contrato en orden', () => {
     const nombres = CATALOGO_EVENTOS.map((e) => e.type)
     expect(nombres).toEqual([...NOMBRES_EVENTOS])
-    expect(new Set(nombres).size).toBe(23)
+    expect(new Set(nombres).size).toBe(24)
   })
 
   it('el switch exhaustivo cubre TODO el tipo GameEvent (añadir/quitar rompe tsc)', () => {

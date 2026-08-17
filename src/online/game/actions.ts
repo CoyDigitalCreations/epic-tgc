@@ -33,7 +33,8 @@ export type Action =
     }
   | { type: 'jugar_mistica'; cardInstanceId: string; slot: number; eterIds: string[] }
   | { type: 'colocar_tactica'; cardInstanceId: string; slot: number }
-  | { type: 'colocar_arcana'; cardInstanceId: string; slot: number; eterIds: string[] }
+  | { type: 'colocar_arcana'; cardInstanceId: string; slot: number }
+  | { type: 'activar_arcana'; cardInstanceId: string; slot: number; eterIds: string[] }
   | { type: 'colocar_combate'; cardInstanceId: string; slot: number }
   | { type: 'bloquear_eter'; eterIds: string[]; campeonSlot: number }
   | { type: 'descartar_carta'; cardInstanceIds: string[] }
@@ -91,6 +92,8 @@ function validarAccion(state: GameState, action: Action): string | null {
       return validarColocarTactica(state, action)
     case 'colocar_arcana':
       return validarColocarArcana(state, action)
+    case 'activar_arcana':
+      return validarActivarArcana(state, action)
     case 'colocar_combate':
       return validarColocarCombate(state, action)
     case 'bloquear_eter':
@@ -241,6 +244,25 @@ function validarColocarArcana(state: GameState, action: Extract<Action, { type: 
   if (!meta || !esArcana(meta)) return 'no es una Arcana'
   if (action.slot < 0 || action.slot >= SLOTS_ARCANAS_COMBATE) return 'slot inválido'
   if (state.players[state.turno].campo.arcanasCombate[action.slot] !== null) return 'slot ocupado'
+  // La colocación es GRATIS (sin pago de éter). El pago se hace al activar.
+  return null
+}
+
+/** Activar_arcana: revela la Arcana boca arriba y paga su coste de éter. */
+export function validarActivarArcana(state: GameState, action: Extract<Action, { type: 'activar_arcana' }>): string | null {
+  if (state.fase !== 'forja') return 'activar_arcana solo en Forja'
+  const inst = state.instances[action.cardInstanceId]
+  if (!inst) return 'instancia no encontrada'
+  const meta = inst.cardId ? getCardMeta(inst.cardId) : null
+  if (!meta || !esArcana(meta)) return 'no es una Arcana'
+  const p = state.players[state.turno]
+  // La Arcana debe estar en el campo (3D-3F) boca abajo
+  const idx = p.campo.arcanasCombate.indexOf(action.cardInstanceId)
+  if (idx === -1) return 'la Arcana no está en el campo'
+  if (inst.bocaArriba) return 'la Arcana ya está boca arriba'
+  // Slot coincidence check
+  if (action.slot !== idx) return 'el slot no coincide con la posición de la Arcana'
+  // Pago de éter
   const pago = validarPago(state, state.turno, action.eterIds, meta.id)
   if (!pago.ok) return pago.error ?? 'pago inválido'
   return null
@@ -358,6 +380,10 @@ function ejecutarAccion(s: GameState, action: Action, ctx: Ctx): void {
     }
     case 'colocar_arcana': {
       ejecutarColocarArcana(s, action, ctx)
+      return
+    }
+    case 'activar_arcana': {
+      ejecutarActivarArcana(s, action, ctx)
       return
     }
     case 'colocar_combate': {
@@ -554,20 +580,28 @@ function ejecutarColocarTactica(s: GameState, action: Extract<Action, { type: 'c
   ctx.emit({ type: 'carta_invocada', cardInstanceId: id, tipo: 'Táctica', slot: action.slot })
 }
 
-/** Paga y coloca la Arcana BOCA ABAJO en 3D-3F (se revela en Choque). */
+/** Coloca la Arcana BOCA ABAJO en 3D-3F SIN pagar (pago al activar). */
 function ejecutarColocarArcana(s: GameState, action: Extract<Action, { type: 'colocar_arcana' }>, ctx: Ctx): void {
   const p = s.players[s.turno]
   const id = action.cardInstanceId
-  const contextoUso: ContextoUso = { tipo: 'habilidad', cardInstanceId: id }
-  aplicarPago(s, ctx, s.turno, action.eterIds, s.instances[id]!.cardId!, contextoUso)
   p.mano.splice(p.mano.indexOf(id), 1)
   const zona = slotAZona('arcanasCombate', action.slot) ?? '3D'
   ctx.emit({ type: 'carta_salida_de_zona', cardInstanceId: id, zona: 'mano', jugador: s.turno })
   p.campo.arcanasCombate[action.slot] = id
-  // §5.5 (activación diferida): recién colocada → NO responde en la cadena 9.6
-  s.instances[id]!.entradaEsteTurno = true
+  s.instances[id]!.bocaArriba = false
   ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: id, zona, jugador: s.turno, bocaArriba: false })
   ctx.emit({ type: 'carta_invocada', cardInstanceId: id, tipo: 'Arcana', slot: action.slot })
+}
+
+/** Revela la Arcana (boca arriba) y paga su coste de éter. */
+function ejecutarActivarArcana(s: GameState, action: Extract<Action, { type: 'activar_arcana' }>, ctx: Ctx): void {
+  const id = action.cardInstanceId
+  const inst = s.instances[id]
+  if (!inst) return
+  const contextoUso: ContextoUso = { tipo: 'habilidad', cardInstanceId: id }
+  aplicarPago(s, ctx, s.turno, action.eterIds, inst.cardId!, contextoUso)
+  inst.bocaArriba = true
+  ctx.emit({ type: 'carta_activada', cardInstanceId: id, jugador: s.turno, slot: action.slot })
 }
 
 /** Coloca el Combate boca arriba en 3D-3F SIN pagar. */
@@ -738,11 +772,9 @@ export function generarAccionesForja(state: GameState, playerId: PlayerId, cardI
       return accion
     }
     case 'Arcana': {
-      const eterIds = etersParaPagar(state, playerId, meta.id)
-      if (!eterIds) return null
       const slot = p.campo.arcanasCombate.findIndex((c) => c === null)
       if (slot === -1) return null
-      const accion: Action = { type: 'colocar_arcana', cardInstanceId, slot, eterIds }
+      const accion: Action = { type: 'colocar_arcana', cardInstanceId, slot }
       if (validarColocarArcana(state, accion) !== null) return null
       if (validarRequisito(state, playerId, meta.id) !== null) return null
       return accion
