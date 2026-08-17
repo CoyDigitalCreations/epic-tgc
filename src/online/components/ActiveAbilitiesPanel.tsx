@@ -8,7 +8,7 @@
  */
 import { getCardMeta, esCampeon, esEter } from '../game/cards'
 import { aurasDe, keywordsDe, hasAuraCampoRegistrada } from '../game/efectos'
-import type { AnyCard, EterCard, CampeonCard } from '../../shared/types'
+import type { EterCard, CampeonCard } from '../../shared/types'
 import type { GameState, PlayerId } from '../game'
 
 interface ActiveEffect {

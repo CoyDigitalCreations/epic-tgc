@@ -68,17 +68,17 @@ registrarEfecto('al-pagar-eter', 'FB-003', (s: GameState, ctx: Ctx, _inst, paylo
   robarCarta(s, ctx, payload.jugador)
 })
 
-// FB-004: "Cuando pagues esta carta para invocar un Campeón, ese Campeón gana +1 de RES hasta el final del turno"
+// FB-004: "Cuando pagues esta carta para invocar un Campeón, ese Campeón gana +1 de RES hasta el final del próximo turno"
 registrarEfecto('al-pagar-eter', 'FB-004', (s: GameState, _ctx: Ctx, _inst, payload: PayloadEfecto) => {
   if (payload.contextoUso === 'invocar' && payload.objetivoId) {
-    aplicarMod(s, payload.objetivoId, 'resistencia', 1, 'ocaso')
+    aplicarMod(s, payload.objetivoId, 'resistencia', 1, 'ocaso', 2)
   }
 })
 
-// DS-005: "Cuando pagues esta carta para invocar un Campeón, ese Campeón gana +1 de ATQ hasta el final del turno"
+// DS-005: "Cuando pagues esta carta para invocar un Campeón, ese Campeón gana +1 de ATQ hasta el final del próximo turno"
 registrarEfecto('al-pagar-eter', 'DS-005', (s: GameState, _ctx: Ctx, _inst, payload: PayloadEfecto) => {
   if (payload.contextoUso === 'invocar' && payload.objetivoId) {
-    aplicarMod(s, payload.objetivoId, 'poder', 1, 'ocaso')
+    aplicarMod(s, payload.objetivoId, 'poder', 1, 'ocaso', 2)
   }
 })
 
@@ -229,7 +229,7 @@ registrarEfecto('al-inicio-choque', 'FB-023', (s, ctx, inst, payload) => {
   if (payload.contextoUso === 'objetivo-elegido') {
     const objetivoId = payload.objetivoId!
     if (!s.instances[objetivoId]) return
-    aplicarMod(s, objetivoId, 'poder', 3, 'turno') // expira al final del turno
+    aplicarMod(s, objetivoId, 'poder', 3, 'ocaso') // expira al final del turno
     robarCarta(s, ctx, payload.jugador, 2)
     return
   }

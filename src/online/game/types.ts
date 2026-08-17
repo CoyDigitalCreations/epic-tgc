@@ -17,6 +17,10 @@ export type CausaDestruccion = 'combate' | 'efecto' | 'ruptura'
 /**
  * Expiración de un modificador (ADR-22): 'ocaso' al fin del turno en curso,
  * 'alba-dueño' en la próxima Alba del DUEÑO de la instancia, 'permanente' nunca.
+ *
+ * Counter-based: si `turnosRestantes` está definido, el modificador expira
+ * cuando el counter llega a 0 (decrementado en cada Ocaso del DUEÑO).
+ * Esto permite duraciones como "hasta el final del próximo turno" (= 2).
  */
 export type ExpiraModificador = 'ocaso' | 'alba-dueño' | 'permanente'
 
@@ -25,6 +29,8 @@ export interface Modificador {
   stat: 'poder' | 'resistencia'
   valor: number
   expira: ExpiraModificador
+  /** Counter-based expiry: undefined = se usa expira; definido = decrementa en Ocaso del dueño. */
+  turnosRestantes?: number
 }
 
 /** Pasos de la sub-máquina de combate en Choque (9.1, ADR-11). */

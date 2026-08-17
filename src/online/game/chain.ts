@@ -19,7 +19,7 @@ import { esArcana, esCombate, esTactica, getCardMeta } from './cards'
 import { continuarCombateTrasCadena } from './combat'
 import { dispararTrigger } from './efectos'
 import { enviarAlCementerio } from './replacements'
-import type { Ctx, GameState, PlayerId } from './types'
+import type { Ctx, CadenaState, GameState, PlayerId } from './types'
 import { slotAZona } from './zones'
 
 /**
@@ -201,6 +201,6 @@ function resolverCadenaCombate(s: GameState, ctx: Ctx): void {
  * Cada carta respondida se resolvió ya al apilar (efecto aplicado).
  * Aquí solo limpiamos la cadena global.
  */
-function resolverCadenaGlobal(s: GameState, ctx: Ctx): void {
+function resolverCadenaGlobal(s: GameState, _ctx: Ctx): void {
   s.cadena = undefined
 }

@@ -10,7 +10,7 @@
  *
  * El overlay bloquea toda interacción con el tablero mientras la cadena está abierta.
  */
-import { MiniCard, type TamanoMini } from './MiniCard'
+import { MiniCard } from './MiniCard'
 import type { Action } from '../game/actions'
 import type { GameState, PlayerId, CardInstance } from '../game/types'
 import { getCardMeta } from '../game/cards'

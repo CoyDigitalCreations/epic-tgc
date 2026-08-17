@@ -604,7 +604,7 @@ function ejecutarActivarArcana(s: GameState, action: Extract<Action, { type: 'ac
   ctx.emit({ type: 'carta_activada', cardInstanceId: id, jugador: s.turno, slot: action.slot })
   // Abrir cadena global: el rival podría responder con cartas Disparo
   const meta = getCardMeta(inst.cardId!)
-  abrirCadenaGlobal(s, s.turno, { cardInstanceId: id, descripcion: meta?.nombre ?? id })
+  abrirCadenaGlobal(s, s.turno, { cardInstanceId: id, descripcion: meta?.name ?? id })
 }
 
 /** Coloca el Combate boca arriba en 3D-3F SIN pagar. */

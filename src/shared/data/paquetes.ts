@@ -125,7 +125,7 @@ export const ESTASIS_CARDS: AnyCard[] = [
     facciones: ['Orden'],
     stats: { cost: 1 },
     variantePago: 'Gatillo',
-    efectoPago: 'Cuando pagues esta carta para invocar un Campeón, ese Campeón gana +1 de RES hasta el final del turno.',
+    efectoPago: 'Cuando pagues esta carta para invocar un Campeón, ese Campeón gana +1 de RES hasta el final del próximo turno.',
   },
   {
     id: 'FB-005',
@@ -748,7 +748,7 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     facciones: ['Caos'],
     stats: { cost: 1 },
     variantePago: 'Gatillo',
-    efectoPago: 'Cuando pagues esta carta para invocar un Campeón, ese Campeón gana +1 de ATQ hasta el final del turno.',
+    efectoPago: 'Cuando pagues esta carta para invocar un Campeón, ese Campeón gana +1 de ATQ hasta el final del próximo turno.',
   },
   {
     id: 'DS-006',

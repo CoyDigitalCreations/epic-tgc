@@ -298,10 +298,11 @@ export function aplicarMod(
   stat: 'poder' | 'resistencia',
   valor: number,
   expira: ExpiraModificador,
+  turnosRestantes?: number,
 ): void {
   const inst = s.instances[id]
   if (!inst) return
-  inst.modificadores = [...(inst.modificadores ?? []), { stat, valor, expira }]
+  inst.modificadores = [...(inst.modificadores ?? []), { stat, valor, expira, turnosRestantes }]
 }
 
 /** Otorga una keyword a una instancia (temporal=true → expira en Ocaso, ADR-22). */
@@ -316,9 +317,16 @@ export function otorgarKeyword(s: GameState, id: string, kw: string, temporal = 
 }
 
 /**
- * Purga los modificadores con `expira` de las instancias en campo (jugador
- * omitido = AMBOS jugadores: los efectos 'ocaso' del turno en curso expiran
- * para todos al llegar el Ocaso).
+ * Purga los modificadores temporales de las instancias en campo.
+ *
+ * Lógica:
+ * - Si el modificador tiene `turnosRestantes` definido:
+ *   - En Ocaso del DUEÑO: decrementa en 1. Si llega a 0, se purga.
+ *   - En Alba del DUEÑO: se purga si `turnosRestantes` ≤ 0 (ya pasó su Ocaso).
+ * - Si NO tiene `turnosRestantes`: se purga cuando `expira` coincide.
+ *
+ * `expira`: fase que dispara la purga.
+ * `jugador`: si se pasa, solo purga para ese jugador.
  */
 export function purgarEfectosTemporales(s: GameState, expira: ExpiraModificador, jugador?: PlayerId): void {
   const jugadores: PlayerId[] = jugador ? [jugador] : ['A', 'B']
@@ -326,8 +334,27 @@ export function purgarEfectosTemporales(s: GameState, expira: ExpiraModificador,
     for (const id of instanciasEnCampo(s, j)) {
       const inst = s.instances[id]
       if (!inst?.modificadores) continue
-      const restantes = inst.modificadores.filter((m) => m.expira !== expira)
-      inst.modificadores = restantes
+
+      if (expira === 'ocaso') {
+        // En Ocaso: decrementar counter de mods con turnosRestantes
+        const restantes = inst.modificadores
+          .map((m) => {
+            if (m.turnosRestantes !== undefined) {
+              return { ...m, turnosRestantes: m.turnosRestantes - 1 }
+            }
+            return m
+          })
+          .filter((m) => {
+            // Purgar si: turnosRestantes ≤ 0 O (sin counter Y expira coincide)
+            if (m.turnosRestantes !== undefined) return m.turnosRestantes > 0
+            return m.expira !== expira
+          })
+        inst.modificadores = restantes
+      } else {
+        // Para 'alba-dueño': purgar por expira normal (sin tocar counters)
+        const restantes = inst.modificadores.filter((m) => m.expira !== expira)
+        inst.modificadores = restantes
+      }
     }
   }
 }
