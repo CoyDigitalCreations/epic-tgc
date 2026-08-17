@@ -65,6 +65,7 @@ const TIPO_LABEL: Record<string, string> = {
   colocar_tactica: 'Colocar',
   colocar_arcana: 'Colocar',
   colocar_combate: 'Colocar',
+  activar_arcana: 'Activar',
   descartar_carta: 'Descartar',
   responder_cadena: 'Responder',
 }
@@ -695,7 +696,11 @@ export function Tablero({ vista, acciones, leTocaA, log, onAccion, onAbandonar, 
     (a): a is Extract<Action, { type: 'elegir_objetivo' }> => a.type === 'elegir_objetivo',
   )
   const ruptura = acciones.find((a) => a.type === 'elegir_ruptura' && a.atacanteId !== null)
-  const pila = vista.combate?.cadena?.pila ?? []
+  const pilaCombate = vista.combate?.cadena?.pila ?? []
+  const pilaGlobal = vista.cadena?.pila ?? []
+  const pila = pilaCombate.length > 0 ? pilaCombate : pilaGlobal
+  const cadenaActiva = vista.combate?.cadena ?? vista.cadena
+  const efectoActual = cadenaActiva?.efectoActual
   const responderDe = (id: string) => acciones.find((a) => a.type === 'responder_cadena' && a.cardInstanceId === id)
 
   const faseTurno = terminada
@@ -818,8 +823,16 @@ export function Tablero({ vista, acciones, leTocaA, log, onAccion, onAbandonar, 
           <section className="grid grid-cols-1 gap-3">
             <div className="bg-surface border border-card-border rounded-lg p-2 min-h-[72px]">
               <p className="text-[9px] uppercase tracking-wider text-gray-500 mb-1.5">
-                Cadena 9.6 {pila.length > 0 ? `(${pila.length})` : ''}
+                {pilaGlobal.length > 0 ? 'Cadena Global' : 'Cadena 9.6'}{pila.length > 0 ? ` (${pila.length})` : ''}
+                {pila.length > 0 ? ` (${pila.length})` : ''}
               </p>
+              {efectoActual && (
+                <p className="text-[10px] text-gray-400 mb-1 italic">
+                  {vista.instances[efectoActual.cardInstanceId]?.cardId
+                    ? `Activó: ${vista.instances[efectoActual.cardInstanceId]!.cardId}`
+                    : 'Efecto activado'}
+                </p>
+              )}
               {pila.length === 0 ? (
                 <p className="text-[11px] text-gray-600 italic">Sin cadena abierta.</p>
               ) : (
