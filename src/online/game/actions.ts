@@ -10,7 +10,7 @@ import { SLOTS_CAMPEONES, SLOTS_MISTICAS_TACTICAS, SLOTS_ARCANAS_COMBATE, slotAZ
 import type { CardInstance } from './types'
 import { ejecutarDeclararAtaque, ejecutarDeclararBloqueo, validarDeclararAtaque, validarDeclararBloqueo, validarElegirRuptura, ejecutarElegirRuptura, tieneKeyword } from './combat'
 import { liberarEterBloqueado, enviarAlCementerio } from './replacements'
-import { validarResponderCadena, validarPasarPrioridad, ejecutarResponderCadena, ejecutarPasarPrioridad } from './chain'
+import { validarResponderCadena, validarPasarPrioridad, ejecutarResponderCadena, ejecutarPasarPrioridad, abrirCadenaGlobal } from './chain'
 import { validarRequisito } from './effects-guards'
 
 /**
@@ -602,6 +602,9 @@ function ejecutarActivarArcana(s: GameState, action: Extract<Action, { type: 'ac
   aplicarPago(s, ctx, s.turno, action.eterIds, inst.cardId!, contextoUso)
   inst.bocaArriba = true
   ctx.emit({ type: 'carta_activada', cardInstanceId: id, jugador: s.turno, slot: action.slot })
+  // Abrir cadena global: el rival podría responder con cartas Disparo
+  const meta = getCardMeta(inst.cardId!)
+  abrirCadenaGlobal(s, s.turno, { cardInstanceId: id, descripcion: meta?.nombre ?? id })
 }
 
 /** Coloca el Combate boca arriba en 3D-3F SIN pagar. */

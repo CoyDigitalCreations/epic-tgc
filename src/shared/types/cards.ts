@@ -49,7 +49,7 @@ export interface CardMeta {
 export interface CampeonCard extends CardMeta {
   type: 'Campeón'
   stats: CombatStats
-  tipoEfecto?: 'Pasivo' | 'Activo' | 'Especial'
+  tipoEfecto?: 'Pasivo' | 'Activo' | 'Especial' | 'Disparo'
   /** Habilidades Activas: 'Continua' o 'Un Solo Uso' (v2.0) */
   tipoHabilidad?: 'Continua' | 'Un Solo Uso'
   efectoPasivo?: string

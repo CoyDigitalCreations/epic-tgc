@@ -18,9 +18,9 @@ import type { GameState, PlayerId } from './types'
  * elige la variante null ("no romper").
  */
 export function botTonto(state: GameState, playerId: PlayerId): Action | null {
-  // Cadena 9.6 (C4, ADR-19): el bot nunca encadena cartas
-  const cadena = state.combate?.cadena
-  if (state.fase === 'choque' && cadena) {
+  // Cadena (combate 9.6 O global): el bot nunca encadena cartas
+  const cadena = state.combate?.cadena ?? state.cadena
+  if (cadena) {
     return cadena.prioridad === playerId ? { type: 'pasar_prioridad' } : null
   }
   const esDefensor = state.fase === 'choque' && state.combate?.paso === 'bloqueo' && playerId !== state.turno
@@ -49,13 +49,13 @@ export function simularPartida(deckA: string[], deckB: string[], seed: number, m
   let iteraciones = 0
   let estado = state
   while (estado.fase !== 'terminada' && iteraciones < maxTurnos) {
-    // Cadena 9.6 (C4): el actor es el jugador con prioridad — sin esta
+    // Cadena (combate 9.6 O global): el actor es el jugador con prioridad — sin esta
     // excepción simularPartida deadlockea pidiendo acciones a quien no puede.
     // En paso bloqueo el actor es el DEFENSOR (9.3, ADR-11): sin esta
     // excepción simularPartida deadlockea pidiendo acciones al activo.
-    const cadena = estado.combate?.cadena
+    const cadena = estado.combate?.cadena ?? estado.cadena
     const actor: PlayerId =
-      estado.fase === 'choque' && cadena
+      cadena
         ? cadena.prioridad
         : estado.fase === 'choque' && estado.combate?.paso === 'bloqueo'
           ? (estado.turno === 'A' ? 'B' : 'A')

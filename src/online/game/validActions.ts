@@ -34,10 +34,10 @@ export function getValidActions(state: GameState, playerId: PlayerId): Action[] 
     acciones.push({ type: 'pasar_mulligan' })
   }
 
-  // Cadena 9.6 abierta (C4): SOLO responder/pasar del jugador con prioridad —
+  // Cadena abierta (combate 9.6 O global): SOLO responder/pasar del jugador con prioridad —
   // el resto del turno queda CONGELADO (ni declarar_bloqueo del defensor, ni
   // Ruptura, ni pasar_turno del activo) hasta cerrar la cadena.
-  const cadena = state.combate?.cadena
+  const cadena = state.combate?.cadena ?? state.cadena
   if (cadena) {
     if (cadena.prioridad === playerId) {
       for (const id of respondiblesDe(state, playerId)) {

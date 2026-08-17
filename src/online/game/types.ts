@@ -123,6 +123,10 @@ export interface CadenaState {
   prioridad: PlayerId
   /** Pases consecutivos: 2 → resolución en orden inverso (L1183). */
   pasesConsecutivos: number
+  /** Fase en que se abrió la cadena (para resolución contextual). */
+  faseAbierta: Fase
+  /** Descripción legible del efecto que abrió la cadena (para UI modal). */
+  efectoActual?: { jugador: PlayerId; cardInstanceId: string; descripcion: string }
 }
 
 /** Sub-máquina de combate en Choque (9.1, ADR-11). Se crea con la PRIMERA declarar_ataque. */
@@ -154,6 +158,12 @@ export interface GameState {
   players: Record<PlayerId, PlayerState>
   /** Sub-máquina de combate en Choque (change 2, ADR-11); undefined fuera de Choque. */
   combate?: CombateState
+  /**
+   * Cadena de efectos GLOBAL (fuera de combate): prioridad entre jugadores
+   * cuando un efecto se activa y el rival puede responder. Se cierra cuando
+   * ambos pasan y se resuelve LIFO.
+   */
+  cadena?: CadenaState
   /** Flag anti-bucle del sexto Vínculo (5.7/13, ADR-16): el hook NO-OP se resuelve UNA vez. */
   sextoVinculoResuelto?: boolean
   /** C2: opciones pendientes de elegir_opcion (Pasivo 1A FB-005/DS-006). */

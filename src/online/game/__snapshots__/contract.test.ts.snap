@@ -567,6 +567,8 @@ exports[`integración bot ↔ contrato (5.8) > snapshot: la secuencia de accione
   "carta_invocada",
   "eter_pagado",
   "carta_activada",
+  "prioridad_pasada",
+  "prioridad_pasada",
   "fase_iniciada",
   "ataque_declarado",
   "prioridad_pasada",
@@ -734,6 +736,8 @@ exports[`integración bot ↔ contrato (5.8) > snapshot: la secuencia de accione
   "carta_invocada",
   "eter_pagado",
   "carta_activada",
+  "prioridad_pasada",
+  "prioridad_pasada",
   "fase_iniciada",
   "ataque_declarado",
   "prioridad_pasada",
@@ -807,8 +811,5 @@ exports[`integración bot ↔ contrato (5.8) > snapshot: la secuencia de accione
   "fase_iniciada",
   "fase_iniciada",
   "ataque_declarado",
-  "prioridad_pasada",
-  "prioridad_pasada",
-  "fase_iniciada",
 ]
 `;

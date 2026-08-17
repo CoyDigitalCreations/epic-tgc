@@ -23,9 +23,12 @@ import type { Ctx, GameState, PlayerId } from './types'
 import { slotAZona } from './zones'
 
 /**
- * Cartas del jugador que pueden responder en la cadena (9.6): Tácticas
- * colocadas en turnos anteriores, Combates, Arcanas colocadas en turnos
- * anteriores. Las Místicas nunca responden y la activación diferida §5.5
+ * Cartas del jugador que pueden responder en la cadena (9.6 + global):
+ * - Tácticas colocadas en turnos anteriores
+ * - Combates
+ * - Arcanas colocadas en turnos anteriores
+ * - Campeones con tipoEfecto 'Disparo' que no estén agotados
+ * Las Místicas nunca responden y la activación diferida §5.5
  * excluye Tácticas/Arcanas recién colocadas (entradaEsteTurno).
  */
 export function respondiblesDe(state: GameState, playerId: PlayerId): string[] {
@@ -45,6 +48,16 @@ export function respondiblesDe(state: GameState, playerId: PlayerId): string[] {
     if (esCombate(meta)) res.push(id)
     else if (esArcana(meta) && !inst.entradaEsteTurno) res.push(id)
   }
+  // Campeones con efecto Disparo (no agotados)
+  for (const id of p.campo.campeones) {
+    if (!id) continue
+    const inst = state.instances[id]
+    if (inst?.agotado) continue
+    const meta = inst?.cardId ? getCardMeta(inst.cardId) : null
+    if (meta && meta.type === 'Campeón' && 'tipoEfecto' in meta && (meta as any).tipoEfecto === 'Disparo') {
+      res.push(id)
+    }
+  }
   return res
 }
 
@@ -59,31 +72,64 @@ export function abrirCadena(s: GameState, primerRespondedor: PlayerId): boolean 
   const combate = s.combate
   if (!combate) return false
   if (respondiblesDe(s, primerRespondedor).length === 0) return false
-  combate.cadena = { pila: [], prioridad: primerRespondedor, pasesConsecutivos: 0 }
+  combate.cadena = { pila: [], prioridad: primerRespondedor, pasesConsecutivos: 0, faseAbierta: s.fase }
   return true
 }
 
+/**
+ * Apertura de cadena GLOBAL (fuera de combate): cuando un efecto se activa
+ * y el rival podría responder. Se abre en s.cadena (no en combate.cadena).
+ * Devuelve true si se abrió (rival tiene respondibles), false si no.
+ */
+export function abrirCadenaGlobal(
+  s: GameState,
+  jugadorActivo: PlayerId,
+  efecto: { cardInstanceId: string; descripcion: string },
+): boolean {
+  const rival: PlayerId = jugadorActivo === 'A' ? 'B' : 'A'
+  if (respondiblesDe(s, rival).length === 0) return false
+  s.cadena = {
+    pila: [],
+    prioridad: rival, // el rival responde primero
+    pasesConsecutivos: 0,
+    faseAbierta: s.fase,
+    efectoActual: { jugador: jugadorActivo, ...efecto },
+  }
+  return true
+}
+
+/**
+ * Obtiene la cadena activa (combate o global).
+ * Prioriza combate.cadena si existe, luego s.cadena.
+ */
+function cadenaActiva(s: GameState): CadenaState | undefined {
+  return s.combate?.cadena ?? s.cadena
+}
+
+/** Determina si la cadena activa es la de combate o la global. */
+function esCadenaDeCombate(s: GameState): boolean {
+  return !!s.combate?.cadena
+}
+
 export function validarResponderCadena(state: GameState, cardInstanceId: string): string | null {
-  if (state.fase !== 'choque') return 'responder_cadena solo en Choque'
-  const cadena = state.combate?.cadena
+  const cadena = cadenaActiva(state)
   if (!cadena) return 'no hay cadena abierta'
   // El payload solo es válido para una carta del jugador con prioridad
-  // (como declarar_bloqueo, el motor valida el estado, no la identidad).
   if (!respondiblesDe(state, cadena.prioridad).includes(cardInstanceId)) {
-    return 'esa carta no puede responder ahora (solo Táctica/Combate/Arcana de turnos anteriores)'
+    return 'esa carta no puede responder ahora'
   }
   return null
 }
 
 export function validarPasarPrioridad(state: GameState): string | null {
-  if (state.fase !== 'choque') return 'pasar_prioridad solo en Choque'
-  if (!state.combate?.cadena) return 'no hay cadena abierta'
+  if (!cadenaActiva(state)) return 'no hay cadena abierta'
   return null
 }
 
 /** Apila la respuesta: pila.push, pases→0, la Arcana se REVELA (bocaArriba) y la prioridad alterna. */
 export function ejecutarResponderCadena(s: GameState, cardInstanceId: string, ctx: Ctx): void {
-  const cadena = s.combate!.cadena!
+  const cadena = cadenaActiva(s)
+  if (!cadena) return
   const jugador = cadena.prioridad
   cadena.pila.push(cardInstanceId)
   cadena.pasesConsecutivos = 0
@@ -91,6 +137,10 @@ export function ejecutarResponderCadena(s: GameState, cardInstanceId: string, ct
   const inst = s.instances[cardInstanceId]
   const meta = inst?.cardId ? getCardMeta(inst.cardId) : null
   if (meta && esArcana(meta)) inst!.bocaArriba = true
+  // Campeones Disparo se revelan también
+  if (meta && meta.type === 'Campeón' && 'tipoEfecto' in meta && (meta as any).tipoEfecto === 'Disparo') {
+    inst!.bocaArriba = true
+  }
   ctx.emit({ type: 'respuesta_encadenada', jugador, cardInstanceId })
   cadena.prioridad = jugador === 'A' ? 'B' : 'A'
 }
@@ -100,13 +150,17 @@ export function ejecutarResponderCadena(s: GameState, cardInstanceId: string, ct
  * resuelve en orden inverso (L1183) y la cadena se cierra.
  */
 export function ejecutarPasarPrioridad(s: GameState, ctx: Ctx): void {
-  const cadena = s.combate?.cadena
-  if (!cadena) return // defensivo: validado antes
+  const cadena = cadenaActiva(s)
+  if (!cadena) return
   const jugador = cadena.prioridad
   cadena.pasesConsecutivos++
   ctx.emit({ type: 'prioridad_pasada', jugador })
   if (cadena.pasesConsecutivos >= 2) {
-    resolverCadena(s, ctx)
+    if (esCadenaDeCombate(s)) {
+      resolverCadenaCombate(s, ctx)
+    } else {
+      resolverCadenaGlobal(s, ctx)
+    }
   } else {
     cadena.prioridad = jugador === 'A' ? 'B' : 'A'
   }
@@ -117,7 +171,7 @@ export function ejecutarPasarPrioridad(s: GameState, ctx: Ctx): void {
  * (liberando el slot 3D-3F); la Táctica PERMANECE en mesa. Cierra la cadena
  * y reanuda la sub-máquina de combate.
  */
-function resolverCadena(s: GameState, ctx: Ctx): void {
+function resolverCadenaCombate(s: GameState, ctx: Ctx): void {
   const combate = s.combate
   const cadena = combate?.cadena
   if (!combate || !cadena) return
@@ -140,4 +194,13 @@ function resolverCadena(s: GameState, ctx: Ctx): void {
   }
   combate.cadena = undefined
   continuarCombateTrasCadena(s, ctx)
+}
+
+/**
+ * Resolución de cadena GLOBAL (fuera de combate): LIFO.
+ * Cada carta respondida se resolvió ya al apilar (efecto aplicado).
+ * Aquí solo limpiamos la cadena global.
+ */
+function resolverCadenaGlobal(s: GameState, ctx: Ctx): void {
+  s.cadena = undefined
 }
