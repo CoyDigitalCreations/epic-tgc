@@ -19,7 +19,7 @@ interface BlockingInterfaceProps {
 }
 
 /** Miniatura de carta para la interfaz de bloqueo */
-function CartaBloqueo({ id, s }: { id: string; s: GameState }) {
+function CartaBloqueo({ id, s, orden }: { id: string; s: GameState; orden: number }) {
   const inst = s.instances[id]
   const cardId = inst?.cardId ?? undefined
   const meta = cardId ? getCardMeta(cardId) : null
@@ -27,6 +27,9 @@ function CartaBloqueo({ id, s }: { id: string; s: GameState }) {
 
   return (
     <div className="flex flex-col items-center gap-1">
+      <span className="text-[10px] font-bold text-red-400 bg-red-900/40 rounded-full w-5 h-5 flex items-center justify-center">
+        {orden}
+      </span>
       <div
         className="w-16 h-22 rounded border border-red-500/50 overflow-hidden bg-surface-2"
         style={{ aspectRatio: '744/1038' }}
@@ -52,11 +55,13 @@ function BloqueadorOption({
   s,
   selected,
   onSelect,
+  orden,
 }: {
   id: string
   s: GameState
   selected: boolean
   onSelect: () => void
+  orden?: number
 }) {
   const inst = s.instances[id]
   const cardId = inst?.cardId ?? undefined
@@ -72,6 +77,11 @@ function BloqueadorOption({
           : 'border-gray-600 hover:border-gray-400 bg-surface-2'
       }`}
     >
+      {orden !== undefined && (
+        <span className="text-[10px] font-bold text-cyan-400 bg-cyan-900/40 rounded-full w-5 h-5 flex items-center justify-center">
+          {orden}
+        </span>
+      )}
       <div
         className="w-12 h-17 rounded overflow-hidden"
         style={{ aspectRatio: '744/1038' }}
@@ -128,12 +138,12 @@ export function BlockingInterface({ s, defensor, atacantes, onBloquear, onCancel
         {/* Atacantes */}
         <div className="mb-4">
           <p className="text-[9px] uppercase tracking-wider text-gray-500 mb-2">
-            Atacantes del rival ({atacantes.length})
+            Orden de los atacantes ({atacantes.length})
           </p>
           <div className="flex gap-3 flex-wrap">
-            {atacantes.map((id) => (
+            {atacantes.map((id, idx) => (
               <div key={id} className="flex flex-col items-center gap-1">
-                <CartaBloqueo id={id} s={s} />
+                <CartaBloqueo id={id} s={s} orden={idx + 1} />
                 {asignaciones[id] ? (
                   <span className="text-[8px] text-cyan-400">
                     ← {s.instances[asignaciones[id]]?.cardId ? getCardMeta(s.instances[asignaciones[id]].cardId!)?.name : '?'}
@@ -149,22 +159,27 @@ export function BlockingInterface({ s, defensor, atacantes, onBloquear, onCancel
         {/* Bloqueadores disponibles */}
         <div className="mb-4">
           <p className="text-[9px] uppercase tracking-wider text-gray-500 mb-2">
-            Tus campeones ({disponibles.length})
+            Orden de los defensores ({disponibles.length})
           </p>
           <div className="flex gap-2 flex-wrap">
-            {disponibles.map((id) => (
-              <BloqueadorOption
-                key={id}
-                id={id}
-                s={s}
-                selected={Object.values(asignaciones).includes(id)}
-                onSelect={() => {
-                  // Asignar al primer atacante sin bloqueador
-                  const sinBloquear = atacantes.find((a) => !asignaciones[a])
-                  if (sinBloquear) seleccionarBloqueador(sinBloquear, id)
-                }}
-              />
-            ))}
+            {disponibles.map((id) => {
+              const asignadoA = Object.entries(asignaciones).find(([, blk]) => blk === id)?.[0]
+              const ordenAsignado = asignadoA ? atacantes.indexOf(asignadoA) + 1 : undefined
+              return (
+                <BloqueadorOption
+                  key={id}
+                  id={id}
+                  s={s}
+                  selected={Object.values(asignaciones).includes(id)}
+                  orden={ordenAsignado}
+                  onSelect={() => {
+                    // Asignar al primer atacante sin bloqueador
+                    const sinBloquear = atacantes.find((a) => !asignaciones[a])
+                    if (sinBloquear) seleccionarBloqueador(sinBloquear, id)
+                  }}
+                />
+              )
+            })}
           </div>
         </div>
 
