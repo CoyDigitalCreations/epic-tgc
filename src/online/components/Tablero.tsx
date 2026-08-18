@@ -45,7 +45,7 @@ type Seleccion =
   | null
 
 /** Zonas que abren el panel inferior con su lista completa. */
-type ZonaPanel = 'reserva' | 'pagado' | 'cementerio' | 'exilio'
+type ZonaPanel = 'reserva' | 'pagado' | 'cementerio' | 'exilio' | 'bloqueado'
 /** Panel inferior abierto: zona de un jugador (2A Reserva / 1A Pagado / 2G Cementerio / 1G Exilio). */
 interface PanelAbierto {
   jugador: 'A' | 'B'
@@ -404,6 +404,8 @@ function GrillaJugador({
           <MiniCard
             inst={bloqueados[0]}
             tamano="md"
+            onZoom={() => abrirZoom(bloqueados[0])}
+            onClick={() => abrirPanel(jugador, 'bloqueado')}
             marca={
               bloqueados.length > 1 ? (
                 <span
@@ -1046,7 +1048,7 @@ export function Tablero({ vista, acciones, leTocaA, log, onAccion, onAbandonar, 
         </div>
       )}
 
-      {/* ── Panel inferior: lista completa de una zona (2A Reserva / 1A Pagado / 2G Cementerio / 1G Exilio) ── */}
+      {/* ── Panel inferior: lista completa de una zona (2A Reserva / 1A Pagado / 2G Cementerio / 1G Exilio / 1B-1F Bloqueado) ── */}
       {panelAbierto && (() => {
         const pj = vista.players[panelAbierto.jugador]
         const insts =
@@ -1056,7 +1058,11 @@ export function Tablero({ vista, acciones, leTocaA, log, onAccion, onAbandonar, 
               ? pj.eterPagado
               : panelAbierto.zona === 'cementerio'
                 ? pj.cementerio
-                : pj.exilio
+                : panelAbierto.zona === 'exilio'
+                  ? pj.exilio
+                  : pj.campo.campeones
+                      .filter((id): id is string => id !== null)
+                      .flatMap((cid) => vista.instances[cid]?.eterBloqueado ?? [])
         const titulo =
           panelAbierto.zona === 'reserva'
             ? 'Reserva de Éter'
@@ -1064,7 +1070,9 @@ export function Tablero({ vista, acciones, leTocaA, log, onAccion, onAbandonar, 
               ? 'Éteres pagados'
               : panelAbierto.zona === 'cementerio'
                 ? 'Cementerio'
-                : 'Exilio'
+                : panelAbierto.zona === 'exilio'
+                  ? 'Exilio'
+                  : 'Éteres bloqueados'
         const posesivo =
           panelAbierto.jugador === 'A'
             ? panelAbierto.zona === 'pagado'
