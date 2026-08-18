@@ -41,6 +41,7 @@ export type Action =
   | { type: 'elegir_opcion'; opcionId: string }
   | { type: 'elegir_objetivo'; objetivoId: string }
   | { type: 'usar_transmutar'; cardInstanceId: string; eterIds: string[] }
+  | { type: 'activar_habilidad'; cardInstanceId: string; eterIds: string[]; objetivoId?: string }
   // Apéndice de combate (change 2, spec #1227 R15): declarar_ataque,
   // declarar_bloqueo y elegir_ruptura (C3) ya despachan en el core;
   // responder_cadena y pasar_prioridad (C4) entran a la unión como stub
@@ -104,6 +105,8 @@ function validarAccion(state: GameState, action: Action): string | null {
       return validarElegirObjetivo(state, action)
     case 'usar_transmutar':
       return validarUsarTransmutar(state, action)
+    case 'activar_habilidad':
+      return validarActivarHabilidad(state, action)
     case 'declarar_ataque':
       return validarDeclararAtaque(state, action.atacanteIds)
     case 'declarar_bloqueo':
@@ -330,6 +333,52 @@ function validarUsarTransmutar(state: GameState, action: Extract<Action, { type:
   return null
 }
 
+/**
+ * Validar activar_habilidad — Campeón propio con tipoEfecto='Activo' o 'Especial'
+ * en campo del jugador activo. Dos patrones de coste:
+ *  - "Bloqueado": eterIds de la Reserva que comparten facción → bloqueados en el Campeón.
+ *  - "Agota": eterIds de la Reserva → pagados (1A) + campeón agotado + 1/turno.
+ */
+function validarActivarHabilidad(state: GameState, action: Extract<Action, { type: 'activar_habilidad' }>): string | null {
+  const p = state.players[state.turno]
+  const inst = state.instances[action.cardInstanceId]
+  if (!inst) return 'la carta no existe'
+  if (!p.campo.campeones.includes(action.cardInstanceId)) return 'la carta no está en tu campo'
+  const meta = inst.cardId ? getCardMeta(inst.cardId) : null
+  if (!meta) return 'carta desconocida'
+  if (meta.tipoEfecto !== 'Activo' && meta.tipoEfecto !== 'Especial') return 'esta carta no tiene habilidad activa'
+  if (!meta.efectoActivo) return 'esta carta no tiene efecto activo'
+
+  const esBloqueado = meta.efectoActivo.includes('bloqueado')
+
+  if (esBloqueado) {
+    // Patrón "Bloqueado": eterIds de la Reserva → Campeón.eterBloqueado
+    if (action.eterIds.length === 0) return 'no indicaste Éteres para bloquear'
+    if (new Set(action.eterIds).size !== action.eterIds.length) return 'éteres repetidos'
+    for (const eterId of action.eterIds) {
+      if (!p.eterReserva.includes(eterId)) return `el Éter ${eterId} no está en tu Reserva`
+      const eterInst = state.instances[eterId]
+      const eterMeta = eterInst?.cardId ? getCardMeta(eterInst.cardId) : null
+      if (!eterMeta) return `Éter desconocido: ${eterId}`
+      if (!faccionesCompartidas(eterMeta.facciones, meta.facciones)) {
+        return `el Éter ${eterId} no comparte facción con ${meta.name}`
+      }
+    }
+  } else {
+    // Patrón "Agota": eterIds de la Reserva → pagados (1A) + agota
+    if (inst.agotado) return 'la carta ya está agotada'
+    if (inst.opcionUsadaEsteTurno) return 'ya usaste esta habilidad este turno'
+    if (action.eterIds.length === 0) return 'no indicaste Éteres para pagar'
+    for (const eterId of action.eterIds) {
+      if (!p.eterReserva.includes(eterId)) return `el Éter ${eterId} no está en tu Reserva`
+    }
+    // Validar pago exacto
+    const validado = validarPago(state, state.turno, action.eterIds, inst.cardId!)
+    if (!validado.ok) return validado.error ?? 'pago inválido'
+  }
+  return null
+}
+
 function ejecutarAccion(s: GameState, action: Action, ctx: Ctx): void {
   switch (action.type) {
     case 'rendirse': {
@@ -405,6 +454,10 @@ function ejecutarAccion(s: GameState, action: Action, ctx: Ctx): void {
       ejecutarUsarTransmutar(s, action, ctx)
       return
     }
+    case 'activar_habilidad': {
+      ejecutarActivarHabilidad(s, action, ctx)
+      return
+    }
     case 'declarar_ataque': {
       ejecutarDeclararAtaque(s, action.atacanteIds, ctx)
       return
@@ -466,7 +519,7 @@ function ejecutarPasarTurno(s: GameState, ctx: Ctx): void {
       limpiarCombate(s) // ADR-11: limpieza defensiva al salir de Choque
       // C1 (ADR-22): al llegar el Ocaso expiran los efectos 'ocaso' del turno
       // en curso (ambos jugadores) y las keywordsTemporales otorgadas.
-      purgarEfectosTemporales(s, 'ocaso')
+      purgarEfectosTemporales(s, 'ocaso', undefined, ctx)
       purgarKeywordsTemporales(s)
     }
     if (s.fase === 'forja') {
@@ -575,6 +628,12 @@ function ejecutarColocarTactica(s: GameState, action: Extract<Action, { type: 'c
   p.campo.misticasTacticas[action.slot] = id
   // §5.5 (activación diferida): recién colocada → NO responde en la cadena 9.6
   s.instances[id]!.entradaEsteTurno = true
+  // Inicializar duración de Táctica si stats.duracion está definido
+  const meta = getCardMeta(s.instances[id]!.cardId!)
+  const duracion = meta?.stats?.duracion
+  if (duracion !== undefined && duracion !== null) {
+    s.instances[id]!.duracionTurnos = duracion
+  }
   ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: id, zona, jugador: s.turno, bocaArriba: true })
   ctx.emit({ type: 'carta_invocada', cardInstanceId: id, tipo: 'Táctica', slot: action.slot })
 }
@@ -725,6 +784,46 @@ function ejecutarUsarTransmutar(s: GameState, action: Extract<Action, { type: 'u
   // C5 (change 4): auto-sacrificio → 2G del dueño con trigger
   enviarAlCementerio(s, ctx, id)
   ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: id, zona: '2G', jugador: inst.owner, bocaArriba: true })
+}
+
+/**
+ * Ejecutar activar_habilidad — dos patrones:
+ *  - "Bloqueado" (Cassandra/Korr): eterIds de Reserva → Campeón.eterBloqueado.
+ *    El aura se aplica dinámicamente via aurasDe (detección automática).
+ *  - "Agota" (Seraphina/Nymeria/Varek/Vorlag): eterIds → 1A + agota + 1/turno
+ *    + disparar trigger 'al-activar-habilidad' (handler aplica efecto).
+ */
+function ejecutarActivarHabilidad(s: GameState, action: Extract<Action, { type: 'activar_habilidad' }>, ctx: Ctx): void {
+  const p = s.players[s.turno]
+  const inst = s.instances[action.cardInstanceId]!
+  const meta = inst.cardId ? getCardMeta(inst.cardId) : null
+  if (!meta) return
+
+  const esBloqueado = meta.efectoActivo?.includes('bloqueado') ?? false
+
+  if (esBloqueado) {
+    // Patrón "Bloqueado": mueve éteres de Reserva → Campeón.eterBloqueado
+    for (const eterId of action.eterIds) {
+      p.eterReserva.splice(p.eterReserva.indexOf(eterId), 1)
+    }
+    inst.eterBloqueado = [...(inst.eterBloqueado ?? []), ...action.eterIds]
+    ctx.emit({ type: 'eter_bloqueado', jugador: s.turno, eterIds: action.eterIds, campeonId: action.cardInstanceId })
+  } else {
+    // Patrón "Agota": éteres → 1A (pagado) + agota + 1/turno
+    for (const eterId of action.eterIds) {
+      p.eterReserva.splice(p.eterReserva.indexOf(eterId), 1)
+      p.eterPagado.push(eterId)
+    }
+    if (action.eterIds.length > 0) {
+      ctx.emit({ type: 'eter_pagado', jugador: s.turno, eterIds: action.eterIds, costo: action.eterIds.length, aportado: action.eterIds.length })
+    }
+    inst.agotado = true
+    inst.opcionUsadaEsteTurno = true
+    // Disparar trigger para que el handler aplique el efecto
+    dispararTrigger(s, ctx, 'al-activar-habilidad', s.turno, [action.cardInstanceId], {
+      objetivoId: action.objetivoId,
+    })
+  }
 }
 
 /* ─────────────────── Generador de acciones de Forja ─────────────────── */

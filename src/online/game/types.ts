@@ -92,6 +92,13 @@ export interface CardInstance {
    bocaArriba?: boolean
    /** C2: flag 1/turno para Pasivo 1A (FB-005/DS-006) — se resetea en al-inicio-alba. */
    opcionUsadaEsteTurno?: boolean
+   /**
+    * Contador de duración para Tácticas (manual §6.2): se inicializa con
+    * stats.duracion al entrar al campo; se decrementa en Ocaso del dueño;
+    * al llegar a 0 se envía la Táctica al cementerio automáticamente.
+    * Solo aplica a cartas con stats.duracion definido.
+    */
+   duracionTurnos?: number
 }
 
 export interface PlayerState {

@@ -50,6 +50,8 @@ type ZonaPanel = 'reserva' | 'pagado' | 'cementerio' | 'exilio' | 'bloqueado'
 interface PanelAbierto {
   jugador: 'A' | 'B'
   zona: ZonaPanel
+  /** Slot del Campeón (0-4) cuando zona='bloqueado' — solo mostrar sus éteres. */
+  campeonSlot?: number
 }
 
 const FASE_LABEL: Record<string, string> = {
@@ -405,7 +407,7 @@ function GrillaJugador({
             inst={bloqueados[0]}
             tamano="md"
             onZoom={() => abrirZoom(bloqueados[0])}
-            onClick={() => abrirPanel(jugador, 'bloqueado')}
+            onClick={() => setPanelAbierto({ jugador, zona: 'bloqueado', campeonSlot: slot })}
             marca={
               bloqueados.length > 1 ? (
                 <span
@@ -1069,9 +1071,11 @@ export function Tablero({ vista, acciones, leTocaA, log, onAccion, onAbandonar, 
                 ? pj.cementerio
                 : panelAbierto.zona === 'exilio'
                   ? pj.exilio
-                  : pj.campo.campeones
-                      .filter((id): id is string => id !== null)
-                      .flatMap((cid) => vista.instances[cid]?.eterBloqueado ?? [])
+                  : panelAbierto.campeonSlot !== undefined
+                    ? vista.instances[pj.campo.campeones[panelAbierto.campeonSlot]]?.eterBloqueado ?? []
+                    : pj.campo.campeones
+                        .filter((id): id is string => id !== null)
+                        .flatMap((cid) => vista.instances[cid]?.eterBloqueado ?? [])
         const titulo =
           panelAbierto.zona === 'reserva'
             ? 'Reserva de Éter'
@@ -1081,7 +1085,9 @@ export function Tablero({ vista, acciones, leTocaA, log, onAccion, onAbandonar, 
                 ? 'Cementerio'
                 : panelAbierto.zona === 'exilio'
                   ? 'Exilio'
-                  : 'Éteres bloqueados'
+                  : panelAbierto.campeonSlot !== undefined
+                    ? `Éteres bloqueados — Campeón ${panelAbierto.campeonSlot + 1}`
+                    : 'Éteres bloqueados'
         const posesivo =
           panelAbierto.jugador === 'A'
             ? panelAbierto.zona === 'pagado'

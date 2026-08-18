@@ -14,7 +14,7 @@ export function resolverAlba(s: GameState, ctx: Ctx, jugador: PlayerId): void {
   const p = s.players[jugador]
 
   // 0. Expiran los efectos 'alba-dueño' del jugador (ADR-22)
-  purgarEfectosTemporales(s, 'alba-dueño', jugador)
+  purgarEfectosTemporales(s, 'alba-dueño', jugador, ctx)
 
   // 1. Enderezar Campeones (silencioso)
   for (const slot of p.campo.campeones) {

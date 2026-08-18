@@ -70,6 +70,35 @@ export function getValidActions(state: GameState, playerId: PlayerId): Action[] 
         acciones.push({ type: 'usar_transmutar', cardInstanceId: champId, eterIds: p.eterPagado.slice(0, 2) })
       }
     }
+    // Activar Habilidades: Campeones con tipoEfecto='Activo' o 'Especial'
+    // Patrón "Bloqueado": necesita 1+ Éter de facción compartida en Reserva
+    // Patrón "Agota": necesita 1 Éter de Reserva + no agotado + no usado este turno
+    for (const champId of p.campo.campeones) {
+      if (!champId) continue
+      const inst = state.instances[champId]
+      const meta = inst?.cardId ? getCardMeta(inst.cardId) : null
+      if (!meta || (meta.tipoEfecto !== 'Activo' && meta.tipoEfecto !== 'Especial')) continue
+      if (!meta.efectoActivo) continue
+      const esBloqueado = meta.efectoActivo.includes('bloqueado')
+      if (esBloqueado) {
+        // Patrón "Bloqueado": buscar 1 Éter de facción compartida en Reserva
+        const eterId = p.eterReserva.find((id) => {
+          const eterMeta = state.instances[id]?.cardId ? getCardMeta(state.instances[id]!.cardId!) : null
+          return eterMeta !== null && faccionesCompartidas(eterMeta.facciones, meta.facciones)
+        })
+        if (eterId !== undefined) {
+          acciones.push({ type: 'activar_habilidad', cardInstanceId: champId, eterIds: [eterId] })
+        }
+      } else {
+        // Patrón "Agota": necesita no agotado + no usado + éter para pagar
+        if (inst!.agotado || inst!.opcionUsadaEsteTurno) continue
+        const eterIds = etersParaPagar(state, playerId, meta.id)
+        if (eterIds) {
+          const accion: Action = { type: 'activar_habilidad', cardInstanceId: champId, eterIds }
+          acciones.push(accion)
+        }
+      }
+    }
     if (state.fase === 'forja') {
       // Jugadas por carta en mano (el generador garantiza payloads válidos)
       for (const id of p.mano) {
@@ -86,7 +115,7 @@ export function getValidActions(state: GameState, playerId: PlayerId): Action[] 
         if (!campeon) return
         const eterId = p.eterReserva.find((id) => {
           const meta = state.instances[id]?.cardId ? getCardMeta(state.instances[id]!.cardId!) : null
-          return meta !== null && faccionesCompartidas(meta.facciones, campeon.facciones) && 'efectoBloqueo' in meta
+          return meta !== null && faccionesCompartidas(meta.facciones, campeon.facciones)
         })
         if (eterId !== undefined) {
           acciones.push({ type: 'bloquear_eter', eterIds: [eterId], campeonSlot: slot })

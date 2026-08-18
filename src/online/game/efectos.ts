@@ -1,4 +1,5 @@
-import { esCampeon, getCardMeta, type AnyCard } from './cards'
+import { esCampeon, esTactica, getCardMeta, type AnyCard } from './cards'
+import { enviarAlCementerio } from './replacements'
 import type { CardInstance, Ctx, ExpiraModificador, GameState, PlayerId } from './types'
 
 /**
@@ -36,6 +37,7 @@ export type TriggerEfecto =
   | 'al-ser-enviado-al-cementerio'
   | 'al-ser-destruido-vinculo'
   | 'al-resolver-cadena'
+  | 'al-activar-habilidad'
   | 'activable'
 
 /** Payload de contexto del dispatch (C2+ lo puebla; C1 usa solo `jugador`). */
@@ -159,11 +161,33 @@ export function aurasDe(s: GameState, id: string): AurasAplicadas {
       const fuenteInst = s.instances[fuenteId]
       const fuenteMeta = fuenteInst?.cardId ? getCardMeta(fuenteInst.cardId) : null
       if (!fuenteInst || !fuenteMeta) continue
-      const fn = aurasCampo.get(fuenteMeta.id)
-      if (!fn) continue
-      const resultado = fn(s, fuenteId, id)
-      if (resultado !== null) {
-        campoAuras.push({ poder: resultado.atq, resistencia: resultado.res })
+
+      // Auras de campo registradas (DS-014 Thane, etc.)
+      const fnCampo = aurasCampo.get(fuenteMeta.id)
+      if (fnCampo) {
+        const resultado = fnCampo(s, fuenteId, id)
+        if (resultado !== null) {
+          campoAuras.push({ poder: resultado.atq, resistencia: resultado.res })
+        }
+      }
+
+      // Habilidades activas "Bloqueado" (FB-016 Cassandra, DS-016 Korr):
+      // si la fuente tiene éteres bloqueados y tiene efectoActivo con 'bloqueado',
+      // aplica un aura a TODOS los campeones que controla el dueño de la fuente.
+      const fuenteOwner = fuenteInst.owner
+      if (
+        (fuenteMeta.tipoEfecto === 'Activo' || fuenteMeta.tipoEfecto === 'Especial') &&
+        fuenteMeta.efectoActivo?.includes('bloqueado') &&
+        (fuenteInst.eterBloqueado?.length ?? 0) > 0
+      ) {
+        // Cassandra (FB-016): +1 RES a todos los que controla
+        if (fuenteMeta.id === 'FB-016') {
+          campoAuras.push({ resistencia: 1 })
+        }
+        // Korr (DS-016): +1 ATQ a todos los que controla
+        if (fuenteMeta.id === 'DS-016') {
+          campoAuras.push({ poder: 1 })
+        }
       }
     }
   }
@@ -326,12 +350,41 @@ export function otorgarKeyword(s: GameState, id: string, kw: string, temporal = 
  *   - En Alba del DUEÑO: se purga si `turnosRestantes` ≤ 0 (ya pasó su Ocaso).
  * - Si NO tiene `turnosRestantes`: se purga cuando `expira` coincide.
  *
+ * Additionally: if expira='ocaso', decrementa `duracionTurnos` de Tácticas
+ * en campo y las envía al cementerio cuando llegan a 0.
+ *
  * `expira`: fase que dispara la purga.
  * `jugador`: si se pasa, solo purga para ese jugador.
+ * `ctx`: opcional; se usa para emitir eventos y enviar Tácticas al cementerio.
  */
-export function purgarEfectosTemporales(s: GameState, expira: ExpiraModificador, jugador?: PlayerId): void {
+export function purgarEfectosTemporales(s: GameState, expira: ExpiraModificador, jugador?: PlayerId, ctx?: Ctx): void {
   const jugadores: PlayerId[] = jugador ? [jugador] : ['A', 'B']
   for (const j of jugadores) {
+    // Expirar Tácticas por duración (solo en Ocaso del dueño)
+    if (expira === 'ocaso') {
+      for (const slot of s.players[j].campo.misticasTacticas) {
+        if (!slot) continue
+        const inst = s.instances[slot]
+        if (!inst) continue
+        if (inst.duracionTurnos !== undefined) {
+          inst.duracionTurnos -= 1
+          if (inst.duracionTurnos <= 0) {
+            // Enviar Táctica al cementerio
+            const idx = s.players[j].campo.misticasTacticas.indexOf(slot)
+            const zona = `3${String.fromCharCode(65 + idx)}` // 3A, 3B, 3C
+            if (ctx) {
+              ctx.emit({ type: 'carta_salida_de_zona', cardInstanceId: slot, zona, jugador: j })
+            }
+            s.players[j].campo.misticasTacticas[idx] = null
+            s.players[j].cementerio.push(slot)
+            if (ctx) {
+              ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: slot, zona: '2G', jugador: j, bocaArriba: true })
+            }
+          }
+        }
+      }
+    }
+
     for (const id of instanciasEnCampo(s, j)) {
       const inst = s.instances[id]
       if (!inst?.modificadores) continue

@@ -20,6 +20,7 @@
  */
 import { esCampeon, getCardMeta } from '../cards'
 import { registrarEfecto, type PayloadEfecto } from '../efectos'
+import { enviarAlCementerio } from '../replacements'
 import type { Ctx, GameState, PlayerId } from '../types'
 
 /** Coste del meta de una instancia (toda carta tiene stats.cost). */

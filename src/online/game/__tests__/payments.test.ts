@@ -181,15 +181,14 @@ describe('bloqueo de Éter sobre Campeón (facción v2.1)', () => {
     expect(ctx.events).toEqual([])
   })
 
-  it('Éter sin efectoBloqueo se rechaza aunque comparta facción', () => {
+  it('Éter sin efectoBloqueo se acepta si comparte facción (sin límite)', () => {
     const base = estadoMinimo()
     const { s } = conCampeonEnCampo(base, SERAPHINA) // Campeón Orden
     const { s: s2, ids } = conEteresEnReserva(s, ETER_ORDEN, 1) // Éter Orden sin efectoBloqueo
     const ctx = crearCtx()
     const error = bloquearEter(s2, ctx, 'A', ids, 0)
-    expect(error).toMatch(/efecto de bloqueo/)
-    expect(s2.players.A.eterReserva).toHaveLength(1) // nada se movió
-    expect(ctx.events).toEqual([])
+    expect(error).toBeNull()
+    expect(s2.players.A.eterReserva).toHaveLength(0) // éter movido a Campeón
   })
 })
 

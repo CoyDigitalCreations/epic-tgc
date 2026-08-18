@@ -425,10 +425,9 @@ describe('bloquear_eter (acción de forja, facción v2.1)', () => {
     expect(r2.ok).toBe(false)
     expect(bloquearEter(s, ctx, 'A', ids, 3)).toMatch(/vacío/)
 
-    // Éter sin efectoBloqueo (FB-001) se rechaza aunque comparta facción
+    // Éter sin efectoBloqueo se acepta si comparte facción (sin límite)
     const { s: s3, ids: idsSinBloqueo } = conEteres(conCampo.s, ETER_ORDEN, 1)
     const r3 = applyAction(s3, { type: 'bloquear_eter', eterIds: idsSinBloqueo, campeonSlot: 0 }, ctx)
-    expect(r3.ok).toBe(false)
-    if (!r3.ok) expect(r3.error).toMatch(/efecto de bloqueo/)
+    expect(r3.ok).toBe(true)
   })
 })
