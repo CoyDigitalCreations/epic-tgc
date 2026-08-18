@@ -800,7 +800,7 @@ export function Tablero({ vista, acciones, leTocaA, log, logDetallado = [], onAc
 
       <main className="max-w-350 mx-auto px-4 mt-2 flex flex-col xl:flex-row gap-4 items-start">
         {/* ── Panel de Habilidades Activas (Columna Izquierda) ─────────── */}
-        <div className="hidden xl:block w-40 shrink-0">
+        <div className="w-40 shrink-0">
           <ActiveAbilitiesPanel s={vista} />
         </div>
 
