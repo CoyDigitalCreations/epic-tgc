@@ -438,7 +438,6 @@ function GrillaJugador({
         insts={p.exilio}
         onClick={() => abrirPanel(jugador, 'exilio')}
         onZoom={() => abrirZoom(vista.instances[p.exilio[p.exilio.length - 1]])}
-        invertida={invertida}
       />
     </Celda>,
   )
@@ -473,7 +472,6 @@ function GrillaJugador({
         insts={p.cementerio}
         onClick={() => abrirPanel(jugador, 'cementerio')}
         onZoom={() => abrirZoom(vista.instances[p.cementerio[p.cementerio.length - 1]])}
-        invertida={invertida}
       />
     </Celda>,
   )
