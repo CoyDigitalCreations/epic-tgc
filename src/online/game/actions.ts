@@ -3,7 +3,7 @@ import { purgarEfectosTemporales, purgarKeywordsTemporales, dispararTrigger, typ
 import { limpiarCombate, resolverAlba } from './phases'
 import { shuffleFisherYates } from './rng'
 import type { Ctx, FaseNombre, GameState, PlayerId } from './types'
-import { esCampeon, esMistica, esTactica, esArcana, esCombate, faccionesCompartidas, getCardMeta } from './cards'
+import { esCampeon, esMistica, esTactica, esArcana, esCombate, faccionesCompartidas, getCardMeta, costeEterHabilidad } from './cards'
 import { esSingular, sacrificiosRequeridos, copiasEnCampo, campeonesSacrificables } from './campo'
 import { aplicarPago, validarPago, validarBloqueo, etersParaPagar, type ContextoUso } from './payments'
 import { SLOTS_CAMPEONES, SLOTS_MISTICAS_TACTICAS, SLOTS_ARCANAS_COMBATE, slotAZona } from './zones'
@@ -353,6 +353,10 @@ function validarActivarHabilidad(state: GameState, action: Extract<Action, { typ
 
   if (esBloqueado) {
     // Patrón "Bloqueado": eterIds de la Reserva → Campeón.eterBloqueado
+    const costoEsperado = costeEterHabilidad(meta)
+    if (costoEsperado > 0 && action.eterIds.length !== costoEsperado) {
+      return `${meta.name} requiere exactamente ${costoEsperado} Éter(es), indicaste ${action.eterIds.length}`
+    }
     if (action.eterIds.length === 0) return 'no indicaste Éteres para bloquear'
     if (new Set(action.eterIds).size !== action.eterIds.length) return 'éteres repetidos'
     for (const eterId of action.eterIds) {
@@ -365,16 +369,17 @@ function validarActivarHabilidad(state: GameState, action: Extract<Action, { typ
       }
     }
   } else {
-    // Patrón "Agota": eterIds de la Reserva → pagados (1A) + agota
+    // Patrón "Agota": eterIds de la Reserva → pagados (1A) + agota + 1/turno
     if (inst.agotado) return 'la carta ya está agotada'
     if (inst.opcionUsadaEsteTurno) return 'ya usaste esta habilidad este turno'
-    if (action.eterIds.length === 0) return 'no indicaste Éteres para pagar'
+    const costoEsperado = costeEterHabilidad(meta)
+    const costoReal = costoEsperado > 0 ? costoEsperado : 1 // fallback: 1 éter
+    if (action.eterIds.length !== costoReal) {
+      return `${meta.name} requiere exactamente ${costoReal} Éter(es), indicaste ${action.eterIds.length}`
+    }
     for (const eterId of action.eterIds) {
       if (!p.eterReserva.includes(eterId)) return `el Éter ${eterId} no está en tu Reserva`
     }
-    // Validar pago exacto
-    const validado = validarPago(state, state.turno, action.eterIds, inst.cardId!)
-    if (!validado.ok) return validado.error ?? 'pago inválido'
   }
   return null
 }

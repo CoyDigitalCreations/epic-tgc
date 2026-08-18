@@ -1,4 +1,4 @@
-import { getCardMeta, faccionesCompartidas, esArcana } from './cards'
+import { getCardMeta, faccionesCompartidas, esArcana, costeEterHabilidad } from './cards'
 import type { Action } from './actions'
 import { generarAccionesForja, validarActivarArcana } from './actions'
 import { atacantesElegibles, asignacionForzada, ataquesSinBloquear, rivalDe, tieneKeyword } from './combat'
@@ -81,21 +81,27 @@ export function getValidActions(state: GameState, playerId: PlayerId): Action[] 
       if (!meta.efectoActivo) continue
       const esBloqueado = meta.efectoActivo.includes('bloqueado')
       if (esBloqueado) {
-        // Patrón "Bloqueado": buscar 1 Éter de facción compartida en Reserva
-        const eterId = p.eterReserva.find((id) => {
+        // Patrón "Bloqueado": buscar N Éteres de facción compartida en Reserva
+        // (N = costo de la carta, extraído de efectoActivo)
+        const costo = costeEterHabilidad(meta)
+        const eteresValidos = p.eterReserva.filter((id) => {
           const eterMeta = state.instances[id]?.cardId ? getCardMeta(state.instances[id]!.cardId!) : null
           return eterMeta !== null && faccionesCompartidas(eterMeta.facciones, meta.facciones)
         })
-        if (eterId !== undefined) {
-          acciones.push({ type: 'activar_habilidad', cardInstanceId: champId, eterIds: [eterId] })
+        if (costo > 0 && eteresValidos.length >= costo) {
+          acciones.push({ type: 'activar_habilidad', cardInstanceId: champId, eterIds: eteresValidos.slice(0, costo) })
+        } else if (costo === 0 && eteresValidos.length > 0) {
+          // Fallback: si no se pudo parsear el costo, enviar 1 éter
+          acciones.push({ type: 'activar_habilidad', cardInstanceId: champId, eterIds: [eteresValidos[0]] })
         }
       } else {
-        // Patrón "Agota": necesita no agotado + no usado + éter para pagar
+        // Patrón "Agota": necesita no agotado + no usado + N éteres de Reserva
+        // (N = costo de la habilidad, NO el coste de invocación de la carta)
         if (inst!.agotado || inst!.opcionUsadaEsteTurno) continue
-        const eterIds = etersParaPagar(state, playerId, meta.id)
-        if (eterIds) {
-          const accion: Action = { type: 'activar_habilidad', cardInstanceId: champId, eterIds }
-          acciones.push(accion)
+        const costo = costeEterHabilidad(meta)
+        const costoReal = costo > 0 ? costo : 1 // fallback: 1 éter
+        if (p.eterReserva.length >= costoReal) {
+          acciones.push({ type: 'activar_habilidad', cardInstanceId: champId, eterIds: p.eterReserva.slice(0, costoReal) })
         }
       }
     }
