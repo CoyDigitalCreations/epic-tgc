@@ -1,4 +1,5 @@
 import type { GameEvent } from './events'
+import type { EfectoPendiente } from './effectRegistry'
 
 export type PlayerId = 'A' | 'B'
 
@@ -191,6 +192,8 @@ export interface GameState {
   objetivosPendientes?: { jugador: PlayerId; instId: string; trigger: string; opciones: string[] }[]
   ganador?: PlayerId
   motivo?: MotivoFin
+  /** Efectos pendientes centralizados (Effect Registry, Fase 1). */
+  efectosPendientes?: EfectoPendiente[]
 }
 
 /**

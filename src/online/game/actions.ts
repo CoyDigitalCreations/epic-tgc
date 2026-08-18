@@ -1,5 +1,6 @@
 import type { GameEvent } from './events'
 import { purgarEfectosTemporales, purgarKeywordsTemporales, dispararTrigger, type TriggerEfecto } from './efectos'
+import { resolverFaseEfectos, registrarEfectoPendiente, hastaAlba, duracionTurnos } from './effectRegistry'
 import { limpiarCombate, resolverAlba } from './phases'
 import { shuffleFisherYates } from './rng'
 import type { Ctx, FaseNombre, GameState, PlayerId } from './types'
@@ -522,6 +523,8 @@ function ejecutarPasarTurno(s: GameState, ctx: Ctx): void {
     const siguiente: FaseNombre = s.fase === 'forja' ? 'choque' : 'ocaso'
     if (s.fase === 'choque') {
       limpiarCombate(s) // ADR-11: limpieza defensiva al salir de Choque
+      // Effect Registry: resolver efectos de fase 'ocaso' antes de la purga legacy
+      resolverFaseEfectos(s, ctx, 'ocaso', s.turno)
       // C1 (ADR-22): al llegar el Ocaso expiran los efectos 'ocaso' del turno
       // en curso (ambos jugadores) y las keywordsTemporales otorgadas.
       purgarEfectosTemporales(s, 'ocaso', undefined, ctx)
@@ -633,11 +636,18 @@ function ejecutarColocarTactica(s: GameState, action: Extract<Action, { type: 'c
   p.campo.misticasTacticas[action.slot] = id
   // §5.5 (activación diferida): recién colocada → NO responde en la cadena 9.6
   s.instances[id]!.entradaEsteTurno = true
-  // Inicializar duración de Táctica si stats.duracion está definido
+  // Inicializar duración de Táctica via Effect Registry si stats.duracion está definido
   const meta = getCardMeta(s.instances[id]!.cardId!)
   const duracion = meta?.stats?.duracion
   if (duracion !== undefined && duracion !== null) {
-    s.instances[id]!.duracionTurnos = duracion
+    registrarEfectoPendiente(s, {
+      fuente: id,
+      owner: s.turno,
+      triggerFase: 'ocaso',
+      triggerOwner: 'dueño',
+      accion: { tipo: 'enviar-cementerio', objetivo: id },
+      duracion: duracionTurnos(duracion),
+    })
   }
   ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: id, zona, jugador: s.turno, bocaArriba: true })
   ctx.emit({ type: 'carta_invocada', cardInstanceId: id, tipo: 'Táctica', slot: action.slot })
@@ -812,9 +822,16 @@ function ejecutarActivarHabilidad(s: GameState, action: Extract<Action, { type: 
       p.eterReserva.splice(p.eterReserva.indexOf(eterId), 1)
     }
     inst.eterBloqueado = [...(inst.eterBloqueado ?? []), ...action.eterIds]
-    // Si el texto indica "Alba" → marcar para liberar en Alba del dueño
+    // Si el texto indica "Alba" → registrar efecto pendiente para liberar en Alba del dueño
     if (meta.efectoActivo?.includes('Alba')) {
-      inst.liberarEnAlba = [...(inst.liberarEnAlba ?? []), ...action.eterIds]
+      registrarEfectoPendiente(s, {
+        fuente: action.cardInstanceId,
+        owner: s.turno,
+        triggerFase: 'alba',
+        triggerOwner: 'dueño',
+        accion: { tipo: 'liberar-eter', eterIds: [...action.eterIds], destino: 'reserva' },
+        duracion: hastaAlba(),
+      })
     }
     ctx.emit({ type: 'eter_bloqueado', jugador: s.turno, eterIds: action.eterIds, campeonId: action.cardInstanceId })
     // Disparar trigger para handlers con targeting (Aurora/Ragnar).

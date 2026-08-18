@@ -66,5 +66,18 @@ export {
 export { registrarEfectos } from './handlers'
 export type { TriggerEfecto, PayloadEfecto, HandlerEfecto } from './efectos'
 export type { Modificador, ExpiraModificador } from './types'
+export {
+  registrarEfectoPendiente,
+  resolverFaseEfectos,
+  limpiarEfectosFuente,
+  cancelarEfectoPendiente,
+  efectosPendientesDe,
+  contarEfectosPendientes,
+  duracionTurnos,
+  hastaAlba,
+  hastaFinTurno,
+  permanente,
+} from './effectRegistry'
+export type { EfectoPendiente, EfectoAccion, EfectoDuracion, FaseTrigger, OwnerTrigger } from './effectRegistry'
 import { registrarEfectos } from './handlers'
 registrarEfectos() // C1 (ADR-20): registra los handlers de efectos al importar el motor

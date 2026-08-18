@@ -1,5 +1,6 @@
 import { reagruparEter } from './payments'
 import { purgarEfectosTemporales, dispararTrigger } from './efectos'
+import { resolverFaseEfectos } from './effectRegistry'
 import type { Ctx, GameState, PlayerId } from './types'
 
 /**
@@ -13,26 +14,11 @@ import type { Ctx, GameState, PlayerId } from './types'
 export function resolverAlba(s: GameState, ctx: Ctx, jugador: PlayerId): void {
   const p = s.players[jugador]
 
+  // 0a. Effect Registry: resolver efectos pendientes de fase 'alba'
+  resolverFaseEfectos(s, ctx, 'alba', jugador)
+
   // 0. Expiran los efectos 'alba-dueño' del jugador (ADR-22)
   purgarEfectosTemporales(s, 'alba-dueño', jugador, ctx)
-
-  // 0b. Liberar éteres bloqueados por habilidades activas (Aurora/Ragnar)
-  //     "Al inicio de tu próxima Alba reagrupa el Éter usado por este efecto"
-  for (const slot of p.campo.campeones) {
-    if (!slot) continue
-    const inst = s.instances[slot]
-    if (!inst?.liberarEnAlba || inst.liberarEnAlba.length === 0) continue
-    const eterIds = [...inst.liberarEnAlba]
-    // Quitar de eterBloqueado del campeón
-    if (inst.eterBloqueado) {
-      inst.eterBloqueado = inst.eterBloqueado.filter((id) => !eterIds.includes(id))
-    }
-    // Limpiar liberarEnAlba
-    delete inst.liberarEnAlba
-    // Mover a Reserva (2A)
-    p.eterReserva.push(...eterIds)
-    ctx.emit({ type: 'eter_reagrupado', jugador, eterIds })
-  }
 
   // 1. Enderezar Campeones (silencioso)
   for (const slot of p.campo.campeones) {

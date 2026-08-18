@@ -360,31 +360,6 @@ export function otorgarKeyword(s: GameState, id: string, kw: string, temporal = 
 export function purgarEfectosTemporales(s: GameState, expira: ExpiraModificador, jugador?: PlayerId, ctx?: Ctx): void {
   const jugadores: PlayerId[] = jugador ? [jugador] : ['A', 'B']
   for (const j of jugadores) {
-    // Expirar Tácticas por duración (solo en Ocaso del dueño)
-    if (expira === 'ocaso') {
-      for (const slot of s.players[j].campo.misticasTacticas) {
-        if (!slot) continue
-        const inst = s.instances[slot]
-        if (!inst) continue
-        if (inst.duracionTurnos !== undefined) {
-          inst.duracionTurnos -= 1
-          if (inst.duracionTurnos <= 0) {
-            // Enviar Táctica al cementerio
-            const idx = s.players[j].campo.misticasTacticas.indexOf(slot)
-            const zona = `3${String.fromCharCode(65 + idx)}` // 3A, 3B, 3C
-            if (ctx) {
-              ctx.emit({ type: 'carta_salida_de_zona', cardInstanceId: slot, zona, jugador: j })
-            }
-            s.players[j].campo.misticasTacticas[idx] = null
-            s.players[j].cementerio.push(slot)
-            if (ctx) {
-              ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: slot, zona: '2G', jugador: j, bocaArriba: true })
-            }
-          }
-        }
-      }
-    }
-
     for (const id of instanciasEnCampo(s, j)) {
       const inst = s.instances[id]
       if (!inst?.modificadores) continue
