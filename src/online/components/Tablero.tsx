@@ -144,7 +144,7 @@ function OpcionTutor({
       onClick={() => onAccion({ type: 'elegir_objetivo', objetivoId: inst.cardInstanceId })}
       title={meta?.flavorText}
       className="flex items-center gap-2 bg-surface-2 hover:bg-card-border border border-card-border rounded-lg
-                 px-2 py-1.5 transition-colors cursor-pointer text-left max-w-[200px]"
+                 px-2 py-1.5 transition-colors cursor-pointer text-left max-w-50"
     >
       <div
         className="shrink-0 rounded-sm border border-card-border overflow-hidden flex items-center justify-center"
@@ -275,7 +275,7 @@ interface GrillaProps {
   /** Abre la carta en grande (CartaZoom) para revisar su efecto. */
   abrirZoom: (inst: CardInstance) => void
   /** Abre el panel inferior con la lista completa de una zona (Éter 2A/1A, Cementerio 2G, Exilio 1G). */
-  abrirPanel: (jugador: 'A' | 'B', zona: ZonaPanel) => void
+  abrirPanel: (jugador: 'A' | 'B', zona: ZonaPanel, campeonSlot?: number) => void
   /** Grilla del rival: se renderiza de cabeza (vista desde el otro lado de la mesa). */
   invertida?: boolean
   seleccion: Seleccion
@@ -409,7 +409,7 @@ function GrillaJugador({
             inst={bloqueados[0]}
             tamano="md"
             onZoom={() => abrirZoom(bloqueados[0])}
-            onClick={() => setPanelAbierto({ jugador, zona: 'bloqueado', campeonSlot: slot })}
+            onClick={() => abrirPanel(jugador, 'bloqueado', slot)}
             invertida={invertida}
             marca={
               bloqueados.length > 1 ? (
@@ -762,9 +762,9 @@ export function Tablero({ vista, acciones, leTocaA, log, onAccion, onAbandonar, 
         </div>
       </header>
 
-      <main className="max-w-[1400px] mx-auto px-4 mt-2 flex flex-col xl:flex-row gap-4 items-start">
+      <main className="max-w-350 mx-auto px-4 mt-2 flex flex-col xl:flex-row gap-4 items-start">
         {/* ── Panel de Habilidades Activas (Columna Izquierda) ─────────── */}
-        <div className="hidden xl:block w-[160px] flex-shrink-0">
+        <div className="hidden xl:block w-40 shrink-0">
           <ActiveAbilitiesPanel s={vista} />
         </div>
 
@@ -795,7 +795,7 @@ export function Tablero({ vista, acciones, leTocaA, log, onAccion, onAbandonar, 
               onAccion={onAccion}
               abrirSelector={abrirSelector}
               abrirZoom={abrirZoom}
-              abrirPanel={(j, z) => setPanelAbierto({ jugador: j, zona: z })}
+              abrirPanel={(j, z, slot) => setPanelAbierto({ jugador: j, zona: z, campeonSlot: slot })}
               invertida
               seleccion={null}
               animaciones={animaciones}
@@ -821,7 +821,7 @@ export function Tablero({ vista, acciones, leTocaA, log, onAccion, onAbandonar, 
               onAccion={onAccion}
               abrirSelector={abrirSelector}
               abrirZoom={abrirZoom}
-              abrirPanel={(j, z) => setPanelAbierto({ jugador: j, zona: z })}
+              abrirPanel={(j, z, slot) => setPanelAbierto({ jugador: j, zona: z, campeonSlot: slot })}
               seleccion={seleccion}
               animaciones={animaciones}
             />
@@ -829,9 +829,9 @@ export function Tablero({ vista, acciones, leTocaA, log, onAccion, onAbandonar, 
         </div>
 
         {/* ── Panel Lateral (Columna Derecha) ────────────────────────────── */}
-        <div className="w-full xl:w-[340px] flex flex-col gap-3 shrink-0">
+        <div className="w-full xl:w-85 flex flex-col gap-3 shrink-0">
           <section className="grid grid-cols-1 gap-3">
-            <div className="bg-surface border border-card-border rounded-lg p-2 min-h-[72px]">
+            <div className="bg-surface border border-card-border rounded-lg p-2 min-h-18">
               <p className="text-[9px] uppercase tracking-wider text-gray-500 mb-1.5">
                 {pilaGlobal.length > 0 ? 'Cadena Global' : 'Cadena 9.6'}{pila.length > 0 ? ` (${pila.length})` : ''}
                 {pila.length > 0 ? ` (${pila.length})` : ''}
@@ -966,7 +966,7 @@ export function Tablero({ vista, acciones, leTocaA, log, onAccion, onAbandonar, 
               </p>
             </div>
 
-            <div className="flex-1 min-w-[280px]">
+            <div className="flex-1 min-w-70">
               <p className="text-sm text-gray-200 mb-2">
                 {seleccion.tipo === 'pagar'
                   ? 'Elegí los Éteres de tu Reserva (2A) para pagar:'
@@ -1080,8 +1080,8 @@ export function Tablero({ vista, acciones, leTocaA, log, onAccion, onAbandonar, 
                   : panelAbierto.campeonSlot !== undefined
                     ? vista.instances[pj.campo.campeones[panelAbierto.campeonSlot]]?.eterBloqueado ?? []
                     : pj.campo.campeones
-                        .filter((id): id is string => id !== null)
-                        .flatMap((cid) => vista.instances[cid]?.eterBloqueado ?? [])
+                      .filter((id): id is string => id !== null)
+                      .flatMap((cid) => vista.instances[cid]?.eterBloqueado ?? [])
         const titulo =
           panelAbierto.zona === 'reserva'
             ? 'Reserva de Éter'
@@ -1128,7 +1128,7 @@ export function Tablero({ vista, acciones, leTocaA, log, onAccion, onAbandonar, 
                     return (
                       <div key={id} className="flex flex-col items-center gap-0.5">
                         <MiniCard inst={inst} tamano="sm" onZoom={() => abrirZoom(inst)} />
-                        <span className="text-[9px] text-gray-500 max-w-[64px] truncate">{nombre}</span>
+                        <span className="text-[9px] text-gray-500 max-w-16 truncate">{nombre}</span>
                       </div>
                     )
                   })}
