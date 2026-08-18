@@ -812,7 +812,16 @@ function ejecutarActivarHabilidad(s: GameState, action: Extract<Action, { type: 
       p.eterReserva.splice(p.eterReserva.indexOf(eterId), 1)
     }
     inst.eterBloqueado = [...(inst.eterBloqueado ?? []), ...action.eterIds]
+    // Si el texto indica "Alba" → marcar para liberar en Alba del dueño
+    if (meta.efectoActivo?.includes('Alba')) {
+      inst.liberarEnAlba = [...(inst.liberarEnAlba ?? []), ...action.eterIds]
+    }
     ctx.emit({ type: 'eter_bloqueado', jugador: s.turno, eterIds: action.eterIds, campeonId: action.cardInstanceId })
+    // Disparar trigger para handlers con targeting (Aurora/Ragnar).
+    // Cassandra/Korr no tienen handler → el trigger es no-op.
+    dispararTrigger(s, ctx, 'al-activar-habilidad', s.turno, [action.cardInstanceId], {
+      objetivoId: action.objetivoId,
+    })
   } else {
     // Patrón "Agota": éteres → 1A (pagado) + agota + 1/turno
     for (const eterId of action.eterIds) {

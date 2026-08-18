@@ -128,9 +128,24 @@ export function registrarEfectosHabilidades(): void {
   // FB-010 Aurora (Activo): "Paga 2 Éter (bloqueado): mientras ese Éter esté
   // bloqueado, un Campeón que controles gana +2 de ATQ y +2 de RES. Al inicio
   // de tu próxima Alba reagrupa el Éter usado por este efecto."
-  // → El bloqueo ya ocurre en ejecutarActivarHabilidad. El aura se aplica
-  //   dinámicamente en aurasDe / statsDe. Solo necesitamos targeting.
-  //   El aura se desactiva cuando el éter se libera.
+  // → El bloqueo ocurre en ejecutarActivarHabilidad + marca liberarEnAlba.
+  //   El targeting pide elegir un campeón propio; se aplica mod +2/+2
+  //   con expira 'alba-dueño' (se purga cuando el éter se libera en Alba).
+  registrarEfecto('al-activar-habilidad', 'FB-010', (s, _ctx, _inst, payload) => {
+    if (payload.contextoUso === 'objetivo-elegido') {
+      const objetivo = s.instances[payload.objetivoId!]
+      if (!objetivo) return
+      objetivo.modificadores = [
+        ...(objetivo.modificadores ?? []),
+        { stat: 'poder', valor: 2, expira: 'alba-dueño' },
+        { stat: 'resistencia', valor: 2, expira: 'alba-dueño' },
+      ]
+      return
+    }
+    // ARMADO: campeones propios válidos (el jugador elige cuál buffear)
+    const opciones = objetivosCampeonesValidos(s, payload.jugador)
+    armarPendiente(s, payload.jugador, _inst.cardInstanceId, 'al-activar-habilidad', opciones)
+  })
 
   // DS-001 Ragnar (Activo): "Paga 2 Éter (bloqueado): mientras ese Éter esté
   // bloqueado, un Campeón que controla el rival pierde 2 de ATQ y 2 de RES.

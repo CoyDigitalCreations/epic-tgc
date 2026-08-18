@@ -325,6 +325,7 @@ function GrillaJugador({
           tamano="md"
           onClick={enSeleccion ? undefined : () => abrirPanel(jugador, 'reserva')}
           onZoom={() => abrirZoom(vista.instances[topeId])}
+          invertida={invertida}
           marca={
             extra > 0 ? (
               <span
@@ -339,6 +340,7 @@ function GrillaJugador({
                   padding: '1px 4px',
                   borderRadius: 4,
                   pointerEvents: 'none',
+                  ...(invertida ? { transform: 'rotate(180deg)' } : undefined),
                 }}
               >
                 +{extra}
@@ -359,7 +361,7 @@ function GrillaJugador({
     const bloquear = acciones.find((a) => a.type === 'bloquear_eter' && a.campeonSlot === slot)
     const rotStyle = invertida ? { transform: 'rotate(180deg)' } : undefined
     return (
-      <MiniCard key={id} inst={inst} tamano="md" onZoom={() => abrirZoom(inst)}>
+      <MiniCard key={id} inst={inst} tamano="md" onZoom={() => abrirZoom(inst)} invertida={invertida}>
         {leTocaA && (ataque || bloquear) && (
           <div className="flex gap-1 flex-wrap justify-center" style={rotStyle}>
             {ataque && <Boton accion={ataque} onClick={onAccion} />}
@@ -408,6 +410,7 @@ function GrillaJugador({
             tamano="md"
             onZoom={() => abrirZoom(bloqueados[0])}
             onClick={() => setPanelAbierto({ jugador, zona: 'bloqueado', campeonSlot: slot })}
+            invertida={invertida}
             marca={
               bloqueados.length > 1 ? (
                 <span
@@ -422,6 +425,7 @@ function GrillaJugador({
                     padding: '1px 4px',
                     borderRadius: 4,
                     pointerEvents: 'none',
+                    ...(invertida ? { transform: 'rotate(180deg)' } : undefined),
                   }}
                 >
                   ×{bloqueados.length}
@@ -459,7 +463,7 @@ function GrillaJugador({
       <Celda key={zona} zona={zona} glow={hayGlow || hayAtaque} glowColor={hayAtaque ? 'red' : 'green'} invertida={invertida}>
         {id ? (
           <div className="relative">
-            {soy && leTocaA ? campeonPropio(slot, id) : <MiniCard inst={vista.instances[id]} tamano="md" onZoom={() => abrirZoom(vista.instances[id])} />}
+            {soy && leTocaA ? campeonPropio(slot, id) : <MiniCard inst={vista.instances[id]} tamano="md" onZoom={() => abrirZoom(vista.instances[id])} invertida={invertida} />}
             <ChampionStatus s={vista} id={id} invertida={invertida} />
             <FocosChampion s={vista} id={id} invertida={invertida} />
           </div>
@@ -485,7 +489,7 @@ function GrillaJugador({
     celdas.push(
       <Celda key={zona} zona={zona} invertida={invertida}>
         {id ? (
-          <MiniCard inst={vista.instances[id]} tamano="md" onZoom={() => abrirZoom(vista.instances[id])} />
+          <MiniCard inst={vista.instances[id]} tamano="md" onZoom={() => abrirZoom(vista.instances[id])} invertida={invertida} />
         ) : undefined}
       </Celda>,
     )
@@ -506,6 +510,7 @@ function GrillaJugador({
                 ? () => abrirZoom(inst)
                 : undefined
             }
+            invertida={invertida}
           />
         ) : undefined}
       </Celda>,
@@ -513,7 +518,7 @@ function GrillaJugador({
   }
   celdas.push(
     <Celda key="3G" zona="3G" invertida={invertida}>
-      <MiniCard inst={{ cardInstanceId: 'mazo', cardId: null, owner: jugador }} tamano="md" />
+      <MiniCard inst={{ cardInstanceId: 'mazo', cardId: null, owner: jugador }} tamano="md" invertida={invertida} />
       <span
         className="text-[8px] text-gray-500 font-mono -mt-0.5"
         style={invertida ? { transform: 'rotate(180deg)' } : undefined}
@@ -540,6 +545,7 @@ function GrillaJugador({
                 ? () => abrirZoom(inst)
                 : undefined
             }
+            invertida={invertida}
           />
         ) : undefined}
       </Celda>,

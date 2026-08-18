@@ -73,8 +73,10 @@ export interface CardInstance {
    * (solo las de turnos anteriores); la Alba del dueño lo borra (phases.ts).
    */
   entradaEsteTurno?: boolean
-  /** Éter bloqueado (1B-1F): ids de Éter sobre este Campeón (6.2: boca arriba). */
-  eterBloqueado?: string[]
+   /** Éter bloqueado (1B-1F): ids de Éter sobre este Campeón (6.2: boca arriba). */
+   eterBloqueado?: string[]
+   /** IDs de Éteres que deben liberarse (→ Reserva) en Alba del dueño (Aurora/Ragnar activo). */
+   liberarEnAlba?: string[]
   /** ID de la carta que robó control de este Campeón (Aurora FB-010). Si el ladrón sale del campo, el control regresa. */
   stolenBy?: string
   /** IDs de Éteres robados por Varek (DS-013). Si Varek sale del campo, regresan al dueño original. */
