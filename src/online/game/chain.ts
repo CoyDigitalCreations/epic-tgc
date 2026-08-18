@@ -33,15 +33,19 @@ import { slotAZona } from './zones'
  */
 export function respondiblesDe(state: GameState, playerId: PlayerId): string[] {
   const p = state.players[playerId]
+  // Cartas que ya están en la pila de la cadena (no pueden responder dos veces)
+  const enPila = new Set(state.combate?.cadena?.pila ?? state.cadena?.pila ?? [])
   const res: string[] = []
   for (const id of p.campo.misticasTacticas) {
     if (!id) continue
+    if (enPila.has(id)) continue
     const inst = state.instances[id]
     const meta = inst?.cardId ? getCardMeta(inst.cardId) : null
     if (meta && esTactica(meta) && !inst.entradaEsteTurno) res.push(id)
   }
   for (const id of p.campo.arcanasCombate) {
     if (!id) continue
+    if (enPila.has(id)) continue
     const inst = state.instances[id]
     const meta = inst?.cardId ? getCardMeta(inst.cardId) : null
     if (!meta) continue
@@ -51,6 +55,7 @@ export function respondiblesDe(state: GameState, playerId: PlayerId): string[] {
   // Campeones con efecto Disparo (no agotados)
   for (const id of p.campo.campeones) {
     if (!id) continue
+    if (enPila.has(id)) continue
     const inst = state.instances[id]
     if (inst?.agotado) continue
     const meta = inst?.cardId ? getCardMeta(inst.cardId) : null
