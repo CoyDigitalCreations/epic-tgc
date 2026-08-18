@@ -59,11 +59,12 @@ export function esVinculo(card: AnyCard): card is VinculoCard {
 
 /**
  * Extrae el costo en Éteres de una habilidad activa desde efectoActivo.
- * Patrones soportados: "Paga 1 Éter", "Paga 2 Éter", etc.
+ * Patrones soportados: "Paga N Éter", "paga N Éter", "hasta un máximo de N Éter".
  * Retorna 0 si no se puede parsear (fallback seguro).
  */
 export function costeEterHabilidad(card: AnyCard): number {
   if (!('efectoActivo' in card) || !card.efectoActivo) return 0
-  const match = card.efectoActivo.match(/[Pp]aga (\d+) Éter/)
+  // Matchea "Paga 2 Éter", "paga 1 Éter", "hasta un máximo de 2 Éter"
+  const match = card.efectoActivo.match(/(?:de\s+)?(\d+)\s+Éter/)
   return match ? parseInt(match[1], 10) : 0
 }

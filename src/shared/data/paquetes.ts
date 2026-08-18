@@ -224,7 +224,7 @@ export const ESTASIS_CARDS: AnyCard[] = [
     stats: { cost: 4, poder: 9, resistencia: 9 },
     tipoEfecto: 'Especial',
     efectoPasivo: 'Al ser invocada, toma control de un Campeón que controla el rival. Mientras esta carta esté en el campo, controla ese Campeón.',
-    efectoActivo: 'Paga 2 Éter (bloqueado): mientras ese Éter esté bloqueado, un Campeón que controles gana +2 de ATQ y +2 de RES. Al inicio de tu próxima Alba reagrupa el Éter usado por este efecto.',
+    efectoActivo: 'Puedes pagar hasta un máximo de 2 Éter (bloqueado) para que un Campeón que controles gane +2 de ATQ y +2 de RES mientras ese Éter esté bloqueado. Al inicio de tu próxima Alba reagrupa el Éter usado por este efecto.',
   },
   {
     id: 'FB-011',
@@ -282,7 +282,7 @@ export const ESTASIS_CARDS: AnyCard[] = [
     stats: { cost: 3, poder: 4, resistencia: 3 },
     tipoEfecto: 'Activo',
     tipoHabilidad: 'Un Solo Uso',
-    efectoActivo: 'Una vez por turno, paga 1 Éter y agota esta carta: cambia el agotamiento de un Campeón que controla el rival (de agotado a no agotado, o viceversa).',
+    efectoActivo: 'Una vez por turno, puedes pagar hasta un máximo de 1 Éter y agotar esta carta para cambiar el agotamiento de un Campeón que controla el rival (de agotado a no agotado, o viceversa).',
   },
   {
     id: 'FB-014',
@@ -340,7 +340,7 @@ export const ESTASIS_CARDS: AnyCard[] = [
     stats: { cost: 3, poder: 3, resistencia: 5 },
     tipoEfecto: 'Activo',
     tipoHabilidad: 'Continua',
-    efectoActivo: 'Paga 1 Éter (bloqueado): mientras esté bloqueado, los Campeones que controles ganan +1 de RES.',
+    efectoActivo: 'Puedes pagar hasta un máximo de 1 Éter (bloqueado) para que los Campeones que controles ganen +1 de RES mientras esté bloqueado.',
   },
   {
     id: 'FB-017',
@@ -360,7 +360,7 @@ export const ESTASIS_CARDS: AnyCard[] = [
     stats: { cost: 4, poder: 4, resistencia: 5 },
     tipoEfecto: 'Activo',
     tipoHabilidad: 'Un Solo Uso',
-    efectoActivo: 'Una vez por turno, paga 1 Éter y agota esta carta: libera hasta 2 Éter bloqueados de Campeones que controla el rival (van a la zona de pago de su dueño).',
+    efectoActivo: 'Una vez por turno, puedes pagar hasta un máximo de 1 Éter y agotar esta carta para liberar hasta 2 Éter bloqueados de Campeones que controla el rival (van a la zona de pago de su dueño).',
   },
   {
     id: 'FB-018',
@@ -684,7 +684,7 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     stats: { cost: 4, poder: 9, resistencia: 9 },
     tipoEfecto: 'Especial',
     efectoPasivo: 'Al ser invocada, destruye un Campeón que controla el rival.',
-    efectoActivo: 'Paga 2 Éter (bloqueado): mientras ese Éter esté bloqueado, un Campeón que controla el rival pierde 2 de ATQ y 2 de RES. Al inicio de tu próxima Alba reagrupa el Éter usado por este efecto.',
+    efectoActivo: 'Puedes pagar hasta un máximo de 2 Éter (bloqueado) para que un Campeón que controla el rival pierda 2 de ATQ y 2 de RES mientras ese Éter esté bloqueado. Al inicio de tu próxima Alba reagrupa el Éter usado por este efecto.',
   },
 
   /* ── ÉTER (9 diseños → 15 copias) ─────────────────────────── */
@@ -885,7 +885,7 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     stats: { cost: 3, poder: 4, resistencia: 3 },
     tipoEfecto: 'Activo',
     tipoHabilidad: 'Un Solo Uso',
-    efectoActivo: 'Una vez por turno, paga 1 Éter y agota esta carta: destruye un Campeón que controla el rival con 3 o menos de RES.',
+    efectoActivo: 'Una vez por turno, puedes pagar hasta un máximo de 1 Éter y agotar esta carta para destruir un Campeón que controla el rival con 3 o menos de RES.',
   },
   {
     id: 'DS-014',
@@ -943,7 +943,7 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     stats: { cost: 3, poder: 3, resistencia: 5 },
     tipoEfecto: 'Activo',
     tipoHabilidad: 'Continua',
-    efectoActivo: 'Paga 1 Éter (bloqueado): mientras esté bloqueado, los Campeones que controlas ganan +1 de ATQ.',
+    efectoActivo: 'Puedes pagar hasta un máximo de 1 Éter (bloqueado) para que los Campeones que controlas ganen +1 de ATQ mientras esté bloqueado.',
   },
   {
     id: 'DS-017',
@@ -963,7 +963,7 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     stats: { cost: 4, poder: 4, resistencia: 5 },
     tipoEfecto: 'Activo',
     tipoHabilidad: 'Un Solo Uso',
-    efectoActivo: 'Una vez por turno, paga 1 Éter y agota esta carta: toma control de hasta 2 Éter bloqueados en Campeones que controla el rival (van a tu Reserva). Mientras esta carta esté en el campo, controla esos Éteres.',
+    efectoActivo: 'Una vez por turno, puedes pagar hasta un máximo de 1 Éter y agotar esta carta para tomar control de hasta 2 Éter bloqueados en Campeones que controla el rival (van a tu Reserva). Mientras esta carta esté en el campo, controla esos Éteres.',
   },
   {
     id: 'DS-018',
