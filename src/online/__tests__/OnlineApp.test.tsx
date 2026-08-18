@@ -66,6 +66,8 @@ describe('OnlineApp', () => {
     renderApp()
     await user.click(screen.getByRole('button', { name: 'Comenzar partida' }))
     await user.click(screen.getByRole('button', { name: 'Pasar mulligan' }))
+    // Expandir Log Detallado para ver los eventos del bot
+    await user.click(screen.getByText(/Log Detallado/))
     // El bot juega su mulligan solo y la partida arranca
     await waitFor(
       () => {

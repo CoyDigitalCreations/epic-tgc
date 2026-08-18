@@ -896,20 +896,6 @@ export function Tablero({ vista, acciones, leTocaA, log, logDetallado = [], onAc
                 </div>
               )}
             </div>
-            <div className="bg-surface border border-card-border rounded-lg p-2 max-h-48 overflow-y-auto">
-              <p className="text-[9px] uppercase tracking-wider text-gray-500 mb-1.5">Bitácora</p>
-              {log.length === 0 ? (
-                <p className="text-[11px] text-gray-600 italic">La partida aún no empieza.</p>
-              ) : (
-                <ul className="space-y-0.5">
-                  {log.map((linea, i) => (
-                    <li key={i} className="text-[11px] text-gray-300 leading-snug">
-                      {linea}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
             {/* ── Log Detallado (debugging) ─────────────────────── */}
             <LogDetallado lineas={logDetallado} />
           </section>
