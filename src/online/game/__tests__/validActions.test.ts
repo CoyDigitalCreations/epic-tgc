@@ -6,6 +6,7 @@ import { getValidActions } from '../validActions'
 import type { Ctx, GameState, PlayerId } from '../types'
 
 const CAMPEON = 'FB-011' // cost 2
+const CAMPEON_BLOQUEO = 'FB-016' // Cassandra: habilidad activa con patrón "bloqueado"
 const MISTICA = 'FB-019' // cost 2
 const TACTICA = 'FB-021' // cost 0
 const ARCANA = 'FB-023' // cost 3
@@ -147,13 +148,22 @@ describe('getValidActions en Forja (5.5)', () => {
     expect(tipos).not.toContain('jugar_campeon')
   })
 
-  it('incluye bloquear_eter por Campeón propio con Éter de facción compartida y efecto de bloqueo en la Reserva', () => {
-    let s = conInstancias(estadoMinimo(), { cam1: { cardId: CAMPEON, owner: 'A' } })
+  it('incluye bloquear_eter por Campeón propio con habilidad activa "bloqueado" y Éter de facción compartida en la Reserva', () => {
+    let s = conInstancias(estadoMinimo(), { cam1: { cardId: CAMPEON_BLOQUEO, owner: 'A' } })
     s = { ...s, players: { ...s.players, A: { ...s.players.A, campo: { ...s.players.A.campo, campeones: ['cam1', null, null, null, null] } } } }
-    s = conEteres(s, 'FB-007', 1) // FB-007 tiene efectoBloqueo (+2/+2)
+    s = conEteres(s, 'FB-001', 1) // Éter Orden compatible con Cassandra (Orden)
 
     const bloqueos = getValidActions(s, 'A').filter((a) => a.type === 'bloquear_eter')
     expect(bloqueos).toHaveLength(1)
+  })
+
+  it('NO incluye bloquear_eter para Campeón sin habilidad que use éter bloqueado', () => {
+    let s = conInstancias(estadoMinimo(), { cam1: { cardId: CAMPEON, owner: 'A' } })
+    s = { ...s, players: { ...s.players, A: { ...s.players.A, campo: { ...s.players.A.campo, campeones: ['cam1', null, null, null, null] } } } }
+    s = conEteres(s, 'FB-001', 1)
+
+    const bloqueos = getValidActions(s, 'A').filter((a) => a.type === 'bloquear_eter')
+    expect(bloqueos).toHaveLength(0)
   })
 
   it('solo expone acciones para el jugador ACTIVO; el rival solo ve rendirse', () => {

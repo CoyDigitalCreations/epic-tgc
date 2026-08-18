@@ -68,3 +68,24 @@ export function costeEterHabilidad(card: AnyCard): number {
   const match = card.efectoActivo.match(/(?:de\s+)?(\d+)\s+Éter/)
   return match ? parseInt(match[1], 10) : 0
 }
+
+/**
+ * Determina si un campeón tiene alguna razón para tener Éter bloqueado.
+ *
+ * Retorna true si:
+ * 1. Su efectoActivo contiene 'bloqueado' (habilidad activa: Korr, Cassandra, Aurora, Ragnar)
+ * 2. Su efectoPasivo referencia 'Éter bloqueado' (pasivo: FB-005, DS-006)
+ * 3. Tiene keyword 'Transmutar' (Cristal Huérfano: necesita 1 éter bloqueado como recurso)
+ *
+ * Retorna false para campeones como Draven, Emisario, etc. que NO se benefician
+ * de tener éter bloqueado.
+ */
+export function campeonNecesitaEterBloqueado(card: AnyCard): boolean {
+  // 1. Habilidad activa con patrón "bloqueado"
+  if ('efectoActivo' in card && card.efectoActivo?.includes('bloqueado')) return true
+  // 2. Efecto pasivo que referencia éter bloqueado
+  if ('efectoPasivo' in card && card.efectoPasivo?.includes('Éter bloqueado')) return true
+  // 3. Transmutar (necesita recursos bloqueados)
+  if ('keywords' in card && card.keywords?.includes('Transmutar')) return true
+  return false
+}

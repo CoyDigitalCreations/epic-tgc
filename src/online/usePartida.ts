@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { applyAction, botTonto, createInitialState, getValidActions } from './game'
 import type { Action, Ctx, GameState, PlayerId } from './game'
 import { eventosParaLog } from './log'
+import { eventosDetalladosParaLog } from './logDetallado'
 
 export interface PartidaConfig {
   /** Mazo del humano (jugador A). */
@@ -71,14 +72,17 @@ export function usePartida(config: PartidaConfig) {
   const estadoRef = useRef<GameState | null>(null)
   const ctxRef = useRef<Ctx | null>(null)
   const logRef = useRef<string[]>([])
+  const logDetalladoRef = useRef<string[]>([])
   if (!estadoRef.current) {
     const inicial = createInitialState(config.deckA, config.deckB, config.seed)
     estadoRef.current = inicial.state
     ctxRef.current = inicial.ctx
     logRef.current = [`La partida comienza (seed ${config.seed}).`]
+    logDetalladoRef.current = [`=== PARTIDA SEED ${config.seed} ===`]
   }
   const [estado, setEstado] = useState<GameState>(estadoRef.current)
   const [log, setLog] = useState<string[]>(logRef.current)
+  const [logDetallado, setLogDetallado] = useState<string[]>(logDetalladoRef.current)
   const [animaciones, setAnimaciones] = useState<AnimacionEntrada[]>([])
   const delayRef = useRef(config.delayMs ?? 350)
   const jugadasBotRef = useRef(0)
@@ -86,6 +90,7 @@ export function usePartida(config: PartidaConfig) {
   const sincronizar = useCallback(() => {
     setEstado(estadoRef.current as GameState)
     setLog(logRef.current)
+    setLogDetallado(logDetalladoRef.current)
   }, [])
 
   /** Aplica una acción del humano. Los eventos del motor se suman al log y disparan animaciones. */
@@ -102,6 +107,7 @@ export function usePartida(config: PartidaConfig) {
       }
       estadoRef.current = r.state
       logRef.current = [...logRef.current, ...eventosParaLog(r.state, r.events)]
+      logDetalladoRef.current = [...logDetalladoRef.current, ...eventosDetalladosParaLog(r.state, r.events)]
       // Animaciones: capturar eventos relevantes
       const now = Date.now()
       const nuevasAnimaciones: AnimacionEntrada[] = []
@@ -184,5 +190,5 @@ export function usePartida(config: PartidaConfig) {
     sincronizar()
   }, [config, sincronizar])
 
-  return { estado, log, leTocaA, acciones, ejecutar, reiniciar, animaciones }
+  return { estado, log, logDetallado, leTocaA, acciones, ejecutar, reiniciar, animaciones }
 }

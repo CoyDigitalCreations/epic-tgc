@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { aporteDe, campeonesSacrificables, faccionesCompartidas, getCardMeta, sacrificiosRequeridos } from '../game'
 import type { Action, CardInstance, GameState, PlayerId } from '../game'
@@ -17,6 +17,8 @@ interface TableroProps {
   acciones: Action[]
   leTocaA: boolean
   log: string[]
+  /** Log detallado con TODOS los eventos (para debugging). */
+  logDetallado?: string[]
   onAccion: (a: Action) => void
   onAbandonar: () => void
   /** Animaciones de movimiento de cartas (glow en celda destino). */
@@ -281,6 +283,40 @@ interface GrillaProps {
   seleccion: Seleccion
   /** Animaciones de movimiento (glow en celda destino). */
   animaciones?: Array<{ tipo: string; zona?: string; jugador?: PlayerId; atacantes?: string[]; cardInstanceId?: string; key: number }>
+}
+
+/** Panel colapsable de log detallado para debugging. */
+function LogDetallado({ lineas }: { lineas: string[] }) {
+  const [abierto, setAbierto] = useState(false)
+  const scrollRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (abierto && scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+    }
+  }, [lineas.length, abierto])
+  return (
+    <div className="bg-[#0a0a12] border border-card-border rounded-lg p-2">
+      <button
+        onClick={() => setAbierto(!abierto)}
+        className="text-[9px] uppercase tracking-wider text-gray-500 hover:text-gray-300 transition-colors cursor-pointer w-full text-left flex items-center gap-1"
+      >
+        <span className={`text-[8px] transition-transform ${abierto ? 'rotate-90' : ''}`}>▶</span>
+        Log Detallado ({lineas.length})
+      </button>
+      {abierto && lineas.length > 0 && (
+        <div ref={scrollRef} className="mt-1.5 max-h-60 overflow-y-auto font-mono text-[10px] leading-relaxed">
+          {lineas.map((linea, i) => (
+            <div key={i} className="text-gray-400 hover:text-gray-200 transition-colors whitespace-pre">
+              {linea}
+            </div>
+          ))}
+        </div>
+      )}
+      {abierto && lineas.length === 0 && (
+        <p className="text-[10px] text-gray-600 italic mt-1">Sin eventos aún.</p>
+      )}
+    </div>
+  )
 }
 
 /** Grilla 4×7 de un jugador, fiel a la vista desde arriba del manual. */
@@ -566,7 +602,7 @@ function GrillaJugador({
   )
 }
 
-export function Tablero({ vista, acciones, leTocaA, log, onAccion, onAbandonar, animaciones }: TableroProps) {
+export function Tablero({ vista, acciones, leTocaA, log, logDetallado = [], onAccion, onAbandonar, animaciones }: TableroProps) {
   const yo = vista.players.A
   const rival = vista.players.B
   const fase = vista.fase
@@ -874,6 +910,8 @@ export function Tablero({ vista, acciones, leTocaA, log, onAccion, onAbandonar, 
                 </ul>
               )}
             </div>
+            {/* ── Log Detallado (debugging) ─────────────────────── */}
+            <LogDetallado lineas={logDetallado} />
           </section>
 
           <section className="bg-surface border border-card-border rounded-lg p-3 space-y-2">

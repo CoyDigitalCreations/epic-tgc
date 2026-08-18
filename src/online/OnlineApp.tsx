@@ -117,6 +117,7 @@ function Partida({ config, onAbandonar }: { config: PartidaConfig; onAbandonar: 
       acciones={partida.acciones}
       leTocaA={partida.leTocaA}
       log={partida.log}
+      logDetallado={partida.logDetallado}
       onAccion={partida.ejecutar}
       onAbandonar={onAbandonar}
       animaciones={partida.animaciones}
