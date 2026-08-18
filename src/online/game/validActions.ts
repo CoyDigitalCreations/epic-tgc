@@ -64,12 +64,10 @@ export function getValidActions(state: GameState, playerId: PlayerId): Action[] 
     // Reserva. Solo se expone con 1A disponible y la variante de retorno
     // máximo (la vacía es una acción estrictamente dominada; el validador la
     // acepta igual, pero getValidActions nunca la sugiere).
-    if (state.fase === 'forja' || state.fase === 'choque') {
-      for (const champId of p.campo.campeones) {
-        if (!champId || !tieneKeyword(state, champId, 'Transmutar')) continue
-        if (p.eterPagado.length > 0) {
-          acciones.push({ type: 'usar_transmutar', cardInstanceId: champId, eterIds: p.eterPagado.slice(0, 2) })
-        }
+    for (const champId of p.campo.campeones) {
+      if (!champId || !tieneKeyword(state, champId, 'Transmutar')) continue
+      if (p.eterPagado.length > 0) {
+        acciones.push({ type: 'usar_transmutar', cardInstanceId: champId, eterIds: p.eterPagado.slice(0, 2) })
       }
     }
     if (state.fase === 'forja') {
@@ -161,9 +159,12 @@ export function getValidActions(state: GameState, playerId: PlayerId): Action[] 
       // Paso bloqueo: el actor es el DEFENSOR (rival) — el activo no tiene
       // acciones propias hasta resolver el bloqueo (R15).
     } else if (state.fase === 'ocaso') {
-      if (p.mano.length <= 6) acciones.push({ type: 'pasar_turno' })
-      for (const id of p.mano) {
-        acciones.push({ type: 'descartar_carta', cardInstanceIds: [id] })
+      if (p.mano.length <= 6) {
+        acciones.push({ type: 'pasar_turno' })
+      } else {
+        for (const id of p.mano) {
+          acciones.push({ type: 'descartar_carta', cardInstanceIds: [id] })
+        }
       }
     }
   } else if (state.fase === 'choque' && playerId === rivalDe(state) && state.combate?.paso === 'bloqueo') {

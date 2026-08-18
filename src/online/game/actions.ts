@@ -313,11 +313,10 @@ function validarElegirObjetivo(state: GameState, action: Extract<Action, { type:
 
 /**
  * C3d (D4): validar usar_transmutar — Campeón con keyword `Transmutar` del
- * jugador ACTIVO en su campo (forja o choque); eterIds ⊆ p.eterPagado (1A),
+ * jugador ACTIVO en su campo; eterIds ⊆ p.eterPagado (1A),
  * únicos y ≤ 2. Genérico por keyword (no hardcodea FB-012).
  */
 function validarUsarTransmutar(state: GameState, action: Extract<Action, { type: 'usar_transmutar' }>): string | null {
-  if (state.fase !== 'forja' && state.fase !== 'choque') return 'usar_transmutar solo en Forja o Choque'
   const p = state.players[state.turno]
   const inst = state.instances[action.cardInstanceId]
   if (!inst) return 'la carta no existe'

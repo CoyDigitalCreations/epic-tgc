@@ -687,6 +687,7 @@ export function Tablero({ vista, acciones, leTocaA, log, onAccion, onAbandonar, 
   const generales = acciones.filter((a) => {
     if (a.type === 'rendirse') return false // va en el header
     if (a.type === 'elegir_objetivo') return false // búsqueda de mazo: se lista como opciones (OpcionTutor)
+    if (a.type === 'descartar_carta') return false // va debajo de la carta de la mano
     if (esDeMano(a)) return false // va sobre la carta de la mano
     if (conCarta(a)) return false // va sobre la carta en la pila
     if (a.type === 'declarar_ataque') return a.atacanteIds.length > 1 // individual va en el campeón
@@ -878,7 +879,9 @@ export function Tablero({ vista, acciones, leTocaA, log, onAccion, onAbandonar, 
               <div className="flex gap-2 flex-wrap items-start">
                 {yo.mano.map((id) => {
                   const acc = acciones.find((a) => esDeMano(a) && a.cardInstanceId === id)
+                  const accDescarte = acciones.find((a): a is Extract<Action, { type: 'descartar_carta' }> => a.type === 'descartar_carta' && a.cardInstanceIds.includes(id))
                   const jugable = leTocaA && !!acc
+                  const descartable = leTocaA && !!accDescarte
                   return (
                     <MiniCard
                       key={id}
@@ -892,6 +895,14 @@ export function Tablero({ vista, acciones, leTocaA, log, onAccion, onAbandonar, 
                           className="text-[10px] bg-ether-600/30 hover:bg-ether-600/50 text-ether-200 px-1.5 py-0.5 rounded transition-colors cursor-pointer whitespace-nowrap"
                         >
                           {acc!.type === 'colocar_tactica' || acc!.type === 'colocar_combate' ? 'Jugar' : 'Pagar'}
+                        </button>
+                      )}
+                      {descartable && (
+                        <button
+                          onClick={() => onAccion(accDescarte!)}
+                          className="text-[10px] bg-red-600/30 hover:bg-red-600/50 text-red-300 px-1.5 py-0.5 rounded transition-colors cursor-pointer whitespace-nowrap"
+                        >
+                          Descartar
                         </button>
                       )}
                     </MiniCard>
