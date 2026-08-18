@@ -534,6 +534,10 @@ function GrillaJugador({
     const zona = `3${String.fromCharCode(68 + slot)}` // 3D…3F (Arcanas/Combate)
     const id = p.campo.arcanasCombate[slot]
     const inst = id ? vista.instances[id] : null
+    // Buscar acción de activar_arcana para esta Arcana
+    const activarArcana = soy && leTocaA && id && !inst?.bocaArriba
+      ? acciones.find((a) => a.type === 'activar_arcana' && a.cardInstanceId === id)
+      : undefined
     celdas.push(
       <Celda key={zona} zona={zona} invertida={invertida}>
         {inst ? (
@@ -547,7 +551,20 @@ function GrillaJugador({
                 : undefined
             }
             invertida={invertida}
-          />
+          >
+            {activarArcana && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onAccion(activarArcana)
+                }}
+                className="text-[10px] bg-purple-600/30 hover:bg-purple-600/50 text-purple-200 px-1.5 py-0.5 rounded 
+                           transition-colors cursor-pointer whitespace-nowrap"
+              >
+                Activar
+              </button>
+            )}
+          </MiniCard>
         ) : undefined}
       </Celda>,
     )
@@ -924,7 +941,7 @@ export function Tablero({ vista, acciones, leTocaA, log, logDetallado = [], onAc
                           onClick={() => onClickMano(id)}
                           className="text-[10px] bg-ether-600/30 hover:bg-ether-600/50 text-ether-200 px-1.5 py-0.5 rounded transition-colors cursor-pointer whitespace-nowrap"
                         >
-                          {acc!.type === 'colocar_tactica' || acc!.type === 'colocar_combate' ? 'Jugar' : 'Pagar'}
+                          {acc!.type === 'colocar_tactica' || acc!.type === 'colocar_combate' ? 'Jugar' : acc!.type === 'colocar_arcana' ? 'Colocar' : 'Pagar'}
                         </button>
                       )}
                       {descartable && (
