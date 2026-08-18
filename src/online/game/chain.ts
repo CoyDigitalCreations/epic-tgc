@@ -202,10 +202,31 @@ function resolverCadenaCombate(s: GameState, ctx: Ctx): void {
 }
 
 /**
- * Resolución de cadena GLOBAL (fuera de combate): LIFO.
- * Cada carta respondida se resolvió ya al apilar (efecto aplicado).
- * Aquí solo limpiamos la cadena global.
+ * Resolución de cadena GLOBAL (fuera de combate): LIFO (L1183).
+ * Combate/Arcana → 2G (se consumen); Táctica → permanece en mesa;
+ * Campeón Disparo → permanece en campo. Se dispara al-resolver-cadena
+ * para cada carta de la pila (LIFO) para que los handlers actúen.
  */
-function resolverCadenaGlobal(s: GameState, _ctx: Ctx): void {
+function resolverCadenaGlobal(s: GameState, ctx: Ctx): void {
+  const cadena = s.cadena
+  if (!cadena) return
+  for (const id of [...cadena.pila].reverse()) {
+    const inst = s.instances[id]
+    const meta = inst?.cardId ? getCardMeta(inst.cardId) : null
+    if (!meta) continue
+    if (esCombate(meta) || esArcana(meta)) {
+      // Combate/Arcana se consumen: → 2G
+      const p = s.players[inst.owner]
+      const idx = p.campo.arcanasCombate.indexOf(id)
+      const zona = slotAZona('arcanasCombate', idx) ?? '3D'
+      ctx.emit({ type: 'carta_salida_de_zona', cardInstanceId: id, zona, jugador: inst.owner })
+      enviarAlCementerio(s, ctx, id)
+      ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: id, zona: '2G', jugador: inst.owner, bocaArriba: true })
+      dispararTrigger(s, ctx, 'al-resolver-cadena', inst.owner, [id])
+    } else {
+      // Táctica / Campeón Disparo: permanece, pero dispara trigger para efectos
+      dispararTrigger(s, ctx, 'al-resolver-cadena', inst.owner, [id])
+    }
+  }
   s.cadena = undefined
 }

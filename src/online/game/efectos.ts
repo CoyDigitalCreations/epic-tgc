@@ -256,7 +256,8 @@ export function statsDe(s: GameState, id: string): { poder: number; resistencia:
     if (a.poder) poder += a.poder
     if (a.resistencia) resistencia += a.resistencia
   }
-  return { poder, resistencia }
+  // ATQ y RES no pueden ser negativos (mínimo 0)
+  return { poder: Math.max(0, poder), resistencia: Math.max(0, resistencia) }
 }
 
 /**

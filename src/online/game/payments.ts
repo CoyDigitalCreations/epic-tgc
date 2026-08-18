@@ -151,9 +151,6 @@ export function etersParaPagar(state: GameState, jugador: PlayerId, objetivoCard
   return buscar(0, 0, [])
 }
 
-/** Límite máximo de Éteres bloqueados por Campeón (balance v2.1). */
-const MAX_ETHERS_PER_CHAMPION = 2
-
 /** Validación read-only del bloqueo: null = válido, string = motivo de rechazo. */
 export function validarBloqueo(state: GameState, jugador: PlayerId, eterIds: string[], campeonSlot: number): string | null {
   const p = state.players[jugador]
@@ -163,11 +160,6 @@ export function validarBloqueo(state: GameState, jugador: PlayerId, eterIds: str
   const campeon = instCampeon?.cardId ? getCardMeta(instCampeon.cardId) : null
   if (!campeon) return 'Campeón desconocido'
   if (eterIds.length === 0) return 'no indicaste Éteres para bloquear'
-  // Límite de éteres por campeón
-  const actuales = instCampeon.eterBloqueado?.length ?? 0
-  if (actuales + eterIds.length > MAX_ETHERS_PER_CHAMPION) {
-    return `máximo ${MAX_ETHERS_PER_CHAMPION} Éteres bloqueados por Campeón (tiene ${actuales})`
-  }
   for (const id of eterIds) {
     const inst = state.instances[id]
     const meta = inst?.cardId ? getCardMeta(inst.cardId) : null
