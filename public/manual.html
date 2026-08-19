@@ -627,9 +627,7 @@
     <div class="section-header"><span class="num">2</span><h2>PREPARACIÓN DE LA PARTIDA</h2></div>
     <div class="content">
       <ol class="steps">
-        <li><strong>Barajar:</strong> Ambos jugadores barajan sus DOS mazos por separado:<br>
-          &mdash; Mazo PRINCIPAL (45 cartas)<br>
-          &mdash; Mazo de VÍNCULOS (6 cartas)</li>
+        <li><strong>Barajar:</strong> Ambos jugadores barajan su Mazo PRINCIPAL (45 cartas).</li>
         <li><strong>Colocar:</strong> Cada jugador coloca su Mazo Principal en <span class="highlight">3G</span> (boca abajo) y sus <strong>15 cartas de ÉTER BOCA ARRIBA en la RESERVA (<span class="highlight">2A</span>)</strong>. El Éter no se roba: se dispone de él desde el inicio de la partida.</li>
         <li><strong>Colocar Vínculos:</strong> Cada jugador coloca sus <strong>6 Vínculos BOCA ABAJO</strong> en las zonas <span class="highlight">4A-4F</span>, en el orden que elija. Cada jugador puede ver sus propios Vínculos, pero <strong>NO</strong> los del oponente.</li>
         <li><strong>Mano inicial:</strong> Cada jugador roba <strong>5 cartas</strong> de su Mazo PRINCIPAL como mano inicial.</li>
@@ -705,9 +703,9 @@
 
       <table>
         <tr><td style="width:140px"><strong>name</strong></td><td>Nombre de la carta</td></tr>
-        <tr><td><strong>type</strong></td><td>Tipo (Campeón, Mística, Táctica, Arcana, Combate, Éter, Vínculo)</td></tr>
+        <tr><td><strong>type</strong></td><td>Tipo (Campeón, Mística, Arcana, Éter, Vínculo)</td></tr>
         <tr><td><strong>rarity</strong></td><td>Rareza (Común, Poco Común, Rara, Épica, Legendaria, Única)</td></tr>
-        <tr><td><strong>faccion</strong></td><td>Facción (Orden, Caos, Creación, Destrucción, Ley, Purga, Entropía, Mutación) — <strong>solo Campeón, Éter, Mística, Arcana y Vínculo</strong>; Táctica y Combate <strong>NO</strong> tienen facción</td></tr>
+        <tr><td><strong>faccion</strong></td><td>Facción (Orden, Caos, Creación, Destrucción, Ley, Purga, Entropía, Mutación) — <strong>solo Campeón, Mística, Arcana y Vínculo</strong>; Éter <strong>NO</strong> tiene facción</td></tr>
         <tr><td><strong>stats.cost</strong></td><td>Coste de Éter</td></tr>
         <tr><td><strong>stats.poder</strong></td><td>Ataque (solo Campeón)</td></tr>
         <tr><td><strong>stats.resistencia</strong></td><td>Defensa (solo Campeón)</td></tr>
@@ -747,7 +745,7 @@
       </ul>
       <p>Pueden tener habilidades propias, que <strong>solo se activan en la zona donde la carta está</strong> (Reserva, pagada o bloqueada). Ver sección 7.7.</p>
       <p>Las cartas de Éter <strong>NO</strong> tienen Poder ni Resistencia. No combaten.</p>
-      <p><strong>FACCIÓN:</strong> Cada carta de Éter tiene <strong>facción propia</strong> (Orden, Caos, Creación, etc.). Algunas cartas de Éter tienen <strong>2 o 3 facciones</strong>: en ese caso cuentan como de <strong>TODAS</strong> ellas (aportan 1 en cualquiera). La facción <strong>restringe el BLOQUEO</strong> del Éter: un Éter solo puede quedar <strong>BLOQUEADO</strong> (efectos continuos) en cartas que compartan al menos una facción con él. Para el resto de los pagos (invocar, un solo uso) el Éter de cualquier facción es válido, pero <strong>fuera de su facción aporta la mitad</strong> (regla de Sintonía, ver sección 7.3).</p>
+      <p><strong>SIN FACCIÓN:</strong> Los Éteres NO tienen facción. Pueden ser usados por cualquier Campeón sin restricción. Todos valen 1 punto de coste.</p>
 
       <!-- 6.2 -->
       <div class="section-header sub"><span class="num">5.2</span><h3>CAMPEÓN <span style="font-weight:400;color:var(--text-muted);font-family:'Inter',sans-serif;">(Combatiente principal)</span></h3></div>
@@ -775,8 +773,8 @@
       </ul>
       <p><strong>Pago de habilidades con Éter (v2.0):</strong> Las habilidades <strong>ACTIVAS</strong> pueden ser de cualquiera de estos dos tipos:</p>
       <ul>
-        <li><strong>HABILIDAD CONTINUA:</strong> El Éter pagado queda <strong>BLOQUEADO</strong> en la zona de Éter del Campeón (1B-1F) mientras el efecto esté activo. <strong>NO agota</strong> al Campeón. <span class="highlight-amber">NO se puede activar más de una vez la misma habilidad continua</span> (no se apilan) salvo que una keyword lo permita. El efecto <strong>NO se puede cancelar a voluntad</strong>: termina cuando su Éter bloqueado es removido (por ejemplo, el Campeón deja el campo) o cuando el propio efecto indique otra duración. <span class="highlight-red">El Éter que se bloquea debe COMPARTIR al menos una facción con este Campeón (sección 7.3): el Éter de facción ajena no puede sostener efectos continuos.</span></li>
-        <li><strong>HABILIDAD DE UN SOLO USO:</strong> El Éter se paga de forma normal (2A → 1A), el efecto es momentáneo y el Campeón se <strong>AGOTA</strong>. Solo se puede usar si el Campeón <strong>NO está agotado</strong> (salvo que una keyword diga lo contrario). <span class="highlight-amber">El Éter de facción ajena aporta la mitad (regla de Sintonía v2.2, sección 7.3).</span></li>
+        <li><strong>HABILIDAD CONTINUA:</strong> El Éter pagado queda <strong>BLOQUEADO</strong> en la zona de Éter del Campeón (1B-1F) mientras el efecto esté activo. <strong>NO agota</strong> al Campeón. <span class="highlight-amber">NO se puede activar más de una vez la misma habilidad continua</span> (no se apilan) salvo que una keyword lo permita. El efecto <strong>NO se puede cancelar a voluntad</strong>: termina cuando su Éter bloqueado es removido (por ejemplo, el Campeón deja el campo) o cuando el propio efecto indique otra duración.</li>
+        <li><strong>HABILIDAD DE UN SOLO USO:</strong> El Éter se paga de forma normal (2A → 1A), el efecto es momentáneo y el Campeón se <strong>AGOTA</strong>. Solo se puede usar si el Campeón <strong>NO está agotado</strong> (salvo que una keyword diga lo contrario).</li>
       </ul>
       <p class="highlight-amber" style="font-weight:600;">AL INVOCAR un Campeón: el Éter pagado va a la ZONA DE ÉTER PAGADO (1A) y vuelve a tu Reserva en tu próximo Alba. NO va al Cementerio ni al Exilio.</p>
 
@@ -796,48 +794,25 @@
         <li><strong>SECUENCIA DE ACTIVACIÓN:</strong> 1) Se juega desde la mano a un slot de soporte (3A-3C). <span class="highlight-amber">NO se coloca boca abajo.</span> 2) Se paga su coste de Éter. 3) Se resuelve su efecto.</li>
         <li><strong>PAGO DEL COSTE (efecto de un solo uso):</strong> el Éter se mueve de la Reserva (2A) a la zona 1A (Éter pagado).</li>
         <li>Tras resolverse, la carta va al <strong>Cementerio</strong> y libera su slot (solo la carta; el Éter nunca va al Cementerio).</li>
-        <li><strong>EFECTO CONTINUO:</strong> el Éter se mueve de la Reserva (2A) directamente a la carta, colocado <strong>EN HORIZONTAL sobre ella</strong> (slot 3A-3C), y permanece bloqueado mientras el efecto esté activo. La carta permanece en su slot. <span class="highlight-amber">El efecto continuo NO se puede cancelar a voluntad del controlador</span> (ver sección 7.2). <span class="highlight-red">El Éter que se bloquea debe COMPARTIR al menos una facción con esta Mística (sección 7.3).</span></li>
+        <li><strong>EFECTO CONTINUO:</strong> el Éter se mueve de la Reserva (2A) directamente a la carta, colocado <strong>EN HORIZONTAL sobre ella</strong> (slot 3A-3C), y permanece bloqueado mientras el efecto esté activo. La carta permanece en su slot. <span class="highlight-amber">El efecto continuo NO se puede cancelar a voluntad del controlador</span> (ver sección 7.2).</li>
         <li>No tienen Poder ni Resistencia &mdash; son puramente conjuros.</li>
       </ul>
 
       <!-- 6.4 -->
-      <div class="section-header sub"><span class="num">5.4</span><h3>TÁCTICA <span style="font-weight:400;color:var(--text-muted);font-family:'Inter',sans-serif;">(Reacción / Estrategia)</span></h3></div>
-      <p>Las Tácticas son cartas de <strong>REACCIÓN gratuitas</strong>.</p>
-      <ul>
-        <li>Se juegan en un slot de soporte (3A-3C) &mdash; comparten espacio con Místicas. <span class="highlight-amber">NO se colocan boca abajo.</span></li>
-        <li><strong>NO</strong> cuestan Éter.</li>
-        <li><strong>NO tienen facción:</strong> son cartas neutrales, no pertenecen a ninguna facción (a diferencia de Campeones, Éteres, Místicas, Arcanas y Vínculos).</li>
-        <li><strong>Solo se JUGAN (colocan) en tu Fase de Forja.</strong> Una vez colocadas, se <strong>ACTIVAN automáticamente</strong> cuando se cumple su condición, en cualquier momento (incluso durante el turno del oponente).</li>
-        <li>Ocupan su slot mientras esperan su condición y van al <strong>Cementerio</strong> tras resolverse.</li>
-      </ul>
-
-      <!-- 6.5 -->
-      <div class="section-header sub"><span class="num">5.5</span><h3>ARCANA <span style="font-weight:400;color:var(--text-muted);font-family:'Inter',sans-serif;">(Pacto / Condición)</span></h3></div>
+      <div class="section-header sub"><span class="num">5.4</span><h3>ARCANA <span style="font-weight:400;color:var(--text-muted);font-family:'Inter',sans-serif;">(Pacto / Condición)</span></h3></div>
       <p>Las Arcanas son cartas de <strong>CONDICIÓN + RECOMPENSA</strong>.</p>
       <ul>
         <li>Se colocan <strong>BOCA ABAJO</strong> en un slot (3D-3F) <strong>sin pagar coste</strong>.</li>
-        <li><strong class="highlight-red">NO se pueden activar el turno en que fueron colocadas:</strong> esperan hasta el turno del oponente (como las cartas de Combate).</li>
+        <li><strong class="highlight-red">NO se pueden activar el turno en que fueron colocadas:</strong> esperan hasta el turno del oponente.</li>
         <li><strong>SECUENCIA DE ACTIVACIÓN:</strong> cuando se cumple su condición: 1) la carta se <strong>VOLTEA BOCA ARRIBA</strong>; 2) se realiza el <strong>PAGO</strong> del coste de Éter; 3) se resuelve la recompensa.</li>
         <li>Si no se tiene suficiente Éter en la Reserva, no se puede activar y la carta permanece boca abajo.</li>
         <li><strong>PAGO DEL COSTE (efecto de un solo uso):</strong> el Éter se mueve de la Reserva (2A) a la zona 1A; la recompensa se resuelve y la carta va al <strong>Cementerio</strong>, liberando su slot.</li>
-        <li><strong>EFECTO CONTINUO:</strong> el Éter se mueve de la Reserva (2A) directamente a la carta, colocado <strong>EN HORIZONTAL sobre ella</strong> (slot 3D-3F); la carta permanece boca arriba en su slot mientras el efecto esté activo. <span class="highlight-red">El Éter que se bloquea debe COMPARTIR al menos una facción con esta Arcana (sección 7.3).</span></li>
+        <li><strong>EFECTO CONTINUO:</strong> el Éter se mueve de la Reserva (2A) directamente a la carta, colocado <strong>EN HORIZONTAL sobre ella</strong> (slot 3D-3F); la carta permanece boca arriba en su slot mientras el efecto esté activo.</li>
         <li>No tienen Poder ni Resistencia.</li>
       </ul>
 
-      <!-- 6.6 -->
-      <div class="section-header sub"><span class="num">5.6</span><h3>COMBATE <span style="font-weight:400;color:var(--text-muted);font-family:'Inter',sans-serif;">(Golpe / Reacción de batalla)</span></h3></div>
-      <p>Las cartas de Combate son <strong>REACCIONES DE BATALLA</strong>.</p>
-      <ul>
-        <li>Se colocan <strong>BOCA ABAJO</strong> en un slot (3D-3F) &mdash; comparten espacio con Arcanas.</li>
-        <li><strong>NO</strong> cuestan Éter.</li>
-        <li><strong>NO tienen facción:</strong> son cartas neutrales, no pertenecen a ninguna facción.</li>
-        <li>Se activan cuando se cumple su condición durante el combate.</li>
-        <li>Deben haber sido colocadas en un turno anterior.</li>
-        <li>Van al Cementerio tras resolverse.</li>
-      </ul>
-
-      <!-- 6.7 -->
-      <div class="section-header sub"><span class="num">5.7</span><h3>VÍNCULO <span style="font-weight:400;color:var(--text-muted);font-family:'Inter',sans-serif;">(Vida / Sistema de daño)</span></h3></div>
+      <!-- 6.5 -->
+      <div class="section-header sub"><span class="num">5.5</span><h3>VÍNCULO <span style="font-weight:400;color:var(--text-muted);font-family:'Inter',sans-serif;">(Vida / Sistema de daño)</span></h3></div>
       <p>Los Vínculos son el <strong>SISTEMA DE VIDA</strong> del juego. Representan los lazos que mantienen a un jugador en la partida.</p>
       <ul>
         <li><strong>NO cuestan Éter.</strong> No tienen Poder ni Resistencia. No combaten.</li>
@@ -892,23 +867,23 @@
         <tr><td><span class="highlight">2A</span></td><td>Reserva de ÉTER</td><td style="color:var(--text-muted)">las 15 cartas de Éter inician aquí, boca arriba</td></tr>
         <tr><td><span class="highlight">2B-2F</span></td><td>Campeones</td><td style="color:var(--text-muted)">hasta 5 Campeones en juego</td></tr>
         <tr><td><span class="highlight">2G</span></td><td>Cementerio</td><td style="color:var(--text-muted)">cartas destruidas, descartadas o resueltas</td></tr>
-        <tr><td><span class="highlight">3A-3C</span></td><td>Místicas / Tácticas</td><td style="color:var(--text-muted)">3 slots compartidos</td></tr>
-        <tr><td><span class="highlight">3D-3F</span></td><td>Arcanas / Combate</td><td style="color:var(--text-muted)">3 slots compartidos</td></tr>
+        <tr><td><span class="highlight">3A-3C</span></td><td>Místicas</td><td style="color:var(--text-muted)">3 slots</td></tr>
+        <tr><td><span class="highlight">3D-3F</span></td><td>Arcanas</td><td style="color:var(--text-muted)">3 slots</td></tr>
         <tr><td><span class="highlight">3G</span></td><td>Mazo PRINCIPAL</td><td style="color:var(--text-muted)">boca abajo, se roba de aqu&iacute;</td></tr>
         <tr><td><span class="highlight" style="color:var(--purple)">4A-4F</span></td><td>Vínculos</td><td style="color:var(--text-muted)">6 Vínculos boca abajo; se voltean al ser destruidos</td></tr>
       </table>
 
       <div class="section-header sub"><span class="num">6.1</span><h3>DISTRIBUCIÓN DE SLOTS DE SOPORTE</h3></div>
       <ul>
-        <li><strong>Slot 3A-3C:</strong> Puedes tener cualquier combinación de Místicas y Tácticas. Ej: 1 Mística + 2 Tácticas, o 3 Místicas, o 3 Tácticas.</li>
-        <li><strong>Slot 3D-3F:</strong> Puedes tener cualquier combinación de Arcanas y Combate. Ej: 2 Arcanas + 1 Combate, o 3 Combate, o 3 Arcanas.</li>
+        <li><strong>Slot 3A-3C:</strong> Místicas. Cada slot puede contener 1 Mística.</li>
+        <li><strong>Slot 3D-3F:</strong> Arcanas. Cada slot puede contener 1 Arcana.</li>
         <li>Cuando una carta de soporte se resuelve, libera su slot.</li>
         <li>Mientras una carta de soporte con efecto continuo está activa, ocupa su slot.</li>
       </ul>
 
       <div class="section-header sub"><span class="num">6.2</span><h3>INFORMACIÓN ABIERTA — OBSERVABILIDAD</h3></div>
       <ul>
-        <li>El oponente puede solicitar al jugador que le muestre la habilidad de <strong>cualquier carta boca arriba</strong>, en cualquier momento y sin importar la zona: Campeones, Místicas, Tácticas, Arcanas, Combate, Vínculos destruidos, Éteres (en la Reserva, pagados o bloqueados) y cartas del Cementerio.</li>
+        <li>El oponente puede solicitar al jugador que le muestre la habilidad de <strong>cualquier carta boca arriba</strong>, en cualquier momento y sin importar la zona: Campeones, Místicas, Arcanas, Vínculos destruidos, Éteres (en la Reserva, pagados o bloqueados) y cartas del Cementerio.</li>
         <li>Esto incluye las cartas que quedan <strong>debajo o tapadas por otras cartas</strong> (por ejemplo, un Éter bloqueado colocado en horizontal sobre un Campeón): aunque físicamente no se alcance a leer el texto, la información es pública y debe mostrarse si se solicita.</li>
         <li>El jugador debe mostrar la carta <strong>sin ocultar nada</strong>: toda carta boca arriba es información abierta por definición.</li>
       </ul>
@@ -940,15 +915,14 @@
 
       <div class="section-header sub"><span class="num">7.3</span><h3>¿CÓMO SE USA?</h3></div>
       <p><strong>REGLA FUNDAMENTAL:</strong> El Éter solo se puede usar desde la <span class="highlight">RESERVA (2A)</span>. No se puede usar desde la mano, el Cementerio ni el Exilio (salvo efectos que lo permitan).</p>
-      <p><strong>REGLA DE FACCIÓN (v2.1):</strong> El Éter de facción ajena <strong class="highlight-red">NO puede quedar BLOQUEADO</strong>. Para pagar una habilidad <strong>CONTINUA</strong> (Campeón, Mística o Arcana), el Éter debe <span class="highlight">COMPARTIR al menos una facción</span> con la carta que activa la habilidad (si el Éter o la carta tienen varias facciones, cualquier facción compartida es válida). Para el <strong>RESTO de los pagos</strong> — invocar Campeones, Místicas/Arcanas de un solo uso, habilidades de un solo uso — el Éter de <strong>CUALQUIER facción</strong> es válido (ver Regla de Sintonía v2.2): va a la zona 1A y vuelve a tu Reserva en tu próximo Alba.</p>
-      <p><strong>REGLA DE SINTONÍA (v2.2):</strong> En los pagos que van a la zona <strong>1A</strong> — invocar Campeones, jugar Místicas/Arcanas de un solo uso, activar habilidades de un solo uso y el coste adicional de Éter de una invocación por sacrificio — el Éter aporta al coste según su facción: <span class="highlight">cada Éter que comparta al menos una facción con la carta aporta 1</span>, y <strong class="highlight-red">cada Éter de facción ajena (sin ninguna facción compartida) aporta ½</strong>: cuesta el DOBLE en cantidad. Puedes <strong>MEZCLAR facciones</strong> libremente: el pago se completa cuando la suma de aportes <strong>ALCANZA el coste</strong> (puedes pagar de más; el excedente se pierde, no hay vuelto). El efecto propio del Éter (pasivo o gatillo de pago) se activa <strong>NORMAL</strong> aunque lo pagues fuera de su facción: la Sintonía solo cambia cuánto aporta, no qué hace el Éter.</p>
+      <p><strong>SIN FACCIÓN:</strong> Todos los Éteres valen 1 punto de coste sin importar de quién sean. No hay medio costo ni restricciones de facción. Simplemente mueves la cantidad requerida de Éteres de tu Reserva (2A) a su destino.</p>
       <div class="example">
         <div class="ex-title">Ejemplo</div>
-        Activas una habilidad <strong>CONTINUA</strong> de un Campeón de <strong>Caos</strong> que cuesta 2 Éter: debes bloquear <strong>2 cartas de Éter de Caos</strong> (por ejemplo, <em>Éter del Primogénito</em>). Un <em>Éter de la Primogénita</em> (Orden) no puede sostener ese efecto continuo, pero sí puedes usarlo para pagar la invocación de otro Campeón o una habilidad de un solo uso (va a 1A).
+        Activas una habilidad <strong>CONTINUA</strong> de un Campeón que cuesta 2 Éter: debes bloquear <strong>2 cartas de Éter</strong> sobre ese Campeón. Cada Éter vale 1, sin importar su facción.
       </div>
       <div class="example">
-        <div class="ex-title">Ejemplo — Sintonía (v2.2)</div>
-        Invocas un Campeón de <strong>Orden</strong> de coste 3: puedes pagarlo con <strong>3 Éteres de Orden</strong> (3 × 1 = 3), con <strong>6 Éteres de Caos</strong> (6 × ½ = 3), o con una mezcla: <strong>1 de Orden + 4 de Caos</strong> (1 + 2 = 3) o <strong>2 de Orden + 2 de Caos</strong> (2 + 1 = 3). Un Éter con facciones <strong>Orden y Caos</strong> aporta 1 para cualquiera de las dos.
+        <div class="ex-title">Ejemplo</div>
+        Invocas un Campeón de coste 3: mueves <strong>3 Éteres</strong> de tu Reserva (2A) a Éter pagado (1A). Cada Éter vale 1, sin importar su facción.
       </div>
       <p><strong>Pasos para pagar:</strong></p>
       <ol>
@@ -972,7 +946,6 @@
         </table>
       </div>
       <p class="highlight-amber" style="font-weight:600;">EN TODOS los casos, el Éter vuelve a tu Reserva (2A) en tu próximo Alba, salvo el de efectos continuos, que permanece bloqueado mientras su efecto esté activo.</p>
-      <p class="highlight-red" style="font-weight:600;">FACCIÓN DEL ÉTER: las filas con destino "Bloqueado" (habilidades continuas) exigen que el Éter COMPARTA al menos una facción con la carta que lo recibe (regla v2.1, sección 7.3). Las filas con destino "Éter pagado (1A)" aceptan Éter de cualquier facción: el de la misma facción aporta 1 y el de facción ajena aporta ½ (regla de Sintonía v2.2, sección 7.3).</p>
 
       <div class="section-header sub"><span class="num">7.5</span><h3>ÉTER UNIFICADO — SIN OVERPAY (v2.0)</h3></div>
       <p>En la v2.0, <strong>TODAS las cartas de Éter valen 1</strong>. No existen valores del 2 al 5, por lo que <strong>NO hay fraccionamiento ni overpay</strong>:</p>
@@ -984,10 +957,10 @@
         <div class="ex-title">Ejemplo</div>
         Pagar un coste de 3: mueves 3 cartas de Éter de la Reserva a 1A. Pagar un coste de 5: mueves 5 cartas. Así de simple.
       </div>
-      <p class="highlight-amber" style="font-weight:600;">CON LA REGLA DE SINTONÍA (v2.2): el Éter de facción ajena aporta ½. Al mezclar facciones, el pago puede superar el coste exacto: el excedente se pierde (no hay vuelto). Elige siempre la combinación más pequeña que alcance el coste.</p>
+      <p class="highlight-amber" style="font-weight:600;">SIN SOBREPAGO: el Éter siempre vale 1. No hay fraccionamiento ni excedente.</p>
 
       <div class="section-header sub"><span class="num">7.6</span><h3>HABILIDADES QUE DICEN "PAGA X ÉTER"</h3></div>
-      <p>Cuando una habilidad dice <strong>"Paga X Éter"</strong> (o "cuesta X Éter"), se refiere a la <span class="highlight">CANTIDAD de cartas</span> a mover, ya que todas valen 1. <span class="highlight-amber">Con la regla de Sintonía (v2.2), el Éter de facción ajena cuenta el DOBLE en cantidad (aporta ½).</span></p>
+      <p>Cuando una habilidad dice <strong>"Paga X Éter"</strong> (o "cuesta X Éter"), se refiere a la <span class="highlight">CANTIDAD de cartas</span> a mover, ya que todas valen 1.</p>
       <div class="example">
         <div class="ex-title">Ejemplo</div>
         Una habilidad <strong>CONTINUA</strong> cuesta 2 Éter: mueves 2 cartas de la Reserva (2A) a la zona de Éter del Campeón (1B-1F). Quedan bloqueadas mientras el efecto esté activo.<br>
@@ -1002,9 +975,9 @@
         <li><strong>EFECTO DE PAGO (1A):</strong> Se activa al ser pagada. Dos variantes:<br>
           &bull; <strong>PASIVO:</strong> funciona mientras la carta esté en tu zona de Éter pagado (1A), hasta tu próximo Alba.<br>
           <span class="example" style="margin:4px 0 0;display:inline-block;padding:6px 12px;">"Mientras esta carta esté en tu zona de Éter pagado, los Campeones que controles ganan +1 Ataque."</span><br>
-          &bull; <strong>GATILLO:</strong> se activa UNA VEZ en el momento de pagarla para un uso específico. <span class="highlight-amber">Se activa NORMAL aunque pagues el Éter fuera de su facción (regla de Sintonía v2.2, sección 7.3): la facción solo cambia cuánto aporta.</span><br>
+          &bull; <strong>GATILLO:</strong> se activa UNA VEZ en el momento de pagarla para un uso específico.<br>
           <span class="example" style="margin:4px 0 0;display:inline-block;padding:6px 12px;">"Cuando pagues esta carta para invocar un Campeón, roba 1 carta."</span></li>
-        <li><strong>EFECTO DE BLOQUEO (1B-1F):</strong> Se activa solo mientras la carta esté <strong>BLOQUEADA en la zona de Éter de un Campeón</strong> (habilidades continuas) o sobre una Mística/Arcana continua. <span class="highlight-red">Por la regla de facción (7.3), este Éter solo puede bloquearse en cartas que compartan al menos una facción con él.</span><br>
+        <li><strong>EFECTO DE BLOQUEO (1B-1F):</strong> Se activa solo mientras la carta esté <strong>BLOQUEADA en la zona de Éter de un Campeón</strong> (habilidades continuas) o sobre una Mística/Arcana continua.<br>
           <span class="example" style="margin:4px 0 0;display:inline-block;padding:6px 12px;">"Mientras esta carta esté bloqueada en un Campeón, ese Campeón gana +1 Resistencia."</span></li>
       </ul>
       <p class="highlight-amber" style="font-weight:600;">NOTA v2.0: el Éter NO se exilia y NO va al Cementerio — los antiguos efectos de "Sacrificio" (exiliar) y "Al ir al Cementerio" quedan ELIMINADOS.</p>
@@ -1022,8 +995,8 @@
         <table>
           <tr><th style="width:70px">FASE</th><th style="width:100px">NOMBRE</th><th>QUÉ PASA</th></tr>
           <tr><td><span class="highlight">1</span></td><td><strong>ALBA</strong></td><td>Enderezas Campeones. Reagrupas el Éter (todo vuelve a la Reserva salvo el de efectos continuos). Se resuelven efectos "Al inicio de tu turno". Robas 1 carta del Mazo Principal.</td></tr>
-          <tr><td><span class="highlight">2</span></td><td><strong>FORJA</strong></td><td>Jugar Campeones, Místicas, Arcanas, Tácticas. Activar efectos.</td></tr>
-          <tr><td><span class="highlight">3</span></td><td><strong>CHOQUE</strong></td><td>Combate (ver sección 9).</td></tr>
+          <tr><td><span class="highlight">2</span></td><td><strong>FORJA</strong></td><td>Jugar Campeones, Místicas, Arcanas. Activar efectos.</td></tr>
+          <tr><td><span class="highlight">3</span></td><td><strong>CHOQUE</strong></td><td>Combate (ver sección 9). Arcanas de combate se activan aquí.</td></tr>
           <tr><td><span class="highlight">4</span></td><td><strong>OCASO</strong></td><td>Descartar al límite de mano (6). Efectos "hasta final del turno" expiran. Pasa el turno al otro jugador.</td></tr>
         </table>
       </div>
@@ -1175,7 +1148,7 @@
       </div>
 
       <div class="section-header sub"><span class="num">9.6</span><h3>CADENA DE EFECTOS EN COMBATE</h3></div>
-      <p>Durante el combate, los jugadores pueden activar Tácticas (colocadas en turnos anteriores), cartas de Combate y Arcanas en respuesta a las acciones del oponente.</p>
+      <p>Durante el combate, los jugadores pueden activar Místicas y Arcanas en respuesta a las acciones del oponente.</p>
       <p><strong>ORDEN DE ACTIVACIÓN:</strong></p>
       <ol>
         <li>El defensor tiene prioridad: activa primero sus respuestas.</li>
@@ -1186,11 +1159,11 @@
       <div class="example">
         <div class="ex-title">Ejemplo de Cadena</div>
         <strong>Jugador A:</strong> Declara ataque con un Campeón (Poder 6). El Campeón se AGOTA al declarar.<br>
-        <strong>Jugador B:</strong> Activa una Táctica → Niega el ataque.<br>
-        <strong>Jugador A:</strong> Responde con una carta de Combate (colocada boca abajo en un turno anterior) → +2 Ataque.<br><br>
+        <strong>Jugador B:</strong> Activa una Mística → Niega el ataque.<br>
+        <strong>Jugador A:</strong> Responde con una Arcana (colocada boca abajo en un turno anterior) → +2 Ataque.<br><br>
         <strong>Resolución (orden inverso):</strong><br>
-        1. La carta de Combate se resuelve: el Campeón gana +2 (ahora Poder 8).<br>
-        2. La Táctica se resuelve: niega el ataque.<br><br>
+        1. La Arcana se resuelve: el Campeón gana +2 (ahora Poder 8).<br>
+        2. La Mística se resuelve: niega el ataque.<br><br>
         <em>Resultado: el ataque es negado, pero el Campeón mantiene +2 Ataque por el resto del turno y permanece AGOTADO (el agotamiento se pagó al declarar).</em>
       </div>
     </div>
@@ -1200,7 +1173,7 @@
   <div class="section">
     <div class="section-header"><span class="num">10</span><h2>PALABRAS CLAVE (KEYWORDS)</h2></div>
     <div class="content">
-      <p>Las palabras clave son reglas abreviadas que se imprimen en las cartas para simplificar su texto. Definiciones oficiales v2.0:</p>
+      <p>Las palabras clave son reglas abreviadas que se imprimen en las cartas para simplificar su texto. Definiciones oficiales v3.0:</p>
       <div class="destiny-table">
         <table>
           <tr><th>KEYWORD</th><th>DEFINICIÓN OFICIAL</th></tr>
@@ -1209,11 +1182,10 @@
           <tr><td><strong>INMORTAL</strong></td><td>No puede ser destruido por efectos (Místicas, Arcanas o habilidades). Sí puede morir en combate</td></tr>
           <tr><td><strong>INDESTRUCTIBLE</strong></td><td>No puede ser destruido por batalla. Sí puede ser destruido por efectos</td></tr>
           <tr><td><strong>RECARGA</strong></td><td>Cuando este Campeón ataca, regresa 1 Éter bloqueado que controles a tu Reserva</td></tr>
-          <tr><td><strong>RESONANCIA</strong></td><td>Al inicio de tu Alba, si pagaste esta carta con 2 o más Éter de distinto nombre, gana +1 Ataque o +1 Resistencia (a tu elección)</td></tr>
-          <tr><td><strong>TRANSMUTAR</strong></td><td>Manda esta carta al Cementerio: regresa hasta 2 Éter pagados (1A) a tu Reserva</td></tr>
-          <tr><td><strong>FRENESÍ</strong></td><td>Puedes agotar este Campeón: gana +2 Ataque hasta el final del turno</td></tr>
           <tr><td><strong>PROTECTOR</strong></td><td>Mientras este Campeón esté en el campo, tus otros Campeones no pueden ser objetivo de habilidades Activas del rival</td></tr>
-          <tr><td><strong>FRACTURAR</strong></td><td>Cuando este Campeón destruye a otro en combate, el rival pierde 1 carta de su mano al azar</td></tr>
+          <tr><td><strong>ARTEFACTO</strong></td><td>La carta se equipa a un Campeón. El efecto es continuo. Si el Campeón sale, la carta va al Cementerio. Si la carta es destruida, el Campeón NO se destruye</td></tr>
+          <tr><td><strong>PRESTEZA</strong></td><td>Velocidad de activación media. Solo puede ser respondida con cartas PRESTEZA o FUGAZ</td></tr>
+          <tr><td><strong>FUGAZ</strong></td><td>Velocidad máxima. Se resuelve inmediatamente sin respuesta del rival</td></tr>
         </table>
       </div>
       <p class="highlight-amber" style="font-weight:600;">Nota: INMORTAL e INDESTRUCTIBLE son complementarias: la primera protege de efectos, la segunda de la batalla.</p>
