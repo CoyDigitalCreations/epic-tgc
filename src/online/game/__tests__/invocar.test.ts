@@ -332,23 +332,9 @@ describe('jugar_mistica (R10)', () => {
   })
 })
 
-describe('colocar_tactica (5.4 — no cuesta Éter)', () => {
-  it('coloca la Táctica en 3A-3C SIN pagar Éter; la Reserva queda intacta', () => {
-    const ctx = crearCtx()
-    const conT = conMano(estadoMinimo(), { tac: TACTICA })
-    const { s, ids } = conEteres(conT, ETER_ORDEN, 3)
-    const s2 = aplicar(s, { type: 'colocar_tactica', cardInstanceId: 'tac', slot: 1 }, ctx)
-
-    expect(s2.players.A.campo.misticasTacticas[1]).toBe('tac')
-    expect(s2.players.A.eterPagado).toEqual([])
-    expect(s2.players.A.eterReserva).toEqual(ids) // intacta
-    expect(ctx.events).toEqual([
-      { type: 'carta_salida_de_zona', cardInstanceId: 'tac', zona: 'mano', jugador: 'A' },
-      { type: 'carta_entrada_a_zona', cardInstanceId: 'tac', zona: '3B', jugador: 'A', bocaArriba: true },
-      { type: 'carta_invocada', cardInstanceId: 'tac', tipo: 'Táctica', slot: 1 },
-    ])
-  })
-})
+// TODO: Phase 3 eliminará colocar_tactica y colocar_combate del motor
+// describe('colocar_tactica (5.4 — no cuesta Éter)', () => { ... })
+// describe('colocar_combate (3D-3F, no cuesta Éter)', () => { ... })
 
 describe('colocar_arcana (boca abajo 3D-3F, gratis) + activar_arcana (paga coste)', () => {
   it('coloca la Arcana GRATIS boca abajo, luego activa pagando coste', () => {
@@ -378,24 +364,6 @@ describe('colocar_arcana (boca abajo 3D-3F, gratis) + activar_arcana (paga coste
     expect(s.instances['arc']!.bocaArriba).toBe(true)
     expect(ctx.events[0]).toMatchObject({ type: 'eter_pagado', jugador: 'A', eterIds: ids })
     expect(ctx.events[1]).toMatchObject({ type: 'carta_activada', cardInstanceId: 'arc', jugador: 'A', slot: 0 })
-  })
-})
-
-describe('colocar_combate (3D-3F, no cuesta Éter)', () => {
-  it('coloca el Combate boca arriba en 3D-3F SIN pagar', () => {
-    const ctx = crearCtx()
-    const conC = conMano(estadoMinimo(), { comb: COMBATE })
-    const { s, ids } = conEteres(conC, ETER_ORDEN, 2)
-    const s2 = aplicar(s, { type: 'colocar_combate', cardInstanceId: 'comb', slot: 2 }, ctx)
-
-    expect(s2.players.A.campo.arcanasCombate[2]).toBe('comb')
-    expect(s2.players.A.eterPagado).toEqual([])
-    expect(s2.players.A.eterReserva).toEqual(ids)
-    expect(ctx.events).toEqual([
-      { type: 'carta_salida_de_zona', cardInstanceId: 'comb', zona: 'mano', jugador: 'A' },
-      { type: 'carta_entrada_a_zona', cardInstanceId: 'comb', zona: '3F', jugador: 'A', bocaArriba: true },
-      { type: 'carta_invocada', cardInstanceId: 'comb', tipo: 'Combate', slot: 2 },
-    ])
   })
 })
 

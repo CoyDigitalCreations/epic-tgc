@@ -246,20 +246,8 @@ describe('soporte C5 (dependencia mazo 45): dispatch al-ser-enviado-al-cementeri
     expect(r.players.A.campo.campeones[1]).toBe(ragnar)
   })
 
-  it('5. auto-sacrificio de Transmutar: Mira → 2G → dispara', () => {
-    let s = estadoMinimo()
-    s.fase = 'forja'
-    const { s: s1, id: mira } = conCampeon(s, MIRA, 0, 'A')
-
-    const disparos: string[] = []
-    registrarEfecto('al-ser-enviado-al-cementerio', MIRA, (_st, _ctx, inst) => disparos.push(inst.cardInstanceId))
-
-    const ctx = crearCtx()
-    const r = aplicar(s1, { type: 'usar_transmutar', cardInstanceId: mira, eterIds: [] }, ctx)
-    expect(disparos).toEqual([mira])
-    expect(r.players.A.cementerio).toContain(mira)
-    expect(r.players.A.campo.campeones[0]).toBeNull()
-  })
+  // TODO: Transmutar eliminado — pendiente rediseño de Cristal Huérfano
+  // it('5. auto-sacrificio de Transmutar: Mira → 2G → dispara', () => { ... })
 
   it('6. DS-004 (descarte al azar de la mano del rival): la carta descartada → 2G → dispara', () => {
     let s = estadoMinimo()

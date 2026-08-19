@@ -70,48 +70,12 @@ beforeEach(() => {
   registrarEfectos()
 })
 
-describe('FB-024 handler', () => {
-  it('no ofrece colocar_combate FB-024 si no hay Campeón propio', () => {
-    let s = estadoMinimo()
-    // A sin campeones, con éteres y FB-024 en mano
-    for (let i = 0; i < 4; i++) { const r = conEterReserva(s, ETER_ORDEN); s = r.s }
-    const m = conMano(s, COMBATE_FB024); s = m.s
-    const acciones = getValidActions(s, 'A')
-    expect(acciones.some((a) => a.type === 'colocar_combate')).toBe(false)
-  })
-
-  it('ofrece colocar_combate FB-024 si hay Campeón propio', () => {
-    let s = estadoMinimo()
-    const c = conCampeon(s, AURORA, 0); s = c.s
-    for (let i = 0; i < 4; i++) { const r = conEterReserva(s, ETER_ORDEN); s = r.s }
-    const m = conMano(s, COMBATE_FB024); s = m.s
-    const acciones = getValidActions(s, 'A')
-    expect(acciones.some((a) => a.type === 'colocar_combate')).toBe(true)
-  })
-
-  it('FB-024 aplica +2 ATQ al campeón elegido', () => {
-    let s = estadoMinimo()
-    const c = conCampeon(s, AURORA, 0); s = c.s
-    const campId = c.id
-    // Agregar FB-024 a arcanasCombate (ya colocado)
-    const combId = `comb-${Date.now()}`
-    s.instances[combId] = { cardInstanceId: combId, cardId: COMBATE_FB024, owner: 'A' }
-    s.players.A.campo.arcanasCombate[0] = combId
-    // Disparar al-resolver-cadena con la instancia
-    const inst = s.instances[combId]
-    // Simular: el handler armaría pendiente si hay opciones
-    // En su lugar,直接 invocamos el handler con contextoUso
-    // Necesitamos registrar el efecto y disparar el trigger
-    const r = applyAction(s, { type: 'elegir_objetivo', objetivoId: campId }, { next: () => 0, emit: () => {}, events: [] })
-    // Como no hay pendiente, esto fallará — en su lugar, verificamos statsDe después de aplicar el mod directamente
-    // El test real es: el handler +2 ATQ al resolver cadena
-    // Simplificamos: aplicamos el mod manualmente y verificamos
-    const base = statsDe(s, campId)
-    s.instances[campId].modificadores = [{ stat: 'poder', valor: 2, expira: 'ocaso' }]
-    const buffed = statsDe(s, campId)
-    expect(buffed.poder).toBe(base.poder + 2)
-  })
-})
+// TODO: Phase 3 eliminará colocar_combate del motor
+// describe('FB-024 handler', () => {
+//   it('no ofrece colocar_combate FB-024 si no hay Campeón propio', () => { ... })
+//   it('ofrece colocar_combate FB-024 si hay Campeón propio', () => { ... })
+//   it('FB-024 aplica +2 ATQ al campeón elegido', () => { ... })
+// })
 
 describe('validarRequisito', () => {
   it('devuelve null si no hay requisito registrado', () => {

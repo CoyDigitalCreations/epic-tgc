@@ -79,15 +79,13 @@ describe('getValidActions en Forja (5.5)', () => {
 
     expect(tipos).toContain('jugar_campeon')
     expect(tipos).toContain('jugar_mistica')
-    expect(tipos).toContain('colocar_tactica')
     expect(tipos).toContain('colocar_arcana')
-    expect(tipos).toContain('colocar_combate')
     expect(tipos).toContain('pasar_turno')
     expect(tipos).toContain('rendirse')
   })
 
-  it('NO incluye jugar_campeon/jugar_mistica si la Reserva no alcanza; sí colocar_arcana (gratis), Táctica y Combate', () => {
-    let s = conMano(estadoMinimo(), { cam: CAMPEON, mist: MISTICA, tac: TACTICA, arc: ARCANA, comb: COMBATE })
+  it('NO incluye jugar_campeon/jugar_mistica si la Reserva no alcanza; sí colocar_arcana (gratis)', () => {
+    let s = conMano(estadoMinimo(), { cam: CAMPEON, mist: MISTICA, arc: ARCANA })
     s = conEteres(s, ETER_ORDEN, 1) // no alcanza para coste 2 ni 3
 
     const tipos = getValidActions(s, 'A').map((a) => a.type)
@@ -95,8 +93,6 @@ describe('getValidActions en Forja (5.5)', () => {
     expect(tipos).not.toContain('jugar_mistica')
     expect(tipos).toContain('colocar_arcana') // gratis: siempre disponible si hay slot
     expect(tipos).not.toContain('activar_arcana') // no hay éter suficiente para activar
-    expect(tipos).toContain('colocar_tactica')
-    expect(tipos).toContain('colocar_combate')
   })
 
   it('NO incluye acciones de invocación si no hay slot libre en el grupo', () => {
