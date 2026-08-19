@@ -215,6 +215,8 @@ export const ESTASIS_CARDS: AnyCard[] = [
     stats: { cost: 4, poder: 9, resistencia: 9 },
     efectoPasivo: 'Al ser invocada, toma control de un Campeón que controla el rival. Mientras esta carta esté en el campo, controla ese Campeón.',
     efectoDisparo: 'Puedes pagar hasta un máximo de 2 Éter (bloqueado) para que un Campeón que controles gane +2 de ATQ y +2 de RES mientras ese Éter esté bloqueado. Al inicio de tu próxima Alba reagrupa el Éter usado por este efecto.',
+    disparoAgota: false,
+    disparoUnSoloUso: false,
   },
   {
     id: 'FB-011',
@@ -269,6 +271,8 @@ export const ESTASIS_CARDS: AnyCard[] = [
     catHabilidad: 'Efecto',
     stats: { cost: 3, poder: 4, resistencia: 3 },
     efectoDisparo: 'Una vez por turno, puedes pagar hasta un máximo de 1 Éter y agotar esta carta para cambiar el agotamiento de un Campeón que controla el rival (de agotado a no agotado, o viceversa).',
+    disparoAgota: true,
+    disparoUnSoloUso: true,
   },
   {
     id: 'FB-014',
@@ -323,6 +327,8 @@ export const ESTASIS_CARDS: AnyCard[] = [
     catHabilidad: 'Efecto',
     stats: { cost: 3, poder: 3, resistencia: 5 },
     efectoDisparo: 'Puedes pagar hasta un máximo de 1 Éter (bloqueado) para que los Campeones que controles ganen +1 de RES mientras esté bloqueado.',
+    disparoAgota: false,
+    disparoUnSoloUso: false,
   },
   {
     id: 'FB-017',
@@ -341,6 +347,8 @@ export const ESTASIS_CARDS: AnyCard[] = [
     catHabilidad: 'Efecto',
     stats: { cost: 4, poder: 4, resistencia: 5 },
     efectoDisparo: 'Una vez por turno, puedes pagar hasta un máximo de 1 Éter y agotar esta carta para liberar hasta 2 Éter bloqueados de Campeones que controla el rival (van a la zona de pago de su dueño).',
+    disparoAgota: true,
+    disparoUnSoloUso: true,
   },
   {
     id: 'FB-018',
@@ -663,6 +671,8 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     stats: { cost: 4, poder: 9, resistencia: 9 },
     efectoPasivo: 'Al ser invocada, destruye un Campeón que controla el rival.',
     efectoDisparo: 'Puedes pagar hasta un máximo de 2 Éter (bloqueado) para que un Campeón que controla el rival pierda 2 de ATQ y 2 de RES mientras ese Éter esté bloqueado. Al inicio de tu próxima Alba reagrupa el Éter usado por este efecto.',
+    disparoAgota: false,
+    disparoUnSoloUso: false,
   },
 
   /* ── ÉTER (9 diseños → 15 copias) ─────────────────────────── */
@@ -851,6 +861,8 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     catHabilidad: 'Efecto',
     stats: { cost: 3, poder: 4, resistencia: 3 },
     efectoDisparo: 'Una vez por turno, puedes pagar hasta un máximo de 1 Éter y agotar esta carta para destruir un Campeón que controla el rival con 3 o menos de RES.',
+    disparoAgota: true,
+    disparoUnSoloUso: true,
   },
   {
     id: 'DS-014',
@@ -905,6 +917,8 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     catHabilidad: 'Efecto',
     stats: { cost: 3, poder: 3, resistencia: 5 },
     efectoDisparo: 'Puedes pagar hasta un máximo de 1 Éter (bloqueado) para que los Campeones que controlas ganen +1 de ATQ mientras esté bloqueado.',
+    disparoAgota: false,
+    disparoUnSoloUso: false,
   },
   {
     id: 'DS-017',
@@ -923,6 +937,8 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     catHabilidad: 'Efecto',
     stats: { cost: 4, poder: 4, resistencia: 5 },
     efectoDisparo: 'Una vez por turno, puedes pagar hasta un máximo de 1 Éter y agotar esta carta para tomar control de hasta 2 Éter bloqueados en Campeones que controla el rival (van a tu Reserva). Mientras esta carta esté en el campo, controla esos Éteres.',
+    disparoAgota: true,
+    disparoUnSoloUso: true,
   },
   {
     id: 'DS-018',
