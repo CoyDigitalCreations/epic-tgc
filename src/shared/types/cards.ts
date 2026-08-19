@@ -47,6 +47,10 @@ export interface CampeonCard extends CardMeta {
   efectoPasivo?: string
   efectoDisparo?: string
   efectoContinuo?: string
+  /** Identificador oculto: ¿el Disparo agota al Campeón? */
+  disparoAgota?: boolean
+  /** Identificador oculto: ¿el Disparo es de un solo uso? */
+  disparoUnSoloUso?: boolean
 }
 
 export interface MisticaCard extends CardMeta {
