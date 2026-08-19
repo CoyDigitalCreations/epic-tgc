@@ -17,32 +17,45 @@
  */
 import { esArcana, esMistica, getCardMeta } from './cards'
 import { continuarCombateTrasCadena } from './combat'
-import { dispararTrigger } from './efectos'
+import { dispararTrigger, velocidadDe } from './efectos'
 import { enviarAlCementerio } from './replacements'
 import type { Ctx, CadenaState, GameState, PlayerId } from './types'
 import { slotAZona } from './zones'
 
 /**
  * Cartas del jugador que pueden responder en la cadena (9.6 + global):
- * - Tácticas colocadas en turnos anteriores
- * - Combates
- * - Arcanas colocadas en turnos anteriores
+ * - Místicas que NO estén en activación diferida (§5.5)
+ * - Arcanas que NO estén en activación diferida (§5.5)
  * - Campeones con efectoDisparo que no estén agotados
- * Las Místicas nunca responden y la activación diferida §5.5
- * excluye Tácticas/Arcanas recién colocadas (entradaEsteTurno).
+ *
+ * Filtro de velocidad: si el último efecto en la pila es PRESTEZA,
+ * solo responden PRESTEZA o FUGAZ. Si es FUGAZ, nadie responde.
  */
 export function respondiblesDe(state: GameState, playerId: PlayerId): string[] {
   const p = state.players[playerId]
   // Cartas que ya están en la pila de la cadena (no pueden responder dos veces)
-  const enPila = new Set(state.combate?.cadena?.pila ?? state.cadena?.pila ?? [])
+  const cadena = state.combate?.cadena ?? state.cadena
+  const enPila = new Set(cadena?.pila ?? [])
+
+  // Determinar velocidad requerida basada en el último efecto de la pila
+  let velocidadRequerida: 'normal' | 'presteza' | 'fugaz' = 'normal'
+  if (cadena && cadena.pila.length > 0) {
+    const ultimoId = cadena.pila[cadena.pila.length - 1]
+    const velUltimo = velocidadDe(state, ultimoId)
+    if (velUltimo === 'fugaz') return [] // FUGAZ: nadie resuelve
+    if (velUltimo === 'presteza') velocidadRequerida = 'presteza' // Solo PRESTEZA/FUGAZ responden
+  }
+
   const res: string[] = []
   for (const id of p.campo.misticasTacticas) {
     if (!id) continue
     if (enPila.has(id)) continue
     const inst = state.instances[id]
     const meta = inst?.cardId ? getCardMeta(inst.cardId) : null
-    // Místicas responden si NO están en activación diferida (§5.5)
-    if (meta && esMistica(meta) && !inst.entradaEsteTurno) res.push(id)
+    if (meta && esMistica(meta) && !inst.entradaEsteTurno) {
+      const vel = velocidadDe(state, id)
+      if (puedeResponder(vel, velocidadRequerida)) res.push(id)
+    }
   }
   for (const id of p.campo.arcanasCombate) {
     if (!id) continue
@@ -50,8 +63,10 @@ export function respondiblesDe(state: GameState, playerId: PlayerId): string[] {
     const inst = state.instances[id]
     const meta = inst?.cardId ? getCardMeta(inst.cardId) : null
     if (!meta) continue
-    // Arcanas responden si NO están en activación diferida (§5.5)
-    if (esArcana(meta) && !inst.entradaEsteTurno) res.push(id)
+    if (esArcana(meta) && !inst.entradaEsteTurno) {
+      const vel = velocidadDe(state, id)
+      if (puedeResponder(vel, velocidadRequerida)) res.push(id)
+    }
   }
   // Campeones con efecto Disparo (no agotados)
   for (const id of p.campo.campeones) {
@@ -61,10 +76,18 @@ export function respondiblesDe(state: GameState, playerId: PlayerId): string[] {
     if (inst?.agotado) continue
     const meta = inst?.cardId ? getCardMeta(inst.cardId) : null
     if (meta && meta.type === 'Campeón' && 'efectoDisparo' in meta && (meta as any).efectoDisparo) {
-      res.push(id)
+      const vel = velocidadDe(state, id)
+      if (puedeResponder(vel, velocidadRequerida)) res.push(id)
     }
   }
   return res
+}
+
+/** Determina si una carta con velocidad `vel` puede responder a una cadena con velocidad `requerida`. */
+function puedeResponder(vel: 'normal' | 'presteza' | 'fugaz', requerida: 'normal' | 'presteza' | 'fugaz'): boolean {
+  if (requerida === 'fugaz') return false // FUGAZ: nadie responde
+  if (requerida === 'presteza') return vel === 'presteza' || vel === 'fugaz' // Solo PRESTEZA/FUGAZ
+  return true // normal: cualquier velocidad responde
 }
 
 /**
@@ -85,6 +108,7 @@ export function abrirCadena(s: GameState, primerRespondedor: PlayerId): boolean 
 /**
  * Apertura de cadena GLOBAL (fuera de combate): cuando un efecto se activa
  * y el rival podría responder. Se abre en s.cadena (no en combate.cadena).
+ * FUGAZ no abre cadena — se resuelve inmediatamente.
  * Devuelve true si se abrió (rival tiene respondibles), false si no.
  */
 export function abrirCadenaGlobal(
@@ -92,6 +116,10 @@ export function abrirCadenaGlobal(
   jugadorActivo: PlayerId,
   efecto: { cardInstanceId: string; descripcion: string },
 ): boolean {
+  // FUGAZ: no abre cadena, se resuelve inmediatamente
+  const vel = velocidadDe(s, efecto.cardInstanceId)
+  if (vel === 'fugaz') return false
+
   const rival: PlayerId = jugadorActivo === 'A' ? 'B' : 'A'
   if (respondiblesDe(s, rival).length === 0) return false
   s.cadena = {
@@ -100,6 +128,7 @@ export function abrirCadenaGlobal(
     pasesConsecutivos: 0,
     faseAbierta: s.fase,
     efectoActual: { jugador: jugadorActivo, ...efecto },
+    velocidadActual: vel,
   }
   return true
 }
@@ -139,6 +168,8 @@ export function ejecutarResponderCadena(s: GameState, cardInstanceId: string, ct
   const jugador = cadena.prioridad
   cadena.pila.push(cardInstanceId)
   cadena.pasesConsecutivos = 0
+  // Registrar velocidad del último efecto activado
+  cadena.velocidadActual = velocidadDe(s, cardInstanceId)
   // Al activarse, la Arcana se revela (6.2: la pila es visible a ambos)
   const inst = s.instances[cardInstanceId]
   const meta = inst?.cardId ? getCardMeta(inst.cardId) : null

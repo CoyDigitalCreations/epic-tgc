@@ -301,6 +301,19 @@ export function keywordsDe(s: GameState, id: string): readonly string[] {
 }
 
 /**
+ * Obtiene la velocidad de una carta para la cadena:
+ * - 'fugaz': resuelve inmediatamente, sin respuesta
+ * - 'presteza': solo puede ser respondida con PRESTEZA o FUGAZ
+ * - 'normal': puede ser respondida con cualquier velocidad
+ */
+export function velocidadDe(s: GameState, id: string): 'fugaz' | 'presteza' | 'normal' {
+  const kws = keywordsDe(s, id)
+  if (kws.includes('Fugaz')) return 'fugaz'
+  if (kws.includes('Presteza')) return 'presteza'
+  return 'normal'
+}
+
+/**
  * Objetivos válidos para efectos que designan "un Campeón que controla el
  * rival" (D3, Protector): campeones no-null del jugador en su campo, en orden
  * de slot. Si el jugador controla ≥1 con keyword Protector (keywordsDe), se
