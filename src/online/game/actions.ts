@@ -35,6 +35,7 @@ export type Action =
   | { type: 'jugar_mistica'; cardInstanceId: string; slot: number; eterIds: string[] }
   | { type: 'colocar_arcana'; cardInstanceId: string; slot: number }
   | { type: 'activar_arcana'; cardInstanceId: string; slot: number; eterIds: string[] }
+  | { type: 'equipar_artefacto'; cardInstanceId: string; campeonInstanceId: string }
   | { type: 'bloquear_eter'; eterIds: string[]; campeonSlot: number }
   | { type: 'descartar_carta'; cardInstanceIds: string[] }
   | { type: 'elegir_opcion'; opcionId: string }
@@ -92,6 +93,8 @@ function validarAccion(state: GameState, action: Action): string | null {
       return validarColocarArcana(state, action)
     case 'activar_arcana':
       return validarActivarArcana(state, action)
+    case 'equipar_artefacto':
+      return validarEquiparArtefacto(state, action)
     case 'bloquear_eter':
       return validarBloquearEter(state, action)
     case 'elegir_opcion':
@@ -255,6 +258,32 @@ export function validarActivarArcana(state: GameState, action: Extract<Action, {
   return null
 }
 
+/**
+ * Validar equipar_artefacto: Mística/Arcana con keyword ARTEFACTO en campo,
+ * se equipa a un Campeón propio en el campo.
+ */
+function validarEquiparArtefacto(state: GameState, action: Extract<Action, { type: 'equipar_artefacto' }>): string | null {
+  if (state.fase !== 'forja') return 'equipar_artefacto solo en Forja'
+  const inst = state.instances[action.cardInstanceId]
+  if (!inst) return 'carta no encontrada'
+  const meta = inst.cardId ? getCardMeta(inst.cardId) : null
+  if (!meta) return 'carta desconocida'
+  if (!('keywords' in meta) || !meta.keywords?.includes('Artefacto')) return 'esta carta no tiene ARTEFACTO'
+  // La carta debe estar en el campo (místicasTacticas o arcanasCombate)
+  const p = state.players[state.turno]
+  const enMT = p.campo.misticasTacticas.includes(action.cardInstanceId)
+  const enAC = p.campo.arcanasCombate.includes(action.cardInstanceId)
+  if (!enMT && !enAC) return 'la carta no está en el campo'
+  if (inst.equipadoA) return 'la carta ya está equipada'
+  // El campeón objetivo debe estar en el campo propio
+  const campeonInst = state.instances[action.campeonInstanceId]
+  if (!campeonInst) return 'campeón no encontrado'
+  if (!p.campo.campeones.includes(action.campeonInstanceId)) return 'el campeón no está en tu campo'
+  const campeonMeta = campeonInst.cardId ? getCardMeta(campeonInst.cardId) : null
+  if (!campeonMeta || !esCampeon(campeonMeta)) return 'el objetivo no es un Campeón'
+  return null
+}
+
 function validarBloquearEter(state: GameState, action: Extract<Action, { type: 'bloquear_eter' }>): string | null {
   if (state.fase !== 'forja') return 'bloquear_eter solo en Forja'
   return validarBloqueo(state, state.turno, action.eterIds, action.campeonSlot)
@@ -399,6 +428,10 @@ function ejecutarAccion(s: GameState, action: Action, ctx: Ctx): void {
     }
     case 'activar_arcana': {
       ejecutarActivarArcana(s, action, ctx)
+      return
+    }
+    case 'equipar_artefacto': {
+      ejecutarEquiparArtefacto(s, action, ctx)
       return
     }
     case 'bloquear_eter': {
@@ -608,6 +641,14 @@ function ejecutarActivarArcana(s: GameState, action: Extract<Action, { type: 'ac
   // Abrir cadena global: el rival podría responder con cartas Disparo
   const meta = getCardMeta(inst.cardId!)
   abrirCadenaGlobal(s, s.turno, { cardInstanceId: id, descripcion: meta?.name ?? id })
+}
+
+/** Equipa un ARTEFACTO a un Campeón: la carta queda en su slot, efecto aplica al campeón. */
+function ejecutarEquiparArtefacto(s: GameState, action: Extract<Action, { type: 'equipar_artefacto' }>, ctx: Ctx): void {
+  const inst = s.instances[action.cardInstanceId]
+  if (!inst) return
+  inst.equipadoA = action.campeonInstanceId
+  ctx.emit({ type: 'carta_activada', cardInstanceId: action.cardInstanceId, jugador: s.turno, slot: -1 })
 }
 
 /** Bloqueo facción v2.1: 2A → Campeón.eterBloqueado (el clon ya fue validado). */

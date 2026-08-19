@@ -76,6 +76,22 @@ export function moverAlCementerio(s: GameState, cardInstanceId: string): void {
 export function enviarAlCementerio(s: GameState, ctx: Ctx, cardInstanceId: string): void {
   const inst = s.instances[cardInstanceId]
   if (!inst) return
+  // ARTEFACTO: si esta carta es un Campeón, buscar artefactos equipados y enviarlos al cementerio
+  if (inst.cardId) {
+    const meta = getCardMeta(inst.cardId)
+    if (meta && esCampeon(meta)) {
+      for (const otherId of Object.keys(s.instances)) {
+        const other = s.instances[otherId]
+        if (other && other.equipadoA === cardInstanceId) {
+          // Artefacto equipado a este campeón → al cementerio
+          other.equipadoA = undefined
+          moverAlCementerio(s, otherId)
+          ctx.emit({ type: 'carta_salida_de_zona', cardInstanceId: otherId, zona: '3A', jugador: other.owner })
+          ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: otherId, zona: '2G', jugador: other.owner, bocaArriba: true })
+        }
+      }
+    }
+  }
   moverAlCementerio(s, cardInstanceId)
   dispararTrigger(s, ctx, 'al-ser-enviado-al-cementerio', inst.owner, [cardInstanceId])
 }
