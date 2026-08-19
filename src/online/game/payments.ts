@@ -37,12 +37,11 @@ export interface ResultadoPago {
   aportado?: number
 }
 
-/** Aporte de un Éter en unidades reales: 1 si comparte facción con la carta pagada, ½ si no. */
-export function aporteDe(eterCardId: string, objetivoCardId: string): number {
+/** Aporte de un Éter: siempre 1 (v2.0 — sin reglas de facción). */
+export function aporteDe(eterCardId: string, _objetivoCardId: string): number {
   const eter = getCardMeta(eterCardId)
-  const objetivo = getCardMeta(objetivoCardId)
-  if (!eter || !objetivo) return 0
-  return faccionesCompartidas(eter.facciones, objetivo.facciones) ? 1 : 0.5
+  if (!eter) return 0
+  return 1
 }
 
 /** Validación read-only: exactamente el coste, sin sobrepago. */
@@ -165,9 +164,6 @@ export function validarBloqueo(state: GameState, jugador: PlayerId, eterIds: str
     const meta = inst?.cardId ? getCardMeta(inst.cardId) : null
     if (!inst || !meta || !esEter(meta)) return `no es un Éter: ${id}`
     if (!p.eterReserva.includes(id)) return `el Éter no está en tu Reserva: ${id}`
-    if (!faccionesCompartidas(meta.facciones, campeon.facciones)) {
-      return `el Éter no comparte facción con el Campeón: ${id}`
-    }
   }
   return null
 }

@@ -47,10 +47,11 @@ describe('Paquetes', () => {
       expect(dist).toEqual({ eter: 15, principal: 45, vinculos: 6, total: 66 })
     })
 
-    it('las cartas con facción son de Orden; Éter y Vínculo pueden tener facción (pendiente Phase 2)', () => {
+    it('las cartas con facción son de Orden; Éter, Vínculo y ex-Táctica no tienen facción', () => {
+      const sinFaccion = ['FB-021', 'FB-022'] // ex-Tácticas convertidas a Místicas
       for (const card of ESTASIS_CARDS) {
         expect(card.paqueteId).toBe('estasis')
-        if (card.type !== 'Éter' && card.type !== 'Vínculo') {
+        if (card.type !== 'Éter' && card.type !== 'Vínculo' && !sinFaccion.includes(card.id)) {
           expect(card.facciones).toEqual(['Orden'])
         }
       }
@@ -120,10 +121,11 @@ describe('Paquetes', () => {
       expect(dist).toEqual({ eter: 15, principal: 45, vinculos: 6, total: 66 })
     })
 
-    it('las cartas con facción son de Caos; Éter y Vínculo pueden tener facción (pendiente Phase 2)', () => {
+    it('las cartas con facción son de Caos; Éter, Vínculo y ex-Táctica no tienen facción', () => {
+      const sinFaccion = ['DS-021', 'DS-022'] // ex-Tácticas convertidas a Místicas
       for (const card of DISONANCIA_CARDS) {
         expect(card.paqueteId).toBe('disonancia')
-        if (card.type !== 'Éter' && card.type !== 'Vínculo') {
+        if (card.type !== 'Éter' && card.type !== 'Vínculo' && !sinFaccion.includes(card.id)) {
           expect(card.facciones).toEqual(['Caos'])
         }
       }

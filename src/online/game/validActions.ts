@@ -80,12 +80,12 @@ export function getValidActions(state: GameState, playerId: PlayerId): Action[] 
       if (!meta || !meta.efectoDisparo) continue
       const esBloqueado = meta.efectoDisparo.includes('bloqueado')
       if (esBloqueado) {
-        // Patrón "Bloqueado": buscar N Éteres de facción compartida en Reserva
+        // Patrón "Bloqueado": buscar N Éteres en Reserva
         // (N = costo de la carta, extraído de efectoDisparo)
         const costo = costeEterHabilidad(meta)
         const eteresValidos = p.eterReserva.filter((id) => {
           const eterMeta = state.instances[id]?.cardId ? getCardMeta(state.instances[id]!.cardId!) : null
-          return eterMeta !== null && faccionesCompartidas(eterMeta.facciones, meta.facciones)
+          return eterMeta !== null
         })
         if (costo > 0 && eteresValidos.length >= costo) {
           acciones.push({ type: 'activar_habilidad', cardInstanceId: champId, eterIds: eteresValidos.slice(0, costo) })
@@ -121,7 +121,7 @@ export function getValidActions(state: GameState, playerId: PlayerId): Action[] 
         if (!campeonNecesitaEterBloqueado(campeon)) return
         const eterId = p.eterReserva.find((id) => {
           const meta = state.instances[id]?.cardId ? getCardMeta(state.instances[id]!.cardId!) : null
-          return meta !== null && faccionesCompartidas(meta.facciones, campeon.facciones)
+          return meta !== null
         })
         if (eterId !== undefined) {
           acciones.push({ type: 'bloquear_eter', eterIds: [eterId], campeonSlot: slot })
