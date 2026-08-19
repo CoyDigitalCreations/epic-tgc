@@ -58,14 +58,14 @@ export function esVinculo(card: AnyCard): card is VinculoCard {
 }
 
 /**
- * Extrae el costo en Éteres de una habilidad activa desde efectoActivo.
+ * Extrae el costo en Éteres de una habilidad activa desde efectoDisparo.
  * Patrones soportados: "Paga N Éter", "paga N Éter", "hasta un máximo de N Éter".
  * Retorna 0 si no se puede parsear (fallback seguro).
  */
 export function costeEterHabilidad(card: AnyCard): number {
-  if (!('efectoActivo' in card) || !card.efectoActivo) return 0
+  if (!('efectoDisparo' in card) || !card.efectoDisparo) return 0
   // Matchea "Paga 2 Éter", "paga 1 Éter", "hasta un máximo de 2 Éter"
-  const match = card.efectoActivo.match(/(?:de\s+)?(\d+)\s+Éter/)
+  const match = card.efectoDisparo.match(/(?:de\s+)?(\d+)\s+Éter/)
   return match ? parseInt(match[1], 10) : 0
 }
 
@@ -73,19 +73,16 @@ export function costeEterHabilidad(card: AnyCard): number {
  * Determina si un campeón tiene alguna razón para tener Éter bloqueado.
  *
  * Retorna true si:
- * 1. Su efectoActivo contiene 'bloqueado' (habilidad activa: Korr, Cassandra, Aurora, Ragnar)
+ * 1. Su efectoDisparo contiene 'bloqueado' (habilidad activa: Korr, Cassandra, Aurora, Ragnar)
  * 2. Su efectoPasivo referencia 'Éter bloqueado' (pasivo: FB-005, DS-006)
- * 3. Tiene keyword 'Transmutar' (Cristal Huérfano: necesita 1 éter bloqueado como recurso)
  *
  * Retorna false para campeones como Draven, Emisario, etc. que NO se benefician
  * de tener éter bloqueado.
  */
 export function campeonNecesitaEterBloqueado(card: AnyCard): boolean {
   // 1. Habilidad activa con patrón "bloqueado"
-  if ('efectoActivo' in card && card.efectoActivo?.includes('bloqueado')) return true
+  if ('efectoDisparo' in card && card.efectoDisparo?.includes('bloqueado')) return true
   // 2. Efecto pasivo que referencia éter bloqueado
   if ('efectoPasivo' in card && card.efectoPasivo?.includes('Éter bloqueado')) return true
-  // 3. Transmutar (necesita recursos bloqueados)
-  if ('keywords' in card && card.keywords?.includes('Transmutar')) return true
   return false
 }

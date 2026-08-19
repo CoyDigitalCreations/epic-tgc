@@ -27,7 +27,7 @@ import { slotAZona } from './zones'
  * - Tácticas colocadas en turnos anteriores
  * - Combates
  * - Arcanas colocadas en turnos anteriores
- * - Campeones con tipoEfecto 'Disparo' que no estén agotados
+ * - Campeones con efectoDisparo que no estén agotados
  * Las Místicas nunca responden y la activación diferida §5.5
  * excluye Tácticas/Arcanas recién colocadas (entradaEsteTurno).
  */
@@ -59,7 +59,7 @@ export function respondiblesDe(state: GameState, playerId: PlayerId): string[] {
     const inst = state.instances[id]
     if (inst?.agotado) continue
     const meta = inst?.cardId ? getCardMeta(inst.cardId) : null
-    if (meta && meta.type === 'Campeón' && 'tipoEfecto' in meta && (meta as any).tipoEfecto === 'Disparo') {
+    if (meta && meta.type === 'Campeón' && 'efectoDisparo' in meta && (meta as any).efectoDisparo) {
       res.push(id)
     }
   }
@@ -143,7 +143,7 @@ export function ejecutarResponderCadena(s: GameState, cardInstanceId: string, ct
   const meta = inst?.cardId ? getCardMeta(inst.cardId) : null
   if (meta && esArcana(meta)) inst!.bocaArriba = true
   // Campeones Disparo se revelan también
-  if (meta && meta.type === 'Campeón' && 'tipoEfecto' in meta && (meta as any).tipoEfecto === 'Disparo') {
+  if (meta && meta.type === 'Campeón' && 'efectoDisparo' in meta && (meta as any).efectoDisparo) {
     inst!.bocaArriba = true
   }
   ctx.emit({ type: 'respuesta_encadenada', jugador, cardInstanceId })

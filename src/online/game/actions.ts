@@ -335,7 +335,7 @@ function validarUsarTransmutar(state: GameState, action: Extract<Action, { type:
 }
 
 /**
- * Validar activar_habilidad — Campeón propio con tipoEfecto='Activo' o 'Especial'
+ * Validar activar_habilidad — Campeón propio con efectoDisparo
  * en campo del jugador activo. Dos patrones de coste:
  *  - "Bloqueado": eterIds de la Reserva que comparten facción → bloqueados en el Campeón.
  *  - "Agota": eterIds de la Reserva → pagados (1A) + campeón agotado + 1/turno.
@@ -347,10 +347,9 @@ function validarActivarHabilidad(state: GameState, action: Extract<Action, { typ
   if (!p.campo.campeones.includes(action.cardInstanceId)) return 'la carta no está en tu campo'
   const meta = inst.cardId ? getCardMeta(inst.cardId) : null
   if (!meta) return 'carta desconocida'
-  if (meta.tipoEfecto !== 'Activo' && meta.tipoEfecto !== 'Especial') return 'esta carta no tiene habilidad activa'
-  if (!meta.efectoActivo) return 'esta carta no tiene efecto activo'
+  if (!meta.efectoDisparo) return 'esta carta no tiene efecto de disparo'
 
-  const esBloqueado = meta.efectoActivo.includes('bloqueado')
+  const esBloqueado = meta.efectoDisparo.includes('bloqueado')
 
   if (esBloqueado) {
     // Patrón "Bloqueado": eterIds de la Reserva → Campeón.eterBloqueado
@@ -814,7 +813,7 @@ function ejecutarActivarHabilidad(s: GameState, action: Extract<Action, { type: 
   const meta = inst.cardId ? getCardMeta(inst.cardId) : null
   if (!meta) return
 
-  const esBloqueado = meta.efectoActivo?.includes('bloqueado') ?? false
+  const esBloqueado = meta.efectoDisparo?.includes('bloqueado') ?? false
 
   if (esBloqueado) {
     // Patrón "Bloqueado": mueve éteres de Reserva → Campeón.eterBloqueado
@@ -823,7 +822,7 @@ function ejecutarActivarHabilidad(s: GameState, action: Extract<Action, { type: 
     }
     inst.eterBloqueado = [...(inst.eterBloqueado ?? []), ...action.eterIds]
     // Si el texto indica "Alba" → registrar efecto pendiente para liberar en Alba del dueño
-    if (meta.efectoActivo?.includes('Alba')) {
+    if (meta.efectoDisparo?.includes('Alba')) {
       registrarEfectoPendiente(s, {
         fuente: action.cardInstanceId,
         owner: s.turno,

@@ -172,12 +172,11 @@ export function aurasDe(s: GameState, id: string): AurasAplicadas {
       }
 
       // Habilidades activas "Bloqueado" (FB-016 Cassandra, DS-016 Korr):
-      // si la fuente tiene éteres bloqueados y tiene efectoActivo con 'bloqueado',
+      // si la fuente tiene éteres bloqueados y tiene efectoDisparo con 'bloqueado',
       // aplica un aura a TODOS los campeones que controla el dueño de la fuente.
       const fuenteOwner = fuenteInst.owner
       if (
-        (fuenteMeta.tipoEfecto === 'Activo' || fuenteMeta.tipoEfecto === 'Especial') &&
-        fuenteMeta.efectoActivo?.includes('bloqueado') &&
+        fuenteMeta.efectoDisparo?.includes('bloqueado') &&
         (fuenteInst.eterBloqueado?.length ?? 0) > 0
       ) {
         // Cassandra (FB-016): +1 RES a todos los que controla

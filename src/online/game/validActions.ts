@@ -70,19 +70,18 @@ export function getValidActions(state: GameState, playerId: PlayerId): Action[] 
         acciones.push({ type: 'usar_transmutar', cardInstanceId: champId, eterIds: p.eterPagado.slice(0, 2) })
       }
     }
-    // Activar Habilidades: Campeones con tipoEfecto='Activo' o 'Especial'
+    // Activar Habilidades: Campeones con efectoDisparo
     // Patrón "Bloqueado": necesita 1+ Éter de facción compartida en Reserva
     // Patrón "Agota": necesita 1 Éter de Reserva + no agotado + no usado este turno
     for (const champId of p.campo.campeones) {
       if (!champId) continue
       const inst = state.instances[champId]
       const meta = inst?.cardId ? getCardMeta(inst.cardId) : null
-      if (!meta || (meta.tipoEfecto !== 'Activo' && meta.tipoEfecto !== 'Especial')) continue
-      if (!meta.efectoActivo) continue
-      const esBloqueado = meta.efectoActivo.includes('bloqueado')
+      if (!meta || !meta.efectoDisparo) continue
+      const esBloqueado = meta.efectoDisparo.includes('bloqueado')
       if (esBloqueado) {
         // Patrón "Bloqueado": buscar N Éteres de facción compartida en Reserva
-        // (N = costo de la carta, extraído de efectoActivo)
+        // (N = costo de la carta, extraído de efectoDisparo)
         const costo = costeEterHabilidad(meta)
         const eteresValidos = p.eterReserva.filter((id) => {
           const eterMeta = state.instances[id]?.cardId ? getCardMeta(state.instances[id]!.cardId!) : null
