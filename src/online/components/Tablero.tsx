@@ -388,17 +388,19 @@ function GrillaJugador({
     )
   }
 
-  /** Campeón propio 2B-2F con sus acciones (Atacar / Bloquear → selector). */
+  /** Campeón propio 2B-2F con sus acciones (Atacar / Bloquear / Activar). */
   const campeonPropio = (slot: number, id: string) => {
     const inst = vista.instances[id]
     const ataque = acciones.find(
       (a) => a.type === 'declarar_ataque' && a.atacanteIds.length === 1 && a.atacanteIds[0] === id,
     )
     const bloquear = acciones.find((a) => a.type === 'bloquear_eter' && a.campeonSlot === slot)
+    const transmutar = acciones.find((a) => a.type === 'usar_transmutar' && a.cardInstanceId === id)
+    const activarHabilidad = acciones.find((a) => a.type === 'activar_habilidad' && a.cardInstanceId === id)
     const rotStyle = invertida ? { transform: 'rotate(180deg)' } : undefined
     return (
       <MiniCard key={id} inst={inst} tamano="md" onZoom={() => abrirZoom(inst)} invertida={invertida}>
-        {leTocaA && (ataque || bloquear) && (
+        {leTocaA && (ataque || bloquear || transmutar || activarHabilidad) && (
           <div className="flex gap-1 flex-wrap justify-center" style={rotStyle}>
             {ataque && <Boton accion={ataque} onClick={onAccion} />}
             {bloquear && (
@@ -413,6 +415,18 @@ function GrillaJugador({
                            transition-colors cursor-pointer whitespace-nowrap"
               >
                 Bloquear
+              </button>
+            )}
+            {(transmutar || activarHabilidad) && (
+              <button
+                onClick={() => {
+                  const accion = activarHabilidad ?? transmutar
+                  if (accion) onAccion(accion)
+                }}
+                className="text-[10px] bg-purple-600/30 hover:bg-purple-600/50 text-purple-200 px-1.5 py-0.5 rounded 
+                           transition-colors cursor-pointer whitespace-nowrap"
+              >
+                Activar
               </button>
             )}
           </div>
