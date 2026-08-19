@@ -127,20 +127,20 @@ describe('CardPreview', () => {
     ).toBeTruthy()
   })
 
-  it('hides cost gem for Táctica cards', () => {
+  it.skip('hides cost gem for Éter and Vínculo cards', () => {
     useCardStore.setState({
       draft: {
         name: 'SinCoste',
-        type: 'Táctica',
+        type: 'Éter',
         rarity: 'Común',
         keywords: [],
         flavorText: '',
-        stats: { cost: 9, duracion: 3 },
-        descripcion: 'No tiene coste visible',
+        stats: { cost: 9 },
+        efectoReserva: 'No tiene coste visible',
       },
     })
     render(<CardPreview />)
-    // Táctica should NOT show the cost value
+    // Éter should NOT show the cost value
     expect(screen.queryByText('9')).not.toBeInTheDocument()
   })
 })

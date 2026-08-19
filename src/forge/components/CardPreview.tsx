@@ -22,20 +22,10 @@ const TYPE_THEME: Record<
     gradient: 'linear-gradient(180deg, #a855f7 0%, #581c87 60%, #0d0d1a 100%)',
     border: '#9333ea',
   },
-  Táctica: {
-    color: '#22d3ee',
-    gradient: 'linear-gradient(180deg, #22d3ee 0%, #155e75 60%, #0d0d1a 100%)',
-    border: '#0891b2',
-  },
   Arcana: {
     color: '#f59e0b',
     gradient: 'linear-gradient(180deg, #f59e0b 0%, #92400e 60%, #0d0d1a 100%)',
     border: '#d97706',
-  },
-  Combate: {
-    color: '#ec4899',
-    gradient: 'linear-gradient(180deg, #ec4899 0%, #831843 60%, #0d0d1a 100%)',
-    border: '#db2777',
   },
   Éter: {
     color: '#fbbf24',
@@ -85,8 +75,6 @@ export function RenderCarta({
   const stats = card.stats as Record<string, any>
   const hasFlavorText = !!card.flavorText
   const sinGem =
-    card.type === 'Táctica' ||
-    card.type === 'Combate' ||
     card.type === 'Éter' ||
     card.type === 'Vínculo'
 
@@ -446,23 +434,26 @@ export function RenderCarta({
             case 'Campeón': {
               const cm = c
               const parts: React.ReactNode[] = []
-              if (cm.tipoEfecto === 'Pasivo' || cm.tipoEfecto === 'Especial') {
-                if (cm.efectoPasivo) {
-                  parts.push(
-                    <p key="pasivo" style={{ fontFamily: '"Inter", sans-serif', fontSize: fluidSize(cm.efectoPasivo, 13.5), lineHeight: 1.35, fontWeight: 500, color: '#261a0e', margin: 0 }}>
-                      <strong>Pasivo:</strong> {cm.efectoPasivo}
-                    </p>
-                  )
-                }
+              if (cm.efectoPasivo) {
+                parts.push(
+                  <p key="pasivo" style={{ fontFamily: '"Inter", sans-serif', fontSize: fluidSize(cm.efectoPasivo, 13.5), lineHeight: 1.35, fontWeight: 500, color: '#261a0e', margin: 0 }}>
+                    <strong>Pasivo:</strong> {cm.efectoPasivo}
+                  </p>
+                )
               }
-              if (cm.tipoEfecto === 'Activo' || cm.tipoEfecto === 'Especial') {
-                if (cm.efectoActivo) {
-                  parts.push(
-                    <p key="activo" style={{ fontFamily: '"Inter", sans-serif', fontSize: fluidSize(cm.efectoActivo, 13.5), lineHeight: 1.35, fontWeight: 500, color: '#261a0e', margin: 0, marginTop: parts.length > 0 ? 8 : 0 }}>
-                      <strong>Activo:</strong> {cm.efectoActivo}
-                    </p>
-                  )
-                }
+              if (cm.efectoDisparo) {
+                parts.push(
+                  <p key="disparo" style={{ fontFamily: '"Inter", sans-serif', fontSize: fluidSize(cm.efectoDisparo, 13.5), lineHeight: 1.35, fontWeight: 500, color: '#261a0e', margin: 0, marginTop: parts.length > 0 ? 8 : 0 }}>
+                    <strong>Disparo:</strong> {cm.efectoDisparo}
+                  </p>
+                )
+              }
+              if (cm.efectoContinuo) {
+                parts.push(
+                  <p key="continuo" style={{ fontFamily: '"Inter", sans-serif', fontSize: fluidSize(cm.efectoContinuo, 13.5), lineHeight: 1.35, fontWeight: 500, color: '#261a0e', margin: 0, marginTop: parts.length > 0 ? 8 : 0 }}>
+                    <strong>Continuo:</strong> {cm.efectoContinuo}
+                  </p>
+                )
               }
               return parts.length > 0 ? <>{parts}</> : null
             }
@@ -481,38 +472,6 @@ export function RenderCarta({
                   <strong>Efecto:</strong> {c.efecto}
                 </p>
               ) : null
-
-            case 'Táctica':
-              return (
-                <>
-                  {c.descripcion ? (
-                    <p
-                      style={{
-                        fontFamily: '"Inter", sans-serif',
-                        fontSize: fluidSize(c.descripcion, 14),
-                        lineHeight: 1.4,
-                        color: '#1c130b',
-                        margin: 0,
-                      }}
-                    >
-                      {c.descripcion}
-                    </p>
-                  ) : null}
-                  {c.stats.duracion ? (
-                    <p
-                      style={{
-                        fontFamily: '"Cinzel", serif',
-                        fontSize: 12,
-                        color: '#7c2d12',
-                        fontWeight: 700,
-                        margin: '4px 0 0',
-                      }}
-                    >
-                      Duración: {c.stats.duracion} turnos
-                    </p>
-                  ) : null}
-                </>
-              )
 
             case 'Arcana':
               return (
@@ -545,21 +504,6 @@ export function RenderCarta({
                   ) : null}
                 </>
               )
-
-            case 'Combate':
-              return c.descripcion ? (
-                <p
-                  style={{
-                    fontFamily: '"Inter", sans-serif',
-                    fontSize: fluidSize(c.descripcion, 14),
-                    lineHeight: 1.4,
-                    color: '#1c130b',
-                    margin: 0,
-                  }}
-                >
-                  {c.descripcion}
-                </p>
-              ) : null
 
             case 'Éter': {
               const et = c
