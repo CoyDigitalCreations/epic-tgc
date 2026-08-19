@@ -127,21 +127,19 @@ describe('pago de coste con Éter (R8)', () => {
     expect(ctx.events).toEqual([])
   })
 
-  it('mezcla propia/ajena ½: 1 Orden (1) + 4 Caos (½ cada uno) = 3 exacto; 1 Orden + 2 Caos = 2 → insuficiente', () => {
+  it('aporte 1 por éter: 3 Éteres = 3 cubre coste 3; 2 Éteres = 2 < 3 insuficiente', () => {
     const base = estadoMinimo()
-    const { s, ids: ordenes } = conEteresEnReserva(base, ETER_ORDEN, 1)
-    const { s: s2, ids: caos } = conEteresEnReserva(s, ETER_CAOS, 4)
-    // 1×1 + 4×½ = 3 → cubre el coste 3 del Campeón Orden
-    const r = validarPago(s2, 'A', [...ordenes, ...caos], SERAPHINA)
+    const { s, ids: ordenes } = conEteresEnReserva(base, ETER_ORDEN, 3)
+    // 3×1 = 3 → cubre el coste 3 del Campeón
+    const r = validarPago(s, 'A', [...ordenes], SERAPHINA)
     expect(r.ok).toBe(true)
     if (r.ok) {
       expect(r.aportado).toBe(3)
     }
 
-    // 1×1 + 2×½ = 2 < 3 → insuficiente
-    const { s: s3, ids: caos2 } = conEteresEnReserva(estadoMinimo(), ETER_CAOS, 2)
-    const { s: s4, ids: ordenes2 } = conEteresEnReserva(s3, ETER_ORDEN, 1)
-    const r2 = validarPago(s4, 'A', [...ordenes2, ...caos2], SERAPHINA)
+    // 2×1 = 2 < 3 → insuficiente
+    const { s: s2, ids: ordenes2 } = conEteresEnReserva(estadoMinimo(), ETER_ORDEN, 2)
+    const r2 = validarPago(s2, 'A', [...ordenes2], SERAPHINA)
     expect(r2.ok).toBe(false)
   })
 
@@ -157,10 +155,10 @@ describe('pago de coste con Éter (R8)', () => {
 })
 
 describe('bloqueo de Éter sobre Campeón (facción v2.1)', () => {
-  it('Éter de facción compartida con efectoBloqueo se bloquea: 2A → Campeón.eterBloqueado + evento eter_bloqueado', () => {
+  it('Éter con efectoBloqueo se bloquea: 2A → Campeón.eterBloqueado + evento eter_bloqueado', () => {
     const base = estadoMinimo()
-    const { s, campeonId } = conCampeonEnCampo(base, SERAPHINA) // Campeón Orden
-    const { s: s2, ids } = conEteresEnReserva(s, ETER_BLOQUEO_ORDEN, 2) // Éter con efectoBloqueo: comparte facción
+    const { s, campeonId } = conCampeonEnCampo(base, SERAPHINA)
+    const { s: s2, ids } = conEteresEnReserva(s, ETER_BLOQUEO_ORDEN, 2)
     const ctx = crearCtx()
     const error = bloquearEter(s2, ctx, 'A', ids, 0)
     expect(error).toBeNull()
@@ -169,22 +167,10 @@ describe('bloqueo de Éter sobre Campeón (facción v2.1)', () => {
     expect(ctx.events).toEqual([{ type: 'eter_bloqueado', jugador: 'A', eterIds: ids, campeonId }])
   })
 
-  it('Éter de facción ajena se rechaza: Caos contra Campeón Orden', () => {
+  it('Éter sin efectoBloqueo se acepta (sin facción, sin límite)', () => {
     const base = estadoMinimo()
-    const { s } = conCampeonEnCampo(base, SERAPHINA) // Campeón Orden
-    const { s: s2, ids } = conEteresEnReserva(s, ETER_BLOQUEO_CAOS, 1) // Éter con efectoBloqueo Caos: facción ajena
-    const ctx = crearCtx()
-    const error = bloquearEter(s2, ctx, 'A', ids, 0)
-    expect(error).toMatch(/facción/)
-    expect(s2.instances['cam-FB-013'].eterBloqueado).toBeUndefined()
-    expect(s2.players.A.eterReserva).toHaveLength(1) // nada se movió
-    expect(ctx.events).toEqual([])
-  })
-
-  it('Éter sin efectoBloqueo se acepta si comparte facción (sin límite)', () => {
-    const base = estadoMinimo()
-    const { s } = conCampeonEnCampo(base, SERAPHINA) // Campeón Orden
-    const { s: s2, ids } = conEteresEnReserva(s, ETER_ORDEN, 1) // Éter Orden sin efectoBloqueo
+    const { s } = conCampeonEnCampo(base, SERAPHINA)
+    const { s: s2, ids } = conEteresEnReserva(s, ETER_ORDEN, 1)
     const ctx = crearCtx()
     const error = bloquearEter(s2, ctx, 'A', ids, 0)
     expect(error).toBeNull()

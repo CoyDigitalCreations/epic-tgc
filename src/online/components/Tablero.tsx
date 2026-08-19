@@ -701,12 +701,7 @@ export function Tablero({ vista, acciones, leTocaA, log, logDetallado = [], onAc
   const puedeConfirmar = useMemo(() => {
     if (!seleccion || elegidos.size === 0) return false
     if (seleccion.tipo === 'bloquear') {
-      const campeon = getCardMeta(seleccion.objetivoCardId)
-      if (!campeon) return false
-      return [...elegidos].every((id) => {
-        const meta = getCardMeta(vista.instances[id]?.cardId ?? '')
-        return meta !== null && faccionesCompartidas(meta.facciones, campeon.facciones)
-      })
+      return elegidos.size > 0
     }
     const total = [...elegidos].reduce((acc, id) => {
       const cardId = vista.instances[id]?.cardId

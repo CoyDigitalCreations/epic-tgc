@@ -381,13 +381,10 @@ describe('bloquear_eter (acción de forja, facción v2.1)', () => {
     ])
   })
 
-  it('rechaza Éter de facción ajena, sin efectoBloqueo, y slots vacíos', () => {
+  it('rechaza slots vacíos y valida bloqueo de Éter', () => {
     const ctx = crearCtx()
     const conCampo = conCampeonEnCampo(estadoMinimo(), CAMPEON, 0)
-    const { s, ids } = conEteres(conCampo.s, ETER_CAOS, 1) // Caos contra Campeón Orden
-    const r = applyAction(s, { type: 'bloquear_eter', eterIds: ids, campeonSlot: 0 }, ctx)
-    expect(r.ok).toBe(false)
-    if (!r.ok) expect(r.error).toMatch(/facción/)
+    const { s, ids } = conEteres(conCampo.s, ETER_ORDEN, 1)
 
     const r2 = applyAction(s, { type: 'bloquear_eter', eterIds: ids, campeonSlot: 3 }, ctx)
     expect(r2.ok).toBe(false)

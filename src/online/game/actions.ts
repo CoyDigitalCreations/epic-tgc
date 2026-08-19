@@ -364,9 +364,6 @@ function validarActivarHabilidad(state: GameState, action: Extract<Action, { typ
       const eterInst = state.instances[eterId]
       const eterMeta = eterInst?.cardId ? getCardMeta(eterInst.cardId) : null
       if (!eterMeta) return `Éter desconocido: ${eterId}`
-      if (!faccionesCompartidas(eterMeta.facciones, meta.facciones)) {
-        return `el Éter ${eterId} no comparte facción con ${meta.name}`
-      }
     }
   } else {
     // Patrón "Agota": eterIds de la Reserva → pagados (1A) + agota + 1/turno
