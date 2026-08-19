@@ -95,13 +95,8 @@ export interface CardInstance {
    bocaArriba?: boolean
    /** C2: flag 1/turno para Pasivo 1A (FB-005/DS-006) — se resetea en al-inicio-alba. */
    opcionUsadaEsteTurno?: boolean
-   /**
-    * Contador de duración para Tácticas (manual §6.2): se inicializa con
-    * stats.duracion al entrar al campo; se decrementa en Ocaso del dueño;
-    * al llegar a 0 se envía la Táctica al cementerio automáticamente.
-    * Solo aplica a cartas con stats.duracion definido.
-    */
-   duracionTurnos?: number
+   /** ID del campeón al que está equipada esta carta (ARTEFACTO). Si el campeón sale, la carta va al cementerio. */
+   equipadoA?: string
 }
 
 export interface PlayerState {
@@ -143,6 +138,8 @@ export interface CadenaState {
   faseAbierta: Fase
   /** Descripción legible del efecto que abrió la cadena (para UI modal). */
   efectoActual?: { jugador: PlayerId; cardInstanceId: string; descripcion: string }
+  /** Velocidad del último efecto activado en la cadena (PRESTEZA/FUGAZ). */
+  velocidadActual?: 'normal' | 'presteza' | 'fugaz'
 }
 
 /** Sub-máquina de combate en Choque (9.1, ADR-11). Se crea con la PRIMERA declarar_ataque. */

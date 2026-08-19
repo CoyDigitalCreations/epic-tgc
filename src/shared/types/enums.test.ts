@@ -13,14 +13,12 @@ import {
 } from './enums'
 
 describe('CARD_TYPES', () => {
-  it('contiene los 7 tipos de carta', () => {
-    expect(CARD_TYPES).toHaveLength(7)
+  it('contiene los 5 tipos de carta', () => {
+    expect(CARD_TYPES).toHaveLength(5)
     expect(CARD_TYPES).toContain('Éter')
     expect(CARD_TYPES).toContain('Campeón')
     expect(CARD_TYPES).toContain('Mística')
-    expect(CARD_TYPES).toContain('Táctica')
     expect(CARD_TYPES).toContain('Arcana')
-    expect(CARD_TYPES).toContain('Combate')
     expect(CARD_TYPES).toContain('Vínculo')
   })
 })
@@ -35,23 +33,23 @@ describe('RARITIES', () => {
 
 describe('KEYWORDS', () => {
   it('contiene las 10 keywords oficiales v2.0', () => {
-    expect(KEYWORDS).toHaveLength(10)
+    expect(KEYWORDS).toHaveLength(9)
     expect(KEYWORDS).toContain('Carga')
     expect(KEYWORDS).toContain('Vigor')
     expect(KEYWORDS).toContain('Inmortal')
     expect(KEYWORDS).toContain('Indestructible')
     expect(KEYWORDS).toContain('Recarga')
-    expect(KEYWORDS).toContain('Resonancia')
-    expect(KEYWORDS).toContain('Transmutar')
-    expect(KEYWORDS).toContain('Frenesí')
     expect(KEYWORDS).toContain('Protector')
-    expect(KEYWORDS).toContain('Fracturar')
+    expect(KEYWORDS).toContain('Artefacto')
+    expect(KEYWORDS).toContain('Presteza')
+    expect(KEYWORDS).toContain('Fugaz')
   })
 
-  it('no contiene keywords de la v1.0', () => {
-    expect(KEYWORDS).not.toContain('Guardián')
-    expect(KEYWORDS).not.toContain('Golpe Letal')
-    expect(KEYWORDS).not.toContain('Canalizar')
+  it('no contiene keywords eliminadas', () => {
+    expect(KEYWORDS).not.toContain('Resonancia')
+    expect(KEYWORDS).not.toContain('Transmutar')
+    expect(KEYWORDS).not.toContain('Frenesí')
+    expect(KEYWORDS).not.toContain('Fracturar')
   })
 })
 

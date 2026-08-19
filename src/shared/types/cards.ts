@@ -11,11 +11,6 @@ export interface CombatStats extends BaseStats {
   resistencia: number
 }
 
-/** Stats for Táctica cards */
-export interface TacticaStats extends BaseStats {
-  duracion: number
-}
-
 /** Base card metadata */
 export interface CardMeta {
   id: string
@@ -49,11 +44,9 @@ export interface CardMeta {
 export interface CampeonCard extends CardMeta {
   type: 'Campeón'
   stats: CombatStats
-  tipoEfecto?: 'Pasivo' | 'Activo' | 'Especial' | 'Disparo'
-  /** Habilidades Activas: 'Continua' o 'Un Solo Uso' (v2.0) */
-  tipoHabilidad?: 'Continua' | 'Un Solo Uso'
   efectoPasivo?: string
-  efectoActivo?: string
+  efectoDisparo?: string
+  efectoContinuo?: string
 }
 
 export interface MisticaCard extends CardMeta {
@@ -63,25 +56,12 @@ export interface MisticaCard extends CardMeta {
   efecto: string
 }
 
-export interface TacticaCard extends CardMeta {
-  type: 'Táctica'
-  /** No cuestan Éter (5.4): cost se ignora en la UI */
-  stats: TacticaStats
-  descripcion: string
-}
-
 export interface ArcanaCard extends CardMeta {
   type: 'Arcana'
   stats: BaseStats
-  condicion: string
-  recompensa: string
-}
-
-export interface CombateCard extends CardMeta {
-  type: 'Combate'
-  /** No cuestan Éter (5.6): cost se ignora en la UI */
-  stats: BaseStats
-  descripcion: string
+  condicion?: string
+  recompensa?: string
+  efecto?: string
 }
 
 export interface EterCard extends CardMeta {
@@ -109,8 +89,6 @@ export interface VinculoCard extends CardMeta {
 export type AnyCard =
   | CampeonCard
   | MisticaCard
-  | TacticaCard
   | ArcanaCard
-  | CombateCard
   | EterCard
   | VinculoCard

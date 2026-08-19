@@ -2,9 +2,7 @@ export const CARD_TYPES = [
   'Éter',
   'Campeón',
   'Mística',
-  'Táctica',
   'Arcana',
-  'Combate',
   'Vínculo',
 ] as const
 
@@ -27,11 +25,10 @@ export const KEYWORDS = [
   'Inmortal',
   'Indestructible',
   'Recarga',
-  'Resonancia',
-  'Transmutar',
-  'Frenesí',
   'Protector',
-  'Fracturar',
+  'Artefacto',
+  'Presteza',
+  'Fugaz',
 ] as const
 
 export type Keyword = (typeof KEYWORDS)[number]
