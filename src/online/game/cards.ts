@@ -41,14 +41,8 @@ export function esCampeon(card: AnyCard): card is CampeonCard {
 export function esMistica(card: AnyCard): card is MisticaCard {
   return card.type === 'Mística'
 }
-export function esTactica(card: AnyCard): card is TacticaCard {
-  return card.type === 'Táctica'
-}
 export function esArcana(card: AnyCard): card is ArcanaCard {
   return card.type === 'Arcana'
-}
-export function esCombate(card: AnyCard): card is CombateCard {
-  return card.type === 'Combate'
 }
 export function esEter(card: AnyCard): card is EterCard {
   return card.type === 'Éter'

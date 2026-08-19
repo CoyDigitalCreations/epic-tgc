@@ -4,7 +4,7 @@ import { resolverFaseEfectos, registrarEfectoPendiente, hastaAlba, duracionTurno
 import { limpiarCombate, resolverAlba } from './phases'
 import { shuffleFisherYates } from './rng'
 import type { Ctx, FaseNombre, GameState, PlayerId } from './types'
-import { esCampeon, esMistica, esTactica, esArcana, esCombate, faccionesCompartidas, getCardMeta, costeEterHabilidad } from './cards'
+import { esCampeon, esMistica, esArcana, faccionesCompartidas, getCardMeta, costeEterHabilidad } from './cards'
 import { esSingular, sacrificiosRequeridos, copiasEnCampo, campeonesSacrificables } from './campo'
 import { aplicarPago, validarPago, validarBloqueo, etersParaPagar, type ContextoUso } from './payments'
 import { SLOTS_CAMPEONES, SLOTS_MISTICAS_TACTICAS, SLOTS_ARCANAS_COMBATE, slotAZona } from './zones'
@@ -33,10 +33,8 @@ export type Action =
       sacrificios?: string[]
     }
   | { type: 'jugar_mistica'; cardInstanceId: string; slot: number; eterIds: string[] }
-  | { type: 'colocar_tactica'; cardInstanceId: string; slot: number }
   | { type: 'colocar_arcana'; cardInstanceId: string; slot: number }
   | { type: 'activar_arcana'; cardInstanceId: string; slot: number; eterIds: string[] }
-  | { type: 'colocar_combate'; cardInstanceId: string; slot: number }
   | { type: 'bloquear_eter'; eterIds: string[]; campeonSlot: number }
   | { type: 'descartar_carta'; cardInstanceIds: string[] }
   | { type: 'elegir_opcion'; opcionId: string }
@@ -90,14 +88,10 @@ function validarAccion(state: GameState, action: Action): string | null {
       return validarJugarCampeon(state, action)
     case 'jugar_mistica':
       return validarJugarMistica(state, action)
-    case 'colocar_tactica':
-      return validarColocarTactica(state, action)
     case 'colocar_arcana':
       return validarColocarArcana(state, action)
     case 'activar_arcana':
       return validarActivarArcana(state, action)
-    case 'colocar_combate':
-      return validarColocarCombate(state, action)
     case 'bloquear_eter':
       return validarBloquearEter(state, action)
     case 'elegir_opcion':
@@ -229,17 +223,6 @@ function validarJugarMistica(state: GameState, action: Extract<Action, { type: '
   return null
 }
 
-function validarColocarTactica(state: GameState, action: Extract<Action, { type: 'colocar_tactica' }>): string | null {
-  if (state.fase !== 'forja' && state.fase !== 'choque') return 'colocar_tactica solo en Forja o Choque'
-  const base = cartaEnMano(state, action.cardInstanceId)
-  if ('error' in base) return base.error
-  const meta = getCardMeta(base.cardId)
-  if (!meta || !esTactica(meta)) return 'no es una Táctica'
-  if (action.slot < 0 || action.slot >= SLOTS_MISTICAS_TACTICAS) return 'slot inválido'
-  if (state.players[state.turno].campo.misticasTacticas[action.slot] !== null) return 'slot ocupado'
-  return null // Táctica no cuesta Éter (5.4)
-}
-
 function validarColocarArcana(state: GameState, action: Extract<Action, { type: 'colocar_arcana' }>): string | null {
   if (state.fase !== 'forja') return 'colocar_arcana solo en Forja'
   const base = cartaEnMano(state, action.cardInstanceId)
@@ -270,20 +253,6 @@ export function validarActivarArcana(state: GameState, action: Extract<Action, {
   const pago = validarPago(state, state.turno, action.eterIds, meta.id)
   if (!pago.ok) return pago.error ?? 'pago inválido'
   return null
-}
-
-function validarColocarCombate(state: GameState, action: Extract<Action, { type: 'colocar_combate' }>): string | null {
-  if (state.fase !== 'forja') return 'colocar_combate solo en Forja'
-  const base = cartaEnMano(state, action.cardInstanceId)
-  if ('error' in base) return base.error
-  const meta = getCardMeta(base.cardId)
-  if (!meta || !esCombate(meta)) return 'no es un Combate'
-  if (action.slot < 0 || action.slot >= SLOTS_ARCANAS_COMBATE) return 'slot inválido'
-  if (state.players[state.turno].campo.arcanasCombate[action.slot] !== null) return 'slot ocupado'
-  // Guard de resolubilidad: el efecto de la carta debe poder resolverse
-  const reqError = validarRequisito(state, state.turno, meta.id)
-  if (reqError) return reqError
-  return null // Combate no cuesta Éter
 }
 
 function validarBloquearEter(state: GameState, action: Extract<Action, { type: 'bloquear_eter' }>): string | null {
@@ -424,20 +393,12 @@ function ejecutarAccion(s: GameState, action: Action, ctx: Ctx): void {
       ejecutarJugarMistica(s, action, ctx)
       return
     }
-    case 'colocar_tactica': {
-      ejecutarColocarTactica(s, action, ctx)
-      return
-    }
     case 'colocar_arcana': {
       ejecutarColocarArcana(s, action, ctx)
       return
     }
     case 'activar_arcana': {
       ejecutarActivarArcana(s, action, ctx)
-      return
-    }
-    case 'colocar_combate': {
-      ejecutarColocarCombate(s, action, ctx)
       return
     }
     case 'bloquear_eter': {
@@ -622,33 +583,6 @@ function ejecutarJugarMistica(s: GameState, action: Extract<Action, { type: 'jug
   dispararTrigger(s, ctx, 'al-jugar-mistica', s.turno, [id])
 }
 
-/** Coloca la Táctica en 3A-3C SIN pagar (5.4). */
-function ejecutarColocarTactica(s: GameState, action: Extract<Action, { type: 'colocar_tactica' }>, ctx: Ctx): void {
-  const p = s.players[s.turno]
-  const id = action.cardInstanceId
-  p.mano.splice(p.mano.indexOf(id), 1)
-  const zona = slotAZona('misticasTacticas', action.slot) ?? '3A'
-  ctx.emit({ type: 'carta_salida_de_zona', cardInstanceId: id, zona: 'mano', jugador: s.turno })
-  p.campo.misticasTacticas[action.slot] = id
-  // §5.5 (activación diferida): recién colocada → NO responde en la cadena 9.6
-  s.instances[id]!.entradaEsteTurno = true
-  // Inicializar duración de Táctica via Effect Registry si stats.duracion está definido
-  const meta = getCardMeta(s.instances[id]!.cardId!)
-  const duracion = meta?.stats?.duracion
-  if (duracion !== undefined && duracion !== null) {
-    registrarEfectoPendiente(s, {
-      fuente: id,
-      owner: s.turno,
-      triggerFase: 'ocaso',
-      triggerOwner: 'dueño',
-      accion: { tipo: 'enviar-cementerio', objetivo: id },
-      duracion: duracionTurnos(duracion),
-    })
-  }
-  ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: id, zona, jugador: s.turno, bocaArriba: true })
-  ctx.emit({ type: 'carta_invocada', cardInstanceId: id, tipo: 'Táctica', slot: action.slot })
-}
-
 /** Coloca la Arcana BOCA ABAJO en 3D-3F SIN pagar (pago al activar). */
 function ejecutarColocarArcana(s: GameState, action: Extract<Action, { type: 'colocar_arcana' }>, ctx: Ctx): void {
   const p = s.players[s.turno]
@@ -674,18 +608,6 @@ function ejecutarActivarArcana(s: GameState, action: Extract<Action, { type: 'ac
   // Abrir cadena global: el rival podría responder con cartas Disparo
   const meta = getCardMeta(inst.cardId!)
   abrirCadenaGlobal(s, s.turno, { cardInstanceId: id, descripcion: meta?.name ?? id })
-}
-
-/** Coloca el Combate boca arriba en 3D-3F SIN pagar. */
-function ejecutarColocarCombate(s: GameState, action: Extract<Action, { type: 'colocar_combate' }>, ctx: Ctx): void {
-  const p = s.players[s.turno]
-  const id = action.cardInstanceId
-  p.mano.splice(p.mano.indexOf(id), 1)
-  const zona = slotAZona('arcanasCombate', action.slot) ?? '3D'
-  ctx.emit({ type: 'carta_salida_de_zona', cardInstanceId: id, zona: 'mano', jugador: s.turno })
-  p.campo.arcanasCombate[action.slot] = id
-  ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: id, zona, jugador: s.turno, bocaArriba: true })
-  ctx.emit({ type: 'carta_invocada', cardInstanceId: id, tipo: 'Combate', slot: action.slot })
 }
 
 /** Bloqueo facción v2.1: 2A → Campeón.eterBloqueado (el clon ya fue validado). */
@@ -891,27 +813,11 @@ export function generarAccionesForja(state: GameState, playerId: PlayerId, cardI
       if (validarRequisito(state, playerId, meta.id) !== null) return null
       return accion
     }
-    case 'Táctica': {
-      const slot = p.campo.misticasTacticas.findIndex((c) => c === null)
-      if (slot === -1) return null
-      const accion: Action = { type: 'colocar_tactica', cardInstanceId, slot }
-      if (validarColocarTactica(state, accion) !== null) return null
-      if (validarRequisito(state, playerId, meta.id) !== null) return null
-      return accion
-    }
     case 'Arcana': {
       const slot = p.campo.arcanasCombate.findIndex((c) => c === null)
       if (slot === -1) return null
       const accion: Action = { type: 'colocar_arcana', cardInstanceId, slot }
       if (validarColocarArcana(state, accion) !== null) return null
-      if (validarRequisito(state, playerId, meta.id) !== null) return null
-      return accion
-    }
-    case 'Combate': {
-      const slot = p.campo.arcanasCombate.findIndex((c) => c === null)
-      if (slot === -1) return null
-      const accion: Action = { type: 'colocar_combate', cardInstanceId, slot }
-      if (validarColocarCombate(state, accion) !== null) return null
       if (validarRequisito(state, playerId, meta.id) !== null) return null
       return accion
     }

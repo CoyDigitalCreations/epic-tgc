@@ -15,7 +15,7 @@
  * 0 extracciones RNG (contrato 89 intacto). CICLO de import deliberado con
  * combat.ts: ambos módulos se usan mutuamente SOLO en runtime (ESM, seguro).
  */
-import { esArcana, esCombate, esTactica, getCardMeta } from './cards'
+import { esArcana, esMistica, getCardMeta } from './cards'
 import { continuarCombateTrasCadena } from './combat'
 import { dispararTrigger } from './efectos'
 import { enviarAlCementerio } from './replacements'
@@ -41,7 +41,8 @@ export function respondiblesDe(state: GameState, playerId: PlayerId): string[] {
     if (enPila.has(id)) continue
     const inst = state.instances[id]
     const meta = inst?.cardId ? getCardMeta(inst.cardId) : null
-    if (meta && esTactica(meta) && !inst.entradaEsteTurno) res.push(id)
+    // Místicas responden si NO están en activación diferida (§5.5)
+    if (meta && esMistica(meta) && !inst.entradaEsteTurno) res.push(id)
   }
   for (const id of p.campo.arcanasCombate) {
     if (!id) continue
@@ -49,8 +50,8 @@ export function respondiblesDe(state: GameState, playerId: PlayerId): string[] {
     const inst = state.instances[id]
     const meta = inst?.cardId ? getCardMeta(inst.cardId) : null
     if (!meta) continue
-    if (esCombate(meta)) res.push(id)
-    else if (esArcana(meta) && !inst.entradaEsteTurno) res.push(id)
+    // Arcanas responden si NO están en activación diferida (§5.5)
+    if (esArcana(meta) && !inst.entradaEsteTurno) res.push(id)
   }
   // Campeones con efecto Disparo (no agotados)
   for (const id of p.campo.campeones) {
@@ -184,7 +185,7 @@ function resolverCadenaCombate(s: GameState, ctx: Ctx): void {
     const inst = s.instances[id]
     const meta = inst?.cardId ? getCardMeta(inst.cardId) : null
     if (!meta) continue
-    if (esCombate(meta) || esArcana(meta)) {
+    if (esArcana(meta)) {
       const p = s.players[inst.owner]
       const idx = p.campo.arcanasCombate.indexOf(id)
       const zona = slotAZona('arcanasCombate', idx) ?? '3D'
@@ -214,8 +215,8 @@ function resolverCadenaGlobal(s: GameState, ctx: Ctx): void {
     const inst = s.instances[id]
     const meta = inst?.cardId ? getCardMeta(inst.cardId) : null
     if (!meta) continue
-    if (esCombate(meta) || esArcana(meta)) {
-      // Combate/Arcana se consumen: → 2G
+    if (esArcana(meta)) {
+      // Arcana se consume: → 2G
       const p = s.players[inst.owner]
       const idx = p.campo.arcanasCombate.indexOf(id)
       const zona = slotAZona('arcanasCombate', idx) ?? '3D'
