@@ -571,6 +571,14 @@ export function CardList() {
             >
               Importar paquete (JSON)
             </button>
+            <button
+              onClick={() => import('../utils/generar-json').then((m) => m.generarJSONActualizado())}
+              title="Exportar JSON actualizado desde paquetes.ts"
+              className="px-3 py-1 rounded-full text-xs bg-ether-600/30 hover:bg-ether-600/50 
+                         text-ether-300 transition-colors cursor-pointer"
+            >
+              Exportar JSON actualizado
+            </button>
           </div>
           <input
             ref={paqueteFileInputRef}
