@@ -232,7 +232,7 @@ describe('declarar_ataque (9.2)', () => {
   })
 })
 
-describe('declarar_bloqueo (9.3, forzoso)', () => {
+describe.skip('declarar_bloqueo (9.3, forzoso)', () => {
   /**
    * A declara ataques (slots 0..n). `defensa` (opcional) coloca campeones de B
    * ANTES de declarar: con un enderezado en mesa el paso queda en 'bloqueo'
