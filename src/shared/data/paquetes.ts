@@ -222,9 +222,8 @@ export const ESTASIS_CARDS: AnyCard[] = [
     roles: ['Soberano'],
     catHabilidad: 'Singular',
     stats: { cost: 4, poder: 9, resistencia: 9 },
-    tipoEfecto: 'Especial',
     efectoPasivo: 'Al ser invocada, toma control de un Campeón que controla el rival. Mientras esta carta esté en el campo, controla ese Campeón.',
-    efectoActivo: 'Puedes pagar hasta un máximo de 2 Éter (bloqueado) para que un Campeón que controles gane +2 de ATQ y +2 de RES mientras ese Éter esté bloqueado. Al inicio de tu próxima Alba reagrupa el Éter usado por este efecto.',
+    efectoDisparo: 'Puedes pagar hasta un máximo de 2 Éter (bloqueado) para que un Campeón que controles gane +2 de ATQ y +2 de RES mientras ese Éter esté bloqueado. Al inicio de tu próxima Alba reagrupa el Éter usado por este efecto.',
   },
   {
     id: 'FB-011',
@@ -242,7 +241,6 @@ export const ESTASIS_CARDS: AnyCard[] = [
     roles: ['Normal'],
     catHabilidad: 'Efecto',
     stats: { cost: 2, poder: 5, resistencia: 3 },
-    tipoEfecto: 'Pasivo',
     efectoPasivo: 'Al atacar, agota un Campeón que controla el rival.',
   },
   {
@@ -261,7 +259,6 @@ export const ESTASIS_CARDS: AnyCard[] = [
     roles: ['Éter'],
     catHabilidad: 'Efecto',
     stats: { cost: 2, poder: 4, resistencia: 4 },
-    tipoEfecto: 'Pasivo',
     efectoPasivo: 'Manda esta carta al Cementerio: regresa hasta 2 Éter pagados (1A) a tu Reserva.',
   },
   {
@@ -280,9 +277,7 @@ export const ESTASIS_CARDS: AnyCard[] = [
     roles: ['Normal'],
     catHabilidad: 'Efecto',
     stats: { cost: 3, poder: 4, resistencia: 3 },
-    tipoEfecto: 'Activo',
-    tipoHabilidad: 'Un Solo Uso',
-    efectoActivo: 'Una vez por turno, puedes pagar hasta un máximo de 1 Éter y agotar esta carta para cambiar el agotamiento de un Campeón que controla el rival (de agotado a no agotado, o viceversa).',
+    efectoDisparo: 'Una vez por turno, puedes pagar hasta un máximo de 1 Éter y agotar esta carta para cambiar el agotamiento de un Campeón que controla el rival (de agotado a no agotado, o viceversa).',
   },
   {
     id: 'FB-014',
@@ -300,7 +295,6 @@ export const ESTASIS_CARDS: AnyCard[] = [
     roles: ['Soporte'],
     catHabilidad: 'Efecto',
     stats: { cost: 3, poder: 3, resistencia: 7 },
-    tipoEfecto: 'Pasivo',
     efectoPasivo: 'Los otros Campeones que controles ganan +1 de ATQ y +1 de RES.',
   },
   {
@@ -319,7 +313,6 @@ export const ESTASIS_CARDS: AnyCard[] = [
     roles: ['Normal'],
     catHabilidad: 'Efecto',
     stats: { cost: 3, poder: 5, resistencia: 4 },
-    tipoEfecto: 'Pasivo',
     efectoPasivo: 'Mientras esta carta tenga al menos 1 Éter bloqueado, gana +1 de ATQ (máx. +3).',
   },
   {
@@ -338,9 +331,7 @@ export const ESTASIS_CARDS: AnyCard[] = [
     roles: ['Soporte'],
     catHabilidad: 'Efecto',
     stats: { cost: 3, poder: 3, resistencia: 5 },
-    tipoEfecto: 'Activo',
-    tipoHabilidad: 'Continua',
-    efectoActivo: 'Puedes pagar hasta un máximo de 1 Éter (bloqueado) para que los Campeones que controles ganen +1 de RES mientras esté bloqueado.',
+    efectoDisparo: 'Puedes pagar hasta un máximo de 1 Éter (bloqueado) para que los Campeones que controles ganen +1 de RES mientras esté bloqueado.',
   },
   {
     id: 'FB-017',
@@ -358,9 +349,7 @@ export const ESTASIS_CARDS: AnyCard[] = [
     roles: ['Éter'],
     catHabilidad: 'Efecto',
     stats: { cost: 4, poder: 4, resistencia: 5 },
-    tipoEfecto: 'Activo',
-    tipoHabilidad: 'Un Solo Uso',
-    efectoActivo: 'Una vez por turno, puedes pagar hasta un máximo de 1 Éter y agotar esta carta para liberar hasta 2 Éter bloqueados de Campeones que controla el rival (van a la zona de pago de su dueño).',
+    efectoDisparo: 'Una vez por turno, puedes pagar hasta un máximo de 1 Éter y agotar esta carta para liberar hasta 2 Éter bloqueados de Campeones que controla el rival (van a la zona de pago de su dueño).',
   },
   {
     id: 'FB-018',
@@ -378,7 +367,6 @@ export const ESTASIS_CARDS: AnyCard[] = [
     roles: ['Soporte'],
     catHabilidad: 'Efecto',
     stats: { cost: 4, poder: 3, resistencia: 6 },
-    tipoEfecto: 'Pasivo',
     efectoPasivo: 'Una vez por turno, si un Vínculo que controles fuera a ser destruido, no lo es.',
   },
   {
@@ -579,7 +567,6 @@ export const ESTASIS_CARDS: AnyCard[] = [
     roles: ['Normal'],
     catHabilidad: 'Efecto',
     stats: { cost: 2, poder: 4, resistencia: 3 },
-    tipoEfecto: 'Pasivo',
     efectoPasivo:
       'Al ser enviada al Cementerio desde cualquier zona: agrega de tu mazo a tu mano 1 carta Campeón de coste 2 o menos.',
   },
@@ -682,9 +669,8 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     roles: ['Soberano'],
     catHabilidad: 'Singular',
     stats: { cost: 4, poder: 9, resistencia: 9 },
-    tipoEfecto: 'Especial',
     efectoPasivo: 'Al ser invocada, destruye un Campeón que controla el rival.',
-    efectoActivo: 'Puedes pagar hasta un máximo de 2 Éter (bloqueado) para que un Campeón que controla el rival pierda 2 de ATQ y 2 de RES mientras ese Éter esté bloqueado. Al inicio de tu próxima Alba reagrupa el Éter usado por este efecto.',
+    efectoDisparo: 'Puedes pagar hasta un máximo de 2 Éter (bloqueado) para que un Campeón que controla el rival pierda 2 de ATQ y 2 de RES mientras ese Éter esté bloqueado. Al inicio de tu próxima Alba reagrupa el Éter usado por este efecto.',
   },
 
   /* ── ÉTER (9 diseños → 15 copias) ─────────────────────────── */
@@ -845,7 +831,6 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     roles: ['Normal'],
     catHabilidad: 'Efecto',
     stats: { cost: 2, poder: 5, resistencia: 3 },
-    tipoEfecto: 'Pasivo',
     efectoPasivo: 'Al atacar, un Campeón que controla el rival pierde 1 de ATQ hasta el final del turno.',
   },
   {
@@ -864,7 +849,6 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     roles: ['Éter'],
     catHabilidad: 'Efecto',
     stats: { cost: 2, poder: 4, resistencia: 4 },
-    tipoEfecto: 'Pasivo',
     efectoPasivo: 'Cuando esta carta destruye a un Campeón en combate, el rival pierde 1 Éter de su zona de pago (1A) (va a su Reserva).',
   },
   {
@@ -883,9 +867,7 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     roles: ['Normal'],
     catHabilidad: 'Efecto',
     stats: { cost: 3, poder: 4, resistencia: 3 },
-    tipoEfecto: 'Activo',
-    tipoHabilidad: 'Un Solo Uso',
-    efectoActivo: 'Una vez por turno, puedes pagar hasta un máximo de 1 Éter y agotar esta carta para destruir un Campeón que controla el rival con 3 o menos de RES.',
+    efectoDisparo: 'Una vez por turno, puedes pagar hasta un máximo de 1 Éter y agotar esta carta para destruir un Campeón que controla el rival con 3 o menos de RES.',
   },
   {
     id: 'DS-014',
@@ -903,7 +885,6 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     roles: ['Soporte'],
     catHabilidad: 'Efecto',
     stats: { cost: 3, poder: 3, resistencia: 7 },
-    tipoEfecto: 'Pasivo',
     efectoPasivo: 'Los otros Campeones que controlas ganan +1 de ATQ.',
   },
   {
@@ -922,7 +903,6 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     roles: ['Normal'],
     catHabilidad: 'Efecto',
     stats: { cost: 3, poder: 5, resistencia: 4 },
-    tipoEfecto: 'Pasivo',
     efectoPasivo: 'Mientras un Campeón que controla el rival tenga al menos 1 Éter bloqueado, esta carta gana +1 de ATQ (máx. +3).',
   },
   {
@@ -941,9 +921,7 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     roles: ['Soporte'],
     catHabilidad: 'Efecto',
     stats: { cost: 3, poder: 3, resistencia: 5 },
-    tipoEfecto: 'Activo',
-    tipoHabilidad: 'Continua',
-    efectoActivo: 'Puedes pagar hasta un máximo de 1 Éter (bloqueado) para que los Campeones que controlas ganen +1 de ATQ mientras esté bloqueado.',
+    efectoDisparo: 'Puedes pagar hasta un máximo de 1 Éter (bloqueado) para que los Campeones que controlas ganen +1 de ATQ mientras esté bloqueado.',
   },
   {
     id: 'DS-017',
@@ -961,9 +939,7 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     roles: ['Éter'],
     catHabilidad: 'Efecto',
     stats: { cost: 4, poder: 4, resistencia: 5 },
-    tipoEfecto: 'Activo',
-    tipoHabilidad: 'Un Solo Uso',
-    efectoActivo: 'Una vez por turno, puedes pagar hasta un máximo de 1 Éter y agotar esta carta para tomar control de hasta 2 Éter bloqueados en Campeones que controla el rival (van a tu Reserva). Mientras esta carta esté en el campo, controla esos Éteres.',
+    efectoDisparo: 'Una vez por turno, puedes pagar hasta un máximo de 1 Éter y agotar esta carta para tomar control de hasta 2 Éter bloqueados en Campeones que controla el rival (van a tu Reserva). Mientras esta carta esté en el campo, controla esos Éteres.',
   },
   {
     id: 'DS-018',
@@ -981,7 +957,6 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     roles: ['Soporte'],
     catHabilidad: 'Efecto',
     stats: { cost: 4, poder: 3, resistencia: 6 },
-    tipoEfecto: 'Pasivo',
     efectoPasivo: 'Una vez por turno, al inicio de tu Choque, si controlas otro Campeón, destruye un Vínculo que controla el rival.',
   },
   {
@@ -1182,7 +1157,6 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     roles: ['Normal'],
     catHabilidad: 'Efecto',
     stats: { cost: 2, poder: 4, resistencia: 3 },
-    tipoEfecto: 'Pasivo',
     efectoPasivo:
       'Al ser enviada al Cementerio desde cualquier zona: agrega de tu mazo a tu mano 1 carta Campeón de coste 2 o menos.',
   },
