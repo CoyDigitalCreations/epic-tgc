@@ -704,7 +704,6 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     limiteCopias: '1',
     createdAt: DS_TS,
     updatedAt: DS_TS,
-    facciones: ['Caos'],
     stats: { cost: 1 },
     efectoReserva: 'Al inicio de tu Choque, si está en tu Reserva, un Campeón que controlas gana Carga hasta el final del turno.',
   },
