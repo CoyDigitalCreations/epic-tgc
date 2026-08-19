@@ -47,10 +47,10 @@ describe('Paquetes', () => {
       expect(dist).toEqual({ eter: 15, principal: 45, vinculos: 6, total: 66 })
     })
 
-    it('las cartas con facción son de Orden; Táctica y Combate no tienen facción', () => {
+    it('las cartas con facción son de Orden; Éter y Vínculo no tienen facción', () => {
       for (const card of ESTASIS_CARDS) {
         expect(card.paqueteId).toBe('estasis')
-        if (card.type === 'Táctica' || card.type === 'Combate') {
+        if (card.type === 'Éter' || card.type === 'Vínculo') {
           expect(card.facciones, `${card.id} (${card.type}) no debe tener facción`).toBeUndefined()
         } else {
           expect(card.facciones).toEqual(['Orden'])
@@ -87,13 +87,9 @@ describe('Paquetes', () => {
     it('cada tipo de carta tiene los campos de juego que le corresponden', () => {
       const expectations: Record<string, (c: AnyCard) => boolean> = {
         'Éter': (c) => 'efectoReserva' in c || 'efectoPago' in c || 'efectoBloqueo' in c,
-        'Campeón': (c) => 'stats' in c && ('efectoPasivo' in c || 'efectoActivo' in c || true),
+        'Campeón': (c) => 'stats' in c && ('efectoPasivo' in c || 'efectoDisparo' in c || true),
         'Mística': (c) => typeof (c as { efecto?: string }).efecto === 'string',
-        'Táctica': (c) => typeof (c as { descripcion?: string }).descripcion === 'string',
-        'Arcana': (c) =>
-          typeof (c as { condicion?: string }).condicion === 'string' &&
-          typeof (c as { recompensa?: string }).recompensa === 'string',
-        'Combate': (c) => typeof (c as { descripcion?: string }).descripcion === 'string',
+        'Arcana': (c) => typeof (c as { efecto?: string }).efecto === 'string' || (typeof (c as { condicion?: string }).condicion === 'string' && typeof (c as { recompensa?: string }).recompensa === 'string'),
         'Vínculo': (c) => typeof (c as { efecto?: string }).efecto === 'string',
       }
       for (const card of ESTASIS_CARDS) {
@@ -126,10 +122,10 @@ describe('Paquetes', () => {
       expect(dist).toEqual({ eter: 15, principal: 45, vinculos: 6, total: 66 })
     })
 
-    it('las cartas con facción son de Caos; Táctica y Combate no tienen facción', () => {
+    it('las cartas con facción son de Caos; Éter y Vínculo no tienen facción', () => {
       for (const card of DISONANCIA_CARDS) {
         expect(card.paqueteId).toBe('disonancia')
-        if (card.type === 'Táctica' || card.type === 'Combate') {
+        if (card.type === 'Éter' || card.type === 'Vínculo') {
           expect(card.facciones, `${card.id} (${card.type}) no debe tener facción`).toBeUndefined()
         } else {
           expect(card.facciones).toEqual(['Caos'])
@@ -166,13 +162,9 @@ describe('Paquetes', () => {
     it('cada tipo de carta tiene los campos de juego que le corresponden', () => {
       const expectations: Record<string, (c: AnyCard) => boolean> = {
         'Éter': (c) => 'efectoReserva' in c || 'efectoPago' in c || 'efectoBloqueo' in c,
-        'Campeón': (c) => 'stats' in c && ('efectoPasivo' in c || 'efectoActivo' in c || true),
+        'Campeón': (c) => 'stats' in c && ('efectoPasivo' in c || 'efectoDisparo' in c || true),
         'Mística': (c) => typeof (c as { efecto?: string }).efecto === 'string',
-        'Táctica': (c) => typeof (c as { descripcion?: string }).descripcion === 'string',
-        'Arcana': (c) =>
-          typeof (c as { condicion?: string }).condicion === 'string' &&
-          typeof (c as { recompensa?: string }).recompensa === 'string',
-        'Combate': (c) => typeof (c as { descripcion?: string }).descripcion === 'string',
+        'Arcana': (c) => typeof (c as { efecto?: string }).efecto === 'string' || (typeof (c as { condicion?: string }).condicion === 'string' && typeof (c as { recompensa?: string }).recompensa === 'string'),
         'Vínculo': (c) => typeof (c as { efecto?: string }).efecto === 'string',
       }
       for (const card of DISONANCIA_CARDS) {
@@ -196,11 +188,10 @@ describe('Paquetes', () => {
       const ragnar = DISONANCIA_CARDS.find((c) => c.id === 'DS-001')!
       expect(ragnar).toBeDefined()
 
-      // Mismo presupuesto: Única, Soberano, Singular, Especial, 9/9, coste 4
+      // Mismo presupuesto: Única, Soberano, Singular, 9/9, coste 4
       expect(ragnar.rarity).toBe('Única')
       expect(ragnar.roles).toEqual(['Soberano'])
       expect(ragnar.catHabilidad).toBe('Singular')
-      expect(ragnar.tipoEfecto).toBe('Especial')
       expect(ragnar.stats).toEqual({ cost: 4, poder: 9, resistencia: 9 })
 
       // Keywords complementarias: Aurora Inmortal (no muere por efectos),

@@ -24,13 +24,11 @@ describe('CardForm', () => {
     expect(screen.getByText('Nueva Carta')).toBeInTheDocument()
   })
 
-  it('renders all 6 card type buttons', () => {
+  it('renders all 5 card type buttons', () => {
     render(<CardForm />)
     expect(screen.getByText('Campeón')).toBeInTheDocument()
     expect(screen.getByText('Mística')).toBeInTheDocument()
-    expect(screen.getByText('Táctica')).toBeInTheDocument()
     expect(screen.getByText('Arcana')).toBeInTheDocument()
-    expect(screen.getByText('Combate')).toBeInTheDocument()
     // Éter appears both as a card type button and a Rol option — verify count
     expect(screen.getAllByText('Éter').length).toBeGreaterThanOrEqual(1)
   })

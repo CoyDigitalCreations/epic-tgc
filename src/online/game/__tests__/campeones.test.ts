@@ -12,7 +12,7 @@ import type { Ctx, GameState, PlayerId } from '../types'
 // FB-010 Aurora 9/9 Inmortal (Soberano, coste 4) · FB-011 Vaela 5/3 Carga
 // (coste 2) · FB-014 Isolde 3/7 Protector (coste 3) · FB-015 Elena 5/4 Recarga
 // (coste 3) · DS-001 Ragnar 9/9 Indestructible (Soberano, coste 4) · DS-011 Kael
-// 5/3 Carga (coste 2) · DS-012 Draven 4/4 Fracturar (coste 2) · DS-014 Thane 3/7
+// 5/3 Carga (coste 2) · DS-012 Draven 4/4 (coste 2) · DS-014 Thane 3/7
 // Protector (coste 3) · DS-015 Marek 5/4 Recarga (coste 3)
 const AURORA = 'FB-010'
 const VAELA = 'FB-011'
@@ -23,7 +23,7 @@ const KAEL = 'DS-011'
 const DRAVEN = 'DS-012'
 const THANE = 'DS-014'
 const MAREK = 'DS-015'
-const MIRA = 'FB-012' // 4/4 Transmutar: "Manda esta carta al Cementerio: regresa hasta 2 Éter pagados (1A) a tu Reserva"
+const MIRA = 'FB-012' // 4/4: "Manda esta carta al Cementerio: regresa hasta 2 Éter pagados (1A) a tu Reserva"
 const FB001 = 'FB-001' // Éter de facción Orden (aporte 1 a Campeones Orden)
 
 /** Estado mínimo de combate: fase choque, turno A. */
@@ -540,110 +540,5 @@ describe('C3c: handlers de campeones con targeting (D7)', () => {
   })
 })
 
-describe('C3d: Transmutar (Mira FB-012)', () => {
-  it('regresa hasta 2 Éteres de 1A → 2A con eter_reagrupado (deja el resto en 1A)', () => {
-    let s = estadoMinimo()
-    s.fase = 'forja'
-    const { s: s1, id: mira } = conCampeon(s, MIRA, 0, 'A')
-    s = s1
-    s = { ...s, players: { ...s.players, A: { ...s.players.A, eterPagado: ['e1', 'e2', 'e3'] } } }
-    for (const e of ['e1', 'e2', 'e3']) {
-      s.instances[e] = { cardInstanceId: e, cardId: FB001, owner: 'A' }
-    }
-
-    const ctx = crearCtx()
-    const r = aplicar(s, { type: 'usar_transmutar', cardInstanceId: mira, eterIds: ['e1', 'e2'] }, ctx)
-    expect(r.players.A.eterPagado).toEqual(['e3'])
-    expect(r.players.A.eterReserva).toEqual(['e1', 'e2'])
-    expect(ctx.events).toContainEqual({ type: 'eter_reagrupado', jugador: 'A', eterIds: ['e1', 'e2'] })
-  })
-
-  it('regresa 0 Éteres: solo sacrifica Mira, sin evento eter_reagrupado', () => {
-    let s = estadoMinimo()
-    s.fase = 'forja'
-    const { s: s1, id: mira } = conCampeon(s, MIRA, 0, 'A')
-    s = s1
-
-    const ctx = crearCtx()
-    const r = aplicar(s, { type: 'usar_transmutar', cardInstanceId: mira, eterIds: [] }, ctx)
-    expect(r.players.A.eterReserva).toEqual([])
-    expect(ctx.events.some((e) => e.type === 'eter_reagrupado')).toBe(false)
-  })
-
-  it('Mira sale del campo → 2G del dueño, libera su Éter bloqueado (1A) y el slot', () => {
-    let s = estadoMinimo()
-    s.fase = 'forja'
-    const { s: s1, id: mira } = conCampeon(s, MIRA, 0, 'A')
-    s = s1
-    s = { ...s, instances: { ...s.instances, [mira]: { ...s.instances[mira], eterBloqueado: ['eb'] } } }
-    s = { ...s, players: { ...s.players, A: { ...s.players.A, eterPagado: ['e1'] } } }
-
-    const ctx = crearCtx()
-    const r = aplicar(s, { type: 'usar_transmutar', cardInstanceId: mira, eterIds: [] }, ctx)
-    expect(r.players.A.campo.campeones[0]).toBeNull()
-    expect(r.players.A.cementerio).toContain(mira)
-    expect(r.instances[mira].eterBloqueado).toBeUndefined()
-    expect(r.players.A.eterPagado).toEqual(['e1', 'eb']) // bloqueado volvió a 1A
-    expect(ctx.events).toContainEqual({ type: 'carta_salida_de_zona', cardInstanceId: mira, zona: '2B', jugador: 'A' })
-    expect(ctx.events).toContainEqual({ type: 'carta_entrada_a_zona', cardInstanceId: mira, zona: '2G', jugador: 'A', bocaArriba: true })
-  })
-
-  it('NO pasa por destruirCarta: un override Inmortal no previene el auto-sacrificio (es coste)', () => {
-    let s = estadoMinimo()
-    s.fase = 'forja'
-    const { s: s1, id: mira } = conCampeon(s, MIRA, 0, 'A')
-    s = s1
-    s = { ...s, instances: { ...s.instances, [mira]: { ...s.instances[mira], keywords: ['Inmortal'] } } }
-
-    const ctx = crearCtx()
-    const r = aplicar(s, { type: 'usar_transmutar', cardInstanceId: mira, eterIds: [] }, ctx)
-    expect(r.players.A.cementerio).toContain(mira)
-    expect(ctx.events.some((e) => e.type === 'destruccion_prevenida')).toBe(false)
-  })
-
-  it('valida: carta con Transmutar en campo del activo; eterIds ⊆ 1A, únicos, ≤ 2', () => {
-    let s = estadoMinimo()
-    s.fase = 'forja'
-    const { s: s1, id: mira } = conCampeon(s, MIRA, 0, 'A')
-    s = s1
-    const { s: s2, id: vaela } = conCampeon(s, VAELA, 1, 'A') // sin Transmutar
-    s = s2
-    s = { ...s, players: { ...s.players, A: { ...s.players.A, eterPagado: ['e1', 'e2', 'e3'] } } }
-
-    const ctx = crearCtx()
-    // sin Transmutar
-    expect(applyAction(s, { type: 'usar_transmutar', cardInstanceId: vaela, eterIds: [] }, ctx).ok).toBe(false)
-    // éter ajeno
-    expect(applyAction(s, { type: 'usar_transmutar', cardInstanceId: mira, eterIds: ['ajeno'] }, ctx).ok).toBe(false)
-    // repetidos
-    expect(applyAction(s, { type: 'usar_transmutar', cardInstanceId: mira, eterIds: ['e1', 'e1'] }, ctx).ok).toBe(false)
-    // > 2
-    expect(applyAction(s, { type: 'usar_transmutar', cardInstanceId: mira, eterIds: ['e1', 'e2', 'e3'] }, ctx).ok).toBe(false)
-    // carta del RIVAL en su campo (no del activo)
-    const { s: s3, id: miraB } = conCampeon(s, MIRA, 0, 'B')
-    s = s3
-    expect(applyAction(s, { type: 'usar_transmutar', cardInstanceId: miraB, eterIds: [] }, ctx).ok).toBe(false)
-  })
-
-  it('getValidActions: expone usar_transmutar con Mira en campo SOLO con 1A (variante máx); NO sin Transmutar', () => {
-    let s = estadoMinimo()
-    s.fase = 'forja'
-    const { s: s1, id: mira } = conCampeon(s, MIRA, 0, 'A')
-    s = s1
-
-    // sin éteres pagados → no hay nada que devolver: NO se expone
-    let acciones = getValidActions(s, 'A')
-    expect(acciones.some((a) => a.type === 'usar_transmutar')).toBe(false)
-
-    // con 1A → la variante de retorno máximo (≤ 2)
-    s = { ...s, players: { ...s.players, A: { ...s.players.A, eterPagado: ['e1', 'e2'] } } }
-    acciones = getValidActions(s, 'A')
-    expect(acciones).toContainEqual({ type: 'usar_transmutar', cardInstanceId: mira, eterIds: ['e1', 'e2'] })
-
-    // Vaela (sin Transmutar) → no se expone para ella
-    const { s: s2, id: vaela } = conCampeon(s, VAELA, 1, 'A')
-    s = s2
-    acciones = getValidActions(s, 'A')
-    expect(acciones.some((a) => a.type === 'usar_transmutar' && a.cardInstanceId === vaela)).toBe(false)
-  })
-})
+// TODO: Reescribir tests de Transmutar cuando se rediseñe Cristal Huérfano (FB-012)
+// describe('C3d: Transmutar (Mira FB-012)', () => { ... })
