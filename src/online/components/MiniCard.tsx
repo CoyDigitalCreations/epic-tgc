@@ -69,7 +69,8 @@ export function MiniCard({
   const imageUrl = useCardImage(cardId, meta?.hasImage, meta?.imageUrl)
   const ancho = TAMANOS[tamano]
   const escala = ancho / ANCHO_CARTA
-  const agotada = agotado ?? inst.agotado === true
+  const tieneCarga = meta?.keywords?.includes('Carga') ?? false
+  const agotada = (agotado ?? inst.agotado === true) && !tieneCarga
   const eteres = inst.eterBloqueado?.length ?? 0
   /**
    * Campeón cansado: la carta se gira 90° (parte de arriba hacia la IZQUIERDA)

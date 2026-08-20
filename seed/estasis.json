@@ -10,9 +10,6 @@
     "limiteCopias": "2",
     "createdAt": "2026-08-03T00:00:00.000Z",
     "updatedAt": "2026-08-03T00:00:00.000Z",
-    "facciones": [
-      "Orden"
-    ],
     "stats": {
       "cost": 1
     },
@@ -29,9 +26,6 @@
     "limiteCopias": "1",
     "createdAt": "2026-08-03T00:00:00.000Z",
     "updatedAt": "2026-08-03T00:00:00.000Z",
-    "facciones": [
-      "Orden"
-    ],
     "stats": {
       "cost": 1
     },
@@ -48,14 +42,11 @@
     "limiteCopias": "2",
     "createdAt": "2026-08-03T00:00:00.000Z",
     "updatedAt": "2026-08-03T00:00:00.000Z",
-    "facciones": [
-      "Orden"
-    ],
     "stats": {
       "cost": 1
     },
     "variantePago": "Gatillo",
-    "efectoPago": "Cuando pagues esta carta, robá 1 carta."
+    "efectoPago": "Cuando pagues esta carta, roba 1 carta."
   },
   {
     "id": "FB-004",
@@ -68,14 +59,11 @@
     "limiteCopias": "2",
     "createdAt": "2026-08-03T00:00:00.000Z",
     "updatedAt": "2026-08-03T00:00:00.000Z",
-    "facciones": [
-      "Orden"
-    ],
     "stats": {
       "cost": 1
     },
     "variantePago": "Gatillo",
-    "efectoPago": "Cuando pagues esta carta para invocar un Campeón, ese Campeón gana +1 de RES hasta el final del turno."
+    "efectoPago": "Cuando pagues esta carta para invocar un Campeón, ese Campeón gana +1 de RES hasta el final del próximo turno."
   },
   {
     "id": "FB-005",
@@ -88,14 +76,11 @@
     "limiteCopias": "2",
     "createdAt": "2026-08-03T00:00:00.000Z",
     "updatedAt": "2026-08-03T00:00:00.000Z",
-    "facciones": [
-      "Orden"
-    ],
     "stats": {
       "cost": 1
     },
     "variantePago": "Pasivo",
-    "efectoPago": "Mientras esté en tu zona de Éter pagado, una vez por turno podés bloquear 1 Éter de tu Reserva sobre un Campeón sin agotarlo."
+    "efectoPago": "Mientras esté en tu zona de Éter pagado, una vez por turno puedes bloquear 1 Éter de tu Reserva sobre un Campeón sin agotarlo."
   },
   {
     "id": "FB-006",
@@ -108,9 +93,6 @@
     "limiteCopias": "1",
     "createdAt": "2026-08-03T00:00:00.000Z",
     "updatedAt": "2026-08-03T00:00:00.000Z",
-    "facciones": [
-      "Orden"
-    ],
     "stats": {
       "cost": 1
     },
@@ -128,13 +110,10 @@
     "limiteCopias": "1",
     "createdAt": "2026-08-03T00:00:00.000Z",
     "updatedAt": "2026-08-03T00:00:00.000Z",
-    "facciones": [
-      "Orden"
-    ],
     "stats": {
       "cost": 1
     },
-    "efectoBloqueo": "Mientras esté bloqueado en un Campeón, ese Campeón gana +2 de ATQ y +2 de RES."
+    "efectoBloqueo": "Mientras esté bloqueado en un Campeón, ese Campeón gana +2 de ATQ y +2 de RES. Máximo 2 de estos Éteres por Campeón."
   },
   {
     "id": "FB-008",
@@ -147,9 +126,6 @@
     "limiteCopias": "2",
     "createdAt": "2026-08-03T00:00:00.000Z",
     "updatedAt": "2026-08-03T00:00:00.000Z",
-    "facciones": [
-      "Orden"
-    ],
     "stats": {
       "cost": 1
     },
@@ -166,9 +142,6 @@
     "limiteCopias": "2",
     "createdAt": "2026-08-03T00:00:00.000Z",
     "updatedAt": "2026-08-03T00:00:00.000Z",
-    "facciones": [
-      "Orden"
-    ],
     "stats": {
       "cost": 1
     },
@@ -200,9 +173,10 @@
       "poder": 9,
       "resistencia": 9
     },
-    "tipoEfecto": "Especial",
-    "efectoPasivo": "Al ser invocada, toma control de un Campeón que controla el rival. Ese Campeón queda agotado hasta el inicio de tu próxima Alba.",
-    "efectoActivo": "Paga 2 Éter (bloqueado): mientras ese Éter esté bloqueado, un Campeón que controles gana +2 de ATQ y +2 de RES. Al inicio de tu próxima Alba reagrupa el Éter usado por este efecto."
+    "efectoPasivo": "Al ser invocada, toma control de un Campeón que controla el rival. Mientras esta carta esté en el campo, controla ese Campeón.",
+    "efectoDisparo": "Puedes pagar hasta un máximo de 2 Éter (bloqueado) para que un Campeón que controles gane +2 de ATQ y +2 de RES mientras ese Éter esté bloqueado. Al inicio de tu próxima Alba reagrupa el Éter usado por este efecto.",
+    "disparoAgota": false,
+    "disparoUnSoloUso": false
   },
   {
     "id": "FB-011",
@@ -230,17 +204,14 @@
       "poder": 5,
       "resistencia": 3
     },
-    "tipoEfecto": "Pasivo",
-    "efectoPasivo": "Al atacar, agotá un Campeón que controla el rival."
+    "efectoPasivo": "Al atacar, agota un Campeón que controla el rival."
   },
   {
     "id": "FB-012",
     "name": "Mira, Cristal Huérfano",
     "type": "Campeón",
     "rarity": "Común",
-    "keywords": [
-      "Transmutar"
-    ],
+    "keywords": [],
     "flavorText": "Recupera lo que otros dan por perdido.",
     "paqueteId": "estasis",
     "limiteCopias": "3",
@@ -259,8 +230,7 @@
       "poder": 4,
       "resistencia": 4
     },
-    "tipoEfecto": "Pasivo",
-    "efectoPasivo": "Manda esta carta al Cementerio: regresa hasta 2 Éter pagados (1A) a tu Reserva."
+    "efectoPasivo": "Al ser enviada al Cementerio desde cualquier zona, agrega de tu cementerio a tu mano 1 Campeón de facción Orden y esencia Céleste."
   },
   {
     "id": "FB-013",
@@ -286,9 +256,9 @@
       "poder": 4,
       "resistencia": 3
     },
-    "tipoEfecto": "Activo",
-    "tipoHabilidad": "Un Solo Uso",
-    "efectoActivo": "Una vez por turno, pagá 1 Éter y agotá esta carta: cambiá el agotamiento de un Campeón que controla el rival (de agotado a no agotado, o viceversa)."
+    "efectoDisparo": "Una vez por turno, puedes pagar hasta un máximo de 1 Éter y agotar esta carta para cambiar el agotamiento de un Campeón que controla el rival (de agotado a no agotado, o viceversa).",
+    "disparoAgota": true,
+    "disparoUnSoloUso": true
   },
   {
     "id": "FB-014",
@@ -316,8 +286,10 @@
       "poder": 3,
       "resistencia": 7
     },
-    "tipoEfecto": "Pasivo",
-    "efectoPasivo": "Los otros Campeones que controles ganan +1 de ATQ y +1 de RES."
+    "efectoPasivo": "Los otros Campeones que controles ganan +1 de ATQ y +1 de RES.",
+    "efectoDisparo": "Una vez por turno, puedes pagar 1 Éter y agotar esta carta para destruir una Mística o Arcana que controla el rival.",
+    "disparoAgota": true,
+    "disparoUnSoloUso": true
   },
   {
     "id": "FB-015",
@@ -345,8 +317,7 @@
       "poder": 5,
       "resistencia": 4
     },
-    "tipoEfecto": "Pasivo",
-    "efectoPasivo": "Mientras esta carta tenga al menos 1 Éter bloqueado, gana +1 de ATQ."
+    "efectoPasivo": "Mientras esta carta tenga al menos 1 Éter bloqueado, gana +1 de ATQ (máx. +3)."
   },
   {
     "id": "FB-016",
@@ -372,9 +343,9 @@
       "poder": 3,
       "resistencia": 5
     },
-    "tipoEfecto": "Activo",
-    "tipoHabilidad": "Continua",
-    "efectoActivo": "Paga 1 Éter (bloqueado): mientras esté bloqueado, los Campeones que controles ganan +1 de RES."
+    "efectoDisparo": "Puedes pagar hasta un máximo de 1 Éter (bloqueado) para que los Campeones que controles ganen +1 de RES mientras esté bloqueado.",
+    "disparoAgota": false,
+    "disparoUnSoloUso": false
   },
   {
     "id": "FB-017",
@@ -400,9 +371,9 @@
       "poder": 4,
       "resistencia": 5
     },
-    "tipoEfecto": "Activo",
-    "tipoHabilidad": "Un Solo Uso",
-    "efectoActivo": "Una vez por turno, pagá 1 Éter y agotá esta carta: liberá hasta 2 Éter bloqueados de Campeones que controla el rival (van a la zona de pago de su dueño)."
+    "efectoDisparo": "Una vez por turno, puedes pagar hasta un máximo de 1 Éter y agotar esta carta para liberar hasta 2 Éter bloqueados de Campeones que controla el rival (van a la zona de pago de su dueño).",
+    "disparoAgota": true,
+    "disparoUnSoloUso": true
   },
   {
     "id": "FB-018",
@@ -428,7 +399,6 @@
       "poder": 3,
       "resistencia": 6
     },
-    "tipoEfecto": "Pasivo",
     "efectoPasivo": "Una vez por turno, si un Vínculo que controles fuera a ser destruido, no lo es."
   },
   {
@@ -472,36 +442,38 @@
   {
     "id": "FB-021",
     "name": "Marcha de las Primeras",
-    "type": "Táctica",
+    "type": "Mística",
     "rarity": "Común",
-    "keywords": [],
+    "keywords": [
+      "Artefacto"
+    ],
     "flavorText": "Unidas por la sangre y el Éter, no hay muro que las detenga.",
     "paqueteId": "estasis",
     "limiteCopias": "3",
     "createdAt": "2026-08-03T00:00:00.000Z",
     "updatedAt": "2026-08-03T00:00:00.000Z",
     "stats": {
-      "cost": 0,
-      "duracion": 2
+      "cost": 0
     },
-    "descripcion": "Mientras dure, al inicio de tu Alba podés bloquear 1 Éter de tu Reserva sobre un Campeón sin agotarlo."
+    "efecto": "Equipa a un Campeón. El Campeón equipado gana +1 de ATQ y puede bloquear 1 Éter adicional sin agotarse."
   },
   {
     "id": "FB-022",
     "name": "Último Refugio",
-    "type": "Táctica",
+    "type": "Mística",
     "rarity": "Común",
-    "keywords": [],
+    "keywords": [
+      "Artefacto"
+    ],
     "flavorText": "Cuando todo cae, queda el juramento.",
     "paqueteId": "estasis",
     "limiteCopias": "3",
     "createdAt": "2026-08-03T00:00:00.000Z",
     "updatedAt": "2026-08-03T00:00:00.000Z",
     "stats": {
-      "cost": 0,
-      "duracion": 3
+      "cost": 0
     },
-    "descripcion": "Mientras dure, la primera vez por turno que un Campeón que controles fuera a ser destruido, no lo es."
+    "efecto": "Equipa a un Campeón. El Campeón equipado puede invocar 1 Campeón de coste 3 o menos desde tu cementerio sin pagar Éter. Ese Campeón invocado no paga Éter."
   },
   {
     "id": "FB-023",
@@ -520,13 +492,13 @@
     "stats": {
       "cost": 3
     },
-    "condicion": "Al inicio de tu Choque, si controlás 2 o más Campeones con Éter bloqueado.",
-    "recompensa": "Robá 2 cartas y un Campeón que controles gana +3 de Poder hasta el final del turno."
+    "condicion": "Al inicio del Choque, si controlas 2 o más Campeones con Éter bloqueado.",
+    "recompensa": "Roba 2 cartas y un Campeón que controles gana +3 de Poder hasta el final del turno."
   },
   {
     "id": "FB-024",
     "name": "Filo del Éter Primigenio",
-    "type": "Combate",
+    "type": "Arcana",
     "rarity": "Común",
     "keywords": [],
     "flavorText": "El cristal no corta: recuerda.",
@@ -534,10 +506,13 @@
     "limiteCopias": "3",
     "createdAt": "2026-08-03T00:00:00.000Z",
     "updatedAt": "2026-08-03T00:00:00.000Z",
+    "facciones": [
+      "Orden"
+    ],
     "stats": {
       "cost": 0
     },
-    "descripcion": "Un Campeón que controles gana +2 de ATQ hasta el final del turno. Si destruye a un Campeón que controla el rival este turno, roba 1 carta."
+    "efecto": "Un Campeón que controles gana +2 de ATQ hasta el final del turno. Si destruye a un Campeón que controla el rival este turno, roba 1 carta."
   },
   {
     "id": "FB-025",
@@ -556,7 +531,7 @@
     "stats": {
       "cost": 0
     },
-    "efecto": "Una vez por turno, al inicio de tu Alba, podés bloquear 1 Éter de tu Reserva sobre un Campeón sin agotarlo."
+    "efecto": "Una vez por turno, al inicio de tu Alba, puedes bloquear 1 Éter de tu Reserva sobre un Campeón sin agotarlo."
   },
   {
     "id": "FB-026",
@@ -594,7 +569,7 @@
     "stats": {
       "cost": 0
     },
-    "efecto": "Regresá hasta 3 Éter pagados (1A) a tu Reserva."
+    "efecto": "Regresa hasta 3 Éter pagados (1A) a tu Reserva."
   },
   {
     "id": "FB-028",
@@ -632,7 +607,7 @@
     "stats": {
       "cost": 0
     },
-    "efecto": "Una vez por turno, al inicio de tu Alba, podés devolver un Campeón de tu Cementerio a tu mano."
+    "efecto": "Una vez por turno, al inicio de tu Alba, puedes devolver un Campeón de tu Cementerio a tu mano."
   },
   {
     "id": "FB-030",
@@ -677,8 +652,7 @@
       "poder": 4,
       "resistencia": 3
     },
-    "tipoEfecto": "Pasivo",
-    "efectoPasivo": "Al ser enviada al Cementerio desde cualquier zona: añadí de tu mazo a tu mano 1 carta Campeón de coste 2 o menos."
+    "efectoPasivo": "Al ser enviada al Cementerio desde cualquier zona: agrega de tu mazo a tu mano 1 carta Campeón de coste 2 o menos."
   },
   {
     "id": "FB-032",
@@ -697,6 +671,6 @@
     "stats": {
       "cost": 2
     },
-    "efecto": "Añadí de tu mazo a tu mano 1 carta de coste 2 o menos."
+    "efecto": "Agrega de tu mazo a tu mano 1 carta de coste 2 o menos."
   }
 ]

@@ -250,6 +250,11 @@ export function validarActivarArcana(state: GameState, action: Extract<Action, {
   const idx = p.campo.arcanasCombate.indexOf(action.cardInstanceId)
   if (idx === -1) return 'la Arcana no está en el campo'
   if (inst.bocaArriba) return 'la Arcana ya está boca arriba'
+  // §5.4: NO se pueden activar el turno en que fueron colocadas
+  if (inst.entradaEsteTurno) return 'la Arcana no se puede activar el turno en que fue colocada (§5.4)'
+  // §5.4: la condición de la Arcana debe cumplirse para activar
+  const reqError = validarRequisito(state, state.turno, meta.id)
+  if (reqError) return reqError
   // Slot coincidence check
   if (action.slot !== idx) return 'el slot no coincide con la posición de la Arcana'
   // Pago de éter
@@ -594,6 +599,7 @@ function ejecutarJugarCampeon(s: GameState, action: Extract<Action, { type: 'jug
   ctx.emit({ type: 'carta_salida_de_zona', cardInstanceId: id, zona: 'mano', jugador: s.turno })
   p.campo.campeones[action.slot] = id
   s.instances[id]!.agotado = true
+  s.instances[id]!.entradaEsteTurno = true  // §5.5: no puede responder en cadena el turno que entra
   ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: id, zona, jugador: s.turno, bocaArriba: true })
   ctx.emit({ type: 'carta_invocada', cardInstanceId: id, tipo: 'Campeón', slot: action.slot })
   // C3 (D5): al-invocar se dispara con la instancia YA en campo (post-invocación)
@@ -610,6 +616,7 @@ function ejecutarJugarMistica(s: GameState, action: Extract<Action, { type: 'jug
   const zona = slotAZona('misticasTacticas', action.slot) ?? '3A'
   ctx.emit({ type: 'carta_salida_de_zona', cardInstanceId: id, zona: 'mano', jugador: s.turno })
   p.campo.misticasTacticas[action.slot] = id
+  s.instances[id]!.entradaEsteTurno = true  // §5.5: no puede responder en cadena el turno que entra
   ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: id, zona, jugador: s.turno, bocaArriba: true })
   ctx.emit({ type: 'carta_invocada', cardInstanceId: id, tipo: 'Mística', slot: action.slot })
   // C5 (change 4): al-jugar-mística se dispara con la instancia YA en campo
@@ -625,6 +632,7 @@ function ejecutarColocarArcana(s: GameState, action: Extract<Action, { type: 'co
   ctx.emit({ type: 'carta_salida_de_zona', cardInstanceId: id, zona: 'mano', jugador: s.turno })
   p.campo.arcanasCombate[action.slot] = id
   s.instances[id]!.bocaArriba = false
+  s.instances[id]!.entradaEsteTurno = true  // §5.4: no se puede activar el turno en que fue colocada
   ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: id, zona, jugador: s.turno, bocaArriba: false })
   ctx.emit({ type: 'carta_invocada', cardInstanceId: id, tipo: 'Arcana', slot: action.slot })
 }
@@ -859,7 +867,8 @@ export function generarAccionesForja(state: GameState, playerId: PlayerId, cardI
       if (slot === -1) return null
       const accion: Action = { type: 'colocar_arcana', cardInstanceId, slot }
       if (validarColocarArcana(state, accion) !== null) return null
-      if (validarRequisito(state, playerId, meta.id) !== null) return null
+      // NOTA: validarRequisito NO se llama aquí — las condiciones de Arcana
+      // se validan al ACTIVAR (validarActivarArcana), no al COLOCAR.
       return accion
     }
     default:

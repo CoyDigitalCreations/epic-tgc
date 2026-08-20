@@ -54,11 +54,15 @@ export function atacantesElegibles(state: GameState): string[] {
   })
 }
 
-/** Bloqueadores disponibles del DEFENSOR: todos los campeones no-null (L1095). Los agotados SÍ pueden bloquear. */
+/** Bloqueadores disponibles del DEFENSOR: campeones no-null y NO agotados (§9.3). */
 export function bloqueadoresDisponibles(state: GameState): string[] {
   const defensor = rivalDe(state)
   const p = state.players[defensor]
-  return p.campo.campeones.filter((id): id is string => id !== null)
+  return p.campo.campeones.filter((id): id is string => {
+    if (id === null) return false
+    const inst = state.instances[id]
+    return !!inst && !inst.agotado
+  })
 }
 
 /** Ataques declarados sin bloqueador (los únicos con Ruptura posible, 9.4-A). */

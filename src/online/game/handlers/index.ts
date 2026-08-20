@@ -4,6 +4,7 @@ import { registrarEfectosEteres } from './eteres'
 import { registrarEfectosHabilidades } from './habilidades'
 import { registrarEfectosSoporte } from './soporte'
 import { registrarEfectosVinculos } from './vinculos'
+import { registrarGuardsArcanas } from '../effects-guards'
 
 /**
  * Registra TODOS los handlers de efectos de cartas (ADR-20). C1 define el
@@ -17,4 +18,5 @@ export function registrarEfectos(): void {
   registrarEfectosSoporte()
   registrarEfectosVinculos()
   registrarEfectosCombate()
+  registrarGuardsArcanas()
 }

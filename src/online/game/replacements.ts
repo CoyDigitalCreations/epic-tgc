@@ -188,6 +188,8 @@ export function destruirCarta(s: GameState, ctx: Ctx, cardInstanceId: string, ca
       s.sextoVinculoResuelto = true
     }
     inst.bocaArriba = true
+    // §5.5: al destruirse, activa su efecto PERMANENTE a favor del jugador que recibió el daño
+    dispararTrigger(s, ctx, 'al-ser-destruido-vinculo', inst.owner, [cardInstanceId])
     ctx.emit({ type: 'destruccion', cardInstanceId, jugador: inst.owner, causa })
     verificarDerrotaVinculos(s, ctx, inst.owner)
     return true

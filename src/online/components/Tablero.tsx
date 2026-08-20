@@ -703,7 +703,7 @@ export function Tablero({ vista, acciones, leTocaA, log, logDetallado = [], onAc
     if (!leTocaA) return
     const acc = acciones.find((a) => esDeMano(a) && a.cardInstanceId === id)
     if (!acc) return
-    if (acc.type === 'colocar_tactica' || acc.type === 'colocar_combate') {
+    if (acc.type === 'colocar_tactica' || acc.type === 'colocar_combate' || acc.type === 'colocar_arcana') {
       onAccion(acc)
       return
     }

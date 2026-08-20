@@ -458,7 +458,8 @@ export const ESTASIS_CARDS: AnyCard[] = [
     updatedAt: FB_TS,
     facciones: ['Orden'],
     stats: { cost: 0 },
-    efecto: 'Un Campeón que controles gana +2 de ATQ hasta el final del turno. Si destruye a un Campeón que controla el rival este turno, roba 1 carta.',
+    condicion: 'Mientras controles por lo menos 1 campeón',
+    recompensa: 'Un Campeón que controles gana +2 de ATQ hasta el final del turno. Si destruye a un Campeón que controla el rival este turno, roba 1 carta.',
   },
 
   /* ── VÍNCULOS (6 diseños → 6 copias) ───────────────────────────── */

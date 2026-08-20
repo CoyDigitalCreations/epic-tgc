@@ -224,9 +224,11 @@ export function CardList() {
   const handleImportPaquete = (paqueteId: string) => {
     const cartas = CARTAS_POR_PAQUETE[paqueteId] ?? []
     if (cartas.length === 0) return
+    // Asegurar que todas tengan paqueteId (puede haberse perdido en migraciones)
+    const cartasConPaquete = cartas.map((c) => ({ ...c, paqueteId }))
     const existentes = new Set(cards.map((c) => c.id))
     const nuevas = cartas.filter((c) => !existentes.has(c.id))
-    loadCards(cartas)
+    loadCards(cartasConPaquete)
     if (nuevas.length === 0) {
       alert('El paquete ya está completo en tu colección.')
     } else {

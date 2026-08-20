@@ -1,4 +1,4 @@
-import { esCampeon, esTactica, getCardMeta, type AnyCard } from './cards'
+import { esCampeon, getCardMeta, type AnyCard } from './cards'
 import { enviarAlCementerio } from './replacements'
 import type { CardInstance, Ctx, ExpiraModificador, GameState, PlayerId } from './types'
 

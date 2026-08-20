@@ -337,7 +337,7 @@ describe('jugar_mistica (R10)', () => {
 // describe('colocar_combate (3D-3F, no cuesta Éter)', () => { ... })
 
 describe('colocar_arcana (boca abajo 3D-3F, gratis) + activar_arcana (paga coste)', () => {
-  it('coloca la Arcana GRATIS boca abajo, luego activa pagando coste', () => {
+  it('coloca la Arcana GRATIS boca abajo, luego activa pagando coste (en turno siguiente)', () => {
     let s = conMano(estadoMinimo(), { arc: ARCANA })
     const { s: s2, ids } = conEteres(s, ETER_ORDEN, 3)
     s = s2
@@ -355,7 +355,15 @@ describe('colocar_arcana (boca abajo 3D-3F, gratis) + activar_arcana (paga coste
       { type: 'carta_invocada', cardInstanceId: 'arc', tipo: 'Arcana', slot: 0 },
     ])
 
-    // Paso 2: activar (paga coste)
+    // §5.4: NO se puede activar el mismo turno que se colocó
+    ctx.events.length = 0
+    const fail = applyAction(s, { type: 'activar_arcana', cardInstanceId: 'arc', slot: 0, eterIds: ids }, ctx)
+    expect(fail.ok).toBe(false) // falla correctamente
+
+    // Simular turno siguiente: limpiar entradaEsteTurno (como hace phases.ts en Alba)
+    delete s.instances['arc']!.entradaEsteTurno
+
+    // Paso 2: activar (paga coste) — ahora sí funciona
     ctx.events.length = 0
     s = aplicar(s, { type: 'activar_arcana', cardInstanceId: 'arc', slot: 0, eterIds: ids }, ctx)
 
