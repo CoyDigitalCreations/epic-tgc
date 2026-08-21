@@ -232,6 +232,7 @@ function Pila({
     <MiniCard
       inst={vista.instances[tope]}
       tamano="md"
+      agotado={false}
       onClick={onClick}
       onZoom={onZoom}
       invertida={invertida}
@@ -416,8 +417,13 @@ function GrillaJugador({
             {(transmutar || activarHabilidad) && (
               <button
                 onClick={() => {
-                  const accion = activarHabilidad ?? transmutar
-                  if (accion) onAccion(accion)
+                  if (activarHabilidad && activarHabilidad.type === 'activar_habilidad') {
+                    // Abrir selector de pago para que el usuario elija qué éteres pagar
+                    const meta = inst.cardId ? getCardMeta(inst.cardId) : null
+                    if (meta) abrirSelector(activarHabilidad, meta.id, slot)
+                  } else if (transmutar) {
+                    onAccion(transmutar)
+                  }
                 }}
                 className="text-[10px] bg-purple-600/30 hover:bg-purple-600/50 text-purple-200 px-1.5 py-0.5 rounded 
                            transition-colors cursor-pointer whitespace-nowrap"
@@ -647,16 +653,20 @@ export function Tablero({ vista, acciones, leTocaA, logDetallado = [], onAccion,
   const abrirZoom = (inst: CardInstance) => setZoom(inst)
 
   // Abrir interfaz de bloqueo automáticamente cuando es turno del defensor y hay bloqueo pendiente
+  // NOTA: dependemos de propiedades PRIMITIVAS (fase, paso, turno) para evitar loops infinitos.
+  const faseActual = vista.fase
+  const pasoCombate = vista.combate?.paso
+  const turnoActual = vista.turno
   useEffect(() => {
-    if (vista.fase === 'choque' && vista.combate?.paso === 'bloqueo') {
-      const defensor = vista.turno === 'A' ? 'B' : 'A'
+    if (faseActual === 'choque' && pasoCombate === 'bloqueo') {
+      const defensor = turnoActual === 'A' ? 'B' : 'A'
       const soyElDefensor = defensor === 'A'
       if (soyElDefensor && !bloqueoAbierto) {
-        const sinBloquear = vista.combate.atacantes.filter((a) => !(a in vista.combate!.bloqueos))
+        const sinBloquear = vista.combate!.atacantes.filter((a) => !(a in vista.combate!.bloqueos))
         if (sinBloquear.length > 0) setBloqueoAbierto(true)
       }
     }
-  }, [vista.fase, vista.combate, bloqueoAbierto])
+  }, [faseActual, pasoCombate, turnoActual])
 
   const abrirSelector = (accionBase: Action, objetivoCardId: string, campeonSlot?: number) => {
     const meta = getCardMeta(objetivoCardId)

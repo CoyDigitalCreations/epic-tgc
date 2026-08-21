@@ -160,11 +160,22 @@ describe('bloqueo de Éter sobre Campeón (facción v2.1)', () => {
     const { s, campeonId } = conCampeonEnCampo(base, SERAPHINA)
     const { s: s2, ids } = conEteresEnReserva(s, ETER_BLOQUEO_ORDEN, 2)
     const ctx = crearCtx()
-    const error = bloquearEter(s2, ctx, 'A', ids, 0)
+    // Seraphina tiene "máximo de 1 Éter" — solo bloquea 1
+    const error = bloquearEter(s2, ctx, 'A', [ids[0]], 0)
     expect(error).toBeNull()
-    expect(s2.instances[campeonId].eterBloqueado).toEqual(ids)
-    expect(s2.players.A.eterReserva).toHaveLength(0)
-    expect(ctx.events).toEqual([{ type: 'eter_bloqueado', jugador: 'A', eterIds: ids, campeonId }])
+    expect(s2.instances[campeonId].eterBloqueado).toEqual([ids[0]])
+    expect(s2.players.A.eterReserva).toHaveLength(1) // 1 queda en reserva
+    expect(ctx.events).toEqual([{ type: 'eter_bloqueado', jugador: 'A', eterIds: [ids[0]], campeonId }])
+  })
+
+  it('rechaza bloquear más éteres del máximo permitido', () => {
+    const base = estadoMinimo()
+    const { s } = conCampeonEnCampo(base, SERAPHINA)
+    const { s: s2, ids } = conEteresEnReserva(s, ETER_BLOQUEO_ORDEN, 2)
+    const ctx = crearCtx()
+    // Intentar bloquear 2 cuando el máximo es 1
+    const error = bloquearEter(s2, ctx, 'A', ids, 0)
+    expect(error).toMatch(/máximo/)
   })
 
   it('Éter sin efectoBloqueo se acepta (sin facción, sin límite)', () => {

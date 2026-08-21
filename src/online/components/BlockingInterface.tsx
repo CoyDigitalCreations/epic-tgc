@@ -24,6 +24,9 @@ function CartaBloqueo({ id, s, orden }: { id: string; s: GameState; orden: numbe
   const cardId = inst?.cardId ?? undefined
   const meta = cardId ? getCardMeta(cardId) : null
   const imageUrl = useCardImage(cardId, meta?.hasImage, meta?.imageUrl)
+  const stats = meta?.type === 'Campeón' && 'poder' in meta.stats
+    ? { atq: meta.stats.poder, res: meta.stats.resistencia }
+    : null
 
   return (
     <div className="flex flex-col items-center gap-1">
@@ -45,6 +48,11 @@ function CartaBloqueo({ id, s, orden }: { id: string; s: GameState; orden: numbe
       <span className="text-[9px] text-red-300 font-medium truncate max-w-16">
         {meta?.name ?? '???'}
       </span>
+      {stats && (
+        <span className="text-[8px] text-gray-400">
+          ⚔{stats.atq} 🛡{stats.res}
+        </span>
+      )}
     </div>
   )
 }
@@ -67,6 +75,9 @@ function BloqueadorOption({
   const cardId = inst?.cardId ?? undefined
   const meta = cardId ? getCardMeta(cardId) : null
   const imageUrl = useCardImage(cardId, meta?.hasImage, meta?.imageUrl)
+  const stats = meta?.type === 'Campeón' && 'poder' in meta.stats
+    ? { atq: meta.stats.poder, res: meta.stats.resistencia }
+    : null
 
   return (
     <button
@@ -97,6 +108,11 @@ function BloqueadorOption({
       <span className="text-[8px] text-gray-300 truncate max-w-12">
         {meta?.name ?? '???'}
       </span>
+      {stats && (
+        <span className="text-[7px] text-gray-400">
+          ⚔{stats.atq} 🛡{stats.res}
+        </span>
+      )}
     </button>
   )
 }

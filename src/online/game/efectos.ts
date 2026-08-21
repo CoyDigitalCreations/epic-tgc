@@ -153,16 +153,22 @@ export function aurasDe(s: GameState, id: string): AurasAplicadas {
   // Auras de campo (D6): fuentes en el campo donde está `id` (el CONTROLADOR,
   // no el owner: D2 robo de control mueve la instancia). Los textos dicen
   // "que controles" → solo el campo propio del objetivo.
+  // Escanea campeones + Místicas/Arcanas (Artefactos equipados).
   const campoAuras: AurasAplicadas['campo'] = []
   const campoDelObjetivo = (['A', 'B'] as PlayerId[]).find((j) => s.players[j].campo.campeones.includes(id))
   if (campoDelObjetivo) {
-    for (const fuenteId of s.players[campoDelObjetivo].campo.campeones) {
+    const fuentesCampo = [
+      ...s.players[campoDelObjetivo].campo.campeones,
+      ...s.players[campoDelObjetivo].campo.misticasTacticas,
+      ...s.players[campoDelObjetivo].campo.arcanasCombate,
+    ]
+    for (const fuenteId of fuentesCampo) {
       if (fuenteId === null) continue
       const fuenteInst = s.instances[fuenteId]
       const fuenteMeta = fuenteInst?.cardId ? getCardMeta(fuenteInst.cardId) : null
       if (!fuenteInst || !fuenteMeta) continue
 
-      // Auras de campo registradas (DS-014 Thane, etc.)
+      // Auras de campo registradas (DS-014 Thane, FB-021 Marcha, DS-021 Nudo, etc.)
       const fnCampo = aurasCampo.get(fuenteMeta.id)
       if (fnCampo) {
         const resultado = fnCampo(s, fuenteId, id)

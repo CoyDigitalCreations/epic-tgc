@@ -110,15 +110,18 @@ export function getValidActions(state: GameState, playerId: PlayerId): Action[] 
         const accion = generarAccionesForja(state, playerId, id)
         if (accion) acciones.push(accion)
       }
-      // Bloqueo de Éter: solo para Campeones que TENGEN RAZÓN para bloquear
+      // Bloqueo de Éter: solo para Campeones que TENGAN RAZÓN para bloquear
       // (habilidad activa/pasiva que use éter bloqueado, o Transmutar).
       // Draven, Emisario, etc. NO generan esta acción.
+      // No genera acciones si el campeón ya tiene éteres bloqueados.
       p.campo.campeones.forEach((campeonId, slot) => {
         if (!campeonId) return
         const inst = state.instances[campeonId]
         const campeon = inst?.cardId ? getCardMeta(inst.cardId) : null
         if (!campeon) return
         if (!campeonNecesitaEterBloqueado(campeon)) return
+        // No generar si ya tiene éteres bloqueados
+        if ((inst.eterBloqueado?.length ?? 0) > 0) return
         const eterId = p.eterReserva.find((id) => {
           const meta = state.instances[id]?.cardId ? getCardMeta(state.instances[id]!.cardId!) : null
           return meta !== null

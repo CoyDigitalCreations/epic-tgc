@@ -1,4 +1,5 @@
 import { esEter, faccionesCompartidas, getCardMeta } from './cards'
+import type { AnyCard } from '../../shared/types'
 import { dispararTrigger } from './efectos'
 import type { Ctx, GameState, PlayerId } from './types'
 
@@ -159,13 +160,37 @@ export function validarBloqueo(state: GameState, jugador: PlayerId, eterIds: str
   const campeon = instCampeon?.cardId ? getCardMeta(instCampeon.cardId) : null
   if (!campeon) return 'Campeón desconocido'
   if (eterIds.length === 0) return 'no indicaste Éteres para bloquear'
+
+  // Límite máximo de éteres bloqueados por campeón (parseado del efecto)
+  const maxEter = maxEterBloqueado(campeon)
+  const actuales = instCampeon.eterBloqueado?.length ?? 0
+  if (actuales + eterIds.length > maxEter) {
+    return `máximo ${maxEter} Éter(es) bloqueado(s) en este Campeón (ya tiene ${actuales})`
+  }
+
   for (const id of eterIds) {
     const inst = state.instances[id]
     const meta = inst?.cardId ? getCardMeta(inst.cardId) : null
     if (!inst || !meta || !esEter(meta)) return `no es un Éter: ${id}`
     if (!p.eterReserva.includes(id)) return `el Éter no está en tu Reserva: ${id}`
+    // Verificar que el éter no esté ya bloqueado en ningún campeón
+    if (instCampeon.eterBloqueado?.includes(id)) return `el Éter ya está bloqueado en este Campeón`
+    for (const cid of p.campo.campeones) {
+      if (cid && cid !== campeonId) {
+        const ci = state.instances[cid]
+        if (ci?.eterBloqueado?.includes(id)) return `el Éter ya está bloqueado en otro Campeón`
+      }
+    }
   }
   return null
+}
+
+/** Parsea el texto del efecto para extraer el máximo de éteres bloqueados. */
+function maxEterBloqueado(card: AnyCard): number {
+  // Buscar patrón "máximo N Éter" en efectoDisparo o efectoPasivo
+  const texto = ('efectoDisparo' in card ? card.efectoDisparo : '') ?? ''
+  const match = texto.match(/máximo\s+(\d+)\s+Éter/i)
+  return match ? parseInt(match[1], 10) : 1 // default: 1 Éter
 }
 
 /**

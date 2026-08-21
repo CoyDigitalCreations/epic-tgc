@@ -4,6 +4,7 @@ import { registrarEfectosEteres } from './eteres'
 import { registrarEfectosHabilidades } from './habilidades'
 import { registrarEfectosSoporte } from './soporte'
 import { registrarEfectosVinculos } from './vinculos'
+import { registrarEfectosArtefactos } from './artefactos'
 import { registrarGuardsArcanas } from '../effects-guards'
 
 /**
@@ -18,5 +19,6 @@ export function registrarEfectos(): void {
   registrarEfectosSoporte()
   registrarEfectosVinculos()
   registrarEfectosCombate()
+  registrarEfectosArtefactos()
   registrarGuardsArcanas()
 }
