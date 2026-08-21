@@ -1183,7 +1183,7 @@ export function Tablero({ vista, acciones, leTocaA, logDetallado = [], onAccion,
                     const nombre = inst.cardId ? (getCardMeta(inst.cardId)?.name ?? '') : ''
                     return (
                       <div key={id} className="flex flex-col items-center gap-0.5">
-                        <MiniCard inst={inst} tamano="sm" onZoom={() => abrirZoom(inst)} />
+                        <MiniCard inst={inst} tamano="sm" agotado={false} onZoom={() => abrirZoom(inst)} />
                         <span className="text-[9px] text-gray-500 max-w-16 truncate">{nombre}</span>
                       </div>
                     )

@@ -855,8 +855,16 @@ export function generarAccionesForja(state: GameState, playerId: PlayerId, cardI
       const sacrificables = campeonesSacrificables(state, playerId, meta.id)
       if (sacrificables.length < requeridos) return null
       const sacrificios = sacrificables.slice(0, requeridos)
-      const libre = p.campo.campeones.findIndex((c) => c === null)
-      const slot = libre !== -1 ? libre : p.campo.campeones.indexOf(sacrificios[0])
+      // Soberano: baja en el slot del sacrificado
+      // Emperador: baja en el slot del primer sacrificado (el usuario elegirá)
+      // Sin sacrificio: busca slot libre
+      let slot: number
+      if (requeridos > 0 && sacrificios.length > 0) {
+        slot = p.campo.campeones.indexOf(sacrificios[0])
+      } else {
+        slot = p.campo.campeones.findIndex((c) => c === null)
+        if (slot === -1) return null
+      }
       const accion: Action = { type: 'jugar_campeon', cardInstanceId, slot, eterIds, sacrificios }
       if (validarJugarCampeon(state, accion) !== null) return null
       if (validarRequisito(state, playerId, meta.id) !== null) return null
