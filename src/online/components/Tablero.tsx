@@ -626,7 +626,7 @@ function GrillaJugador({
     <div className="overflow-x-auto pb-1">
       <div
         data-testid={`grilla-${jugador}`}
-        className="grid grid-cols-7 gap-1.5 w-max"
+        className="grid grid-cols-7 gap-3 w-max"
         style={invertida ? { transform: 'rotate(180deg)' } : undefined}
       >
         {celdas}

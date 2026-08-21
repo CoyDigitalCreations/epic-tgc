@@ -76,7 +76,7 @@ export function FocosChampion({ s, id, invertida }: ChampionStatusProps) {
   const rotStyle = invertida ? { transform: 'rotate(180deg)' } : undefined
 
   return (
-    <div className="flex flex-col items-center gap-1 absolute -right-5 top-1" data-testid={`focos-${id}`}>
+    <div className="flex flex-col items-center gap-1 absolute -right-6 top-1" data-testid={`focos-${id}`}>
       {/* Continuo: ∞ + dot */}
       <div className="flex items-center gap-0.5" style={rotStyle}>
         <span className="text-[9px] text-gray-400 leading-none">∞</span>
