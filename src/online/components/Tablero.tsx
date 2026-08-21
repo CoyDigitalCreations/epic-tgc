@@ -44,6 +44,7 @@ interface TableroProps {
 type Seleccion =
   | { tipo: 'pagar'; accionBase: Action; objetivoCardId: string; coste: number }
   | { tipo: 'bloquear'; accionBase: Action; objetivoCardId: string; campeonSlot: number }
+  | { tipo: 'elegir_slot'; accionBase: Action; objetivoCardId: string; slotsDisponibles: number[]; slotLabels: string[] }
   | null
 
 /** Zonas que abren el panel inferior con su lista completa. */
@@ -741,14 +742,71 @@ export function Tablero({ vista, acciones, leTocaA, logDetallado = [], onAccion,
   const confirmar = () => {
     if (!seleccion || !puedeConfirmar) return
     const accionBase = seleccion.accionBase
-    onAccion({
+    const accionConPago = {
       ...accionBase,
       eterIds: [...elegidos],
       sacrificios: [...sacrificiosElegidos],
-    } as Action)
-    setSeleccion(null)
-    setElegidos(new Set())
-    setSacrificiosElegidos([])
+    } as Action
+
+    // ¿Necesita selección de casilla?
+    const necesitaSlot = accionConPago.type === 'jugar_campeon' ||
+      accionConPago.type === 'jugar_mistica' ||
+      accionConPago.type === 'colocar_arcana'
+
+    if (necesitaSlot) {
+      // Calcular slots disponibles
+      let slotsDisponibles: number[] = []
+      let slotLabels: string[] = []
+      if (accionConPago.type === 'jugar_campeon') {
+        // Slots 0-4 (2B-2F), vacíos o del sacrificio
+        for (let i = 0; i < 5; i++) {
+          const occupant = yo.campo.campeones[i]
+          if (!occupant || (accionConPago.sacrificios ?? []).includes(occupant)) {
+            slotsDisponibles.push(i)
+            slotLabels.push(`2${String.fromCharCode(66 + i)}`)
+          }
+        }
+      } else if (accionConPago.type === 'jugar_mistica') {
+        // Slots 0-2 (3A-3C), vacíos
+        for (let i = 0; i < 3; i++) {
+          if (!yo.campo.misticasTacticas[i]) {
+            slotsDisponibles.push(i)
+            slotLabels.push(`3${String.fromCharCode(65 + i)}`)
+          }
+        }
+      } else if (accionConPago.type === 'colocar_arcana') {
+        // Slots 0-2 (3D-3F), vacíos
+        for (let i = 0; i < 3; i++) {
+          if (!yo.campo.arcanasCombate[i]) {
+            slotsDisponibles.push(i)
+            slotLabels.push(`3${String.fromCharCode(68 + i)}`)
+          }
+        }
+      }
+
+      if (slotsDisponibles.length === 1) {
+        // Solo 1 slot → ejecutar directo
+        onAccion({ ...accionConPago, slot: slotsDisponibles[0] } as Action)
+        setSeleccion(null)
+        setElegidos(new Set())
+        setSacrificiosElegidos([])
+      } else if (slotsDisponibles.length > 1) {
+        // Mostrar selector de casilla
+        setSeleccion({ tipo: 'elegir_slot', accionBase: accionConPago, objetivoCardId: seleccion.objetivoCardId, slotsDisponibles, slotLabels })
+      } else {
+        // No hay slots → ejecutar con slot por defecto (el validador rechazará)
+        onAccion(accionConPago)
+        setSeleccion(null)
+        setElegidos(new Set())
+        setSacrificiosElegidos([])
+      }
+    } else {
+      // Sin selección de casilla → ejecutar directo
+      onAccion(accionConPago)
+      setSeleccion(null)
+      setElegidos(new Set())
+      setSacrificiosElegidos([])
+    }
   }
 
   const cancelar = () => {
@@ -1087,6 +1145,34 @@ export function Tablero({ vista, acciones, leTocaA, logDetallado = [], onAccion,
                         </button>
                       )
                     })}
+                  </div>
+                </div>
+              )}
+
+              {/* Selector de casilla (después del pago) */}
+              {seleccion.tipo === 'elegir_slot' && (
+                <div className="mt-3 border-t border-card-border/50 pt-3">
+                  <p className="text-sm text-gray-200 mb-2">
+                    Elegí la casilla donde quieres colocar tu carta:
+                  </p>
+                  <div className="flex gap-2 flex-wrap">
+                    {seleccion.slotsDisponibles.map((slotIdx, i) => (
+                      <button
+                        key={slotIdx}
+                        onClick={() => {
+                          onAccion({ ...seleccion.accionBase, slot: slotIdx } as Action)
+                          setSeleccion(null)
+                          setElegidos(new Set())
+                          setSacrificiosElegidos([])
+                        }}
+                        className="flex flex-col items-center gap-1 p-2 rounded border border-gray-600 hover:border-cyan-400 bg-surface-2 hover:bg-cyan-900/20 transition-colors cursor-pointer"
+                      >
+                        <span className="text-[11px] font-mono font-bold text-cyan-300">
+                          {seleccion.slotLabels[i]}
+                        </span>
+                        <span className="text-[8px] text-gray-500">Vacío</span>
+                      </button>
+                    ))}
                   </div>
                 </div>
               )}
