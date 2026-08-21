@@ -1026,7 +1026,7 @@ export function Tablero({ vista, acciones, leTocaA, logDetallado = [], onAccion,
               <p className="text-sm text-gray-200 mb-2">
                 {seleccion.tipo === 'pagar'
                   ? 'Elegí los Éteres de tu Reserva (2A) para pagar:'
-                  : 'Elegí los Éteres a bloquear (solo facción compartida):'}
+                  : 'Elegí los Éteres a bloquear:'}
               </p>
               {yo.eterReserva.length === 0 ? (
                 <p className="text-xs text-gray-500 italic">Tu Reserva está vacía.</p>

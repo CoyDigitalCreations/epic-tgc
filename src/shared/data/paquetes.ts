@@ -214,9 +214,7 @@ export const ESTASIS_CARDS: AnyCard[] = [
     catHabilidad: 'Singular',
     stats: { cost: 4, poder: 9, resistencia: 9 },
     efectoPasivo: 'Al ser invocada, toma control de un Campeón que controla el rival. Mientras esta carta esté en el campo, controla ese Campeón.',
-    efectoDisparo: 'Puedes pagar hasta un máximo de 2 Éter (bloqueado) para que un Campeón que controles gane +2 de ATQ y +2 de RES mientras ese Éter esté bloqueado. Al inicio de tu próxima Alba reagrupa el Éter usado por este efecto.',
-    disparoAgota: false,
-    disparoUnSoloUso: false,
+    efectoContinuo: 'Puedes pagar hasta un máximo de 2 Éter (bloqueado) para que un Campeón que controles gane +2 de ATQ y +2 de RES mientras ese Éter esté bloqueado. Al inicio de tu próxima Alba reagrupa el Éter usado por este efecto.',
   },
   {
     id: 'FB-011',
@@ -329,9 +327,7 @@ export const ESTASIS_CARDS: AnyCard[] = [
     roles: ['Soporte'],
     catHabilidad: 'Efecto',
     stats: { cost: 3, poder: 3, resistencia: 5 },
-    efectoDisparo: 'Puedes pagar hasta un máximo de 1 Éter (bloqueado) para que los Campeones que controles ganen +1 de RES mientras esté bloqueado.',
-    disparoAgota: false,
-    disparoUnSoloUso: false,
+    efectoContinuo: 'Puedes pagar hasta un máximo de 1 Éter (bloqueado) para que los Campeones que controles ganen +1 de RES mientras esté bloqueado.',
   },
   {
     id: 'FB-017',
@@ -664,9 +660,7 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     catHabilidad: 'Singular',
     stats: { cost: 4, poder: 9, resistencia: 9 },
     efectoPasivo: 'Al ser invocada, destruye un Campeón que controla el rival.',
-    efectoDisparo: 'Puedes pagar hasta un máximo de 2 Éter (bloqueado) para que un Campeón que controla el rival pierda 2 de ATQ y 2 de RES mientras ese Éter esté bloqueado. Al inicio de tu próxima Alba reagrupa el Éter usado por este efecto.',
-    disparoAgota: false,
-    disparoUnSoloUso: false,
+    efectoContinuo: 'Puedes pagar hasta un máximo de 2 Éter (bloqueado) para que un Campeón que controla el rival pierda 2 de ATQ y 2 de RES mientras ese Éter esté bloqueado. Al inicio de tu próxima Alba reagrupa el Éter usado por este efecto.',
   },
 
   /* ── ÉTER (9 diseños → 15 copias) ─────────────────────────── */
@@ -912,9 +906,7 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     roles: ['Soporte'],
     catHabilidad: 'Efecto',
     stats: { cost: 3, poder: 3, resistencia: 5 },
-    efectoDisparo: 'Puedes pagar hasta un máximo de 1 Éter (bloqueado) para que los Campeones que controlas ganen +1 de ATQ mientras esté bloqueado.',
-    disparoAgota: false,
-    disparoUnSoloUso: false,
+    efectoContinuo: 'Puedes pagar hasta un máximo de 1 Éter (bloqueado) para que los Campeones que controlas ganen +1 de ATQ mientras esté bloqueado.',
   },
   {
     id: 'DS-017',

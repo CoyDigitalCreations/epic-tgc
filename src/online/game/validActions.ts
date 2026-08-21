@@ -1,4 +1,4 @@
-import { getCardMeta, faccionesCompartidas, esArcana, costeEterHabilidad, campeonNecesitaEterBloqueado } from './cards'
+import { getCardMeta, faccionesCompartidas, esArcana, esCampeon, costeEterHabilidad, campeonNecesitaEterBloqueado } from './cards'
 import type { Action } from './actions'
 import { generarAccionesForja, validarActivarArcana } from './actions'
 import { atacantesElegibles, asignacionForzada, ataquesSinBloquear, rivalDe, tieneKeyword } from './combat'
@@ -70,18 +70,21 @@ export function getValidActions(state: GameState, playerId: PlayerId): Action[] 
         acciones.push({ type: 'usar_transmutar', cardInstanceId: champId, eterIds: p.eterPagado.slice(0, 2) })
       }
     }
-    // Activar Habilidades: Campeones con efectoDisparo
-    // Patrón "Bloqueado": necesita 1+ Éter de facción compartida en Reserva
-    // Patrón "Agota": necesita 1 Éter de Reserva + no agotado + no usado este turno
+    // Activar Habilidades: Campeones con efectoContinuo o efectoDisparo
+    // Continuo (bloquea éter): NO puede activar si agotado; agota al activar.
+    // Disparo (paga éter): SÍ puede activar si agotado; NO agota.
     for (const champId of p.campo.campeones) {
       if (!champId) continue
       const inst = state.instances[champId]
       const meta = inst?.cardId ? getCardMeta(inst.cardId) : null
-      if (!meta || !meta.efectoDisparo) continue
-      const esBloqueado = meta.efectoDisparo.includes('bloqueado')
-      if (esBloqueado) {
-        // Patrón "Bloqueado": buscar N Éteres en Reserva
-        // (N = costo de la carta, extraído de efectoDisparo)
+      if (!meta) continue
+
+      const tieneContinuo = 'efectoContinuo' in meta && !!(meta as any).efectoContinuo
+      const tieneDisparo = 'efectoDisparo' in meta && !!meta.efectoDisparo
+
+      if (tieneContinuo) {
+        // Continuo: NO puede activar si agotado
+        if (inst!.agotado) continue
         const costo = costeEterHabilidad(meta)
         const eteresValidos = p.eterReserva.filter((id) => {
           const eterMeta = state.instances[id]?.cardId ? getCardMeta(state.instances[id]!.cardId!) : null
@@ -90,18 +93,53 @@ export function getValidActions(state: GameState, playerId: PlayerId): Action[] 
         if (costo > 0 && eteresValidos.length >= costo) {
           acciones.push({ type: 'activar_habilidad', cardInstanceId: champId, eterIds: eteresValidos.slice(0, costo) })
         } else if (costo === 0 && eteresValidos.length > 0) {
-          // Fallback: si no se pudo parsear el costo, enviar 1 éter
           acciones.push({ type: 'activar_habilidad', cardInstanceId: champId, eterIds: [eteresValidos[0]] })
         }
-      } else {
-        // Patrón "Agota": necesita no agotado + no usado + N éteres de Reserva
-        // (N = costo de la habilidad, NO el coste de invocación de la carta)
-        if (inst!.agotado || inst!.opcionUsadaEsteTurno) continue
-        const costo = costeEterHabilidad(meta)
-        const costoReal = costo > 0 ? costo : 1 // fallback: 1 éter
-        if (p.eterReserva.length >= costoReal) {
-          acciones.push({ type: 'activar_habilidad', cardInstanceId: champId, eterIds: p.eterReserva.slice(0, costoReal) })
+      } else if (tieneDisparo) {
+        // Disparo: SÍ puede activar si agotado; NO agota
+        const esBloqueado = meta.efectoDisparo!.includes('bloqueado')
+        if (esBloqueado) {
+          const costo = costeEterHabilidad(meta)
+          const eteresValidos = p.eterReserva.filter((id) => {
+            const eterMeta = state.instances[id]?.cardId ? getCardMeta(state.instances[id]!.cardId!) : null
+            return eterMeta !== null
+          })
+          if (costo > 0 && eteresValidos.length >= costo) {
+            acciones.push({ type: 'activar_habilidad', cardInstanceId: champId, eterIds: eteresValidos.slice(0, costo) })
+          } else if (costo === 0 && eteresValidos.length > 0) {
+            acciones.push({ type: 'activar_habilidad', cardInstanceId: champId, eterIds: [eteresValidos[0]] })
+          }
+        } else {
+          // Patrón "Agota": necesita no agotado + no usado + N éteres
+          if (inst!.agotado || inst!.opcionUsadaEsteTurno) continue
+          const costo = costeEterHabilidad(meta)
+          const costoReal = costo > 0 ? costo : 1
+          if (p.eterReserva.length >= costoReal) {
+            acciones.push({ type: 'activar_habilidad', cardInstanceId: champId, eterIds: p.eterReserva.slice(0, costoReal) })
+          }
         }
+      }
+    }
+    // FB-022 Último Refugio: campeón equipado puede invocar del cementerio (sin éter)
+    for (const champId of p.campo.campeones) {
+      if (!champId) continue
+      const inst = state.instances[champId]
+      if (!inst || inst.agotado) continue
+      // Buscar si tiene FB-022 equipado
+      const tieneFB022 = Object.values(state.instances).some(
+        (i) => i?.cardId === 'FB-022' && i.equipadoA === champId,
+      )
+      if (!tieneFB022) continue
+      // Verificar que hay campeones en el cementerio con coste ≤3
+      const enCementerio = p.cementerio.filter((id): id is string => {
+        const ci = state.instances[id]
+        const cardId = ci?.cardId
+        if (!cardId) return false
+        const meta = getCardMeta(cardId)
+        return !!meta && esCampeon(meta) && (meta.stats.cost ?? 99) <= 3
+      })
+      if (enCementerio.length > 0) {
+        acciones.push({ type: 'activar_habilidad', cardInstanceId: champId, eterIds: [] })
       }
     }
     if (state.fase === 'forja') {

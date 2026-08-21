@@ -350,9 +350,12 @@ function validarActivarHabilidad(state: GameState, action: Extract<Action, { typ
   if (!p.campo.campeones.includes(action.cardInstanceId)) return 'la carta no está en tu campo'
   const meta = inst.cardId ? getCardMeta(inst.cardId) : null
   if (!meta) return 'carta desconocida'
-  if (!meta.efectoDisparo) return 'esta carta no tiene efecto de disparo'
+  const tieneContinuo = 'efectoContinuo' in meta && !!(meta as any).efectoContinuo
+  const tieneDisparo = !!meta.efectoDisparo
+  if (!tieneContinuo && !tieneDisparo) return 'esta carta no tiene efecto activo'
 
-  const esBloqueado = meta.efectoDisparo.includes('bloqueado')
+  const esContinuo = tieneContinuo
+  const esBloqueado = esContinuo || (meta.efectoDisparo?.includes('bloqueado') ?? false)
 
   if (esBloqueado) {
     // Patrón "Bloqueado": eterIds de la Reserva → Campeón.eterBloqueado
@@ -781,16 +784,20 @@ function ejecutarActivarHabilidad(s: GameState, action: Extract<Action, { type: 
   const meta = inst.cardId ? getCardMeta(inst.cardId) : null
   if (!meta) return
 
-  const esBloqueado = meta.efectoDisparo?.includes('bloqueado') ?? false
+  // Continuo (efectoContinuo): bloquea éter, agota al activar
+  const esContinuo = 'efectoContinuo' in meta && !!(meta as any).efectoContinuo
+  // Disparo con éter bloqueado (legacy): no agota
+  const esBloqueadoLegacy = !esContinuo && (meta.efectoDisparo?.includes('bloqueado') ?? false)
 
-  if (esBloqueado) {
+  if (esContinuo || esBloqueadoLegacy) {
     // Patrón "Bloqueado": mueve éteres de Reserva → Campeón.eterBloqueado
     for (const eterId of action.eterIds) {
       p.eterReserva.splice(p.eterReserva.indexOf(eterId), 1)
     }
     inst.eterBloqueado = [...(inst.eterBloqueado ?? []), ...action.eterIds]
     // Si el texto indica "Alba" → registrar efecto pendiente para liberar en Alba del dueño
-    if (meta.efectoDisparo?.includes('Alba')) {
+    const textoEfecto = esContinuo ? (meta as any).efectoContinuo : meta.efectoDisparo
+    if (textoEfecto?.includes('Alba')) {
       registrarEfectoPendiente(s, {
         fuente: action.cardInstanceId,
         owner: s.turno,
@@ -801,13 +808,16 @@ function ejecutarActivarHabilidad(s: GameState, action: Extract<Action, { type: 
       })
     }
     ctx.emit({ type: 'eter_bloqueado', jugador: s.turno, eterIds: action.eterIds, campeonId: action.cardInstanceId })
+    // Continuo: agota al activar
+    if (esContinuo) {
+      inst.agotado = true
+    }
     // Disparar trigger para handlers con targeting (Aurora/Ragnar).
-    // Cassandra/Korr no tienen handler → el trigger es no-op.
     dispararTrigger(s, ctx, 'al-activar-habilidad', s.turno, [action.cardInstanceId], {
       objetivoId: action.objetivoId,
     })
   } else {
-    // Patrón "Agota": éteres → 1A (pagado) + agota + 1/turno
+    // Patrón "Disparo/Agota": éteres → 1A (pagado) + 1/turno
     for (const eterId of action.eterIds) {
       p.eterReserva.splice(p.eterReserva.indexOf(eterId), 1)
       p.eterPagado.push(eterId)
@@ -815,7 +825,7 @@ function ejecutarActivarHabilidad(s: GameState, action: Extract<Action, { type: 
     if (action.eterIds.length > 0) {
       ctx.emit({ type: 'eter_pagado', jugador: s.turno, eterIds: action.eterIds, costo: action.eterIds.length, aportado: action.eterIds.length })
     }
-    inst.agotado = true
+    // Disparo: NO agota (puede usar agotado)
     inst.opcionUsadaEsteTurno = true
     // Disparar trigger para que el handler aplique el efecto
     dispararTrigger(s, ctx, 'al-activar-habilidad', s.turno, [action.cardInstanceId], {

@@ -68,7 +68,7 @@ export function ChampionStatus({ s, id, invertida }: ChampionStatusProps) {
   )
 }
 
-/** Focos de estado a la derecha de la celda: ∞ continuo + ★ activación. */
+/** Focos de estado a la derecha de la celda: ∞ continuo + ★ activación + ⚡ disparo. */
 export function FocosChampion({ s, id, invertida }: ChampionStatusProps) {
   const focos = focosState(s, id)
   if (!focos) return null
@@ -91,6 +91,14 @@ export function FocosChampion({ s, id, invertida }: ChampionStatusProps) {
         <span
           className={`inline-block w-2 h-2 rounded-full ${FOCO_CLASSES[focos.temporal]}`}
           title={focos.temporal === 'verde' ? 'Efecto temporal activo' : 'Sin efectos temporales'}
+        />
+      </div>
+      {/* Disparo: ⚡ + dot */}
+      <div className="flex items-center gap-0.5" style={rotStyle}>
+        <span className="text-[9px] text-gray-400 leading-none">⚡</span>
+        <span
+          className={`inline-block w-2 h-2 rounded-full ${FOCO_CLASSES[focos.disparo]}`}
+          title={focos.disparo === 'verde' ? 'Habilidad activa disponible' : 'Sin habilidad activa'}
         />
       </div>
     </div>

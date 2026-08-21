@@ -22,6 +22,7 @@ export type FocoEstado = 'gris' | 'verde' | 'rojo'
 export interface FocosState {
   continuo: FocoEstado
   temporal: FocoEstado
+  disparo: FocoEstado
 }
 
 function colorFor(base: number, actual: number): StatChip['color'] {
@@ -73,8 +74,12 @@ export function focosState(s: GameState, id: string): FocosState | null {
     (inst.modificadores?.some((m) => m.expira !== 'permanente') ?? false) ||
     (inst.keywordsTemporales?.length ?? 0) > 0
 
+  // Disparo: tiene efectoDisparo o efectoContinuo (habilidad activa)
+  const tieneDisparo = !!meta.efectoContinuo || !!('efectoDisparo' in meta && (meta as any).efectoDisparo)
+
   return {
     continuo,
     temporal: hasTemporal ? 'verde' : 'gris',
+    disparo: tieneDisparo ? 'verde' : 'gris',
   }
 }

@@ -7,9 +7,10 @@
  * Cartas:
  * - FB-021 Marcha de las Primeras: +1 ATQ al campeón equipado
  * - FB-022 Último Refugio: el campeón equipado puede invocar del cementerio
- * - DS-021 El Nudo Aprieta: +1 ATQ al equipado, -1 ATQ a rivales con éter bloqueado
- * - DS-022 Maldición del Sur: +1 ATQ al equipado, descarte al rival al atacar
+ * - DS-021 El Nudo Aprieta: +1 ATQ al equipado
+ * - DS-022 Maldición del Sur: +1 ATQ al equipado
  */
+import { getCardMeta, esCampeon } from '../cards'
 import { registrarEfecto, registrarAuraCampo } from '../efectos'
 import type { GameState, PlayerId } from '../types'
 
@@ -19,26 +20,34 @@ function armarPendiente(s: GameState, jugador: PlayerId, instId: string, trigger
   s.objetivosPendientes = [...(s.objetivosPendientes ?? []), { jugador, instId, trigger, opciones }]
 }
 
-/** Campeones propios en campo (sin Protector filtering — artefactos van a cualquiera). */
+/** Campeones propios en campo. */
 function campeonesPropios(s: GameState, jugador: PlayerId): string[] {
   return s.players[jugador].campo.campeones.filter((id): id is string => id !== null)
 }
 
+/** Champions en cementerio del jugador con coste ≤3. */
+function campeonesEnCementerio(s: GameState, jugador: PlayerId): string[] {
+  return s.players[jugador].cementerio.filter((id): id is string => {
+    const inst = s.instances[id]
+    const cardId = inst?.cardId
+    if (!cardId) return false
+    const meta = getCardMeta(cardId)
+    if (!meta || !esCampeon(meta)) return false
+    return (meta.stats.cost ?? 99) <= 3
+  })
+}
+
 export function registrarEfectosArtefactos(): void {
   // ─── FB-021 Marcha de las Primeras ───
-  // "Equipa a un Campeón. El Campeón equipado gana +1 de ATQ."
   registrarEfecto('al-jugar-mistica', 'FB-021', (s, _ctx, inst, payload) => {
     if (payload.contextoUso === 'objetivo-elegido') {
-      // Equipar: setear link equipadoA
       const artefacto = s.instances[inst.cardInstanceId]
       if (artefacto) artefacto.equipadoA = payload.objetivoId
       return
     }
-    const opciones = campeonesPropios(s, payload.jugador)
-    armarPendiente(s, payload.jugador, inst.cardInstanceId, 'al-jugar-mistica', opciones)
+    armarPendiente(s, payload.jugador, inst.cardInstanceId, 'al-jugar-mistica', campeonesPropios(s, payload.jugador))
   })
 
-  // Aura FB-021: +1 ATQ al campeón equipado
   registrarAuraCampo('FB-021', (s, fuente, objetivo) => {
     const inst = s.instances[fuente]
     if (!inst?.equipadoA || inst.equipadoA !== objetivo) return null
@@ -46,36 +55,51 @@ export function registrarEfectosArtefactos(): void {
   })
 
   // ─── FB-022 Último Refugio ───
-  // "Equipa a un Campeón. El Campeón equipado puede invocar 1 Campeón
-  //  de coste 3 o menos desde tu cementerio sin pagar Éter."
+  // Equipar: al jugar la Mística
   registrarEfecto('al-jugar-mistica', 'FB-022', (s, _ctx, inst, payload) => {
     if (payload.contextoUso === 'objetivo-elegido') {
       const artefacto = s.instances[inst.cardInstanceId]
       if (artefacto) artefacto.equipadoA = payload.objetivoId
       return
     }
-    const opciones = campeonesPropios(s, payload.jugador)
-    armarPendiente(s, payload.jugador, inst.cardInstanceId, 'al-jugar-mistica', opciones)
+    armarPendiente(s, payload.jugador, inst.cardInstanceId, 'al-jugar-mistica', campeonesPropios(s, payload.jugador))
   })
 
-  // Aura FB-022: no da stats directos, pero el efecto de invocar del cementerio
-  // se resolvería vía una habilidad activa separada (no implementada aún como aura).
-  // Por ahora, el aura es un placeholder que no modifica stats.
+  // Habilidad activa: invocar del cementerio (se dispara cuando el campeón equipado activa)
+  registrarEfecto('al-activar-habilidad', 'FB-022', (s, ctx, inst, payload) => {
+    if (payload.contextoUso === 'objetivo-elegido') {
+      // Invocar el campeón seleccionado del cementerio → campo
+      const objetivoId = payload.objetivoId
+      if (!objetivoId) return
+      const p = s.players[payload.jugador]
+      const idx = p.cementerio.indexOf(objetivoId)
+      if (idx === -1) return
+      const slotLibre = p.campo.campeones.indexOf(null)
+      if (slotLibre === -1) return
+      // Mover del cementerio al campo (sin pagar éter)
+      p.cementerio.splice(idx, 1)
+      p.campo.campeones[slotLibre] = objetivoId
+      // Invocación cansada: agotado + entradaEsteTurno
+      s.instances[objetivoId].agotado = true
+      s.instances[objetivoId].entradaEsteTurno = true
+      ctx.emit({ type: 'carta_invocada', cardInstanceId: objetivoId, tipo: 'Campeón', slot: slotLibre })
+      return
+    }
+    // Armar pendiente con campeones del cementerio (coste ≤3)
+    const opciones = campeonesEnCementerio(s, payload.jugador)
+    armarPendiente(s, payload.jugador, inst.cardInstanceId, 'al-activar-habilidad', opciones)
+  })
 
   // ─── DS-021 El Nudo Aprieta ───
-  // "Equipa a un Campeón. El Campeón equipado gana +1 de ATQ.
-  //  Los Campeones que controla el rival con Éter bloqueado pierden 1 de ATQ."
   registrarEfecto('al-jugar-mistica', 'DS-021', (s, _ctx, inst, payload) => {
     if (payload.contextoUso === 'objetivo-elegido') {
       const artefacto = s.instances[inst.cardInstanceId]
       if (artefacto) artefacto.equipadoA = payload.objetivoId
       return
     }
-    const opciones = campeonesPropios(s, payload.jugador)
-    armarPendiente(s, payload.jugador, inst.cardInstanceId, 'al-jugar-mistica', opciones)
+    armarPendiente(s, payload.jugador, inst.cardInstanceId, 'al-jugar-mistica', campeonesPropios(s, payload.jugador))
   })
 
-  // Aura DS-021: +1 ATQ al equipado
   registrarAuraCampo('DS-021', (s, fuente, objetivo) => {
     const inst = s.instances[fuente]
     if (!inst?.equipadoA || inst.equipadoA !== objetivo) return null
@@ -83,19 +107,15 @@ export function registrarEfectosArtefactos(): void {
   })
 
   // ─── DS-022 Maldición del Sur ───
-  // "Equipa a un Campeón. El Campeón equipado gana +1 de ATQ.
-  //  Cuando el Campeón equipado ataca y destruye a un Campeón rival, roba 1 carta."
   registrarEfecto('al-jugar-mistica', 'DS-022', (s, _ctx, inst, payload) => {
     if (payload.contextoUso === 'objetivo-elegido') {
       const artefacto = s.instances[inst.cardInstanceId]
       if (artefacto) artefacto.equipadoA = payload.objetivoId
       return
     }
-    const opciones = campeonesPropios(s, payload.jugador)
-    armarPendiente(s, payload.jugador, inst.cardInstanceId, 'al-jugar-mistica', opciones)
+    armarPendiente(s, payload.jugador, inst.cardInstanceId, 'al-jugar-mistica', campeonesPropios(s, payload.jugador))
   })
 
-  // Aura DS-022: +1 ATQ al equipado
   registrarAuraCampo('DS-022', (s, fuente, objetivo) => {
     const inst = s.instances[fuente]
     if (!inst?.equipadoA || inst.equipadoA !== objetivo) return null

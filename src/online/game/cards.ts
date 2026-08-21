@@ -73,10 +73,22 @@ export function costeEterHabilidad(card: AnyCard): number {
  * Retorna false para campeones como Draven, Emisario, etc. que NO se benefician
  * de tener éter bloqueado.
  */
+/**
+ * true si el campeón tiene una habilidad que requiere (o puede usar) éter bloqueado.
+ * Continuo: efectoContinuo con "bloqueado" → se activa/agota cuando lo usa.
+ * Disparo: efectoDisparo con "bloqueado" → no agota, puede usar agotado.
+ */
 export function campeonNecesitaEterBloqueado(card: AnyCard): boolean {
-  // 1. Habilidad activa con patrón "bloqueado"
+  // 1. Efecto Continuo con patrón "bloqueado"
+  if ('efectoContinuo' in card && card.efectoContinuo?.includes('bloqueado')) return true
+  // 2. Habilidad Disparo con patrón "bloqueado"
   if ('efectoDisparo' in card && card.efectoDisparo?.includes('bloqueado')) return true
-  // 2. Efecto pasivo que referencia éter bloqueado
+  // 3. Efecto pasivo que referencia éter bloqueado
   if ('efectoPasivo' in card && card.efectoPasivo?.includes('Éter bloqueado')) return true
   return false
+}
+
+/** true si el campeón tiene efecto Continuo (bloquea éter, agota al activar). */
+export function esContinuo(card: AnyCard): boolean {
+  return 'efectoContinuo' in card && !!(card as AnyCard & { efectoContinuo?: string }).efectoContinuo
 }
