@@ -1,13 +1,39 @@
 import type { AnyCard } from '../../shared/types'
 import { getCardImage } from './image-store'
+import { cardArtPath } from '../../shared/data/paquetes'
 
-/** Re-embebe el arte (IndexedDB) en las cartas para el export (shared con export-paquete). */
+/**
+ * Re-embebe el arte (IndexedDB + PNGs estáticos) en las cartas para el export.
+ * IndexedDB tiene prioridad (usuario subió arte custom); si no hay,
+ * intenta fetchear el PNG estático de public/cartas/ y convertirlo a data URL.
+ */
 export async function conArteEmbebido(cards: AnyCard[]): Promise<AnyCard[]> {
   return Promise.all(
     cards.map(async (card) => {
-      if (!card.hasImage) return card
-      const dataUrl = await getCardImage(card.id)
-      return dataUrl ? { ...card, imageUrl: dataUrl } : card
+      // 1. IndexedDB (arte subido por el usuario)
+      if (card.hasImage) {
+        const dataUrl = await getCardImage(card.id)
+        if (dataUrl) return { ...card, imageUrl: dataUrl }
+      }
+      // 2. PNG estático en public/cartas/
+      const staticPath = cardArtPath(card.id)
+      if (staticPath) {
+        try {
+          const res = await fetch(staticPath)
+          if (res.ok) {
+            const blob = await res.blob()
+            const dataUrl = await new Promise<string>((resolve) => {
+              const reader = new FileReader()
+              reader.onload = () => resolve(reader.result as string)
+              reader.readAsDataURL(blob)
+            })
+            return { ...card, imageUrl: dataUrl }
+          }
+        } catch {
+          // Si el PNG no existe, la carta queda sin arte embebido
+        }
+      }
+      return card
     }),
   )
 }

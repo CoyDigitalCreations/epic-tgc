@@ -705,7 +705,7 @@
         <tr><td style="width:140px"><strong>name</strong></td><td>Nombre de la carta</td></tr>
         <tr><td><strong>type</strong></td><td>Tipo (Campeón, Mística, Arcana, Éter, Vínculo)</td></tr>
         <tr><td><strong>rarity</strong></td><td>Rareza (Común, Poco Común, Rara, Épica, Legendaria, Única)</td></tr>
-        <tr><td><strong>faccion</strong></td><td>Facción (Orden, Caos, Creación, Destrucción, Ley, Purga, Entropía, Mutación) — <strong>solo Campeón, Mística, Arcana y Vínculo</strong>; Éter <strong>NO</strong> tiene facción</td></tr>
+        <tr><td><strong>faccion</strong></td><td>Facción (Orden, Caos, Creación, Destrucción, Ley, Purga, Entropía, Mutación) — <strong>obligatoria en Campeones</strong>; opcional en Místicas y Arcanas; Éter y Vínculo <strong>NO</strong> tienen facción</td></tr>
         <tr><td><strong>stats.cost</strong></td><td>Coste de Éter</td></tr>
         <tr><td><strong>stats.poder</strong></td><td>Ataque (solo Campeón)</td></tr>
         <tr><td><strong>stats.resistencia</strong></td><td>Defensa (solo Campeón)</td></tr>
@@ -745,7 +745,7 @@
       </ul>
       <p>Pueden tener habilidades propias, que <strong>solo se activan en la zona donde la carta está</strong> (Reserva, pagada o bloqueada). Ver sección 7.7.</p>
       <p>Las cartas de Éter <strong>NO</strong> tienen Poder ni Resistencia. No combaten.</p>
-      <p><strong>SIN FACCIÓN:</strong> Los Éteres NO tienen facción. Pueden ser usados por cualquier Campeón sin restricción. Todos valen 1 punto de coste.</p>
+      <p><strong>SIN FACCIÓN:</strong> Los Éteres NO tienen facción. Pueden ser usados por cualquier Campeón sin restricción. Todos valen 1 punto de coste. Las Místicas y Arcanas pueden tener facción (opcional).</p>
 
       <!-- 6.2 -->
       <div class="section-header sub"><span class="num">5.2</span><h3>CAMPEÓN <span style="font-weight:400;color:var(--text-muted);font-family:'Inter',sans-serif;">(Combatiente principal)</span></h3></div>
@@ -754,7 +754,7 @@
         <li><strong>cost</strong> &mdash; Coste de Éter para invocarlo</li>
         <li><strong>poder</strong> &mdash; Ataque (daño que inflige en combate)</li>
         <li><strong>resistencia</strong> &mdash; Defensa (vida del Campeón)</li>
-        <li><strong>faccion</strong> &mdash; Orden, Caos, Creación, Destrucción, Ley, Purga, Entropía o Mutación</li>
+        <li><strong>faccion</strong> &mdash; Orden, Caos, Creación, Destrucción, Ley, Purga, Entropía o Mutación (<strong>obligatoria</strong>)</li>
         <li><strong>esencia</strong> &mdash; Mago, Guerrero, Bestia, Dragón, Espectro, Céleste, Abisal, Elemental, Constructo, Humano</li>
         <li><strong>roles</strong> &mdash; hasta 2 por carta: Soberano, Emperador, Soporte, Éter, Normal</li>
         <li><strong>catHabilidad</strong> &mdash; Efecto, Singular, Legendario, Maldito, Bendito, Normal</li>

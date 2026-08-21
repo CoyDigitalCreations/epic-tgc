@@ -67,9 +67,7 @@ const FASE_LABEL: Record<string, string> = {
 const TIPO_LABEL: Record<string, string> = {
   jugar_campeon: 'Invocar',
   jugar_mistica: 'Jugar',
-  colocar_tactica: 'Colocar',
   colocar_arcana: 'Colocar',
-  colocar_combate: 'Colocar',
   activar_arcana: 'Activar',
   descartar_carta: 'Descartar',
   responder_cadena: 'Responder',
@@ -98,9 +96,7 @@ function esDeMano(a: Action): a is Extract<Action, { cardInstanceId: string }> {
   return (
     a.type === 'jugar_campeon' ||
     a.type === 'jugar_mistica' ||
-    a.type === 'colocar_tactica' ||
-    a.type === 'colocar_arcana' ||
-    a.type === 'colocar_combate'
+    a.type === 'colocar_arcana'
   )
 }
 
@@ -633,7 +629,7 @@ function GrillaJugador({
   )
 }
 
-export function Tablero({ vista, acciones, leTocaA, log, logDetallado = [], onAccion, onAbandonar, animaciones }: TableroProps) {
+export function Tablero({ vista, acciones, leTocaA, logDetallado = [], onAccion, onAbandonar, animaciones }: TableroProps) {
   const yo = vista.players.A
   const rival = vista.players.B
   const fase = vista.fase
@@ -703,7 +699,7 @@ export function Tablero({ vista, acciones, leTocaA, log, logDetallado = [], onAc
     if (!leTocaA) return
     const acc = acciones.find((a) => esDeMano(a) && a.cardInstanceId === id)
     if (!acc) return
-    if (acc.type === 'colocar_tactica' || acc.type === 'colocar_combate' || acc.type === 'colocar_arcana') {
+    if (acc.type === 'colocar_arcana') {
       onAccion(acc)
       return
     }
@@ -950,7 +946,7 @@ export function Tablero({ vista, acciones, leTocaA, log, logDetallado = [], onAc
                           onClick={() => onClickMano(id)}
                           className="text-[10px] bg-ether-600/30 hover:bg-ether-600/50 text-ether-200 px-1.5 py-0.5 rounded transition-colors cursor-pointer whitespace-nowrap"
                         >
-                          {acc!.type === 'colocar_tactica' || acc!.type === 'colocar_combate' ? 'Jugar' : acc!.type === 'colocar_arcana' ? 'Colocar' : 'Pagar'}
+                          {acc!.type === 'colocar_arcana' ? 'Colocar' : 'Pagar'}
                         </button>
                       )}
                       {descartable && (

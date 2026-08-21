@@ -32,12 +32,24 @@ function campeonesConEterBloqueado(s: GameState, jugador: PlayerId): number {
   }).length
 }
 
+/** Cuenta campeones en campo del jugador. */
+function campeonesEnCampo(s: GameState, jugador: PlayerId): number {
+  return s.players[jugador].campo.campeones.filter((id): id is string => id !== null).length
+}
+
 /** Registra los guards de condiciones de Arcanas (§5.4). */
 export function registrarGuardsArcanas(): void {
   // FB-023 El Reino Perdido: "Al inicio del Choque, si controlas 2 o más Campeones con Éter bloqueado."
   registrarRequisito('FB-023', (s, jugador) => {
     const count = campeonesConEterBloqueado(s, jugador)
     if (count < 2) return 'se requieren 2 o más Campeones con Éter bloqueado'
+    return null
+  })
+
+  // DS-024 Golpe del Nudo: "Mientras controles 2 o más Campeones."
+  registrarRequisito('DS-024', (s, jugador) => {
+    const count = campeonesEnCampo(s, jugador)
+    if (count < 2) return 'se requieren 2 o más Campeones en campo'
     return null
   })
 
