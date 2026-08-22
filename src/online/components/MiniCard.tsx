@@ -191,7 +191,7 @@ export function MiniCard({
         )}
 
         {/* Badge de Vínculo roto (bocaArriba por Ruptura) */}
-        {inst.bocaArriba && (
+        {inst.bocaArriba && meta?.type === 'Vínculo' && (
           <div
             style={{
               position: 'absolute',

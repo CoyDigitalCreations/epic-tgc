@@ -317,7 +317,7 @@
       "poder": 5,
       "resistencia": 4
     },
-    "efectoPasivo": "Mientras esta carta tenga al menos 1 Éter bloqueado, gana +1 de ATQ (máx. +3)."
+    "efectoContinuo": "Mientras esta carta tenga al menos 1 Éter bloqueado, gana +1 de ATQ (máx. +3)."
   },
   {
     "id": "FB-016",
