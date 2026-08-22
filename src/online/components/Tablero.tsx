@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
-import { aporteDe, campeonesSacrificables, faccionesCompartidas, getCardMeta, sacrificiosRequeridos } from '../game'
+import { aporteDe, campeonesSacrificables, costeEterHabilidad, faccionesCompartidas, getCardMeta, sacrificiosRequeridos } from '../game'
 import type { Action, CardInstance, GameState, PlayerId } from '../game'
 import { useCardImage } from '../../forge/hooks/useCardImage'
 import { MiniCard, TAMANOS } from './MiniCard'
@@ -672,10 +672,13 @@ export function Tablero({ vista, acciones, leTocaA, logDetallado = [], onAccion,
   const abrirSelector = (accionBase: Action, objetivoCardId: string, campeonSlot?: number) => {
     const meta = getCardMeta(objetivoCardId)
     if (!meta) return
-    if (campeonSlot !== undefined) {
+    if (campeonSlot !== undefined && accionBase.type === 'bloquear_eter') {
       setSeleccion({ tipo: 'bloquear', accionBase, objetivoCardId, campeonSlot })
     } else {
-      setSeleccion({ tipo: 'pagar', accionBase, objetivoCardId, coste: meta.stats.cost })
+      const costo = accionBase.type === 'activar_habilidad'
+        ? (costeEterHabilidad(meta) || 1)
+        : meta.stats.cost
+      setSeleccion({ tipo: 'pagar', accionBase, objetivoCardId, coste: costo })
     }
     setElegidos(new Set())
     setSacrificiosElegidos([])

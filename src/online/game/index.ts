@@ -29,7 +29,7 @@ export { resolverAlba, robarCarta } from './phases'
 export { createCtx, shuffleFisherYates } from './rng'
 
 // Catálogo de cartas
-export { getCardMeta, registrarCartas, faccionesCompartidas, esCampeon, esMistica, esArcana, esEter, esVinculo, campeonNecesitaEterBloqueado, esContinuo } from './cards'
+export { getCardMeta, registrarCartas, faccionesCompartidas, esCampeon, esMistica, esArcana, esEter, esVinculo, campeonNecesitaEterBloqueado, esContinuo, costeEterHabilidad } from './cards'
 
 // Reglas de campo
 export { sacrificiosRequeridos, esSingular, copiasEnCampo, campeonesSacrificables } from './campo'
