@@ -1,70 +1,9 @@
-import type { AnyCard, Paquete } from '../types'
-import { FACCION_COLORS } from '../types'
+/**
+ * Cartas actualizadas desde EstasisDisonancia.json
+ * Generado automáticamente — NO EDITAR A MANO
+ */
 
-/* ─────────────────────────────────────────────
-   Registro de paquetes
-   ───────────────────────────────────────────── */
-
-export const PAQUETES: Paquete[] = [
-  {
-    id: 'estasis',
-    nombre: 'Estásis',
-    tipo: 'Mazo Temático',
-    color: FACCION_COLORS.Orden,
-    facciones: ['Orden'],
-    entrega: 'Primogénitos',
-    distribucion: { eter: 15, principal: 45, vinculos: 6 },
-    lore:
-      'Estásis ("El Ancla") es el mazo temático de la facción Orden y la primera ' +
-      'entrega de Los Primogénitos. Antes de la Gran Escisión, cuando las facciones aún ' +
-      'no habían tomado sus nombres, el polo del norte se llamaba Estásis: el Ancla ' +
-      'y el Eje de la realidad. De la tensión entre los polos del Éter nacieron ' +
-      'los Primogénitos del Éter: los primeros seres humanos en fusionarse con la ' +
-      'energía primigenia, cada uno elegido al nacer por su casa noble para portar ' +
-      'un cristal de Éter. En esta primera entrega, las primogénitas de Orden son ' +
-      'mujeres y los primogénitos de Caos, hombres. Aurora, la Primogénita, fue la ' +
-      'primera de todas y su sangre se convirtió en la fuente del poder de las casas.\n\n' +
-      'Cuando la Gran Escisión partió el Eje y las casas cayeron en la guerra, las ' +
-      'primogénitas del norte se negaron a elegir bando y formaron una hermandad ' +
-      'errante, unidas por la sangre y el Éter: "No somos hijos de ningún reino. ' +
-      'Somos el Reino."\n\n' +
-      'El mazo juega con la economía de Éter: bloquear, devolver y reciclar recursos ' +
-      'mientras los Campeones se fortalecen con cada cristal anclado.',
-  },
-  {
-    id: 'disonancia',
-    nombre: 'Disonancia',
-    tipo: 'Mazo Temático',
-    color: FACCION_COLORS.Caos,
-    facciones: ['Caos'],
-    entrega: 'Primogénitos',
-    distribucion: { eter: 15, principal: 45, vinculos: 6 },
-    lore:
-      'Disonancia ("La Tormenta") es el mazo temático de la facción Caos y la segunda ' +
-      'entrega de Los Primogénitos. En el sur, donde el Eje termina en un Nudo, los ' +
-      'primogénitos de Caos son hombres: despertaron con el cristal del Nudo clavado ' +
-      'en el pecho, y el Nudo aprieta cada vez que el Eje tiembla. Mientras Estásis ' +
-      'ancla, Disonancia aprieta: la Tormenta no retiene lo que toma, lo rompe y lo ' +
-      'suelta. Ragnar, Voz del Nudo, es el primero de todos — el hombre que habla por ' +
-      'el sur y el único capaz de mirar a Aurora sin pestañear.\n\n' +
-      'El mazo juega con la presión y la destrucción: romper los Campeones del rival ' +
-      'y estrangular su economía de Éter mientras los Campeones de Caos avanzan como ' +
-      'la tormenta que no se detiene.',
-  },
-]
-export const getPaquete = (id?: string) => PAQUETES.find((p) => p.id === id)
-
-/* ─────────────────────────────────────────────
-   Mazo Estásis (entrega Primogénitos) — 32 diseños / 66 cartas
-   (15 Éter + 45 Principal + 6 Vínculos)
-   Todas las cartas son de la facción Orden.
-   ───────────────────────────────────────────── */
-
-const FB_TS = '2026-08-03T00:00:00.000Z'
-const C4_TS = '2026-08-12T00:00:00.000Z'
-
-export const ESTASIS_CARDS: AnyCard[] = [
-  /* ── ÉTER (9 diseños → 15 copias) ─────────────────────────────── */
+// ═══════════════ ESTASIS (32 cartas) ═══════════════
   {
     id: 'FB-001',
     name: 'Éter del Alba Primigenia',
@@ -105,8 +44,8 @@ export const ESTASIS_CARDS: AnyCard[] = [
     createdAt: FB_TS,
     updatedAt: FB_TS,
     stats: { cost: 1 },
-    variantePago: 'Gatillo',
     efectoPago: 'Cuando pagues esta carta, roba 1 carta.',
+    variantePago: 'Gatillo',
   },
   {
     id: 'FB-004',
@@ -120,8 +59,8 @@ export const ESTASIS_CARDS: AnyCard[] = [
     createdAt: FB_TS,
     updatedAt: FB_TS,
     stats: { cost: 1 },
-    variantePago: 'Gatillo',
     efectoPago: 'Cuando pagues esta carta para invocar un Campeón, ese Campeón gana +1 de RES hasta el final del próximo turno.',
+    variantePago: 'Gatillo',
   },
   {
     id: 'FB-005',
@@ -135,8 +74,8 @@ export const ESTASIS_CARDS: AnyCard[] = [
     createdAt: FB_TS,
     updatedAt: FB_TS,
     stats: { cost: 1 },
-    variantePago: 'Pasivo',
     efectoPago: 'Mientras esté en tu zona de Éter pagado, una vez por turno puedes bloquear 1 Éter de tu Reserva sobre un Campeón sin agotarlo.',
+    variantePago: 'Pasivo',
   },
   {
     id: 'FB-006',
@@ -150,8 +89,8 @@ export const ESTASIS_CARDS: AnyCard[] = [
     createdAt: FB_TS,
     updatedAt: FB_TS,
     stats: { cost: 1 },
-    variantePago: 'Gatillo',
     efectoPago: 'Cuando pagues esta carta, devuelve un Éter de tu zona de pago (1A) a tu Reserva.',
+    variantePago: 'Gatillo',
   },
   {
     id: 'FB-007',
@@ -195,8 +134,6 @@ export const ESTASIS_CARDS: AnyCard[] = [
     stats: { cost: 1 },
     efectoBloqueo: 'Mientras esté bloqueado en un Campeón, ese Campeón gana +1 de RES.',
   },
-
-  /* ── PRINCIPAL (15 diseños → 40 copias; + FB-031/32 → 45) ────── */
   {
     id: 'FB-010',
     name: 'Aurora, La Primogénita',
@@ -439,8 +376,6 @@ export const ESTASIS_CARDS: AnyCard[] = [
     createdAt: FB_TS,
     updatedAt: FB_TS,
     stats: { cost: 3 },
-    condicion: 'Al inicio del Choque, si controlas 2 o más Campeones con Éter bloqueado.',
-    recompensa: 'Roba 2 cartas y un Campeón que controles gana +3 de Poder hasta el final del turno.',
   },
   {
     id: 'FB-024',
@@ -456,11 +391,7 @@ export const ESTASIS_CARDS: AnyCard[] = [
     facciones: ['Orden'],
     stats: { cost: 2 },
     efecto: 'Un Campeón que controles gana +2 de ATQ hasta el final del turno. Si destruye a un Campeón que controla el rival este turno, roba 1 carta.',
-    condicion: 'Mientras controles por lo menos 1 campeón',
-    recompensa: 'Un Campeón que controles gana +2 de ATQ hasta el final del turno. Si destruye a un Campeón que controla el rival este turno, roba 1 carta.',
   },
-
-  /* ── VÍNCULOS (6 diseños → 6 copias) ───────────────────────────── */
   {
     id: 'FB-025',
     name: 'Primer Juramento',
@@ -473,7 +404,7 @@ export const ESTASIS_CARDS: AnyCard[] = [
     createdAt: FB_TS,
     updatedAt: FB_TS,
     stats: { cost: 0 },
-    efecto: 'Una vez por turno, al inicio de tu Alba, puedes bloquear 1 Éter de tu Reserva sobre un Campeón sin agotarlo.',
+    efecto: 'Una vez por turno, al inicio de tu Alba, puedes bloquear 1 Éter de tu Reserva sobre un Campeón que pueda bloquear Éter.',
   },
   {
     id: 'FB-026',
@@ -545,8 +476,6 @@ export const ESTASIS_CARDS: AnyCard[] = [
     stats: { cost: 0 },
     efecto: 'El Campeón que controla el rival con mayor ATQ pierde 2 de ATQ de forma permanente.',
   },
-
-  /* ── CHANGE 4 — Mazo 45: campeona ×3 (FB-031) + mística ×2 (FB-032) ── */
   {
     id: 'FB-031',
     name: 'Enviada de las Casas, Voz del Este',
@@ -556,15 +485,14 @@ export const ESTASIS_CARDS: AnyCard[] = [
     flavorText: 'Cae una enviada; llegan las casas.',
     paqueteId: 'estasis',
     limiteCopias: '3',
-    createdAt: C4_TS,
-    updatedAt: C4_TS,
+    createdAt: FB_TS,
+    updatedAt: FB_TS,
     facciones: ['Orden'],
     esencia: 'Céleste',
     roles: ['Normal'],
     catHabilidad: 'Efecto',
     stats: { cost: 2, poder: 4, resistencia: 3 },
-    efectoPasivo:
-      'Al ser enviada al Cementerio desde cualquier zona: agrega de tu mazo a tu mano 1 carta Campeón de coste 2 o menos.',
+    efectoPasivo: 'Al ser enviada al Cementerio desde cualquier zona: agrega de tu mazo a tu mano 1 carta Campeón de coste 2 o menos.',
   },
   {
     id: 'FB-032',
@@ -575,79 +503,13 @@ export const ESTASIS_CARDS: AnyCard[] = [
     flavorText: 'El alba devuelve lo que la noche escondió.',
     paqueteId: 'estasis',
     limiteCopias: '2',
-    createdAt: C4_TS,
-    updatedAt: C4_TS,
+    createdAt: FB_TS,
+    updatedAt: FB_TS,
     stats: { cost: 2 },
     efecto: 'Agrega de tu mazo a tu mano 1 carta de coste 2 o menos.',
   },
-]
 
-/** Distribución de copias por tipo de carta (para tests e integridad) */
-export const distribucionDe = (cards: AnyCard[]) => {
-  const eter = cards.filter((c) => c.type === 'Éter')
-  const vinculos = cards.filter((c) => c.type === 'Vínculo')
-  const principal = cards.filter(
-    (c) => c.type !== 'Éter' && c.type !== 'Vínculo',
-  )
-  const copias = (cs: AnyCard[]) =>
-    cs.reduce((acc, c) => acc + Number(c.limiteCopias ?? 1), 0)
-  return {
-    eter: copias(eter),
-    principal: copias(principal),
-    vinculos: copias(vinculos),
-    total: copias(cards),
-  }
-}
-
-/** Distribución del paquete Estásis por tipo de carta */
-export const estasisDistribucion = () => distribucionDe(ESTASIS_CARDS)
-
-/** Distribución del paquete Disonancia por tipo de carta */
-export const disonanciaDistribucion = () => distribucionDe(DISONANCIA_CARDS)
-
-/* ─────────────────────────────────────────────
-   Progreso de colección por paquete
-   La colección guarda 1 carta por diseño con limiteCopias (×N),
-   así que "coleccionadas" suma copias, no diseños únicos.
-   ───────────────────────────────────────────── */
-
-export interface ProgresoPaquete {
-  paqueteId: string
-  coleccionadas: number
-  total: number
-  completo: boolean
-}
-
-/** Progreso de un paquete en la colección actual (copias / total de copias) */
-export function progresoPaquete(
-  cards: AnyCard[],
-  paqueteId: string,
-): ProgresoPaquete | null {
-  const paquete = getPaquete(paqueteId)
-  if (!paquete) return null
-  const { eter, principal, vinculos } = paquete.distribucion
-  const total = eter + principal + vinculos
-  const coleccionadas = cards
-    .filter((c) => c.paqueteId === paqueteId)
-    .reduce((acc, c) => acc + Number(c.limiteCopias ?? 1), 0)
-  return {
-    paqueteId,
-    coleccionadas,
-    total,
-    completo: coleccionadas >= total,
-  }
-}
-
-/* ─────────────────────────────────────────────
-   Mazo Disonancia (entrega Primogénitos) — contraparte de Estásis
-   (15 Éter + 45 Principal + 6 Vínculos)
-   Todas las cartas son de la facción Caos.
-   ───────────────────────────────────────────── */
-
-const DS_TS = '2026-08-06T00:00:00.000Z'
-
-export const DISONANCIA_CARDS: AnyCard[] = [
-  /* ── PRINCIPAL — leyenda del sur (DS-001) ─────────────────── */
+// ═══════════════ DISONANCIA (33 cartas) ═══════════════
   {
     id: 'DS-001',
     name: 'Ragnar, Voz del Nudo',
@@ -657,8 +519,8 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     flavorText: 'El norte canta su Reino. El sur aprieta su Nudo.',
     paqueteId: 'disonancia',
     limiteCopias: '1',
-    createdAt: DS_TS,
-    updatedAt: DS_TS,
+    createdAt: C4_TS,
+    updatedAt: C4_TS,
     facciones: ['Caos'],
     esencia: 'Abisal',
     roles: ['Soberano'],
@@ -669,8 +531,6 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     disparoAgota: false,
     disparoUnSoloUso: false,
   },
-
-  /* ── ÉTER (9 diseños → 15 copias) ─────────────────────────── */
   {
     id: 'DS-002',
     name: 'Éter del Nudo',
@@ -680,8 +540,8 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     flavorText: 'El Nudo aprieta todo lo que toca.',
     paqueteId: 'disonancia',
     limiteCopias: '2',
-    createdAt: DS_TS,
-    updatedAt: DS_TS,
+    createdAt: C4_TS,
+    updatedAt: C4_TS,
     stats: { cost: 1 },
     efectoReserva: 'Mientras esté en tu Reserva, los Campeones que controla el rival pierden 1 de ATQ.',
   },
@@ -694,8 +554,8 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     flavorText: 'La Tormenta no anuncia su llegada: la sientes.',
     paqueteId: 'disonancia',
     limiteCopias: '1',
-    createdAt: DS_TS,
-    updatedAt: DS_TS,
+    createdAt: C4_TS,
+    updatedAt: C4_TS,
     stats: { cost: 1 },
     efectoReserva: 'Al inicio de tu Choque, si está en tu Reserva, un Campeón que controlas gana Carga hasta el final del turno.',
   },
@@ -708,10 +568,11 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     flavorText: 'El trueno no avisa: llega.',
     paqueteId: 'disonancia',
     limiteCopias: '2',
-    createdAt: DS_TS,
+    createdAt: C4_TS,
+    updatedAt: C4_TS,
     stats: { cost: 1 },
-    variantePago: 'Gatillo',
     efectoPago: 'Cuando pagues esta carta, el rival pierde 1 carta de su mano al azar.',
+    variantePago: 'Gatillo',
   },
   {
     id: 'DS-005',
@@ -722,11 +583,11 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     flavorText: 'La marea del sur no retrocede.',
     paqueteId: 'disonancia',
     limiteCopias: '2',
-    createdAt: DS_TS,
-    updatedAt: DS_TS,
+    createdAt: C4_TS,
+    updatedAt: C4_TS,
     stats: { cost: 1 },
-    variantePago: 'Gatillo',
     efectoPago: 'Cuando pagues esta carta para invocar un Campeón, ese Campeón gana +1 de ATQ hasta el final del próximo turno.',
+    variantePago: 'Gatillo',
   },
   {
     id: 'DS-006',
@@ -737,11 +598,11 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     flavorText: 'El viento no pide permiso para moverse.',
     paqueteId: 'disonancia',
     limiteCopias: '2',
-    createdAt: DS_TS,
-    updatedAt: DS_TS,
+    createdAt: C4_TS,
+    updatedAt: C4_TS,
     stats: { cost: 1 },
-    variantePago: 'Pasivo',
     efectoPago: 'Mientras esté en tu zona de Éter pagado, una vez por turno puedes bloquear 1 Éter de tu Reserva sobre un Campeón sin agotarlo.',
+    variantePago: 'Pasivo',
   },
   {
     id: 'DS-007',
@@ -752,11 +613,11 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     flavorText: 'Lo que el sur toma, el norte lo llora.',
     paqueteId: 'disonancia',
     limiteCopias: '1',
-    createdAt: DS_TS,
-    updatedAt: DS_TS,
+    createdAt: C4_TS,
+    updatedAt: C4_TS,
     stats: { cost: 1 },
-    variantePago: 'Gatillo',
     efectoPago: 'Cuando pagues esta carta, el rival devuelve 1 Éter de su zona de pago (1A) a su Reserva.',
+    variantePago: 'Gatillo',
   },
   {
     id: 'DS-008',
@@ -767,8 +628,8 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     flavorText: 'El primero del sur despertó con el Nudo en el pecho.',
     paqueteId: 'disonancia',
     limiteCopias: '1',
-    createdAt: DS_TS,
-    updatedAt: DS_TS,
+    createdAt: C4_TS,
+    updatedAt: C4_TS,
     stats: { cost: 1 },
     efectoBloqueo: 'Mientras esté bloqueado en un Campeón, ese Campeón gana +2 de ATQ y +2 de RES. Máximo 2 de estos Éteres por Campeón.',
   },
@@ -781,8 +642,8 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     flavorText: 'Nada rompe lo que el Nudo aprieta.',
     paqueteId: 'disonancia',
     limiteCopias: '2',
-    createdAt: DS_TS,
-    updatedAt: DS_TS,
+    createdAt: C4_TS,
+    updatedAt: C4_TS,
     stats: { cost: 1 },
     efectoBloqueo: 'Mientras esté bloqueado en un Campeón, ese Campeón tiene Indestructible.',
   },
@@ -795,13 +656,11 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     flavorText: 'El último trueno es el que más duele.',
     paqueteId: 'disonancia',
     limiteCopias: '2',
-    createdAt: DS_TS,
-    updatedAt: DS_TS,
+    createdAt: C4_TS,
+    updatedAt: C4_TS,
     stats: { cost: 1 },
     efectoBloqueo: 'Mientras esté bloqueado en un Campeón, ese Campeón gana +1 de ATQ.',
   },
-
-  /* ── PRINCIPAL (17 diseños → 44 copias; +Ragnar = 45) ─────── */
   {
     id: 'DS-011',
     name: 'Kael, Filo del Nudo',
@@ -811,8 +670,8 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     flavorText: 'El Nudo corta lo que toca.',
     paqueteId: 'disonancia',
     limiteCopias: '3',
-    createdAt: DS_TS,
-    updatedAt: DS_TS,
+    createdAt: C4_TS,
+    updatedAt: C4_TS,
     facciones: ['Caos'],
     esencia: 'Abisal',
     roles: ['Normal'],
@@ -829,8 +688,8 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     flavorText: 'Lo que rompe, lo cobra.',
     paqueteId: 'disonancia',
     limiteCopias: '3',
-    createdAt: DS_TS,
-    updatedAt: DS_TS,
+    createdAt: C4_TS,
+    updatedAt: C4_TS,
     facciones: ['Caos'],
     esencia: 'Abisal',
     roles: ['Éter'],
@@ -850,8 +709,8 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     flavorText: 'El agotado ya está muerto: solo falta cobrar.',
     paqueteId: 'disonancia',
     limiteCopias: '3',
-    createdAt: DS_TS,
-    updatedAt: DS_TS,
+    createdAt: C4_TS,
+    updatedAt: C4_TS,
     facciones: ['Caos'],
     esencia: 'Abisal',
     roles: ['Normal'],
@@ -870,8 +729,8 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     flavorText: 'El trueno abre paso a los suyos.',
     paqueteId: 'disonancia',
     limiteCopias: '2',
-    createdAt: DS_TS,
-    updatedAt: DS_TS,
+    createdAt: C4_TS,
+    updatedAt: C4_TS,
     facciones: ['Caos'],
     esencia: 'Abisal',
     roles: ['Soporte'],
@@ -888,8 +747,8 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     flavorText: 'Cada nudo que aprieta el norte lo alimenta.',
     paqueteId: 'disonancia',
     limiteCopias: '2',
-    createdAt: DS_TS,
-    updatedAt: DS_TS,
+    createdAt: C4_TS,
+    updatedAt: C4_TS,
     facciones: ['Caos'],
     esencia: 'Abisal',
     roles: ['Normal'],
@@ -906,8 +765,8 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     flavorText: 'El sur empuja a los suyos hacia adelante.',
     paqueteId: 'disonancia',
     limiteCopias: '3',
-    createdAt: DS_TS,
-    updatedAt: DS_TS,
+    createdAt: C4_TS,
+    updatedAt: C4_TS,
     facciones: ['Caos'],
     esencia: 'Abisal',
     roles: ['Soporte'],
@@ -926,8 +785,8 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     flavorText: 'El Nudo cobra lo que el norte bloquea.',
     paqueteId: 'disonancia',
     limiteCopias: '2',
-    createdAt: DS_TS,
-    updatedAt: DS_TS,
+    createdAt: C4_TS,
+    updatedAt: C4_TS,
     facciones: ['Caos'],
     esencia: 'Abisal',
     roles: ['Éter'],
@@ -946,8 +805,8 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     flavorText: 'Los vínculos del norte se rompen como el hielo.',
     paqueteId: 'disonancia',
     limiteCopias: '3',
-    createdAt: DS_TS,
-    updatedAt: DS_TS,
+    createdAt: C4_TS,
+    updatedAt: C4_TS,
     facciones: ['Caos'],
     esencia: 'Abisal',
     roles: ['Soporte'],
@@ -964,8 +823,8 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     flavorText: 'La tormenta no negocia: arrasa.',
     paqueteId: 'disonancia',
     limiteCopias: '3',
-    createdAt: DS_TS,
-    updatedAt: DS_TS,
+    createdAt: C4_TS,
+    updatedAt: C4_TS,
     facciones: ['Caos'],
     stats: { cost: 2 },
     efecto: 'Destruye un Campeón que controla el rival con 3 o menos de RES.',
@@ -979,8 +838,8 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     flavorText: 'El Nudo aprieta: el aliento del rival se acorta.',
     paqueteId: 'disonancia',
     limiteCopias: '3',
-    createdAt: DS_TS,
-    updatedAt: DS_TS,
+    createdAt: C4_TS,
+    updatedAt: C4_TS,
     stats: { cost: 1 },
     efecto: 'Un Campeón que controla el rival pierde 2 de ATQ hasta el final del turno.',
   },
@@ -993,8 +852,8 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     flavorText: 'Cada cristal que el norte ancla, el sur lo aprieta.',
     paqueteId: 'disonancia',
     limiteCopias: '3',
-    createdAt: DS_TS,
-    updatedAt: DS_TS,
+    createdAt: C4_TS,
+    updatedAt: C4_TS,
     stats: { cost: 1 },
     efecto: 'Equipa a un Campeón. El Campeón equipado gana +1 de ATQ. Los Campeones que controla el rival con Éter bloqueado pierden 1 de ATQ.',
   },
@@ -1007,8 +866,8 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     flavorText: 'El sur no llora a sus muertos: los cobra.',
     paqueteId: 'disonancia',
     limiteCopias: '3',
-    createdAt: DS_TS,
-    updatedAt: DS_TS,
+    createdAt: C4_TS,
+    updatedAt: C4_TS,
     stats: { cost: 0 },
     efecto: 'Equipa a un Campeón. El Campeón equipado gana +1 de ATQ. Cuando el Campeón equipado destruye a un Campeón en combate, el rival pierde 1 carta de su mano al azar.',
   },
@@ -1021,12 +880,10 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     flavorText: 'El Nudo aprieta cuando el Eje tiembla. Y el Eje siempre tiembla.',
     paqueteId: 'disonancia',
     limiteCopias: '3',
-    createdAt: DS_TS,
-    updatedAt: DS_TS,
+    createdAt: C4_TS,
+    updatedAt: C4_TS,
     facciones: ['Caos'],
     stats: { cost: 3 },
-    condicion: 'Al inicio del Choque, si el rival controla 2 o más Campeones con Éter bloqueado.',
-    recompensa: 'Un Campeón que controla el rival pierde 3 de RES de forma permanente. Roba 1 carta.',
   },
   {
     id: 'DS-024',
@@ -1037,15 +894,11 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     flavorText: 'El golpe no recompensa: cobra.',
     paqueteId: 'disonancia',
     limiteCopias: '3',
-    createdAt: DS_TS,
-    updatedAt: DS_TS,
+    createdAt: C4_TS,
+    updatedAt: C4_TS,
     stats: { cost: 2 },
     efecto: 'Un Campeón que controlas gana +2 de ATQ hasta el final del turno. Si destruye a un Campeón que controla el rival este turno, el rival pierde 1 carta de su mano al azar.',
-    condicion: 'Mientras controles 2 o más Campeones.',
-    recompensa: 'Un Campeón que controlas gana +2 de ATQ hasta el final del turno. Si destruye a un Campeón que controla el rival este turno, el rival pierde 1 carta de su mano al azar.',
   },
-
-  /* ── VÍNCULOS (6 diseños → 6 copias) ──────────────────────── */
   {
     id: 'DS-025',
     name: 'Primer Nudo',
@@ -1055,8 +908,8 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     flavorText: 'El primer nudo ató el sur al Caos.',
     paqueteId: 'disonancia',
     limiteCopias: '1',
-    createdAt: DS_TS,
-    updatedAt: DS_TS,
+    createdAt: C4_TS,
+    updatedAt: C4_TS,
     stats: { cost: 0 },
     efecto: 'Una vez por turno, al inicio de tu Alba, un Campeón que controlas gana +1 de ATQ hasta el final del turno.',
   },
@@ -1069,8 +922,8 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     flavorText: 'El sur no hereda: arrebata.',
     paqueteId: 'disonancia',
     limiteCopias: '1',
-    createdAt: DS_TS,
-    updatedAt: DS_TS,
+    createdAt: C4_TS,
+    updatedAt: C4_TS,
     stats: { cost: 0 },
     efecto: 'El rival pierde 1 carta de su mano al azar.',
   },
@@ -1083,8 +936,8 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     flavorText: 'Lo que el norte pagó, el sur lo devuelve.',
     paqueteId: 'disonancia',
     limiteCopias: '1',
-    createdAt: DS_TS,
-    updatedAt: DS_TS,
+    createdAt: C4_TS,
+    updatedAt: C4_TS,
     stats: { cost: 0 },
     efecto: 'El rival devuelve hasta 2 Éter de su zona de pago (1A) a su Reserva.',
   },
@@ -1097,8 +950,8 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     flavorText: 'El cristal del sur no brilla: aguanta.',
     paqueteId: 'disonancia',
     limiteCopias: '1',
-    createdAt: DS_TS,
-    updatedAt: DS_TS,
+    createdAt: C4_TS,
+    updatedAt: C4_TS,
     stats: { cost: 0 },
     efecto: 'Un Campeón que controlas gana Indestructible de forma permanente.',
   },
@@ -1111,8 +964,8 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     flavorText: 'El Nudo no devuelve lo que cobra.',
     paqueteId: 'disonancia',
     limiteCopias: '1',
-    createdAt: DS_TS,
-    updatedAt: DS_TS,
+    createdAt: C4_TS,
+    updatedAt: C4_TS,
     stats: { cost: 0 },
     efecto: 'Una vez por turno, al inicio de tu Alba, puedes exiliar un Campeón del Cementerio del rival.',
   },
@@ -1125,13 +978,11 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     flavorText: 'El primer grito del sur todavía rompe.',
     paqueteId: 'disonancia',
     limiteCopias: '1',
-    createdAt: DS_TS,
-    updatedAt: DS_TS,
+    createdAt: C4_TS,
+    updatedAt: C4_TS,
     stats: { cost: 0 },
     efecto: 'El Campeón que controla el rival con mayor RES pierde 2 de RES de forma permanente.',
   },
-
-  /* ── CHANGE 4 — Mazo 45: campeón ×2 (DS-031) + arcana ×2 (DS-032) + mística ×1 (DS-033) ── */
   {
     id: 'DS-031',
     name: 'Emisario del Nudo, Voz del Sur',
@@ -1148,8 +999,7 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     roles: ['Normal'],
     catHabilidad: 'Efecto',
     stats: { cost: 2, poder: 4, resistencia: 3 },
-    efectoPasivo:
-      'Al ser enviada al Cementerio desde cualquier zona: agrega de tu mazo a tu mano 1 carta Campeón de coste 2 o menos.',
+    efectoPasivo: 'Al ser enviada al Cementerio desde cualquier zona: agrega de tu mazo a tu mano 1 carta Campeón de coste 2 o menos.',
   },
   {
     id: 'DS-032',
@@ -1163,8 +1013,6 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     createdAt: C4_TS,
     updatedAt: C4_TS,
     stats: { cost: 3 },
-    condicion: 'Al inicio del Choque, si controlas 2 o más Campeones con Éter bloqueado.',
-    recompensa: 'Agrega de tu cementerio a tu mano 1 carta de coste 3 o menos.',
   },
   {
     id: 'DS-033',
@@ -1180,36 +1028,3 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     stats: { cost: 3 },
     efecto: 'Agrega de tu mazo a tu mano 1 carta Campeón.',
   },
-]
-
-/* ─────────────────────────────────────────────
-   Todas las cartas de todos los sets.
-   Fuente de verdad para los seeds: al agregar un set nuevo,
-   solo hay que sumar sus cartas acá y el script lo detecta solo.
-   ───────────────────────────────────────────── */
-
-export const ALL_CARDS: AnyCard[] = [...ESTASIS_CARDS, ...DISONANCIA_CARDS]
-
-/* ─────────────────────────────────────────────
-   Arte versionado — convención automática.
-   Los PNGs viven en public/cartas/{cardId}.png.
-   La ruta se deriva del ID: no hay que cargar el
-   base64 en las cartas (el store los conservaría).
-   ───────────────────────────────────────────── */
-
-/**
- * IDs que tienen arte oficial en public/cartas/{cardId}.png.
- * Ambos sets (Estásis y Disonancia) tienen PNG versionado.
- * Al agregar una carta nueva SIN arte, no la sumes acá:
- * la UI mostrará su placeholder ✦.
- */
-export const CARD_ART_IDS: ReadonlySet<string> = new Set([
-  ...ESTASIS_CARDS.map((c) => c.id),
-  ...DISONANCIA_CARDS.map((c) => c.id),
-])
-
-/** Ruta del arte oficial de una carta, o undefined si no tiene */
-export function cardArtPath(cardId: string | undefined): string | undefined {
-  if (!cardId || !CARD_ART_IDS.has(cardId)) return undefined
-  return `/cartas/${cardId}.png`
-}
