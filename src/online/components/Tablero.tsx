@@ -573,7 +573,9 @@ function GrillaJugador({
               <button
                 onClick={(e) => {
                   e.stopPropagation()
-                  onAccion(activarArcana)
+                  // Abrir selector de pago para que el usuario elija qué éteres pagar
+                  const meta = inst.cardId ? getCardMeta(inst.cardId) : null
+                  if (meta) abrirSelector(activarArcana, meta.id)
                 }}
                 className="text-[10px] bg-purple-600/30 hover:bg-purple-600/50 text-purple-200 px-1.5 py-0.5 rounded 
                            transition-colors cursor-pointer whitespace-nowrap"

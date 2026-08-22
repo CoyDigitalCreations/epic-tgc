@@ -61,7 +61,7 @@ export function bloqueadoresDisponibles(state: GameState): string[] {
   return p.campo.campeones.filter((id): id is string => {
     if (id === null) return false
     const inst = state.instances[id]
-    return !!inst && !inst.agotado
+    return !!inst // agotados SÍ bloquean (solo no pueden atacar)
   })
 }
 
