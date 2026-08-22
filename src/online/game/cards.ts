@@ -81,8 +81,8 @@ export function costeEterHabilidad(card: AnyCard): number {
 export function campeonNecesitaEterBloqueado(card: AnyCard): boolean {
   // 1. Efecto Continuo con patrón "bloqueado"
   if ('efectoContinuo' in card && card.efectoContinuo?.includes('bloqueado')) return true
-  // 2. Habilidad Disparo con patrón "bloqueado"
-  if ('efectoDisparo' in card && card.efectoDisparo?.includes('bloqueado')) return true
+  // 2. Habilidad Disparo con patrón "bloqueado" (solo si NO es agota)
+  if ('efectoDisparo' in card && !('disparoAgota' in card && (card as any).disparoAgota) && card.efectoDisparo?.includes('bloqueado')) return true
   // 3. Efecto pasivo que referencia éter bloqueado
   if ('efectoPasivo' in card && card.efectoPasivo?.includes('Éter bloqueado')) return true
   return false

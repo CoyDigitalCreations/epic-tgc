@@ -60,7 +60,6 @@ exports[`integración bot ↔ contrato (5.8) > snapshot: la secuencia de accione
   "carta_entrada_a_zona",
   "carta_invocada",
   "eter_bloqueado",
-  "eter_bloqueado",
   "fase_iniciada",
   "ataque_declarado",
   "fase_iniciada",
@@ -101,7 +100,9 @@ exports[`integración bot ↔ contrato (5.8) > snapshot: la secuencia de accione
   "eter_bloqueado",
   "eter_bloqueado",
   "eter_bloqueado",
+  "eter_bloqueado",
   "fase_iniciada",
+  "eter_reagrupado",
   "ataque_declarado",
   "prioridad_pasada",
   "prioridad_pasada",
@@ -129,6 +130,7 @@ exports[`integración bot ↔ contrato (5.8) > snapshot: la secuencia de accione
   "eter_reagrupado",
   "carta_robada",
   "fase_iniciada",
+  "eter_bloqueado",
   "eter_bloqueado",
   "fase_iniciada",
   "ataque_declarado",
@@ -710,7 +712,6 @@ exports[`integración bot ↔ contrato (5.8) > snapshot: la secuencia de accione
   "eter_bloqueado",
   "fase_iniciada",
   "ataque_declarado",
-  "prioridad_pasada",
   "prioridad_pasada",
 ]
 `;
