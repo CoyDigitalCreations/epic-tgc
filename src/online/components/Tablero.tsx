@@ -724,6 +724,9 @@ export function Tablero({ vista, acciones, leTocaA, logDetallado = [], onAccion,
     if (seleccion.tipo === 'bloquear') {
       return elegidos.size > 0
     }
+    if (seleccion.tipo === 'elegir_slot') {
+      return true
+    }
     const total = [...elegidos].reduce((acc, id) => {
       const cardId = vista.instances[id]?.cardId
       return acc + (cardId ? aporteDe(cardId, seleccion.objetivoCardId) : 0)
