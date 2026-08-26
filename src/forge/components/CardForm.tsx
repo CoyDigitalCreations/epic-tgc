@@ -5,6 +5,7 @@ import { getFormConfig } from '../types/form-config'
 import type { CardType } from '../../shared/types'
 import { validateCard } from '../utils/validation'
 import { TextField, NumberField, SelectField, TextAreaField, MultiSelectField } from './fields'
+import { EffectField } from './fields/EffectField'
 import { ImageUpload } from './ImageUpload'
 import { PAQUETES } from '../../shared/data/paquetes'
 
@@ -70,7 +71,7 @@ export function CardForm() {
     initDraft(type as CardType)
   }
 
-  const renderField = (field: { name: string; label: string; type: string; required: boolean; options?: string[]; min?: number; max?: number; placeholder?: string; defaultValue?: string }) => {
+  const renderField = (field: { name: string; label: string; type: string; required: boolean; options?: string[]; min?: number; max?: number; placeholder?: string; defaultValue?: string; showEffectFields?: string[] }) => {
     const isStatsField = STATS_FIELDS.has(field.name)
     const value = isStatsField
       ? (draft.stats as Record<string, unknown>)?.[field.name] ?? ''
@@ -159,6 +160,18 @@ export function CardForm() {
               ))}
             </select>
           </label>
+        )
+      }
+      case 'effect': {
+        const effectData = value as Record<string, unknown> | undefined
+        return (
+          <EffectField
+            key={field.name}
+            label={field.label}
+            value={effectData as any}
+            onChange={(v) => onChange(v)}
+            showFields={field.showEffectFields as any}
+          />
         )
       }
     }
