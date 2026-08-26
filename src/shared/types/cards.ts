@@ -11,6 +11,45 @@ export interface CombatStats extends BaseStats {
   resistencia: number
 }
 
+/**
+ * Structured effect metadata — machine-readable effect parameters.
+ * The engine reads this instead of parsing text with regex.
+ * `texto` field is display-only (for UI rendering).
+ */
+export interface EfectoData {
+  /** Effect type */
+  tipo: 'pasivo' | 'continuo' | 'disparo' | 'reserva' | 'pago' | 'bloqueo' | 'hechizo' | 'vinculo'
+  /** Cost type */
+  costoTipo?: 'ninguno' | 'eter' | 'eter_bloqueado' | 'exhaust'
+  /** Maximum cost value */
+  costoMax?: number
+  /** Target type */
+  objetivo?: 'self' | 'campeon_propio' | 'campeon_rival' | 'mistica_rival' | 'arcana_rival'
+           | 'todos_campeones_propios' | 'todos_campeones_rivales'
+           | 'campeon_cementerio_propio' | 'carta_mazo'
+  /** Effect action */
+  efecto?: 'buff' | 'debuff' | 'destruir' | 'robar' | 'invocar_cementerio'
+         | 'devolver_mano' | 'equipar' | 'modificar_stat' | 'keyword' | 'toggle_agotamiento'
+         | 'steal_eter' | 'release_eter' | 'return_eter' | 'rival_discard'
+  /** Stat modifications */
+  stats?: { ATQ?: number; RES?: number }
+  /** Keyword to grant */
+  keyword?: string
+  /** Duration */
+  duracion?: 'permanente' | 'turno' | 'hasta_alba' | 'mientras_ester_bloqueado' | 'n_turnos'
+  /** Trigger condition */
+  trigger?: 'al_invocar' | 'al_atacar' | 'al_matar_en_combate' | 'al_pagar_eter'
+          | 'inicio_choque' | 'inicio_alba' | 'al_jugar_mistica'
+          | 'al_resolver_cadena' | 'al_activar_habilidad' | 'al_ser_enviado_al_cementerio'
+          | 'al_ser_destruido_vinculo' | 'ninguno'
+  /** Activation condition text */
+  condicion?: string
+  /** Maximum number of targets */
+  maxObjetivos?: number
+  /** Human-readable text (display only) */
+  texto?: string
+}
+
 /** Base card metadata */
 export interface CardMeta {
   id: string
@@ -51,6 +90,10 @@ export interface CampeonCard extends CardMeta {
   disparoAgota?: boolean
   /** Identificador oculto: ¿el Disparo es de un solo uso? */
   disparoUnSoloUso?: boolean
+  /** Structured effect data (optional — engine prefers this over text parsing) */
+  efectoPasivoData?: EfectoData
+  efectoDisparoData?: EfectoData
+  efectoContinuoData?: EfectoData
 }
 
 export interface MisticaCard extends CardMeta {
@@ -58,6 +101,8 @@ export interface MisticaCard extends CardMeta {
   /** No tienen Poder ni Resistencia — son puramente conjuros (5.3) */
   stats: BaseStats
   efecto: string
+  /** Structured effect data */
+  efectoData?: EfectoData
 }
 
 export interface ArcanaCard extends CardMeta {
@@ -66,6 +111,10 @@ export interface ArcanaCard extends CardMeta {
   condicion?: string
   recompensa?: string
   efecto?: string
+  /** Structured effect data */
+  condicionData?: EfectoData
+  recompensaData?: EfectoData
+  efectoData?: EfectoData
 }
 
 export interface EterCard extends CardMeta {
@@ -79,6 +128,10 @@ export interface EterCard extends CardMeta {
   variantePago?: 'Pasivo' | 'Gatillo'
   /** Efecto en zona BLOQUEO (1B-1F) */
   efectoBloqueo?: string
+  /** Structured effect data */
+  efectoReservaData?: EfectoData
+  efectoPagoData?: EfectoData
+  efectoBloqueoData?: EfectoData
 }
 
 export interface VinculoCard extends CardMeta {
@@ -87,6 +140,8 @@ export interface VinculoCard extends CardMeta {
   stats: BaseStats
   /** Efecto PERMANENTE a favor del dueño al ser destruido */
   efecto: string
+  /** Structured effect data */
+  efectoData?: EfectoData
 }
 
 /** Discriminated union of all card types */

@@ -52,13 +52,17 @@ export function esVinculo(card: AnyCard): card is VinculoCard {
 }
 
 /**
- * Extrae el costo en Éteres de una habilidad activa desde efectoDisparo.
- * Patrones soportados: "Paga N Éter", "paga N Éter", "hasta un máximo de N Éter".
- * Retorna 0 si no se puede parsear (fallback seguro).
+ * Extrae el costo en Éteres de una habilidad activa.
+ * Prefiere efectoData.costoMax si está disponible.
+ * Fallback: regex sobre efectoDisparo (backward compatible).
  */
 export function costeEterHabilidad(card: AnyCard): number {
+  // 1. Prefer efectoData if available
+  if ('efectoDisparoData' in card && (card as any).efectoDisparoData?.costoMax !== undefined) {
+    return (card as any).efectoDisparoData.costoMax
+  }
+  // 2. Fallback: regex parsing (backward compatible)
   if (!('efectoDisparo' in card) || !card.efectoDisparo) return 0
-  // Matchea "Paga 2 Éter", "paga 1 Éter", "hasta un máximo de 2 Éter"
   const match = card.efectoDisparo.match(/(?:de\s+)?(\d+)\s+Éter/)
   return match ? parseInt(match[1], 10) : 0
 }
@@ -75,15 +79,19 @@ export function costeEterHabilidad(card: AnyCard): number {
  */
 /**
  * true si el campeón tiene una habilidad que requiere (o puede usar) éter bloqueado.
- * Continuo: efectoContinuo con "bloqueado" → se activa/agota cuando lo usa.
- * Disparo: efectoDisparo con "bloqueado" → no agota, puede usar agotado.
+ * Prefiere efectoData si está disponible.
+ * Fallback: text pattern matching (backward compatible).
  */
 export function campeonNecesitaEterBloqueado(card: AnyCard): boolean {
-  // 1. Efecto Continuo con patrón "bloqueado"
+  // 1. Prefer efectoData if available
+  const efectoData = (card as any).efectoDisparoData
+  if (efectoData?.costoTipo === 'eter_bloqueado') return true
+  const efectoPasivoData = (card as any).efectoPasivoData
+  if (efectoPasivoData?.trigger === 'al-inicio-alba' && efectoPasivoData?.condicion?.includes('bloqueado')) return true
+
+  // 2. Fallback: text pattern matching (backward compatible)
   if ('efectoContinuo' in card && card.efectoContinuo?.includes('bloqueado')) return true
-  // 2. Habilidad Disparo con patrón "bloqueado" (solo si NO es agota)
   if ('efectoDisparo' in card && !('disparoAgota' in card && (card as any).disparoAgota) && card.efectoDisparo?.includes('bloqueado')) return true
-  // 3. Efecto pasivo que referencia éter bloqueado
   if ('efectoPasivo' in card && card.efectoPasivo?.includes('Éter bloqueado')) return true
   return false
 }
