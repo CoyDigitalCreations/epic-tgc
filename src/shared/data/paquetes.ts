@@ -78,6 +78,7 @@ export const ESTASIS_CARDS: AnyCard[] = [
     updatedAt: FB_TS,
     stats: { cost: 1 },
     efectoReserva: 'Mientras esté en tu Reserva, los Campeones que controles ganan +1 de ATQ.',
+      efectoReservaData: {"tipo":"reserva","trigger":"ninguno","texto":"Mientras esté en tu Reserva, los Campeones que controles ganan +1 de ATQ."},
   },
   {
     id: 'FB-002',
@@ -92,6 +93,7 @@ export const ESTASIS_CARDS: AnyCard[] = [
     updatedAt: FB_TS,
     stats: { cost: 1 },
     efectoReserva: 'Al inicio de tu Choque, si está en tu Reserva, un Campeón que controles gana Vigor hasta el final del turno.',
+      efectoReservaData: {"tipo":"reserva","trigger":"inicio_choque","texto":"Al inicio de tu Choque, si está en tu Reserva, un Campeón que controles gana Vigor hasta el final del turno.","efecto":"keyword","keyword":"Vigor","objetivo":"campeon_propio"},
   },
   {
     id: 'FB-003',
@@ -107,6 +109,7 @@ export const ESTASIS_CARDS: AnyCard[] = [
     stats: { cost: 1 },
     variantePago: 'Gatillo',
     efectoPago: 'Cuando pagues esta carta, roba 1 carta.',
+      efectoPagoData: {"tipo":"pago","texto":"Cuando pagues esta carta, roba 1 carta.","trigger":"al_pagar_eter","efecto":"robar"},
   },
   {
     id: 'FB-004',
@@ -122,6 +125,7 @@ export const ESTASIS_CARDS: AnyCard[] = [
     stats: { cost: 1 },
     variantePago: 'Gatillo',
     efectoPago: 'Cuando pagues esta carta para invocar un Campeón, ese Campeón gana +1 de RES hasta el final del próximo turno.',
+      efectoPagoData: {"tipo":"pago","texto":"Cuando pagues esta carta para invocar un Campeón, ese Campeón gana +1 de RES hasta el final del próximo turno.","trigger":"al_pagar_eter","efecto":"buff"},
   },
   {
     id: 'FB-005',
@@ -137,6 +141,7 @@ export const ESTASIS_CARDS: AnyCard[] = [
     stats: { cost: 1 },
     variantePago: 'Pasivo',
     efectoPago: 'Mientras esté en tu zona de Éter pagado, una vez por turno puedes bloquear 1 Éter de tu Reserva sobre un Campeón sin agotarlo.',
+      efectoPagoData: {"tipo":"pago","texto":"Mientras esté en tu zona de Éter pagado, una vez por turno puedes bloquear 1 Éter de tu Reserva sobre un Campeón sin agotarlo.","trigger":"ninguno"},
   },
   {
     id: 'FB-006',
@@ -152,6 +157,7 @@ export const ESTASIS_CARDS: AnyCard[] = [
     stats: { cost: 1 },
     variantePago: 'Gatillo',
     efectoPago: 'Cuando pagues esta carta, devuelve un Éter de tu zona de pago (1A) a tu Reserva.',
+      efectoPagoData: {"tipo":"pago","texto":"Cuando pagues esta carta, devuelve un Éter de tu zona de pago (1A) a tu Reserva.","trigger":"al_pagar_eter","efecto":"return_eter"},
   },
   {
     id: 'FB-007',
@@ -166,6 +172,7 @@ export const ESTASIS_CARDS: AnyCard[] = [
     updatedAt: FB_TS,
     stats: { cost: 1 },
     efectoBloqueo: 'Mientras esté bloqueado en un Campeón, ese Campeón gana +2 de ATQ y +2 de RES. Máximo 2 de estos Éteres por Campeón.',
+      efectoBloqueoData: {"tipo":"bloqueo","texto":"Mientras esté bloqueado en un Campeón, ese Campeón gana +2 de ATQ y +2 de RES. Máximo 2 de estos Éteres por Campeón.","efecto":"buff","stats":{"ATQ":2,"RES":2},"objetivo":"campeon_propio","duracion":"mientras_ester_bloqueado"},
   },
   {
     id: 'FB-008',
@@ -180,6 +187,7 @@ export const ESTASIS_CARDS: AnyCard[] = [
     updatedAt: FB_TS,
     stats: { cost: 1 },
     efectoBloqueo: 'Mientras esté bloqueado en un Campeón, ese Campeón tiene Inmortal.',
+      efectoBloqueoData: {"tipo":"bloqueo","texto":"Mientras esté bloqueado en un Campeón, ese Campeón tiene Inmortal.","efecto":"keyword","keyword":"Inmortal","objetivo":"campeon_propio","duracion":"mientras_ester_bloqueado"},
   },
   {
     id: 'FB-009',
@@ -194,6 +202,7 @@ export const ESTASIS_CARDS: AnyCard[] = [
     updatedAt: FB_TS,
     stats: { cost: 1 },
     efectoBloqueo: 'Mientras esté bloqueado en un Campeón, ese Campeón gana +1 de RES.',
+      efectoBloqueoData: {"tipo":"bloqueo","texto":"Mientras esté bloqueado en un Campeón, ese Campeón gana +1 de RES.","efecto":"buff","stats":{"RES":1},"objetivo":"campeon_propio","duracion":"mientras_ester_bloqueado"},
   },
 
   /* ── PRINCIPAL (15 diseños → 40 copias; + FB-031/32 → 45) ────── */
@@ -217,6 +226,8 @@ export const ESTASIS_CARDS: AnyCard[] = [
     efectoDisparo: 'Puedes pagar hasta un máximo de 2 Éter (bloqueado) para que un Campeón que controles gane +2 de ATQ y +2 de RES mientras ese Éter esté bloqueado. Al inicio de tu próxima Alba reagrupa el Éter usado por este efecto.',
     disparoAgota: false,
     disparoUnSoloUso: false,
+      efectoPasivoData: {"tipo":"pasivo","texto":"Al ser invocada, toma control de un Campeón que controla el rival. Mientras esta carta esté en el campo, controla ese Campeón.","trigger":"al_invocar","objetivo":"campeon_rival"},
+    efectoDisparoData: {"tipo":"disparo","texto":"Puedes pagar hasta un máximo de 2 Éter (bloqueado) para que un Campeón que controles gane +2 de ATQ y +2 de RES mientras ese Éter esté bloqueado. Al inicio de tu próxima Alba reagrupa el Éter usado por este efecto.","costoMax":2,"costoTipo":"eter_bloqueado","trigger":"al_activar_habilidad"},
   },
   {
     id: 'FB-011',
@@ -235,6 +246,7 @@ export const ESTASIS_CARDS: AnyCard[] = [
     catHabilidad: 'Efecto',
     stats: { cost: 2, poder: 5, resistencia: 3 },
     efectoPasivo: 'Al atacar, agota un Campeón que controla el rival.',
+      efectoPasivoData: {"tipo":"pasivo","texto":"Al atacar, agota un Campeón que controla el rival.","trigger":"al_atacar","objetivo":"campeon_rival"},
   },
   {
     id: 'FB-012',
@@ -253,6 +265,7 @@ export const ESTASIS_CARDS: AnyCard[] = [
     catHabilidad: 'Efecto',
     stats: { cost: 2, poder: 4, resistencia: 4 },
     efectoPasivo: 'Al ser enviada al Cementerio desde cualquier zona, agrega de tu cementerio a tu mano 1 Campeón de facción Orden y esencia Céleste.',
+      efectoPasivoData: {"tipo":"pasivo","texto":"Al ser enviada al Cementerio desde cualquier zona, agrega de tu cementerio a tu mano 1 Campeón de facción Orden y esencia Céleste.","trigger":"al_ser_enviado_al_cementerio","objetivo":"self"},
   },
   {
     id: 'FB-013',
@@ -273,6 +286,7 @@ export const ESTASIS_CARDS: AnyCard[] = [
     efectoDisparo: 'Una vez por turno, puedes pagar hasta un máximo de 1 Éter y agotar esta carta para cambiar el agotamiento de un Campeón que controla el rival (de agotado a no agotado, o viceversa).',
     disparoAgota: true,
     disparoUnSoloUso: true,
+      efectoDisparoData: {"tipo":"disparo","texto":"Una vez por turno, puedes pagar hasta un máximo de 1 Éter y agotar esta carta para cambiar el agotamiento de un Campeón que controla el rival (de agotado a no agotado, o viceversa).","costoMax":1,"costoTipo":"exhaust","trigger":"al_activar_habilidad"},
   },
   {
     id: 'FB-014',
@@ -294,6 +308,8 @@ export const ESTASIS_CARDS: AnyCard[] = [
     efectoDisparo: 'Una vez por turno, puedes pagar 1 Éter y agotar esta carta para destruir una Mística o Arcana que controla el rival.',
     disparoAgota: true,
     disparoUnSoloUso: true,
+      efectoPasivoData: {"tipo":"pasivo","texto":"Los otros Campeones que controles ganan +1 de ATQ y +1 de RES.","trigger":"ninguno","efecto":"buff","stats":{"ATQ":1,"RES":1},"objetivo":"todos_campeones_propios"},
+    efectoDisparoData: {"tipo":"disparo","texto":"Una vez por turno, puedes pagar 1 Éter y agotar esta carta para destruir una Mística o Arcana que controla el rival.","costoMax":1,"costoTipo":"exhaust","trigger":"al_activar_habilidad","efecto":"destruir","objetivo":"mistica_rival"},
   },
   {
     id: 'FB-015',
@@ -312,6 +328,7 @@ export const ESTASIS_CARDS: AnyCard[] = [
     catHabilidad: 'Efecto',
     stats: { cost: 3, poder: 5, resistencia: 4 },
     efectoPasivo: 'Mientras esta carta tenga al menos 1 Éter bloqueado, gana +1 de ATQ (máx. +3).',
+      efectoPasivoData: {"tipo":"pasivo","texto":"Mientras esta carta tenga al menos 1 Éter bloqueado, gana +1 de ATQ (máx. +3).","trigger":"ninguno","efecto":"buff","stats":{"ATQ":1},"objetivo":"self"},
   },
   {
     id: 'FB-016',
@@ -332,6 +349,7 @@ export const ESTASIS_CARDS: AnyCard[] = [
     efectoDisparo: 'Puedes pagar hasta un máximo de 1 Éter (bloqueado) para que los Campeones que controles ganen +1 de RES mientras esté bloqueado.',
     disparoAgota: false,
     disparoUnSoloUso: false,
+      efectoDisparoData: {"tipo":"disparo","texto":"Puedes pagar hasta un máximo de 1 Éter (bloqueado) para que los Campeones que controles ganen +1 de RES mientras esté bloqueado.","costoMax":1,"costoTipo":"eter_bloqueado","trigger":"al_activar_habilidad","efecto":"buff","stats":{"RES":1},"objetivo":"campeon_propio","duracion":"mientras_ester_bloqueado"},
   },
   {
     id: 'FB-017',
@@ -352,6 +370,7 @@ export const ESTASIS_CARDS: AnyCard[] = [
     efectoDisparo: 'Una vez por turno, puedes pagar hasta un máximo de 1 Éter y agotar esta carta para liberar hasta 2 Éter bloqueados de Campeones que controla el rival (van a la zona de pago de su dueño).',
     disparoAgota: true,
     disparoUnSoloUso: true,
+      efectoDisparoData: {"tipo":"disparo","texto":"Una vez por turno, puedes pagar hasta un máximo de 1 Éter y agotar esta carta para liberar hasta 2 Éter bloqueados de Campeones que controla el rival (van a la zona de pago de su dueño).","costoMax":1,"costoTipo":"exhaust","trigger":"al_activar_habilidad","efecto":"release_eter","objetivo":"campeon_rival"},
   },
   {
     id: 'FB-018',
@@ -370,6 +389,7 @@ export const ESTASIS_CARDS: AnyCard[] = [
     catHabilidad: 'Efecto',
     stats: { cost: 4, poder: 3, resistencia: 6 },
     efectoPasivo: 'Una vez por turno, si un Vínculo que controles fuera a ser destruido, no lo es.',
+      efectoPasivoData: {"tipo":"pasivo","texto":"Una vez por turno, si un Vínculo que controles fuera a ser destruido, no lo es.","trigger":"ninguno","objetivo":"self"},
   },
   {
     id: 'FB-019',
@@ -384,6 +404,7 @@ export const ESTASIS_CARDS: AnyCard[] = [
     updatedAt: FB_TS,
     stats: { cost: 2 },
     efecto: 'Devuelve un Campeón que controla el rival con ATQ 5 o menos a la mano de su dueño.',
+      efectoData: {"tipo":"hechizo","texto":"Devuelve un Campeón que controla el rival con ATQ 5 o menos a la mano de su dueño.","efecto":"devolver_mano","objetivo":"campeon_propio"},
   },
   {
     id: 'FB-020',
@@ -398,6 +419,7 @@ export const ESTASIS_CARDS: AnyCard[] = [
     updatedAt: FB_TS,
     stats: { cost: 1 },
     efecto: 'Un Campeón que controles gana +2 de ATQ hasta el final del turno.',
+      efectoData: {"tipo":"hechizo","texto":"Un Campeón que controles gana +2 de ATQ hasta el final del turno.","efecto":"buff","stats":{"ATQ":2},"objetivo":"campeon_propio"},
   },
   {
     id: 'FB-021',
@@ -412,6 +434,7 @@ export const ESTASIS_CARDS: AnyCard[] = [
     updatedAt: FB_TS,
     stats: { cost: 1 },
     efecto: 'Equipa a un Campeón. El Campeón equipado gana +1 de ATQ y puede bloquear 1 Éter adicional sin agotarse.',
+      efectoData: {"tipo":"hechizo","texto":"Equipa a un Campeón. El Campeón equipado gana +1 de ATQ y puede bloquear 1 Éter adicional sin agotarse.","efecto":"buff","stats":{"ATQ":1},"objetivo":"campeon_propio"},
   },
   {
     id: 'FB-022',
@@ -426,6 +449,7 @@ export const ESTASIS_CARDS: AnyCard[] = [
     updatedAt: FB_TS,
     stats: { cost: 3 },
     efecto: 'Equipa a un Campeón. El Campeón equipado puede invocar 1 Campeón de coste 3 o menos desde tu cementerio sin pagar Éter. Ese Campeón invocado no paga Éter.',
+      efectoData: {"tipo":"hechizo","texto":"Equipa a un Campeón. El Campeón equipado puede invocar 1 Campeón de coste 3 o menos desde tu cementerio sin pagar Éter. Ese Campeón invocado no paga Éter.","efecto":"equipar","objetivo":"campeon_propio"},
   },
   {
     id: 'FB-023',
@@ -441,6 +465,8 @@ export const ESTASIS_CARDS: AnyCard[] = [
     stats: { cost: 3 },
     condicion: 'Al inicio del Choque, si controlas 2 o más Campeones con Éter bloqueado.',
     recompensa: 'Roba 2 cartas y un Campeón que controles gana +3 de Poder hasta el final del turno.',
+      condicionData: {"tipo":"pasivo","condicion":"Al inicio del Choque, si controlas 2 o más Campeones con Éter bloqueado.","texto":"Al inicio del Choque, si controlas 2 o más Campeones con Éter bloqueado."},
+    recompensaData: {"tipo":"hechizo","texto":"Roba 2 cartas y un Campeón que controles gana +3 de Poder hasta el final del turno.","efecto":"buff","stats":{},"objetivo":"campeon_propio"},
   },
   {
     id: 'FB-024',
@@ -458,6 +484,9 @@ export const ESTASIS_CARDS: AnyCard[] = [
     efecto: 'Un Campeón que controles gana +2 de ATQ hasta el final del turno. Si destruye a un Campeón que controla el rival este turno, roba 1 carta.',
     condicion: 'Mientras controles por lo menos 1 campeón',
     recompensa: 'Un Campeón que controles gana +2 de ATQ hasta el final del turno. Si destruye a un Campeón que controla el rival este turno, roba 1 carta.',
+      efectoData: {"tipo":"hechizo","texto":"Un Campeón que controles gana +2 de ATQ hasta el final del turno. Si destruye a un Campeón que controla el rival este turno, roba 1 carta.","efecto":"buff","stats":{"ATQ":2},"objetivo":"campeon_propio"},
+    condicionData: {"tipo":"pasivo","condicion":"Mientras controles por lo menos 1 campeón","texto":"Mientras controles por lo menos 1 campeón"},
+    recompensaData: {"tipo":"hechizo","texto":"Un Campeón que controles gana +2 de ATQ hasta el final del turno. Si destruye a un Campeón que controla el rival este turno, roba 1 carta.\"","efecto":"buff","stats":{"ATQ":2},"objetivo":"campeon_propio"},
   },
 
   /* ── VÍNCULOS (6 diseños → 6 copias) ───────────────────────────── */
@@ -474,6 +503,7 @@ export const ESTASIS_CARDS: AnyCard[] = [
     updatedAt: FB_TS,
     stats: { cost: 0 },
     efecto: 'Una vez por turno, al inicio de tu Alba, puedes bloquear 1 Éter de tu Reserva sobre un Campeón sin agotarlo.',
+      efectoData: {"tipo":"hechizo","texto":"Una vez por turno, al inicio de tu Alba, puedes bloquear 1 Éter de tu Reserva sobre un Campeón que pueda bloquear Éter."},
   },
   {
     id: 'FB-026',
@@ -488,6 +518,7 @@ export const ESTASIS_CARDS: AnyCard[] = [
     updatedAt: FB_TS,
     stats: { cost: 0 },
     efecto: 'Roba 2 cartas.',
+      efectoData: {"tipo":"hechizo","texto":"Roba 2 cartas.","efecto":"robar"},
   },
   {
     id: 'FB-027',
@@ -502,6 +533,7 @@ export const ESTASIS_CARDS: AnyCard[] = [
     updatedAt: FB_TS,
     stats: { cost: 0 },
     efecto: 'Regresa hasta 3 Éter pagados (1A) a tu Reserva.',
+      efectoData: {"tipo":"hechizo","texto":"Regresa hasta 3 Éter pagados (1A) a tu Reserva."},
   },
   {
     id: 'FB-028',
@@ -516,6 +548,7 @@ export const ESTASIS_CARDS: AnyCard[] = [
     updatedAt: FB_TS,
     stats: { cost: 0 },
     efecto: 'Un Campeón que controles gana Inmortal de forma permanente.',
+      efectoData: {"tipo":"hechizo","texto":"Un Campeón que controles gana Inmortal de forma permanente.","efecto":"keyword","keyword":"Inmortal","objetivo":"campeon_propio","duracion":"permanente"},
   },
   {
     id: 'FB-029',
@@ -530,6 +563,7 @@ export const ESTASIS_CARDS: AnyCard[] = [
     updatedAt: FB_TS,
     stats: { cost: 0 },
     efecto: 'Una vez por turno, al inicio de tu Alba, puedes devolver un Campeón de tu Cementerio a tu mano.',
+      efectoData: {"tipo":"hechizo","texto":"Una vez por turno, al inicio de tu Alba, puedes devolver un Campeón de tu Cementerio a tu mano."},
   },
   {
     id: 'FB-030',
@@ -544,6 +578,7 @@ export const ESTASIS_CARDS: AnyCard[] = [
     updatedAt: FB_TS,
     stats: { cost: 0 },
     efecto: 'El Campeón que controla el rival con mayor ATQ pierde 2 de ATQ de forma permanente.',
+      efectoData: {"tipo":"hechizo","texto":"El Campeón que controla el rival con mayor ATQ pierde 2 de ATQ de forma permanente.","efecto":"debuff","objetivo":"campeon_rival"},
   },
 
   /* ── CHANGE 4 — Mazo 45: campeona ×3 (FB-031) + mística ×2 (FB-032) ── */
@@ -565,6 +600,7 @@ export const ESTASIS_CARDS: AnyCard[] = [
     stats: { cost: 2, poder: 4, resistencia: 3 },
     efectoPasivo:
       'Al ser enviada al Cementerio desde cualquier zona: agrega de tu mazo a tu mano 1 carta Campeón de coste 2 o menos.',
+      efectoPasivoData: {"tipo":"pasivo","texto":"Al ser enviada al Cementerio desde cualquier zona: agrega de tu mazo a tu mano 1 carta Campeón de coste 2 o menos.","trigger":"al_ser_enviado_al_cementerio","objetivo":"self"},
   },
   {
     id: 'FB-032',
@@ -579,6 +615,7 @@ export const ESTASIS_CARDS: AnyCard[] = [
     updatedAt: C4_TS,
     stats: { cost: 2 },
     efecto: 'Agrega de tu mazo a tu mano 1 carta de coste 2 o menos.',
+      efectoData: {"tipo":"hechizo","texto":"Agrega de tu mazo a tu mano 1 carta de coste 2 o menos.","efecto":"robar","objetivo":"carta_mazo"},
   },
 ]
 
@@ -668,6 +705,8 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     efectoDisparo: 'Puedes pagar hasta un máximo de 2 Éter (bloqueado) para que un Campeón que controla el rival pierda 2 de ATQ y 2 de RES mientras ese Éter esté bloqueado. Al inicio de tu próxima Alba reagrupa el Éter usado por este efecto.',
     disparoAgota: false,
     disparoUnSoloUso: false,
+      efectoPasivoData: {"tipo":"pasivo","texto":"Al ser invocada, destruye un Campeón que controla el rival.","trigger":"al_invocar","objetivo":"campeon_rival"},
+    efectoDisparoData: {"tipo":"disparo","texto":"Puedes pagar hasta un máximo de 2 Éter (bloqueado) para que un Campeón que controla el rival pierda 2 de ATQ y 2 de RES mientras ese Éter esté bloqueado. Al inicio de tu próxima Alba reagrupa el Éter usado por este efecto.","costoMax":2,"costoTipo":"eter_bloqueado","trigger":"al_activar_habilidad"},
   },
 
   /* ── ÉTER (9 diseños → 15 copias) ─────────────────────────── */
@@ -684,6 +723,7 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     updatedAt: DS_TS,
     stats: { cost: 1 },
     efectoReserva: 'Mientras esté en tu Reserva, los Campeones que controla el rival pierden 1 de ATQ.',
+      efectoReservaData: {"tipo":"reserva","trigger":"ninguno","texto":"Mientras esté en tu Reserva, los Campeones que controla el rival pierden 1 de ATQ.","efecto":"debuff","objetivo":"todos_campeones_rivales"},
   },
   {
     id: 'DS-003',
@@ -698,6 +738,7 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     updatedAt: DS_TS,
     stats: { cost: 1 },
     efectoReserva: 'Al inicio de tu Choque, si está en tu Reserva, un Campeón que controlas gana Carga hasta el final del turno.',
+      efectoReservaData: {"tipo":"reserva","trigger":"inicio_choque","texto":"Al inicio de tu Choque, si está en tu Reserva, un Campeón que controlas gana Carga hasta el final del turno.","efecto":"keyword","keyword":"Carga","objetivo":"campeon_propio"},
   },
   {
     id: 'DS-004',
@@ -712,6 +753,7 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     stats: { cost: 1 },
     variantePago: 'Gatillo',
     efectoPago: 'Cuando pagues esta carta, el rival pierde 1 carta de su mano al azar.',
+      efectoPagoData: {"tipo":"pago","texto":"Cuando pagues esta carta, el rival pierde 1 carta de su mano al azar.","trigger":"al_pagar_eter","efecto":"rival_discard"},
   },
   {
     id: 'DS-005',
@@ -727,6 +769,7 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     stats: { cost: 1 },
     variantePago: 'Gatillo',
     efectoPago: 'Cuando pagues esta carta para invocar un Campeón, ese Campeón gana +1 de ATQ hasta el final del próximo turno.',
+      efectoPagoData: {"tipo":"pago","texto":"Cuando pagues esta carta para invocar un Campeón, ese Campeón gana +1 de ATQ hasta el final del próximo turno.","trigger":"al_pagar_eter","efecto":"buff"},
   },
   {
     id: 'DS-006',
@@ -742,6 +785,7 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     stats: { cost: 1 },
     variantePago: 'Pasivo',
     efectoPago: 'Mientras esté en tu zona de Éter pagado, una vez por turno puedes bloquear 1 Éter de tu Reserva sobre un Campeón sin agotarlo.',
+      efectoPagoData: {"tipo":"pago","texto":"Mientras esté en tu zona de Éter pagado, una vez por turno puedes bloquear 1 Éter de tu Reserva sobre un Campeón sin agotarlo.","trigger":"ninguno"},
   },
   {
     id: 'DS-007',
@@ -757,6 +801,7 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     stats: { cost: 1 },
     variantePago: 'Gatillo',
     efectoPago: 'Cuando pagues esta carta, el rival devuelve 1 Éter de su zona de pago (1A) a su Reserva.',
+      efectoPagoData: {"tipo":"pago","texto":"Cuando pagues esta carta, el rival devuelve 1 Éter de su zona de pago (1A) a su Reserva.","trigger":"al_pagar_eter","efecto":"return_eter"},
   },
   {
     id: 'DS-008',
@@ -771,6 +816,7 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     updatedAt: DS_TS,
     stats: { cost: 1 },
     efectoBloqueo: 'Mientras esté bloqueado en un Campeón, ese Campeón gana +2 de ATQ y +2 de RES. Máximo 2 de estos Éteres por Campeón.',
+      efectoBloqueoData: {"tipo":"bloqueo","texto":"Mientras esté bloqueado en un Campeón, ese Campeón gana +2 de ATQ y +2 de RES. Máximo 2 de estos Éteres por Campeón.","efecto":"buff","stats":{"ATQ":2,"RES":2},"objetivo":"campeon_propio","duracion":"mientras_ester_bloqueado"},
   },
   {
     id: 'DS-009',
@@ -785,6 +831,7 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     updatedAt: DS_TS,
     stats: { cost: 1 },
     efectoBloqueo: 'Mientras esté bloqueado en un Campeón, ese Campeón tiene Indestructible.',
+      efectoBloqueoData: {"tipo":"bloqueo","texto":"Mientras esté bloqueado en un Campeón, ese Campeón tiene Indestructible.","efecto":"keyword","keyword":"Indestructible","objetivo":"campeon_propio","duracion":"mientras_ester_bloqueado"},
   },
   {
     id: 'DS-010',
@@ -799,6 +846,7 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     updatedAt: DS_TS,
     stats: { cost: 1 },
     efectoBloqueo: 'Mientras esté bloqueado en un Campeón, ese Campeón gana +1 de ATQ.',
+      efectoBloqueoData: {"tipo":"bloqueo","texto":"Mientras esté bloqueado en un Campeón, ese Campeón gana +1 de ATQ.","efecto":"buff","stats":{"ATQ":1},"objetivo":"campeon_propio","duracion":"mientras_ester_bloqueado"},
   },
 
   /* ── PRINCIPAL (17 diseños → 44 copias; +Ragnar = 45) ─────── */
@@ -819,6 +867,7 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     catHabilidad: 'Efecto',
     stats: { cost: 2, poder: 5, resistencia: 3 },
     efectoPasivo: 'Al atacar, un Campeón que controla el rival pierde 1 de ATQ hasta el final del turno.',
+      efectoPasivoData: {"tipo":"pasivo","texto":"Al atacar, un Campeón que controla el rival pierde 1 de ATQ hasta el final del turno.","trigger":"al_atacar","efecto":"buff","stats":{"ATQ":-1},"objetivo":"campeon_rival"},
   },
   {
     id: 'DS-012',
@@ -840,6 +889,8 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     efectoDisparo: 'Una vez por turno, puedes pagar 1 Éter y agotar esta carta para destruir una Mística o Arcana que controla el rival.',
     disparoAgota: true,
     disparoUnSoloUso: true,
+      efectoPasivoData: {"tipo":"pasivo","texto":"Cuando esta carta destruye a un Campeón en combate, el rival pierde 1 Éter de su zona de pago (1A) (va a su Reserva).","trigger":"ninguno","objetivo":"self"},
+    efectoDisparoData: {"tipo":"disparo","texto":"Una vez por turno, puedes pagar 1 Éter y agotar esta carta para destruir una Mística o Arcana que controla el rival.","costoMax":1,"costoTipo":"exhaust","trigger":"al_activar_habilidad","efecto":"destruir","objetivo":"mistica_rival"},
   },
   {
     id: 'DS-013',
@@ -860,6 +911,7 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     efectoDisparo: 'Una vez por turno, puedes pagar hasta un máximo de 1 Éter y agotar esta carta para destruir un Campeón que controla el rival con 3 o menos de RES.',
     disparoAgota: true,
     disparoUnSoloUso: true,
+      efectoDisparoData: {"tipo":"disparo","texto":"Una vez por turno, puedes pagar hasta un máximo de 1 Éter y agotar esta carta para destruir un Campeón que controla el rival con 3 o menos de RES.","costoMax":1,"costoTipo":"exhaust","trigger":"al_activar_habilidad","efecto":"destruir","objetivo":"campeon_rival"},
   },
   {
     id: 'DS-014',
@@ -878,6 +930,7 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     catHabilidad: 'Efecto',
     stats: { cost: 3, poder: 3, resistencia: 7 },
     efectoPasivo: 'Los otros Campeones que controlas ganan +1 de ATQ.',
+      efectoPasivoData: {"tipo":"pasivo","texto":"Los otros Campeones que controlas ganan +1 de ATQ.","trigger":"ninguno","efecto":"buff","stats":{"ATQ":1},"objetivo":"self"},
   },
   {
     id: 'DS-015',
@@ -896,6 +949,7 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     catHabilidad: 'Efecto',
     stats: { cost: 3, poder: 5, resistencia: 4 },
     efectoPasivo: 'Mientras un Campeón que controla el rival tenga al menos 1 Éter bloqueado, esta carta gana +1 de ATQ (máx. +3).',
+      efectoPasivoData: {"tipo":"pasivo","texto":"Mientras un Campeón que controla el rival tenga al menos 1 Éter bloqueado, esta carta gana +1 de ATQ (máx. +3).","trigger":"ninguno","efecto":"buff","stats":{"ATQ":1},"objetivo":"campeon_rival"},
   },
   {
     id: 'DS-016',
@@ -916,6 +970,7 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     efectoDisparo: 'Puedes pagar hasta un máximo de 1 Éter (bloqueado) para que los Campeones que controlas ganen +1 de ATQ mientras esté bloqueado.',
     disparoAgota: false,
     disparoUnSoloUso: false,
+      efectoDisparoData: {"tipo":"disparo","texto":"Puedes pagar hasta un máximo de 1 Éter (bloqueado) para que los Campeones que controlas ganen +1 de ATQ mientras esté bloqueado.","costoMax":1,"costoTipo":"eter_bloqueado","trigger":"al_activar_habilidad","efecto":"buff","stats":{"ATQ":1},"objetivo":"campeon_propio","duracion":"mientras_ester_bloqueado"},
   },
   {
     id: 'DS-017',
@@ -936,6 +991,7 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     efectoDisparo: 'Una vez por turno, puedes pagar hasta un máximo de 1 Éter y agotar esta carta para tomar control de hasta 2 Éter bloqueados en Campeones que controla el rival (van a tu Reserva). Mientras esta carta esté en el campo, controla esos Éteres.',
     disparoAgota: true,
     disparoUnSoloUso: true,
+      efectoDisparoData: {"tipo":"disparo","texto":"Una vez por turno, puedes pagar hasta un máximo de 1 Éter y agotar esta carta para tomar control de hasta 2 Éter bloqueados en Campeones que controla el rival (van a tu Reserva). Mientras esta carta esté en el campo, controla esos Éteres.","costoMax":1,"costoTipo":"exhaust","trigger":"al_activar_habilidad"},
   },
   {
     id: 'DS-018',
@@ -954,6 +1010,7 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     catHabilidad: 'Efecto',
     stats: { cost: 4, poder: 3, resistencia: 6 },
     efectoPasivo: 'Una vez por turno, al inicio de tu Choque, si controlas otro Campeón, destruye un Vínculo que controla el rival.',
+      efectoPasivoData: {"tipo":"pasivo","texto":"Una vez por turno, al inicio de tu Choque, si controlas otro Campeón, destruye un Vínculo que controla el rival.","trigger":"inicio_choque","objetivo":"self"},
   },
   {
     id: 'DS-019',
@@ -969,6 +1026,7 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     facciones: ['Caos'],
     stats: { cost: 2 },
     efecto: 'Destruye un Campeón que controla el rival con 3 o menos de RES.',
+      efectoData: {"tipo":"hechizo","texto":"Destruye un Campeón que controla el rival con 3 o menos de RES.","efecto":"destruir","objetivo":"campeon_rival"},
   },
   {
     id: 'DS-020',
@@ -983,6 +1041,7 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     updatedAt: DS_TS,
     stats: { cost: 1 },
     efecto: 'Un Campeón que controla el rival pierde 2 de ATQ hasta el final del turno.',
+      efectoData: {"tipo":"hechizo","texto":"Un Campeón que controla el rival pierde 2 de ATQ hasta el final del turno.","efecto":"debuff","objetivo":"campeon_rival"},
   },
   {
     id: 'DS-021',
@@ -997,6 +1056,7 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     updatedAt: DS_TS,
     stats: { cost: 1 },
     efecto: 'Equipa a un Campeón. El Campeón equipado gana +1 de ATQ. Los Campeones que controla el rival con Éter bloqueado pierden 1 de ATQ.',
+      efectoData: {"tipo":"hechizo","texto":"Equipa a un Campeón. El Campeón equipado gana +1 de ATQ. Los Campeones que controla el rival con Éter bloqueado pierden 1 de ATQ.","efecto":"buff","stats":{"ATQ":1},"objetivo":"campeon_propio"},
   },
   {
     id: 'DS-022',
@@ -1011,6 +1071,7 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     updatedAt: DS_TS,
     stats: { cost: 0 },
     efecto: 'Equipa a un Campeón. El Campeón equipado gana +1 de ATQ. Cuando el Campeón equipado destruye a un Campeón en combate, el rival pierde 1 carta de su mano al azar.',
+      efectoData: {"tipo":"hechizo","texto":"Equipa a un Campeón. El Campeón equipado gana +1 de ATQ. Cuando el Campeón equipado destruye a un Campeón en combate, el rival pierde 1 carta de su mano al azar.","efecto":"buff","stats":{"ATQ":1},"objetivo":"campeon_propio"},
   },
   {
     id: 'DS-023',
@@ -1027,6 +1088,8 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     stats: { cost: 3 },
     condicion: 'Al inicio del Choque, si el rival controla 2 o más Campeones con Éter bloqueado.',
     recompensa: 'Un Campeón que controla el rival pierde 3 de RES de forma permanente. Roba 1 carta.',
+      condicionData: {"tipo":"pasivo","condicion":"Al inicio del Choque, si el rival controla 2 o más Campeones con Éter bloqueado.","texto":"Al inicio del Choque, si el rival controla 2 o más Campeones con Éter bloqueado."},
+    recompensaData: {"tipo":"hechizo","texto":"Un Campeón que controla el rival pierde 3 de RES de forma permanente. Roba 1 carta.","efecto":"debuff","objetivo":"campeon_rival"},
   },
   {
     id: 'DS-024',
@@ -1043,6 +1106,9 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     efecto: 'Un Campeón que controlas gana +2 de ATQ hasta el final del turno. Si destruye a un Campeón que controla el rival este turno, el rival pierde 1 carta de su mano al azar.',
     condicion: 'Mientras controles 2 o más Campeones.',
     recompensa: 'Un Campeón que controlas gana +2 de ATQ hasta el final del turno. Si destruye a un Campeón que controla el rival este turno, el rival pierde 1 carta de su mano al azar.',
+      efectoData: {"tipo":"hechizo","texto":"Un Campeón que controlas gana +2 de ATQ hasta el final del turno. Si destruye a un Campeón que controla el rival este turno, el rival pierde 1 carta de su mano al azar.","efecto":"buff","stats":{"ATQ":2},"objetivo":"campeon_propio"},
+    condicionData: {"tipo":"pasivo","condicion":"Mientras controles 2 o más Campeones","texto":"Mientras controles 2 o más Campeones"},
+    recompensaData: {"tipo":"hechizo","texto":"Un Campeón que controlas gana +2 de ATQ hasta el final del turno. Si destruye a un Campeón que controla el rival este turno, el rival pierde 1 carta de su mano al azar.","efecto":"buff","stats":{"ATQ":2},"objetivo":"campeon_propio"},
   },
 
   /* ── VÍNCULOS (6 diseños → 6 copias) ──────────────────────── */
@@ -1059,6 +1125,7 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     updatedAt: DS_TS,
     stats: { cost: 0 },
     efecto: 'Una vez por turno, al inicio de tu Alba, un Campeón que controlas gana +1 de ATQ hasta el final del turno.',
+      efectoData: {"tipo":"hechizo","texto":"Una vez por turno, al inicio de tu Alba, un Campeón que controlas gana +1 de ATQ hasta el final del turno.","efecto":"buff","stats":{"ATQ":1},"objetivo":"campeon_propio"},
   },
   {
     id: 'DS-026',
@@ -1073,6 +1140,7 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     updatedAt: DS_TS,
     stats: { cost: 0 },
     efecto: 'El rival pierde 1 carta de su mano al azar.',
+      efectoData: {"tipo":"hechizo","texto":"El rival pierde 1 carta de su mano al azar.","efecto":"debuff","objetivo":"campeon_rival"},
   },
   {
     id: 'DS-027',
@@ -1087,6 +1155,7 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     updatedAt: DS_TS,
     stats: { cost: 0 },
     efecto: 'El rival devuelve hasta 2 Éter de su zona de pago (1A) a su Reserva.',
+      efectoData: {"tipo":"hechizo","texto":"El rival devuelve hasta 2 Éter de su zona de pago (1A) a su Reserva.","efecto":"devolver_mano","objetivo":"campeon_propio"},
   },
   {
     id: 'DS-028',
@@ -1101,6 +1170,7 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     updatedAt: DS_TS,
     stats: { cost: 0 },
     efecto: 'Un Campeón que controlas gana Indestructible de forma permanente.',
+      efectoData: {"tipo":"hechizo","texto":"Un Campeón que controlas gana Indestructible de forma permanente.","efecto":"keyword","keyword":"Indestructible","objetivo":"campeon_propio","duracion":"permanente"},
   },
   {
     id: 'DS-029',
@@ -1115,6 +1185,7 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     updatedAt: DS_TS,
     stats: { cost: 0 },
     efecto: 'Una vez por turno, al inicio de tu Alba, puedes exiliar un Campeón del Cementerio del rival.',
+      efectoData: {"tipo":"hechizo","texto":"Una vez por turno, al inicio de tu Alba, puedes exiliar un Campeón del Cementerio del rival."},
   },
   {
     id: 'DS-030',
@@ -1129,6 +1200,7 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     updatedAt: DS_TS,
     stats: { cost: 0 },
     efecto: 'El Campeón que controla el rival con mayor RES pierde 2 de RES de forma permanente.',
+      efectoData: {"tipo":"hechizo","texto":"El Campeón que controla el rival con mayor RES pierde 2 de RES de forma permanente.","efecto":"debuff","objetivo":"campeon_rival"},
   },
 
   /* ── CHANGE 4 — Mazo 45: campeón ×2 (DS-031) + arcana ×2 (DS-032) + mística ×1 (DS-033) ── */
@@ -1150,6 +1222,7 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     stats: { cost: 2, poder: 4, resistencia: 3 },
     efectoPasivo:
       'Al ser enviada al Cementerio desde cualquier zona: agrega de tu mazo a tu mano 1 carta Campeón de coste 2 o menos.',
+      efectoPasivoData: {"tipo":"pasivo","texto":"Al ser enviada al Cementerio desde cualquier zona: agrega de tu mazo a tu mano 1 carta Campeón de coste 2 o menos.","trigger":"al_ser_enviado_al_cementerio","objetivo":"self"},
   },
   {
     id: 'DS-032',
@@ -1165,6 +1238,8 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     stats: { cost: 3 },
     condicion: 'Al inicio del Choque, si controlas 2 o más Campeones con Éter bloqueado.',
     recompensa: 'Agrega de tu cementerio a tu mano 1 carta de coste 3 o menos.',
+      condicionData: {"tipo":"pasivo","condicion":"Al inicio del Choque, si controlas 2 o más Campeones con Éter bloqueado.","texto":"Al inicio del Choque, si controlas 2 o más Campeones con Éter bloqueado."},
+    recompensaData: {"tipo":"hechizo","texto":"Agrega de tu cementerio a tu mano 1 carta de coste 3 o menos.","efecto":"robar","objetivo":"carta_mazo"},
   },
   {
     id: 'DS-033',
@@ -1179,6 +1254,7 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     updatedAt: C4_TS,
     stats: { cost: 3 },
     efecto: 'Agrega de tu mazo a tu mano 1 carta Campeón.',
+    efectoData: {"tipo":"hechizo","texto":"Agrega de tu mazo a tu mano 1 carta Campeón.","efecto":"robar","objetivo":"carta_mazo"},
   },
 ]
 
