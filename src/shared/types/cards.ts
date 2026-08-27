@@ -1,4 +1,5 @@
 import type { CardType, Rarity, Keyword, Faccion, Esencia, Rol, CatHabilidad } from './enums'
+export type { CardType }
 
 /** Base stats shared by all cards */
 export interface BaseStats {

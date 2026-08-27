@@ -157,7 +157,7 @@ export const ESTASIS_CARDS: AnyCard[] = [
     stats: { cost: 1 },
     variantePago: 'Gatillo',
     efectoPago: 'Cuando pagues esta carta, devuelve un Éter de tu zona de pago (1A) a tu Reserva.',
-      efectoPagoData: {"tipo":"pago","texto":"Cuando pagues esta carta, devuelve un Éter de tu zona de pago (1A) a tu Reserva.","trigger":"al_pagar_eter","efecto":"return_eter"},
+      efectoPagoData: {"tipo":"pago","texto":"Cuando pagues esta carta, devuelve un Éter de tu zona de pago (1A) a tu Reserva.","trigger":"al_pagar_eter","efecto":"return_ether"},
   },
   {
     id: 'FB-007',
@@ -370,7 +370,7 @@ export const ESTASIS_CARDS: AnyCard[] = [
     efectoDisparo: 'Una vez por turno, puedes pagar hasta un máximo de 1 Éter y agotar esta carta para liberar hasta 2 Éter bloqueados de Campeones que controla el rival (van a la zona de pago de su dueño).',
     disparoAgota: true,
     disparoUnSoloUso: true,
-      efectoDisparoData: {"tipo":"disparo","texto":"Una vez por turno, puedes pagar hasta un máximo de 1 Éter y agotar esta carta para liberar hasta 2 Éter bloqueados de Campeones que controla el rival (van a la zona de pago de su dueño).","costoMax":1,"costoTipo":"exhaust","trigger":"al_activar_habilidad","efecto":"release_eter","objetivo":"campeon_rival"},
+      efectoDisparoData: {"tipo":"disparo","texto":"Una vez por turno, puedes pagar hasta un máximo de 1 Éter y agotar esta carta para liberar hasta 2 Éter bloqueados de Campeones que controla el rival (van a la zona de pago de su dueño).","costoMax":1,"costoTipo":"exhaust","trigger":"al_activar_habilidad","efecto":"release_ether","objetivo":"campeon_rival"},
   },
   {
     id: 'FB-018',
@@ -750,6 +750,7 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     paqueteId: 'disonancia',
     limiteCopias: '2',
     createdAt: DS_TS,
+    updatedAt: DS_TS,
     stats: { cost: 1 },
     variantePago: 'Gatillo',
     efectoPago: 'Cuando pagues esta carta, el rival pierde 1 carta de su mano al azar.',
@@ -801,7 +802,7 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     stats: { cost: 1 },
     variantePago: 'Gatillo',
     efectoPago: 'Cuando pagues esta carta, el rival devuelve 1 Éter de su zona de pago (1A) a su Reserva.',
-      efectoPagoData: {"tipo":"pago","texto":"Cuando pagues esta carta, el rival devuelve 1 Éter de su zona de pago (1A) a su Reserva.","trigger":"al_pagar_eter","efecto":"return_eter"},
+      efectoPagoData: {"tipo":"pago","texto":"Cuando pagues esta carta, el rival devuelve 1 Éter de su zona de pago (1A) a su Reserva.","trigger":"al_pagar_eter","efecto":"return_ether"},
   },
   {
     id: 'DS-008',
