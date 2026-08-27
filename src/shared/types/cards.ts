@@ -15,38 +15,45 @@ export interface CombatStats extends BaseStats {
  * Structured effect metadata — machine-readable effect parameters.
  * The engine reads this instead of parsing text with regex.
  * `texto` field is display-only (for UI rendering).
+ *
+ * Based on analysis of all 65 cards: 45 unique patterns, 8 duplicate groups, 8 edge cases.
  */
 export interface EfectoData {
-  /** Effect type */
+  /** Effect type — which zone/phase this effect belongs to */
   tipo: 'pasivo' | 'continuo' | 'disparo' | 'reserva' | 'pago' | 'bloqueo' | 'hechizo' | 'vinculo'
-  /** Cost type */
+  /** Cost type — what the player must pay to activate */
   costoTipo?: 'ninguno' | 'eter' | 'eter_bloqueado' | 'exhaust'
-  /** Maximum cost value */
+  /** Maximum cost value (e.g., "hasta un máximo de 2 Éter") */
   costoMax?: number
-  /** Target type */
+  /** Target type — what this effect acts upon */
   objetivo?: 'self' | 'campeon_propio' | 'campeon_rival' | 'mistica_rival' | 'arcana_rival'
            | 'todos_campeones_propios' | 'todos_campeones_rivales'
-           | 'campeon_cementerio_propio' | 'carta_mazo'
-  /** Effect action */
+           | 'campeon_cementerio_propio' | 'cementerio_rival'
+           | 'carta_mazo' | 'rival_hand' | 'ether_pagado_rival'
+  /** Effect action — what this effect DOES */
   efecto?: 'buff' | 'debuff' | 'destruir' | 'robar' | 'invocar_cementerio'
-         | 'devolver_mano' | 'equipar' | 'modificar_stat' | 'keyword' | 'toggle_agotamiento'
-         | 'steal_eter' | 'release_eter' | 'return_eter' | 'rival_discard'
-  /** Stat modifications */
+         | 'devolver_mano' | 'equipar' | 'modificar_stat' | 'keyword'
+         | 'toggle_agotamiento' | 'steal_champion' | 'steal_ether' | 'release_ether'
+         | 'return_ether' | 'force_return_ether' | 'rival_discard'
+         | 'conditional_trigger' | 'equip_grant_ability' | 'prevent_destroy'
+         | 'exile'
+  /** Stat modifications (positive = buff, negative = debuff) */
   stats?: { ATQ?: number; RES?: number }
   /** Keyword to grant */
   keyword?: string
-  /** Duration */
+  /** Duration — how long this effect lasts */
   duracion?: 'permanente' | 'turno' | 'hasta_alba' | 'mientras_ester_bloqueado' | 'n_turnos'
-  /** Trigger condition */
+           | 'mientras_en_campo' | '1_por_turno' | 'mientras_equipped' | 'instant'
+  /** Trigger condition — when this effect activates */
   trigger?: 'al_invocar' | 'al_atacar' | 'al_matar_en_combate' | 'al_pagar_eter'
           | 'inicio_choque' | 'inicio_alba' | 'al_jugar_mistica'
           | 'al_resolver_cadena' | 'al_activar_habilidad' | 'al_ser_enviado_al_cementerio'
           | 'al_ser_destruido_vinculo' | 'ninguno'
-  /** Activation condition text */
+  /** Activation condition text (for Arcanas) */
   condicion?: string
   /** Maximum number of targets */
   maxObjetivos?: number
-  /** Human-readable text (display only) */
+  /** Human-readable text (display only — auto-generated from fields) */
   texto?: string
 }
 

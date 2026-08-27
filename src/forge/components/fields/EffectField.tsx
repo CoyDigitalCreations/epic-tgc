@@ -39,7 +39,10 @@ const OBJETIVO_OPTIONS = [
   { value: 'todos_campeones_propios', label: 'Todos tus Campeones' },
   { value: 'todos_campeones_rivales', label: 'Todos los rivales' },
   { value: 'campeon_cementerio_propio', label: 'Campeón del cementerio propio' },
+  { value: 'cementerio_rival', label: 'Cementerio rival' },
   { value: 'carta_mazo', label: 'Carta del mazo' },
+  { value: 'rival_hand', label: 'Mano del rival' },
+  { value: 'ether_pagado_rival', label: 'Éter pagado del rival' },
 ]
 
 const EFECTO_OPTIONS = [
@@ -53,10 +56,16 @@ const EFECTO_OPTIONS = [
   { value: 'modificar_stat', label: 'Modificar stat' },
   { value: 'keyword', label: 'Dar keyword' },
   { value: 'toggle_agotamiento', label: 'Toggle agotamiento' },
-  { value: 'steal_eter', label: 'Robar éter bloqueado' },
-  { value: 'release_eter', label: 'Liberar éter bloqueado' },
-  { value: 'return_eter', label: 'Devolver éter a reserva' },
+  { value: 'steal_champion', label: 'Robar campeón rival' },
+  { value: 'steal_ether', label: 'Robar éter bloqueado' },
+  { value: 'release_ether', label: 'Liberar éter bloqueado' },
+  { value: 'return_ether', label: 'Devolver éter a reserva' },
+  { value: 'force_return_ether', label: 'Forzar devolución de éter' },
   { value: 'rival_discard', label: 'Rival descarta' },
+  { value: 'conditional_trigger', label: 'Trigger condicional' },
+  { value: 'equip_grant_ability', label: 'Equipar + dar habilidad' },
+  { value: 'prevent_destroy', label: 'Prevenir destrucción' },
+  { value: 'exile', label: 'Exiliar' },
 ]
 
 const DURACION_OPTIONS = [
@@ -64,6 +73,10 @@ const DURACION_OPTIONS = [
   { value: 'turno', label: 'Este turno' },
   { value: 'hasta_alba', label: 'Hasta tu Alba' },
   { value: 'mientras_ester_bloqueado', label: 'Mientras éter bloqueado' },
+  { value: 'mientras_en_campo', label: 'Mientras esté en campo' },
+  { value: 'mientras_equipped', label: 'Mientras esté equipado' },
+  { value: '1_por_turno', label: '1 por turno' },
+  { value: 'instant', label: 'Instantáneo' },
   { value: 'n_turnos', label: 'N turnos' },
 ]
 

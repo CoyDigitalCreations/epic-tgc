@@ -404,7 +404,7 @@ export const ESTASIS_CARDS: AnyCard[] = [
     updatedAt: FB_TS,
     stats: { cost: 2 },
     efecto: 'Devuelve un Campeón que controla el rival con ATQ 5 o menos a la mano de su dueño.',
-      efectoData: {"tipo":"hechizo","texto":"Devuelve un Campeón que controla el rival con ATQ 5 o menos a la mano de su dueño.","efecto":"devolver_mano","objetivo":"campeon_propio"},
+      efectoData: {"tipo":"hechizo","texto":"Devuelve un Campeón que controla el rival con ATQ 5 o menos a la mano de su dueño.","efecto":"devolver_mano","objetivo":"campeon_rival"},
   },
   {
     id: 'FB-020',
@@ -1140,7 +1140,7 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     updatedAt: DS_TS,
     stats: { cost: 0 },
     efecto: 'El rival pierde 1 carta de su mano al azar.',
-      efectoData: {"tipo":"hechizo","texto":"El rival pierde 1 carta de su mano al azar.","efecto":"debuff","objetivo":"campeon_rival"},
+      efectoData: {"tipo":"hechizo","texto":"El rival pierde 1 carta de su mano al azar.","efecto":"rival_discard","objetivo":"rival_hand"},
   },
   {
     id: 'DS-027',
@@ -1155,7 +1155,7 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     updatedAt: DS_TS,
     stats: { cost: 0 },
     efecto: 'El rival devuelve hasta 2 Éter de su zona de pago (1A) a su Reserva.',
-      efectoData: {"tipo":"hechizo","texto":"El rival devuelve hasta 2 Éter de su zona de pago (1A) a su Reserva.","efecto":"devolver_mano","objetivo":"campeon_propio"},
+      efectoData: {"tipo":"hechizo","texto":"El rival devuelve hasta 2 Éter de su zona de pago (1A) a su Reserva.","efecto":"return_ether","objetivo":"ether_pagado_rival"},
   },
   {
     id: 'DS-028',
