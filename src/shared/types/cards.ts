@@ -52,14 +52,24 @@ export interface EfectoData {
           | 'inicio_choque' | 'inicio_alba' | 'al_jugar_mistica'
           | 'al_resolver_cadena' | 'al_activar_habilidad' | 'al_ser_enviado_al_cementerio'
           | 'al_ser_destruido_vinculo' | 'ninguno'
-  /** Activation condition text (for Arcanas) */
+  /** Activation condition (structured — for Arcanas and conditional effects) */
   condicion?: string
   /** Maximum number of targets */
   maxObjetivos?: number
   /** Human-readable text (AUTO-GENERATED from fields — not user-editable) */
   texto?: string
-  /** Additional effect text for edge cases (e.g., "Éter regresa a reserva") */
-  campoAdicional?: string
+  /** Regroup ether in Dawn phase — "Al inicio de tu próxima Alba reagrupa el Éter usado" */
+  reagruparAlba?: boolean
+  /** Secondary condition (structured — appears when trigger has prerequisite) */
+  condicionSecundaria?: CondicionSecundaria
+}
+
+/** Structured secondary condition — no free text */
+export interface CondicionSecundaria {
+  /** Condition type */
+  tipo: 'controlar_campeones' | 'controlar_eter_bloqueado' | 'controlar_otro_campeon'
+  /** Minimum count (for "2+ campeones" patterns) */
+  cantidad?: number
 }
 
 /** Base card metadata */

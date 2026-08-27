@@ -135,9 +135,19 @@ function generateEffectText(data: EfectoData): string {
     parts.push(`(${data.condicion})`)
   }
 
-  // Additional field
-  if (data.campoAdicional) {
-    parts.push(data.campoAdicional)
+  // Secondary condition
+  if (data.condicionSecundaria) {
+    const condTexts: Record<string, string> = {
+      'controlar_campeones': `si controlas ${data.condicionSecundaria.cantidad ?? 2}+ Campeones`,
+      'controlar_eter_bloqueado': 'si controlas Campeones con Éter bloqueado',
+      'controlar_otro_campeon': 'si controlas otro Campeón',
+    }
+    parts.push(condTexts[data.condicionSecundaria.tipo] || data.condicionSecundaria.tipo)
+  }
+
+  // Regroup ether in Dawn
+  if (data.reagruparAlba) {
+    parts.push('Al inicio de tu próxima Alba reagrupa el Éter usado por este efecto')
   }
 
   return parts.length > 0 ? parts.join(' ') + '.' : 'Efecto sin definir.'
@@ -236,7 +246,7 @@ export function EffectList({ cardType, effects, onChange, maxEffects = 3 }: Effe
                   label=""
                   value={effect}
                   onChange={(v) => { if (v) updateEffect(idx, v) }}
-                  showFields={['tipo', 'costoTipo', 'costoMax', 'trigger', 'objetivo', 'efecto', 'stats', 'keyword', 'duracion', 'condicion', 'maxObjetivos', 'campoAdicional', 'statsReserva']}
+                  showFields={['tipo', 'costoTipo', 'costoMax', 'trigger', 'objetivo', 'efecto', 'stats', 'keyword', 'duracion', 'condicion', 'maxObjetivos', 'reagruparAlba', 'condicionSecundaria', 'statsReserva']}
                 />
                 {/* Auto-generated text preview */}
                 {effect.texto && (

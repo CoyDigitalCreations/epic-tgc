@@ -200,10 +200,10 @@ export function EffectField({ label, value, onChange, showFields }: EffectFieldP
           </div>
         </div>
       )}
-      {/* Condition text */}
+      {/* Condition text — only for Arcana activation conditions */}
       {shouldShow('condicion') && (
         <div className="flex flex-col gap-1 mt-2">
-          <label className="text-[10px] uppercase tracking-wider text-gray-400">Condición (texto)</label>
+          <label className="text-[10px] uppercase tracking-wider text-gray-400">Condición de activación</label>
           <input
             type="text"
             value={data.condicion ?? ''}
@@ -213,17 +213,54 @@ export function EffectField({ label, value, onChange, showFields }: EffectFieldP
           />
         </div>
       )}
-      {/* Additional field for edge cases */}
-      {shouldShow('campoAdicional') && (
-        <div className="flex flex-col gap-1 mt-2">
-          <label className="text-[10px] uppercase tracking-wider text-gray-400">Campo adicional (texto extra)</label>
+      {/* Regroup ether in Dawn — only when costoTipo is ether_bloqueado */}
+      {shouldShow('reagruparAlba') && data.costoTipo === 'eter_bloqueado' && (
+        <div className="flex items-center gap-2 mt-2">
           <input
-            type="text"
-            value={data.campoAdicional ?? ''}
-            onChange={(e) => update({ campoAdicional: e.target.value || undefined })}
-            placeholder="ej: Éter regresa a reserva"
-            className="bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs text-gray-200"
+            type="checkbox"
+            checked={data.reagruparAlba ?? false}
+            onChange={(e) => update({ reagruparAlba: e.target.checked || undefined })}
+            className="rounded border-gray-600"
           />
+          <label className="text-[10px] uppercase tracking-wider text-gray-400">
+            Reagrupar éter en Alba
+          </label>
+        </div>
+      )}
+      {/* Secondary condition — only for specific triggers */}
+      {shouldShow('condicionSecundaria') && (
+        <div className="flex flex-col gap-1 mt-2">
+          <label className="text-[10px] uppercase tracking-wider text-gray-400">Condición secundaria</label>
+          <select
+            value={data.condicionSecundaria?.tipo ?? ''}
+            onChange={(e) => {
+              if (!e.target.value) {
+                update({ condicionSecundaria: undefined })
+              } else {
+                update({
+                  condicionSecundaria: {
+                    tipo: e.target.value as any,
+                    cantidad: e.target.value === 'controlar_campeones' ? 2 : undefined,
+                  },
+                })
+              }
+            }}
+            className="bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs text-gray-200"
+          >
+            <option value="">Sin condición</option>
+            <option value="controlar_campeones">Controlar N+ Campeones</option>
+            <option value="controlar_eter_bloqueado">Controlar Campeones con Éter bloqueado</option>
+            <option value="controlar_otro_campeon">Controlar otro Campeón</option>
+          </select>
+          {data.condicionSecundaria?.tipo === 'controlar_campeones' && (
+            <NumberInput
+              label="Mín. campeones"
+              value={data.condicionSecundaria.cantidad}
+              onChange={(v) => update({ condicionSecundaria: { ...data.condicionSecundaria!, cantidad: v } })}
+              min={1}
+              max={5}
+            />
+          )}
         </div>
       )}
       {/* Stats while in reserve */}

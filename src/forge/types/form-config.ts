@@ -86,7 +86,7 @@ export const FORM_CONFIGS: CardFormConfig[] = [
       { name: 'name', label: 'Nombre', type: 'text', required: true, placeholder: 'Ej: El Juicio Final' },
       { name: 'facciones', label: 'Facciones (máx 3)', type: 'multi-select', required: false, options: [...FACCIONES], max: 3 },
       { name: 'cost', label: 'Coste de Éter', type: 'number', required: true, min: 0, max: 20 },
-      { name: 'condicion', label: 'Condición de Activación', type: 'textarea', required: true },
+      { name: 'condicion', label: 'Condición de Activación', type: 'textarea', required: true, placeholder: 'No se puede activar el turno en que fue colocada' },
       { name: 'recompensa', label: 'Recompensa', type: 'textarea', required: true },
       { name: 'efectos', label: 'Efectos', type: 'effect-list', required: false },
       { name: 'keywords', label: 'Palabras Clave', type: 'multi-select', required: false },
