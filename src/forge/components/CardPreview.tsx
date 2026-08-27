@@ -427,51 +427,69 @@ export function RenderCarta({
           </div>
         )}
 
-        {/* Habilidades según tipo */}
+        {/* Habilidades según tipo — reads from efectos[].texto (unified system) */}
         {(() => {
           const c = card
+          // Helper: get effect text by tipo from efectos array
+          const getEffectText = (tipo: string): string | undefined => {
+            if (!('efectos' in c) || !c.efectos) return undefined
+            return c.efectos.find((e) => e.tipo === tipo)?.texto
+          }
+
           switch (c.type) {
             case 'Campeón': {
-              const cm = c
               const parts: React.ReactNode[] = []
-              if (cm.efectoPasivo) {
+              // New system: read from efectos[]
+              const pasivo = getEffectText('pasivo')
+              const disparo = getEffectText('disparo')
+              const continuo = getEffectText('continuo')
+              // Fallback: legacy text fields
+              const pasivoText = pasivo ?? c.efectoPasivo
+              const disparoText = disparo ?? c.efectoDisparo
+              const continuoText = continuo ?? c.efectoContinuo
+
+              if (pasivoText) {
                 parts.push(
-                  <p key="pasivo" style={{ fontFamily: '"Inter", sans-serif', fontSize: fluidSize(cm.efectoPasivo, 13.5), lineHeight: 1.35, fontWeight: 500, color: '#261a0e', margin: 0 }}>
-                    <strong>Pasivo:</strong> {cm.efectoPasivo}
+                  <p key="pasivo" style={{ fontFamily: '"Inter", sans-serif', fontSize: fluidSize(pasivoText, 13.5), lineHeight: 1.35, fontWeight: 500, color: '#261a0e', margin: 0 }}>
+                    <strong>Pasivo:</strong> {pasivoText}
                   </p>
                 )
               }
-              if (cm.efectoDisparo) {
+              if (disparoText) {
                 parts.push(
-                  <p key="disparo" style={{ fontFamily: '"Inter", sans-serif', fontSize: fluidSize(cm.efectoDisparo, 13.5), lineHeight: 1.35, fontWeight: 500, color: '#261a0e', margin: 0, marginTop: parts.length > 0 ? 8 : 0 }}>
-                    <strong>Disparo:</strong> {cm.efectoDisparo}
+                  <p key="disparo" style={{ fontFamily: '"Inter", sans-serif', fontSize: fluidSize(disparoText, 13.5), lineHeight: 1.35, fontWeight: 500, color: '#261a0e', margin: 0, marginTop: parts.length > 0 ? 8 : 0 }}>
+                    <strong>Disparo:</strong> {disparoText}
                   </p>
                 )
               }
-              if (cm.efectoContinuo) {
+              if (continuoText) {
                 parts.push(
-                  <p key="continuo" style={{ fontFamily: '"Inter", sans-serif', fontSize: fluidSize(cm.efectoContinuo, 13.5), lineHeight: 1.35, fontWeight: 500, color: '#261a0e', margin: 0, marginTop: parts.length > 0 ? 8 : 0 }}>
-                    <strong>Continuo:</strong> {cm.efectoContinuo}
+                  <p key="continuo" style={{ fontFamily: '"Inter", sans-serif', fontSize: fluidSize(continuoText, 13.5), lineHeight: 1.35, fontWeight: 500, color: '#261a0e', margin: 0, marginTop: parts.length > 0 ? 8 : 0 }}>
+                    <strong>Continuo:</strong> {continuoText}
                   </p>
                 )
               }
               return parts.length > 0 ? <>{parts}</> : null
             }
 
-            case 'Mística':
-              return c.efecto ? (
+            case 'Mística': {
+              // New system: read from efectos[]
+              const hechizo = getEffectText('hechizo')
+              const texto = hechizo ?? c.efecto
+              return texto ? (
                 <p
                   style={{
                     fontFamily: '"Inter", sans-serif',
-                    fontSize: fluidSize(c.efecto, 14),
+                    fontSize: fluidSize(texto, 14),
                     lineHeight: 1.4,
                     color: '#1c130b',
                     margin: 0,
                   }}
                 >
-                  <strong>Efecto:</strong> {c.efecto}
+                  <strong>Efecto:</strong> {texto}
                 </p>
               ) : null
+            }
 
             case 'Arcana':
               return (
@@ -506,46 +524,58 @@ export function RenderCarta({
               )
 
             case 'Éter': {
-              const et = c
               const parts: React.ReactNode[] = []
-              if (et.efectoReserva) {
+              // New system: read from efectos[]
+              const reserva = getEffectText('reserva')
+              const pago = getEffectText('pago')
+              const bloqueo = getEffectText('bloqueo')
+              // Fallback: legacy text fields
+              const reservaText = reserva ?? c.efectoReserva
+              const pagoText = pago ?? c.efectoPago
+              const bloqueoText = bloqueo ?? c.efectoBloqueo
+
+              if (reservaText) {
                 parts.push(
-                  <p key="reserva" style={{ fontFamily: '"Inter", sans-serif', fontSize: fluidSize(et.efectoReserva, 14), lineHeight: 1.4, color: '#1c130b', margin: 0 }}>
-                    <strong>Reserva (2A):</strong> {et.efectoReserva}
+                  <p key="reserva" style={{ fontFamily: '"Inter", sans-serif', fontSize: fluidSize(reservaText, 14), lineHeight: 1.4, color: '#1c130b', margin: 0 }}>
+                    <strong>Reserva (2A):</strong> {reservaText}
                   </p>
                 )
               }
-              if (et.efectoPago) {
+              if (pagoText) {
                 parts.push(
-                  <p key="pago" style={{ fontFamily: '"Inter", sans-serif', fontSize: fluidSize(et.efectoPago, 14), lineHeight: 1.4, color: '#1c130b', margin: 0, marginTop: parts.length > 0 ? 8 : 0 }}>
-                    <strong>Pago (1A{et.variantePago ? `, ${et.variantePago}` : ''}):</strong> {et.efectoPago}
+                  <p key="pago" style={{ fontFamily: '"Inter", sans-serif', fontSize: fluidSize(pagoText, 14), lineHeight: 1.4, color: '#1c130b', margin: 0, marginTop: parts.length > 0 ? 8 : 0 }}>
+                    <strong>Pago (1A{c.variantePago ? `, ${c.variantePago}` : ''}):</strong> {pagoText}
                   </p>
                 )
               }
-              if (et.efectoBloqueo) {
+              if (bloqueoText) {
                 parts.push(
-                  <p key="bloqueo" style={{ fontFamily: '"Inter", sans-serif', fontSize: fluidSize(et.efectoBloqueo, 14), lineHeight: 1.4, color: '#1c130b', margin: 0, marginTop: parts.length > 0 ? 8 : 0 }}>
-                    <strong>Bloqueo (1B-1F):</strong> {et.efectoBloqueo}
+                  <p key="bloqueo" style={{ fontFamily: '"Inter", sans-serif', fontSize: fluidSize(bloqueoText, 14), lineHeight: 1.4, color: '#1c130b', margin: 0, marginTop: parts.length > 0 ? 8 : 0 }}>
+                    <strong>Bloqueo (1B-1F):</strong> {bloqueoText}
                   </p>
                 )
               }
               return parts.length > 0 ? <>{parts}</> : null
             }
 
-            case 'Vínculo':
-              return c.efecto ? (
+            case 'Vínculo': {
+              // New system: read from efectos[]
+              const vinculo = getEffectText('vinculo')
+              const texto = vinculo ?? c.efecto
+              return texto ? (
                 <p
                   style={{
                     fontFamily: '"Inter", sans-serif',
-                    fontSize: fluidSize(c.efecto, 14),
+                    fontSize: fluidSize(texto, 14),
                     lineHeight: 1.4,
                     color: '#1c130b',
                     margin: 0,
                   }}
                 >
-                  <strong>Efecto Permanente:</strong> {c.efecto}
+                  <strong>Efecto Permanente:</strong> {texto}
                 </p>
               ) : null
+            }
           }
         })()}
 

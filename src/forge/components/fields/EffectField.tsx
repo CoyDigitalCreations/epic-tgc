@@ -213,17 +213,27 @@ export function EffectField({ label, value, onChange, showFields }: EffectFieldP
           />
         </div>
       )}
-      {/* Display text */}
-      {shouldShow('texto') && (
+      {/* Additional field for edge cases */}
+      {shouldShow('campoAdicional') && (
         <div className="flex flex-col gap-1 mt-2">
-          <label className="text-[10px] uppercase tracking-wider text-gray-400">Texto (display)</label>
-          <textarea
-            value={data.texto ?? ''}
-            onChange={(e) => update({ texto: e.target.value || undefined })}
-            placeholder="Texto que se muestra en la carta..."
-            rows={2}
-            className="bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs text-gray-200 resize-y"
+          <label className="text-[10px] uppercase tracking-wider text-gray-400">Campo adicional (texto extra)</label>
+          <input
+            type="text"
+            value={data.campoAdicional ?? ''}
+            onChange={(e) => update({ campoAdicional: e.target.value || undefined })}
+            placeholder="ej: Éter regresa a reserva"
+            className="bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs text-gray-200"
           />
+        </div>
+      )}
+      {/* Stats while in reserve */}
+      {shouldShow('statsReserva') && data.tipo === 'reserva' && (
+        <div className="mt-2">
+          <p className="text-[10px] uppercase tracking-wider text-gray-400 mb-1">Stats en Reserva</p>
+          <div className="flex gap-2">
+            <NumberInput label="ATQ" value={data.statsReserva?.ATQ} onChange={(v) => update({ statsReserva: { ...data.statsReserva, ATQ: v } })} min={-10} max={10} />
+            <NumberInput label="RES" value={data.statsReserva?.RES} onChange={(v) => update({ statsReserva: { ...data.statsReserva, RES: v } })} min={-10} max={10} />
+          </div>
         </div>
       )}
     </div>

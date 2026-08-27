@@ -35,6 +35,17 @@ function seleccionDesdeCardIds(cardIds: string[]): Map<string, number> {
  * (mismo criterio de nombres que CardPreview).
  */
 function efectosDe(card: AnyCard): { etiqueta: string; texto: string }[] {
+  // New system: read from efectos[]
+  if ('efectos' in card && card.efectos && card.efectos.length > 0) {
+    return card.efectos
+      .filter((e) => e.texto)
+      .map((e) => ({
+        etiqueta: e.tipo.charAt(0).toUpperCase() + e.tipo.slice(1),
+        texto: e.texto!,
+      }))
+  }
+
+  // Fallback: legacy text fields
   switch (card.type) {
     case 'Campeón': {
       const l: { etiqueta: string; texto: string }[] = []

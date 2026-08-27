@@ -15,7 +15,7 @@ export interface CombatStats extends BaseStats {
 /**
  * Structured effect metadata — machine-readable effect parameters.
  * The engine reads this instead of parsing text with regex.
- * `texto` field is display-only (for UI rendering).
+ * `texto` field is AUTO-GENERATED (not user-editable).
  *
  * Based on analysis of all 65 cards: 45 unique patterns, 8 duplicate groups, 8 edge cases.
  */
@@ -40,6 +40,8 @@ export interface EfectoData {
          | 'exile'
   /** Stat modifications (positive = buff, negative = debuff) */
   stats?: { ATQ?: number; RES?: number }
+  /** Stats while in reserve (for effects that change based on zone) */
+  statsReserva?: { ATQ?: number; RES?: number }
   /** Keyword to grant */
   keyword?: string
   /** Duration — how long this effect lasts */
@@ -54,8 +56,10 @@ export interface EfectoData {
   condicion?: string
   /** Maximum number of targets */
   maxObjetivos?: number
-  /** Human-readable text (display only — auto-generated from fields) */
+  /** Human-readable text (AUTO-GENERATED from fields — not user-editable) */
   texto?: string
+  /** Additional effect text for edge cases (e.g., "Éter regresa a reserva") */
+  campoAdicional?: string
 }
 
 /** Base card metadata */
@@ -91,6 +95,9 @@ export interface CardMeta {
 export interface CampeonCard extends CardMeta {
   type: 'Campeón'
   stats: CombatStats
+  /** Unified effect list — the ONLY source of truth for effects (required after migration) */
+  efectos?: EfectoData[]
+  /** Legacy text fields (optional, kept for backward compat during migration) */
   efectoPasivo?: string
   efectoDisparo?: string
   efectoContinuo?: string
@@ -98,7 +105,7 @@ export interface CampeonCard extends CardMeta {
   disparoAgota?: boolean
   /** Identificador oculto: ¿el Disparo es de un solo uso? */
   disparoUnSoloUso?: boolean
-  /** Structured effect data (optional — engine prefers this over text parsing) */
+  /** Legacy structured data (optional, kept for backward compat) */
   efectoPasivoData?: EfectoData
   efectoDisparoData?: EfectoData
   efectoContinuoData?: EfectoData
@@ -108,18 +115,24 @@ export interface MisticaCard extends CardMeta {
   type: 'Mística'
   /** No tienen Poder ni Resistencia — son puramente conjuros (5.3) */
   stats: BaseStats
+  /** Unified effect list */
+  efectos?: EfectoData[]
+  /** Legacy text field */
   efecto: string
-  /** Structured effect data */
+  /** Legacy structured data */
   efectoData?: EfectoData
 }
 
 export interface ArcanaCard extends CardMeta {
   type: 'Arcana'
   stats: BaseStats
+  /** Unified effect list — first effect is condition, second is reward */
+  efectos?: EfectoData[]
+  /** Legacy text fields */
   condicion?: string
   recompensa?: string
   efecto?: string
-  /** Structured effect data */
+  /** Legacy structured data */
   condicionData?: EfectoData
   recompensaData?: EfectoData
   efectoData?: EfectoData
@@ -129,14 +142,14 @@ export interface EterCard extends CardMeta {
   type: 'Éter'
   /** No combaten: valen 1 en v2.0 (7.7). Sin Poder ni Resistencia */
   stats: BaseStats
-  /** Efecto en zona RESERVA (2A) */
+  /** Unified effect list — up to 3 effects (reserva, pago, bloqueo) */
+  efectos?: EfectoData[]
+  /** Legacy text fields */
   efectoReserva?: string
-  /** Efecto en zona PAGO (1A) — pasivo o gatillo */
   efectoPago?: string
   variantePago?: 'Pasivo' | 'Gatillo'
-  /** Efecto en zona BLOQUEO (1B-1F) */
   efectoBloqueo?: string
-  /** Structured effect data */
+  /** Legacy structured data */
   efectoReservaData?: EfectoData
   efectoPagoData?: EfectoData
   efectoBloqueoData?: EfectoData
@@ -146,9 +159,11 @@ export interface VinculoCard extends CardMeta {
   type: 'Vínculo'
   /** No cuestan Éter (5.7) */
   stats: BaseStats
-  /** Efecto PERMANENTE a favor del dueño al ser destruido */
+  /** Unified effect list */
+  efectos?: EfectoData[]
+  /** Legacy text field */
   efecto: string
-  /** Structured effect data */
+  /** Legacy structured data */
   efectoData?: EfectoData
 }
 

@@ -18,12 +18,12 @@ interface EffectListProps {
 const ALLOWED_EFFECTS: Record<CardType, EfectoData['tipo'][]> = {
   'Campeón': ['pasivo', 'continuo', 'disparo'],
   'Mística': ['hechizo'],
-  'Arcana': ['pasivo'], // condicion + recompensa handled separately
+  'Arcana': ['pasivo'],
   'Éter': ['reserva', 'pago', 'bloqueo'],
   'Vínculo': ['vinculo'],
 }
 
-/** Generate human-readable text from EfectoData */
+/** Generate human-readable text from EfectoData — improved Spanish */
 function generateEffectText(data: EfectoData): string {
   const parts: string[] = []
 
@@ -82,7 +82,7 @@ function generateEffectText(data: EfectoData): string {
     'devolver_mano': 'devuelve a la mano',
     'equipar': 'Se equipa a',
     'modificar_stat': 'gana',
-    'keyword': `tiene`,
+    'keyword': 'tiene',
     'toggle_agotamiento': 'cambia el agotamiento de',
     'steal_champion': 'toma control de',
     'steal_ether': 'toma control de',
@@ -135,6 +135,11 @@ function generateEffectText(data: EfectoData): string {
     parts.push(`(${data.condicion})`)
   }
 
+  // Additional field
+  if (data.campoAdicional) {
+    parts.push(data.campoAdicional)
+  }
+
   return parts.length > 0 ? parts.join(' ') + '.' : 'Efecto sin definir.'
 }
 
@@ -151,7 +156,6 @@ export function EffectList({ cardType, effects, onChange, maxEffects = 3 }: Effe
 
     const newEffect: EfectoData = {
       tipo: availableTypes[0],
-      texto: '',
     }
     onChange([...effects, newEffect])
     setExpandedIdx(effects.length)
@@ -185,13 +189,13 @@ export function EffectList({ cardType, effects, onChange, maxEffects = 3 }: Effe
             onClick={addEffect}
             className="text-xs bg-ether-600/30 hover:bg-ether-600/50 text-ether-200 px-2 py-1 rounded transition-colors cursor-pointer"
           >
-            + Agregar
+            + Agregar Efecto
           </button>
         )}
       </div>
 
       {effects.length === 0 && (
-        <p className="text-xs text-gray-500 italic">Sin efectos definidos</p>
+        <p className="text-xs text-gray-500 italic">Sin efectos definidos — presiona "+ Agregar Efecto" para comenzar</p>
       )}
 
       {effects.map((effect, idx) => {
@@ -232,12 +236,12 @@ export function EffectList({ cardType, effects, onChange, maxEffects = 3 }: Effe
                   label=""
                   value={effect}
                   onChange={(v) => { if (v) updateEffect(idx, v) }}
-                  showFields={['tipo', 'costoTipo', 'costoMax', 'trigger', 'objetivo', 'efecto', 'stats', 'keyword', 'duracion', 'condicion', 'maxObjetivos']}
+                  showFields={['tipo', 'costoTipo', 'costoMax', 'trigger', 'objetivo', 'efecto', 'stats', 'keyword', 'duracion', 'condicion', 'maxObjetivos', 'campoAdicional', 'statsReserva']}
                 />
                 {/* Auto-generated text preview */}
                 {effect.texto && (
                   <div className="mt-2 p-2 bg-gray-900/50 rounded border border-gray-700/50">
-                    <p className="text-[10px] uppercase tracking-wider text-gray-500 mb-1">Texto generado</p>
+                    <p className="text-[10px] uppercase tracking-wider text-gray-500 mb-1">Texto generado (auto)</p>
                     <p className="text-xs text-gray-300 italic">{effect.texto}</p>
                   </div>
                 )}

@@ -1,95 +1,87 @@
 /**
- * Migra efectoData a paquetes.ts desde el JSON de migración.
- * Lee el JSON generado y agrega efectoData a cada carta.
- *
- * Uso: npx tsx scripts/apply-migration.ts [--dry-run]
+ * Script para generar el código migrado de paquetes.ts
+ * Lee el archivo original y agrega efectos[] a cada carta
  */
-import { readFileSync, writeFileSync } from 'node:fs'
-import { resolve } from 'node:path'
+import { readFileSync, writeFileSync } from 'fs'
+import type { AnyCard, EfectoData } from '../src/shared/types/cards'
 
-const isDryRun = process.argv.includes('--dry-run')
+/** Extrae efectos[] de una carta basándose en sus campos legacy */
+function migrarCarta(card: AnyCard): EfectoData[] {
+  const efectos: EfectoData[] = []
 
-const migrationPath = resolve(process.cwd(), 'seed', 'efectodata-migration.json')
-const migrationData = JSON.parse(readFileSync(migrationPath, 'utf8')) as any[]
+  switch (card.type) {
+    case 'Campeón': {
+      if (card.efectoPasivoData) efectos.push(card.efectoPasivoData)
+      else if (card.efectoPasivo) efectos.push({ tipo: 'pasivo', texto: card.efectoPasivo, trigger: 'al_invocar', objetivo: 'campeon_propio' })
+      if (card.efectoDisparoData) efectos.push(card.efectoDisparoData)
+      else if (card.efectoDisparo) efectos.push({ tipo: 'disparo', texto: card.efectoDisparo, costoTipo: 'eter', trigger: 'al_activar_habilidad' })
+      if (card.efectoContinuoData) efectos.push(card.efectoContinuoData)
+      else if (card.efectoContinuo) efectos.push({ tipo: 'continuo', texto: card.efectoContinuo, costoTipo: 'eter_bloqueado' })
+      break
+    }
+    case 'Mística': {
+      if (card.efectoData) efectos.push(card.efectoData)
+      else if (card.efecto) efectos.push({ tipo: 'hechizo', texto: card.efecto })
+      break
+    }
+    case 'Arcana': {
+      if (card.condicionData) efectos.push(card.condicionData)
+      else if (card.condicion) efectos.push({ tipo: 'pasivo', condicion: card.condicion, texto: card.condicion })
+      if (card.recompensaData) efectos.push(card.recompensaData)
+      else if (card.recompensa) efectos.push({ tipo: 'hechizo', texto: card.recompensa })
+      if (card.efectoData) efectos.push(card.efectoData)
+      else if (card.efecto) efectos.push({ tipo: 'pasivo', texto: card.efecto })
+      break
+    }
+    case 'Éter': {
+      if (card.efectoReservaData) efectos.push(card.efectoReservaData)
+      else if (card.efectoReserva) efectos.push({ tipo: 'reserva', texto: card.efectoReserva, trigger: 'ninguno' })
+      if (card.efectoPagoData) efectos.push(card.efectoPagoData)
+      else if (card.efectoPago) efectos.push({ tipo: 'pago', texto: card.efectoPago, trigger: 'ninguno' })
+      if (card.efectoBloqueoData) efectos.push(card.efectoBloqueoData)
+      else if (card.efectoBloqueo) efectos.push({ tipo: 'bloqueo', texto: card.efectoBloqueo })
+      break
+    }
+    case 'Vínculo': {
+      if (card.efectoData) efectos.push(card.efectoData)
+      else if (card.efecto) efectos.push({ tipo: 'vinculo', texto: card.efecto })
+      break
+    }
+  }
+  return efectos
+}
 
-const paqPath = resolve(process.cwd(), 'src', 'shared', 'data', 'paquetes.ts')
-let paqContent = readFileSync(paqPath, 'utf8')
+// Read original file
+const content = readFileSync('src/shared/data/paquetes.ts', 'utf8')
 
-// Create a map of card ID -> efectoData
-const efectoDataMap = new Map<string, any>()
-for (const card of migrationData) {
-  if (Object.keys(card.efectoData).length > 0) {
-    efectoDataMap.set(card.id, card.efectoData)
+// Import cards
+const { ESTASIS_CARDS, DISONANCIA_CARDS } = await import('../src/shared/data/paquetes.ts')
+
+// Process all cards
+const allCards = [...ESTASIS_CARDS, ...DISONANCIA_CARDS]
+const migratedCards = new Map<string, string>()
+
+for (const card of allCards) {
+  const efectos = migrarCarta(card as AnyCard)
+  if (efectos.length > 0) {
+    migratedCards.set(card.id, JSON.stringify(efectos).replace(/"/g, '"'))
   }
 }
 
-console.log(`Found ${efectoDataMap.size} cards with efectoData to migrate`)
+// Generate replacement code
+let updatedContent = content
 
-// For each card in paquetes.ts, add efectoData
-let changes = 0
-
-for (const [cardId, efectoData] of efectoDataMap) {
-  // Find the card block in paqContent
-  const idPattern = `id: '${cardId}'`
-  const start = paqContent.indexOf(idPattern)
-  if (start === -1) {
-    console.log(`⚠️  ${cardId}: NOT FOUND in paquetes.ts`)
-    continue
+for (const [cardId, efectosJson] of migratedCards) {
+  // Find the card's closing brace and add efectos before it
+  // Pattern: find card by id, then add efectos before the closing }
+  const cardRegex = new RegExp(`(id: '${cardId}'[\\s\\S]*?)(\\n  \\},)`)
+  const match = updatedContent.match(cardRegex)
+  if (match) {
+    const indent = '    '
+    const efectosCode = `${indent}efectos: ${efectosJson.replace(/"/g, "'")},\n`
+    updatedContent = updatedContent.replace(cardRegex, `$1${efectosCode}$2`)
   }
-
-  // Find the closing }, after this card
-  const afterThis = paqContent.substring(start + idPattern.length)
-  const nextCardMatch = afterThis.match(/\bid:\s*'[A-Z]{2}-\d+'/)
-  let endIdx: number
-  if (nextCardMatch) {
-    const nextIdIdx = afterThis.indexOf(nextCardMatch[0])
-    const beforeNext = paqContent.substring(0, start + idPattern.length + nextIdIdx)
-    endIdx = beforeNext.lastIndexOf('},')
-    if (endIdx === -1) endIdx = start + idPattern.length + nextIdIdx
-    else endIdx += 2
-  } else {
-    // Last card
-    const arrayEnd = paqContent.indexOf(']', start)
-    const beforeEnd = paqContent.substring(0, arrayEnd)
-    endIdx = beforeEnd.lastIndexOf('},')
-    if (endIdx === -1) endIdx = arrayEnd
-    else endIdx += 2
-  }
-
-  const cardBlock = paqContent.substring(start, endIdx)
-
-  // Check if efectoData already exists
-  if (cardBlock.includes('efectoPasivoData') || cardBlock.includes('efectoDisparoData') ||
-      cardBlock.includes('efectoContinuoData') || cardBlock.includes('efectoData') ||
-      cardBlock.includes('efectoReservaData') || cardBlock.includes('efectoPagoData') ||
-      cardBlock.includes('efectoBloqueoData') || cardBlock.includes('condicionData') ||
-      cardBlock.includes('recompensaData')) {
-    // Already has effect data, skip
-    continue
-  }
-
-  // Generate efectoData lines
-  const dataLines: string[] = []
-  for (const [key, value] of Object.entries(efectoData)) {
-    dataLines.push(`    ${key}: ${JSON.stringify(value)},`)
-  }
-
-  if (dataLines.length === 0) continue
-
-  // Insert before the closing }
-  const insertPoint = cardBlock.lastIndexOf('}')
-  const newBlock = cardBlock.substring(0, insertPoint) + dataLines.join('\n') + '\n  ' + cardBlock.substring(insertPoint)
-
-  paqContent = paqContent.substring(0, start) + newBlock + paqContent.substring(endIdx)
-  changes++
-  console.log(`  ${cardId}: +${Object.keys(efectoData).length} efectoData fields`)
 }
 
-console.log(`\n${isDryRun ? 'DRY RUN' : 'UPDATE'}: ${changes} cards updated`)
-
-if (!isDryRun && changes > 0) {
-  writeFileSync(paqPath, paqContent)
-  console.log(`✅ paquetes.ts updated with efectoData`)
-} else if (isDryRun) {
-  console.log(`(dry run — no changes written)`)
-}
+writeFileSync('src/shared/data/paquetes.ts', updatedContent)
+console.log(`✅ Migrated ${migratedCards.size} cards with efectos[]`)

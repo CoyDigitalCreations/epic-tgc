@@ -3,9 +3,11 @@ import { useCardStore } from '../store/useCardStore'
 import { CARD_TYPES, RARITIES, KEYWORDS } from '../../shared/types'
 import { getFormConfig } from '../types/form-config'
 import type { CardType } from '../../shared/types'
+import type { EfectoData } from '../../shared/types/cards'
 import { validateCard } from '../utils/validation'
 import { TextField, NumberField, SelectField, TextAreaField, MultiSelectField } from './fields'
 import { EffectField } from './fields/EffectField'
+import { EffectList } from './EffectList'
 import { ImageUpload } from './ImageUpload'
 import { PAQUETES } from '../../shared/data/paquetes'
 
@@ -171,6 +173,17 @@ export function CardForm() {
             value={effectData as any}
             onChange={(v) => onChange(v)}
             showFields={field.showEffectFields as any}
+          />
+        )
+      }
+      case 'effect-list': {
+        const effects = (value as EfectoData[]) ?? []
+        return (
+          <EffectList
+            key={field.name}
+            cardType={(draft.type as CardType) || 'Campeón'}
+            effects={effects}
+            onChange={(v) => onChange(v)}
           />
         )
       }
