@@ -1,4 +1,4 @@
-import { esEter, faccionesCompartidas, getCardMeta } from './cards'
+import { esEter, getCardMeta } from './cards'
 import type { AnyCard } from '../../shared/types'
 import { dispararTrigger } from './efectos'
 import type { Ctx, GameState, PlayerId } from './types'

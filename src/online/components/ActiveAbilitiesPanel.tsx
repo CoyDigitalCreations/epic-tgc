@@ -24,7 +24,7 @@ interface ActiveEffect {
 function getChampionEffectText(meta: CampeonCard, type: 'aura-campo' | 'keyword'): string {
   if (type === 'aura-campo') {
     // Aura de campo = efecto pasivo que aplica a otros
-    return meta.efectoPasivo ?? meta.efectoActivo ?? 'Efecto de campo'
+    return meta.efectoPasivo ?? meta.efectoDisparo ?? 'Efecto de campo'
   }
   // Keywords se muestran como están
   return meta.efectoPasivo ?? ''

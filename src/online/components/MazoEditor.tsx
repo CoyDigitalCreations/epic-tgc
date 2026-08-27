@@ -39,21 +39,18 @@ function efectosDe(card: AnyCard): { etiqueta: string; texto: string }[] {
     case 'Campeón': {
       const l: { etiqueta: string; texto: string }[] = []
       if (card.efectoPasivo) l.push({ etiqueta: 'Pasivo', texto: card.efectoPasivo })
-      if (card.efectoActivo) l.push({ etiqueta: 'Activo', texto: card.efectoActivo })
+      if (card.efectoDisparo) l.push({ etiqueta: 'Disparo', texto: card.efectoDisparo })
+      if (card.efectoContinuo) l.push({ etiqueta: 'Continuo', texto: card.efectoContinuo })
       return l
     }
     case 'Mística':
       return card.efecto ? [{ etiqueta: 'Efecto', texto: card.efecto }] : []
-    case 'Táctica':
-      return card.descripcion ? [{ etiqueta: 'Efecto', texto: card.descripcion }] : []
     case 'Arcana': {
       const l: { etiqueta: string; texto: string }[] = []
       if (card.condicion) l.push({ etiqueta: 'Condición', texto: card.condicion })
       if (card.recompensa) l.push({ etiqueta: 'Recompensa', texto: card.recompensa })
       return l
     }
-    case 'Combate':
-      return card.descripcion ? [{ etiqueta: 'Efecto', texto: card.descripcion }] : []
     case 'Éter': {
       const l: { etiqueta: string; texto: string }[] = []
       if (card.efectoReserva) l.push({ etiqueta: 'Reserva', texto: card.efectoReserva })

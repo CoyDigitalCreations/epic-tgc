@@ -3,7 +3,6 @@
  * Extraído de actions.ts para separación de dominios (change: refactor-engine).
  */
 import type { GameState, Ctx, PlayerId, FaseNombre } from './types'
-import { shuffleFisherYates } from './rng'
 import { purgarEfectosTemporales, purgarKeywordsTemporales, dispararTrigger } from './efectos'
 import { resolverFaseEfectos } from './effectRegistry'
 import { limpiarCombate, resolverAlba } from './phases'

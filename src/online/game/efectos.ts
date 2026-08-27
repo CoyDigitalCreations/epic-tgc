@@ -1,5 +1,4 @@
 import { esCampeon, getCardMeta, type AnyCard } from './cards'
-import { enviarAlCementerio } from './replacements'
 import type { CardInstance, Ctx, ExpiraModificador, GameState, PlayerId } from './types'
 
 /**
@@ -180,9 +179,8 @@ export function aurasDe(s: GameState, id: string): AurasAplicadas {
       // Habilidades activas "Bloqueado" (FB-016 Cassandra, DS-016 Korr):
       // si la fuente tiene éteres bloqueados y tiene efectoDisparo con 'bloqueado',
       // aplica un aura a TODOS los campeones que controla el dueño de la fuente.
-      const fuenteOwner = fuenteInst.owner
       if (
-        fuenteMeta.efectoDisparo?.includes('bloqueado') &&
+        'efectoDisparo' in fuenteMeta && (fuenteMeta as any).efectoDisparo?.includes('bloqueado') &&
         (fuenteInst.eterBloqueado?.length ?? 0) > 0
       ) {
         // Cassandra (FB-016): +1 RES a todos los que controla
@@ -375,7 +373,7 @@ export function otorgarKeyword(s: GameState, id: string, kw: string, temporal = 
  * `jugador`: si se pasa, solo purga para ese jugador.
  * `ctx`: opcional; se usa para emitir eventos y enviar Tácticas al cementerio.
  */
-export function purgarEfectosTemporales(s: GameState, expira: ExpiraModificador, jugador?: PlayerId, ctx?: Ctx): void {
+export function purgarEfectosTemporales(s: GameState, expira: ExpiraModificador, jugador?: PlayerId, _ctx?: Ctx): void {
   const jugadores: PlayerId[] = jugador ? [jugador] : ['A', 'B']
   for (const j of jugadores) {
     for (const id of instanciasEnCampo(s, j)) {

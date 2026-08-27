@@ -1227,8 +1227,8 @@ export function Tablero({ vista, acciones, leTocaA, logDetallado = [], onAccion,
                 ? pj.cementerio
                 : panelAbierto.zona === 'exilio'
                   ? pj.exilio
-                  : panelAbierto.campeonSlot !== undefined
-                    ? vista.instances[pj.campo.campeones[panelAbierto.campeonSlot]]?.eterBloqueado ?? []
+                  : panelAbierto.campeonSlot !== undefined && pj.campo.campeones[panelAbierto.campeonSlot] !== null
+                    ? vista.instances[pj.campo.campeones[panelAbierto.campeonSlot]!]?.eterBloqueado ?? []
                     : pj.campo.campeones
                       .filter((id): id is string => id !== null)
                       .flatMap((cid) => vista.instances[cid]?.eterBloqueado ?? [])
@@ -1272,7 +1272,7 @@ export function Tablero({ vista, acciones, leTocaA, logDetallado = [], onAccion,
                 <p className="text-xs text-gray-500 italic">Esta zona está vacía.</p>
               ) : (
                 <div className="flex gap-2 flex-wrap items-start">
-                  {insts.map((id) => {
+                  {insts.map((id: string) => {
                     const inst = vista.instances[id]
                     const nombre = inst.cardId ? (getCardMeta(inst.cardId)?.name ?? '') : ''
                     return (

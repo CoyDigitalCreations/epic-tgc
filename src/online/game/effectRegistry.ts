@@ -12,7 +12,7 @@
  *   4. `limpiarFuente()` cuando una carta sale del campo (cementerio/exilio)
  */
 
-import type { Ctx, GameState, PlayerId } from './types'
+import type { Ctx, GameState, PlayerId, Zona } from './types'
 import { enviarAlCementerio } from './replacements'
 
 /* ───────────────────── Types ───────────────────── */
@@ -66,8 +66,6 @@ export interface EfectoPendiente {
 }
 
 /* ───────────────────── Registry ───────────────────── */
-
-let nextId = 1
 
 /** Genera un ID único para efectos pendientes (basado en estado, no en counter global). */
 function generarId(s: GameState): string {
@@ -184,7 +182,7 @@ function ejecutarAccionEfecto(s: GameState, ctx: Ctx, ep: EfectoPendiente): void
       const slotIdx = p.campo.campeones.indexOf(accion.objetivo)
       if (slotIdx !== -1) {
         p.campo.campeones[slotIdx] = null
-        ctx.emit({ type: 'carta_salida_de_zona', cardInstanceId: accion.objetivo, zona: `2${String.fromCharCode(66 + slotIdx)}`, jugador: inst.owner })
+        ctx.emit({ type: 'carta_salida_de_zona', cardInstanceId: accion.objetivo, zona: `2${String.fromCharCode(66 + slotIdx)}` as Zona, jugador: inst.owner })
         enviarAlCementerio(s, ctx, accion.objetivo)
         ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: accion.objetivo, zona: '2G', jugador: inst.owner, bocaArriba: true })
       }
@@ -231,7 +229,7 @@ function ejecutarAccionEfecto(s: GameState, ctx: Ctx, ep: EfectoPendiente): void
       // Buscar en místicas/tácticas (3A-3C)
       const slotMT = p.campo.misticasTacticas.indexOf(accion.objetivo)
       if (slotMT !== -1) {
-        const zona = `3${String.fromCharCode(65 + slotMT)}`
+        const zona = `3${String.fromCharCode(65 + slotMT)}` as Zona
         ctx.emit({ type: 'carta_salida_de_zona', cardInstanceId: accion.objetivo, zona, jugador: inst.owner })
         p.campo.misticasTacticas[slotMT] = null
         p.cementerio.push(accion.objetivo)
@@ -241,7 +239,7 @@ function ejecutarAccionEfecto(s: GameState, ctx: Ctx, ep: EfectoPendiente): void
       // Buscar en arcanas/combate (3D-3F)
       const slotAC = p.campo.arcanasCombate.indexOf(accion.objetivo)
       if (slotAC !== -1) {
-        const zona = `3${String.fromCharCode(68 + slotAC)}`
+        const zona = `3${String.fromCharCode(68 + slotAC)}` as Zona
         ctx.emit({ type: 'carta_salida_de_zona', cardInstanceId: accion.objetivo, zona, jugador: inst.owner })
         p.campo.arcanasCombate[slotAC] = null
         p.cementerio.push(accion.objetivo)
@@ -251,7 +249,7 @@ function ejecutarAccionEfecto(s: GameState, ctx: Ctx, ep: EfectoPendiente): void
       // Buscar en campeones (2B-2F)
       const slotCP = p.campo.campeones.indexOf(accion.objetivo)
       if (slotCP !== -1) {
-        const zona = `2${String.fromCharCode(66 + slotCP)}`
+        const zona = `2${String.fromCharCode(66 + slotCP)}` as Zona
         ctx.emit({ type: 'carta_salida_de_zona', cardInstanceId: accion.objetivo, zona, jugador: inst.owner })
         p.campo.campeones[slotCP] = null
         enviarAlCementerio(s, ctx, accion.objetivo)

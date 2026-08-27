@@ -1,4 +1,4 @@
-import { getCardMeta, faccionesCompartidas, esArcana, esCampeon, costeEterHabilidad, campeonNecesitaEterBloqueado } from './cards'
+import { getCardMeta, esArcana, esCampeon, costeEterHabilidad, campeonNecesitaEterBloqueado } from './cards'
 import type { Action } from './actions'
 import { generarAccionesForja, validarActivarArcana } from './actions'
 import { atacantesElegibles, asignacionForzada, ataquesSinBloquear, rivalDe, tieneKeyword } from './combat'

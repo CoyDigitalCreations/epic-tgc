@@ -57,12 +57,12 @@ export function validarActivarHabilidad(state: GameState, action: Extract<Action
   const meta = inst.cardId ? getCardMeta(inst.cardId) : null
   if (!meta) return 'carta desconocida'
   const tieneContinuo = 'efectoContinuo' in meta && !!(meta as any).efectoContinuo
-  const tieneDisparo = !!meta.efectoDisparo
+  const tieneDisparo = 'efectoDisparo' in meta && !!(meta as any).efectoDisparo
   if (!tieneContinuo && !tieneDisparo) return 'esta carta no tiene efecto activo'
 
   const esContinuo = tieneContinuo
   // Patrón "Bloqueado": solo si NO es agota (Vorlag tiene "bloqueado" en texto pero es Agota)
-  const esBloqueado = esContinuo || (!('disparoAgota' in meta && (meta as any).disparoAgota) && (meta.efectoDisparo?.includes('bloqueado') ?? false))
+  const esBloqueado = esContinuo || (!('disparoAgota' in meta && (meta as any).disparoAgota) && ((meta as any).efectoDisparo?.includes('bloqueado') ?? false))
 
   if (esBloqueado) {
     // Patrón "Bloqueado": eterIds de la Reserva → Campeón.eterBloqueado
@@ -169,7 +169,7 @@ export function ejecutarActivarHabilidad(s: GameState, action: Extract<Action, {
   // Continuo (efectoContinuo): bloquea éter, agota al activar
   const esContinuo = 'efectoContinuo' in meta && !!(meta as any).efectoContinuo
   // Disparo con éter bloqueado (legacy): no agota
-  const esBloqueadoLegacy = !esContinuo && (meta.efectoDisparo?.includes('bloqueado') ?? false)
+  const esBloqueadoLegacy = !esContinuo && ('efectoDisparo' in meta && ((meta as any).efectoDisparo?.includes('bloqueado') ?? false))
 
   if (esContinuo || esBloqueadoLegacy) {
     // Patrón "Bloqueado": mueve éteres de Reserva → Campeón.eterBloqueado
@@ -178,7 +178,7 @@ export function ejecutarActivarHabilidad(s: GameState, action: Extract<Action, {
     }
     inst.eterBloqueado = [...(inst.eterBloqueado ?? []), ...action.eterIds]
     // Si el texto indica "Alba" → registrar efecto pendiente para liberar en Alba del dueño
-    const textoEfecto = esContinuo ? (meta as any).efectoContinuo : meta.efectoDisparo
+    const textoEfecto = esContinuo ? (meta as any).efectoContinuo : (meta as any).efectoDisparo
     if (textoEfecto?.includes('Alba')) {
       registrarEfectoPendiente(s, {
         fuente: action.cardInstanceId,

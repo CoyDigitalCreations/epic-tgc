@@ -6,9 +6,8 @@
  *
  * §5.5: al destruirse, activa su efecto PERMANENTE a favor del jugador que recibió el daño.
  */
-import { aplicarMod, objetivosCampeonesValidos, otorgarKeyword, registrarEfecto } from '../efectos'
+import { aplicarMod, otorgarKeyword, registrarEfecto } from '../efectos'
 import { registrarEfectoPendiente } from '../effectRegistry'
-import { enviarAlCementerio, liberarEterBloqueado, moverAlCementerio } from '../replacements'
 import type { GameState, PlayerId } from '../types'
 
 /** Busca el campeón con mayor stat en el campo del jugador. */
@@ -77,7 +76,7 @@ export function registrarEfectosVinculos(): void {
       const idx = Math.floor(ctx.next() * p.mano.length)
       const descartada = p.mano.splice(idx, 1)[0]
       p.cementerio.push(descartada)
-      ctx.emit({ type: 'carta_descartada', jugador: rival, cardInstanceId: descartada })
+      ctx.emit({ type: 'carta_descartada', jugador: rival, cardInstanceIds: [descartada] })
     }
   })
 

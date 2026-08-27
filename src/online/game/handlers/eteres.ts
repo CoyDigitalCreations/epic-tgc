@@ -230,7 +230,8 @@ registrarEfecto('al-inicio-choque', 'FB-023', (s, ctx, inst, payload) => {
     const objetivoId = payload.objetivoId!
     if (!s.instances[objetivoId]) return
     aplicarMod(s, objetivoId, 'poder', 3, 'ocaso') // expira al final del turno
-    robarCarta(s, ctx, payload.jugador, 2)
+    robarCarta(s, ctx, payload.jugador)
+    robarCarta(s, ctx, payload.jugador)
     return
   }
   // ARMADO: verificar condición (2+ campeones con éter bloqueado)
@@ -257,7 +258,7 @@ registrarEfecto('al-inicio-choque', 'DS-023', (s, ctx, inst, payload) => {
     const objetivoId = payload.objetivoId!
     if (!s.instances[objetivoId]) return
     aplicarMod(s, objetivoId, 'resistencia', -3, 'permanente') // permanente
-    robarCarta(s, ctx, payload.jugador, 1)
+    robarCarta(s, ctx, payload.jugador)
     return
   }
   // ARMADO: verificar condición (rival tiene 2+ campeones con éter bloqueado)

@@ -2,7 +2,7 @@
  * Movimientos de cartas — invocar, colocar, equipar.
  * Extraído de actions.ts para separación de dominios (change: refactor-engine).
  */
-import type { GameState, PlayerId, CardInstance } from './types'
+import type { GameState, PlayerId, CardInstance, Zona } from './types'
 import { esCampeon, esMistica, esArcana, esVinculo, faccionesCompartidas, getCardMeta } from './cards'
 import { esSingular, sacrificiosRequeridos, copiasEnCampo, campeonesSacrificables } from './campo'
 import { aplicarPago, validarPago, etersParaPagar, type ContextoUso } from './payments'
@@ -12,7 +12,6 @@ import { liberarEterBloqueado, enviarAlCementerio } from './replacements'
 import { abrirCadenaGlobal } from './chain'
 import { validarRequisito } from './effects-guards'
 import type { Action } from './core'
-import type { GameEvent } from './events'
 import type { Ctx } from './types'
 
 /* ─────────────────────── Helpers compartidos ─────────────────────── */
@@ -207,7 +206,7 @@ export function ejecutarColocarVinculo(s: GameState, action: Extract<Action, { t
   const p = s.players[s.turno]
   const id = action.cardInstanceId
   p.mano.splice(p.mano.indexOf(id), 1)
-  const zona = `4${String.fromCharCode(65 + action.slot)}`
+  const zona = `4${String.fromCharCode(65 + action.slot)}` as Zona
   ctx.emit({ type: 'carta_salida_de_zona', cardInstanceId: id, zona: 'mano', jugador: s.turno })
   p.vinculos[action.slot] = id
   s.instances[id]!.bocaArriba = false

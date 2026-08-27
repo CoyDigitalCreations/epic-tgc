@@ -58,6 +58,10 @@ export function formatearEvento(estado: GameState, e: GameEvent): string | null 
     case 'carta_entrada_a_zona':
     case 'carta_salida_de_zona':
       return null // ruido de zonas internas
+    case 'carta_activada':
+      return `${e.jugador} activa ${nombreCarta(estado, e.cardInstanceId)}.`
+    default:
+      return null
   }
 }
 
