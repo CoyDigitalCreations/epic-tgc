@@ -370,6 +370,28 @@ export function RenderCarta({
             userSelect: 'none',
           }}
         />
+        {/* Texto de sabor — una línea, debajo del arte, arriba de info del campeón */}
+        {hasFlavorText && (
+          <p
+            style={{
+              position: 'relative',
+              zIndex: 2,
+              fontFamily: '"Inter", serif',
+              fontSize: fluidSize(card.flavorText, 10),
+              fontStyle: 'italic',
+              lineHeight: 1.2,
+              color: '#fef08a',
+              textAlign: 'center',
+              margin: '4px 0 0',
+              textShadow: '0 1px 3px rgba(0,0,0,0.8)',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            }}
+          >
+            &ldquo;{card.flavorText as string}&rdquo;
+          </p>
+        )}
         <span
           style={{
             position: 'relative',
@@ -586,24 +608,6 @@ export function RenderCarta({
             }
           }
         })()}
-
-        {/* Texto de ambientación (Flavor Text) */}
-        {hasFlavorText && (
-          <div style={{ marginTop: 'auto', marginBottom: 40, paddingTop: 6, borderTop: '1px solid #a3825866' }}>
-            <p
-              style={{
-                fontFamily: '"Inter", serif',
-                fontSize: fluidSize(card.flavorText, 11.5),
-                fontStyle: 'italic',
-                lineHeight: 1.35,
-                color: '#4a3722',
-                margin: 0,
-              }}
-            >
-              &ldquo;{card.flavorText as string}&rdquo;
-            </p>
-          </div>
-        )}
       </TextScroll>
 
       {/* ════════════ BADGES INFERIORES DE ATK Y DEF ════════════ */}
