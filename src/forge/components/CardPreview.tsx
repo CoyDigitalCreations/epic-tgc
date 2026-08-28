@@ -350,6 +350,7 @@ export function RenderCarta({
           right: 18,
           height: 40,
           display: 'flex',
+          flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
           zIndex: 15,
