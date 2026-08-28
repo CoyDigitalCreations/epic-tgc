@@ -173,6 +173,7 @@ export function CardForm() {
             value={effectData as any}
             onChange={(v) => onChange(v)}
             showFields={field.showEffectFields as any}
+            isComandante={field.name === 'efectoComandante'}
           />
         )
       }

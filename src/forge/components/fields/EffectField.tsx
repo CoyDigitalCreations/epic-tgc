@@ -1,8 +1,10 @@
 /**
  * EffectField — Structured effect editor with dropdowns and inputs.
  * Replaces free-text TextAreaField for effect parameters.
+ * Auto-generates texto from structured fields.
  */
 import type { EfectoData } from '../../../shared/types/cards'
+import { generateComandanteText } from '../EffectList'
 
 interface EffectFieldProps {
   label: string
@@ -10,6 +12,8 @@ interface EffectFieldProps {
   onChange: (val: EfectoData | undefined) => void
   /** Which fields to show (defaults to all) */
   showFields?: (keyof EfectoData)[]
+  /** If true, auto-generate texto using generateComandanteText */
+  isComandante?: boolean
 }
 
 const TIPO_OPTIONS = [
@@ -140,11 +144,16 @@ function NumberInput({ label, value, onChange, min, max }: {
   )
 }
 
-export function EffectField({ label, value, onChange, showFields }: EffectFieldProps) {
+export function EffectField({ label, value, onChange, showFields, isComandante }: EffectFieldProps) {
   const data: EfectoData = value ?? { tipo: 'pasivo' }
 
   const update = (patch: Partial<EfectoData>) => {
-    onChange({ ...data, ...patch })
+    const updated = { ...data, ...patch }
+    // Auto-generate texto for Comandante effects
+    if (isComandante) {
+      updated.texto = generateComandanteText(updated)
+    }
+    onChange(updated)
   }
 
   const shouldShow = (field: keyof EfectoData) => !showFields || showFields.includes(field)
