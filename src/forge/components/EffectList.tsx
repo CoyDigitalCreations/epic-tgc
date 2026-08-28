@@ -23,7 +23,7 @@ const ALLOWED_EFFECTS: Record<CardType, EfectoData['tipo'][]> = {
   'Vínculo': ['vinculo'],
 }
 
-/** Generate human-readable text from EfectoData — improved Spanish */
+/** Generate human-readable text from EfectoData — comprehensive Spanish */
 function generateEffectText(data: EfectoData): string {
   const parts: string[] = []
 
@@ -45,18 +45,28 @@ function generateEffectText(data: EfectoData): string {
     parts.push(triggerTexts[data.trigger] || data.trigger)
   }
 
-  // Cost
+  // Cost — only for activatable effects (disparo, continuo with explicit cost)
   if (data.costoTipo && data.costoTipo !== 'ninguno') {
     if (data.costoTipo === 'eter' && data.costoMax) {
       parts.push(`puedes pagar ${data.costoMax} Éter`)
     } else if (data.costoTipo === 'eter_bloqueado' && data.costoMax) {
-      parts.push(`puedes pagar hasta un máximo de ${data.costoMax} Éter (bloqueado)`)
+      parts.push(`puedes bloquear ${data.costoMax} Éter (Max. ${data.costoMax})`)
     } else if (data.costoTipo === 'exhaust') {
       parts.push('puedes agotar esta carta')
     }
   }
 
-  // Target
+  // Secondary condition
+  if (data.condicionSecundaria) {
+    const condTexts: Record<string, string> = {
+      'controlar_campeones': `si controlas ${data.condicionSecundaria.cantidad ?? 2}+ Campeones`,
+      'controlar_eter_bloqueado': 'si controlas Campeones con Éter bloqueado',
+      'controlar_otro_campeon': 'si controlas otro Campeón',
+    }
+    parts.push(condTexts[data.condicionSecundaria.tipo] || data.condicionSecundaria.tipo)
+  }
+
+  // Target + Effect action
   const targetTexts: Record<string, string> = {
     'self': 'esta carta',
     'campeon_propio': 'un Campeón que controles',
@@ -72,7 +82,6 @@ function generateEffectText(data: EfectoData): string {
     'ether_pagado_rival': 'Éter de su zona de pago',
   }
 
-  // Effect action
   const effectTexts: Record<string, string> = {
     'buff': 'gana',
     'debuff': 'pierde',
@@ -130,27 +139,28 @@ function generateEffectText(data: EfectoData): string {
     parts.push(durationTexts[data.duracion] || data.duracion)
   }
 
-  // Condition
+  // Condition (Arcana activation)
   if (data.condicion) {
-    parts.push(`(${data.condicion})`)
+    parts.push(`Condición: ${data.condicion}`)
   }
 
-  // Secondary condition
-  if (data.condicionSecundaria) {
-    const condTexts: Record<string, string> = {
-      'controlar_campeones': `si controlas ${data.condicionSecundaria.cantidad ?? 2}+ Campeones`,
-      'controlar_eter_bloqueado': 'si controlas Campeones con Éter bloqueado',
-      'controlar_otro_campeon': 'si controlas otro Campeón',
-    }
-    parts.push(condTexts[data.condicionSecundaria.tipo] || data.condicionSecundaria.tipo)
+  // Regroup ether
+  if (data.reagrupar) {
+    const faseText = data.reagrupar.fase === 'alba' ? 'Alba' : 'Choque'
+    const turnoText = data.reagrupar.turno === 'propio' ? 'tu' : 'del oponente'
+    parts.push(`Al inicio de ${turnoText} ${faseText} reagrupa el Éter usado por este efecto`)
   }
 
-  // Regroup ether in Dawn
-  if (data.reagruparAlba) {
-    parts.push('Al inicio de tu próxima Alba reagrupa el Éter usado por este efecto')
+  // Build final text
+  let text = parts.length > 0 ? parts.join(' ') + '.' : 'Efecto sin definir.'
+
+  // Capitalize first letter after effect type label (e.g., "Pasivo: text...")
+  // The first letter of the generated text should be uppercase
+  if (text.length > 0) {
+    text = text.charAt(0).toUpperCase() + text.slice(1)
   }
 
-  return parts.length > 0 ? parts.join(' ') + '.' : 'Efecto sin definir.'
+  return text
 }
 
 export function EffectList({ cardType, effects, onChange, maxEffects = 3 }: EffectListProps) {
@@ -246,7 +256,7 @@ export function EffectList({ cardType, effects, onChange, maxEffects = 3 }: Effe
                   label=""
                   value={effect}
                   onChange={(v) => { if (v) updateEffect(idx, v) }}
-                  showFields={['tipo', 'costoTipo', 'costoMax', 'trigger', 'objetivo', 'efecto', 'stats', 'keyword', 'duracion', 'condicion', 'maxObjetivos', 'reagruparAlba', 'condicionSecundaria', 'statsReserva']}
+                  showFields={['tipo', 'costoTipo', 'costoMax', 'trigger', 'objetivo', 'efecto', 'stats', 'keyword', 'duracion', 'condicion', 'maxObjetivos', 'reagrupar', 'condicionSecundaria', 'statsReserva']}
                 />
                 {/* Auto-generated text preview */}
                 {effect.texto && (

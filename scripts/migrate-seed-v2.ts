@@ -16,7 +16,7 @@ interface EfectoData {
   costoMax?: number
   duracion?: string
   condicion?: string
-  reagruparAlba?: boolean
+  reagrupar?: { fase: 'alba' | 'choque'; turno: 'propio' | 'oponente' }
   condicionSecundaria?: { tipo: string; cantidad?: number }
 }
 
@@ -128,9 +128,19 @@ function detectarDuracion(texto: string): string | undefined {
   return undefined
 }
 
-/** Detectar reagruparAlba del texto */
-function detectarReagruparAlba(texto: string): boolean {
-  return texto.includes('reagrupa el Éter') || texto.includes('reagrupa el éter')
+/** Detectar reagrupar del texto — returns { fase, turno } or undefined */
+function detectarReagrupar(texto: string): { fase: 'alba' | 'choque'; turno: 'propio' | 'oponente' } | undefined {
+  if (!texto.includes('reagrupa el Éter') && !texto.includes('reagrupa el éter')) return undefined
+
+  // Detect phase
+  let fase: 'alba' | 'choque' = 'alba'
+  if (texto.toLowerCase().includes('choque')) fase = 'choque'
+
+  // Detect turn
+  let turno: 'propio' | 'oponente' = 'propio'
+  if (texto.toLowerCase().includes('oponente') || texto.toLowerCase().includes('rival')) turno = 'oponente'
+
+  return { fase, turno }
 }
 
 /** Detectar condición secundaria del texto */
@@ -159,7 +169,7 @@ function construirEfecto(tipo: string, texto: string): EfectoData {
   const keyword = detectarKeyword(texto)
   const costo = detectarCosto(texto)
   const duracion = detectarDuracion(texto)
-  const reagruparAlba = detectarReagruparAlba(texto)
+  const reagrupar = detectarReagrupar(texto)
   const condicionSecundaria = detectarCondicionSecundaria(texto)
 
   if (trigger) efecto.trigger = trigger
@@ -172,7 +182,7 @@ function construirEfecto(tipo: string, texto: string): EfectoData {
     if (costo.costoMax) efecto.costoMax = costo.costoMax
   }
   if (duracion) efecto.duracion = duracion
-  if (reagruparAlba) efecto.reagruparAlba = true
+  if (reagrupar) efecto.reagrupar = reagrupar
   if (condicionSecundaria) efecto.condicionSecundaria = condicionSecundaria
 
   // NO incluir texto — se genera automáticamente

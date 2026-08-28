@@ -213,18 +213,50 @@ export function EffectField({ label, value, onChange, showFields }: EffectFieldP
           />
         </div>
       )}
-      {/* Regroup ether in Dawn — only when costoTipo is ether_bloqueado */}
-      {shouldShow('reagruparAlba') && data.costoTipo === 'eter_bloqueado' && (
-        <div className="flex items-center gap-2 mt-2">
-          <input
-            type="checkbox"
-            checked={data.reagruparAlba ?? false}
-            onChange={(e) => update({ reagruparAlba: e.target.checked || undefined })}
-            className="rounded border-gray-600"
-          />
-          <label className="text-[10px] uppercase tracking-wider text-gray-400">
-            Reagrupar éter en Alba
-          </label>
+      {/* Regroup ether — only when costoTipo is ether_bloqueado */}
+      {shouldShow('reagrupar') && data.costoTipo === 'eter_bloqueado' && (
+        <div className="flex gap-2 mt-2">
+          <div className="flex flex-col gap-1">
+            <label className="text-[10px] uppercase tracking-wider text-gray-400">Reagrupar</label>
+            <select
+              value={data.reagrupar?.fase ?? ''}
+              onChange={(e) => {
+                if (!e.target.value) {
+                  update({ reagrupar: undefined })
+                } else {
+                  update({
+                    reagrupar: {
+                      fase: e.target.value as 'alba' | 'choque',
+                      turno: data.reagrupar?.turno ?? 'propio',
+                    },
+                  })
+                }
+              }}
+              className="bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs text-gray-200"
+            >
+              <option value="">No reagrupar</option>
+              <option value="alba">Alba</option>
+              <option value="choque">Choque</option>
+            </select>
+          </div>
+          {data.reagrupar?.fase && (
+            <div className="flex flex-col gap-1">
+              <label className="text-[10px] uppercase tracking-wider text-gray-400">Turno</label>
+              <select
+                value={data.reagrupar?.turno ?? 'propio'}
+                onChange={(e) => update({
+                  reagrupar: {
+                    fase: data.reagrupar!.fase,
+                    turno: e.target.value as 'propio' | 'oponente',
+                  },
+                })}
+                className="bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs text-gray-200"
+              >
+                <option value="propio">Propio</option>
+                <option value="oponente">Oponente</option>
+              </select>
+            </div>
+          )}
         </div>
       )}
       {/* Secondary condition — only for specific triggers */}

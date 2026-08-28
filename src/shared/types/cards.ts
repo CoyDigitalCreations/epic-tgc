@@ -58,8 +58,8 @@ export interface EfectoData {
   maxObjetivos?: number
   /** Human-readable text (AUTO-GENERATED from fields — not user-editable) */
   texto?: string
-  /** Regroup ether in Dawn phase — "Al inicio de tu próxima Alba reagrupa el Éter usado" */
-  reagruparAlba?: boolean
+  /** Regroup ether — "Al inicio de la fase [X], reagrupa el Éter usado" */
+  reagrupar?: { fase: 'alba' | 'choque'; turno: 'propio' | 'oponente' }
   /** Secondary condition (structured — appears when trigger has prerequisite) */
   condicionSecundaria?: CondicionSecundaria
 }
