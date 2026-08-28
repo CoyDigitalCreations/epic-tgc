@@ -152,6 +152,7 @@ export type Rol = (typeof ROLES)[number]
 export const CAT_HABILIDAD = [
   'Efecto',
   'Singular',
+  'Comandante',
   'Legendario',
   'Maldito',
   'Bendito',

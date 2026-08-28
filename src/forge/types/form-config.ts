@@ -59,6 +59,7 @@ export const FORM_CONFIGS: CardFormConfig[] = [
       { name: 'roles', label: 'Roles (máx 2)', type: 'multi-select', required: true, options: [...ROLES], max: 2 },
       { name: 'catHabilidad', label: 'Categoría de Habilidad', type: 'select', required: true, options: [...CAT_HABILIDAD] },
       { name: 'efectos', label: 'Efectos', type: 'effect-list', required: false },
+      { name: 'efectoComandante', label: 'Efecto Comandante', type: 'effect', required: false, showEffectFields: ['efecto', 'stats', 'keyword'] },
       { name: 'disparoAgota', label: 'Disparo: ¿Agota al Campeón?', type: 'select', required: false, options: ['Sí', 'No'], placeholder: 'Solo si tiene efecto Disparo' },
       { name: 'disparoUnSoloUso', label: 'Disparo: ¿Es de un solo uso?', type: 'select', required: false, options: ['Sí', 'No'], placeholder: 'Solo si tiene efecto Disparo' },
       { name: 'keywords', label: 'Palabras Clave', type: 'multi-select', required: false },

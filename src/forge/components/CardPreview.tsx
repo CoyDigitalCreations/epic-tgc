@@ -469,6 +469,14 @@ export function RenderCarta({
                   </p>
                 )
               }
+              // Comandante effect
+              if ('efectoComandante' in c && c.efectoComandante?.texto) {
+                parts.push(
+                  <p key="comandante" style={{ fontFamily: '"Inter", sans-serif', fontSize: fluidSize(c.efectoComandante.texto, 13.5), lineHeight: 1.35, fontWeight: 500, color: '#261a0e', margin: 0, marginTop: parts.length > 0 ? 8 : 0 }}>
+                    <strong>Comandante:</strong> {c.efectoComandante.texto}
+                  </p>
+                )
+              }
               return parts.length > 0 ? <>{parts}</> : null
             }
 

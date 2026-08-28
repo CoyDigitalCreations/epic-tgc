@@ -193,6 +193,9 @@ function construirEfecto(tipo: string, texto: string): EfectoData {
 function migrarCarta(card: Card): Card {
   const efectos: EfectoData[] = []
 
+  // Detect Comandante cards (Aurora FB-010, Ragnar DS-001)
+  const esComandante = card.id === 'FB-010' || card.id === 'DS-001'
+
   switch (card.type) {
     case 'Campeón': {
       // Pasivo
@@ -272,6 +275,11 @@ function migrarCarta(card: Card): Card {
   delete cleaned.efectoData
   delete cleaned.condicionData
   delete cleaned.recompensaData
+
+  // Set Comandante category for Aurora and Ragnar
+  if (esComandante) {
+    cleaned.catHabilidad = 'Comandante'
+  }
 
   return { ...cleaned, efectos }
 }

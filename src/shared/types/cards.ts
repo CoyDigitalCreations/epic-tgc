@@ -107,6 +107,8 @@ export interface CampeonCard extends CardMeta {
   stats: CombatStats
   /** Unified effect list — the ONLY source of truth for effects (required after migration) */
   efectos?: EfectoData[]
+  /** Comandante effect — applies to ALL champions of same faction you control */
+  efectoComandante?: EfectoData
   /** Legacy text fields (optional, kept for backward compat during migration) */
   efectoPasivo?: string
   efectoDisparo?: string

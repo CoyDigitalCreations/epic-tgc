@@ -163,6 +163,40 @@ function generateEffectText(data: EfectoData): string {
   return text
 }
 
+/** Generate text for Comandante effect — applies to all champions of same faction */
+export function generateComandanteText(data: EfectoData): string {
+  const parts: string[] = []
+
+  // Effect action
+  const effectTexts: Record<string, string> = {
+    'buff': 'ganan',
+    'debuff': 'pierden',
+    'keyword': 'adquieren',
+  }
+
+  if (data.efecto) {
+    const effect = effectTexts[data.efecto] || data.efecto
+
+    if (data.efecto === 'buff' || data.efecto === 'debuff') {
+      const stats = data.stats || {}
+      const statParts: string[] = []
+      if (stats.ATQ) statParts.push(`${stats.ATQ > 0 ? '+' : ''}${stats.ATQ} de ATQ`)
+      if (stats.RES) statParts.push(`${stats.RES > 0 ? '+' : ''}${stats.RES} de RES`)
+      if (statParts.length > 0) {
+        parts.push(`${effect} ${statParts.join(' y ')}`)
+      }
+    } else if (data.efecto === 'keyword' && data.keyword) {
+      parts.push(`${effect} ${data.keyword}`)
+    }
+  }
+
+  let text = parts.length > 0 ? parts.join(' ') + '.' : 'Efecto sin definir.'
+  if (text.length > 0) {
+    text = text.charAt(0).toUpperCase() + text.slice(1)
+  }
+  return text
+}
+
 export function EffectList({ cardType, effects, onChange, maxEffects = 3 }: EffectListProps) {
   const [expandedIdx, setExpandedIdx] = useState<number | null>(null)
 
