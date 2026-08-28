@@ -123,7 +123,7 @@ function detectarDuracion(texto: string): string | undefined {
   if (texto.includes('hasta el final del turno')) return 'turno'
   if (texto.includes('hasta tu próxima Alba') || texto.includes('hasta el final de tu próximo Alba')) return 'hasta_alba'
   if (texto.includes('mientras ese Éter esté bloqueado') || texto.includes('mientras esté bloqueado')) return 'mientras_ester_bloqueado'
-  if (texto.includes('mientras esta carta esté en el campo')) return 'mientras_en_campo'
+  if (texto.toLowerCase().includes('mientras esta carta esté en el campo')) return 'mientras_en_campo'
   if (texto.includes('una vez por turno')) return '1_por_turno'
   return undefined
 }
