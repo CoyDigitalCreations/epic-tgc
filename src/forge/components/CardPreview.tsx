@@ -372,25 +372,24 @@ export function RenderCarta({
         />
         {/* Texto de sabor — una línea, debajo del arte, arriba de info del campeón */}
         {hasFlavorText && (
-          <p
-            style={{
-              position: 'relative',
-              zIndex: 2,
-              fontFamily: '"Inter", serif',
-              fontSize: fluidSize(card.flavorText, 10),
-              fontStyle: 'italic',
-              lineHeight: 1.2,
-              color: '#fef08a',
-              textAlign: 'center',
-              margin: '4px 0 0',
-              textShadow: '0 1px 3px rgba(0,0,0,0.8)',
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-            }}
-          >
-            &ldquo;{card.flavorText as string}&rdquo;
-          </p>
+          <div style={{ position: 'relative', zIndex: 2, display: 'block', width: '100%', textAlign: 'center', margin: '4px 0 0' }}>
+            <p
+              style={{
+                fontFamily: '"Inter", serif',
+                fontSize: fluidSize(card.flavorText, 10),
+                fontStyle: 'italic',
+                lineHeight: 1.2,
+                color: '#fef08a',
+                margin: 0,
+                textShadow: '0 1px 3px rgba(0,0,0,0.8)',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }}
+            >
+              &ldquo;{card.flavorText as string}&rdquo;
+            </p>
+          </div>
         )}
         <span
           style={{
