@@ -4,7 +4,7 @@
  * Auto-generates texto from structured fields.
  * Filters options by card type for better UX.
  */
-import type { EfectoData, CardType, FiltroObjetivo } from '../../../shared/types/cards'
+import type { EfectoData, CardType } from '../../../shared/types/cards'
 import { FACCIONES, ESENCIAS, ROLES } from '../../../shared/types/enums'
 import { generateComandanteText } from '../EffectList'
 
@@ -63,21 +63,31 @@ const ALL_COSTO_OPTIONS = [
   { value: 'exhaust', label: 'Agotar' },
 ]
 
-const ALL_OBJETIVO_OPTIONS = [
+const ALL_OBJETIVO_TIPO_OPTIONS = [
   { value: 'self', label: 'Esta carta' },
-  { value: 'campeon_propio', label: 'Campeón propio' },
-  { value: 'campeon_rival', label: 'Campeón rival' },
-  { value: 'mistica_rival', label: 'Mística rival' },
-  { value: 'arcana_rival', label: 'Arcana rival' },
-  { value: 'todos_campeones_propios', label: 'Todos tus Campeones' },
-  { value: 'todos_campeones_rivales', label: 'Todos los rivales' },
-  { value: 'cementerio_propio', label: 'Cementerio propio' },
-  { value: 'cementerio_rival', label: 'Cementerio rival' },
-  { value: 'exilio_propio', label: 'Exilio propio' },
-  { value: 'exilio_rival', label: 'Exilio rival' },
-  { value: 'carta_mazo', label: 'Carta del mazo' },
-  { value: 'rival_hand', label: 'Mano del rival' },
-  { value: 'ether_pagado_rival', label: 'Éter pagado del rival' },
+  { value: 'campeon', label: 'Campeón' },
+  { value: 'mistica', label: 'Mística' },
+  { value: 'arcana', label: 'Arcana' },
+  { value: 'eter', label: 'Éter' },
+  { value: 'carta', label: 'Carta' },
+  { value: 'mano', label: 'Mano' },
+]
+
+const ALL_CONTROLADOR_OPTIONS = [
+  { value: 'propio', label: 'Propio' },
+  { value: 'rival', label: 'Rival' },
+  { value: 'ambos', label: 'Ambos' },
+]
+
+const ALL_ZONA_OBJETIVO_OPTIONS = [
+  { value: 'campo', label: 'Campo' },
+  { value: 'cementerio', label: 'Cementerio' },
+  { value: 'exilio', label: 'Exilio' },
+  { value: 'reserva', label: 'Reserva' },
+  { value: 'pagado', label: 'Pagado' },
+  { value: 'bloqueado', label: 'Bloqueado' },
+  { value: 'mano', label: 'Mano' },
+  { value: 'mazo', label: 'Mazo' },
 ]
 
 const ALL_EFECTO_OPTIONS = [
@@ -199,10 +209,6 @@ function NumberInput({ label, value, onChange, min, max }: {
   )
 }
 
-function updateFiltro(current: FiltroObjetivo | undefined, patch: Partial<FiltroObjetivo>): FiltroObjetivo {
-  return { ...current, ...patch } as FiltroObjetivo
-}
-
 export function EffectField({ label, value, onChange, showFields, isComandante, cardType }: EffectFieldProps) {
   const data: EfectoData = value ?? { tipo: 'pasivo' }
 
@@ -245,7 +251,13 @@ export function EffectField({ label, value, onChange, showFields, isComandante, 
           <NumberInput label="Cantidad" value={data.costoMax} onChange={(v) => update({ costoMax: v })} min={0} max={10} />
         )}
         {showObjetivo && (
-          <SelectField label="Objetivo" value={data.objetivo} options={ALL_OBJETIVO_OPTIONS} onChange={(v) => update({ objetivo: v as EfectoData['objetivo'] })} />
+          <SelectField label="Tipo objetivo" value={data.objetivo?.tipo} options={ALL_OBJETIVO_TIPO_OPTIONS} onChange={(v) => update({ objetivo: { tipo: v as any, controlador: data.objetivo?.controlador ?? 'propio', zona: data.objetivo?.zona ?? 'campo', filtros: data.objetivo?.filtros } })} />
+        )}
+        {showObjetivo && (
+          <SelectField label="Controlador" value={data.objetivo?.controlador} options={ALL_CONTROLADOR_OPTIONS} onChange={(v) => update({ objetivo: { tipo: data.objetivo?.tipo ?? 'campeon', controlador: v as any, zona: data.objetivo?.zona ?? 'campo', filtros: data.objetivo?.filtros } })} />
+        )}
+        {showObjetivo && (
+          <SelectField label="Zona" value={data.objetivo?.zona} options={ALL_ZONA_OBJETIVO_OPTIONS} onChange={(v) => update({ objetivo: { tipo: data.objetivo?.tipo ?? 'campeon', controlador: data.objetivo?.controlador ?? 'propio', zona: v as any, filtros: data.objetivo?.filtros } })} />
         )}
         {showEfecto && (
           <SelectField label="Efecto" value={data.efecto} options={ALL_EFECTO_OPTIONS} onChange={(v) => update({ efecto: v as EfectoData['efecto'] })} />
@@ -303,18 +315,18 @@ export function EffectField({ label, value, onChange, showFields, isComandante, 
           <NumberInput label="Turnos" value={data.duracionTurnos} onChange={(v) => update({ duracionTurnos: v })} min={1} max={10} />
         </div>
       )}
-      {/* Target filter — for cementerio/exilio targets */}
-      {shouldShow('filtroObjetivo') && (data.objetivo?.includes('cementerio') || data.objetivo?.includes('exilio')) && (
+      {/* Target filters — show when objective is set and not 'self' */}
+      {showObjetivo && data.objetivo?.tipo && data.objetivo.tipo !== 'self' && (
         <div className="border border-gray-600/30 rounded p-2 mt-2">
           <p className="text-[10px] uppercase tracking-wider text-gray-400 mb-2">Filtros del objetivo</p>
           <div className="grid grid-cols-2 gap-2">
-            <SelectField label="Tipo de carta" value={data.filtroObjetivo?.tipo} options={ALL_FILTRO_TIPO_OPTIONS} onChange={(v) => update({ filtroObjetivo: updateFiltro(data.filtroObjetivo, { tipo: v as any }) })} />
-            <SelectField label="Faccion" value={data.filtroObjetivo?.faccion} options={[{ value: '', label: 'Cualquiera' }, ...FACCIONES.map(f => ({ value: f, label: f }))]} onChange={(v) => update({ filtroObjetivo: updateFiltro(data.filtroObjetivo, { faccion: v as any }) })} />
-            <SelectField label="Esencia" value={data.filtroObjetivo?.esencia} options={[{ value: '', label: 'Cualquiera' }, ...ESENCIAS.map(e => ({ value: e, label: e }))]} onChange={(v) => update({ filtroObjetivo: updateFiltro(data.filtroObjetivo, { esencia: v as any }) })} />
-            <SelectField label="Rol" value={data.filtroObjetivo?.rol} options={[{ value: '', label: 'Cualquiera' }, ...ROLES.map(r => ({ value: r, label: r }))]} onChange={(v) => update({ filtroObjetivo: updateFiltro(data.filtroObjetivo, { rol: v as any }) })} />
-            <NumberInput label="Coste max." value={data.filtroObjetivo?.costeMax} onChange={(v) => update({ filtroObjetivo: updateFiltro(data.filtroObjetivo, { costeMax: v }) })} min={0} max={20} />
-            <NumberInput label="ATQ max." value={data.filtroObjetivo?.atqMax} onChange={(v) => update({ filtroObjetivo: updateFiltro(data.filtroObjetivo, { atqMax: v }) })} min={0} max={99} />
-            <NumberInput label="RES max." value={data.filtroObjetivo?.resMax} onChange={(v) => update({ filtroObjetivo: updateFiltro(data.filtroObjetivo, { resMax: v }) })} min={0} max={99} />
+            <SelectField label="Tipo carta" value={data.objetivo?.filtros?.tipoCarta} options={ALL_FILTRO_TIPO_OPTIONS} onChange={(v) => update({ objetivo: { ...data.objetivo!, filtros: { ...data.objetivo?.filtros, tipoCarta: v as any } } })} />
+            <SelectField label="Faccion" value={data.objetivo?.filtros?.faccion} options={[{ value: '', label: 'Cualquiera' }, ...FACCIONES.map(f => ({ value: f, label: f }))]} onChange={(v) => update({ objetivo: { ...data.objetivo!, filtros: { ...data.objetivo?.filtros, faccion: v as any } } })} />
+            <SelectField label="Esencia" value={data.objetivo?.filtros?.esencia} options={[{ value: '', label: 'Cualquiera' }, ...ESENCIAS.map(e => ({ value: e, label: e }))]} onChange={(v) => update({ objetivo: { ...data.objetivo!, filtros: { ...data.objetivo?.filtros, esencia: v as any } } })} />
+            <SelectField label="Rol" value={data.objetivo?.filtros?.rol} options={[{ value: '', label: 'Cualquiera' }, ...ROLES.map(r => ({ value: r, label: r }))]} onChange={(v) => update({ objetivo: { ...data.objetivo!, filtros: { ...data.objetivo?.filtros, rol: v as any } } })} />
+            <NumberInput label="Coste max." value={data.objetivo?.filtros?.costeMax} onChange={(v) => update({ objetivo: { ...data.objetivo!, filtros: { ...data.objetivo?.filtros, costeMax: v } } })} min={0} max={20} />
+            <NumberInput label="ATQ max." value={data.objetivo?.filtros?.atqMax} onChange={(v) => update({ objetivo: { ...data.objetivo!, filtros: { ...data.objetivo?.filtros, atqMax: v } } })} min={0} max={99} />
+            <NumberInput label="RES max." value={data.objetivo?.filtros?.resMax} onChange={(v) => update({ objetivo: { ...data.objetivo!, filtros: { ...data.objetivo?.filtros, resMax: v } } })} min={0} max={99} />
           </div>
         </div>
       )}

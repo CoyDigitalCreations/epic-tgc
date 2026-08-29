@@ -30,14 +30,8 @@ export interface EfectoData {
   zonaActivacion?: 'reserva' | 'pago' | 'bloqueo' | 'campo'
   /** How often this effect can be used */
   frecuencia?: '1_por_turno' | 'ilimitado'
-  /** Target type — what this effect acts upon */
-  objetivo?: 'self' | 'campeon_propio' | 'campeon_rival' | 'mistica_rival' | 'arcana_rival'
-           | 'todos_campeones_propios' | 'todos_campeones_rivales'
-           | 'cementerio_propio' | 'cementerio_rival'
-           | 'exilio_propio' | 'exilio_rival'
-           | 'carta_mazo' | 'rival_hand' | 'ether_pagado_rival'
-  /** Additional filters for the target */
-  filtroObjetivo?: FiltroObjetivo
+  /** Target — structured target with type, controller, zone and filters */
+  objetivo?: ObjetivoEfecto
   /** Effect action — what this effect DOES */
   efecto?: 'buff' | 'debuff' | 'destruir' | 'robar' | 'invocar_cementerio'
          | 'devolver_mano' | 'equipar' | 'modificar_stat' | 'keyword'
@@ -75,10 +69,22 @@ export interface EfectoData {
   condicionSecundaria?: CondicionSecundaria
 }
 
+/** Structured target — 3-layer system: type + controller + zone + filters */
+export interface ObjetivoEfecto {
+  /** Type of card targeted */
+  tipo: 'self' | 'campeon' | 'mistica' | 'arcana' | 'eter' | 'carta' | 'mano'
+  /** Who controls the target */
+  controlador: 'propio' | 'rival' | 'ambos'
+  /** Where the target is located */
+  zona: 'campo' | 'cementerio' | 'exilio' | 'reserva' | 'pagado' | 'bloqueado' | 'mano' | 'mazo'
+  /** Additional filters */
+  filtros?: FiltroObjetivo
+}
+
 /** Structured target filter — no free text */
 export interface FiltroObjetivo {
   /** Card type to filter by */
-  tipo?: 'campeon' | 'mistica' | 'arcana'
+  tipoCarta?: 'campeon' | 'mistica' | 'arcana'
   /** Faction to filter by */
   faccion?: Faccion
   /** Essence to filter by */
