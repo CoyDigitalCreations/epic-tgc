@@ -393,11 +393,11 @@ export function EffectList({ cardType, effects, onChange, maxEffects = 3 }: Effe
               className="flex items-center justify-between px-3 py-2 bg-gray-800/50 cursor-pointer hover:bg-gray-800/80 transition-colors"
               onClick={() => setExpandedIdx(isExpanded ? null : idx)}
             >
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-mono text-gray-400">#{idx + 1}</span>
-                <span className="text-sm font-medium text-gray-200">{effectLabel}</span>
+              <div className="flex items-center gap-2 flex-1 min-w-0">
+                <span className="text-xs font-mono text-gray-400 shrink-0">#{idx + 1}</span>
+                <span className="text-sm font-medium text-gray-200 shrink-0">{effectLabel}</span>
                 {effect.texto && (
-                  <span className="text-xs text-gray-500 truncate max-w-[300px]">
+                  <span className="text-xs text-gray-500 truncate min-w-0">
                     — {effect.texto}
                   </span>
                 )}
