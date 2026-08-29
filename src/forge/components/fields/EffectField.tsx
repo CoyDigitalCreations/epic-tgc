@@ -234,7 +234,7 @@ export function EffectField({ label, value, onChange, showFields, isComandante, 
   const showObjetivo = shouldShow('objetivo') && cardType !== 'Arcana'
   const showEfecto = shouldShow('efecto') && cardType !== 'Arcana'
   const showDuracion = shouldShow('duracion') && cardType !== 'Arcana'
-  const showReagrupar = shouldShow('reagrupar') && data.costoTipo === 'eter_bloqueado' && (cardType === 'Campeón' || cardType === 'Éter')
+  const showReagrupar = shouldShow('reagrupar') && (data.costoTipo === 'eter_bloqueado' || data.costoTipo === 'eter') && (cardType === 'Campeón' || cardType === 'Éter')
   const showCondicionSecundaria = shouldShow('condicionSecundaria') && cardType === 'Campeón'
 
   return (
