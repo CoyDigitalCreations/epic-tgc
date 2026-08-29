@@ -232,6 +232,9 @@ export function EffectField({ label, value, onChange, showFields, isComandante, 
         {shouldShow('maxObjetivos') && (
           <NumberInput label="Máx. objetivos" value={data.maxObjetivos} onChange={(v) => update({ maxObjetivos: v })} min={1} max={10} />
         )}
+        {shouldShow('cantidad') && (
+          <NumberInput label="Cantidad" value={data.cantidad} onChange={(v) => update({ cantidad: v })} min={1} max={20} />
+        )}
       </div>
       {/* Stats inputs for buff/debuff */}
       {shouldShow('stats') && (data.efecto === 'buff' || data.efecto === 'debuff' || data.efecto === 'modificar_stat') && (

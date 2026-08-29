@@ -54,6 +54,8 @@ export interface EfectoData {
           | 'al_ser_destruido_vinculo' | 'ninguno'
   /** Activation condition (structured — for Arcanas and conditional effects) */
   condicion?: string
+  /** Quantity — how many cards this effect affects (default: 1) */
+  cantidad?: number
   /** Maximum number of targets */
   maxObjetivos?: number
   /** Human-readable text (AUTO-GENERATED from fields — not user-editable) */

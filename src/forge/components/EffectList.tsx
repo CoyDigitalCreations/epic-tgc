@@ -23,6 +23,27 @@ const ALLOWED_EFFECTS: Record<CardType, EfectoData['tipo'][]> = {
   'Vínculo': ['vinculo'],
 }
 
+/** Check if target is plural (affects multiple units) */
+function isPluralTarget(target: string | undefined): boolean {
+  return target === 'todos_campeones_propios' || target === 'todos_campeones_rivales'
+}
+
+/** Conjugate verb to plural in Spanish */
+function pluralize(verb: string): string {
+  const plurals: Record<string, string> = {
+    'gana': 'ganan',
+    'pierde': 'pierden',
+    'destruye': 'destruyen',
+    'roba': 'roban',
+    'devuelve': 'devuelven',
+    'tiene': 'tienen',
+    'libera': 'liberan',
+    'exilia': 'exilian',
+    'cambia': 'cambian',
+  }
+  return plurals[verb] || verb
+}
+
 /** Generate human-readable text from EfectoData — comprehensive Spanish */
 function generateEffectText(data: EfectoData): string {
   const parts: string[] = []
@@ -107,7 +128,13 @@ function generateEffectText(data: EfectoData): string {
 
   if (data.efecto && data.objetivo) {
     const target = targetTexts[data.objetivo] || data.objetivo
-    const effect = effectTexts[data.efecto] || data.efecto
+    let effect = effectTexts[data.efecto] || data.efecto
+    const plural = isPluralTarget(data.objetivo)
+
+    // Pluralize verb if target is plural
+    if (plural) {
+      effect = pluralize(effect)
+    }
 
     if (data.efecto === 'buff' || data.efecto === 'debuff' || data.efecto === 'modificar_stat' || data.efecto === 'conditional_trigger') {
       const stats = data.stats || {}
@@ -119,6 +146,9 @@ function generateEffectText(data: EfectoData): string {
       }
     } else if (data.efecto === 'keyword' && data.keyword) {
       parts.push(`${target} ${effect} ${data.keyword}`)
+    } else if (data.efecto === 'robar') {
+      const qty = data.cantidad ?? 1
+      parts.push(`${effect} ${qty} carta${qty > 1 ? 's' : ''}`)
     } else {
       parts.push(`${effect} ${target}`)
     }
@@ -290,7 +320,7 @@ export function EffectList({ cardType, effects, onChange, maxEffects = 3 }: Effe
                   label=""
                   value={effect}
                   onChange={(v) => { if (v) updateEffect(idx, v) }}
-                  showFields={['tipo', 'costoTipo', 'costoMax', 'trigger', 'objetivo', 'efecto', 'stats', 'keyword', 'duracion', 'condicion', 'maxObjetivos', 'reagrupar', 'condicionSecundaria', 'statsReserva']}
+                  showFields={['tipo', 'costoTipo', 'costoMax', 'trigger', 'objetivo', 'efecto', 'stats', 'keyword', 'duracion', 'condicion', 'cantidad', 'maxObjetivos', 'reagrupar', 'condicionSecundaria', 'statsReserva']}
                   cardType={cardType}
                 />
                 {/* Auto-generated text preview */}
