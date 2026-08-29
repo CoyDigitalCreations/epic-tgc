@@ -387,7 +387,7 @@ export function EffectList({ cardType, effects, onChange, maxEffects = 3 }: Effe
         const effectLabel = effect.tipo ? effect.tipo.charAt(0).toUpperCase() + effect.tipo.slice(1) : `Efecto ${idx + 1}`
 
         return (
-          <div key={idx} className="border border-gray-600/50 rounded-lg overflow-hidden">
+          <div key={idx} className="border border-gray-600/50 rounded-lg">
             {/* Header — always visible */}
             <div
               className="flex items-center justify-between px-3 py-2 bg-gray-800/50 cursor-pointer hover:bg-gray-800/80 transition-colors"
