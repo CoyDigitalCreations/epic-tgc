@@ -62,7 +62,7 @@ export function validarActivarHabilidad(state: GameState, action: Extract<Action
 
   const esContinuo = tieneContinuo
   // Patrón "Bloqueado": solo si NO es agota (Vorlag tiene "bloqueado" en texto pero es Agota)
-  const esBloqueado = esContinuo || (!('disparoAgota' in meta && (meta as any).disparoAgota) && ((meta as any).efectoDisparo?.includes('bloqueado') ?? false))
+  const esBloqueado = esContinuo || ((meta as any).efectoDisparo?.includes('bloqueado') ?? false)
 
   if (esBloqueado) {
     // Patrón "Bloqueado": eterIds de la Reserva → Campeón.eterBloqueado

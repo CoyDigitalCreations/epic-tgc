@@ -98,11 +98,17 @@ export function aplicarPago(
     aportado: validado.aportado,
   })
 
-  // C2 (ADR-25): gatillos al-pagar-eter por cada Éter con variantePago='Gatillo'
+  // C2 (ADR-25): gatillos al-pagar-eter por cada Éter con trigger='al_pagar_eter' en sus efectos
   const gatillos = eterIds.filter((id) => {
     const inst = s.instances[id]
     const meta = inst?.cardId ? getCardMeta(inst.cardId) : null
-    return meta !== null && esEter(meta) && meta.variantePago === 'Gatillo'
+    if (!meta || !esEter(meta)) return false
+    // Check new system: efectos[] with trigger='al_pagar_eter'
+    if ('efectos' in meta && meta.efectos) {
+      return meta.efectos.some((e) => e.trigger === 'al_pagar_eter')
+    }
+    // Fallback: legacy variantePago
+    return (meta as any).variantePago === 'Gatillo'
   })
   for (const id of gatillos) {
     dispararTrigger(s, ctx, 'al-pagar-eter', jugador, [id], {

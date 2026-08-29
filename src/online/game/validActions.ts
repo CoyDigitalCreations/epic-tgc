@@ -97,8 +97,8 @@ export function getValidActions(state: GameState, playerId: PlayerId): Action[] 
         }
       } else if (tieneDisparo) {
         // Disparo: SÍ puede activar si agotado; NO agota
-        // Patrón "Bloqueado": solo si NO es agota (Vorlag tiene "bloqueado" en texto pero es Agota)
-        const esBloqueado = !('disparoAgota' in meta && (meta as any).disparoAgota) && meta.efectoDisparo!.includes('bloqueado')
+        // Patrón "Bloqueado": verificar si el efecto tiene bloqueado en el texto
+        const esBloqueado = meta.efectoDisparo!.includes('bloqueado')
         if (esBloqueado) {
           const costo = costeEterHabilidad(meta)
           const eteresValidos = p.eterReserva.filter((id) => {

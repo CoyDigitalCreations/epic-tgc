@@ -60,8 +60,6 @@ export const FORM_CONFIGS: CardFormConfig[] = [
       { name: 'catHabilidad', label: 'Categoría de Habilidad', type: 'select', required: true, options: [...CAT_HABILIDAD] },
       { name: 'efectos', label: 'Efectos', type: 'effect-list', required: false },
       { name: 'efectoComandante', label: 'Efecto Comandante', type: 'effect', required: false, showEffectFields: ['efecto', 'stats', 'keyword'] },
-      { name: 'disparoAgota', label: 'Disparo: ¿Agota al Campeón?', type: 'select', required: false, options: ['Sí', 'No'], placeholder: 'Solo si tiene efecto Disparo' },
-      { name: 'disparoUnSoloUso', label: 'Disparo: ¿Es de un solo uso?', type: 'select', required: false, options: ['Sí', 'No'], placeholder: 'Solo si tiene efecto Disparo' },
       { name: 'keywords', label: 'Palabras Clave', type: 'multi-select', required: false },
       { name: 'flavorText', label: 'Texto de Sabor', type: 'textarea', required: false, placeholder: 'Ambientación...' },
       { name: 'limiteCopias', label: 'Límite por Mazo', type: 'select', required: false, options: ['1', '2', '3'] },
@@ -101,7 +99,6 @@ export const FORM_CONFIGS: CardFormConfig[] = [
     fields: [
       { name: 'name', label: 'Nombre', type: 'text', required: true, placeholder: 'Ej: Corazón del Éter' },
       { name: 'cost', label: 'Valor de Éter', type: 'number', required: true, min: 1, max: 1 },
-      { name: 'variantePago', label: 'Variante de Efecto de Pago', type: 'select', required: false, options: ['Pasivo', 'Gatillo'], placeholder: 'Sin efecto de pago' },
       { name: 'efectos', label: 'Efectos', type: 'effect-list', required: false },
       { name: 'keywords', label: 'Palabras Clave', type: 'multi-select', required: false },
       { name: 'flavorText', label: 'Texto de Sabor', type: 'textarea', required: false },

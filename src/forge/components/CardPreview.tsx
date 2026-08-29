@@ -341,11 +341,41 @@ export function RenderCarta({
         )
       })()}
 
+      {/* ════════════ TEXTO DE SABOR ════════════ */}
+      {hasFlavorText && (
+        <div style={{
+          position: 'absolute',
+          top: 530,
+          left: 20,
+          right: 20,
+          textAlign: 'center',
+          zIndex: 16,
+        }}>
+          <p
+            style={{
+              fontFamily: '"Inter", serif',
+              fontSize: fluidSize(card.flavorText, 11),
+              fontStyle: 'italic',
+              fontWeight: 'bold',
+              lineHeight: 1.2,
+              color: '#ffffff',
+              margin: 0,
+              textShadow: '0 2px 4px rgba(0,0,0,1), 0 0 8px rgba(0,0,0,1)',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            }}
+          >
+            &ldquo;{card.flavorText as string}&rdquo;
+          </p>
+        </div>
+      )}
+
       {/* ════════════ BARRA DE CLASIFICACIÓN / SUBTIPOS ════════════ */}
       <div
         style={{
           position: 'absolute',
-          top: 586,
+          top: 560,
           left: 18,
           right: 18,
           height: 40,
@@ -371,27 +401,6 @@ export function RenderCarta({
             userSelect: 'none',
           }}
         />
-        {/* Texto de sabor — una línea, debajo del arte, arriba de info del campeón */}
-        {hasFlavorText && (
-          <div style={{ position: 'relative', zIndex: 2, display: 'block', width: '100%', textAlign: 'center', margin: '4px 0 0' }}>
-            <p
-              style={{
-                fontFamily: '"Inter", serif',
-                fontSize: fluidSize(card.flavorText, 10),
-                fontStyle: 'italic',
-                lineHeight: 1.2,
-                color: '#fef08a',
-                margin: 0,
-                textShadow: '0 1px 3px rgba(0,0,0,0.8)',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-              }}
-            >
-              &ldquo;{card.flavorText as string}&rdquo;
-            </p>
-          </div>
-        )}
         <span
           style={{
             position: 'relative',
@@ -419,10 +428,10 @@ export function RenderCarta({
       {/* ════════════ CAJA DE TEXTO Y HABILIDADES (PERGAMINO ENVEJECIDO) ════════════ */}
       <TextScroll
         style={{
-          top: 624,
-          left: 48,
-          right: 48,
-          height: 330,
+          top: 600,
+          left: 44,
+          right: 44,
+          height: 369,
         }}
       >
         {/* Palabras clave (Keywords) */}
@@ -572,9 +581,12 @@ export function RenderCarta({
                 )
               }
               if (pagoText) {
+                // Determine variant from effect trigger
+                const pagoEffect = ('efectos' in c && c.efectos) ? c.efectos.find((e) => e.tipo === 'pago') : undefined
+                const variantLabel = pagoEffect?.trigger === 'al_pagar_eter' ? 'Gatillo' : 'Pasivo'
                 parts.push(
                   <p key="pago" style={{ fontFamily: '"Inter", sans-serif', fontSize: fluidSize(pagoText, 14), lineHeight: 1.4, color: '#1c130b', margin: 0, marginTop: parts.length > 0 ? 8 : 0 }}>
-                    <strong>Pago (1A{c.variantePago ? `, ${c.variantePago}` : ''}):</strong> {pagoText}
+                    <strong>Pago (1A, {variantLabel}):</strong> {pagoText}
                   </p>
                 )
               }

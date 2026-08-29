@@ -210,7 +210,12 @@ function migrarCarta(card: Card): Card {
       if (card.efectoDisparo) {
         const esContinuo = card.efectoDisparo.includes('bloqueado') && !card.efectoDisparo.includes('agotar')
         if (!esContinuo) {
-          efectos.push(construirEfecto('disparo', card.efectoDisparo))
+          const efectoDisparo = construirEfecto('disparo', card.efectoDisparo)
+          // Apply disparoAgota: if true, set costoTipo to exhaust
+          if (card.disparoAgota) {
+            efectoDisparo.costoTipo = 'exhaust'
+          }
+          efectos.push(efectoDisparo)
         } else {
           // Es continuo con costo de éter bloqueado
           efectos.push(construirEfecto('continuo', card.efectoDisparo))
@@ -242,7 +247,12 @@ function migrarCarta(card: Card): Card {
         efectos.push(construirEfecto('reserva', card.efectoReserva))
       }
       if (card.efectoPago) {
-        efectos.push(construirEfecto('pago', card.efectoPago))
+        const efectoPago = construirEfecto('pago', card.efectoPago)
+        // Apply variantePago: if 'Gatillo', set trigger to al_pagar_eter
+        if (card.variantePago === 'Gatillo') {
+          efectoPago.trigger = 'al_pagar_eter'
+        }
+        efectos.push(efectoPago)
       }
       if (card.efectoBloqueo) {
         efectos.push(construirEfecto('bloqueo', card.efectoBloqueo))

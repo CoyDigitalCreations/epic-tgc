@@ -105,7 +105,7 @@ export function campeonNecesitaEterBloqueado(card: AnyCard): boolean {
 
   // 3. Fallback: text pattern matching (backward compatible)
   if ('efectoContinuo' in card && card.efectoContinuo?.includes('bloqueado')) return true
-  if ('efectoDisparo' in card && !('disparoAgota' in card && (card as any).disparoAgota) && card.efectoDisparo?.includes('bloqueado')) return true
+  if ('efectoDisparo' in card && card.efectoDisparo?.includes('bloqueado')) return true
   if ('efectoPasivo' in card && card.efectoPasivo?.includes('Éter bloqueado')) return true
   return false
 }
