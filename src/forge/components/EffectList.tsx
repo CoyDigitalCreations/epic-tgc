@@ -96,8 +96,10 @@ function generateEffectText(data: EfectoData): string {
     'arcana_rival': 'una Arcana que controla el rival',
     'todos_campeones_propios': 'los Campeones que controles',
     'todos_campeones_rivales': 'los Campeones que controla el rival',
-    'campeon_cementerio_propio': 'un Campeón de tu Cementerio',
-    'cementerio_rival': 'un Campeón del Cementerio del rival',
+    'cementerio_propio': 'de tu Cementerio',
+    'cementerio_rival': 'del Cementerio del rival',
+    'exilio_propio': 'de tu Exilio',
+    'exilio_rival': 'del Exilio del rival',
     'carta_mazo': 'una carta de tu mazo',
     'rival_hand': 'el rival',
     'ether_pagado_rival': 'Éter de su zona de pago',
@@ -124,6 +126,8 @@ function generateEffectText(data: EfectoData): string {
     'equip_grant_ability': 'Se equipa a',
     'prevent_destroy': 'no es destruido',
     'exile': 'exilia',
+    'mover_ether': 'mueve',
+    'bloquear_ether': 'bloquea',
   }
 
   if (data.efecto && data.objetivo) {
@@ -136,22 +140,54 @@ function generateEffectText(data: EfectoData): string {
       effect = pluralize(effect)
     }
 
+    // Build target text with filters
+    let targetText = target
+    if (data.filtroObjetivo && (data.objetivo?.includes('cementerio') || data.objetivo?.includes('exilio'))) {
+      const filters: string[] = []
+      if (data.filtroObjetivo.tipo) filters.push(data.filtroObjetivo.tipo === 'campeon' ? 'Campeón' : data.filtroObjetivo.tipo === 'mistica' ? 'Mística' : 'Arcana')
+      if (data.filtroObjetivo.faccion) filters.push(data.filtroObjetivo.faccion)
+      if (data.filtroObjetivo.esencia) filters.push(data.filtroObjetivo.esencia)
+      if (data.filtroObjetivo.rol) filters.push(data.filtroObjetivo.rol)
+      if (data.filtroObjetivo.costeMax !== undefined) filters.push(`coste ${data.filtroObjetivo.costeMax} o menos`)
+      if (data.filtroObjetivo.atqMax !== undefined) filters.push(`ATQ ${data.filtroObjetivo.atqMax} o menos`)
+      if (data.filtroObjetivo.resMax !== undefined) filters.push(`RES ${data.filtroObjetivo.resMax} o menos`)
+      if (filters.length > 0) {
+        targetText = `una carta ${filters.join(' ')} ${target}`
+      }
+    }
+
     if (data.efecto === 'buff' || data.efecto === 'debuff' || data.efecto === 'modificar_stat' || data.efecto === 'conditional_trigger') {
       const stats = data.stats || {}
       const statParts: string[] = []
       if (stats.ATQ) statParts.push(`${stats.ATQ > 0 ? '+' : ''}${stats.ATQ} de ATQ`)
       if (stats.RES) statParts.push(`${stats.RES > 0 ? '+' : ''}${stats.RES} de RES`)
       if (statParts.length > 0) {
-        parts.push(`${target} ${effect} ${statParts.join(' y ')}`)
+        parts.push(`${targetText} ${effect} ${statParts.join(' y ')}`)
       }
     } else if (data.efecto === 'keyword' && data.keyword) {
-      parts.push(`${target} ${effect} ${data.keyword}`)
+      parts.push(`${targetText} ${effect} ${data.keyword}`)
     } else if (data.efecto === 'robar') {
       const qty = data.cantidad ?? 1
       parts.push(`${effect} ${qty} carta${qty > 1 ? 's' : ''}`)
     } else {
-      parts.push(`${effect} ${target}`)
+      parts.push(`${effect} ${targetText}`)
     }
+  }
+
+  // Zone activation — for Éter effects
+  if (data.zonaActivacion) {
+    const zonaTexts: Record<string, string> = {
+      'reserva': 'en tu Reserva',
+      'pago': 'en tu zona de pago',
+      'bloqueo': 'mientras esté bloqueado',
+      'campo': 'en el campo',
+    }
+    parts.push(`Mientras esté ${zonaTexts[data.zonaActivacion] || data.zonaActivacion}`)
+  }
+
+  // Frequency — for activatable effects
+  if (data.frecuencia === '1_por_turno') {
+    parts.push('una vez por turno')
   }
 
   // Duration
@@ -164,7 +200,7 @@ function generateEffectText(data: EfectoData): string {
       'mientras_en_campo': 'mientras esta carta esté en el campo',
       'mientras_equipped': 'mientras esté equipado',
       '1_por_turno': 'una vez por turno',
-      'n_turnos': 'por N turnos',
+      'n_turnos': data.duracionTurnos ? `por ${data.duracionTurnos} turnos` : 'por N turnos',
     }
     parts.push(durationTexts[data.duracion] || data.duracion)
   }
@@ -320,7 +356,7 @@ export function EffectList({ cardType, effects, onChange, maxEffects = 3 }: Effe
                   label=""
                   value={effect}
                   onChange={(v) => { if (v) updateEffect(idx, v) }}
-                  showFields={['tipo', 'costoTipo', 'costoMax', 'trigger', 'objetivo', 'efecto', 'stats', 'keyword', 'duracion', 'condicion', 'cantidad', 'maxObjetivos', 'reagrupar', 'condicionSecundaria', 'statsReserva']}
+                  showFields={['tipo', 'costoTipo', 'costoMax', 'zonaActivacion', 'frecuencia', 'trigger', 'objetivo', 'filtroObjetivo', 'efecto', 'stats', 'keyword', 'duracion', 'duracionTurnos', 'condicion', 'cantidad', 'maxObjetivos', 'reagrupar', 'condicionSecundaria', 'statsReserva']}
                   cardType={cardType}
                 />
                 {/* Auto-generated text preview */}

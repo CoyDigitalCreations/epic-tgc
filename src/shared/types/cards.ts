@@ -26,18 +26,25 @@ export interface EfectoData {
   costoTipo?: 'ninguno' | 'eter' | 'eter_bloqueado' | 'exhaust'
   /** Maximum cost value (e.g., "hasta un máximo de 2 Éter") */
   costoMax?: number
+  /** Zone where this effect can be activated from */
+  zonaActivacion?: 'reserva' | 'pago' | 'bloqueo' | 'campo'
+  /** How often this effect can be used */
+  frecuencia?: '1_por_turno' | 'ilimitado'
   /** Target type — what this effect acts upon */
   objetivo?: 'self' | 'campeon_propio' | 'campeon_rival' | 'mistica_rival' | 'arcana_rival'
            | 'todos_campeones_propios' | 'todos_campeones_rivales'
-           | 'campeon_cementerio_propio' | 'cementerio_rival'
+           | 'cementerio_propio' | 'cementerio_rival'
+           | 'exilio_propio' | 'exilio_rival'
            | 'carta_mazo' | 'rival_hand' | 'ether_pagado_rival'
+  /** Additional filters for the target */
+  filtroObjetivo?: FiltroObjetivo
   /** Effect action — what this effect DOES */
   efecto?: 'buff' | 'debuff' | 'destruir' | 'robar' | 'invocar_cementerio'
          | 'devolver_mano' | 'equipar' | 'modificar_stat' | 'keyword'
          | 'toggle_agotamiento' | 'steal_champion' | 'steal_ether' | 'release_ether'
          | 'return_ether' | 'force_return_ether' | 'rival_discard'
          | 'conditional_trigger' | 'equip_grant_ability' | 'prevent_destroy'
-         | 'exile'
+         | 'exile' | 'mover_ether' | 'bloquear_ether'
   /** Stat modifications (positive = buff, negative = debuff) */
   stats?: { ATQ?: number; RES?: number }
   /** Stats while in reserve (for effects that change based on zone) */
@@ -47,6 +54,8 @@ export interface EfectoData {
   /** Duration — how long this effect lasts */
   duracion?: 'permanente' | 'turno' | 'hasta_alba' | 'mientras_ester_bloqueado' | 'n_turnos'
            | 'mientras_en_campo' | '1_por_turno' | 'mientras_equipped' | 'instant'
+  /** Number of turns for duracion='n_turnos' */
+  duracionTurnos?: number
   /** Trigger condition — when this effect activates */
   trigger?: 'al_invocar' | 'al_atacar' | 'al_matar_en_combate' | 'al_pagar_eter'
           | 'inicio_choque' | 'inicio_alba' | 'al_jugar_mistica'
@@ -64,6 +73,26 @@ export interface EfectoData {
   reagrupar?: { fase: 'alba' | 'choque'; turno: 'propio' | 'oponente' }
   /** Secondary condition (structured — appears when trigger has prerequisite) */
   condicionSecundaria?: CondicionSecundaria
+}
+
+/** Structured target filter — no free text */
+export interface FiltroObjetivo {
+  /** Card type to filter by */
+  tipo?: 'campeon' | 'mistica' | 'arcana'
+  /** Faction to filter by */
+  faccion?: Faccion
+  /** Essence to filter by */
+  esencia?: Esencia
+  /** Role to filter by */
+  rol?: Rol
+  /** Maximum cost */
+  costeMax?: number
+  /** Maximum ATQ */
+  atqMax?: number
+  /** Maximum RES */
+  resMax?: number
+  /** Keywords the card must have */
+  keyword?: string
 }
 
 /** Structured secondary condition — no free text */

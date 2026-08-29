@@ -4,7 +4,8 @@
  * Auto-generates texto from structured fields.
  * Filters options by card type for better UX.
  */
-import type { EfectoData, CardType } from '../../../shared/types/cards'
+import type { EfectoData, CardType, FiltroObjetivo } from '../../../shared/types/cards'
+import { FACCIONES, ESENCIAS, ROLES } from '../../../shared/types/enums'
 import { generateComandanteText } from '../EffectList'
 
 interface EffectFieldProps {
@@ -98,6 +99,8 @@ const ALL_EFECTO_OPTIONS = [
   { value: 'equip_grant_ability', label: 'Equipar + dar habilidad' },
   { value: 'prevent_destroy', label: 'Prevenir destrucción' },
   { value: 'exile', label: 'Exiliar' },
+  { value: 'mover_ether', label: 'Mover éter' },
+  { value: 'bloquear_ether', label: 'Bloquear éter' },
 ]
 
 const ALL_DURACION_OPTIONS = [
@@ -125,6 +128,24 @@ const ALL_TRIGGER_OPTIONS = [
   { value: 'al_activar_habilidad', label: 'Al activar habilidad' },
   { value: 'al_ser_enviado_al_cementerio', label: 'Al ir al cementerio' },
   { value: 'al_ser_destruido_vinculo', label: 'Al destruir Vínculo' },
+]
+
+const ALL_ZONA_ACTIVACION_OPTIONS = [
+  { value: 'reserva', label: 'Reserva' },
+  { value: 'pago', label: 'Pago' },
+  { value: 'bloqueo', label: 'Bloqueo' },
+  { value: 'campo', label: 'Campo' },
+]
+
+const ALL_FRECUENCIA_OPTIONS = [
+  { value: '1_por_turno', label: '1 por turno' },
+  { value: 'ilimitado', label: 'Ilimitado' },
+]
+
+const ALL_FILTRO_TIPO_OPTIONS = [
+  { value: 'campeon', label: 'Campeón' },
+  { value: 'mistica', label: 'Mística' },
+  { value: 'arcana', label: 'Arcana' },
 ]
 
 function filterOptions(all: { value: string; label: string }[], allowed: string[]) {
@@ -174,6 +195,10 @@ function NumberInput({ label, value, onChange, min, max }: {
       />
     </div>
   )
+}
+
+function updateFiltro(current: FiltroObjetivo | undefined, patch: Partial<FiltroObjetivo>): FiltroObjetivo {
+  return { ...current, ...patch } as FiltroObjetivo
 }
 
 export function EffectField({ label, value, onChange, showFields, isComandante, cardType }: EffectFieldProps) {
@@ -255,6 +280,39 @@ export function EffectField({ label, value, onChange, showFields, isComandante, 
               placeholder="ej: Inmortal"
               className="bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs text-gray-200"
             />
+          </div>
+        </div>
+      )}
+      {/* Zone activation — for Éter effects */}
+      {shouldShow('zonaActivacion') && cardType === 'Éter' && (
+        <div className="flex flex-col gap-1 mt-2">
+          <SelectField label="Zona de activación" value={data.zonaActivacion} options={ALL_ZONA_ACTIVACION_OPTIONS} onChange={(v) => update({ zonaActivacion: v as any })} />
+        </div>
+      )}
+      {/* Frequency — for activatable effects */}
+      {shouldShow('frecuencia') && (data.tipo === 'disparo' || data.tipo === 'continuo' || data.tipo === 'pago') && (
+        <div className="flex flex-col gap-1 mt-2">
+          <SelectField label="Frecuencia" value={data.frecuencia} options={ALL_FRECUENCIA_OPTIONS} onChange={(v) => update({ frecuencia: v as any })} />
+        </div>
+      )}
+      {/* Duration turns — only when duracion='n_turnos' */}
+      {shouldShow('duracionTurnos') && data.duracion === 'n_turnos' && (
+        <div className="flex flex-col gap-1 mt-2">
+          <NumberInput label="Turnos" value={data.duracionTurnos} onChange={(v) => update({ duracionTurnos: v })} min={1} max={10} />
+        </div>
+      )}
+      {/* Target filter — for cementerio/exilio targets */}
+      {shouldShow('filtroObjetivo') && (data.objetivo?.includes('cementerio') || data.objetivo?.includes('exilio')) && (
+        <div className="border border-gray-600/30 rounded p-2 mt-2">
+          <p className="text-[10px] uppercase tracking-wider text-gray-400 mb-2">Filtros del objetivo</p>
+          <div className="grid grid-cols-2 gap-2">
+            <SelectField label="Tipo de carta" value={data.filtroObjetivo?.tipo} options={ALL_FILTRO_TIPO_OPTIONS} onChange={(v) => update({ filtroObjetivo: updateFiltro(data.filtroObjetivo, { tipo: v as any }) })} />
+            <SelectField label="Faccion" value={data.filtroObjetivo?.faccion} options={[{ value: '', label: 'Cualquiera' }, ...FACCIONES.map(f => ({ value: f, label: f }))]} onChange={(v) => update({ filtroObjetivo: updateFiltro(data.filtroObjetivo, { faccion: v as any }) })} />
+            <SelectField label="Esencia" value={data.filtroObjetivo?.esencia} options={[{ value: '', label: 'Cualquiera' }, ...ESENCIAS.map(e => ({ value: e, label: e }))]} onChange={(v) => update({ filtroObjetivo: updateFiltro(data.filtroObjetivo, { esencia: v as any }) })} />
+            <SelectField label="Rol" value={data.filtroObjetivo?.rol} options={[{ value: '', label: 'Cualquiera' }, ...ROLES.map(r => ({ value: r, label: r }))]} onChange={(v) => update({ filtroObjetivo: updateFiltro(data.filtroObjetivo, { rol: v as any }) })} />
+            <NumberInput label="Coste max." value={data.filtroObjetivo?.costeMax} onChange={(v) => update({ filtroObjetivo: updateFiltro(data.filtroObjetivo, { costeMax: v }) })} min={0} max={20} />
+            <NumberInput label="ATQ max." value={data.filtroObjetivo?.atqMax} onChange={(v) => update({ filtroObjetivo: updateFiltro(data.filtroObjetivo, { atqMax: v }) })} min={0} max={99} />
+            <NumberInput label="RES max." value={data.filtroObjetivo?.resMax} onChange={(v) => update({ filtroObjetivo: updateFiltro(data.filtroObjetivo, { resMax: v }) })} min={0} max={99} />
           </div>
         </div>
       )}
