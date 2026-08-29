@@ -177,6 +177,8 @@ function generateEffectText(data: EfectoData): string {
     'bloquear_ether': 'bloquea',
   }
 
+  let targetText = ''
+
   if (data.efecto && data.objetivo) {
     const target = generateTargetText(data.objetivo)
     let effect = effectTexts[data.efecto] || data.efecto
@@ -188,7 +190,7 @@ function generateEffectText(data: EfectoData): string {
     }
 
     // Use target text from generateTargetText
-    let targetText = target
+    targetText = target
 
     if (data.efecto === 'buff' || data.efecto === 'debuff' || data.efecto === 'modificar_stat' || data.efecto === 'conditional_trigger') {
       const stats = data.stats || {}
@@ -196,15 +198,16 @@ function generateEffectText(data: EfectoData): string {
       if (stats.ATQ) statParts.push(`${stats.ATQ > 0 ? '+' : ''}${stats.ATQ} de ATQ`)
       if (stats.RES) statParts.push(`${stats.RES > 0 ? '+' : ''}${stats.RES} de RES`)
       if (statParts.length > 0) {
-        parts.push(`${targetText} ${effect} ${statParts.join(' y ')}`)
+        // Defer to after zone/frequency/cost
+        targetText = `${targetText} ${effect} ${statParts.join(' y ')}`
       }
     } else if (data.efecto === 'keyword' && data.keyword) {
-      parts.push(`${targetText} ${effect} ${data.keyword}`)
+      targetText = `${targetText} ${effect} ${data.keyword}`
     } else if (data.efecto === 'robar') {
       const qty = data.cantidad ?? 1
-      parts.push(`${effect} ${qty} carta${qty > 1 ? 's' : ''}`)
+      targetText = `${effect} ${qty} carta${qty > 1 ? 's' : ''}`
     } else {
-      parts.push(`${effect} ${targetText}`)
+      targetText = `${effect} ${targetText}`
     }
   }
 
@@ -238,6 +241,11 @@ function generateEffectText(data: EfectoData): string {
     } else if (data.costoTipo === 'exhaust') {
       parts.push('puedes agotar esta carta')
     }
+  }
+
+  // Target + Effect (FOURTH: "sobre un Campeón que controles")
+  if (targetText) {
+    parts.push(targetText)
   }
 
   // Duration
