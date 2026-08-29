@@ -141,17 +141,6 @@ function generateEffectText(data: EfectoData): string {
     parts.push(triggerTexts[data.trigger] || data.trigger)
   }
 
-  // Cost — only for activatable effects (disparo, continuo with explicit cost)
-  if (data.costoTipo && data.costoTipo !== 'ninguno') {
-    if (data.costoTipo === 'eter' && data.costoMax) {
-      parts.push(`puedes pagar ${data.costoMax} Éter`)
-    } else if (data.costoTipo === 'eter_bloqueado' && data.costoMax) {
-      parts.push(`puedes bloquear ${data.costoMax} Éter (Max. ${data.costoMax})`)
-    } else if (data.costoTipo === 'exhaust') {
-      parts.push('puedes agotar esta carta')
-    }
-  }
-
   // Secondary condition
   if (data.condicionSecundaria) {
     const condTexts: Record<string, string> = {
@@ -219,7 +208,7 @@ function generateEffectText(data: EfectoData): string {
     }
   }
 
-  // Zone activation — for Éter effects
+  // Zone activation — for Éter effects (FIRST: "Mientras esté en tu zona de pago")
   if (data.zonaActivacion) {
     const zonaTexts: Record<string, string> = {
       'reserva': 'en tu Reserva',
@@ -230,9 +219,25 @@ function generateEffectText(data: EfectoData): string {
     parts.push(`Mientras esté ${zonaTexts[data.zonaActivacion] || data.zonaActivacion}`)
   }
 
-  // Frequency — for activatable effects
+  // Frequency — for activatable effects (SECOND: "una vez por turno")
   if (data.frecuencia === '1_por_turno') {
     parts.push('una vez por turno')
+  }
+
+  // Cost — only for activatable effects (THIRD: "puedes bloquear 1 Éter")
+  if (data.costoTipo && data.costoTipo !== 'ninguno') {
+    if (data.costoTipo === 'eter' && data.costoMax) {
+      // Check if effect is 'bloquear_ether' to use correct verb
+      if (data.efecto === 'bloquear_ether') {
+        parts.push(`puedes bloquear ${data.costoMax} Éter`)
+      } else {
+        parts.push(`puedes pagar ${data.costoMax} Éter`)
+      }
+    } else if (data.costoTipo === 'eter_bloqueado' && data.costoMax) {
+      parts.push(`puedes bloquear hasta un máximo de ${data.costoMax} Éter (Max. ${data.costoMax})`)
+    } else if (data.costoTipo === 'exhaust') {
+      parts.push('puedes agotar esta carta')
+    }
   }
 
   // Duration
