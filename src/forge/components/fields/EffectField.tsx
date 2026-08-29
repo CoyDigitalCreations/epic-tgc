@@ -2,8 +2,9 @@
  * EffectField — Structured effect editor with dropdowns and inputs.
  * Replaces free-text TextAreaField for effect parameters.
  * Auto-generates texto from structured fields.
+ * Filters options by card type for better UX.
  */
-import type { EfectoData } from '../../../shared/types/cards'
+import type { EfectoData, CardType } from '../../../shared/types/cards'
 import { generateComandanteText } from '../EffectList'
 
 interface EffectFieldProps {
@@ -14,9 +15,36 @@ interface EffectFieldProps {
   showFields?: (keyof EfectoData)[]
   /** If true, auto-generate texto using generateComandanteText */
   isComandante?: boolean
+  /** Card type — filters available options per card type */
+  cardType?: CardType
 }
 
-const TIPO_OPTIONS = [
+/** Options per card type */
+const CARD_TYPE_EFFECTS: Record<CardType, string[]> = {
+  'Campeón': ['pasivo', 'continuo', 'disparo'],
+  'Mística': ['hechizo'],
+  'Arcana': ['pasivo'],
+  'Éter': ['reserva', 'pago', 'bloqueo'],
+  'Vínculo': ['vinculo'],
+}
+
+const CARD_TYPE_TRIGGERS: Record<CardType, string[]> = {
+  'Campeón': ['ninguno', 'al_invocar', 'al_atacar', 'al_matar_en_combate', 'al_activar_habilidad', 'al_ser_enviado_al_cementerio', 'inicio_alba', 'inicio_choque'],
+  'Mística': ['ninguno'],
+  'Arcana': ['ninguno'],
+  'Éter': ['ninguno', 'inicio_choque', 'al_pagar_eter'],
+  'Vínculo': ['ninguno'],
+}
+
+const CARD_TYPE_DURACION: Record<CardType, string[]> = {
+  'Campeón': ['permanente', 'turno', 'hasta_alba', 'mientras_ester_bloqueado', 'mientras_en_campo', '1_por_turno', 'n_turnos', 'instant'],
+  'Mística': ['permanente', 'turno', 'hasta_alba', 'instant'],
+  'Arcana': ['permanente'],
+  'Éter': ['permanente', 'mientras_ester_bloqueado', 'mientras_en_campo'],
+  'Vínculo': ['permanente'],
+}
+
+const ALL_TIPO_OPTIONS = [
   { value: 'pasivo', label: 'Pasivo' },
   { value: 'continuo', label: 'Continuo' },
   { value: 'disparo', label: 'Disparo' },
@@ -27,14 +55,14 @@ const TIPO_OPTIONS = [
   { value: 'vinculo', label: 'Vínculo' },
 ]
 
-const COSTO_OPTIONS = [
+const ALL_COSTO_OPTIONS = [
   { value: 'ninguno', label: 'Sin costo' },
   { value: 'eter', label: 'Éter' },
   { value: 'eter_bloqueado', label: 'Éter bloqueado' },
   { value: 'exhaust', label: 'Agotar' },
 ]
 
-const OBJETIVO_OPTIONS = [
+const ALL_OBJETIVO_OPTIONS = [
   { value: 'self', label: 'Esta carta' },
   { value: 'campeon_propio', label: 'Campeón propio' },
   { value: 'campeon_rival', label: 'Campeón rival' },
@@ -49,7 +77,7 @@ const OBJETIVO_OPTIONS = [
   { value: 'ether_pagado_rival', label: 'Éter pagado del rival' },
 ]
 
-const EFECTO_OPTIONS = [
+const ALL_EFECTO_OPTIONS = [
   { value: 'buff', label: 'Buff (+ATQ/+RES)' },
   { value: 'debuff', label: 'Debuff (-ATQ/-RES)' },
   { value: 'destruir', label: 'Destruir' },
@@ -72,7 +100,7 @@ const EFECTO_OPTIONS = [
   { value: 'exile', label: 'Exiliar' },
 ]
 
-const DURACION_OPTIONS = [
+const ALL_DURACION_OPTIONS = [
   { value: 'permanente', label: 'Permanente' },
   { value: 'turno', label: 'Este turno' },
   { value: 'hasta_alba', label: 'Hasta tu Alba' },
@@ -84,7 +112,7 @@ const DURACION_OPTIONS = [
   { value: 'n_turnos', label: 'N turnos' },
 ]
 
-const TRIGGER_OPTIONS = [
+const ALL_TRIGGER_OPTIONS = [
   { value: 'ninguno', label: 'Ninguno (siempre activo)' },
   { value: 'al_invocar', label: 'Al invocar' },
   { value: 'al_atacar', label: 'Al atacar' },
@@ -98,6 +126,10 @@ const TRIGGER_OPTIONS = [
   { value: 'al_ser_enviado_al_cementerio', label: 'Al ir al cementerio' },
   { value: 'al_ser_destruido_vinculo', label: 'Al destruir Vínculo' },
 ]
+
+function filterOptions(all: { value: string; label: string }[], allowed: string[]) {
+  return all.filter((o) => allowed.includes(o.value))
+}
 
 function SelectField({ label, value, options, onChange }: {
   label: string
@@ -144,7 +176,7 @@ function NumberInput({ label, value, onChange, min, max }: {
   )
 }
 
-export function EffectField({ label, value, onChange, showFields, isComandante }: EffectFieldProps) {
+export function EffectField({ label, value, onChange, showFields, isComandante, cardType }: EffectFieldProps) {
   const data: EfectoData = value ?? { tipo: 'pasivo' }
 
   const update = (patch: Partial<EfectoData>) => {
@@ -158,30 +190,44 @@ export function EffectField({ label, value, onChange, showFields, isComandante }
 
   const shouldShow = (field: keyof EfectoData) => !showFields || showFields.includes(field)
 
+  // Filter options by card type
+  const tipoOptions = cardType ? filterOptions(ALL_TIPO_OPTIONS, CARD_TYPE_EFFECTS[cardType] || []) : ALL_TIPO_OPTIONS
+  const triggerOptions = cardType ? filterOptions(ALL_TRIGGER_OPTIONS, CARD_TYPE_TRIGGERS[cardType] || ALL_TRIGGER_OPTIONS.map(o => o.value)) : ALL_TRIGGER_OPTIONS
+  const duracionOptions = cardType ? filterOptions(ALL_DURACION_OPTIONS, CARD_TYPE_DURACION[cardType] || ALL_DURACION_OPTIONS.map(o => o.value)) : ALL_DURACION_OPTIONS
+
+  // Determine which fields to show based on card type
+  const showCosto = shouldShow('costoTipo') && cardType !== 'Mística' && cardType !== 'Arcana' && cardType !== 'Vínculo'
+  const showTrigger = shouldShow('trigger') && cardType !== 'Mística' && cardType !== 'Arcana' && cardType !== 'Vínculo'
+  const showObjetivo = shouldShow('objetivo') && cardType !== 'Arcana'
+  const showEfecto = shouldShow('efecto') && cardType !== 'Arcana'
+  const showDuracion = shouldShow('duracion') && cardType !== 'Arcana'
+  const showReagrupar = shouldShow('reagrupar') && data.costoTipo === 'eter_bloqueado' && (cardType === 'Campeón' || cardType === 'Éter')
+  const showCondicionSecundaria = shouldShow('condicionSecundaria') && cardType === 'Campeón'
+
   return (
     <div className="border border-gray-600/50 rounded-lg p-3 bg-gray-900/50">
       <p className="text-xs font-semibold text-gray-300 mb-2">{label}</p>
       <div className="grid grid-cols-2 gap-2">
         {shouldShow('tipo') && (
-          <SelectField label="Tipo" value={data.tipo} options={TIPO_OPTIONS} onChange={(v) => update({ tipo: v as EfectoData['tipo'] })} />
+          <SelectField label="Tipo" value={data.tipo} options={tipoOptions} onChange={(v) => update({ tipo: v as EfectoData['tipo'] })} />
         )}
-        {shouldShow('costoTipo') && (
-          <SelectField label="Costo" value={data.costoTipo} options={COSTO_OPTIONS} onChange={(v) => update({ costoTipo: v as EfectoData['costoTipo'] })} />
+        {showCosto && (
+          <SelectField label="Costo" value={data.costoTipo} options={ALL_COSTO_OPTIONS} onChange={(v) => update({ costoTipo: v as EfectoData['costoTipo'] })} />
         )}
-        {shouldShow('costoMax') && data.costoTipo && data.costoTipo !== 'ninguno' && (
+        {showCosto && data.costoTipo && data.costoTipo !== 'ninguno' && (
           <NumberInput label="Cantidad" value={data.costoMax} onChange={(v) => update({ costoMax: v })} min={0} max={10} />
         )}
-        {shouldShow('objetivo') && (
-          <SelectField label="Objetivo" value={data.objetivo} options={OBJETIVO_OPTIONS} onChange={(v) => update({ objetivo: v as EfectoData['objetivo'] })} />
+        {showObjetivo && (
+          <SelectField label="Objetivo" value={data.objetivo} options={ALL_OBJETIVO_OPTIONS} onChange={(v) => update({ objetivo: v as EfectoData['objetivo'] })} />
         )}
-        {shouldShow('efecto') && (
-          <SelectField label="Efecto" value={data.efecto} options={EFECTO_OPTIONS} onChange={(v) => update({ efecto: v as EfectoData['efecto'] })} />
+        {showEfecto && (
+          <SelectField label="Efecto" value={data.efecto} options={ALL_EFECTO_OPTIONS} onChange={(v) => update({ efecto: v as EfectoData['efecto'] })} />
         )}
-        {shouldShow('duracion') && (
-          <SelectField label="Duración" value={data.duracion} options={DURACION_OPTIONS} onChange={(v) => update({ duracion: v as EfectoData['duracion'] })} />
+        {showDuracion && (
+          <SelectField label="Duración" value={data.duracion} options={duracionOptions} onChange={(v) => update({ duracion: v as EfectoData['duracion'] })} />
         )}
-        {shouldShow('trigger') && (
-          <SelectField label="Trigger" value={data.trigger} options={TRIGGER_OPTIONS} onChange={(v) => update({ trigger: v as EfectoData['trigger'] })} />
+        {showTrigger && (
+          <SelectField label="Trigger" value={data.trigger} options={triggerOptions} onChange={(v) => update({ trigger: v as EfectoData['trigger'] })} />
         )}
         {shouldShow('maxObjetivos') && (
           <NumberInput label="Máx. objetivos" value={data.maxObjetivos} onChange={(v) => update({ maxObjetivos: v })} min={1} max={10} />
@@ -222,8 +268,8 @@ export function EffectField({ label, value, onChange, showFields, isComandante }
           />
         </div>
       )}
-      {/* Regroup ether — only when costoTipo is ether_bloqueado */}
-      {shouldShow('reagrupar') && data.costoTipo === 'eter_bloqueado' && (
+      {/* Regroup ether */}
+      {showReagrupar && (
         <div className="flex gap-2 mt-2">
           <div className="flex flex-col gap-1">
             <label className="text-[10px] uppercase tracking-wider text-gray-400">Reagrupar</label>
@@ -268,8 +314,8 @@ export function EffectField({ label, value, onChange, showFields, isComandante }
           )}
         </div>
       )}
-      {/* Secondary condition — only for specific triggers */}
-      {shouldShow('condicionSecundaria') && (
+      {/* Secondary condition — only for Campeón */}
+      {showCondicionSecundaria && (
         <div className="flex flex-col gap-1 mt-2">
           <label className="text-[10px] uppercase tracking-wider text-gray-400">Condición secundaria</label>
           <select
@@ -302,16 +348,6 @@ export function EffectField({ label, value, onChange, showFields, isComandante }
               max={5}
             />
           )}
-        </div>
-      )}
-      {/* Stats while in reserve */}
-      {shouldShow('statsReserva') && data.tipo === 'reserva' && (
-        <div className="mt-2">
-          <p className="text-[10px] uppercase tracking-wider text-gray-400 mb-1">Stats en Reserva</p>
-          <div className="flex gap-2">
-            <NumberInput label="ATQ" value={data.statsReserva?.ATQ} onChange={(v) => update({ statsReserva: { ...data.statsReserva, ATQ: v } })} min={-10} max={10} />
-            <NumberInput label="RES" value={data.statsReserva?.RES} onChange={(v) => update({ statsReserva: { ...data.statsReserva, RES: v } })} min={-10} max={10} />
-          </div>
         </div>
       )}
     </div>

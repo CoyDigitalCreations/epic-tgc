@@ -291,6 +291,7 @@ export function EffectList({ cardType, effects, onChange, maxEffects = 3 }: Effe
                   value={effect}
                   onChange={(v) => { if (v) updateEffect(idx, v) }}
                   showFields={['tipo', 'costoTipo', 'costoMax', 'trigger', 'objetivo', 'efecto', 'stats', 'keyword', 'duracion', 'condicion', 'maxObjetivos', 'reagrupar', 'condicionSecundaria', 'statsReserva']}
+                  cardType={cardType}
                 />
                 {/* Auto-generated text preview */}
                 {effect.texto && (
