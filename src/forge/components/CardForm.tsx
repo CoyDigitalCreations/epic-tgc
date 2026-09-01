@@ -74,6 +74,12 @@ export function CardForm() {
   }
 
   const renderField = (field: { name: string; label: string; type: string; required: boolean; options?: string[]; min?: number; max?: number; placeholder?: string; defaultValue?: string; showEffectFields?: string[] }) => {
+    // Skip efectoComandante if catHabilidad doesn't include 'Comandante'
+    if (field.name === 'efectoComandante') {
+      const catHab = draft.catHabilidad as string[] | undefined
+      if (!catHab || !catHab.includes('Comandante')) return null
+    }
+
     const isStatsField = STATS_FIELDS.has(field.name)
     const value = isStatsField
       ? (draft.stats as Record<string, unknown>)?.[field.name] ?? ''

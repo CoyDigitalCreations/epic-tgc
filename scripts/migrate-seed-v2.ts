@@ -288,7 +288,10 @@ function migrarCarta(card: Card): Card {
 
   // Set Comandante category for Aurora and Ragnar
   if (esComandante) {
-    cleaned.catHabilidad = 'Comandante'
+    cleaned.catHabilidad = ['Comandante']
+  } else if (cleaned.catHabilidad && typeof cleaned.catHabilidad === 'string') {
+    // Convert single string to array
+    cleaned.catHabilidad = [cleaned.catHabilidad]
   }
 
   return { ...cleaned, efectos }

@@ -16,9 +16,9 @@ export function sacrificiosRequeridos(roles: Rol[] | undefined): number {
   return 0
 }
 
-/** true si el Campeón es Singular (catHabilidad 'Singular'): solo 1 copia en el campo. */
+/** true si el Campeón es Singular (catHabilidad incluye 'Singular'): solo 1 copia en el campo. */
 export function esSingular(card: AnyCard): boolean {
-  return card.type === 'Campeón' && card.catHabilidad === 'Singular'
+  return card.type === 'Campeón' && (card.catHabilidad?.includes('Singular') ?? false)
 }
 
 /** Copias del cardId presentes en el campo 2B-2F del jugador. */

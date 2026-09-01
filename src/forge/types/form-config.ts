@@ -57,7 +57,7 @@ export const FORM_CONFIGS: CardFormConfig[] = [
       { name: 'facciones', label: 'Facciones (máx 3)', type: 'multi-select', required: true, options: [...FACCIONES], max: 3 },
       { name: 'esencia', label: 'Esencia', type: 'select', required: true, options: [...ESENCIAS] },
       { name: 'roles', label: 'Roles (máx 2)', type: 'multi-select', required: true, options: [...ROLES], max: 2 },
-      { name: 'catHabilidad', label: 'Categoría de Habilidad', type: 'select', required: true, options: [...CAT_HABILIDAD] },
+      { name: 'catHabilidad', label: 'Categorías de Habilidad (máx 2)', type: 'multi-select', required: true, options: [...CAT_HABILIDAD], max: 2 },
       { name: 'efectos', label: 'Efectos', type: 'effect-list', required: false },
       { name: 'efectoComandante', label: 'Efecto Comandante', type: 'effect', required: false, showEffectFields: ['efecto', 'stats', 'keyword'] },
       { name: 'keywords', label: 'Palabras Clave', type: 'multi-select', required: false },

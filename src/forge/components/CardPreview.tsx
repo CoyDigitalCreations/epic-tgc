@@ -418,7 +418,7 @@ export function RenderCarta({
             ? [
               card.esencia || 'SIN ESENCIA',
               card.roles?.join(' / ') || 'SIN ROL',
-              card.catHabilidad || 'NORML',
+              card.catHabilidad?.join(' / ') || 'NORML',
             ].join(' / ')
             : card.type.toUpperCase()
           }

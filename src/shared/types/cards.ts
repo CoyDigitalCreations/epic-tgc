@@ -127,7 +127,8 @@ export interface CardMeta {
   esencia?: Esencia
   /** Roles (taxonomía, principalmente para Campeón): hasta 2 */
   roles?: Rol[]
-  catHabilidad?: CatHabilidad
+  /** Hability categories (up to 2) */
+  catHabilidad?: CatHabilidad[]
   /** Copy limit: '1' | '2' | '3' (string to match form select) */
   limiteCopias?: string
   /** Paquete/set al que pertenece la carta (ver types/paquetes.ts) */
