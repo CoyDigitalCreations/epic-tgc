@@ -304,7 +304,13 @@ export const useCardStore = create<CardStore>()(
 
       // Draft
       draft: initialDraft,
-      setDraft: (draft) => set({ draft }),
+      setDraft: (draft) => {
+        // Ensure catHabilidad is always an array
+        if (draft.catHabilidad && !Array.isArray(draft.catHabilidad)) {
+          draft.catHabilidad = [draft.catHabilidad as string]
+        }
+        set({ draft })
+      },
       updateDraft: (field, value) =>
         set((state) => ({ draft: { ...state.draft, [field]: value } })),
       resetDraft: () => set({ draft: initialDraft }),
@@ -315,6 +321,7 @@ export const useCardStore = create<CardStore>()(
             type,
             rarity: 'Común',
             keywords: [],
+            catHabilidad: [],
             flavorText: '',
             limiteCopias: '3',
             stats: { cost: 0, poder: 0, resistencia: 0 },

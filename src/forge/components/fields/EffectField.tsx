@@ -5,7 +5,7 @@
  * Filters options by card type for better UX.
  */
 import type { EfectoData, CardType } from '../../../shared/types/cards'
-import { FACCIONES, ESENCIAS, ROLES } from '../../../shared/types/enums'
+import { FACCIONES, ESENCIAS, ROLES, KEYWORDS } from '../../../shared/types/enums'
 import { generateComandanteText } from '../EffectList'
 
 interface EffectFieldProps {
@@ -160,6 +160,13 @@ const ALL_FILTRO_TIPO_OPTIONS = [
   { value: 'arcana', label: 'Arcana' },
 ]
 
+const ALL_CONDICION_OPTIONS = [
+  { value: 'no_activar_turno_colocada', label: 'No se puede activar el turno en que fue colocada' },
+  { value: 'controlar_2_campeones', label: 'Si controlas 2+ Campeones' },
+  { value: 'controlar_campeon_eter_bloqueado', label: 'Si controlas un Campeón con Éter bloqueado' },
+  { value: 'controlar_otro_campeon', label: 'Si controlas otro Campeón' },
+]
+
 function filterOptions(all: { value: string; label: string }[], allowed: string[]) {
   return all.filter((o) => allowed.includes(o.value))
 }
@@ -282,19 +289,10 @@ export function EffectField({ label, value, onChange, showFields, isComandante, 
           <NumberInput label="RES" value={data.stats?.RES} onChange={(v) => update({ stats: { ...data.stats, RES: v } })} min={-10} max={10} />
         </div>
       )}
-      {/* Keyword input */}
+      {/* Keyword select */}
       {shouldShow('keyword') && data.efecto === 'keyword' && (
-        <div className="flex gap-2 mt-2">
-          <div className="flex flex-col gap-1">
-            <label className="text-[10px] uppercase tracking-wider text-gray-400">Keyword</label>
-            <input
-              type="text"
-              value={data.keyword ?? ''}
-              onChange={(e) => update({ keyword: e.target.value || undefined })}
-              placeholder="ej: Inmortal"
-              className="bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs text-gray-200"
-            />
-          </div>
+        <div className="flex flex-col gap-1 mt-2">
+          <SelectField label="Keyword" value={data.keyword} options={[{ value: '', label: 'Seleccionar...' }, ...KEYWORDS.map(k => ({ value: k, label: k }))]} onChange={(v) => update({ keyword: v || undefined })} />
         </div>
       )}
       {/* Zone activation — for Éter effects */}
@@ -330,17 +328,10 @@ export function EffectField({ label, value, onChange, showFields, isComandante, 
           </div>
         </div>
       )}
-      {/* Condition text — only for Arcana activation conditions */}
+      {/* Condition select — for Arcana activation conditions */}
       {shouldShow('condicion') && (
         <div className="flex flex-col gap-1 mt-2">
-          <label className="text-[10px] uppercase tracking-wider text-gray-400">Condición de activación</label>
-          <input
-            type="text"
-            value={data.condicion ?? ''}
-            onChange={(e) => update({ condicion: e.target.value || undefined })}
-            placeholder="ej: coste <= 3"
-            className="bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs text-gray-200"
-          />
+          <SelectField label="Condición de activación" value={data.condicion} options={[{ value: '', label: 'Ninguna' }, ...ALL_CONDICION_OPTIONS]} onChange={(v) => update({ condicion: v || undefined })} />
         </div>
       )}
       {/* Regroup ether */}
