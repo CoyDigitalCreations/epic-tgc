@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useCardStore } from '../store/useCardStore'
 import { CARD_TYPES, RARITIES, KEYWORDS } from '../../shared/types'
 import { getFormConfig } from '../types/form-config'
@@ -8,6 +8,7 @@ import { validateCard } from '../utils/validation'
 import { TextField, NumberField, SelectField, TextAreaField, MultiSelectField } from './fields'
 import { EffectField } from './fields/EffectField'
 import { EffectList } from './EffectList'
+import { EffectManualModal } from './EffectManualModal'
 import { ImageUpload } from './ImageUpload'
 import { PAQUETES } from '../../shared/data/paquetes'
 
@@ -25,6 +26,7 @@ export function CardForm() {
   const userPacks = useCardStore((s) => s.userPacks)
 
   const isEditing = draft.id && cards.some((c) => c.id === draft.id)
+  const [showManual, setShowManual] = useState(false)
 
   // Auto-load card data when a card is selected in the collection
   useEffect(() => {
@@ -262,6 +264,19 @@ export function CardForm() {
           Cancelar
         </button>
       </div>
+
+      {/* Manual de Efectos button */}
+      <div className="mt-4">
+        <button
+          onClick={() => setShowManual(true)}
+          className="w-full text-xs text-gray-500 hover:text-ether-400 transition-colors cursor-pointer py-1"
+        >
+          📖 Manual de Efectos
+        </button>
+      </div>
+
+      {/* Manual modal */}
+      <EffectManualModal isOpen={showManual} onClose={() => setShowManual(false)} />
     </div>
   )
 }
