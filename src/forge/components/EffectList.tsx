@@ -101,7 +101,8 @@ function generateTargetText(objetivo: ObjetivoEfecto): string {
 /** Check if target is plural (affects multiple units) */
 function isPluralTarget(objetivo: ObjetivoEfecto | undefined): boolean {
   if (!objetivo) return false
-  return objetivo.controlador === 'ambos' || (objetivo.tipo === 'campeon' && objetivo.zona === 'campo')
+  // Only plural when controller is 'ambos' (affects both sides)
+  return objetivo.controlador === 'ambos'
 }
 
 /** Conjugate verb to plural in Spanish */
@@ -123,6 +124,11 @@ function pluralize(verb: string): string {
 /** Generate human-readable text from EfectoData — comprehensive Spanish */
 function generateEffectText(data: EfectoData): string {
   const parts: string[] = []
+
+  // Zone activation prefix — for Bloqueo type, always start with "Mientras esté bloqueado"
+  if (data.tipo === 'bloqueo') {
+    parts.push('Mientras esté bloqueado')
+  }
 
   // Trigger
   if (data.trigger && data.trigger !== 'ninguno') {
@@ -192,6 +198,11 @@ function generateEffectText(data: EfectoData): string {
 
     // Use target text from generateTargetText
     targetText = target
+
+    // For Bloqueo type, override target text to be more specific
+    if (data.tipo === 'bloqueo' && data.objetivo?.tipo === 'campeon' && data.objetivo?.controlador === 'propio') {
+      targetText = 'el Campeón que tiene este éter bloqueado'
+    }
 
     // For effects already handled in cost section, use preposition instead of verb
     const handledInCost = data.costoTipo && data.costoTipo !== 'ninguno' && 
