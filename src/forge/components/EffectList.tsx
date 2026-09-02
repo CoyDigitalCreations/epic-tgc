@@ -30,6 +30,7 @@ function generateTargetText(objetivo: ObjetivoEfecto): string {
     'campeon': 'Campeón',
     'mistica': 'Mística',
     'arcana': 'Arcana',
+    'mistica_arcana': 'Mística o Arcana',
     'eter': 'Éter',
     'carta': 'carta',
     'mano': 'carta',
@@ -67,7 +68,7 @@ function generateTargetText(objetivo: ObjetivoEfecto): string {
   // Article
   if (objetivo.tipo === 'campeon' || objetivo.tipo === 'carta' || objetivo.tipo === 'mano') {
     text = `un${objetivo.tipo === 'carta' || objetivo.tipo === 'mano' ? 'a' : ''} ${tipo}`
-  } else if (objetivo.tipo === 'mistica' || objetivo.tipo === 'arcana') {
+  } else if (objetivo.tipo === 'mistica' || objetivo.tipo === 'arcana' || objetivo.tipo === 'mistica_arcana') {
     text = `una ${tipo}`
   } else if (objetivo.tipo === 'eter') {
     text = 'Éter'
@@ -206,9 +207,9 @@ function generateEffectText(data: EfectoData): string {
       }
     } else if (data.efecto === 'keyword' && data.keyword) {
       targetText = `${targetText} ${effect} ${data.keyword}`
-    } else if (data.efecto === 'robar') {
+    } else if (data.efecto === 'robar' || data.efecto === 'destruir' || data.efecto === 'return_ether' || data.efecto === 'release_ether' || data.efecto === 'devolver_mano' || data.efecto === 'exile') {
       const qty = data.cantidad ?? 1
-      targetText = `${effect} ${qty} carta${qty > 1 ? 's' : ''}`
+      targetText = `${effect} ${qty} ${targetText}${qty > 1 ? 's' : ''}`
     } else if (handledInCost) {
       // Already handled in cost section — use preposition
       targetText = `sobre ${targetText}`

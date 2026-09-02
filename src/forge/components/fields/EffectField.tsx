@@ -68,6 +68,7 @@ const ALL_OBJETIVO_TIPO_OPTIONS = [
   { value: 'campeon', label: 'Campeón' },
   { value: 'mistica', label: 'Mística' },
   { value: 'arcana', label: 'Arcana' },
+  { value: 'mistica_arcana', label: 'Mística / Arcana' },
   { value: 'eter', label: 'Éter' },
   { value: 'carta', label: 'Carta' },
   { value: 'mano', label: 'Mano' },

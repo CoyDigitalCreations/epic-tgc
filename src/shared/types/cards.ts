@@ -72,7 +72,7 @@ export interface EfectoData {
 /** Structured target — 3-layer system: type + controller + zone + filters */
 export interface ObjetivoEfecto {
   /** Type of card targeted */
-  tipo: 'self' | 'campeon' | 'mistica' | 'arcana' | 'eter' | 'carta' | 'mano'
+  tipo: 'self' | 'campeon' | 'mistica' | 'arcana' | 'mistica_arcana' | 'eter' | 'carta' | 'mano'
   /** Who controls the target */
   controlador: 'propio' | 'rival' | 'ambos'
   /** Where the target is located */
