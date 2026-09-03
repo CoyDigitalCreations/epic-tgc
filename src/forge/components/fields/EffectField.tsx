@@ -160,7 +160,7 @@ export function EffectField({ label, value, onChange, cardType }: EffectFieldPro
 
       {/* Capa 3: Costo */}
       {showCost && (
-        <div className="flex gap-2 mt-2">
+        <div className="grid grid-cols-2 gap-2 mt-2">
           <SelectField label="Costo" value={data.costo?.tipo} options={COSTO_OPTIONS} onChange={(v) => updateCosto({ tipo: v as any })} />
           {data.costo?.tipo && data.costo.tipo !== 'ninguno' && <NumberInput label="Cantidad" value={data.costo?.cantidad} onChange={(v) => updateCosto({ cantidad: v })} min={1} max={10} />}
         </div>
@@ -168,7 +168,7 @@ export function EffectField({ label, value, onChange, cardType }: EffectFieldPro
 
       {/* Capa 4: Objetivo */}
       {showObjetivo && (
-        <div className="flex gap-2 mt-2">
+        <div className="grid grid-cols-3 gap-2 mt-2">
           <SelectField label="Tipo objetivo" value={data.objetivo?.tipo} options={OBJETIVO_TIPO_OPTIONS} onChange={(v) => updateObjetivo({ tipo: v as any })} />
           <SelectField label="Controlador" value={data.objetivo?.controlador} options={CONTROLADOR_OPTIONS} onChange={(v) => updateObjetivo({ controlador: v as any })} />
           <SelectField label="Zona" value={data.objetivo?.zona} options={ZONA_OPTIONS} onChange={(v) => updateObjetivo({ zona: v as any })} />
@@ -177,7 +177,7 @@ export function EffectField({ label, value, onChange, cardType }: EffectFieldPro
 
       {/* Capa 6: Stats */}
       {showStats && (
-        <div className="flex gap-2 mt-2">
+        <div className="grid grid-cols-2 gap-2 mt-2">
           <NumberInput label="ATQ" value={data.stats?.ATQ} onChange={(v) => update({ stats: { ...data.stats, ATQ: v } })} min={-10} max={10} />
           <NumberInput label="RES" value={data.stats?.RES} onChange={(v) => update({ stats: { ...data.stats, RES: v } })} min={-10} max={10} />
         </div>
@@ -195,7 +195,7 @@ export function EffectField({ label, value, onChange, cardType }: EffectFieldPro
 
       {/* Capa 10: Reagrupar */}
       {showReagrupar && (
-        <div className="flex gap-2 mt-2">
+        <div className="grid grid-cols-2 gap-2 mt-2">
           <SelectField label="Reagrupar" value={data.reagrupar?.fase} options={[{ value: '', label: 'No' }, { value: 'alba', label: 'Alba' }, { value: 'choque', label: 'Choque' }]} onChange={(v) => update({ reagrupar: v ? { fase: v as any, turno: data.reagrupar?.turno ?? 'propio' } : undefined })} />
           {data.reagrupar?.fase && <SelectField label="Turno" value={data.reagrupar?.turno} options={[{ value: 'propio', label: 'Propio' }, { value: 'oponente', label: 'Oponente' }]} onChange={(v) => update({ reagrupar: { ...data.reagrupar!, turno: v as any } })} />}
         </div>
