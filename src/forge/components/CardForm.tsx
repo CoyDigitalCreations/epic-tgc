@@ -180,8 +180,7 @@ export function CardForm() {
             label={field.label}
             value={effectData as any}
             onChange={(v) => onChange(v)}
-            showFields={field.showEffectFields as any}
-            isComandante={field.name === 'efectoComandante'}
+            cardType={(draft.type as CardType) || 'Campeón'}
           />
         )
       }

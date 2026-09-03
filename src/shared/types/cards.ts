@@ -14,67 +14,97 @@ export interface CombatStats extends BaseStats {
 
 /**
  * Structured effect metadata — machine-readable effect parameters.
+ * 11-layer system: tipo → trigger → costo → objetivo → efecto → stats → cantidad → keyword → duracion → reagrupar → condicion
  * The engine reads this instead of parsing text with regex.
  * `texto` field is AUTO-GENERATED (not user-editable).
- *
- * Based on analysis of all 65 cards: 45 unique patterns, 8 duplicate groups, 8 edge cases.
  */
 export interface EfectoData {
+  // ── Capa 1: TIPO (obligatorio) ──
   /** Effect type — which zone/phase this effect belongs to */
-  tipo: 'pasivo' | 'continuo' | 'disparo' | 'reserva' | 'pago' | 'bloqueo' | 'hechizo' | 'vinculo'
-  /** Cost type — what the player must pay to activate */
-  costoTipo?: 'ninguno' | 'eter' | 'eter_bloqueado' | 'exhaust'
-  /** Maximum cost value (e.g., "hasta un máximo de 2 Éter") */
-  costoMax?: number
-  /** Zone where this effect can be activated from */
-  zonaActivacion?: 'reserva' | 'pago' | 'bloqueo' | 'campo'
-  /** How often this effect can be used */
-  frecuencia?: '1_por_turno' | 'ilimitado'
-  /** Target — structured target with type, controller, zone and filters */
-  objetivo?: ObjetivoEfecto
-  /** Effect action — what this effect DOES */
-  efecto?: 'buff' | 'debuff' | 'destruir' | 'robar' | 'invocar_cementerio'
-         | 'devolver_mano' | 'equipar' | 'modificar_stat' | 'keyword'
-         | 'toggle_agotamiento' | 'steal_champion' | 'steal_ether' | 'release_ether'
-         | 'return_ether' | 'force_return_ether' | 'rival_discard'
-         | 'conditional_trigger' | 'equip_grant_ability' | 'prevent_destroy'
-         | 'exile' | 'mover_ether' | 'bloquear_ether'
-  /** Stat modifications (positive = buff, negative = debuff) */
-  stats?: { ATQ?: number; RES?: number }
-  /** Stats while in reserve (for effects that change based on zone) */
-  statsReserva?: { ATQ?: number; RES?: number }
-  /** Keyword to grant */
-  keyword?: string
-  /** Duration — how long this effect lasts */
-  duracion?: 'permanente' | 'turno' | 'hasta_alba' | 'mientras_ester_bloqueado' | 'n_turnos'
-           | 'mientras_en_campo' | '1_por_turno' | 'mientras_equipped' | 'instant'
-  /** Number of turns for duracion='n_turnos' */
-  duracionTurnos?: number
-  /** Trigger condition — when this effect activates */
+  tipo: 'pasivo' | 'disparo' | 'continuo' | 'comandante' | 'reserva' | 'pago' | 'bloqueo' | 'hechizo' | 'vinculo'
+
+  // ── Capa 2: TRIGGER (opcional) ──
+  /** When this effect activates */
   trigger?: 'al_invocar' | 'al_atacar' | 'al_matar_en_combate' | 'al_pagar_eter'
           | 'inicio_choque' | 'inicio_alba' | 'al_jugar_mistica'
           | 'al_resolver_cadena' | 'al_activar_habilidad' | 'al_ser_enviado_al_cementerio'
           | 'al_ser_destruido_vinculo' | 'ninguno'
-  /** Activation condition (structured — for Arcanas and conditional effects) */
-  condicion?: string
-  /** Quantity — how many cards this effect affects (default: 1) */
+
+  // ── Capa 3: COSTO (opcional, anidado) ──
+  /** What the player must pay to activate */
+  costo?: CostoEfecto
+
+  // ── Capa 4: OBJETIVO (opcional) ──
+  /** Who/what this effect acts upon */
+  objetivo?: ObjetivoEfecto
+
+  // ── Capa 5: EFECTO (obligatorio) ──
+  /** What this effect DOES */
+  efecto?: EfectoAccion
+
+  // ── Capa 6: STATS (opcional) ──
+  /** Stat modifications for buff/debuff */
+  stats?: { ATQ?: number; RES?: number }
+
+  // ── Capa 7: CANTIDAD (opcional) ──
+  /** How many cards this affects (for draw, destroy, exile, scry, etc.) */
   cantidad?: number
-  /** Maximum number of targets */
-  maxObjetivos?: number
-  /** Human-readable text (AUTO-GENERATED from fields — not user-editable) */
-  texto?: string
+
+  // ── Capa 8: KEYWORD (opcional) ──
+  /** Keyword to grant (for grant_keyword effect) */
+  keyword?: string
+
+  // ── Capa 9: DURACIÓN (opcional) ──
+  /** How long this effect lasts */
+  duracion?: 'permanente' | 'turno' | 'hasta_alba' | 'mientras_ester_bloqueado'
+           | 'mientras_en_campo' | 'mientras_equipped' | '1_por_turno' | 'n_turnos'
+  /** Number of turns when duracion='n_turnos' */
+  duracionTurnos?: number
+
+  // ── Capa 10: REAGRUPAR (opcional) ──
   /** Regroup ether — "Al inicio de la fase [X], reagrupa el Éter usado" */
   reagrupar?: { fase: 'alba' | 'choque'; turno: 'propio' | 'oponente' }
-  /** Secondary condition (structured — appears when trigger has prerequisite) */
-  condicionSecundaria?: CondicionSecundaria
+
+  // ── Capa 11: CONDICIÓN (solo para Arcana) ──
+  /** Activation condition for Arcanas — accepts string (legacy) or CondicionEfecto */
+  condicion?: CondicionEfecto | string
+
+  // ── Texto auto-generado ──
+  /** Human-readable text (AUTO-GENERATED from fields — not user-editable) */
+  texto?: string
 }
+
+/** Cost structure — what the player pays */
+export interface CostoEfecto {
+  /** Cost type */
+  tipo: 'ninguno' | 'eter' | 'eter_bloqueado' | 'exhaust'
+  /** Amount (for ether costs) */
+  cantidad?: number
+}
+
+/** All available effect actions */
+export type EfectoAccion =
+  | 'buff' | 'debuff' | 'destroy' | 'exile' | 'return_hand'
+  | 'draw' | 'steal_champion' | 'steal_ether' | 'block_ether'
+  | 'free_ether' | 'return_ether' | 'toggle_exhaust' | 'prevent_destroy'
+  | 'scry' | 'tutor' | 'counter' | 'copy' | 'redirect'
+  | 'double_attack' | 'direct_attack' | 'change_type' | 'grant_keyword'
+  | 'recuperar_campo' | 'recuperar_mano' | 'recuperar_mazo'
+  | 'recuperar_mazo_barajar' | 'recuperar_mazo_top' | 'recuperar_mazo_bottom'
+  | 'recuperar_exilio'
+  // Legacy compatibility
+  | 'keyword' | 'robar' | 'destruir' | 'bloquear_ether' | 'mover_ether'
+  | 'release_ether' | 'devolver_mano' | 'equipar' | 'invocar_cementerio'
+  | 'conditional_trigger' | 'equip_grant_ability' | 'force_return_ether'
+  | 'rival_discard' | 'modificar_stat'
 
 /** Structured target — 3-layer system: type + controller + zone + filters */
 export interface ObjetivoEfecto {
   /** Type of card targeted */
   tipo: 'self' | 'campeon' | 'mistica' | 'arcana' | 'mistica_arcana' | 'eter' | 'carta' | 'mano'
+       | 'todos_campeones_propios' | 'todos_campeones_rivales' | 'rival_hand'
   /** Who controls the target */
-  controlador: 'propio' | 'rival' | 'ambos'
+  controlador: 'propio' | 'rival' | 'ambos' | 'ninguno'
   /** Where the target is located */
   zona: 'campo' | 'cementerio' | 'exilio' | 'reserva' | 'pagado' | 'bloqueado' | 'mano' | 'mazo'
   /** Additional filters */
@@ -101,11 +131,27 @@ export interface FiltroObjetivo {
   keyword?: string
 }
 
-/** Structured secondary condition — no free text */
-export interface CondicionSecundaria {
+/** Structured condition for Arcanas */
+export interface CondicionEfecto {
+  /** When this condition is checked */
+  trigger: 'inicio_choque' | 'inicio_alba' | 'al_atacar' | 'al_invocar' | 'al_resolver_cadena' | 'al_activar_habilidad'
+  /** Array of conditions that must ALL be true */
+  condiciones: CondicionItem[]
+}
+
+/** Individual condition item */
+export interface CondicionItem {
   /** Condition type */
-  tipo: 'controlar_campeones' | 'controlar_eter_bloqueado' | 'controlar_otro_campeon'
-  /** Minimum count (for "2+ campeones" patterns) */
+  tipo: 'controlar_minimo' | 'controlar_maximo' | 'rival_controla_minimo' | 'rival_controla_maximo'
+       | 'tener_mano_minimo' | 'tener_mano_maximo' | 'tener_eter_bloqueado' | 'tener_eter_pagado'
+  /** Target of the condition */
+  objetivo?: {
+    tipo: 'campeon' | 'mistica' | 'arcana' | 'campeon_con_eter' | 'campeon_agotado'
+    controlador: 'propio' | 'rival'
+    cantidad?: number
+    filtros?: FiltroObjetivo
+  }
+  /** Minimum/maximum count */
   cantidad?: number
 }
 

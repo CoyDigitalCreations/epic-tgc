@@ -53,16 +53,16 @@ export function esVinculo(card: AnyCard): card is VinculoCard {
 
 /**
  * Extrae el costo en Éteres de una habilidad activa.
- * Prefiere efectos[].costoMax si está disponible.
+ * Prefiere efectos[].costo.cantidad si está disponible.
  * Fallback: regex sobre efectoDisparo (backward compatible).
  */
 export function costeEterHabilidad(card: AnyCard): number {
   // 1. Prefer efectos[] array (unified system)
   if ('efectos' in card && card.efectos) {
     const disparo = card.efectos.find((e) => e.tipo === 'disparo')
-    if (disparo?.costoMax !== undefined) return disparo.costoMax
+    if (disparo?.costo?.cantidad !== undefined) return disparo.costo.cantidad
     const continuo = card.efectos.find((e) => e.tipo === 'continuo')
-    if (continuo?.costoMax !== undefined) return continuo.costoMax
+    if (continuo?.costo?.cantidad !== undefined) return continuo.costo.cantidad
   }
   // 2. Fallback: legacy efectoDisparoData
   if ('efectoDisparoData' in card && (card as any).efectoDisparoData?.costoMax !== undefined) {
@@ -93,8 +93,7 @@ export function campeonNecesitaEterBloqueado(card: AnyCard): boolean {
   // 1. Prefer efectos[] array (unified system)
   if ('efectos' in card && card.efectos) {
     for (const e of card.efectos) {
-      if (e.costoTipo === 'eter_bloqueado') return true
-      if (e.trigger === 'inicio_alba' && e.condicion?.includes('bloqueado')) return true
+      if (e.costo?.tipo === 'eter_bloqueado') return true
     }
   }
   // 2. Fallback: legacy efectoDisparoData / efectoPasivoData
