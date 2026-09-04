@@ -107,3 +107,22 @@ export function importCardDataFromJson(file: File): Promise<AnyCard[]> {
     reader.readAsText(file)
   })
 }
+
+/**
+ * Exporta cartas SIN arte (solo datos): útil para compartir cartas sin imágenes pesadas.
+ */
+export function exportCollectionSinArte(
+  cards: AnyCard[],
+  nombreArchivo = 'cartas-sin-arte',
+): void {
+  const exported = cards.map(sinArte)
+  const json = JSON.stringify(exported, null, 2)
+  const blob = new Blob([json], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  const nombreLimpio = nombreArchivo.trim().replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-_]/g, '') || 'cartas-sin-arte'
+  link.download = `${nombreLimpio}.json`
+  link.href = url
+  link.click()
+  URL.revokeObjectURL(url)
+}

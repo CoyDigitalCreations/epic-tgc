@@ -190,6 +190,7 @@ export function EffectManualModal({ isOpen, onClose }: EffectManualModalProps) {
                 ['Bloquear éter', 'bloquea', 'bloquean'],
                 ['Liberar éter', 'libera', 'liberan'],
                 ['Devolver éter', 'devuelve', 'devuelven'],
+                ['Mover éter', 'mueve', 'mueven'],
                 ['Exiliar', 'exilia', 'exilian'],
                 ['Toggle agotamiento', 'cambia el agotamiento de', 'cambian el agotamiento de'],
                 ['Prevenir destrucción', 'no es destruido', 'no son destruidos'],
@@ -206,6 +207,7 @@ export function EffectManualModal({ isOpen, onClose }: EffectManualModalProps) {
                 ['Permanente', 'de forma permanente'],
                 ['Este turno', 'hasta el final del turno'],
                 ['Hasta tu Alba', 'hasta tu próxima Alba'],
+                ['Hasta la Alba del oponente', 'hasta la próxima Alba del oponente'],
                 ['Mientras éter bloqueado', 'mientras ese Éter esté bloqueado'],
                 ['Mientras esté en campo', 'mientras esta carta esté en el campo'],
                 ['Mientras esté equipado', 'mientras esté equipado'],
@@ -224,6 +226,31 @@ export function EffectManualModal({ isOpen, onClose }: EffectManualModalProps) {
                 ['Ilimitado', '(no se agrega texto adicional)'],
               ]}
             />
+          </Section>
+
+          {/* 7b. ZONA DESTINO — MOVER ÉTER */}
+          <Section title="7b. Zona Destino → Mover Éter">
+            <p className="mb-2">Cuando el efecto es <strong>mover</strong>, <strong>devolver éter</strong>, <strong>liberar éter</strong> o <strong>bloquear éter</strong>, se agrega la zona destino:</p>
+            <Table
+              headers={['Zona Destino', 'Texto generado']}
+              rows={[
+                ['Campo', 'al campo'],
+                ['Cementerio', 'al Cementerio'],
+                ['Exilio', 'al Exilio'],
+                ['Reserva', 'a la Reserva'],
+                ['Pago', 'a su zona de pago'],
+                ['Bloqueado', 'a bloqueado'],
+                ['Mano', 'a la mano'],
+                ['Mazo', 'al mazo'],
+              ]}
+            />
+            <p className="mt-2 text-gray-500 text-xs">Ejemplo: "mueve Éter de la Reserva del rival a su zona de pago"</p>
+          </Section>
+
+          {/* 7c. NEGANDO EFECTO */}
+          <Section title="7c. Negando Efecto">
+            <p className="mb-2">Cuando se activa <strong>"Negando su efecto"</strong>, el Éter movido no activa sus habilidades (gatillo o pasivo) hasta que el oponente reagroupe en su Alba.</p>
+            <p className="text-xs text-gray-500">Se agrega al final del texto: "negando su efecto hasta la próxima Alba del oponente"</p>
           </Section>
 
           {/* 8. TEXTO AUTO-GENERADO — ZONA DE ACTIVACIÓN */}

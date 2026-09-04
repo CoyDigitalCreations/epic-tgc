@@ -28,7 +28,11 @@ export interface EfectoData {
   trigger?: 'al_invocar' | 'al_atacar' | 'al_matar_en_combate' | 'al_pagar_eter'
           | 'inicio_choque' | 'inicio_alba' | 'al_jugar_mistica'
           | 'al_resolver_cadena' | 'al_activar_habilidad' | 'al_ser_enviado_al_cementerio'
-          | 'al_ser_destruido_vinculo' | 'ninguno'
+          | 'al_ser_destruido_vinculo' | 'cuando_vinculo_seria_destruido' | 'ninguno'
+
+  // ── Capa 2b: TRIGGER ZONA (opcional) ──
+  /** Where the card was when the trigger happened (for al_ser_enviado_al_cementerio) */
+  triggerZona?: 'mano' | 'campo' | 'cualquier_zona'
 
   // ── Capa 3: COSTO (opcional, anidado) ──
   /** What the player must pay to activate */
@@ -56,7 +60,7 @@ export interface EfectoData {
 
   // ── Capa 9: DURACIÓN (opcional) ──
   /** How long this effect lasts */
-  duracion?: 'permanente' | 'turno' | 'hasta_alba' | 'mientras_ester_bloqueado'
+  duracion?: 'permanente' | 'turno' | 'hasta_alba' | 'hasta_alba_oponente' | 'mientras_ester_bloqueado'
            | 'mientras_en_campo' | 'mientras_equipped' | '1_por_turno' | 'n_turnos'
   /** Number of turns when duracion='n_turnos' */
   duracionTurnos?: number
@@ -69,6 +73,10 @@ export interface EfectoData {
   /** Activation condition for Arcanas — accepts string (legacy) or CondicionEfecto */
   condicion?: CondicionEfecto | string
 
+  // ── Modificador: SIN ACTIVAR EFECTO ──
+  /** When true, the moved/returned ether does NOT trigger its effects (until opponent's Alba) */
+  sinActivarEfecto?: boolean
+
   // ── Texto auto-generado ──
   /** Human-readable text (AUTO-GENERATED from fields — not user-editable) */
   texto?: string
@@ -77,7 +85,7 @@ export interface EfectoData {
 /** Cost structure — what the player pays */
 export interface CostoEfecto {
   /** Cost type */
-  tipo: 'ninguno' | 'eter' | 'eter_bloqueado' | 'exhaust'
+  tipo: 'ninguno' | 'eter' | 'eter_bloqueado' | 'exhaust' | 'exile_self' | 'cemetery_self'
   /** Amount (for ether costs) */
   cantidad?: number
 }
@@ -92,43 +100,59 @@ export type EfectoAccion =
   | 'recuperar_campo' | 'recuperar_mano' | 'recuperar_mazo'
   | 'recuperar_mazo_barajar' | 'recuperar_mazo_top' | 'recuperar_mazo_bottom'
   | 'recuperar_exilio'
+  | 'mover'
   // Legacy compatibility
   | 'keyword' | 'robar' | 'destruir' | 'bloquear_ether' | 'mover_ether'
   | 'release_ether' | 'devolver_mano' | 'equipar' | 'invocar_cementerio'
   | 'conditional_trigger' | 'equip_grant_ability' | 'force_return_ether'
   | 'rival_discard' | 'modificar_stat'
 
-/** Structured target — 3-layer system: type + controller + zone + filters */
+/** Structured target — 4-layer system: type + controller + zone + filters + destination */
 export interface ObjetivoEfecto {
   /** Type of card targeted */
-  tipo: 'self' | 'campeon' | 'mistica' | 'arcana' | 'mistica_arcana' | 'eter' | 'carta' | 'mano'
+  tipo: 'self' | 'campeon' | 'mistica' | 'arcana' | 'mistica_arcana' | 'eter' | 'vinculo' | 'carta' | 'mano'
        | 'todos_campeones_propios' | 'todos_campeones_rivales' | 'rival_hand'
   /** Who controls the target */
   controlador: 'propio' | 'rival' | 'ambos' | 'ninguno'
   /** Where the target is located */
   zona: 'campo' | 'cementerio' | 'exilio' | 'reserva' | 'pagado' | 'bloqueado' | 'mano' | 'mazo'
+  /** Where to move the target (for return_ether, move effects) */
+  zonaDestino?: 'campo' | 'cementerio' | 'exilio' | 'reserva' | 'pagado' | 'bloqueado' | 'mano' | 'mazo'
   /** Additional filters */
   filtros?: FiltroObjetivo
 }
 
-/** Structured target filter — no free text */
+/** Structured target filter — dynamic based on card type */
 export interface FiltroObjetivo {
-  /** Card type to filter by */
-  tipoCarta?: 'campeon' | 'mistica' | 'arcana'
-  /** Faction to filter by */
+  /** Faction to filter by (Campeón, Mística, Arcana) */
   faccion?: Faccion
-  /** Essence to filter by */
+  /** Essence to filter by (Campeón) */
   esencia?: Esencia
-  /** Role to filter by */
+  /** Role to filter by (Campeón) */
   rol?: Rol
+  /** Ability category to filter by (Campeón) */
+  catHabilidad?: CatHabilidad
+  /** Minimum cost */
+  costeMin?: number
   /** Maximum cost */
   costeMax?: number
-  /** Maximum ATQ */
+  /** Maximum ATQ (Campeón) */
   atqMax?: number
-  /** Maximum RES */
+  /** Maximum RES (Campeón) */
   resMax?: number
-  /** Keywords the card must have */
+  /** Exhaust status filter (Campeón): true = must be exhausted, false = must NOT be exhausted */
+  agotado?: boolean
+  /** Has blocked ether filter (Campeón): true = must have blocked ether, false = must NOT have blocked ether */
+  conEterBloqueado?: boolean
+  /** Equipment status filter (Campeón): true = must be equipped, false = must NOT be equipped */
+  equipado?: boolean
+  /** Minimum cost (for "coste X o más") */
+  /** Keyword the card must have */
   keyword?: string
+  /** Effect type filter (Mística): 'hechizo' | 'continuo' */
+  tipoEfectoMistica?: 'hechizo' | 'continuo'
+  /** Face status filter (Arcana): true = face up, false = face down */
+  bocaArriba?: boolean
 }
 
 /** Structured condition for Arcanas */

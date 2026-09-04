@@ -79,11 +79,11 @@ export function RenderCarta({
     card.type === 'Vínculo'
 
   /** Auto-escala el fontSize: texto corto → más grande (hasta 2x), texto largo → más chico (hasta minSize) */
-  const fluidSize = (text: string | undefined | null, minSize: number): number => {
-    const len = (text ?? '').length
+  const fluidSize = (text: string | undefined | null, minSize: number, maxLen = 220, overrideLen?: number): number => {
+    const len = overrideLen !== undefined ? overrideLen : (text ?? '').length
     if (len <= 35) return +(minSize * 2).toFixed(1)
-    if (len >= 220) return +minSize.toFixed(1)
-    const t = (len - 35) / (220 - 35)
+    if (len >= maxLen) return +minSize.toFixed(1)
+    const t = (len - 35) / (maxLen - 35)
     return +(minSize * (2 - t)).toFixed(1)
   }
 
@@ -418,7 +418,7 @@ export function RenderCarta({
             ? [
               card.esencia || 'SIN ESENCIA',
               card.roles?.join(' / ') || 'SIN ROL',
-              card.catHabilidad?.join(' / ') || 'NORML',
+              (Array.isArray(card.catHabilidad) ? card.catHabilidad : [card.catHabilidad]).filter(Boolean).join(' / ') || 'NORML',
             ].join(' / ')
             : card.type.toUpperCase()
           }
@@ -478,33 +478,36 @@ export function RenderCarta({
               const pasivoText = pasivo ?? c.efectoPasivo
               const disparoText = disparo ?? c.efectoDisparo
               const continuoText = continuo ?? c.efectoContinuo
+              
+              const comandanteText = ('efectoComandante' in c && c.efectoComandante?.texto) ? c.efectoComandante.texto : ''
+              const totalLen = (pasivoText?.length || 0) + (disparoText?.length || 0) + (continuoText?.length || 0) + (comandanteText.length || 0)
 
               if (pasivoText) {
                 parts.push(
-                  <p key="pasivo" style={{ fontFamily: '"Inter", sans-serif', fontSize: fluidSize(pasivoText, 13.5), lineHeight: 1.35, fontWeight: 500, color: '#261a0e', margin: 0 }}>
+                  <p key="pasivo" style={{ fontFamily: '"Inter", sans-serif', fontSize: fluidSize(pasivoText, 13.5, 450, totalLen), lineHeight: 1.35, fontWeight: 500, color: '#261a0e', margin: 0 }}>
                     <strong>Pasivo:</strong> {pasivoText}
                   </p>
                 )
               }
               if (disparoText) {
                 parts.push(
-                  <p key="disparo" style={{ fontFamily: '"Inter", sans-serif', fontSize: fluidSize(disparoText, 13.5), lineHeight: 1.35, fontWeight: 500, color: '#261a0e', margin: 0, marginTop: parts.length > 0 ? 8 : 0 }}>
+                  <p key="disparo" style={{ fontFamily: '"Inter", sans-serif', fontSize: fluidSize(disparoText, 13.5, 450, totalLen), lineHeight: 1.35, fontWeight: 500, color: '#261a0e', margin: 0, marginTop: parts.length > 0 ? 8 : 0 }}>
                     <strong>Disparo:</strong> {disparoText}
                   </p>
                 )
               }
               if (continuoText) {
                 parts.push(
-                  <p key="continuo" style={{ fontFamily: '"Inter", sans-serif', fontSize: fluidSize(continuoText, 13.5), lineHeight: 1.35, fontWeight: 500, color: '#261a0e', margin: 0, marginTop: parts.length > 0 ? 8 : 0 }}>
+                  <p key="continuo" style={{ fontFamily: '"Inter", sans-serif', fontSize: fluidSize(continuoText, 13.5, 450, totalLen), lineHeight: 1.35, fontWeight: 500, color: '#261a0e', margin: 0, marginTop: parts.length > 0 ? 8 : 0 }}>
                     <strong>Continuo:</strong> {continuoText}
                   </p>
                 )
               }
               // Comandante effect
-              if ('efectoComandante' in c && c.efectoComandante?.texto) {
+              if (comandanteText) {
                 parts.push(
-                  <p key="comandante" style={{ fontFamily: '"Inter", sans-serif', fontSize: fluidSize(c.efectoComandante.texto, 13.5), lineHeight: 1.35, fontWeight: 500, color: '#261a0e', margin: 0, marginTop: parts.length > 0 ? 8 : 0 }}>
-                    <strong>Comandante:</strong> {c.efectoComandante.texto}
+                  <p key="comandante" style={{ fontFamily: '"Inter", sans-serif', fontSize: fluidSize(comandanteText, 13.5, 450, totalLen), lineHeight: 1.35, fontWeight: 500, color: '#261a0e', margin: 0, marginTop: parts.length > 0 ? 8 : 0 }}>
+                    <strong>Comandante:</strong> {comandanteText}
                   </p>
                 )
               }
@@ -519,7 +522,7 @@ export function RenderCarta({
                 <p
                   style={{
                     fontFamily: '"Inter", sans-serif',
-                    fontSize: fluidSize(texto, 14),
+                    fontSize: fluidSize(texto, 14, 450),
                     lineHeight: 1.4,
                     color: '#1c130b',
                     margin: 0,
@@ -530,14 +533,15 @@ export function RenderCarta({
               ) : null
             }
 
-            case 'Arcana':
+            case 'Arcana': {
+              const totalLen = (c.condicion?.length || 0) + (c.recompensa?.length || 0)
               return (
                 <>
                   {c.condicion ? (
                     <p
                       style={{
                         fontFamily: '"Inter", sans-serif',
-                        fontSize: fluidSize(c.condicion, 13.5),
+                        fontSize: fluidSize(c.condicion, 13.5, 450, totalLen),
                         lineHeight: 1.4,
                         color: '#1c130b',
                         margin: 0,
@@ -550,7 +554,7 @@ export function RenderCarta({
                     <p
                       style={{
                         fontFamily: '"Inter", sans-serif',
-                        fontSize: fluidSize(c.recompensa, 13.5),
+                        fontSize: fluidSize(c.recompensa, 13.5, 450, totalLen),
                         lineHeight: 1.4,
                         color: '#1c130b',
                         margin: '4px 0 0',
@@ -561,6 +565,7 @@ export function RenderCarta({
                   ) : null}
                 </>
               )
+            }
 
             case 'Éter': {
               const parts: React.ReactNode[] = []
@@ -572,10 +577,11 @@ export function RenderCarta({
               const reservaText = reserva ?? c.efectoReserva
               const pagoText = pago ?? c.efectoPago
               const bloqueoText = bloqueo ?? c.efectoBloqueo
+              const totalLen = (reservaText?.length || 0) + (pagoText?.length || 0) + (bloqueoText?.length || 0)
 
               if (reservaText) {
                 parts.push(
-                  <p key="reserva" style={{ fontFamily: '"Inter", sans-serif', fontSize: fluidSize(reservaText, 14), lineHeight: 1.4, color: '#1c130b', margin: 0 }}>
+                  <p key="reserva" style={{ fontFamily: '"Inter", sans-serif', fontSize: fluidSize(reservaText, 14, 450, totalLen), lineHeight: 1.4, color: '#1c130b', margin: 0 }}>
                     <strong>Reserva (2A):</strong> {reservaText}
                   </p>
                 )
@@ -585,14 +591,14 @@ export function RenderCarta({
                 const pagoEffect = ('efectos' in c && c.efectos) ? c.efectos.find((e) => e.tipo === 'pago') : undefined
                 const variantLabel = pagoEffect?.trigger === 'al_pagar_eter' ? 'Gatillo' : 'Pasivo'
                 parts.push(
-                  <p key="pago" style={{ fontFamily: '"Inter", sans-serif', fontSize: fluidSize(pagoText, 14), lineHeight: 1.4, color: '#1c130b', margin: 0, marginTop: parts.length > 0 ? 8 : 0 }}>
+                  <p key="pago" style={{ fontFamily: '"Inter", sans-serif', fontSize: fluidSize(pagoText, 14, 450, totalLen), lineHeight: 1.4, color: '#1c130b', margin: 0, marginTop: parts.length > 0 ? 8 : 0 }}>
                     <strong>Pago (1A, {variantLabel}):</strong> {pagoText}
                   </p>
                 )
               }
               if (bloqueoText) {
                 parts.push(
-                  <p key="bloqueo" style={{ fontFamily: '"Inter", sans-serif', fontSize: fluidSize(bloqueoText, 14), lineHeight: 1.4, color: '#1c130b', margin: 0, marginTop: parts.length > 0 ? 8 : 0 }}>
+                  <p key="bloqueo" style={{ fontFamily: '"Inter", sans-serif', fontSize: fluidSize(bloqueoText, 14, 450, totalLen), lineHeight: 1.4, color: '#1c130b', margin: 0, marginTop: parts.length > 0 ? 8 : 0 }}>
                     <strong>Bloqueo (1B-1F):</strong> {bloqueoText}
                   </p>
                 )
@@ -608,7 +614,7 @@ export function RenderCarta({
                 <p
                   style={{
                     fontFamily: '"Inter", sans-serif',
-                    fontSize: fluidSize(texto, 14),
+                    fontSize: fluidSize(texto, 14, 450),
                     lineHeight: 1.4,
                     color: '#1c130b',
                     margin: 0,

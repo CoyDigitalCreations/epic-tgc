@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef } from 'react'
 import { useCardStore } from '../store/useCardStore'
-import { exportCollectionToJson, importCollectionFromJson } from '../utils/export-json'
+import { exportCollectionToJson, importCollectionFromJson, exportCollectionSinArte } from '../utils/export-json'
 import { exportPaqueteToJson, importPaqueteFromJson } from '../utils/export-paquete'
 import { CARD_TYPES, type CardType } from '../../shared/types'
 import { PAQUETES, ESTASIS_CARDS, DISONANCIA_CARDS, progresoPaquete } from '../../shared/data/paquetes'
@@ -370,26 +370,37 @@ export function CardList() {
                     console.error('Error al exportar JSON:', err)
                   })
                 }}
+                title="Descargar todas las cartas CON arte (archivos grandes)"
                 className="text-xs bg-surface-2 hover:bg-card-border text-gray-300 px-3 py-1.5 rounded 
                            transition-colors cursor-pointer"
               >
-                Exportar JSON
+                📥 Exportar colección (con arte)
+              </button>
+              <button
+                onClick={() => exportCollectionSinArte(cards, coleccionActiva?.nombre)}
+                title="Descargar cartas SIN arte (solo datos, archivo liviano)"
+                className="text-xs bg-surface-2 hover:bg-card-border text-gray-300 px-3 py-1.5 rounded 
+                           transition-colors cursor-pointer"
+              >
+                📄 Exportar cartas (sin arte)
               </button>
               <button
                 onClick={() => setShowClearModal(true)}
+                title="Eliminar TODAS las cartas de la colección"
                 className="text-xs bg-red-600/30 hover:bg-red-600/50 text-red-300 px-3 py-1.5 rounded 
                            transition-colors cursor-pointer"
               >
-                Limpiar
+                🗑️ Limpiar colección
               </button>
             </>
           )}
           <button
             onClick={handleImport}
+            title="Cargar cartas desde un archivo JSON exportado"
             className="text-xs bg-surface-2 hover:bg-card-border text-gray-300 px-3 py-1.5 rounded 
                        transition-colors cursor-pointer"
           >
-            Importar JSON
+            📤 Importar cartas (JSON)
           </button>
         </div>
         <input
@@ -519,11 +530,11 @@ export function CardList() {
                           console.error('Error al exportar paquete JSON:', err)
                         })
                       }}
-                      title={`Exportar paquete ${paquete.nombre}`}
+                      title={`Descargar paquete "${paquete.nombre}" como archivo .paquete.json`}
                       className="px-2 py-1 rounded-full text-xs bg-ether-600/20 hover:bg-ether-600/40 
                                  text-ether-300 transition-colors cursor-pointer"
                     >
-                      Exportar
+                      📥 Exportar
                     </button>
                     <button
                       onClick={() => {
@@ -536,21 +547,21 @@ export function CardList() {
                           eliminarPaquete(paquete.id)
                         }
                       }}
-                      title="Eliminar paquete"
+                      title="Quitar paquete (las cartas quedan sin paquete)"
                       className="px-2 py-1 rounded-full text-xs bg-red-600/20 hover:bg-red-600/40 
                                  text-red-300 transition-colors cursor-pointer"
                     >
-                      Eliminar
+                      🗑️ Quitar
                     </button>
                   </>
                 ) : (
                   <button
                     onClick={() => handleImportPaquete(paquete.id)}
-                    title={`Importar paquete ${paquete.nombre} (${paquete.distribucion.eter + paquete.distribucion.principal + paquete.distribucion.vinculos} cartas)`}
+                    title={`Agregar cartas de "${paquete.nombre}" a mi colección (sin repetir)`}
                     className="px-2 py-1 rounded-full text-xs bg-ether-600/20 hover:bg-ether-600/40 
                                text-ether-300 transition-colors cursor-pointer"
                   >
-                    Importar
+                    📤 Agregar a mi colección
                   </button>
                 )}
               </span>
@@ -559,27 +570,27 @@ export function CardList() {
           <div className="ml-auto flex gap-1.5">
             <button
               onClick={() => setShowPaqueteModal(true)}
-              title="Crear paquete personalizado sin escribir código"
+              title="Crear un paquete nuevo desde cero"
               className="px-3 py-1 rounded-full text-xs bg-ether-600/30 hover:bg-ether-600/50 
                          text-ether-300 transition-colors cursor-pointer"
             >
-              Nuevo paquete
+              + Crear paquete
             </button>
             <button
               onClick={() => paqueteFileInputRef.current?.click()}
-              title="Importar un paquete exportado (.paquete.json)"
+              title="Cargar un paquete desde un archivo .paquete.json"
               className="px-3 py-1 rounded-full text-xs bg-surface-2 hover:bg-card-border 
                          text-gray-300 transition-colors cursor-pointer"
             >
-              Importar paquete (JSON)
+              📤 Importar paquete (JSON)
             </button>
             <button
               onClick={() => import('../utils/generar-json').then((m) => m.generarJSONActualizado())}
-              title="Exportar JSON actualizado desde paquetes.ts"
+              title="Generar JSON desde el código paquetes.ts (solo desarrollo)"
               className="px-3 py-1 rounded-full text-xs bg-ether-600/30 hover:bg-ether-600/50 
                          text-ether-300 transition-colors cursor-pointer"
             >
-              Exportar JSON actualizado
+              🔄 Generar desde código
             </button>
           </div>
           <input

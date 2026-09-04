@@ -32,8 +32,8 @@ describe('RARITIES', () => {
 })
 
 describe('KEYWORDS', () => {
-  it('contiene las 10 keywords oficiales v2.0', () => {
-    expect(KEYWORDS).toHaveLength(9)
+  it('contiene las 11 keywords oficiales v2.0', () => {
+    expect(KEYWORDS).toHaveLength(10)
     expect(KEYWORDS).toContain('Carga')
     expect(KEYWORDS).toContain('Vigor')
     expect(KEYWORDS).toContain('Inmortal')

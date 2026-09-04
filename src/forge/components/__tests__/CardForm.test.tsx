@@ -78,10 +78,9 @@ describe('CardForm', () => {
 
   it('changes form fields when card type changes', () => {
     render(<CardForm />)
-    // Campeón has "Habilidad" field label — but it's inside a textarea placeholder
-    // Mística should show "Efecto" label
+    // Mística should show "Efectos" label (effect-list type)
     fireEvent.click(screen.getByText('Mística'))
-    expect(screen.getByText('Efecto')).toBeInTheDocument()
+    expect(screen.getByText('Efectos (0/3)')).toBeInTheDocument()
   })
 })
 

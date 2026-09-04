@@ -57,45 +57,100 @@ function generateTargetText(objetivo: ObjetivoEfecto): string {
 
   const tipoTexts: Record<string, string> = {
     'campeon': 'Campeón', 'mistica': 'Mística', 'arcana': 'Arcana',
-    'mistica_arcana': 'Mística o Arcana', 'eter': 'Éter', 'carta': 'carta', 'mano': 'carta',
+    'mistica_arcana': 'Mística o Arcana', 'eter': 'Éter', 'vinculo': 'Vínculo',
+    'carta': 'carta', 'mano': 'carta',
   }
   const controladorTexts: Record<string, string> = {
     'propio': 'que controles', 'rival': 'que controla el rival', 'ambos': 'en juego', 'ninguno': '',
   }
   const zonaTexts: Record<string, string> = {
     'campo': '', 'cementerio': 'del Cementerio', 'exilio': 'del Exilio',
-    'reserva': 'de tu Reserva', 'pagado': 'de tu zona de pago',
-    'bloqueado': 'bloqueado', 'mano': 'de tu mano', 'mazo': 'de tu mazo',
+    'reserva': 'de la Reserva', 'pagado': 'de la zona de pago',
+    'bloqueado': 'bloqueado', 'mano': 'de la mano', 'mazo': 'del mazo',
+  }
+  const zonaDestinoTexts: Record<string, string> = {
+    'campo': 'al campo', 'cementerio': 'al Cementerio', 'exilio': 'al Exilio',
+    'reserva': 'a la Reserva', 'pagado': 'a su zona de pago',
+    'bloqueado': 'a bloqueado', 'mano': 'a la mano', 'mazo': 'al mazo',
   }
 
   const tipo = tipoTexts[objetivo.tipo] || objetivo.tipo
   const controlador = controladorTexts[objetivo.controlador] || ''
   const zona = zonaTexts[objetivo.zona] || ''
+  const zonaDestino = objetivo.zonaDestino ? zonaDestinoTexts[objetivo.zonaDestino] || '' : ''
 
   let text = ''
-  if (objetivo.tipo === 'campeon' || objetivo.tipo === 'carta' || objetivo.tipo === 'mano') {
-    text = `un${objetivo.tipo === 'carta' || objetivo.tipo === 'mano' ? 'a' : ''} ${tipo}`
-  } else if (objetivo.tipo === 'mistica' || objetivo.tipo === 'arcana' || objetivo.tipo === 'mistica_arcana') {
-    text = `una ${tipo}`
-  } else if (objetivo.tipo === 'eter') {
-    text = 'Éter'
+  
+  // Check if filters include tipoCarta - if so, don't add card type to base text
+  const hasTipoCartaFilter = objetivo.filtros?.tipoCarta
+  
+  if (!hasTipoCartaFilter) {
+    if (objetivo.tipo === 'campeon' || objetivo.tipo === 'carta' || objetivo.tipo === 'mano') {
+      text = `un${objetivo.tipo === 'carta' || objetivo.tipo === 'mano' ? 'a' : ''} ${tipo}`
+    } else if (objetivo.tipo === 'mistica' || objetivo.tipo === 'arcana' || objetivo.tipo === 'mistica_arcana') {
+      text = `una ${tipo}`
+    } else if (objetivo.tipo === 'eter' || objetivo.tipo === 'vinculo') {
+      text = tipo
+    }
+  } else {
+    // When tipoCarta filter exists, don't add card type to base text
+    text = ''
   }
 
-  if (controlador) text += ` ${controlador}`
-  if (zona) text += ` ${zona}`
-
-  // Filters
+  // Add filters AFTER card type (for better grammar)
   if (objetivo.filtros) {
     const filters: string[] = []
-    if (objetivo.filtros.tipoCarta) filters.push(objetivo.filtros.tipoCarta === 'campeon' ? 'Campeón' : objetivo.filtros.tipoCarta === 'mistica' ? 'Mística' : 'Arcana')
-    if (objetivo.filtros.faccion) filters.push(objetivo.filtros.faccion)
-    if (objetivo.filtros.esencia) filters.push(objetivo.filtros.esencia)
-    if (objetivo.filtros.rol) filters.push(objetivo.filtros.rol)
+    
+    // Common filters
+    if (objetivo.filtros.faccion) filters.push(`de facción ${objetivo.filtros.faccion}`)
+    if (objetivo.filtros.keyword) filters.push(`con keyword ${objetivo.filtros.keyword}`)
     if (objetivo.filtros.costeMax !== undefined) filters.push(`coste ${objetivo.filtros.costeMax} o menos`)
+    
+    // Campeón-specific filters
+    if (objetivo.filtros.esencia) filters.push(`de esencia ${objetivo.filtros.esencia}`)
+    if (objetivo.filtros.rol) filters.push(`de rol ${objetivo.filtros.rol}`)
+    if (objetivo.filtros.catHabilidad) filters.push(`de categoría ${objetivo.filtros.catHabilidad}`)
+    if (objetivo.filtros.costeMin !== undefined) filters.push(`de coste ${objetivo.filtros.costeMin} o más`)
     if (objetivo.filtros.atqMax !== undefined) filters.push(`ATQ ${objetivo.filtros.atqMax} o menos`)
     if (objetivo.filtros.resMax !== undefined) filters.push(`RES ${objetivo.filtros.resMax} o menos`)
-    if (filters.length > 0) text = `una carta ${filters.join(' ')} ${text}`
+    if (objetivo.filtros.agotado === true) filters.push('que esté agotado')
+    if (objetivo.filtros.agotado === false) filters.push('que no esté agotado')
+    if (objetivo.filtros.conEterBloqueado === true) filters.push('con éter bloqueado')
+    if (objetivo.filtros.conEterBloqueado === false) filters.push('sin éter bloqueado')
+    if (objetivo.filtros.equipado === true) filters.push('equipado')
+    if (objetivo.filtros.equipado === false) filters.push('sin equipar')
+    
+    // Mística-specific filters
+    if (objetivo.filtros.tipoEfectoMistica) filters.push(`de tipo ${objetivo.filtros.tipoEfectoMistica}`)
+    
+    // Arcana-specific filters
+    if (objetivo.filtros.bocaArriba === true) filters.push('boca arriba')
+    if (objetivo.filtros.bocaArriba === false) filters.push('boca abajo')
+    
+    // Insert filters after card type
+    if (filters.length > 0) text = `${text} ${filters.join(' ')}`
   }
+
+  // Special handling for zones that don't use "que controles"
+  // These zones use "de tu X" or "del X del rival" instead
+  const zonesWithOwner = ['cementerio', 'mano', 'mazo', 'exilio']
+  if (zonesWithOwner.includes(objetivo.zona)) {
+    const zonaOwnerTexts: Record<string, { propio: string; rival: string }> = {
+      'cementerio': { propio: 'de tu Cementerio', rival: 'del Cementerio del rival' },
+      'mano': { propio: 'de tu mano', rival: 'de la mano del rival' },
+      'mazo': { propio: 'de tu mazo', rival: 'del mazo del rival' },
+      'exilio': { propio: 'del Exilio', rival: 'del Exilio del rival' },
+    }
+    const zonaText = zonaOwnerTexts[objetivo.zona]
+    if (zonaText) {
+      text += objetivo.controlador === 'propio' ? ` ${zonaText.propio}` : ` ${zonaText.rival}`
+    }
+  } else {
+    // For other zones (campo, reserva, pagado, bloqueado), use the original logic
+    if (controlador) text += ` ${controlador}`
+    if (zona) text += ` ${zona}`
+  }
+  if (zonaDestino) text += ` ${zonaDestino}`
 
   return text || 'un objetivo'
 }
@@ -104,8 +159,9 @@ function generateTargetText(objetivo: ObjetivoEfecto): string {
 function generateEffectText(data: EfectoData): string {
   const parts: string[] = []
 
-  // Capa 1: Tipo prefix — for Bloqueo type
-  if (data.tipo === 'bloqueo') parts.push('Mientras esté bloqueado')
+  // Capa 1: Tipo prefix — Reserva and Bloqueo get contextual prefixes
+  if (data.tipo === 'reserva') parts.push('Mientras esté en tu Reserva,')
+  if (data.tipo === 'bloqueo') parts.push('Mientras esté bloqueado,')
 
   // Capa 2: Trigger
   if (data.trigger && data.trigger !== 'ninguno') {
@@ -117,8 +173,19 @@ function generateEffectText(data: EfectoData): string {
       'al_activar_habilidad': 'Al activar esta habilidad',
       'al_ser_enviado_al_cementerio': 'Al ser enviada al Cementerio',
       'al_ser_destruido_vinculo': 'Al ser destruido este Vínculo',
+      'cuando_vinculo_seria_destruido': 'Cuando un Vínculo que controles fuera a ser destruido',
     }
-    parts.push(triggerTexts[data.trigger] || data.trigger)
+    let triggerText = triggerTexts[data.trigger] || data.trigger
+    // Add zone specification for al_ser_enviado_al_cementerio
+    if (data.trigger === 'al_ser_enviado_al_cementerio' && data.triggerZona) {
+      const zonaTexts: Record<string, string> = {
+        'mano': 'desde tu mano',
+        'campo': 'desde el campo',
+        'cualquier_zona': 'desde cualquier zona',
+      }
+      triggerText += ` ${zonaTexts[data.triggerZona]}`
+    }
+    parts.push(triggerText)
   }
 
   // Capa 3: Costo
@@ -130,6 +197,10 @@ function generateEffectText(data: EfectoData): string {
       parts.push(`puedes bloquear hasta un máximo de ${data.costo.cantidad} Éter (Max. ${data.costo.cantidad})`)
     } else if (data.costo.tipo === 'exhaust') {
       parts.push('puedes agotar esta carta')
+    } else if (data.costo.tipo === 'exile_self') {
+      parts.push('puedes enviar esta carta a tu exilio')
+    } else if (data.costo.tipo === 'cemetery_self') {
+      parts.push('puedes enviar esta carta a tu Cementerio')
     }
   }
 
@@ -138,17 +209,22 @@ function generateEffectText(data: EfectoData): string {
   let effectVerb = ''
 
   if (data.objetivo && data.efecto) {
-    targetText = generateTargetText(data.objetivo)
+    // Special case: bloqueo effects reference the champion that has this ether
+    if (data.tipo === 'bloqueo' && data.objetivo.tipo === 'campeon') {
+      targetText = 'el Campeón que tenga este Éter'
+    } else {
+      targetText = generateTargetText(data.objetivo)
+    }
     const plural = isPluralTarget(data.objetivo)
 
     const effectVerbs: Record<string, string> = {
       'buff': 'gana', 'debuff': 'pierde', 'destroy': 'destruye', 'exile': 'exilia',
       'return_hand': 'devuelve a la mano', 'draw': 'roba', 'steal_champion': 'toma control de',
       'steal_ether': 'toma control de', 'block_ether': 'bloquea', 'free_ether': 'libera',
-      'return_ether': 'devuelve', 'toggle_exhaust': 'cambia el agotamiento de',
+      'return_ether': 'devuelve', 'mover': 'mueve', 'toggle_exhaust': 'cambia el agotamiento de',
       'prevent_destroy': 'no es destruido', 'scry': 'mira', 'tutor': 'busca',
       'counter': 'contrarresta', 'copy': 'copia', 'redirect': 'cambia',
-      'double_attack': 'ataca dos veces', 'direct_attack': 'ataca directamente',
+      'direct_attack': 'ataca directamente',
       'change_type': 'se convierte en', 'grant_keyword': 'gana',
       'recuperar_campo': 'invoca', 'recuperar_mano': 'devuelve a tu mano',
       'recuperar_mazo': 'devuelve a tu mazo', 'recuperar_mazo_barajar': 'devuelve a tu mazo y baraja',
@@ -157,36 +233,59 @@ function generateEffectText(data: EfectoData): string {
       'recuperar_exilio': 'devuelve del Exilio',
     }
 
-    effectVerb = effectVerbs[data.efecto] || data.efecto
-    if (plural) effectVerb = pluralize(effectVerb)
-
-    // Stats handling
-    if (data.efecto === 'buff' || data.efecto === 'debuff') {
-      const statParts: string[] = []
-      if (data.stats?.ATQ) statParts.push(`${data.stats.ATQ > 0 ? '+' : ''}${data.stats.ATQ} de ATQ`)
-      if (data.stats?.RES) statParts.push(`${data.stats.RES > 0 ? '+' : ''}${data.stats.RES} de RES`)
-      if (statParts.length > 0) targetText = `${targetText} ${effectVerb} ${statParts.join(' y ')}`
-    } else if (data.efecto === 'grant_keyword' && data.keyword) {
-      targetText = `${targetText} ${effectVerb} ${data.keyword}`
-    } else if (['draw', 'destroy', 'exile', 'scry'].includes(data.efecto)) {
-      const qty = data.cantidad ?? 1
-      targetText = `${effectVerb} ${qty} carta${qty > 1 ? 's' : ''}`
-    } else if (['block_ether', 'free_ether', 'return_ether'].includes(data.efecto) && data.costo?.tipo) {
-      targetText = `sobre ${targetText}`
+    // Special case: double_attack - "puede declarar 2 veces ataque"
+    if (data.efecto === 'double_attack') {
+      targetText = `${targetText} puede declarar 2 veces ataque`
+    } else if (data.efecto === 'prevent_destroy' && data.objetivo?.tipo === 'vinculo') {
+      // Special case: bond protection - "previniendo la destrucción de ese vínculo"
+      targetText = `previniendo la destrucción de ese vínculo`
     } else {
-      targetText = `${effectVerb} ${targetText}`
+      effectVerb = effectVerbs[data.efecto] || data.efecto
+      if (plural) effectVerb = pluralize(effectVerb)
+
+      // Stats handling
+      if (data.efecto === 'buff' || data.efecto === 'debuff') {
+        const statParts: string[] = []
+        if (data.stats?.ATQ) statParts.push(`${data.stats.ATQ > 0 ? '+' : ''}${data.stats.ATQ} de ATQ`)
+        if (data.stats?.RES) statParts.push(`${data.stats.RES > 0 ? '+' : ''}${data.stats.RES} de RES`)
+        if (statParts.length > 0) targetText = `${targetText} ${effectVerb} ${statParts.join(' y ')}`
+      } else if (data.efecto === 'grant_keyword' && data.keyword) {
+        targetText = `${targetText} ${effectVerb} ${data.keyword}`
+      } else if (['draw', 'destroy', 'exile', 'scry'].includes(data.efecto)) {
+        const qty = data.cantidad ?? 1
+        targetText = `${effectVerb} ${qty} ${targetText}`
+      } else if (['mover', 'return_ether'].includes(data.efecto)) {
+        const qty = data.cantidad ?? 1
+        targetText = `${effectVerb} ${qty} ${targetText}`
+      } else if (data.efecto === 'return_hand') {
+        const qty = data.cantidad ?? 1
+        targetText = `devuelve a la mano de su dueño ${qty} ${targetText}`
+      } else if (['block_ether', 'free_ether'].includes(data.efecto) && data.costo?.tipo) {
+        targetText = `sobre ${targetText}`
+      } else {
+        targetText = `${effectVerb} ${targetText}`
+      }
     }
   }
+
+  // Capa 4+5 merged: push target+effect text into parts
+  if (targetText) parts.push(targetText)
 
   // Capa 7: Duración
   if (data.duracion) {
     const durationTexts: Record<string, string> = {
       'permanente': 'de forma permanente', 'turno': 'hasta el final del turno',
-      'hasta_alba': 'hasta tu próxima Alba', 'mientras_ester_bloqueado': 'mientras ese Éter esté bloqueado',
+      'hasta_alba': 'hasta tu próxima Alba', 'hasta_alba_oponente': 'hasta la próxima Alba del oponente',
+      'mientras_ester_bloqueado': 'mientras ese Éter esté bloqueado',
       'mientras_en_campo': 'mientras esta carta esté en el campo', 'mientras_equipped': 'mientras esté equipado',
       '1_por_turno': 'una vez por turno', 'n_turnos': data.duracionTurnos ? `por ${data.duracionTurnos} turnos` : 'por N turnos',
     }
     parts.push(durationTexts[data.duracion] || data.duracion)
+  }
+
+  // Sin activar efecto modifier
+  if (data.sinActivarEfecto) {
+    parts.push('negando su efecto')
   }
 
   // Capa 8: Reagrupar
@@ -210,7 +309,14 @@ export function EffectList({ cardType, effects, onChange, maxEffects = 3 }: Effe
 
   const addEffect = () => {
     if (effects.length >= maxEffects || availableTypes.length === 0) return
-    const newEffect: EfectoData = { tipo: availableTypes[0], efecto: 'buff' }
+    const newEffect: EfectoData = {
+      tipo: availableTypes[0],
+      efecto: 'buff',
+      objetivo: { tipo: 'campeon', controlador: 'propio', zona: 'campo' },
+      stats: { ATQ: 0, RES: 0 },
+    }
+    // Generate text immediately
+    newEffect.texto = generateEffectText(newEffect)
     onChange([...effects, newEffect])
     setExpandedIdx(effects.length)
   }

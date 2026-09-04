@@ -70,15 +70,16 @@ describe('CardList', () => {
       } as import('../../../shared/types').CampeonCard],
     })
     render(<CardList />)
-    expect(screen.getByText('Exportar JSON')).toBeInTheDocument()
-    expect(screen.getByText('Importar JSON')).toBeInTheDocument()
+    expect(screen.getByText(/Exportar colección/)).toBeInTheDocument()
+    expect(screen.getByText(/Exportar cartas/)).toBeInTheDocument()
+    expect(screen.getByText(/Importar cartas/)).toBeInTheDocument()
   })
 
   it('importa el paquete Disonancia (DS-031, DS-032, DS-033) a la colección', () => {
     vi.spyOn(window, 'alert').mockImplementation(() => {})
     render(<CardList />)
-    // Los botones "Importar" de paquetes van en el orden de PAQUETES: [estasis, disonancia]
-    const botonesImportar = screen.getAllByText('Importar')
+    // Los botones "Agregar a mi colección" de paquetes van en el orden de PAQUETES: [estasis, disonancia]
+    const botonesImportar = screen.getAllByText(/Agregar a mi colección/)
     fireEvent.click(botonesImportar[1])
     const ids = useCardStore.getState().cards.map((c) => c.id)
     expect(ids).toContain('DS-031')
@@ -135,13 +136,13 @@ describe('CardList — paquetes personalizados', () => {
   it('la pill dinámica tiene botón Exportar', () => {
     useCardStore.setState({ userPacks: [paqueteMutantes] })
     render(<CardList />)
-    expect(screen.getByText('Exportar')).toBeInTheDocument()
+    expect(screen.getByText(/Exportar/)).toBeInTheDocument()
   })
 
-  it('el header de paquetes tiene "Nuevo paquete" e "Importar paquete (JSON)"', () => {
+  it('el header de paquetes tiene "Crear paquete" e "Importar paquete (JSON)"', () => {
     render(<CardList />)
-    expect(screen.getByText('Nuevo paquete')).toBeInTheDocument()
-    expect(screen.getByText('Importar paquete (JSON)')).toBeInTheDocument()
+    expect(screen.getByText(/Crear paquete/)).toBeInTheDocument()
+    expect(screen.getByText(/Importar paquete/)).toBeInTheDocument()
   })
 
   it('eliminar paquete lo quita y desasigna sus cartas (confirm)', () => {
@@ -151,7 +152,7 @@ describe('CardList — paquetes personalizados', () => {
       cards: [cartaMutante('m-1')],
     })
     render(<CardList />)
-    fireEvent.click(screen.getByTitle('Eliminar paquete'))
+    fireEvent.click(screen.getByTitle(/Quitar paquete/))
     expect(useCardStore.getState().userPacks).toHaveLength(0)
     expect(useCardStore.getState().cards[0].paqueteId).toBeUndefined()
   })
@@ -164,7 +165,7 @@ describe('CardList — paquetes personalizados', () => {
     render(<CardList />)
     // Progreso de Estásis: 1 copia / 66 total
     expect(screen.getByText(/1\/66/)).toBeInTheDocument()
-    // Los dos paquetes estáticos mantienen su botón Importar
-    expect(screen.getAllByText('Importar')).toHaveLength(2)
+    // Los dos paquetes estáticos mantienen su botón "Agregar a mi colección"
+    expect(screen.getAllByText(/Agregar a mi colección/)).toHaveLength(2)
   })
 })
