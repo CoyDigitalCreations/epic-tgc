@@ -50,6 +50,10 @@ export interface EfectoData {
   /** Stat modifications for buff/debuff */
   stats?: { ATQ?: number; RES?: number }
 
+  // ── Capa 6b: BUFF PER BLOCKED ETHER ──
+  /** When true, the buff applies per blocked ether (e.g., +2 ATQ per blocked ether) */
+  buffPerBlockedEther?: boolean
+
   // ── Capa 7: CANTIDAD (opcional) ──
   /** How many cards this affects (for draw, destroy, exile, scry, etc.) */
   cantidad?: number
@@ -57,6 +61,10 @@ export interface EfectoData {
   // ── Capa 8: KEYWORD (opcional) ──
   /** Keyword to grant (for grant_keyword effect) */
   keyword?: string
+
+  // ── Capa 8b: TIPO NEGACIÓN (opcional) ──
+  /** Type of negation (for negar effect) */
+  tipoNegacion?: 'invocacion' | 'activacion' | 'resolucion' | 'efecto_activo' | 'pago' | 'ataque' | 'bloqueo' | 'robo'
 
   // ── Capa 9: DURACIÓN (opcional) ──
   /** How long this effect lasts */
@@ -73,6 +81,10 @@ export interface EfectoData {
   /** Activation condition for Arcanas — accepts string (legacy) or CondicionEfecto */
   condicion?: CondicionEfecto | string
 
+  // ── Capa 5b: COPY ATTRIBUTES (solo cuando efecto = 'copy') ──
+  /** Qué atributos se copian del objetivo. Solo aplica cuando efecto = 'copy'. */
+  copyAttributes?: CopyAttribute[]
+
   // ── Modificador: SIN ACTIVAR EFECTO ──
   /** When true, the moved/returned ether does NOT trigger its effects (until opponent's Alba) */
   sinActivarEfecto?: boolean
@@ -81,6 +93,32 @@ export interface EfectoData {
   /** Human-readable text (AUTO-GENERATED from fields — not user-editable) */
   texto?: string
 }
+
+/**
+ * Atributo copiable por el efecto 'copy'.
+ *
+ * El motor valida qué atributos son válidos según el tipo de carta objetivo.
+ * Cada tipo de carta tiene sus propios atributos copiables.
+ */
+export type CopyAttribute =
+  // ── Campeón ──
+  | 'faccion'              // facciones del campeón
+  | 'keyword'              // keywords del campeón
+  | 'atq'                  // ATQ base (sin mods temporales ni auras)
+  | 'res'                  // RES base (sin mods temporales ni auras)
+  | 'efecto'               // pasivo/continuo/disparo — NO comandante
+  // ── Mística ──
+  | 'mistica_hechizo'      // efecto de hechizo
+  | 'mistica_continuo'     // efecto continuo
+  // ── Arcana ──
+  | 'arcana_condicion'     // condición de activación
+  | 'arcana_recompensa'    // recompensa
+  // ── Éter ──
+  | 'eter_reserva'         // efecto en reserva
+  | 'eter_pago'            // efecto al pagar
+  | 'eter_bloqueo'         // efecto al bloquear
+  // ── Vínculo ──
+  | 'vinculo_efecto'       // efecto del vínculo
 
 /** Cost structure — what the player pays */
 export interface CostoEfecto {
@@ -95,12 +133,12 @@ export type EfectoAccion =
   | 'buff' | 'debuff' | 'destroy' | 'exile' | 'return_hand'
   | 'draw' | 'steal_champion' | 'steal_ether' | 'block_ether'
   | 'free_ether' | 'return_ether' | 'toggle_exhaust' | 'prevent_destroy'
-  | 'scry' | 'tutor' | 'counter' | 'copy' | 'redirect'
+  | 'scry' | 'tutor' | 'copy' | 'redirect'
   | 'double_attack' | 'direct_attack' | 'change_type' | 'grant_keyword'
   | 'recuperar_campo' | 'recuperar_mano' | 'recuperar_mazo'
   | 'recuperar_mazo_barajar' | 'recuperar_mazo_top' | 'recuperar_mazo_bottom'
   | 'recuperar_exilio'
-  | 'mover'
+  | 'mover' | 'negar'
   // Legacy compatibility
   | 'keyword' | 'robar' | 'destruir' | 'bloquear_ether' | 'mover_ether'
   | 'release_ether' | 'devolver_mano' | 'equipar' | 'invocar_cementerio'
@@ -112,6 +150,7 @@ export interface ObjetivoEfecto {
   /** Type of card targeted */
   tipo: 'self' | 'campeon' | 'mistica' | 'arcana' | 'mistica_arcana' | 'eter' | 'vinculo' | 'carta' | 'mano'
        | 'todos_campeones_propios' | 'todos_campeones_rivales' | 'rival_hand'
+       | 'equipped_champion'
   /** Who controls the target */
   controlador: 'propio' | 'rival' | 'ambos' | 'ninguno'
   /** Where the target is located */

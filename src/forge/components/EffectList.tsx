@@ -4,7 +4,7 @@
  * Auto-generates human-readable text from structured data.
  */
 import { useState } from 'react'
-import type { EfectoData, CardType, ObjetivoEfecto } from '../../shared/types/cards'
+import type { EfectoData, CardType, ObjetivoEfecto, CopyAttribute } from '../../shared/types/cards'
 import { EffectField } from './fields/EffectField'
 
 interface EffectListProps {
@@ -54,6 +54,7 @@ function generateTargetText(objetivo: ObjetivoEfecto): string {
   if (objetivo.tipo === 'todos_campeones_propios') return 'todos tus Campeones'
   if (objetivo.tipo === 'todos_campeones_rivales') return 'todos los Campeones que controla el rival'
   if (objetivo.tipo === 'rival_hand') return 'el rival'
+  if (objetivo.tipo === 'equipped_champion') return 'el Campeón equipado con esta carta'
 
   const tipoTexts: Record<string, string> = {
     'campeon': 'Campeón', 'mistica': 'Mística', 'arcana': 'Arcana',
@@ -155,13 +156,47 @@ function generateTargetText(objetivo: ObjetivoEfecto): string {
   return text || 'un objetivo'
 }
 
+/** Labels for copy attributes in natural Spanish */
+const COPY_ATTRIBUTE_LABELS: Record<CopyAttribute, string> = {
+  // Campeón
+  faccion: 'la facción',
+  keyword: 'la keyword',
+  atq: 'el ATQ',
+  res: 'el RES',
+  efecto: 'el efecto',
+  // Mística
+  mistica_hechizo: 'el efecto de hechizo',
+  mistica_continuo: 'el efecto continuo',
+  // Arcana
+  arcana_condicion: 'la condición',
+  arcana_recompensa: 'la recompensa',
+  // Éter
+  eter_reserva: 'el efecto de reserva',
+  eter_pago: 'el efecto de pago',
+  eter_bloqueo: 'el efecto de bloqueo',
+  // Vínculo
+  vinculo_efecto: 'el efecto',
+}
+
+/** Join copy attributes with proper Spanish grammar: "la facción y keyword" or "la facción, keyword y ATQ" */
+function joinCopyAttributes(attrs: CopyAttribute[]): string {
+  if (attrs.length === 0) return ''
+  const labels = attrs.map((a) => COPY_ATTRIBUTE_LABELS[a])
+  if (labels.length === 1) return labels[0]
+  if (labels.length === 2) return `${labels[0]} y ${labels[1]}`
+  return `${labels.slice(0, -1).join(', ')} y ${labels[labels.length - 1]}`
+}
+
 /** Generate human-readable text from EfectoData — 11-layer system */
 function generateEffectText(data: EfectoData): string {
   const parts: string[] = []
 
+  // Helper: add part with trailing comma (will be cleaned at the end)
+  const addPart = (text: string) => parts.push(text)
+
   // Capa 1: Tipo prefix — Reserva and Bloqueo get contextual prefixes
-  if (data.tipo === 'reserva') parts.push('Mientras esté en tu Reserva,')
-  if (data.tipo === 'bloqueo') parts.push('Mientras esté bloqueado,')
+  if (data.tipo === 'reserva') addPart('Mientras esté en tu Reserva,')
+  if (data.tipo === 'bloqueo') addPart('Mientras esté bloqueado,')
 
   // Capa 2: Trigger
   if (data.trigger && data.trigger !== 'ninguno') {
@@ -185,22 +220,22 @@ function generateEffectText(data: EfectoData): string {
       }
       triggerText += ` ${zonaTexts[data.triggerZona]}`
     }
-    parts.push(triggerText)
+    addPart(`${triggerText},`)
   }
 
   // Capa 3: Costo
   if (data.costo && data.costo.tipo !== 'ninguno') {
     if (data.costo.tipo === 'eter' && data.costo.cantidad) {
-      if (data.efecto === 'block_ether') parts.push(`puedes bloquear ${data.costo.cantidad} Éter`)
-      else parts.push(`puedes pagar ${data.costo.cantidad} Éter`)
+      if (data.efecto === 'block_ether') addPart(`puedes bloquear ${data.costo.cantidad} Éter,`)
+      else addPart(`puedes pagar ${data.costo.cantidad} Éter,`)
     } else if (data.costo.tipo === 'eter_bloqueado' && data.costo.cantidad) {
-      parts.push(`puedes bloquear hasta un máximo de ${data.costo.cantidad} Éter (Max. ${data.costo.cantidad})`)
+      addPart(`puedes bloquear hasta un máximo de ${data.costo.cantidad} Éter (Max. ${data.costo.cantidad}),`)
     } else if (data.costo.tipo === 'exhaust') {
-      parts.push('puedes agotar esta carta')
+      addPart('puedes agotar esta carta,')
     } else if (data.costo.tipo === 'exile_self') {
-      parts.push('puedes enviar esta carta a tu exilio')
+      addPart('puedes enviar esta carta a tu exilio,')
     } else if (data.costo.tipo === 'cemetery_self') {
-      parts.push('puedes enviar esta carta a tu Cementerio')
+      addPart('puedes enviar esta carta a tu Cementerio,')
     }
   }
 
@@ -219,17 +254,17 @@ function generateEffectText(data: EfectoData): string {
 
     const effectVerbs: Record<string, string> = {
       'buff': 'gana', 'debuff': 'pierde', 'destroy': 'destruye', 'exile': 'exilia',
-      'return_hand': 'devuelve a la mano', 'draw': 'roba', 'steal_champion': 'toma control de',
+      'return_hand': 'devuelve a la mano de su dueño', 'draw': 'roba', 'steal_champion': 'toma control de',
       'steal_ether': 'toma control de', 'block_ether': 'bloquea', 'free_ether': 'libera',
       'return_ether': 'devuelve', 'mover': 'mueve', 'toggle_exhaust': 'cambia el agotamiento de',
       'prevent_destroy': 'no es destruido', 'scry': 'mira', 'tutor': 'busca',
-      'counter': 'contrarresta', 'copy': 'copia', 'redirect': 'cambia',
+      'copy': 'copia', 'redirect': 'cambia',
       'direct_attack': 'ataca directamente',
       'change_type': 'se convierte en', 'grant_keyword': 'gana',
-      'recuperar_campo': 'invoca', 'recuperar_mano': 'devuelve a tu mano',
-      'recuperar_mazo': 'devuelve a tu mazo', 'recuperar_mazo_barajar': 'devuelve a tu mazo y baraja',
-      'recuperar_mazo_top': 'pone en la parte superior de tu mazo',
-      'recuperar_mazo_bottom': 'pone en la parte inferior de tu mazo',
+      'recuperar_campo': 'invoca del Cementerio', 'recuperar_mano': 'devuelve a la mano de su dueño',
+      'recuperar_mazo': 'devuelve al mazo de su dueño', 'recuperar_mazo_barajar': 'devuelve al mazo de su dueño y baraja',
+      'recuperar_mazo_top': 'pone en la parte superior del mazo de su dueño',
+      'recuperar_mazo_bottom': 'pone en la parte inferior del mazo de su dueño',
       'recuperar_exilio': 'devuelve del Exilio',
     }
 
@@ -239,6 +274,20 @@ function generateEffectText(data: EfectoData): string {
     } else if (data.efecto === 'prevent_destroy' && data.objetivo?.tipo === 'vinculo') {
       // Special case: bond protection - "previniendo la destrucción de ese vínculo"
       targetText = `previniendo la destrucción de ese vínculo`
+    } else if (data.efecto === 'negar') {
+      // Special case: negation effects — prepend negation text, keep target
+      const negacionTexts: Record<string, string> = {
+        'invocacion': 'Niega la invocación',
+        'activacion': 'Niega la activación del efecto',
+        'resolucion': 'Niega la resolución',
+        'efecto_activo': 'Niega el efecto activo',
+        'pago': 'Niega el pago',
+        'ataque': 'Niega el ataque',
+        'bloqueo': 'Niega la declaración de bloqueo',
+        'robo': 'Niega el robo',
+      }
+      const negText = negacionTexts[data.tipoNegacion || 'activacion'] || 'Niega'
+      targetText = `${negText} de ${targetText}`
     } else {
       effectVerb = effectVerbs[data.efecto] || data.efecto
       if (plural) effectVerb = pluralize(effectVerb)
@@ -248,7 +297,13 @@ function generateEffectText(data: EfectoData): string {
         const statParts: string[] = []
         if (data.stats?.ATQ) statParts.push(`${data.stats.ATQ > 0 ? '+' : ''}${data.stats.ATQ} de ATQ`)
         if (data.stats?.RES) statParts.push(`${data.stats.RES > 0 ? '+' : ''}${data.stats.RES} de RES`)
-        if (statParts.length > 0) targetText = `${targetText} ${effectVerb} ${statParts.join(' y ')}`
+        if (statParts.length > 0) {
+          if (data.buffPerBlockedEther) {
+            targetText = `${targetText} gana ${statParts.join(' y ')} por cada Éter bloqueado`
+          } else {
+            targetText = `${targetText} ${effectVerb} ${statParts.join(' y ')}`
+          }
+        }
       } else if (data.efecto === 'grant_keyword' && data.keyword) {
         targetText = `${targetText} ${effectVerb} ${data.keyword}`
       } else if (['draw', 'destroy', 'exile', 'scry'].includes(data.efecto)) {
@@ -257,11 +312,12 @@ function generateEffectText(data: EfectoData): string {
       } else if (['mover', 'return_ether'].includes(data.efecto)) {
         const qty = data.cantidad ?? 1
         targetText = `${effectVerb} ${qty} ${targetText}`
-      } else if (data.efecto === 'return_hand') {
-        const qty = data.cantidad ?? 1
-        targetText = `devuelve a la mano de su dueño ${qty} ${targetText}`
       } else if (['block_ether', 'free_ether'].includes(data.efecto) && data.costo?.tipo) {
         targetText = `sobre ${targetText}`
+      } else if (data.efecto === 'copy' && data.copyAttributes && data.copyAttributes.length > 0) {
+        // Copy effect: "copia la facción y keyword de un Campeón que controla el rival"
+        const attrText = joinCopyAttributes(data.copyAttributes)
+        targetText = `${effectVerb} ${attrText} de ${targetText}`
       } else {
         targetText = `${effectVerb} ${targetText}`
       }
@@ -269,7 +325,7 @@ function generateEffectText(data: EfectoData): string {
   }
 
   // Capa 4+5 merged: push target+effect text into parts
-  if (targetText) parts.push(targetText)
+  if (targetText) addPart(`${targetText},`)
 
   // Capa 7: Duración
   if (data.duracion) {
@@ -280,23 +336,25 @@ function generateEffectText(data: EfectoData): string {
       'mientras_en_campo': 'mientras esta carta esté en el campo', 'mientras_equipped': 'mientras esté equipado',
       '1_por_turno': 'una vez por turno', 'n_turnos': data.duracionTurnos ? `por ${data.duracionTurnos} turnos` : 'por N turnos',
     }
-    parts.push(durationTexts[data.duracion] || data.duracion)
+    addPart(`${durationTexts[data.duracion] || data.duracion},`)
   }
 
   // Sin activar efecto modifier
   if (data.sinActivarEfecto) {
-    parts.push('negando su efecto')
+    addPart('negando su efecto,')
   }
 
-  // Capa 8: Reagrupar
+  // Capa 8: Reagrupar (no comma at end)
   if (data.reagrupar) {
     const faseText = data.reagrupar.fase === 'alba' ? 'Alba' : 'Choque'
     const turnoText = data.reagrupar.turno === 'propio' ? 'tu' : 'del oponente'
-    parts.push(`Al inicio de ${turnoText} ${faseText} reagrupa el Éter usado por este efecto`)
+    addPart(`Al inicio de ${turnoText} ${faseText} reagrupa el Éter usado por este efecto`)
   }
 
   // Build final text
   let text = parts.length > 0 ? parts.join(' ') + '.' : 'Efecto sin definir.'
+  // Clean up: remove double commas, trailing commas before period
+  text = text.replace(/,\./g, '.').replace(/,\s*,/g, ',').replace(/\s+/g, ' ').trim()
   if (text.length > 0) text = text.charAt(0).toUpperCase() + text.slice(1)
   return text
 }
