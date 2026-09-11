@@ -410,25 +410,76 @@ export function EffectField({ label, value, onChange, cardType }: EffectFieldPro
               <SelectField label="Trigger" value={data.condicion.trigger} options={CONDICION_TRIGGER_OPTIONS} onChange={(v) => updateCondicion({ trigger: v as any })} />
               <div className="mt-2 space-y-2">
                 {((data.condicion as CondicionEfecto).condiciones ?? []).map((c: any, i: number) => (
-                  <div key={i} className="flex gap-2 items-end">
-                    <SelectField label={`Condición ${i + 1}`} value={c.tipo} options={CONDICION_TIPO_OPTIONS} onChange={(v) => {
-                      const newConds = [...((data.condicion as CondicionEfecto).condiciones ?? [])]
-                      newConds[i] = { ...c, tipo: v as any }
-                      updateCondicion({ condiciones: newConds })
-                    }} />
-                    {c.tipo?.includes('minimo') && <NumberInput label="Cantidad" value={c.cantidad} onChange={(v) => {
-                      const newConds = [...((data.condicion as CondicionEfecto).condiciones ?? [])]
-                      newConds[i] = { ...c, cantidad: v }
-                      updateCondicion({ condiciones: newConds })
-                    }} min={1} max={10} />}
-                    <button onClick={() => {
-                      const newConds = ((data.condicion as CondicionEfecto).condiciones ?? []).filter((_: any, j: number) => j !== i)
-                      updateCondicion({ condiciones: newConds })
-                    }} className="text-xs text-red-400 hover:text-red-300 px-1 mb-1">✕</button>
+                  <div key={i} className="border border-gray-600/30 rounded p-2 bg-gray-900/30">
+                    <div className="flex gap-2 items-end">
+                      <SelectField label={`Condición ${i + 1}`} value={c.tipo} options={CONDICION_TIPO_OPTIONS} onChange={(v) => {
+                        const newConds = [...((data.condicion as CondicionEfecto).condiciones ?? [])]
+                        newConds[i] = { ...c, tipo: v as any }
+                        updateCondicion({ condiciones: newConds })
+                      }} />
+                      {c.tipo?.includes('minimo') && <NumberInput label="Cantidad" value={c.cantidad} onChange={(v) => {
+                        const newConds = [...((data.condicion as CondicionEfecto).condiciones ?? [])]
+                        newConds[i] = { ...c, cantidad: v }
+                        updateCondicion({ condiciones: newConds })
+                      }} min={1} max={10} />}
+                      <button onClick={() => {
+                        const newConds = ((data.condicion as CondicionEfecto).condiciones ?? []).filter((_: any, j: number) => j !== i)
+                        updateCondicion({ condiciones: newConds })
+                      }} className="text-xs text-red-400 hover:text-red-300 px-1 mb-1">✕</button>
+                    </div>
+                    {/* Objetivo de la condición: tipo + controlador + filtros */}
+                    <div className="grid grid-cols-2 gap-2 mt-2">
+                      <SelectField label="Tipo objetivo" value={c.objetivo?.tipo} options={[
+                        { value: 'campeon', label: 'Campeón' },
+                        { value: 'mistica', label: 'Mística' },
+                        { value: 'arcana', label: 'Arcana' },
+                      ]} onChange={(v) => {
+                        const newConds = [...((data.condicion as CondicionEfecto).condiciones ?? [])]
+                        newConds[i] = { ...c, objetivo: { ...c.objetivo, tipo: v as any, controlador: c.objetivo?.controlador ?? 'propio' } }
+                        updateCondicion({ condiciones: newConds })
+                      }} />
+                      <SelectField label="Controlador" value={c.objetivo?.controlador} options={[
+                        { value: 'propio', label: 'Propio' },
+                        { value: 'rival', label: 'Rival' },
+                      ]} onChange={(v) => {
+                        const newConds = [...((data.condicion as CondicionEfecto).condiciones ?? [])]
+                        newConds[i] = { ...c, objetivo: { ...c.objetivo, controlador: v as any, tipo: c.objetivo?.tipo ?? 'campeon' } }
+                        updateCondicion({ condiciones: newConds })
+                      }} />
+                    </div>
+                    {/* Filtros del objetivo de la condición (solo para campeón) */}
+                    {c.objetivo?.tipo === 'campeon' && (
+                      <div className="grid grid-cols-2 gap-2 mt-2">
+                        <SelectField label="Éter bloqueado" value={c.objetivo?.filtros?.conEterBloqueado?.toString()} options={[
+                          { value: '', label: 'Cualquiera' },
+                          { value: 'true', label: 'Con éter bloqueado' },
+                          { value: 'false', label: 'Sin éter bloqueado' },
+                        ]} onChange={(v) => {
+                          const newConds = [...((data.condicion as CondicionEfecto).condiciones ?? [])]
+                          const filtros = { ...c.objetivo?.filtros, conEterBloqueado: v === '' ? undefined : v === 'true' }
+                          newConds[i] = { ...c, objetivo: { ...c.objetivo, filtros } }
+                          updateCondicion({ condiciones: newConds })
+                        }} />
+                        <SelectField label="Agotamiento" value={c.objetivo?.filtros?.agotado?.toString()} options={[
+                          { value: '', label: 'Cualquiera' },
+                          { value: 'true', label: 'Esté agotado' },
+                          { value: 'false', label: 'No esté agotado' },
+                        ]} onChange={(v) => {
+                          const newConds = [...((data.condicion as CondicionEfecto).condiciones ?? [])]
+                          const filtros = { ...c.objetivo?.filtros, agotado: v === '' ? undefined : v === 'true' }
+                          newConds[i] = { ...c, objetivo: { ...c.objetivo, filtros } }
+                          updateCondicion({ condiciones: newConds })
+                        }} />
+                      </div>
+                    )}
                   </div>
                 ))}
                 <button onClick={() => {
-                  const newConds = [...((data.condicion as CondicionEfecto).condiciones ?? []), { tipo: 'controlar_minimo' as const, cantidad: 2 }]
+                  const newConds = [...((data.condicion as CondicionEfecto).condiciones ?? []), {
+                    tipo: 'controlar_minimo' as const,
+                    cantidad: 2,
+                    objetivo: { tipo: 'campeon' as const, controlador: 'propio' as const },
+                  }]
                   updateCondicion({ condiciones: newConds })
                 }} className="text-xs text-ether-400 hover:text-ether-300">+ Agregar condición</button>
               </div>

@@ -534,37 +534,27 @@ export function RenderCarta({
             }
 
             case 'Arcana': {
-              const totalLen = (c.condicion?.length || 0) + (c.recompensa?.length || 0)
-              return (
-                <>
-                  {c.condicion ? (
-                    <p
-                      style={{
-                        fontFamily: '"Inter", sans-serif',
-                        fontSize: fluidSize(c.condicion, 13.5, 450, totalLen),
-                        lineHeight: 1.4,
-                        color: '#1c130b',
-                        margin: 0,
-                      }}
-                    >
-                      <strong>Condición:</strong> {c.condicion}
-                    </p>
-                  ) : null}
-                  {c.recompensa ? (
-                    <p
-                      style={{
-                        fontFamily: '"Inter", sans-serif',
-                        fontSize: fluidSize(c.recompensa, 13.5, 450, totalLen),
-                        lineHeight: 1.4,
-                        color: '#1c130b',
-                        margin: '4px 0 0',
-                      }}
-                    >
-                      <strong>Recompensa:</strong> {c.recompensa}
-                    </p>
-                  ) : null}
-                </>
-              )
+              const parts: React.ReactNode[] = []
+              // New system: read from efectos[]
+              const condicionText = getEffectText('pasivo')
+              const recompensaText = getEffectText('hechizo')
+              const totalLen = (condicionText?.length || 0) + (recompensaText?.length || 0)
+
+              if (condicionText) {
+                parts.push(
+                  <p key="condicion" style={{ fontFamily: '"Inter", sans-serif', fontSize: fluidSize(condicionText, 13.5, 450, totalLen), lineHeight: 1.4, color: '#1c130b', margin: 0 }}>
+                    <strong>Condición:</strong> {condicionText}
+                  </p>
+                )
+              }
+              if (recompensaText) {
+                parts.push(
+                  <p key="recompensa" style={{ fontFamily: '"Inter", sans-serif', fontSize: fluidSize(recompensaText, 13.5, 450, totalLen), lineHeight: 1.4, color: '#1c130b', margin: '4px 0 0' }}>
+                    <strong>Recompensa:</strong> {recompensaText}
+                  </p>
+                )
+              }
+              return parts.length > 0 ? <>{parts}</> : null
             }
 
             case 'Éter': {

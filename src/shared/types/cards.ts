@@ -285,16 +285,8 @@ export interface MisticaCard extends CardMeta {
 export interface ArcanaCard extends CardMeta {
   type: 'Arcana'
   stats: BaseStats
-  /** Unified effect list — first effect is condition, second is reward */
+  /** Unified effect list — first effect is condition (pasivo), second is reward (hechizo) */
   efectos?: EfectoData[]
-  /** Legacy text fields */
-  condicion?: string
-  recompensa?: string
-  efecto?: string
-  /** Legacy structured data */
-  condicionData?: EfectoData
-  recompensaData?: EfectoData
-  efectoData?: EfectoData
 }
 
 export interface EterCard extends CardMeta {
