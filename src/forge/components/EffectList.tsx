@@ -83,7 +83,7 @@ function generateTargetText(objetivo: ObjetivoEfecto): string {
   let text = ''
   
   // Check if filters include tipoCarta - if so, don't add card type to base text
-  const hasTipoCartaFilter = objetivo.filtros?.tipoCarta
+  const hasTipoCartaFilter = (objetivo.filtros as any)?.tipoCarta
   
   if (!hasTipoCartaFilter) {
     if (objetivo.tipo === 'campeon' || objetivo.tipo === 'carta' || objetivo.tipo === 'mano') {

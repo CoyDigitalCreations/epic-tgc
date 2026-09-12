@@ -120,9 +120,6 @@ const ZONA_OPTIONS = [
   { value: 'pagado', label: 'Pagado' }, { value: 'bloqueado', label: 'Bloqueado' },
   { value: 'mano', label: 'Mano' }, { value: 'mazo', label: 'Mazo' },
 ]
-const FILTRO_TIPO_OPTIONS = [
-  { value: 'campeon', label: 'Campeón' }, { value: 'mistica', label: 'Mística' }, { value: 'arcana', label: 'Arcana' },
-]
 const CONDICION_TRIGGER_OPTIONS = [
   { value: 'inicio_choque', label: 'Inicio de Choque' }, { value: 'inicio_alba', label: 'Inicio de Alba' },
   { value: 'al_atacar', label: 'Al atacar' }, { value: 'al_invocar', label: 'Al invocar' },
@@ -261,7 +258,7 @@ export function EffectField({ label, value, onChange, cardType }: EffectFieldPro
             { value: 'mano', label: 'Desde tu mano' },
             { value: 'campo', label: 'Desde el campo' },
             { value: 'cualquier_zona', label: 'Desde cualquier zona' },
-          ]} onChange={(v) => update({ triggerZona: v || undefined })} />
+          ]} onChange={(v) => update({ triggerZona: v as any })} />
         )}
         {/* Capa 5: Efecto */}
         <GroupedSelectField label="Efecto" value={data.efecto} categories={EFFECT_CATEGORIES} onChange={(v) => update({ efecto: v as any })} />
@@ -310,7 +307,7 @@ export function EffectField({ label, value, onChange, cardType }: EffectFieldPro
       {/* Capa 4b: Zona destino (for return_ether, move effects) */}
       {showObjetivo && data.efecto && ['return_ether', 'free_ether', 'block_ether', 'mover'].includes(data.efecto) && (
         <div className="grid grid-cols-2 gap-2 mt-2">
-          <SelectField label="Zona destino" value={data.objetivo?.zonaDestino} options={ZONA_OPTIONS} onChange={(v) => updateObjetivo({ zonaDestino: v || undefined })} />
+          <SelectField label="Zona destino" value={data.objetivo?.zonaDestino} options={ZONA_OPTIONS} onChange={(v) => updateObjetivo({ zonaDestino: v as any })} />
           {data.objetivo?.zonaDestino && (
             <div className="flex items-center gap-2 mt-2">
               <input

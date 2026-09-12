@@ -58,8 +58,10 @@ function efectosDe(card: AnyCard): { etiqueta: string; texto: string }[] {
       return card.efecto ? [{ etiqueta: 'Efecto', texto: card.efecto }] : []
     case 'Arcana': {
       const l: { etiqueta: string; texto: string }[] = []
-      if (card.condicion) l.push({ etiqueta: 'Condición', texto: card.condicion })
-      if (card.recompensa) l.push({ etiqueta: 'Recompensa', texto: card.recompensa })
+      const condicion = card.efectos?.find((e) => e.tipo === 'pasivo')?.texto
+      const recompensa = card.efectos?.find((e) => e.tipo === 'hechizo')?.texto
+      if (condicion) l.push({ etiqueta: 'Condición', texto: condicion })
+      if (recompensa) l.push({ etiqueta: 'Recompensa', texto: recompensa })
       return l
     }
     case 'Éter': {
