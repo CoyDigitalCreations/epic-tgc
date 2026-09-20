@@ -224,11 +224,23 @@ function instanciasEnCampo(s: GameState, jugador: PlayerId): string[] {
   ].filter((id): id is string => id !== null)
 }
 
+/** Handler genérico por tipo de efecto (no por cardId). */
+type HandlerGenerico = (s: GameState, ctx: Ctx, inst: CardInstance, payload: PayloadEfecto) => void
+const registroGenerico = new Map<string, HandlerGenerico>()
+
+/** Registra un handler genérico para un tipo de efecto (ej: invocar_y_equipar). */
+export function registrarEfectoGenerico(efectoTipo: string, fn: HandlerGenerico): void {
+  registroGenerico.set(efectoTipo, fn)
+}
+
 /**
  * Dispara un trigger: ejecuta los handlers registrados en orden determinista
  * (cardInstanceId asc). Con `instancias` explícitas usa esas; sin ellas,
  * recolecta por zona el campo del jugador (los triggers de contexto específico
  * —al-invocar, al-matar-en-combate…— SIEMPRE pasan instancias desde C2+).
+ *
+ * Después de los handlers por cardId, ejecuta handlers genéricos para cartas
+ * que tengan el efecto correspondiente en su efectos[].
  */
 export function dispararTrigger(
   s: GameState,
@@ -239,17 +251,32 @@ export function dispararTrigger(
   payloadExtra?: Partial<PayloadEfecto>,
 ): void {
   const porCarta = registro.get(trigger)
-  if (!porCarta) return
   const ids = instancias ?? instanciasEnCampo(s, jugador)
   const orden = [...ids].sort()
   const payload: PayloadEfecto = { jugador, ...payloadExtra }
+
   for (const id of orden) {
     const inst = s.instances[id]
     const cardId = inst?.cardId
     if (!inst || !cardId) continue
-    const fn = porCarta.get(cardId)
-    if (!fn) continue
-    fn(s, ctx, inst, payload)
+
+    // Handler por cardId (registrado específicamente para esta carta)
+    const fn = porCarta?.get(cardId)
+    if (fn) {
+      fn(s, ctx, inst, payload)
+      continue
+    }
+
+    // Handler genérico por tipo de efecto (lee efectos[] de la carta)
+    for (const [efectoTipo, genericFn] of registroGenerico) {
+      const meta = getCardMeta(cardId)
+      if (!meta || !('efectos' in meta)) continue
+      const tieneEfecto = (meta as any).efectos?.some((e: any) => e.efecto === efectoTipo)
+      if (tieneEfecto) {
+        genericFn(s, ctx, inst, payload)
+        break // un solo handler genérico por carta
+      }
+    }
   }
 }
 

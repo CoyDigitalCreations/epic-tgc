@@ -34,6 +34,10 @@ export interface EfectoData {
   /** Where the card was when the trigger happened (for al_ser_enviado_al_cementerio) */
   triggerZona?: 'mano' | 'campo' | 'cualquier_zona'
 
+  // ── Capa 2c: TRIGGER CONTROLADOR (opcional) ──
+  /** Whose turn the trigger applies to (default: propio) */
+  controladorTrigger?: 'propio' | 'rival'
+
   // ── Capa 3: COSTO (opcional, anidado) ──
   /** What the player must pay to activate */
   costo?: CostoEfecto
@@ -46,6 +50,10 @@ export interface EfectoData {
   /** What this effect DOES */
   efecto?: EfectoAccion
 
+  // ── Capa 5c: ZONA ORIGEN (para invocar_y_equipar) ──
+  /** De dónde se invoca el campeón (cementerio, exilio, mano, mazo) */
+  zonaOrigen?: 'cementerio' | 'exilio' | 'mano' | 'mazo'
+
   // ── Capa 6: STATS (opcional) ──
   /** Stat modifications for buff/debuff */
   stats?: { ATQ?: number; RES?: number }
@@ -53,6 +61,10 @@ export interface EfectoData {
   // ── Capa 6b: BUFF PER BLOCKED ETHER ──
   /** When true, the buff applies per blocked ether (e.g., +2 ATQ per blocked ether) */
   buffPerBlockedEther?: boolean
+
+  // ── Capa 6c: HASTA (para cantidades flexibles) ──
+  /** When true, the quantity is "up to N" instead of exact */
+  esHasta?: boolean
 
   // ── Capa 7: CANTIDAD (opcional) ──
   /** How many cards this affects (for draw, destroy, exile, scry, etc.) */
@@ -123,7 +135,7 @@ export type CopyAttribute =
 /** Cost structure — what the player pays */
 export interface CostoEfecto {
   /** Cost type */
-  tipo: 'ninguno' | 'eter' | 'eter_bloqueado' | 'exhaust' | 'exile_self' | 'cemetery_self'
+  tipo: 'ninguno' | 'eter' | 'eter_bloqueado' | 'bloqueo_fijo' | 'exhaust' | 'exile_self' | 'cemetery_self'
   /** Amount (for ether costs) */
   cantidad?: number
 }
@@ -138,6 +150,7 @@ export type EfectoAccion =
   | 'recuperar_campo' | 'recuperar_mano' | 'recuperar_mazo'
   | 'recuperar_mazo_barajar' | 'recuperar_mazo_top' | 'recuperar_mazo_bottom'
   | 'recuperar_exilio'
+  | 'invocar' | 'invocar_y_equipar'
   | 'mover' | 'negar'
   // Legacy compatibility
   | 'keyword' | 'robar' | 'destruir' | 'bloquear_ether' | 'mover_ether'
@@ -183,6 +196,8 @@ export interface FiltroObjetivo {
   agotado?: boolean
   /** Has blocked ether filter (Campeón): true = must have blocked ether, false = must NOT have blocked ether */
   conEterBloqueado?: boolean
+  /** Can receive blocked ether filter (Campeón): true = must be eligible to receive blocked ether */
+  puedeBloquearEter?: boolean
   /** Equipment status filter (Campeón): true = must be equipped, false = must NOT be equipped */
   equipado?: boolean
   /** Minimum cost (for "coste X o más") */
@@ -192,12 +207,19 @@ export interface FiltroObjetivo {
   tipoEfectoMistica?: 'hechizo' | 'continuo'
   /** Face status filter (Arcana): true = face up, false = face down */
   bocaArriba?: boolean
+  /** Select by ranking: pick exactly one champion with the highest/lowest stat */
+  seleccionar?: {
+    stat: 'poder' | 'resistencia' | 'coste'
+    orden: 'mayor' | 'menor'
+  }
 }
 
 /** Structured condition for Arcanas */
 export interface CondicionEfecto {
   /** When this condition is checked */
-  trigger: 'inicio_choque' | 'inicio_alba' | 'al_atacar' | 'al_invocar' | 'al_resolver_cadena' | 'al_activar_habilidad'
+  trigger: 'inicio_choque' | 'inicio_alba' | 'al_atacar' | 'al_invocar' | 'al_resolver_cadena' | 'al_activar_habilidad' | 'activacion'
+  /** Whose turn the trigger applies to */
+  controladorTrigger?: 'propio' | 'rival'
   /** Array of conditions that must ALL be true */
   condiciones: CondicionItem[]
 }
@@ -287,10 +309,10 @@ export interface ArcanaCard extends CardMeta {
   stats: BaseStats
   /** Unified effect list — first effect is condition (pasivo), second is reward (hechizo) */
   efectos?: EfectoData[]
+  /** Condición de activación estructurada (nuevo sistema) */
+  condicion?: CondicionEfecto | string
   /** Legacy text fields (kept for backward compat with existing data) */
-  condicion?: string
   recompensa?: string
-  efecto?: string
   /** Legacy structured data (kept for backward compat with existing data) */
   condicionData?: EfectoData
   recompensaData?: EfectoData

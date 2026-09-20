@@ -3,6 +3,8 @@ import { useCardStore } from '../../forge/store/useCardStore'
 import { useCardImage } from '../../forge/hooks/useCardImage'
 import { buildDeck, cartasDisponibles, conteosDe } from '../mazos'
 import type { MazoPersonalizado } from '../useMazosStore'
+import { condicionArcanaTexto } from '../../forge/components/fields/CondicionArcanaField'
+import type { CondicionEfecto } from '../../shared/types/cards'
 import { CARD_TYPES, FACCION_COLORS, FACCIONES, type AnyCard, type CardType, type Faccion } from '../../shared/types'
 
 const MAX_ETER = 15
@@ -35,6 +37,22 @@ function seleccionDesdeCardIds(cardIds: string[]): Map<string, number> {
  * (mismo criterio de nombres que CardPreview).
  */
 function efectosDe(card: AnyCard): { etiqueta: string; texto: string }[] {
+  // Arcana: condition from dedicated field, reward from efectos[]
+  if (card.type === 'Arcana') {
+    const l: { etiqueta: string; texto: string }[] = []
+    const rawCondicion = ('condicion' in card && card.condicion) ? card.condicion : undefined
+    const condicionData = (rawCondicion && typeof rawCondicion === 'object' && 'trigger' in rawCondicion)
+      ? rawCondicion as CondicionEfecto
+      : undefined
+    const condicionTexto = condicionData
+      ? condicionArcanaTexto(condicionData)
+      : typeof rawCondicion === 'string' ? rawCondicion : undefined
+    const recompensa = card.efectos?.find((e) => e.tipo === 'hechizo')?.texto
+    if (condicionTexto) l.push({ etiqueta: 'Condición', texto: condicionTexto })
+    if (recompensa) l.push({ etiqueta: 'Recompensa', texto: recompensa })
+    return l
+  }
+
   // New system: read from efectos[]
   if ('efectos' in card && card.efectos && card.efectos.length > 0) {
     return card.efectos

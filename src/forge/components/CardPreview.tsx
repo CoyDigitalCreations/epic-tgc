@@ -3,9 +3,10 @@ import { useCardStore } from '../store/useCardStore'
 import { exportCardToPng } from '../utils/export-png'
 import { fileToCompressedDataUrl, isValidImageFile } from '../utils/file-to-data-url'
 import { useCardImage } from '../hooks/useCardImage'
-import type { AnyCard } from '../../shared/types'
+import type { AnyCard, CondicionEfecto } from '../../shared/types'
 import { FACCION_COLORS, FACCION_IMAGES } from '../../shared/types'
 import { CardFrame, CostGem, EtherHexagon, NamePlate, RuneIcon, StatBadge, TextScroll } from './card-art'
+import { condicionArcanaTexto } from './fields/CondicionArcanaField'
 
 /* ───────── type theme ───────── */
 const TYPE_THEME: Record<
@@ -444,9 +445,9 @@ export function RenderCarta({
                   background: '#4a3722',
                   border: '1px solid #8c6d47',
                   borderRadius: 3,
-                  padding: '2px 8px',
+                  padding: '3px 12px',
                   fontFamily: '"Cinzel", serif',
-                  fontSize: 10,
+                  fontSize: 15,
                   fontWeight: 700,
                   color: '#fef3c7',
                   letterSpacing: '0.5px',
@@ -535,8 +536,14 @@ export function RenderCarta({
 
             case 'Arcana': {
               const parts: React.ReactNode[] = []
-              // New system: read from efectos[]
-              const condicionText = getEffectText('pasivo')
+              // New system: read condition from dedicated field, reward from efectos[]
+              const rawCondicion = ('condicion' in c && c.condicion) ? c.condicion : undefined
+              const condicionData = (rawCondicion && typeof rawCondicion === 'object' && 'trigger' in rawCondicion)
+                ? rawCondicion as CondicionEfecto
+                : undefined
+              const condicionText = condicionData
+                ? condicionArcanaTexto(condicionData)
+                : typeof rawCondicion === 'string' ? rawCondicion : getEffectText('pasivo') // legacy fallback
               const recompensaText = getEffectText('hechizo')
               const totalLen = (condicionText?.length || 0) + (recompensaText?.length || 0)
 

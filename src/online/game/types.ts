@@ -95,8 +95,10 @@ export interface CardInstance {
    bocaArriba?: boolean
    /** C2: flag 1/turno para Pasivo 1A (FB-005/DS-006) — se resetea en al-inicio-alba. */
    opcionUsadaEsteTurno?: boolean
-   /** ID del campeón al que está equipada esta carta (ARTEFACTO). Si el campeón sale, la carta va al cementerio. */
-   equipadoA?: string
+    /** ID del campeón al que está equipada esta carta (ARTEFACTO). Si el campeón sale, la carta va al cementerio. */
+    equipadoA?: string
+    /** ID del campeón que fue invocado por esta carta (invocar_y_equipar). Si esta carta sale, el campeón también. */
+    vinculadoA?: string
 }
 
 export interface PlayerState {

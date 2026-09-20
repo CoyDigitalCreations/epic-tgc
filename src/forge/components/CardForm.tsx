@@ -7,6 +7,7 @@ import type { EfectoData } from '../../shared/types/cards'
 import { validateCard } from '../utils/validation'
 import { TextField, NumberField, SelectField, TextAreaField, MultiSelectField } from './fields'
 import { EffectField } from './fields/EffectField'
+import { CondicionArcanaField } from './fields/CondicionArcanaField'
 import { EffectList } from './EffectList'
 import { EffectManualModal } from './EffectManualModal'
 import { ImageUpload } from './ImageUpload'
@@ -191,6 +192,15 @@ export function CardForm() {
             key={field.name}
             cardType={(draft.type as CardType) || 'Campeón'}
             effects={effects}
+            onChange={(v) => onChange(v)}
+          />
+        )
+      }
+      case 'condicion-arcana': {
+        return (
+          <CondicionArcanaField
+            key={field.name}
+            value={value as any}
             onChange={(v) => onChange(v)}
           />
         )

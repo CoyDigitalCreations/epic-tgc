@@ -4,7 +4,7 @@ import { FACCIONES, ESENCIAS, ROLES, CAT_HABILIDAD } from '../../shared/types/en
 export interface FieldDef {
   name: string
   label: string
-  type: 'text' | 'number' | 'select' | 'textarea' | 'multi-select' | 'paquete' | 'effect' | 'effect-list'
+  type: 'text' | 'number' | 'select' | 'textarea' | 'multi-select' | 'paquete' | 'effect' | 'effect-list' | 'condicion-arcana'
   required: boolean
   options?: string[]
   min?: number
@@ -85,7 +85,8 @@ export const FORM_CONFIGS: CardFormConfig[] = [
       { name: 'name', label: 'Nombre', type: 'text', required: true, placeholder: 'Ej: El Juicio Final' },
       { name: 'facciones', label: 'Facciones (máx 3)', type: 'multi-select', required: false, options: [...FACCIONES], max: 3 },
       { name: 'cost', label: 'Coste de Éter', type: 'number', required: true, min: 0, max: 20 },
-      { name: 'efectos', label: 'Efectos', type: 'effect-list', required: false },
+      { name: 'condicion', label: 'Condición de Activación', type: 'condicion-arcana', required: false },
+      { name: 'efectos', label: 'Efectos (Recompensa)', type: 'effect-list', required: false },
       { name: 'keywords', label: 'Palabras Clave', type: 'multi-select', required: false },
       { name: 'flavorText', label: 'Texto de Sabor', type: 'textarea', required: false },
       { name: 'limiteCopias', label: 'Límite por Mazo', type: 'select', required: false, options: ['1', '2', '3'] },

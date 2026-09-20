@@ -485,10 +485,9 @@ export const ESTASIS_CARDS: AnyCard[] = [
     createdAt: FB_TS,
     updatedAt: FB_TS,
     stats: { cost: 3 },
-    condicion:'',
+    condicion: { trigger: 'inicio_choque', condiciones: [{ tipo: 'controlar_minimo', cantidad: 2, objetivo: { tipo: 'campeon', controlador: 'propio', filtros: { conEterBloqueado: true } } }] },
     recompensa: 'Roba 2 cartas y un Campeón que controles gana +3 de Poder hasta el final del turno.',
-      condicionData: {"tipo":"pasivo","condicion":"Al inicio del Choque, si controlas 2 o más Campeones con Éter bloqueado.","texto":"Al inicio del Choque, si controlas 2 o más Campeones con Éter bloqueado."},
-    recompensaData: {"tipo":"hechizo","texto":"Roba 2 cartas y un Campeón que controles gana +3 de Poder hasta el final del turno.","efecto":"buff","stats":{},"objetivo":{ "tipo":"campeon","controlador":"propio","zona":"campo" }},    efectos: [{'tipo':'pasivo','condicion':'Al inicio del Choque, si controlas 2 o más Campeones con Éter bloqueado.','texto':'Al inicio del Choque, si controlas 2 o más Campeones con Éter bloqueado.'},{'tipo':'hechizo','texto':'Roba 2 cartas y un Campeón que controles gana +3 de Poder hasta el final del turno.','efecto':'buff','stats':{},'objetivo':{ 'tipo':'campeon','controlador':'propio','zona':'campo' }}],
+    efectos: [{'tipo':'hechizo','texto':'Roba 2 cartas y un Campeón que controles gana +3 de Poder hasta el final del turno.','efecto':'buff','stats':{},'objetivo':{ 'tipo':'campeon','controlador':'propio','zona':'campo' }}],
 
   },
   {
@@ -504,12 +503,11 @@ export const ESTASIS_CARDS: AnyCard[] = [
     updatedAt: FB_TS,
     facciones: ['Orden'],
     stats: { cost: 2 },
+    condicion: { trigger: 'activacion', condiciones: [{ tipo: 'controlar_minimo', cantidad: 1, objetivo: { tipo: 'campeon', controlador: 'propio' } }] },
     efecto: 'Un Campeón que controles gana +2 de ATQ hasta el final del turno. Si destruye a un Campeón que controla el rival este turno, roba 1 carta.',
-    condicion:'',
     recompensa: 'Un Campeón que controles gana +2 de ATQ hasta el final del turno. Si destruye a un Campeón que controla el rival este turno, roba 1 carta.',
       efectoData: {"tipo":"hechizo","texto":"Un Campeón que controles gana +2 de ATQ hasta el final del turno. Si destruye a un Campeón que controla el rival este turno, roba 1 carta.","efecto":"buff","stats":{"ATQ":2},"objetivo":{ "tipo":"campeon","controlador":"propio","zona":"campo" }},
-    condicionData: {"tipo":"pasivo","condicion":"Mientras controles por lo menos 1 campeón","texto":"Mientras controles por lo menos 1 campeón"},
-    recompensaData: {"tipo":"hechizo","texto":"Un Campeón que controles gana +2 de ATQ hasta el final del turno. Si destruye a un Campeón que controla el rival este turno, roba 1 carta.\"","efecto":"buff","stats":{"ATQ":2},"objetivo":{ "tipo":"campeon","controlador":"propio","zona":"campo" }},    efectos: [{'tipo':'pasivo','condicion':'Mientras controles por lo menos 1 campeón','texto':'Mientras controles por lo menos 1 campeón'},{'tipo':'hechizo','texto':'Un Campeón que controles gana +2 de ATQ hasta el final del turno. Si destruye a un Campeón que controla el rival este turno, roba 1 carta.\'','efecto':'buff','stats':{'ATQ':2},'objetivo':{ 'tipo':'campeon','controlador':'propio','zona':'campo' }},{'tipo':'hechizo','texto':'Un Campeón que controles gana +2 de ATQ hasta el final del turno. Si destruye a un Campeón que controla el rival este turno, roba 1 carta.','efecto':'buff','stats':{'ATQ':2},'objetivo':{ 'tipo':'campeon','controlador':'propio','zona':'campo' }}],
+    recompensaData: {"tipo":"hechizo","texto":"Un Campeón que controles gana +2 de ATQ hasta el final del turno. Si destruye a un Campeón que controla el rival este turno, roba 1 carta.\"","efecto":"buff","stats":{"ATQ":2},"objetivo":{ "tipo":"campeon","controlador":"propio","zona":"campo" }},    efectos: [{'tipo':'hechizo','texto':'Un Campeón que controles gana +2 de ATQ hasta el final del turno. Si destruye a un Campeón que controla el rival este turno, roba 1 carta.','efecto':'buff','stats':{'ATQ':2},'objetivo':{ 'tipo':'campeon','controlador':'propio','zona':'campo' }}],
 
   },
 
@@ -1141,10 +1139,9 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     updatedAt: DS_TS,
     facciones: ['Caos'],
     stats: { cost: 3 },
-    condicion:'',
+    condicion: { trigger: 'inicio_choque', condiciones: [{ tipo: 'rival_controla_minimo', cantidad: 2, objetivo: { tipo: 'campeon', controlador: 'rival', filtros: { conEterBloqueado: true } } }] },
     recompensa: 'Un Campeón que controla el rival pierde 3 de RES de forma permanente. Roba 1 carta.',
-      condicionData: {"tipo":"pasivo","condicion":"Al inicio del Choque, si el rival controla 2 o más Campeones con Éter bloqueado.","texto":"Al inicio del Choque, si el rival controla 2 o más Campeones con Éter bloqueado."},
-    recompensaData: {"tipo":"hechizo","texto":"Un Campeón que controla el rival pierde 3 de RES de forma permanente. Roba 1 carta.","efecto":"debuff","objetivo":{ "tipo":"campeon","controlador":"rival","zona":"campo" }},    efectos: [{'tipo':'pasivo','condicion':'Al inicio del Choque, si el rival controla 2 o más Campeones con Éter bloqueado.','texto':'Al inicio del Choque, si el rival controla 2 o más Campeones con Éter bloqueado.'},{'tipo':'hechizo','texto':'Un Campeón que controla el rival pierde 3 de RES de forma permanente. Roba 1 carta.','efecto':'debuff','objetivo':{ 'tipo':'campeon','controlador':'rival','zona':'campo' }}],
+    efectos: [{'tipo':'hechizo','texto':'Un Campeón que controla el rival pierde 3 de RES de forma permanente. Roba 1 carta.','efecto':'debuff','objetivo':{ 'tipo':'campeon','controlador':'rival','zona':'campo' }}],
 
   },
   {
@@ -1159,12 +1156,11 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     createdAt: DS_TS,
     updatedAt: DS_TS,
     stats: { cost: 2 },
+    condicion: { trigger: 'activacion', condiciones: [{ tipo: 'controlar_minimo', cantidad: 2, objetivo: { tipo: 'campeon', controlador: 'propio' } }] },
     efecto: 'Un Campeón que controlas gana +2 de ATQ hasta el final del turno. Si destruye a un Campeón que controla el rival este turno, el rival pierde 1 carta de su mano al azar.',
-    condicion:'',
     recompensa: 'Un Campeón que controlas gana +2 de ATQ hasta el final del turno. Si destruye a un Campeón que controla el rival este turno, el rival pierde 1 carta de su mano al azar.',
       efectoData: {"tipo":"hechizo","texto":"Un Campeón que controlas gana +2 de ATQ hasta el final del turno. Si destruye a un Campeón que controla el rival este turno, el rival pierde 1 carta de su mano al azar.","efecto":"buff","stats":{"ATQ":2},"objetivo":{ "tipo":"campeon","controlador":"propio","zona":"campo" }},
-    condicionData: {"tipo":"pasivo","condicion":"Mientras controles 2 o más Campeones","texto":"Mientras controles 2 o más Campeones"},
-    recompensaData: {"tipo":"hechizo","texto":"Un Campeón que controlas gana +2 de ATQ hasta el final del turno. Si destruye a un Campeón que controla el rival este turno, el rival pierde 1 carta de su mano al azar.","efecto":"buff","stats":{"ATQ":2},"objetivo":{ "tipo":"campeon","controlador":"propio","zona":"campo" }},    efectos: [{'tipo':'pasivo','condicion':'Mientras controles 2 o más Campeones','texto':'Mientras controles 2 o más Campeones'},{'tipo':'hechizo','texto':'Un Campeón que controlas gana +2 de ATQ hasta el final del turno. Si destruye a un Campeón que controla el rival este turno, el rival pierde 1 carta de su mano al azar.','efecto':'buff','stats':{'ATQ':2},'objetivo':{ 'tipo':'campeon','controlador':'propio','zona':'campo' }},{'tipo':'hechizo','texto':'Un Campeón que controlas gana +2 de ATQ hasta el final del turno. Si destruye a un Campeón que controla el rival este turno, el rival pierde 1 carta de su mano al azar.','efecto':'buff','stats':{'ATQ':2},'objetivo':{ 'tipo':'campeon','controlador':'propio','zona':'campo' }}],
+    recompensaData: {"tipo":"hechizo","texto":"Un Campeón que controlas gana +2 de ATQ hasta el final del turno. Si destruye a un Campeón que controla el rival este turno, el rival pierde 1 carta de su mano al azar.","efecto":"buff","stats":{"ATQ":2},"objetivo":{ "tipo":"campeon","controlador":"propio","zona":"campo" }},    efectos: [{'tipo':'hechizo','texto':'Un Campeón que controlas gana +2 de ATQ hasta el final del turno. Si destruye a un Campeón que controla el rival este turno, el rival pierde 1 carta de su mano al azar.','efecto':'buff','stats':{'ATQ':2},'objetivo':{ 'tipo':'campeon','controlador':'propio','zona':'campo' }}],
 
   },
 
@@ -1300,11 +1296,9 @@ export const DISONANCIA_CARDS: AnyCard[] = [
     createdAt: C4_TS,
     updatedAt: C4_TS,
     stats: { cost: 3 },
-    condicion:'',
+    condicion: { trigger: 'inicio_choque', condiciones: [{ tipo: 'controlar_minimo', cantidad: 2, objetivo: { tipo: 'campeon', controlador: 'propio', filtros: { conEterBloqueado: true } } }] },
     recompensa: 'Agrega de tu cementerio a tu mano 1 carta de coste 3 o menos.',
-      condicionData: {"tipo":"pasivo","condicion":"Al inicio del Choque, si controlas 2 o más Campeones con Éter bloqueado.","texto":"Al inicio del Choque, si controlas 2 o más Campeones con Éter bloqueado."},
-    recompensaData: {"tipo":"hechizo","texto":"Agrega de tu cementerio a tu mano 1 carta de coste 3 o menos.","efecto":"robar","objetivo":{ "tipo":"carta","controlador":"propio","zona":"mazo" }},    efectos: [{'tipo':'pasivo','condicion':'Al inicio del Choque, si controlas 2 o más Campeones con Éter bloqueado.','texto':'Al inicio del Choque, si controlas 2 o más Campeones con Éter bloqueado.'},{'tipo':'hechizo','texto':'Agrega de tu cementerio a tu mano 1 carta de coste 3 o menos.','efecto':'robar','objetivo':{ 'tipo':'carta','controlador':'propio','zona':'mazo' }}],
-
+    efectos: [{'tipo':'hechizo','texto':'Agrega de tu cementerio a tu mano 1 carta de coste 3 o menos.','efecto':'robar','objetivo':{ 'tipo':'carta','controlador':'propio','zona':'mazo' }}],
   },
   {
     id: 'DS-033',

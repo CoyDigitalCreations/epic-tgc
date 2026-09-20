@@ -2,7 +2,7 @@ import { useState, useMemo, useRef } from 'react'
 import { useCardStore } from '../store/useCardStore'
 import { exportCollectionToJson, importCollectionFromJson, exportCollectionSinArte } from '../utils/export-json'
 import { exportPaqueteToJson, importPaqueteFromJson } from '../utils/export-paquete'
-import { CARD_TYPES, type CardType } from '../../shared/types'
+import { CARD_TYPES, RARITIES, KEYWORDS, FACCIONES, type CardType, type Faccion, type Keyword, type Rarity } from '../../shared/types'
 import { PAQUETES, ESTASIS_CARDS, DISONANCIA_CARDS, progresoPaquete } from '../../shared/data/paquetes'
 import { RuneIcon } from './card-art'
 import { ConfirmModal } from './modals/ConfirmModal'
@@ -194,6 +194,10 @@ export function CardList() {
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState<CardType | 'Todas'>('Todas')
   const [paqueteFilter, setPaqueteFilter] = useState<string | 'Todos'>('Todos')
+  const [costeFilter, setCosteFilter] = useState<string>('Todos')
+  const [faccionFilter, setFaccionFilter] = useState<Faccion | 'Todas'>('Todas')
+  const [keywordFilter, setKeywordFilter] = useState<Keyword | 'Todas'>('Todas')
+  const [rarityFilter, setRarityFilter] = useState<Rarity | 'Todas'>('Todas')
 
   // Clear confirmation
   const [showClearModal, setShowClearModal] = useState(false)
@@ -203,6 +207,14 @@ export function CardList() {
       cards.filter((card) => {
         if (typeFilter !== 'Todas' && card.type !== typeFilter) return false
         if (paqueteFilter !== 'Todos' && card.paqueteId !== paqueteFilter) return false
+        if (rarityFilter !== 'Todas' && card.rarity !== rarityFilter) return false
+        if (faccionFilter !== 'Todas' && !card.facciones?.includes(faccionFilter)) return false
+        if (keywordFilter !== 'Todas' && !card.keywords?.includes(keywordFilter)) return false
+        if (costeFilter !== 'Todos') {
+          const coste = card.stats?.cost ?? 0
+          if (costeFilter === '7+' && coste < 7) return false
+          if (costeFilter !== '7+' && coste !== Number(costeFilter)) return false
+        }
         if (search) {
           const q = search.toLowerCase()
           const name = (card.name || '').toLowerCase()
@@ -210,7 +222,7 @@ export function CardList() {
         }
         return true
       }),
-    [cards, search, typeFilter, paqueteFilter],
+    [cards, search, typeFilter, paqueteFilter, costeFilter, faccionFilter, keywordFilter, rarityFilter],
   )
 
   const handleEdit = (card: (typeof cards)[number]) => {
@@ -467,6 +479,105 @@ export function CardList() {
         ))}
       </div>
 
+      {/* Coste filter pills */}
+      <div className="flex gap-1.5 flex-wrap items-center mb-3">
+        <span className="text-[10px] uppercase tracking-wider text-gray-500 mr-1">Coste:</span>
+        <button
+          onClick={() => setCosteFilter('Todos')}
+          className={`px-2.5 py-0.5 rounded-full text-xs font-medium transition-colors cursor-pointer
+            ${costeFilter === 'Todos'
+              ? 'bg-ether-600 text-white'
+              : 'bg-surface-2 text-gray-400 hover:text-gray-200 hover:bg-card-border'
+            }`}
+        >
+          Todos
+        </button>
+        {[0, 1, 2, 3, 4, 5, 6].map((c) => (
+          <button
+            key={c}
+            onClick={() => setCosteFilter(String(c))}
+            className={`px-2.5 py-0.5 rounded-full text-xs font-medium transition-colors cursor-pointer
+              ${costeFilter === String(c)
+                ? 'bg-ether-600 text-white'
+                : 'bg-surface-2 text-gray-400 hover:text-gray-200 hover:bg-card-border'
+              }`}
+          >
+            {c}
+          </button>
+        ))}
+        <button
+          onClick={() => setCosteFilter('7+')}
+          className={`px-2.5 py-0.5 rounded-full text-xs font-medium transition-colors cursor-pointer
+            ${costeFilter === '7+'
+              ? 'bg-ether-600 text-white'
+              : 'bg-surface-2 text-gray-400 hover:text-gray-200 hover:bg-card-border'
+          }`}
+        >
+          7+
+        </button>
+      </div>
+
+      {/* Facción + Rareza + Keyword (row) */}
+      <div className="flex gap-3 flex-wrap items-center mb-4">
+        {/* Facción */}
+        <div className="flex gap-1.5 items-center">
+          <span className="text-[10px] uppercase tracking-wider text-gray-500 mr-1">Facción:</span>
+          <button
+            onClick={() => setFaccionFilter('Todas')}
+            className={`px-2.5 py-0.5 rounded-full text-xs font-medium transition-colors cursor-pointer
+              ${faccionFilter === 'Todas'
+                ? 'bg-ether-600 text-white'
+                : 'bg-surface-2 text-gray-400 hover:text-gray-200 hover:bg-card-border'
+              }`}
+          >
+            Todas
+          </button>
+          {FACCIONES.map((f) => (
+            <button
+              key={f}
+              onClick={() => setFaccionFilter(f)}
+              className={`px-2.5 py-0.5 rounded-full text-xs font-medium transition-colors cursor-pointer
+                ${faccionFilter === f
+                  ? 'bg-ether-600 text-white'
+                  : 'bg-surface-2 text-gray-400 hover:text-gray-200 hover:bg-card-border'
+                }`}
+            >
+              {f}
+            </button>
+          ))}
+        </div>
+
+        {/* Rareza */}
+        <div className="flex gap-1.5 items-center">
+          <span className="text-[10px] uppercase tracking-wider text-gray-500 mr-1">Rareza:</span>
+          <select
+            value={rarityFilter}
+            onChange={(e) => setRarityFilter(e.target.value as Rarity | 'Todas')}
+            className="bg-surface-2 border border-card-border rounded px-2 py-0.5 text-xs text-gray-200 cursor-pointer"
+          >
+            <option value="Todas">Todas</option>
+            {RARITIES.map((r) => (
+              <option key={r} value={r}>{r}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Keyword */}
+        <div className="flex gap-1.5 items-center">
+          <span className="text-[10px] uppercase tracking-wider text-gray-500 mr-1">Keyword:</span>
+          <select
+            value={keywordFilter}
+            onChange={(e) => setKeywordFilter(e.target.value as Keyword | 'Todas')}
+            className="bg-surface-2 border border-card-border rounded px-2 py-0.5 text-xs text-gray-200 cursor-pointer"
+          >
+            <option value="Todas">Todas</option>
+            {KEYWORDS.map((k) => (
+              <option key={k} value={k}>{k}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
       {/* Paquete filter pills (oficiales + personalizados) */}
       {paquetesVisibles.length > 0 && (
         <div className="flex gap-1.5 flex-wrap items-center mb-4">
@@ -616,11 +727,15 @@ export function CardList() {
           <p className="font-display text-lg">No se encontraron cartas</p>
           <p className="text-sm mt-1">
             Probá con otro término de búsqueda o{' '}
-            <button
+              <button
               onClick={() => {
                 setSearch('')
                 setTypeFilter('Todas')
                 setPaqueteFilter('Todos')
+                setCosteFilter('Todos')
+                setFaccionFilter('Todas')
+                setKeywordFilter('Todas')
+                setRarityFilter('Todas')
               }}
               className="text-ether-400 hover:text-ether-300 underline cursor-pointer"
             >

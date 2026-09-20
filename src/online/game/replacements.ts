@@ -76,6 +76,21 @@ export function moverAlCementerio(s: GameState, cardInstanceId: string): void {
 export function enviarAlCementerio(s: GameState, ctx: Ctx, cardInstanceId: string): void {
   const inst = s.instances[cardInstanceId]
   if (!inst) return
+  // VÍNCULO INVERTIDO (invocar_y_equipar): si esta carta tiene un campeón vinculado,
+  // destruir también al campeón ANTES de mover esta carta al cementerio.
+  if (inst.vinculadoA) {
+    const vinculadoId = inst.vinculadoA
+    inst.vinculadoA = undefined
+    // Solo destruir si el campeón sigue en campo del dueño
+    const p = s.players[inst.owner]
+    const slotIdx = p.campo.campeones.indexOf(vinculadoId)
+    if (slotIdx !== -1) {
+      p.campo.campeones[slotIdx] = null
+      ctx.emit({ type: 'carta_salida_de_zona', cardInstanceId: vinculadoId, zona: `2${String.fromCharCode(66 + slotIdx)}` as any, jugador: inst.owner })
+      enviarAlCementerio(s, ctx, vinculadoId)
+      ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: vinculadoId, zona: '2G', jugador: inst.owner, bocaArriba: true })
+    }
+  }
   // ARTEFACTO: si esta carta es un Campeón, buscar artefactos equipados y enviarlos al cementerio
   if (inst.cardId) {
     const meta = getCardMeta(inst.cardId)

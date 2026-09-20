@@ -77,7 +77,8 @@ describe('validateCard', () => {
   })
 
   it('validates Arcana fields', () => {
+    // condicion is optional — empty value should NOT trigger an error
     const errors = validateCard({ type: 'Arcana', condicion: '' })
-    expect(errors.some((e) => e.field === 'condicion')).toBe(true)
+    expect(errors.some((e) => e.field === 'condicion')).toBe(false)
   })
 })
