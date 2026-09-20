@@ -115,11 +115,11 @@ export function CondicionArcanaField({ value, onChange }: CondicionArcanaFieldPr
     ? value as CondicionEfecto
     : { trigger: 'inicio_choque', condiciones: [] }
 
-  const updateTrigger = (trigger: string) => {
-    onChange({ ...condicion, trigger: trigger as CondicionEfecto['trigger'] })
+  const updateTrigger = (trigger: string | undefined) => {
+    if (trigger) onChange({ ...condicion, trigger: trigger as CondicionEfecto['trigger'] })
   }
 
-  const updateControladorTrigger = (controlador: string) => {
+  const updateControladorTrigger = (controlador: string | undefined) => {
     onChange({ ...condicion, controladorTrigger: controlador === 'rival' ? 'rival' : undefined })
   }
 

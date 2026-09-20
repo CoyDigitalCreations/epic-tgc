@@ -74,14 +74,6 @@ function efectosDe(card: AnyCard): { etiqueta: string; texto: string }[] {
     }
     case 'Mística':
       return card.efecto ? [{ etiqueta: 'Efecto', texto: card.efecto }] : []
-    case 'Arcana': {
-      const l: { etiqueta: string; texto: string }[] = []
-      const condicion = card.efectos?.find((e) => e.tipo === 'pasivo')?.texto
-      const recompensa = card.efectos?.find((e) => e.tipo === 'hechizo')?.texto
-      if (condicion) l.push({ etiqueta: 'Condición', texto: condicion })
-      if (recompensa) l.push({ etiqueta: 'Recompensa', texto: recompensa })
-      return l
-    }
     case 'Éter': {
       const l: { etiqueta: string; texto: string }[] = []
       if (card.efectoReserva) l.push({ etiqueta: 'Reserva', texto: card.efectoReserva })

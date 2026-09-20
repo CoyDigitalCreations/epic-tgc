@@ -6,8 +6,13 @@
  */
 import { getCardMeta, esCampeon } from '../cards'
 import { registrarEfectoGenerico } from '../efectos'
-import { armarPendiente } from '../efectos'
 import type { Ctx, GameState, PlayerId } from '../types'
+
+/** Agrega un objetivo pendiente a la cola del jugador */
+function armarPendiente(s: GameState, jugador: PlayerId, instId: string, trigger: string, opciones: string[]): void {
+  if (opciones.length === 0) return
+  s.objetivosPendientes = [...(s.objetivosPendientes ?? []), { jugador, instId, trigger, opciones }]
+}
 
 /** Busca campeones en una zona específica del jugador */
 function campeonesEnZona(s: GameState, jugador: PlayerId, zona: string): string[] {
