@@ -71,7 +71,7 @@ export const EFFECT_CATEGORIES = [
   },
   {
     nombre: 'Robo',
-    efectos: ['draw', 'scry', 'tutor'] as const,
+    efectos: ['draw', 'scry', 'tutor', 'rival_discard'] as const,
   },
   {
     nombre: 'Combate',
@@ -103,13 +103,21 @@ const EFECTO_OPTIONS = [
   { value: 'recuperar_exilio', label: 'Devolver del Exilio' },
   { value: 'invocar', label: 'Invocar' },
   { value: 'invocar_y_equipar', label: 'Invocar y equipar' },
+  { value: 'rival_discard', label: 'Descartar carta rival' },
 ]
 const DURACION_OPTIONS = [
   { value: 'permanente', label: 'Permanente' }, { value: 'turno', label: 'Este turno' },
-  { value: 'hasta_alba', label: 'Hasta tu Alba' }, { value: 'hasta_alba_oponente', label: 'Hasta la Alba del oponente' },
   { value: 'mientras_ester_bloqueado', label: 'Mientras éter bloqueado' },
   { value: 'mientras_en_campo', label: 'Mientras esté en campo' }, { value: 'mientras_equipped', label: 'Mientras equipado' },
   { value: '1_por_turno', label: '1 por turno' }, { value: 'n_turnos', label: 'N turnos' },
+  { value: 'hasta_fase', label: 'Hasta fase...' },
+]
+const DURACION_FASE_OPTIONS = [
+  { value: 'alba', label: 'Alba' }, { value: 'forja', label: 'Forja' },
+  { value: 'choque', label: 'Choque' }, { value: 'ocaso', label: 'Ocaso' },
+]
+const DURACION_CONTROLADOR_OPTIONS = [
+  { value: '', label: 'Tu' }, { value: 'rival', label: 'Del rival' },
 ]
 const OBJETIVO_TIPO_OPTIONS = [
   { value: 'self', label: 'Esta carta' }, { value: 'campeon', label: 'Campeón' },
@@ -234,10 +242,10 @@ export function EffectField({ label, value, onChange, cardType }: EffectFieldPro
   const showTrigger = data.tipo !== 'comandante'
   const showObjetivo = data.tipo !== 'comandante'
   const showStats = data.efecto === 'buff' || data.efecto === 'debuff'
-  const showCantidad = data.efecto ? ['draw', 'destroy', 'exile', 'scry', 'tutor', 'mover', 'return_ether'].includes(data.efecto) : false
+  const showCantidad = data.efecto === 'tutor' || (data.efecto ? ['draw', 'destroy', 'exile', 'scry', 'mover', 'return_ether', 'return_hand', 'steal_champion', 'steal_ether', 'block_ether', 'free_ether', 'invocar', 'invocar_y_equipar'].includes(data.efecto) : false)
   const showKeyword = data.efecto === 'grant_keyword'
   const showDuracion = data.tipo !== 'comandante'
-  const showReagrupar = data.costo?.tipo === 'eter_bloqueado' && (cardType === 'Campeón' || cardType === 'Éter')
+  const showReagrupar = (data.costo?.tipo === 'eter_bloqueado' || data.costo?.tipo === 'bloqueo_fijo') && (cardType === 'Campeón' || cardType === 'Éter')
   return (
     <div className="border border-gray-600/50 rounded-lg p-3 bg-gray-900/50">
       <p className="text-xs font-semibold text-gray-300 mb-2">{label}</p>
@@ -286,8 +294,18 @@ export function EffectField({ label, value, onChange, cardType }: EffectFieldPro
           ]} onChange={(v) => update({ zonaOrigen: v as any })} />
         )}
         {/* Capa 7: Duración */}
-        {showDuracion && <SelectField label="Duración" value={data.duracion} options={DURACION_OPTIONS} onChange={(v) => update({ duracion: v as any })} />}
-        {showDuracion && data.duracion === 'n_turnos' && <NumberInput label="Turnos" value={data.duracionTurnos} onChange={(v) => update({ duracionTurnos: v })} min={1} max={10} />}
+        {showDuracion && (
+          <div className="col-span-2 flex flex-wrap gap-2 mt-2 items-end">
+            <SelectField label="Duración" value={data.duracion} options={DURACION_OPTIONS} onChange={(v) => update({ duracion: v as any, duracionFase: undefined, duracionControlador: undefined })} />
+            {data.duracion === 'n_turnos' && <NumberInput label="Turnos" value={data.duracionTurnos} onChange={(v) => update({ duracionTurnos: v })} min={1} max={10} />}
+            {data.duracion === 'hasta_fase' && (
+              <>
+                <SelectField label="Fase" value={data.duracionFase} options={DURACION_FASE_OPTIONS} onChange={(v) => update({ duracionFase: v as any })} />
+                <SelectField label="De quién" value={data.duracionControlador === 'rival' ? 'rival' : ''} options={DURACION_CONTROLADOR_OPTIONS} onChange={(v) => update({ duracionControlador: v === 'rival' ? 'rival' : undefined })} />
+              </>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Capa 3: Costo (for disparo/continuo) */}
@@ -315,11 +333,25 @@ export function EffectField({ label, value, onChange, cardType }: EffectFieldPro
       )}
 
       {/* Capa 4b: Zona destino (for return_ether, move, tutor effects) */}
-      {showObjetivo && data.efecto && ['return_ether', 'free_ether', 'block_ether', 'mover', 'tutor'].includes(data.efecto) && (
-        <div className="grid grid-cols-2 gap-2 mt-2">
-          <SelectField label="Zona destino" value={data.objetivo?.zonaDestino} options={ZONA_OPTIONS} onChange={(v) => updateObjetivo({ zonaDestino: v as any })} />
+      {data.efecto && ['return_ether', 'free_ether', 'block_ether', 'mover', 'tutor'].includes(data.efecto) && (
+        <div className="grid grid-cols-2 gap-2 mt-2 border border-gray-600/30 rounded p-2">
+          <SelectField label="Agregar a zona" value={data.objetivo?.zonaDestino} options={[
+            { value: 'mano', label: 'Tu mano' },
+            { value: 'campo', label: 'Campo (invocar)' },
+            { value: 'reserva', label: 'Reserva (2A)' },
+            { value: 'pagado', label: 'Zona de pago (1A)' },
+            { value: 'cementerio', label: 'Cementerio' },
+            { value: 'exilio', label: 'Exilio' },
+          ]} onChange={(v) => updateObjetivo({ zonaDestino: v as any })} />
           {data.objetivo?.zonaDestino && (
-            <div className="flex items-center gap-2 mt-2">
+            <SelectField label="Zona de quién" value={data.objetivo?.controladorDestino ?? ''} options={[
+              { value: '', label: 'Tuya' },
+              { value: 'rival', label: 'Del rival' },
+              { value: 'dueno', label: 'Del dueño' },
+            ]} onChange={(v) => updateObjetivo({ controladorDestino: v || undefined })} />
+          )}
+          {['tutor', 'mover', 'return_ether'].includes(data.efecto ?? '') && data.objetivo?.zonaDestino && (
+            <div className="flex items-center gap-2">
               <input
                 type="checkbox"
                 id="sinActivarEfecto"
@@ -462,10 +494,10 @@ export function EffectField({ label, value, onChange, cardType }: EffectFieldPro
                   const [orden, stat] = v.split('_') as [string, string]
                   updateFiltros({ seleccionar: { stat: stat as any, orden: orden as any } })
                 }} />
-                <SelectField label="Agotamiento" value={data.objetivo?.filtros?.agotado?.toString()} options={[{ value: 'true', label: 'Esté agotado' }, { value: 'false', label: 'No esté agotado' }]} onChange={(v) => updateFiltros({ agotado: v === '' ? undefined : v === 'true' })} />
-                <SelectField label="Éter bloqueado" value={data.objetivo?.filtros?.conEterBloqueado?.toString()} options={[{ value: 'true', label: 'Con éter bloqueado' }, { value: 'false', label: 'Sin éter bloqueado' }]} onChange={(v) => updateFiltros({ conEterBloqueado: v === '' ? undefined : v === 'true' })} />
-                <SelectField label="Puede bloquear Éter" value={data.objetivo?.filtros?.puedeBloquearEter?.toString()} options={[{ value: '', label: 'Cualquiera' }, { value: 'true', label: 'Puede recibir éter' }]} onChange={(v) => updateFiltros({ puedeBloquearEter: v === '' ? undefined : v === 'true' })} />
-                <SelectField label="Equipado" value={data.objetivo?.filtros?.equipado?.toString()} options={[{ value: 'true', label: 'Equipado' }, { value: 'false', label: 'Sin equipar' }]} onChange={(v) => updateFiltros({ equipado: v === '' ? undefined : v === 'true' })} />
+                <SelectField label="Agotamiento" value={data.objetivo?.filtros?.agotado?.toString()} options={[{ value: '', label: 'Cualquiera' }, { value: 'true', label: 'Esté agotado' }, { value: 'false', label: 'No esté agotado' }]} onChange={(v) => updateFiltros({ agotado: v === 'true' ? true : v === 'false' ? false : undefined })} />
+                <SelectField label="Éter bloqueado" value={data.objetivo?.filtros?.conEterBloqueado?.toString()} options={[{ value: '', label: 'Cualquiera' }, { value: 'true', label: 'Con éter bloqueado' }, { value: 'false', label: 'Sin éter bloqueado' }]} onChange={(v) => updateFiltros({ conEterBloqueado: v === 'true' ? true : v === 'false' ? false : undefined })} />
+                <SelectField label="Puede bloquear Éter" value={data.objetivo?.filtros?.puedeBloquearEter?.toString()} options={[{ value: '', label: 'Cualquiera' }, { value: 'true', label: 'Puede recibir éter' }]} onChange={(v) => updateFiltros({ puedeBloquearEter: v === 'true' ? true : undefined })} />
+                <SelectField label="Equipado" value={data.objetivo?.filtros?.equipado?.toString()} options={[{ value: '', label: 'Cualquiera' }, { value: 'true', label: 'Equipado' }, { value: 'false', label: 'Sin equipar' }]} onChange={(v) => updateFiltros({ equipado: v === 'true' ? true : v === 'false' ? false : undefined })} />
               </>
             )}
             

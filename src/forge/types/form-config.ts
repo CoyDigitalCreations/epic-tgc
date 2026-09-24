@@ -19,6 +19,13 @@ export interface FieldDef {
 /** Campos comunes a todos los tipos (metadata de autoría) */
 export const META_FIELDS: FieldDef[] = [
   {
+    name: 'id',
+    label: 'ID / Número de Serie',
+    type: 'text',
+    required: false,
+    placeholder: 'Ej: FB-001 (aparece en la carta)',
+  },
+  {
     name: 'paqueteId',
     label: 'Paquete',
     type: 'paquete',

@@ -1,12 +1,25 @@
-import { useRef, useState, type ChangeEvent } from 'react'
+import { useRef, useState, type ChangeEvent, type ReactNode } from 'react'
 import { useCardStore } from '../store/useCardStore'
 import { exportCardToPng } from '../utils/export-png'
 import { fileToCompressedDataUrl, isValidImageFile } from '../utils/file-to-data-url'
 import { useCardImage } from '../hooks/useCardImage'
 import type { AnyCard, CondicionEfecto } from '../../shared/types'
-import { FACCION_COLORS, FACCION_IMAGES } from '../../shared/types'
+import { FACCION_COLORS, FACCION_IMAGES, KEYWORDS } from '../../shared/types'
 import { CardFrame, CostGem, EtherHexagon, NamePlate, RuneIcon, StatBadge, TextScroll } from './card-art'
 import { condicionArcanaTexto } from './fields/CondicionArcanaField'
+
+/** Wrap keywords in bold tags within a text string */
+function highlightKeywords(text: string): ReactNode[] {
+  const keywords = KEYWORDS.map(k => k).join('|')
+  const regex = new RegExp(`\\b(${keywords})\\b`, 'g')
+  const parts = text.split(regex)
+  return parts.map((part, i) => {
+    if (KEYWORDS.includes(part as any)) {
+      return <strong key={i}>{part}</strong>
+    }
+    return part
+  })
+}
 
 /* ───────── type theme ───────── */
 const TYPE_THEME: Record<
@@ -486,21 +499,21 @@ export function RenderCarta({
               if (pasivoText) {
                 parts.push(
                   <p key="pasivo" style={{ fontFamily: '"Inter", sans-serif', fontSize: fluidSize(pasivoText, 13.5, 450, totalLen), lineHeight: 1.35, fontWeight: 500, color: '#261a0e', margin: 0 }}>
-                    <strong>Pasivo:</strong> {pasivoText}
+                    <strong>Pasivo:</strong> {highlightKeywords(pasivoText)}
                   </p>
                 )
               }
               if (disparoText) {
                 parts.push(
                   <p key="disparo" style={{ fontFamily: '"Inter", sans-serif', fontSize: fluidSize(disparoText, 13.5, 450, totalLen), lineHeight: 1.35, fontWeight: 500, color: '#261a0e', margin: 0, marginTop: parts.length > 0 ? 8 : 0 }}>
-                    <strong>Disparo:</strong> {disparoText}
+                    <strong>Disparo:</strong> {highlightKeywords(disparoText)}
                   </p>
                 )
               }
               if (continuoText) {
                 parts.push(
                   <p key="continuo" style={{ fontFamily: '"Inter", sans-serif', fontSize: fluidSize(continuoText, 13.5, 450, totalLen), lineHeight: 1.35, fontWeight: 500, color: '#261a0e', margin: 0, marginTop: parts.length > 0 ? 8 : 0 }}>
-                    <strong>Continuo:</strong> {continuoText}
+                    <strong>Continuo:</strong> {highlightKeywords(continuoText)}
                   </p>
                 )
               }
@@ -508,7 +521,7 @@ export function RenderCarta({
               if (comandanteText) {
                 parts.push(
                   <p key="comandante" style={{ fontFamily: '"Inter", sans-serif', fontSize: fluidSize(comandanteText, 13.5, 450, totalLen), lineHeight: 1.35, fontWeight: 500, color: '#261a0e', margin: 0, marginTop: parts.length > 0 ? 8 : 0 }}>
-                    <strong>Comandante:</strong> {comandanteText}
+                    <strong>Comandante:</strong> {highlightKeywords(comandanteText)}
                   </p>
                 )
               }
@@ -529,7 +542,7 @@ export function RenderCarta({
                     margin: 0,
                   }}
                 >
-                  <strong>Efecto:</strong> {texto}
+                  <strong>Efecto:</strong> {highlightKeywords(texto)}
                 </p>
               ) : null
             }
@@ -550,14 +563,14 @@ export function RenderCarta({
               if (condicionText) {
                 parts.push(
                   <p key="condicion" style={{ fontFamily: '"Inter", sans-serif', fontSize: fluidSize(condicionText, 13.5, 450, totalLen), lineHeight: 1.4, color: '#1c130b', margin: 0 }}>
-                    <strong>Condición:</strong> {condicionText}
+                    <strong>Condición:</strong> {highlightKeywords(condicionText)}
                   </p>
                 )
               }
               if (recompensaText) {
                 parts.push(
                   <p key="recompensa" style={{ fontFamily: '"Inter", sans-serif', fontSize: fluidSize(recompensaText, 13.5, 450, totalLen), lineHeight: 1.4, color: '#1c130b', margin: '4px 0 0' }}>
-                    <strong>Recompensa:</strong> {recompensaText}
+                    <strong>Recompensa:</strong> {highlightKeywords(recompensaText)}
                   </p>
                 )
               }
@@ -579,7 +592,7 @@ export function RenderCarta({
               if (reservaText) {
                 parts.push(
                   <p key="reserva" style={{ fontFamily: '"Inter", sans-serif', fontSize: fluidSize(reservaText, 14, 450, totalLen), lineHeight: 1.4, color: '#1c130b', margin: 0 }}>
-                    <strong>Reserva (2A):</strong> {reservaText}
+                    <strong>Reserva (2A):</strong> {highlightKeywords(reservaText)}
                   </p>
                 )
               }
@@ -589,14 +602,14 @@ export function RenderCarta({
                 const variantLabel = pagoEffect?.trigger === 'al_pagar_eter' ? 'Gatillo' : 'Pasivo'
                 parts.push(
                   <p key="pago" style={{ fontFamily: '"Inter", sans-serif', fontSize: fluidSize(pagoText, 14, 450, totalLen), lineHeight: 1.4, color: '#1c130b', margin: 0, marginTop: parts.length > 0 ? 8 : 0 }}>
-                    <strong>Pago (1A, {variantLabel}):</strong> {pagoText}
+                    <strong>Pago (1A, {variantLabel}):</strong> {highlightKeywords(pagoText)}
                   </p>
                 )
               }
               if (bloqueoText) {
                 parts.push(
                   <p key="bloqueo" style={{ fontFamily: '"Inter", sans-serif', fontSize: fluidSize(bloqueoText, 14, 450, totalLen), lineHeight: 1.4, color: '#1c130b', margin: 0, marginTop: parts.length > 0 ? 8 : 0 }}>
-                    <strong>Bloqueo (1B-1F):</strong> {bloqueoText}
+                    <strong>Bloqueo (1B-1F):</strong> {highlightKeywords(bloqueoText)}
                   </p>
                 )
               }
@@ -617,7 +630,7 @@ export function RenderCarta({
                     margin: 0,
                   }}
                 >
-                  <strong>Efecto Permanente:</strong> {texto}
+                  <strong>Efecto Permanente:</strong> {highlightKeywords(texto)}
                 </p>
               ) : null
             }
@@ -660,7 +673,7 @@ export function RenderCarta({
         <span
           style={{
             fontFamily: '"Inter", monospace',
-            fontSize: 10,
+            fontSize: 20,
             fontWeight: 600,
             color: '#94a3b8',
             letterSpacing: '1px',

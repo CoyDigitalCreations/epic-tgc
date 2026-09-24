@@ -77,13 +77,17 @@ export interface EfectoData {
   // ── Capa 8b: TIPO NEGACIÓN (opcional) ──
   /** Type of negation (for negar effect) */
   tipoNegacion?: 'invocacion' | 'activacion' | 'resolucion' | 'efecto_activo' | 'pago' | 'ataque' | 'bloqueo' | 'robo'
-
   // ── Capa 9: DURACIÓN (opcional) ──
   /** How long this effect lasts */
-  duracion?: 'permanente' | 'turno' | 'hasta_alba' | 'hasta_alba_oponente' | 'mientras_ester_bloqueado'
+  duracion?: 'permanente' | 'turno' | 'mientras_ester_bloqueado'
            | 'mientras_en_campo' | 'mientras_equipped' | '1_por_turno' | 'n_turnos'
+           | 'hasta_fase'
   /** Number of turns when duracion='n_turnos' */
   duracionTurnos?: number
+  /** Fase destino when duracion='hasta_fase' */
+  duracionFase?: 'alba' | 'forja' | 'choque' | 'ocaso'
+  /** A quién pertenece la fase when duracion='hasta_fase' */
+  duracionControlador?: 'propio' | 'rival'
 
   // ── Capa 10: REAGRUPAR (opcional) ──
   /** Regroup ether — "Al inicio de la fase [X], reagrupa el Éter usado" */
@@ -170,6 +174,8 @@ export interface ObjetivoEfecto {
   zona: 'campo' | 'cementerio' | 'exilio' | 'reserva' | 'pagado' | 'bloqueado' | 'mano' | 'mazo'
   /** Where to move the target (for return_ether, move effects) */
   zonaDestino?: 'campo' | 'cementerio' | 'exilio' | 'reserva' | 'pagado' | 'bloqueado' | 'mano' | 'mazo'
+  /** Who controls the destination zone */
+  controladorDestino?: 'propio' | 'rival' | 'dueno'
   /** Additional filters */
   filtros?: FiltroObjetivo
 }

@@ -9,6 +9,7 @@ import { TextField, NumberField, SelectField, TextAreaField, MultiSelectField } 
 import { EffectField } from './fields/EffectField'
 import { CondicionArcanaField } from './fields/CondicionArcanaField'
 import { EffectList } from './EffectList'
+import { generateEffectText } from './EffectList'
 import { EffectManualModal } from './EffectManualModal'
 import { ImageUpload } from './ImageUpload'
 import { PAQUETES } from '../../shared/data/paquetes'
@@ -175,14 +176,30 @@ export function CardForm() {
       }
       case 'effect': {
         const effectData = value as Record<string, unknown> | undefined
+        const effectTexto = effectData?.texto as string | undefined
         return (
-          <EffectField
-            key={field.name}
-            label={field.label}
-            value={effectData as any}
-            onChange={(v) => onChange(v)}
-            cardType={(draft.type as CardType) || 'Campeón'}
-          />
+          <div>
+            <EffectField
+              key={field.name}
+              label={field.label}
+              value={effectData as any}
+              onChange={(v) => {
+                if (v && typeof v === 'object') {
+                  const withText = { ...v, texto: generateEffectText(v as EfectoData) }
+                  onChange(withText)
+                } else {
+                  onChange(v)
+                }
+              }}
+              cardType={(draft.type as CardType) || 'Campeón'}
+            />
+            {effectTexto && (
+              <div className="mt-1 p-2 bg-gray-900/50 rounded border border-gray-700/50">
+                <p className="text-[10px] uppercase tracking-wider text-gray-500 mb-0.5">Texto generado</p>
+                <p className="text-xs text-gray-300 italic">{effectTexto}</p>
+              </div>
+            )}
+          </div>
         )
       }
       case 'effect-list': {
