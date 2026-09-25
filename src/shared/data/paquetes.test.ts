@@ -90,7 +90,7 @@ describe('Paquetes', () => {
         'Éter': (c) => 'efectoReserva' in c || 'efectoPago' in c || 'efectoBloqueo' in c,
         'Campeón': (c) => 'stats' in c && ('efectoPasivo' in c || 'efectoDisparo' in c || true),
         'Mística': (c) => typeof (c as { efecto?: string }).efecto === 'string',
-        'Arcana': (c) => typeof (c as { efecto?: string }).efecto === 'string' || (typeof (c as { condicion?: string }).condicion === 'string' && typeof (c as { recompensa?: string }).recompensa === 'string'),
+        'Arcana': (c) => typeof (c as { efecto?: string }).efecto === 'string' || ((c as { condicion?: unknown }).condicion !== undefined && typeof (c as { recompensa?: string }).recompensa === 'string'),
         'Vínculo': (c) => typeof (c as { efecto?: string }).efecto === 'string',
       }
       for (const card of ESTASIS_CARDS) {
@@ -166,7 +166,7 @@ describe('Paquetes', () => {
         'Éter': (c) => 'efectoReserva' in c || 'efectoPago' in c || 'efectoBloqueo' in c,
         'Campeón': (c) => 'stats' in c && ('efectoPasivo' in c || 'efectoDisparo' in c || true),
         'Mística': (c) => typeof (c as { efecto?: string }).efecto === 'string',
-        'Arcana': (c) => typeof (c as { efecto?: string }).efecto === 'string' || (typeof (c as { condicion?: string }).condicion === 'string' && typeof (c as { recompensa?: string }).recompensa === 'string'),
+        'Arcana': (c) => typeof (c as { efecto?: string }).efecto === 'string' || ((c as { condicion?: unknown }).condicion !== undefined && typeof (c as { recompensa?: string }).recompensa === 'string'),
         'Vínculo': (c) => typeof (c as { efecto?: string }).efecto === 'string',
       }
       for (const card of DISONANCIA_CARDS) {
@@ -193,7 +193,7 @@ describe('Paquetes', () => {
       // Mismo presupuesto: Única, Soberano, Singular, 9/9, coste 4
       expect(ragnar.rarity).toBe('Única')
       expect(ragnar.roles).toEqual(['Soberano'])
-      expect(ragnar.catHabilidad).toBe('Singular')
+      expect(ragnar.catHabilidad).toEqual(['Singular'])
       expect(ragnar.stats).toEqual({ cost: 4, poder: 9, resistencia: 9 })
 
       // Keywords complementarias: Aurora Inmortal (no muere por efectos),

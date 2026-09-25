@@ -98,7 +98,7 @@ describe('MazoEditor', () => {
       campeonCustom({
         stats: { cost: 3, poder: 4, resistencia: 4 },
         efectoPasivo: 'Gana +1 poder por Éter bloqueado.',
-        efectoActivo: 'Paga 1 Éter: agota un Campeón rival.',
+        efectoDisparo: 'Paga 1 Éter: agota un Campeón rival.',
       }),
     ])
     render(<MazoEditor onGuardar={vi.fn()} onCancelar={vi.fn()} />)
@@ -109,7 +109,7 @@ describe('MazoEditor', () => {
     expect(within(fila).getByText(/ATQ 4 RES 4/)).toBeInTheDocument()
     // Efectos con su etiqueta (mismo criterio de nombres que CardPreview)
     expect(within(fila).getByText('Pasivo:')).toBeInTheDocument()
-    expect(within(fila).getByText('Activo:')).toBeInTheDocument()
+    expect(within(fila).getByText('Disparo:')).toBeInTheDocument()
     expect(within(fila).getByText(/Gana \+1 poder por Éter bloqueado\./)).toBeInTheDocument()
     expect(within(fila).getByText(/Paga 1 Éter: agota un Campeón rival\./)).toBeInTheDocument()
   })
