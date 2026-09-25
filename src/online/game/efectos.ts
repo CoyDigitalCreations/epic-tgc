@@ -1,5 +1,6 @@
 import { esCampeon, getCardMeta, type AnyCard } from './cards'
 import type { CardInstance, Ctx, ExpiraModificador, GameState, PlayerId } from './types'
+import { interpretEffect } from './effectInterpreter'
 
 /**
  * Infraestructura de efectos (change 3, ADR-20..22): registro → dispatch.
@@ -260,23 +261,62 @@ export function dispararTrigger(
     const cardId = inst?.cardId
     if (!inst || !cardId) continue
 
-    // Handler por cardId (registrado específicamente para esta carta)
+    // 1. Handler por cardId (registrado específicamente para esta carta)
     const fn = porCarta?.get(cardId)
     if (fn) {
       fn(s, ctx, inst, payload)
       continue
     }
 
-    // Handler genérico por tipo de efecto (lee efectos[] de la carta)
+    // 2. Handler genérico por tipo de efecto (lee efectos[] de la carta)
+    let genericHandled = false
     for (const [efectoTipo, genericFn] of registroGenerico) {
       const meta = getCardMeta(cardId)
       if (!meta || !('efectos' in meta)) continue
       const tieneEfecto = (meta as any).efectos?.some((e: any) => e.efecto === efectoTipo)
       if (tieneEfecto) {
         genericFn(s, ctx, inst, payload)
+        genericHandled = true
         break // un solo handler genérico por carta
       }
     }
+
+    // 3. If no generic handler, check EfectoData — use interpreter
+    // NOTE: Interpreter is disabled for now — existing generic handlers cover all current effects.
+    // Enable when adding cards without generic handlers.
+    /*
+    if (!genericHandled) {
+      const meta = getCardMeta(cardId)
+      if (meta && 'efectos' in meta) {
+        const efectos = (meta as AnyCard & { efectos?: any[] }).efectos
+        if (efectos && Array.isArray(efectos)) {
+          // Find effect with matching trigger
+          const triggerMapping: Record<string, string> = {
+            'al-invocar': 'al_invocar',
+            'al-atacar': 'al_atacar',
+            'al-matar-en-combate': 'al_matar_en_combate',
+            'al-inicio-alba': 'inicio_alba',
+            'al-inicio-choque': 'inicio_choque',
+            'al-pagar-eter': 'al_pagar_eter',
+            'al-jugar-mistica': 'al_jugar_mistica',
+            'al-ser-enviado-al-cementerio': 'al_ser_enviado_al_cementerio',
+            'al-ser-destruido-vinculo': 'al_ser_destruido_vinculo',
+            'al-resolver-cadena': 'al_resolver_cadena',
+            'al-activar-habilidad': 'al_activar_habilidad',
+          }
+          const efectoTrigger = triggerMapping[trigger]
+          
+          for (const efecto of efectos) {
+            if (efecto.trigger === efectoTrigger && efecto.efecto) {
+              // Found matching EfectoData — use interpreter
+              interpretEffect(s, ctx, inst, efecto, payload)
+              break
+            }
+          }
+        }
+      }
+    }
+    */
   }
 }
 
