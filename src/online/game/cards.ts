@@ -53,68 +53,35 @@ export function esVinculo(card: AnyCard): card is VinculoCard {
 
 /**
  * Extrae el costo en Éteres de una habilidad activa.
- * Prefiere efectos[].costo.cantidad si está disponible.
- * Fallback: regex sobre efectoDisparo (backward compatible).
+ * Lee de efectos[] — el sistema unificado.
  */
 export function costeEterHabilidad(card: AnyCard): number {
-  // 1. Prefer efectos[] array (unified system)
   if ('efectos' in card && card.efectos) {
     const disparo = card.efectos.find((e) => e.tipo === 'disparo')
     if (disparo?.costo?.cantidad !== undefined) return disparo.costo.cantidad
     const continuo = card.efectos.find((e) => e.tipo === 'continuo')
     if (continuo?.costo?.cantidad !== undefined) return continuo.costo.cantidad
   }
-  // 2. Fallback: legacy efectoDisparoData
-  if ('efectoDisparoData' in card && (card as any).efectoDisparoData?.costoMax !== undefined) {
-    return (card as any).efectoDisparoData.costoMax
-  }
-  // 3. Fallback: regex parsing (backward compatible)
-  if (!('efectoDisparo' in card) || !card.efectoDisparo) return 0
-  const match = card.efectoDisparo.match(/(?:de\s+)?(\d+)\s+Éter/)
-  return match ? parseInt(match[1], 10) : 0
+  return 0
 }
 
 /**
- * Determina si un campeón tiene alguna razón para tener Éter bloqueado.
- *
- * Retorna true si:
- * 1. Su efectoDisparo contiene 'bloqueado' (habilidad activa: Korr, Cassandra, Aurora, Ragnar)
- * 2. Su efectoPasivo referencia 'Éter bloqueado' (pasivo: FB-005, DS-006)
- *
- * Retorna false para campeones como Draven, Emisario, etc. que NO se benefician
- * de tener éter bloqueado.
- */
-/**
  * true si el campeón tiene una habilidad que requiere (o puede usar) éter bloqueado.
- * Prefiere efectos[] si está disponible.
- * Fallback: text pattern matching (backward compatible).
+ * Lee de efectos[] — el sistema unificado.
  */
 export function campeonNecesitaEterBloqueado(card: AnyCard): boolean {
-  // 1. Prefer efectos[] array (unified system)
   if ('efectos' in card && card.efectos) {
     for (const e of card.efectos) {
       if (e.costo?.tipo === 'eter_bloqueado') return true
     }
   }
-  // 2. Fallback: legacy efectoDisparoData / efectoPasivoData
-  const efectoData = (card as any).efectoDisparoData
-  if (efectoData?.costoTipo === 'eter_bloqueado') return true
-  const efectoPasivoData = (card as any).efectoPasivoData
-  if (efectoPasivoData?.trigger === 'al-inicio-alba' && efectoPasivoData?.condicion?.includes('bloqueado')) return true
-
-  // 3. Fallback: text pattern matching (backward compatible)
-  if ('efectoContinuo' in card && card.efectoContinuo?.includes('bloqueado')) return true
-  if ('efectoDisparo' in card && card.efectoDisparo?.includes('bloqueado')) return true
-  if ('efectoPasivo' in card && card.efectoPasivo?.includes('Éter bloqueado')) return true
   return false
 }
 
 /** true si el campeón tiene efecto Continuo (bloquea éter, agota al activar). */
 export function esContinuo(card: AnyCard): boolean {
-  // 1. Prefer efectos[] array (unified system)
   if ('efectos' in card && card.efectos) {
     return card.efectos.some((e) => e.tipo === 'continuo')
   }
-  // 2. Fallback: legacy field
-  return 'efectoContinuo' in card && !!(card as AnyCard & { efectoContinuo?: string }).efectoContinuo
+  return false
 }

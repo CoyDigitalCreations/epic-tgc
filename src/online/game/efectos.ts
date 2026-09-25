@@ -178,10 +178,10 @@ export function aurasDe(s: GameState, id: string): AurasAplicadas {
       }
 
       // Habilidades activas "Bloqueado" (FB-016 Cassandra, DS-016 Korr):
-      // si la fuente tiene éteres bloqueados y tiene efectoDisparo con 'bloqueado',
+      // si la fuente tiene éteres bloqueados y tiene efecto con costo de éter bloqueado,
       // aplica un aura a TODOS los campeones que controla el dueño de la fuente.
       if (
-        'efectoDisparo' in fuenteMeta && (fuenteMeta as any).efectoDisparo?.includes('bloqueado') &&
+        'efectos' in fuenteMeta && fuenteMeta.efectos?.some((e) => e.costo?.tipo === 'eter_bloqueado') &&
         (fuenteInst.eterBloqueado?.length ?? 0) > 0
       ) {
         // Cassandra (FB-016): +1 RES a todos los que controla
@@ -282,9 +282,6 @@ export function dispararTrigger(
     }
 
     // 3. If no generic handler, check EfectoData — use interpreter
-    // NOTE: Interpreter is disabled for now — existing generic handlers cover all current effects.
-    // Enable when adding cards without generic handlers.
-    /*
     if (!genericHandled) {
       const meta = getCardMeta(cardId)
       if (meta && 'efectos' in meta) {
@@ -316,7 +313,6 @@ export function dispararTrigger(
         }
       }
     }
-    */
   }
 }
 

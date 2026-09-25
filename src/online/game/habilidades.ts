@@ -44,10 +44,8 @@ export function validarActivarArcana(state: GameState, action: Extract<Action, {
 }
 
 /**
- * Validar activar_habilidad — Campeón propio con efectoDisparo
- * en campo del jugador activo. Dos patrones de coste:
- *  - "Bloqueado": eterIds de la Reserva que comparten facción → bloqueados en el Campeón.
- *  - "Agota": eterIds de la Reserva → pagados (1A) + campeón agotado + 1/turno.
+ * Validar activar_habilidad — Campeón propio con efecto activo (disparo o continuo).
+ * Lee de efectos[] — el sistema unificado.
  */
 export function validarActivarHabilidad(state: GameState, action: Extract<Action, { type: 'activar_habilidad' }>): string | null {
   const p = state.players[state.turno]
@@ -56,13 +54,16 @@ export function validarActivarHabilidad(state: GameState, action: Extract<Action
   if (!p.campo.campeones.includes(action.cardInstanceId)) return 'la carta no está en tu campo'
   const meta = inst.cardId ? getCardMeta(inst.cardId) : null
   if (!meta) return 'carta desconocida'
-  const tieneContinuo = 'efectoContinuo' in meta && !!(meta as any).efectoContinuo
-  const tieneDisparo = 'efectoDisparo' in meta && !!(meta as any).efectoDisparo
+
+  // Check efectos[] for active abilities
+  const tieneEfectos = 'efectos' in meta && meta.efectos
+  const tieneContinuo = tieneEfectos && meta.efectos!.some((e) => e.tipo === 'continuo')
+  const tieneDisparo = tieneEfectos && meta.efectos!.some((e) => e.tipo === 'disparo')
   if (!tieneContinuo && !tieneDisparo) return 'esta carta no tiene efecto activo'
 
   const esContinuo = tieneContinuo
-  // Patrón "Bloqueado": solo si NO es agota (Vorlag tiene "bloqueado" en texto pero es Agota)
-  const esBloqueado = esContinuo || ((meta as any).efectoDisparo?.includes('bloqueado') ?? false)
+  // Check if it's a "blocked ether" pattern (continuo) or "exhaust" pattern
+  const esBloqueado = esContinuo || meta.efectos!.some((e) => e.costo?.tipo === 'eter_bloqueado')
 
   if (esBloqueado) {
     // Patrón "Bloqueado": eterIds de la Reserva → Campeón.eterBloqueado
@@ -166,28 +167,30 @@ export function ejecutarActivarHabilidad(s: GameState, action: Extract<Action, {
   const meta = inst.cardId ? getCardMeta(inst.cardId) : null
   if (!meta) return
 
-  // Continuo (efectoContinuo): bloquea éter, agota al activar
-  const esContinuo = 'efectoContinuo' in meta && !!(meta as any).efectoContinuo
-  // Disparo con éter bloqueado (legacy): no agota
-  const esBloqueadoLegacy = !esContinuo && ('efectoDisparo' in meta && ((meta as any).efectoDisparo?.includes('bloqueado') ?? false))
+  // Check efectos[] for active abilities
+  const tieneEfectos = 'efectos' in meta && meta.efectos
+  const esContinuo = tieneEfectos && meta.efectos!.some((e) => e.tipo === 'continuo')
+  const esBloqueado = esContinuo || (tieneEfectos && meta.efectos!.some((e) => e.costo?.tipo === 'eter_bloqueado'))
 
-  if (esContinuo || esBloqueadoLegacy) {
+  if (esContinuo || esBloqueado) {
     // Patrón "Bloqueado": mueve éteres de Reserva → Campeón.eterBloqueado
     for (const eterId of action.eterIds) {
       p.eterReserva.splice(p.eterReserva.indexOf(eterId), 1)
     }
     inst.eterBloqueado = [...(inst.eterBloqueado ?? []), ...action.eterIds]
-    // Si el texto indica "Alba" → registrar efecto pendiente para liberar en Alba del dueño
-    const textoEfecto = esContinuo ? (meta as any).efectoContinuo : (meta as any).efectoDisparo
-    if (textoEfecto?.includes('Alba')) {
-      registrarEfectoPendiente(s, {
-        fuente: action.cardInstanceId,
-        owner: s.turno,
-        triggerFase: 'alba',
-        triggerOwner: 'dueño',
-        accion: { tipo: 'liberar-eter', eterIds: [...action.eterIds], destino: 'reserva' },
-        duracion: hastaAlba(),
-      })
+    // Check if effect has reagrupar (Alba) — register pending effect
+    if (tieneEfectos) {
+      const efectoConReagrupar = meta.efectos!.find((e) => e.reagrupar)
+      if (efectoConReagrupar?.reagrupar) {
+        registrarEfectoPendiente(s, {
+          fuente: action.cardInstanceId,
+          owner: s.turno,
+          triggerFase: efectoConReagrupar.reagrupar.fase,
+          triggerOwner: efectoConReagrupar.reagrupar.turno === 'propio' ? 'dueño' : 'rival',
+          accion: { tipo: 'liberar-eter', eterIds: [...action.eterIds], destino: 'reserva' },
+          duracion: hastaAlba(),
+        })
+      }
     }
     ctx.emit({ type: 'eter_bloqueado', jugador: s.turno, eterIds: action.eterIds, campeonId: action.cardInstanceId })
     // Continuo: agota al activar

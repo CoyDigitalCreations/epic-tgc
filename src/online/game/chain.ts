@@ -75,7 +75,7 @@ export function respondiblesDe(state: GameState, playerId: PlayerId): string[] {
     const inst = state.instances[id]
     if (inst?.agotado) continue
     const meta = inst?.cardId ? getCardMeta(inst.cardId) : null
-    if (meta && meta.type === 'Campeón' && 'efectoDisparo' in meta && (meta as any).efectoDisparo) {
+    if (meta && meta.type === 'Campeón' && 'efectos' in meta && meta.efectos?.some((e) => e.tipo === 'disparo')) {
       const vel = velocidadDe(state, id)
       if (puedeResponder(vel, velocidadRequerida)) res.push(id)
     }
@@ -174,8 +174,8 @@ export function ejecutarResponderCadena(s: GameState, cardInstanceId: string, ct
   const inst = s.instances[cardInstanceId]
   const meta = inst?.cardId ? getCardMeta(inst.cardId) : null
   if (meta && esArcana(meta)) inst!.bocaArriba = true
-  // Campeones Disparo se revelan también
-  if (meta && meta.type === 'Campeón' && 'efectoDisparo' in meta && (meta as any).efectoDisparo) {
+  // Campeones con efecto disparo se revelan también
+  if (meta && meta.type === 'Campeón' && 'efectos' in meta && meta.efectos?.some((e) => e.tipo === 'disparo')) {
     inst!.bocaArriba = true
   }
   ctx.emit({ type: 'respuesta_encadenada', jugador, cardInstanceId })

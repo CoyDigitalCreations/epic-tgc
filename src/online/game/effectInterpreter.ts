@@ -513,11 +513,11 @@ function executeRivalDiscard(
   for (let i = 0; i < cantidad; i++) {
     if (p.mano.length === 0) break
 
-    // Random discard
-    const idx = Math.floor(Math.random() * p.mano.length)
+    // Deterministic discard using ctx.next()
+    const idx = Math.floor(ctx.next() * p.mano.length)
     const cardId = p.mano.splice(idx, 1)[0]
     p.cementerio.push(cardId)
-    ctx.emit({ type: 'carta_descartada', cardInstanceId: cardId, jugador: rival })
+    ctx.emit({ type: 'carta_descartada', jugador: rival, cardInstanceIds: [cardId] })
   }
 }
 

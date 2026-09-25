@@ -79,8 +79,10 @@ export function getValidActions(state: GameState, playerId: PlayerId): Action[] 
       const meta = inst?.cardId ? getCardMeta(inst.cardId) : null
       if (!meta) continue
 
-      const tieneContinuo = 'efectoContinuo' in meta && !!(meta as any).efectoContinuo
-      const tieneDisparo = 'efectoDisparo' in meta && !!meta.efectoDisparo
+      // Check efectos[] for active abilities
+      const tieneEfectos = 'efectos' in meta && meta.efectos
+      const tieneContinuo = tieneEfectos && meta.efectos!.some((e) => e.tipo === 'continuo')
+      const tieneDisparo = tieneEfectos && meta.efectos!.some((e) => e.tipo === 'disparo')
 
       if (tieneContinuo) {
         // Continuo: NO puede activar si agotado
@@ -97,8 +99,8 @@ export function getValidActions(state: GameState, playerId: PlayerId): Action[] 
         }
       } else if (tieneDisparo) {
         // Disparo: SÍ puede activar si agotado; NO agota
-        // Patrón "Bloqueado": verificar si el efecto tiene bloqueado en el texto
-        const esBloqueado = meta.efectoDisparo!.includes('bloqueado')
+        // Check if it's a "blocked ether" pattern
+        const esBloqueado = meta.efectos!.some((e) => e.costo?.tipo === 'eter_bloqueado')
         if (esBloqueado) {
           const costo = costeEterHabilidad(meta)
           const eteresValidos = p.eterReserva.filter((id) => {

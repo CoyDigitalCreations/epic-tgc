@@ -74,8 +74,9 @@ export function focosState(s: GameState, id: string): FocosState | null {
     (inst.modificadores?.some((m) => m.expira !== 'permanente') ?? false) ||
     (inst.keywordsTemporales?.length ?? 0) > 0
 
-  // Disparo: tiene efectoDisparo o efectoContinuo (habilidad activa)
-  const tieneDisparo = !!meta.efectoContinuo || !!('efectoDisparo' in meta && (meta as any).efectoDisparo)
+  // Disparo: tiene efecto de tipo disparo o continuo (habilidad activa)
+  const tieneEfectos = 'efectos' in meta && meta.efectos
+  const tieneDisparo = tieneEfectos && meta.efectos!.some((e) => e.tipo === 'disparo' || e.tipo === 'continuo')
 
   return {
     continuo,

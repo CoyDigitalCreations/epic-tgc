@@ -191,20 +191,16 @@ export function validarBloqueo(state: GameState, jugador: PlayerId, eterIds: str
   return null
 }
 
-/** Extrae el máximo de éteres bloqueados. Prefiere efectoData sobre regex. */
+/** Extrae el máximo de éteres bloqueados desde efectos[]. */
 function maxEterBloqueado(card: AnyCard): number {
-  // 1. Prefer efectoData if available
-  const efectoData = (card as any).efectoDisparoData
-  if (efectoData?.costoMax !== undefined) return efectoData.costoMax
-  const efectoPasivoData = (card as any).efectoPasivoData
-  if (efectoPasivoData?.stats?.RES !== undefined) {
-    // Passive that gives RES while blocked — extract max from text
+  if ('efectos' in card && card.efectos) {
+    for (const e of card.efectos) {
+      if (e.costo?.tipo === 'eter_bloqueado' && e.costo.cantidad !== undefined) {
+        return e.costo.cantidad
+      }
+    }
   }
-
-  // 2. Fallback: regex parsing (backward compatible)
-  const texto = ('efectoDisparo' in card ? card.efectoDisparo : '') ?? ''
-  const match = texto.match(/máximo\s+(\d+)\s+Éter/i)
-  return match ? parseInt(match[1], 10) : 1 // default: 1 Éter
+  return 1 // default: 1 Éter
 }
 
 /**

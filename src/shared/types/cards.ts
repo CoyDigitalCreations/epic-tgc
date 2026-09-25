@@ -280,22 +280,14 @@ export interface CardMeta {
 export interface CampeonCard extends CardMeta {
   type: 'Campeón'
   stats: CombatStats
-  /** Unified effect list — the ONLY source of truth for effects (required after migration) */
+  /** Unified effect list — the ONLY source of truth for effects */
   efectos?: EfectoData[]
   /** Comandante effect — applies to ALL champions of same faction you control */
   efectoComandante?: EfectoData
-  /** Legacy text fields (optional, kept for backward compat during migration) */
-  efectoPasivo?: string
-  efectoDisparo?: string
-  efectoContinuo?: string
-  /** Identificador oculto: ¿el Disparo agota al Campeón? */
+  /** ¿el Disparo agota al Campeón? */
   disparoAgota?: boolean
-  /** Identificador oculto: ¿el Disparo es de un solo uso? */
+  /** ¿el Disparo es de un solo uso? */
   disparoUnSoloUso?: boolean
-  /** Legacy structured data (optional, kept for backward compat) */
-  efectoPasivoData?: EfectoData
-  efectoDisparoData?: EfectoData
-  efectoContinuoData?: EfectoData
 }
 
 export interface MisticaCard extends CardMeta {
@@ -304,10 +296,6 @@ export interface MisticaCard extends CardMeta {
   stats: BaseStats
   /** Unified effect list */
   efectos?: EfectoData[]
-  /** Legacy text field */
-  efecto: string
-  /** Legacy structured data */
-  efectoData?: EfectoData
 }
 
 export interface ArcanaCard extends CardMeta {
@@ -315,14 +303,10 @@ export interface ArcanaCard extends CardMeta {
   stats: BaseStats
   /** Unified effect list — first effect is condition (pasivo), second is reward (hechizo) */
   efectos?: EfectoData[]
-  /** Condición de activación estructurada (nuevo sistema) */
+  /** Condición de activación estructurada */
   condicion?: CondicionEfecto | string
-  /** Legacy text fields (kept for backward compat with existing data) */
+  /** Recompensa text (for display) */
   recompensa?: string
-  /** Legacy structured data (kept for backward compat with existing data) */
-  condicionData?: EfectoData
-  recompensaData?: EfectoData
-  efectoData?: EfectoData
 }
 
 export interface EterCard extends CardMeta {
@@ -331,15 +315,8 @@ export interface EterCard extends CardMeta {
   stats: BaseStats
   /** Unified effect list — up to 3 effects (reserva, pago, bloqueo) */
   efectos?: EfectoData[]
-  /** Legacy text fields */
-  efectoReserva?: string
-  efectoPago?: string
+  /** Variante de pago: Pasivo o Gatillo */
   variantePago?: 'Pasivo' | 'Gatillo'
-  efectoBloqueo?: string
-  /** Legacy structured data */
-  efectoReservaData?: EfectoData
-  efectoPagoData?: EfectoData
-  efectoBloqueoData?: EfectoData
 }
 
 export interface VinculoCard extends CardMeta {
@@ -348,10 +325,6 @@ export interface VinculoCard extends CardMeta {
   stats: BaseStats
   /** Unified effect list */
   efectos?: EfectoData[]
-  /** Legacy text field */
-  efecto: string
-  /** Legacy structured data */
-  efectoData?: EfectoData
 }
 
 /** Discriminated union of all card types */
