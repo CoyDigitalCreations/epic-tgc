@@ -46,7 +46,7 @@ export function interpretEffect(
   switch (efecto) {
     case 'buff':
     case 'debuff':
-      executeBuffDebuff(s, targetIds, stats, duracion, efectoData.buffPerBlockedEther, inst)
+      executeBuffDebuff(s, targetIds, stats, duracion, efectoData.buffPerBlockedEther, inst, efecto)
       break
 
     case 'destroy':
@@ -178,19 +178,23 @@ function executeBuffDebuff(
   duracion: EfectoData['duracion'],
   buffPerBlockedEther: boolean | undefined,
   inst: CardInstance,
+  efecto: EfectoData['efecto'],
 ): void {
   if (!stats) return
 
-  // Calculate modifier expiration
+  // Calculate modifier expiration — ExpiraModificador = 'ocaso' | 'alba-dueño' | 'permanente'
   const expira = duracion === 'permanente' ? 'permanente' :
-                 duracion === 'turno' ? 'turno' :
-                 duracion === '1_por_turno' ? 'fase' :
                  duracion === 'mientras_en_campo' ? 'permanente' :
-                 'fase'
+                 duracion === 'mientras_ester_bloqueado' ? 'permanente' :
+                 duracion === 'mientras_equipped' ? 'permanente' :
+                 'ocaso' // turno, 1_por_turno, n_turnos, hasta_fase → expira en Ocaso
+
+  // Debuffs negate the stats (Card-Maker generates positive values for "pierde X ATQ")
+  const sign = efecto === 'debuff' ? -1 : 1
 
   for (const targetId of targetIds) {
-    let atqDelta = stats.ATQ ?? 0
-    let resDelta = stats.RES ?? 0
+    let atqDelta = (stats.ATQ ?? 0) * sign
+    let resDelta = (stats.RES ?? 0) * sign
 
     // Handle buffPerBlockedEther
     if (buffPerBlockedEther) {
@@ -420,6 +424,35 @@ function executeFreeEther(
 }
 
 /**
+ * Remove an ether from its current zone (Reserva or Pagado).
+ * Returns true if removed, false if not found.
+ * NOTE: Does NOT touch eterBloqueado — blocked ether has special game semantics.
+ */
+function removeEterFromCurrentZone(
+  s: GameState,
+  targetId: string,
+  owner: PlayerId,
+): boolean {
+  const p = s.players[owner]
+
+  // Check Reserva (2A)
+  const resIdx = p.eterReserva.indexOf(targetId)
+  if (resIdx !== -1) {
+    p.eterReserva.splice(resIdx, 1)
+    return true
+  }
+
+  // Check Pagado (1A)
+  const paidIdx = p.eterPagado.indexOf(targetId)
+  if (paidIdx !== -1) {
+    p.eterPagado.splice(paidIdx, 1)
+    return true
+  }
+
+  return false
+}
+
+/**
  * Execute return_ether effect.
  */
 function executeReturnEther(
@@ -433,17 +466,14 @@ function executeReturnEther(
     if (!inst) continue
 
     const owner = inst.owner
-    const p = s.players[owner]
 
-    // Remove from current zone (paid or blocked)
-    const paidIdx = p.eterPagado.indexOf(targetId)
-    if (paidIdx !== -1) {
-      p.eterPagado.splice(paidIdx, 1)
-    }
+    // Remove from ANY current zone
+    const removed = removeEterFromCurrentZone(s, targetId, owner)
+    if (!removed) continue
 
     // Add to destination zone
     if (zonaDestino === 'reserva') {
-      p.eterReserva.push(targetId)
+      s.players[owner].eterReserva.push(targetId)
       ctx.emit({ type: 'eter_devuelto', cardInstanceId: targetId, destino: 'reserva', jugador: owner })
     }
   }
@@ -458,7 +488,6 @@ function executeMover(
   targetIds: string[],
   zonaDestino: string | undefined,
 ): void {
-  // Mover is similar to return_ether but more generic
   for (const targetId of targetIds) {
     const inst = s.instances[targetId]
     if (!inst) continue
@@ -466,11 +495,9 @@ function executeMover(
     const owner = inst.owner
     const p = s.players[owner]
 
-    // Remove from current zone
-    const paidIdx = p.eterPagado.indexOf(targetId)
-    if (paidIdx !== -1) {
-      p.eterPagado.splice(paidIdx, 1)
-    }
+    // Remove from ANY current zone
+    const removed = removeEterFromCurrentZone(s, targetId, owner)
+    if (!removed) continue
 
     // Add to destination zone
     if (zonaDestino === 'pagado') {
