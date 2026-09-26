@@ -67,4 +67,11 @@ export function registrarGuardsArcanas(): void {
     if (count < 2) return 'se requieren 2 o más Campeones con Éter bloqueado'
     return null
   })
+
+  // FB-024 Filo del Éter Primigenio: "Si controlas al menos 1 Campeón."
+  registrarRequisito('FB-024', (s, jugador) => {
+    const count = campeonesEnCampo(s, jugador)
+    if (count < 1) return 'se requiere al menos 1 Campeón en campo'
+    return null
+  })
 }

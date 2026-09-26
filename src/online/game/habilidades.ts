@@ -48,6 +48,9 @@ export function validarActivarArcana(state: GameState, action: Extract<Action, {
  * Lee de efectos[] — el sistema unificado.
  */
 export function validarActivarHabilidad(state: GameState, action: Extract<Action, { type: 'activar_habilidad' }>): string | null {
+  // Las habilidades activas NO se pueden usar en Alba (solo efectos automáticos)
+  if (state.fase === 'alba') return 'no se pueden activar habilidades en la fase de Alba'
+
   const p = state.players[state.turno]
   const inst = state.instances[action.cardInstanceId]
   if (!inst) return 'la carta no existe'

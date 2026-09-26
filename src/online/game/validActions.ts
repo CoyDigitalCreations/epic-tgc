@@ -73,6 +73,8 @@ export function getValidActions(state: GameState, playerId: PlayerId): Action[] 
     // Activar Habilidades: Campeones con efectoContinuo o efectoDisparo
     // Continuo (bloquea éter): NO puede activar si agotado; agota al activar.
     // Disparo (paga éter): SÍ puede activar si agotado; NO agota.
+    // Restricción: NO se pueden activar en Alba (solo efectos automáticos).
+    if (state.fase !== 'alba') {
     for (const champId of p.campo.campeones) {
       if (!champId) continue
       const inst = state.instances[champId]
@@ -123,6 +125,7 @@ export function getValidActions(state: GameState, playerId: PlayerId): Action[] 
         }
       }
     }
+    } // end if (fase !== 'alba')
     // FB-022 Último Refugio: campeón equipado puede invocar del cementerio (sin éter)
     for (const champId of p.campo.campeones) {
       if (!champId) continue

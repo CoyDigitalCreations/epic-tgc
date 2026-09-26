@@ -3,12 +3,11 @@
  * mientras el Éter siga en eterBloqueado (Aurora FB-010, Ragnar DS-001,
  * Cassandra FB-016, Korr DS-016) y "paga 1 Éter y agota" con 1/turno
  * (opcionUsadaEsteTurno): Seraphina FB-013, Nymeria FB-017, Varek DS-013,
- * Vorlag DS-017.
+ * Vorlag DS-017, Isolde FB-014, Draven DS-012.
  *
  * Las auras "Bloqueado" (Cassandra/Korr) se resuelven dinámicamente en
- * aurasDe() — no necesitan handler. Este archivo implementa solo los
- * handlers de trigger 'al-activar-habilidad' para los patrones "Agota" y
- * los patrones "Bloqueado" con targeting (Aurora/Ragnar).
+ * aurasDe() — los handlers vacíos previenen que el interpreter aplique
+ * un buff doble. Isolde/Draven usan el interpreter con targeting.
  */
 
 import { registrarEfecto, objetivosCampeonesValidos, statsDe } from '../efectos'
@@ -174,5 +173,48 @@ export function registrarEfectosHabilidades(): void {
     const rival: PlayerId = payload.jugador === 'A' ? 'B' : 'A'
     armarPendiente(s, payload.jugador, _inst.cardInstanceId, 'al-activar-habilidad',
       objetivosCampeonesValidos(s, rival))
+  })
+
+  // ──── Handlers vacíos para auras dinámicas (previenen interpreter fallback) ────
+
+  // FB-016 Cassandra: aura dinámica en aurasDe() (+1 RES mientras éter bloqueado)
+  // Handler vacío: el efecto lo maneja aurasDe(), no el interpreter.
+  registrarEfecto('al-activar-habilidad', 'FB-016', () => {})
+
+  // DS-016 Korr: aura dinámica en aurasDe() (+1 ATQ mientras éter bloqueado)
+  // Handler vacío: el efecto lo maneja aurasDe(), no el interpreter.
+  registrarEfecto('al-activar-habilidad', 'DS-016', () => {})
+
+  // ──── Patrón "Agota" con targeting (Isolde/Draven) ──────────────────
+
+  // FB-014 Isolde: "Una vez por turno, paga 1 Éter y agota esta carta:
+  // destruye 1 Mística o Arcana que controla el rival."
+  registrarEfecto('al-activar-habilidad', 'FB-014', (s, ctx, _inst, payload) => {
+    if (payload.contextoUso === 'objetivo-elegido') {
+      destruirCarta(s, ctx, payload.objetivoId!, 'efecto')
+      return
+    }
+    const rival: PlayerId = payload.jugador === 'A' ? 'B' : 'A'
+    const opciones: string[] = [
+      ...s.players[rival].campo.misticasTacticas.filter((id): id is string => id !== null),
+      ...s.players[rival].campo.arcanasCombate.filter((id): id is string => id !== null),
+    ]
+    armarPendiente(s, payload.jugador, _inst.cardInstanceId, 'al-activar-habilidad', opciones)
+  })
+
+  // DS-012 Draven: "Una vez por turno, paga 1 Éter y agota esta carta:
+  // destruye 1 Mística o Arcana que controla el rival."
+  // Mismo efecto que Isolde, diferente flavour.
+  registrarEfecto('al-activar-habilidad', 'DS-012', (s, ctx, _inst, payload) => {
+    if (payload.contextoUso === 'objetivo-elegido') {
+      destruirCarta(s, ctx, payload.objetivoId!, 'efecto')
+      return
+    }
+    const rival: PlayerId = payload.jugador === 'A' ? 'B' : 'A'
+    const opciones: string[] = [
+      ...s.players[rival].campo.misticasTacticas.filter((id): id is string => id !== null),
+      ...s.players[rival].campo.arcanasCombate.filter((id): id is string => id !== null),
+    ]
+    armarPendiente(s, payload.jugador, _inst.cardInstanceId, 'al-activar-habilidad', opciones)
   })
 }
