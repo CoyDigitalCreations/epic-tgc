@@ -129,15 +129,15 @@ describe('OnlineApp — mazo personalizado', () => {
     expect(
       screen.getByRole('heading', { name: 'Nuevo mazo personalizado' }),
     ).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Volver al menú' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Volver' })).toBeInTheDocument()
   })
 
   it('volver al menú desde el editor cancela sin guardar', async () => {
     const user = userEvent.setup()
     renderApp()
     await user.click(screen.getByRole('button', { name: /Nuevo mazo personalizado/ }))
-    await user.type(screen.getByLabelText('Nombre del mazo'), 'Los Mutantes')
-    await user.click(screen.getByRole('button', { name: 'Volver al menú' }))
+    await user.type(screen.getByPlaceholderText('Nombre del mazo'), 'Los Mutantes')
+    await user.click(screen.getByRole('button', { name: 'Volver' }))
     // Sin selección válida: no se guarda al volver
     expect(useMazosStore.getState().mazosPersonalizados).toHaveLength(0)
   })
