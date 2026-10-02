@@ -9,6 +9,7 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "coverage-map": "tsx scripts/coverage-map.ts",
+    "sync:cards": "tsx scripts/sync-forge-to-engine.ts",
     "test": "vitest run",
     "test:watch": "vitest"
   },
