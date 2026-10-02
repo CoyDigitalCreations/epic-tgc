@@ -10,6 +10,7 @@ import { useMazosStore, type MazoPersonalizado } from './useMazosStore'
 import { usePartida, type PartidaConfig } from './usePartida'
 import { Tablero } from './components/Tablero'
 import { MazoEditor } from './components/MazoEditor'
+import { EffectPreviewModal } from './components/EffectPreviewModal'
 
 /** Selección del humano: un set preestablecido o un mazo personalizado guardado. */
 type MazoSeleccionado =
@@ -20,9 +21,9 @@ type MazoSeleccionado =
  * Éter Online — modo vs bot (local).
  * Menú: elegir mazo (set preestablecido o personalizado armado en el editor) y
  * seed (reproducibilidad). Los sets juegan SIEMPRE con los diseños originales
- * (efectos keyed por cardId); la colección local de la forja solo alimenta el
- * editor del mazo personalizado (las cartas custom con id nuevo juegan sin su
- * texto de efecto hasta que el motor soporte efectos dinámicos).
+ * (efectos keyed por cardId); la colección local de la forja alimenta el
+ * editor del mazo personalizado. Cartas custom con id nuevo se registran en
+ * el motor vía registrarCartas y resuelven sus efectos[] data-driven.
  * Partida: el humano es SIEMPRE el jugador A; el bot (B) juega solo.
  */
 export default function OnlineApp() {
@@ -115,17 +116,30 @@ export default function OnlineApp() {
 function Partida({ config, onAbandonar }: { config: PartidaConfig; onAbandonar: () => void }) {
   const partida = usePartida(config)
   const vista = useMemo(() => visibleState(partida.estado, 'A'), [partida.estado])
+  const previewInst = partida.preview
+    ? partida.estado.instances[partida.preview.cardInstanceId]
+    : undefined
   return (
-    <Tablero
-      vista={vista}
-      acciones={partida.acciones}
-      leTocaA={partida.leTocaA}
-      log={partida.log}
-      logDetallado={partida.logDetallado}
-      onAccion={partida.ejecutar}
-      onAbandonar={onAbandonar}
-      animaciones={partida.animaciones}
-    />
+    <>
+      <Tablero
+        vista={vista}
+        acciones={partida.acciones}
+        leTocaA={partida.leTocaA}
+        log={partida.log}
+        logDetallado={partida.logDetallado}
+        onAccion={partida.ejecutar}
+        onAbandonar={onAbandonar}
+        animaciones={partida.animaciones}
+      />
+      {partida.preview && (
+        <EffectPreviewModal
+          preview={partida.preview}
+          instancia={previewInst}
+          onAceptar={partida.aceptarPreview}
+          onCancelar={partida.cancelarPreview}
+        />
+      )}
+    </>
   )
 }
 

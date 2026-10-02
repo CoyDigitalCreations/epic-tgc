@@ -921,6 +921,15 @@ export function Tablero({ vista, acciones, leTocaA, logDetallado = [], onAccion,
     (a): a is Extract<Action, { type: 'elegir_objetivo' }> => a.type === 'elegir_objetivo',
   )
   const ruptura = acciones.find((a) => a.type === 'elegir_ruptura' && a.atacanteId !== null)
+  /** ¿Hay jugadas reales (no solo pasar/rendirse)? Para el hint de "sin jugadas". */
+  const hayJugablesSignificativas = acciones.some((a) =>
+    [
+      'jugar_campeon', 'jugar_mistica', 'colocar_arcana', 'colocar_vinculo',
+      'activar_habilidad', 'equipar_artefacto', 'activar_arcana', 'bloquear_eter',
+      'declarar_ataque', 'declarar_bloqueo', 'responder_cadena', 'responder_prevenicion',
+      'elegir_objetivo', 'elegir_opcion', 'elegir_ruptura', 'usar_transmutar',
+    ].includes(a.type),
+  )
   const pilaCombate = vista.combate?.cadena?.pila ?? []
   const pilaGlobal = vista.cadena?.pila ?? []
   const pila = pilaCombate.length > 0 ? pilaCombate : pilaGlobal
@@ -1128,6 +1137,11 @@ export function Tablero({ vista, acciones, leTocaA, logDetallado = [], onAccion,
             {leTocaA && (generales.length > 0 || ruptura) && (
               <div className="flex gap-1.5 flex-wrap items-center pt-2 border-t border-card-border/50">
                 <p className="text-[9px] uppercase tracking-wider text-gray-500 mr-1">Acciones</p>
+                {!hayJugablesSignificativas && (fase === 'forja' || fase === 'choque') && (
+                  <span className="text-[10px] text-amber-400/90 mr-1">
+                    Sin jugadas — pasá el turno para continuar
+                  </span>
+                )}
                 {generales.map((a, i) => (
                   <Boton key={i} accion={a} onClick={onAccion} fase={fase} />
                 ))}

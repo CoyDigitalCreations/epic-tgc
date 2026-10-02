@@ -62,8 +62,21 @@ export function formatearEvento(estado: GameState, e: GameEvent): string | null 
       return null // ruido de zonas internas
     case 'carta_activada':
       return `${e.jugador} activa ${nombreCarta(estado, e.cardInstanceId)}.`
+    case 'carta_devuelta_a_mano':
+      return `${nombreCarta(estado, e.cardInstanceId)} vuelve a la mano de ${e.jugador}.`
+    case 'carta_exiliada':
+      return `${nombreCarta(estado, e.cardInstanceId)} es exiliada (${e.jugador}).`
+    case 'campeon_robado':
+      return `${e.jugador} roba el Campeón ${nombreCarta(estado, e.cardInstanceId)} a ${e.rival}.`
+    case 'eter_robado':
+      return `${e.jugador} roba el Éter ${nombreCarta(estado, e.cardInstanceId)} a ${e.rival}.`
+    case 'eter_liberado':
+      return `Éter liberado: ${nombreCarta(estado, e.cardInstanceId)} (${e.jugador}).`
+    case 'eter_movido':
+      return `Éter ${nombreCarta(estado, e.cardInstanceId)} movido a ${e.destino} (${e.jugador}).`
     default:
-      return null
+      // Nunca perder eventos del catálogo en el log narrativo
+      return `Evento: ${(e as { type: string }).type}`
   }
 }
 
