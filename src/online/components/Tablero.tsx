@@ -402,7 +402,7 @@ function GrillaJugador({
     const activarHabilidad = acciones.find((a) => a.type === 'activar_habilidad' && a.cardInstanceId === id)
     const rotStyle = invertida ? { transform: 'rotate(180deg)' } : undefined
     return (
-      <MiniCard key={id} inst={inst} tamano="md" onZoom={() => abrirZoom(inst)} invertida={invertida}>
+      <MiniCard key={id} inst={inst} tamano="md" rotarSiAgotado onZoom={() => abrirZoom(inst)} invertida={invertida}>
         {leTocaA && (ataque || bloquear || transmutar || activarHabilidad) && (
           <div className="flex gap-1 flex-wrap justify-center" style={rotStyle}>
             {ataque && <Boton accion={ataque} onClick={onAccion} />}
@@ -521,7 +521,7 @@ function GrillaJugador({
       <Celda key={zona} zona={zona} glow={hayGlow || hayAtaque} glowColor={hayAtaque ? 'red' : 'green'} invertida={invertida}>
         {id ? (
           <div className="relative">
-            {soy && leTocaA ? campeonPropio(id) : <MiniCard inst={vista.instances[id]} tamano="md" onZoom={() => abrirZoom(vista.instances[id])} invertida={invertida} />}
+            {soy && leTocaA ? campeonPropio(id) : <MiniCard inst={vista.instances[id]} tamano="md" rotarSiAgotado onZoom={() => abrirZoom(vista.instances[id])} invertida={invertida} />}
             <ChampionStatus s={vista} id={id} invertida={invertida} />
             <FocosChampion s={vista} id={id} invertida={invertida} />
           </div>

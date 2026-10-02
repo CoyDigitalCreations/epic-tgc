@@ -29,11 +29,15 @@ export function PriorityModal({ state, playerId, acciones, onAccion, onZoom }: P
   if (!cadena) return null
   if (cadena.prioridad !== playerId) return null
 
+  const respondibles = respondiblesDe(state, playerId)
+  // Sin cartas que puedan responder (p.ej. campeones agotados no activan disparo):
+  // NO mostrar el modal — el botón "Pasar prioridad" vive en Acciones generales.
+  if (respondibles.length === 0) return null
+
   const efectoActual = cadena.efectoActual
   const efectoInst = efectoActual ? state.instances[efectoActual.cardInstanceId] : null
   const efectoMeta = efectoInst?.cardId ? getCardMeta(efectoInst.cardId) : null
 
-  const respondibles = respondiblesDe(state, playerId)
   const esCombate = !!state.combate?.cadena
 
   return (
@@ -45,9 +49,7 @@ export function PriorityModal({ state, playerId, acciones, onAccion, onZoom }: P
             {esCombate ? 'Cadena de Combate (9.6)' : 'Cadena Global'}
           </h2>
           <p className="text-xs text-gray-400">
-            {cadena.prioridad === playerId
-              ? 'Es tu turno para responder'
-              : `Es turno de ${cadena.prioridad === 'A' ? 'Tú' : 'el rival'}`}
+            Tenés {respondibles.length} carta(s) que puede(n) responder — elegí o pasá prioridad.
           </p>
         </div>
 
@@ -100,38 +102,36 @@ export function PriorityModal({ state, playerId, acciones, onAccion, onZoom }: P
         )}
 
         {/* ── Cartas respondibles ───────────────────────────────── */}
-        {respondibles.length > 0 && (
-          <div className="mb-4">
-            <p className="text-[9px] uppercase tracking-wider text-gray-500 mb-1.5">
-              Tus cartas respondibles ({respondibles.length})
-            </p>
-            <div className="flex gap-2 flex-wrap items-start">
-              {respondibles.map((id) => {
-                const inst = state.instances[id]
-                const accion = acciones.find(
-                  (a) => a.type === 'responder_cadena' && a.cardInstanceId === id,
-                )
-                return (
-                  <div key={id} className="flex flex-col items-center gap-1">
-                    <MiniCard
-                      inst={inst}
-                      tamano="sm"
-                      onZoom={() => onZoom(inst)}
-                    />
-                    {accion && (
-                      <button
-                        onClick={() => onAccion(accion)}
-                        className="text-[10px] bg-ether-600 hover:bg-ether-500 text-white px-2 py-0.5 rounded transition-colors cursor-pointer"
-                      >
-                        Responder
-                      </button>
-                    )}
-                  </div>
-                )
-              })}
-            </div>
+        <div className="mb-4">
+          <p className="text-[9px] uppercase tracking-wider text-gray-500 mb-1.5">
+            Tus cartas respondibles ({respondibles.length})
+          </p>
+          <div className="flex gap-2 flex-wrap items-start">
+            {respondibles.map((id) => {
+              const inst = state.instances[id]
+              const accion = acciones.find(
+                (a) => a.type === 'responder_cadena' && a.cardInstanceId === id,
+              )
+              return (
+                <div key={id} className="flex flex-col items-center gap-1">
+                  <MiniCard
+                    inst={inst}
+                    tamano="sm"
+                    onZoom={() => onZoom(inst)}
+                  />
+                  {accion && (
+                    <button
+                      onClick={() => onAccion(accion)}
+                      className="text-[10px] bg-ether-600 hover:bg-ether-500 text-white px-2 py-0.5 rounded transition-colors cursor-pointer"
+                    >
+                      Responder
+                    </button>
+                  )}
+                </div>
+              )
+            })}
           </div>
-        )}
+        </div>
 
         {/* ── Botón Pasar ───────────────────────────────────────── */}
         <div className="flex justify-end gap-3 mt-4 pt-3 border-t border-card-border">

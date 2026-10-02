@@ -40,6 +40,11 @@ interface MiniCardProps {
   marca?: ReactNode
   /** Tablero invertido: counter-rotate la lupita de zoom. */
   invertida?: boolean
+  /**
+   * Rota la carta 90° si está agotada (solo casillas del campo 2B-2F).
+   * Default false: en modales, cadena, mano y paneles SIEMPRE vertical.
+   */
+  rotarSiAgotado?: boolean
   children?: ReactNode
 }
 
@@ -62,6 +67,7 @@ export function MiniCard({
   title,
   marca,
   invertida,
+  rotarSiAgotado = false,
   children,
 }: MiniCardProps) {
   const cardId = inst.cardId ?? undefined
@@ -70,7 +76,8 @@ export function MiniCard({
   const ancho = TAMANOS[tamano]
   const escala = ancho / ANCHO_CARTA
   const tieneCarga = meta?.keywords?.includes('Carga') ?? false
-  const agotada = (agotado ?? inst.agotado === true) && !tieneCarga
+  // Rotación SOLO en campo (rotarSiAgotado): modales/mano/cadena siempre vertical
+  const agotada = rotarSiAgotado && (agotado ?? inst.agotado === true) && !tieneCarga
   const eteres = inst.eterBloqueado?.length ?? 0
   /**
    * Campeón cansado: la carta se gira 90° (parte de arriba hacia la IZQUIERDA)

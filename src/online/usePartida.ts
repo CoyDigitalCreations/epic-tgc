@@ -52,14 +52,23 @@ const ATTACK_DURATION_MS = 600
 /** Duración de animación de destrucción (ms). */
 const DEATH_DURATION_MS = 500
 
-/** Acciones del humano que disparan efectos[] y deben pasar por el modal de pre-efectos. */
-const ACCIONES_CON_PREVIEW = new Set([
-  'jugar_campeon',
-  'jugar_mistica',
-  'colocar_arcana',
-  'activar_arcana',
-  'activar_habilidad',
-])
+/**
+ * El modal de pre-efectos SOLO cuando el EFECTO entra en acción — no cuando
+ * la carta simplemente entra al campo.
+ * - activar_habilidad / activar_arcana / jugar_mistica → el efecto resuelve
+ * - jugar_campeon → solo si tiene trigger al_invocar (disparo/pasivo esperan)
+ * - colocar_arcana → nunca (la recompensa se activa después)
+ */
+function efectosSeActivanCon(accion: Action, efectos: { tipo?: string; trigger?: string }[] | undefined): boolean {
+  if (!efectos || efectos.length === 0) return false
+  if (accion.type === 'activar_habilidad' || accion.type === 'activar_arcana' || accion.type === 'jugar_mistica') {
+    return true
+  }
+  if (accion.type === 'jugar_campeon') {
+    return efectos.some((e) => e.trigger === 'al_invocar' || e.tipo === 'hechizo')
+  }
+  return false
+}
 
 /**
  * El actor de la jugada actual NO es siempre `estado.turno`:
@@ -166,9 +175,9 @@ export function usePartida(config: PartidaConfig) {
       if ('cardInstanceId' in accion && accion.cardInstanceId) {
         const inst = s.instances[accion.cardInstanceId]
         const meta = inst?.cardId ? getCardMeta(inst.cardId) : null
-        const lineas = describirEfectosDeCarta(meta)
-        if (lineas.length > 0 && ACCIONES_CON_PREVIEW.has(accion.type)) {
-          for (const l of lineas) {
+        const efectos = meta && 'efectos' in meta ? meta.efectos : undefined
+        if (efectosSeActivanCon(accion, efectos)) {
+          for (const l of describirEfectosDeCarta(meta)) {
             logDetalladoRef.current = [...logDetalladoRef.current, `   📋 Efecto: ${l}`]
           }
         }
@@ -219,9 +228,11 @@ export function usePartida(config: PartidaConfig) {
       const s = estadoRef.current
       if (!s || s.fase === 'terminada') return false
       if (!pausarRef.current) return false
-      if (!ACCIONES_CON_PREVIEW.has(accion.type) || !('cardInstanceId' in accion)) return false
+      if (!('cardInstanceId' in accion) || !accion.cardInstanceId) return false
       const inst = s.instances[accion.cardInstanceId]
       const meta = inst?.cardId ? getCardMeta(inst.cardId) : null
+      const efectos = meta && 'efectos' in meta ? meta.efectos : undefined
+      if (!efectosSeActivanCon(accion, efectos)) return false
       const lineas = describirEfectosDeCarta(meta)
       if (lineas.length === 0) return false
       previewAccionRef.current = accion
