@@ -26,7 +26,7 @@ import { slotAZona } from './zones'
  * Cartas del jugador que pueden responder en la cadena (9.6 + global):
  * - Místicas que NO estén en activación diferida (§5.5)
  * - Arcanas que NO estén en activación diferida (§5.5)
- * - Campeones con efectoDisparo que no estén agotados
+ * - Campeones con efectos[] tipo disparo que no estén agotados
  *
  * Filtro de velocidad: si el último efecto en la pila es PRESTEZA,
  * solo responden PRESTEZA o FUGAZ. Si es FUGAZ, nadie responde.

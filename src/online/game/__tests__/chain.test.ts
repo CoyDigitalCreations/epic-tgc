@@ -104,13 +104,6 @@ function aplicar(s: GameState, accion: Action, ctx: Ctx): GameState {
 
 const tiposDe = (s: GameState, p: PlayerId): string[] => getValidActions(s, p).map((a) => a.type)
 
-// TODO: Phase 5 reescribirá estos tests con el sistema de velocidades
-// describe('cadena 9.6 — apertura y prioridad (ADR-12)', () => { ... })
-
-// TODO: Phase 5 reescribirá estos tests con el sistema de velocidades
-// describe('responder_cadena (9.6) — pila, orden inverso y consumo', () => { ... })
-// describe('pasar_prioridad y cierre (L1183)', () => { ... })
-
 describe('visibleState con cadena (6.2)', () => {
   it('la Arcana rival en la pila de la cadena es visible para el atacante', () => {
     const ctx = crearCtx()

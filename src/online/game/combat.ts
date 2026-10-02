@@ -1,5 +1,5 @@
 import { abrirCadena } from './chain'
-import { dispararTrigger, keywordsDe, statsDe } from './efectos'
+import { dispararTrigger, keywordsDe, statsDe, tieneDoubleAttackActivo } from './efectos'
 import { destruirCarta } from './replacements'
 import type { Ctx, GameState, PlayerId } from './types'
 
@@ -12,7 +12,7 @@ import type { Ctx, GameState, PlayerId } from './types'
  * Combate = 0 extracciones RNG (contrato 89 intacto).
  * Stats consultados vía statsDe/keywordsDe de efectos.ts (C1, ADR-20/22): el
  * combate ve los modificadores (Σ aditivo) Y las auras de campo (C3b, D6:
- * Isolde/Thane/Elena/Marek se suman vía aurasDe en statsDe).
+ * Isolde/Thane/Elena/Marek se suman vía modificadoresJSONDe en statsDe).
  */
 
 /** Consulta de keyword genérica (data paquetes.ts + overrides, sin hardcode por cardId). */
@@ -37,9 +37,11 @@ function controladorDe(s: GameState, id: string): PlayerId | null {
 
 /**
  * Atacantes elegibles del jugador activo (9.2): Campeones enderezados (no
- * agotados) salvo keyword Carga (L1207). La invocación cansada (L1090) es un
- * Campeón agotado por entrar al campo (C5 agota al invocar) — la única
- * excepción es Carga. primerTurno prohíbe atacar (§8.6, L1062).
+ * agotados) salvo keyword Carga (L1207) o doble ataque activo (Fase 2b,
+ * FB-015: "puede declarar 2 veces ataque mientras ese Éter esté bloqueado" —
+ * la segunda declaración pese al agotamiento del primer ataque; la invocación
+ * cansada del turno SÍ aplica, el doble ataque no anula summoning sickness).
+ * primerTurno prohíbe atacar (§8.6, L1062).
  */
 export function atacantesElegibles(state: GameState): string[] {
   if (state.primerTurno) return []
@@ -48,10 +50,31 @@ export function atacantesElegibles(state: GameState): string[] {
     if (!id) return false
     const inst = state.instances[id]
     if (!inst) return false
-    if (inst.atacoEsteTurno) return false
-    if (inst.agotado && !tieneKeyword(state, id, 'Carga')) return false
+    const doubleActivo = tieneDoubleAttackActivo(state, id)
+    if (inst.atacoEsteTurno && !doubleActivo) return false
+    if (inst.agotado && !tieneKeyword(state, id, 'Carga')) {
+      // Doble ataque activo + ya atacó al menos una vez → puede declarar otra
+      if (!(doubleActivo && inst.atacoEsteTurno)) return false
+    }
     return true
   })
+}
+
+/**
+ * Cierra la sub-máquina de combate si algún atacante SOBREVIVIENTE tiene
+ * doble ataque activo (Fase 2b): permite declarar una segunda ola de ataque
+ * en el mismo turno de Choque. Si nadie tiene doble ataque, el combate
+ * persiste hasta salir de Choque (Ruptura/pasar_turno) — comportamiento previo.
+ */
+export function cerrarCombateSiDoubleAttack(s: GameState): void {
+  const combate = s.combate
+  if (!combate) return
+  const dobles = combate.atacantes.some(
+    (id) =>
+      s.players[s.turno].campo.campeones.includes(id) &&
+      tieneDoubleAttackActivo(s, id),
+  )
+  if (dobles) s.combate = undefined
 }
 
 /** Bloqueadores disponibles del DEFENSOR: campeones no-null y NO agotados (§9.3). */
@@ -137,6 +160,8 @@ export function ejecutarDeclararAtaque(s: GameState, atacanteIds: string[], ctx:
   if (bloqueadoresDisponibles(s).length === 0) {
     s.combate.paso = 'resolucion'
     resolverCombate(s, ctx) // sin pares: sin muertes
+    // Fase 2b: doble ataque activo → cerrar combate para permitir 2da ola
+    cerrarCombateSiDoubleAttack(s)
   }
 }
 
@@ -244,6 +269,8 @@ export function continuarCombateTrasCadena(s: GameState, ctx: Ctx): void {
   if (combate.paso === 'bloqueo' && bloqueadoresDisponibles(s).length === 0) {
     combate.paso = 'resolucion'
     resolverCombate(s, ctx) // sin pares: sin muertes
+    // Fase 2b: doble ataque activo → cerrar combate para permitir 2da ola
+    cerrarCombateSiDoubleAttack(s)
   }
 }
 
@@ -275,8 +302,12 @@ export function ejecutarElegirRuptura(s: GameState, atacanteId: string | null, v
     ctx.emit({ type: 'ruptura_realizada', atacanteId, vinculoSlot, vinculoId })
     destruirCarta(s, ctx, vinculoId, 'ruptura')
     if (s.combate) s.combate.rupturaUsadaEsteTurno = true
-    // NO borramos s.combate aquí — que pasar_turno lo limpie al salir de Choque.
-    // Si lo borramos, validarDeclararAtaque permite un nuevo combate en el mismo turno.
+    // Fase 2b: si algún atacante sobreviviente tiene doble ataque activo,
+    // cerrar el combate para permitir la segunda ola en el mismo turno.
+    cerrarCombateSiDoubleAttack(s)
+    // Sin doble ataque: NO borramos s.combate aquí — que pasar_turno lo limpie
+    // al salir de Choque. Si lo borramos, validarDeclararAtaque permite un
+    // nuevo combate en el mismo turno (comportamiento previo al doble ataque).
   } else {
     // "No romper" voluntario (L1107): cierra el combate para permitir pasar turno.
     s.combate = undefined

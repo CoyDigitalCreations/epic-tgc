@@ -3,6 +3,8 @@ import { describe, it, expect } from 'vitest'
 import { applyAction } from '../actions'
 import type { Action } from '../actions'
 import { getValidActions } from '../validActions'
+import { registrarCartas } from '../cards'
+import type { AnyCard } from '../../../shared/types/cards'
 import type { Ctx, GameState, PlayerId } from '../types'
 
 // Cartas reales del paquete (paquetes.ts):
@@ -14,6 +16,7 @@ const CASSANDRA = 'FB-016' // sin keywords 3/5
 const ISOLDE = 'FB-014' // Protector 3/7
 const ROWENA = 'FB-018' // sin keywords 3/6
 const VINCULO = 'FB-025' // Primer Juramento (Vínculo Orden)
+const ETER_ORDEN = 'FB-001' // Éter Orden (para eterBloqueado en tests de double_attack)
 
 function estadoMinimo(): GameState {
   const jugador = (id: PlayerId) => ({
@@ -520,5 +523,102 @@ describe('resolución: Ruptura (9.4-A, ADR-13)', () => {
     const tipos = ctx.events.map((e) => e.type)
     expect(tipos.filter((t) => t === 'partida_terminada')).toHaveLength(1)
     expect(ctx.events[ctx.events.length - 1]).toEqual({ type: 'partida_terminada', ganador: 'A', motivo: 'vinculos' })
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════════
+// double_attack (Fase 2b) — segunda ola data-driven desde efectos[]
+// Tests genéricos por tipo de efecto (tarjeta sintética) + FB-015 real.
+// ═══════════════════════════════════════════════════════════════════
+
+describe('double_attack (Fase 2b) — segunda ola data-driven', () => {
+  const DOUBLE = 'TEST-DOUBLE-ATTACK'
+  registrarCartas([{
+    id: DOUBLE,
+    name: 'Double Attack Test',
+    type: 'Campeón',
+    rarity: 'Común',
+    keywords: [],
+    flavorText: '',
+    createdAt: '2026-01-01T00:00:00.000Z',
+    updatedAt: '2026-01-01T00:00:00.000Z',
+    paqueteId: 'test',
+    limiteCopias: '1',
+    stats: { cost: 3, poder: 5, resistencia: 5 },
+    efectos: [{
+      tipo: 'continuo',
+      efecto: 'double_attack',
+      duracion: 'mientras_ester_bloqueado',
+      objetivo: { tipo: 'self', zona: 'campo' },
+      costo: { tipo: 'bloqueo_fijo', cantidad: 1 },
+      texto: 'Bloquea 1 Éter, esta carta puede declarar 2 veces ataque, mientras ese Éter esté bloqueado.',
+    }],
+  } as unknown as AnyCard])
+
+  it('con Éter bloqueado: primera ola cierra el combate y permite la segunda declarar_ataque', () => {
+    let s = estadoMinimo()
+    const { s: s1, id: champ } = conCampeon(s, DOUBLE, 0, { eterBloqueado: ['e1'] })
+    s = s1
+    s.instances['e1'] = { cardInstanceId: 'e1', cardId: ETER_ORDEN, owner: 'A' }
+
+    const ctx = crearCtx()
+    // Primera ola: B sin defensores → auto-resolución → combate se cierra (double activo)
+    const r1 = aplicar(s, { type: 'declarar_ataque', atacanteIds: [champ] }, ctx)
+    expect(r1.combate).toBeUndefined()
+    expect(r1.instances[champ].atacoEsteTurno).toBe(true)
+    expect(r1.instances[champ].agotado).toBe(true)
+
+    // Segunda ola: doble ataque activo pese a atacoEsteTurno + agotado
+    const r2 = applyAction(r1, { type: 'declarar_ataque', atacanteIds: [champ] }, ctx)
+    expect(r2.ok).toBe(true)
+  })
+
+  it('sin Éter bloqueado: el combate persiste y la segunda declarar_ataque falla', () => {
+    let s = estadoMinimo()
+    const { s: s1, id: champ } = conCampeon(s, DOUBLE, 0) // sin eterBloqueado
+    s = s1
+
+    const ctx = crearCtx()
+    const r1 = aplicar(s, { type: 'declarar_ataque', atacanteIds: [champ] }, ctx)
+    // Sin double activo: combate queda en resolucion (comportamiento previo)
+    expect(r1.combate).toBeDefined()
+
+    const r2 = applyAction(r1, { type: 'declarar_ataque', atacanteIds: [champ] }, ctx)
+    expect(r2.ok).toBe(false)
+  })
+
+  it('invocación cansada: el doble ataque NO anula summoning sickness', () => {
+    let s = estadoMinimo()
+    const { s: s1, id: champ } = conCampeon(s, DOUBLE, 0, {
+      agotado: true,
+      entradaEsteTurno: true,
+      eterBloqueado: ['e1'],
+    })
+    s = s1
+    s.instances['e1'] = { cardInstanceId: 'e1', cardId: ETER_ORDEN, owner: 'A' }
+
+    const ctx = crearCtx()
+    const r = applyAction(s, { type: 'declarar_ataque', atacanteIds: [champ] }, ctx)
+    expect(r.ok).toBe(false) // cansada este turno → no ataca, aunque tenga double activo
+  })
+
+  it('FB-015 Elena real: Recarga libera 1 Éter al declarar — con 3 bloqueados queda double activo y hay segunda ola', () => {
+    let s = estadoMinimo()
+    // Elena (FB-015): continuo/double_attack + keyword Recarga, costo bloqueo_fijo 3
+    const { s: s1, id: elena } = conCampeon(s, ELENA, 0, { eterBloqueado: ['e1', 'e2', 'e3'] })
+    s = s1
+    s.instances['e1'] = { cardInstanceId: 'e1', cardId: ETER_ORDEN, owner: 'A' }
+    s.instances['e2'] = { cardInstanceId: 'e2', cardId: ETER_ORDEN, owner: 'A' }
+    s.instances['e3'] = { cardInstanceId: 'e3', cardId: ETER_ORDEN, owner: 'A' }
+
+    const ctx = crearCtx()
+    const r1 = aplicar(s, { type: 'declarar_ataque', atacanteIds: [elena] }, ctx)
+    // Recarga: 1 Éter vuelve a la Reserva al declarar → quedan 2 bloqueados → double sigue activo
+    expect(r1.instances[elena].eterBloqueado).toHaveLength(2)
+    expect(r1.players.A.eterReserva).toHaveLength(1)
+    expect(r1.combate).toBeUndefined() // cerrado por double activo
+
+    const r2 = applyAction(r1, { type: 'declarar_ataque', atacanteIds: [elena] }, ctx)
+    expect(r2.ok).toBe(true)
   })
 })

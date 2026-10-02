@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { applyAction, botTonto, createInitialState, getValidActions } from './game'
 import type { Action, Ctx, GameState, PlayerId } from './game'
+import type { Dificultad } from './game/bot'
 import { eventosParaLog } from './log'
 import { eventosDetalladosParaLog } from './logDetallado'
 
@@ -12,6 +13,8 @@ export interface PartidaConfig {
   seed: number
   /** Delay entre jugadas del bot (0 en tests). */
   delayMs?: number
+  /** Dificultad del bot */
+  dificultad?: Dificultad
 }
 
 /** Tipo de animación */
@@ -43,12 +46,15 @@ const DEATH_DURATION_MS = 500
 
 /**
  * El actor de la jugada actual NO es siempre `estado.turno`:
+ * - Checkpoint prevent_destroy (Fase 2c) → el jugador que debe elegir.
  * - Cadena 9.6 abierta → el actor es `cadena.prioridad` (el turno queda congelado).
  * - Paso bloqueo (9.3, ADR-11) → el actor es el DEFENSOR (rival del activo).
  * - Resto → el jugador activo.
  */
 export function actorActual(estado: GameState): PlayerId | null {
   if (estado.fase === 'terminada') return null
+  const preven = estado.preventivosPendientes?.[0]
+  if (preven) return preven.jugador
   const cadena = estado.combate?.cadena
   if (estado.fase === 'choque' && cadena) return cadena.prioridad
   if (estado.fase === 'choque' && estado.combate?.paso === 'bloqueo') {
@@ -166,7 +172,7 @@ export function usePartida(config: PartidaConfig) {
       const act = actorActual(s)
       if (!act || act === 'A') return
       jugadasBotRef.current += 1
-      const accion = botTonto(s, act)
+      const accion = botTonto(s, act, config.dificultad)
       if (!accion || jugadasBotRef.current > MAX_JUGADAS_BOT) {
         // Sin progreso posible: el bot se rinde para no colgar la partida.
         ejecutar({ type: 'rendirse' })

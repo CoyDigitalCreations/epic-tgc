@@ -108,8 +108,8 @@ export function ImageUpload({ value, onChange }: ImageUploadProps) {
                 d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
               />
             </svg>
-            <p className="text-sm">Soltó una imagen acá</p>
-            <p className="text-xs text-gray-600 mt-1">o hacé clic para buscar</p>
+            <p className="text-sm">Suelta una imagen aquí</p>
+            <p className="text-xs text-gray-600 mt-1">o haz clic para buscar</p>
             <p className="text-xs text-gray-700 mt-1">PNG, JPG, WebP — máx 5 MB</p>
           </div>
         )}

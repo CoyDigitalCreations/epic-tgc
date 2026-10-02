@@ -4,6 +4,7 @@
  */
 import type { GameState, Ctx, PlayerId, FaseNombre } from './types'
 import { purgarEfectosTemporales, purgarKeywordsTemporales, dispararTrigger } from './efectos'
+import { getCardMeta } from './cards'
 import { resolverFaseEfectos } from './effectRegistry'
 import { limpiarCombate, resolverAlba } from './phases'
 import { enviarAlCementerio } from './replacements'
@@ -96,7 +97,7 @@ export function ejecutarPasarTurno(s: GameState, ctx: Ctx): void {
     const siguiente: FaseNombre = s.fase === 'forja' ? 'choque' : 'ocaso'
     if (s.fase === 'choque') {
       limpiarCombate(s) // ADR-11: limpieza defensiva al salir de Choque
-      // Effect Registry: resolver efectos de fase 'ocaso' antes de la purga legacy
+      // Effect Registry: resolver efectos de fase 'ocaso' antes de la purga temporal (ADR-22)
       resolverFaseEfectos(s, ctx, 'ocaso', s.turno)
       // C1 (ADR-22): al llegar el Ocaso expiran los efectos 'ocaso' del turno
       // en curso (ambos jugadores) y las keywordsTemporales otorgadas.
@@ -105,12 +106,31 @@ export function ejecutarPasarTurno(s: GameState, ctx: Ctx): void {
     }
     if (s.fase === 'forja') {
       // C2 (ADR-24): al inicio del Choque del jugador activo se disparan
-      // efectos de inicio-choque: Éteres en Reserva (FB-002/DS-003) Y Arcanas
-      // propias en campo (DS-032 al-inicio-choque, change 4).
+      // efectos de inicio-choque: Éteres en Reserva (FB-002/DS-003), Campeones
+      // (DS-018 — Fase 2a), Arcanas propias y vínculos periódicos.
       const p = s.players[s.turno]
+      const campeones = p.campo.campeones.filter((x): x is string => x !== null)
       const arcanas = p.campo.arcanasCombate.filter((x): x is string => x !== null)
-      if (p.eterReserva.length > 0 || arcanas.length > 0) {
-        dispararTrigger(s, ctx, 'al-inicio-choque', s.turno, [...p.eterReserva, ...arcanas])
+      const vinculos = p.vinculos.filter((x): x is string => x !== null)
+      const choqueInstances = [...p.eterReserva, ...campeones, ...arcanas, ...vinculos]
+      if (choqueInstances.length > 0) {
+        dispararTrigger(s, ctx, 'al-inicio-choque', s.turno, choqueInstances)
+      }
+      // Fase 3d: vínculos RIVALES con controladorTrigger:'rival' firean EN el
+      // choque del activo (DS-027 "Al inicio del Choque del RIVAL"). Se
+      // dispatchan con jugador=DUEÑO del vínculo para que "rival" resuelva
+      // al activo (perspectiva correcta del efecto).
+      const rival: PlayerId = s.turno === 'A' ? 'B' : 'A'
+      const vinculosRivales = s.players[rival].vinculos.filter((x): x is string => {
+        if (!x) return false
+        const vInst = s.instances[x]
+        const vMeta = vInst?.cardId ? getCardMeta(vInst.cardId) : null
+        return !!vMeta && 'efectos' in vMeta && !!vMeta.efectos?.some(
+          (e) => e.trigger === 'inicio_choque' && e.controladorTrigger === 'rival',
+        )
+      })
+      if (vinculosRivales.length > 0) {
+        dispararTrigger(s, ctx, 'al-inicio-choque', rival, vinculosRivales)
       }
     }
     s.fase = siguiente

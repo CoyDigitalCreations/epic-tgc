@@ -1,25 +1,27 @@
-import { esCampeon, getCardMeta, type AnyCard } from './cards'
+import { esCampeon, faccionesCompartidas, getCardMeta, type AnyCard } from './cards'
 import type { CardInstance, Ctx, ExpiraModificador, GameState, PlayerId } from './types'
 import { interpretEffect } from './effectInterpreter'
+import { resolveTargets } from './targetResolver'
+import type { CondicionEfecto, EfectoData } from '../../shared/types'
 
 /**
  * Infraestructura de efectos (change 3, ADR-20..22): registro → dispatch.
  *
- * - `registrarEfecto(trigger, cardId, fn)` registra handlers por (trigger, cardId).
- * - `dispararTrigger` recolecta las instancias relevantes (explícitas vía
- *   `instancias` o por zona en el campo del jugador) y ejecuta los handlers en
- *   orden DETERMINISTA (cardInstanceId asc) sobre el CLON (patrón ADR-5).
+ * - `registrarEfecto(trigger, cardId, fn)` registra handlers por (trigger, cardId)
+ *   para infraestructura de dispatch (tests, features del engine).
+ * - `dispararTrigger` recolecta las instancias relevantes y ejecuta los handlers
+ *   en orden DETERMINISTA sobre el CLON (patrón ADR-5).
  * - `statsDe`/`keywordsDe` son la ÚNICA consulta de stats: base del meta +
- *   override de instancia (poder?/resistencia?, patrón keywords) + Σ de
- *   `modificadores` (ADR-22). combat.ts las consume (regresión C1).
+ *   override de instancia + Σ de `modificadores` (ADR-22) + Σ de
+ *   `modificadoresJSONDe` (Fase 1: auras derivadas del JSON).
  * - Las purgas por expiración (ADR-22) se disparan desde las transiciones de
- *   fase: 'ocaso' y keywordsTemporales en choque→ocaso (actions.ts), 'alba-dueño'
- *   en la Alba del dueño (phases.ts).
+ *   fase: 'ocaso' en choque→ocaso (partida.ts), 'alba-dueño' en la Alba
+ *   del dueño (phases.ts).
  *
- * C2 (change 3): auras por zona (reserva 2A / bloqueo 1B-1F) se registran con
- * `registrarAuraReserva` / `registrarAuraBloqueo` y se suman en `statsDe` y
- * `keywordsDe` vía `aurasDe`. Los mods de aura expiran 'permanente'; las
- * keywords de aura son extra (no temporales).
+ * FASE 1 — Modificadores continuos desde el JSON:
+ * Las auras (campo/reserva/bloqueo + efectoComandante) se DERIVAN leyendo
+ * efectos[] de las fuentes en el estado — sin handlers por cardId. Cualquier
+ * carta con configuración válida en Card-Maker produce auras.
  *
  * Combate = 0 extracciones RNG (contrato 89 intacto); los efectos tampoco
  * consumen RNG salvo que el handler lo pida explícitamente vía ctx.
@@ -47,6 +49,7 @@ export interface PayloadEfecto {
   contextoUso?: string
   killerId?: string
   victimaId?: string
+  fromTrigger?: boolean
   extra?: Record<string, unknown>
 }
 
@@ -55,148 +58,501 @@ export type HandlerEfecto = (s: GameState, ctx: Ctx, inst: CardInstance, payload
 
 const registro = new Map<TriggerEfecto, Map<string, HandlerEfecto>>()
 
-/** Aura de reserva: fn(inst, meta, championOwner, eterOwner) → { poder?, resistencia?, keywords?[] } | null. */
-export type AuraReservaFn = (
-  inst: CardInstance,
-  meta: AnyCard,
-  championOwner: PlayerId,
-  eterOwner: PlayerId,
-) => { poder?: number; resistencia?: number; keywords?: string[] } | null
-/** Aura de bloqueo: fn(inst, meta) → { poder?, resistencia?, keywords?[] } | null. */
-export type AuraBloqueoFn = (
-  inst: CardInstance,
-  meta: AnyCard,
-) => { poder?: number; resistencia?: number; keywords?: string[] } | null
+/* ──────────────────────────────────────────────────────────────────────────
+   MODIFICADORES CONTINUOS DESDE EL JSON (Fase 1)
+   Estado derivado: statsDe/keywordsDe computan auras leyendo efectos[] +
+   efectoComandante de las fuentes en el estado. Sin handlers por cardId.
+   ────────────────────────────────────────────────────────────────────────── */
 
-const aurasReserva = new Map<string, AuraReservaFn>()
-const aurasBloqueo = new Map<string, AuraBloqueoFn>()
-
-/** Aura de campo (D6): fn(s, fuente, objetivo) → { atq?, res? } | null. Decide
- * por par (fuente, objetivo); admite objetivo === fuente (self-buff). Las
- * auras de campo son PURAS (no emiten eventos ni mutan): viven en statsDe. */
-export type AuraCampoFn = (s: GameState, fuente: string, objetivo: string) => { atq?: number; res?: number } | null
-
-const aurasCampo = new Map<string, AuraCampoFn>()
-
-/** true si hay un aura de campo registrada para este cardId (para foco "rojo"). */
-export function hasAuraCampoRegistrada(cardId: string): boolean {
-  return aurasCampo.has(cardId)
+/** ¿El efecto produce stats/keywords (aura candidata)? */
+function esEfectoStat(efecto: EfectoData): boolean {
+  return efecto.efecto === 'buff' || efecto.efecto === 'debuff' || efecto.efecto === 'grant_keyword'
 }
 
-/** Registra un aura de campo para un Campeón (D6): fuentes en el campo del
- * mismo jugador que el objetivo ("otros campeones que controles"). */
-export function registrarAuraCampo(cardId: string, fn: AuraCampoFn): void {
-  aurasCampo.set(cardId, fn)
-}
-
-/** Registra un aura para Éter en Reserva (2A). La fn recibe la instancia del Éter y su meta. */
-export function registrarAuraReserva(cardId: string, fn: AuraReservaFn): void {
-  aurasReserva.set(cardId, fn)
-}
-
-/** Registra un aura para Éter bloqueado (1B-1F). La fn recibe la instancia del Éter y su meta. */
-export function registrarAuraBloqueo(cardId: string, fn: AuraBloqueoFn): void {
-  aurasBloqueo.set(cardId, fn)
-}
-
-/** Resultado de auras aplicables a una instancia (Campeón u otra). */
-export interface AurasAplicadas {
-  reserva: Array<{ poder?: number; resistencia?: number; keywords?: string[] }>
-  bloqueo: Array<{ poder?: number; resistencia?: number; keywords?: string[] }>
-  /** Auras de campo (D6): ya normalizadas a poder/resistencia (Σ aditivo). */
-  campo: Array<{ poder?: number; resistencia?: number }>
+/** Aura de zona: pasivo/reserva/bloqueo SIN trigger de evento (o trigger 'ninguno'). */
+export function esAuraZona(efecto: EfectoData): boolean {
+  if (!esEfectoStat(efecto)) return false
+  const sinTriggerDeEvento = efecto.trigger === undefined || efecto.trigger === 'ninguno'
+  return (efecto.tipo === 'pasivo' || efecto.tipo === 'reserva' || efecto.tipo === 'bloqueo') && sinTriggerDeEvento
 }
 
 /**
- * Devuelve las auras que aplican a `inst` (normalmente un Campeón):
- * - reserva: Éteres en eterReserva de AMBOS jugadores (algunas afectan al rival)
- * - bloqueo: Éteres en inst.eterBloqueado del Campeón
- * Los mods de aura expiran 'permanente'; las keywords son extra (no temporales).
+ * Aura condicional: "gana X mientras ese Éter esté bloqueado".
+ * Solo cuenta como aura cuando el objetivo es self o todos_campeones_propios
+ * Y el efecto NO se ejecuta por activación (tipo disparo/continuo van al
+ * interpreter al activar — p.ej. Ragnar continuo grant_keyword a UN campeón,
+ * Korr disparo buff — para no duplicar el modificador).
  */
-export function aurasDe(s: GameState, id: string): AurasAplicadas {
-  const inst = s.instances[id]
-  if (!inst) return { reserva: [], bloqueo: [], campo: [] }
-  const championOwner = inst.owner
-  const metaInst = inst.cardId ? getCardMeta(inst.cardId) : null
-  const esCampeonInst = metaInst ? esCampeon(metaInst) : false
-  if (!esCampeonInst) return { reserva: [], bloqueo: [], campo: [] }
+export function esAuraCondicionada(efecto: EfectoData): boolean {
+  if (efecto.tipo === 'disparo' || efecto.tipo === 'continuo') return false
+  if (efecto.duracion !== 'mientras_ester_bloqueado') return false
+  if (!esEfectoStat(efecto)) return false
+  const t = efecto.objetivo?.tipo
+  return t === 'todos_campeones_propios' || t === 'self'
+}
 
-  // Auras de reserva: Éteres en 2A de AMBOS jugadores
-  const reservaAuras: AurasAplicadas['reserva'] = []
+/**
+ * Aura de artefacto equipado (Fase 3a — FB-020): hechizo buff/debuff con
+ * buffPerBlockedEther + costo-bloqueado + objetivo equipped_champion.
+ * "el Campeón equipado con esta carta gana X por cada Éter bloqueado [en esta carta]".
+ * El buff es DERIVADO: escala con fuente.eterBloqueado, sin evento de activación.
+ */
+export function esAuraEquipada(efecto: EfectoData): boolean {
+  if (efecto.efecto !== 'buff' && efecto.efecto !== 'debuff') return false
+  if (!efecto.buffPerBlockedEther) return false
+  if (efecto.costo?.tipo !== 'eter_bloqueado' && efecto.costo?.tipo !== 'bloqueo_fijo') return false
+  return efecto.objetivo?.tipo === 'equipped_champion'
+}
+
+/**
+ * Aura de Vínculo (Fase 3d — FB-030, DS-030): tipo 'vinculo' + efecto stat +
+ * duracion 'mientras_en_campo' + sin trigger. "vínculos siempre en el campo
+ * → permanente" (diseño del usuario). Aura derivada via modificadoresJSONDe.
+ */
+export function esAuraVinculo(efecto: EfectoData): boolean {
+  if (efecto.tipo !== 'vinculo') return false
+  if (!esEfectoStat(efecto)) return false
+  if (efecto.duracion !== 'mientras_en_campo') return false
+  return efecto.trigger === undefined || efecto.trigger === null
+}
+
+/**
+ * Stats base + modificadores temporales (SIN auras JSON) — para ranking
+ * en evaluarAura (seleccionar filter). Evita recursión
+ * statsDe↔modificadoresJSONDe. V1: ranking por stats imprimibles.
+ */
+function statsBaseDe(s: GameState, id: string): { poder: number; resistencia: number } {
+  const inst = s.instances[id]
+  const meta = inst?.cardId ? getCardMeta(inst.cardId) : null
+  const esCamp = !!meta && esCampeon(meta)
+  const stats = esCamp ? (meta as { stats?: { poder?: number; resistencia?: number } }).stats : undefined
+  let poder = inst?.poder ?? stats?.poder ?? 0
+  let resistencia = inst?.resistencia ?? stats?.resistencia ?? 0
+  for (const m of inst?.modificadores ?? []) {
+    if (m.stat === 'poder') poder += m.valor
+    else resistencia += m.valor
+  }
+  return { poder, resistencia }
+}
+
+/**
+ * ¿El campeón está NEGADO? (Fase 3b — FB-021 Marcha de las Primeras).
+ * Estado derivado: scan del campo de AMBOS jugadores buscando fuentes con
+ * efecto 'negar' en JSON + negadoTargetId === champId. Si la fuente salió
+ * del campo, la negación terminó (patrón modificadoresJSONDe — sin cleanup).
+ */
+export function championNegado(s: GameState, champId: string): boolean {
+  const champInst = s.instances[champId]
+  if (!champInst) return false
+  for (const j of ['A', 'B'] as PlayerId[]) {
+    const p = s.players[j]
+    for (const grupo of ['campeones', 'misticasTacticas', 'arcanasCombate'] as const) {
+      for (const id of p.campo[grupo]) {
+        if (!id) continue
+        const inst = s.instances[id]
+        if (!inst?.negadoTargetId || inst.negadoTargetId !== champId) continue
+        const meta = inst.cardId ? getCardMeta(inst.cardId) : null
+        if (meta && 'efectos' in meta && meta.efectos?.some((e) => e.efecto === 'negar')) return true
+      }
+    }
+  }
+  return false
+}
+
+/**
+ * ¿El copy de FB-022 está ACTIVO? (Fase 3c — Último Refugio).
+ * Estado derivado: copyTargetId + ≥1 Éter bloqueado + target en campo.
+ * "copia el efecto... mientras ese Éter esté bloqueado" (§7.7 / manual).
+ * Patrón modificadoresJSONDe — sin cleanup; si el target sale, copyActivo=false.
+ */
+export function copyActivo(s: GameState, id: string): boolean {
+  const inst = s.instances[id]
+  if (!inst?.copyTargetId || (inst.eterBloqueado?.length ?? 0) === 0) return false
+  const targetId = inst.copyTargetId
+  const target = s.instances[targetId]
+  if (!target?.cardId) return false
+  const p = s.players[target.owner]
+  return (
+    p.campo.campeones.includes(targetId) ||
+    p.campo.misticasTacticas.includes(targetId) ||
+    p.campo.arcanasCombate.includes(targetId)
+  )
+}
+
+/** Modificadores continuos computados para una instancia. */
+export interface ModificadoresJSON {
+  poder: number
+  resistencia: number
+  keywords: string[]
+}
+
+type OrigenAura = 'campo' | 'reserva' | 'bloqueo' | 'vinculo'
+
+interface CandidatoAura {
+  inst: CardInstance
+  meta: AnyCard
+  esComandante: boolean
+  origen: OrigenAura
+}
+
+/**
+ * Evalúa si un efecto continuo aplica a `objetivoId` dado el contexto de la
+ * fuente, y calcula los modificadores resultantes. null = no aplica.
+ */
+function evaluarAura(
+  s: GameState,
+  efecto: EfectoData,
+  fuente: CardInstance,
+  esComandante: boolean,
+  objetivoId: string,
+  objetivoInst: CardInstance,
+  origen: OrigenAura,
+): { poder?: number; resistencia?: number; keywords?: string[] } | null {
+  const objetivo = efecto.objetivo
+  if (!objetivo) return null
+
+  const mismoDueno = fuente.owner === objetivoInst.owner
+
+  // ¿Aplica el objetivo del JSON a esta instancia?
+  let aplica = false
+  let excluirSelf = false
+
+  switch (objetivo.tipo) {
+    case 'self':
+      aplica = objetivoId === fuente.cardInstanceId
+      break
+    case 'todos_campeones_propios':
+      aplica = mismoDueno
+      // Convención del motor (por semántica del JSON, no por cardId):
+      // - efectoComandante → INCLUYE self ("Todos tus Campeones ganan…")
+      // - aura condicional (mientras_ester_bloqueado) → INCLUYE self
+      //   ("los Campeones que controlas ganen… mientras esté bloqueado")
+      // - aura de zona estática (pasivo/reserva/bloqueo sin trigger) → EXCLUYE self
+      //   ("Los OTROS Campeones que controlas ganan…")
+      excluirSelf = !esComandante && origen === 'campo' && esAuraZona(efecto) && !esAuraCondicionada(efecto)
+      break
+    case 'campeon':
+      if (objetivo.controlador === 'propio') aplica = mismoDueno
+      else if (objetivo.controlador === 'rival') aplica = !mismoDueno
+      else aplica = true
+      // Fase 3d: filtro seleccionar (mayor/menor stat) — el aura aplica SOLO
+      // al campeón que matchea el ranking del pool elegible.
+      if (aplica && objetivo.filtros?.seleccionar) {
+        const { stat, orden } = objetivo.filtros.seleccionar
+        const pool: string[] = []
+        for (const j of ['A', 'B'] as PlayerId[]) {
+          const esDuenoFiltro = objetivo.controlador === 'propio' ? j === fuente.owner : objetivo.controlador === 'rival' ? j !== fuente.owner : true
+          if (!esDuenoFiltro) continue
+          for (const cid of s.players[j].campo.campeones) {
+            if (cid) pool.push(cid)
+          }
+        }
+        if (pool.length === 0) return null
+        let mejorId = pool[0]
+        let mejorVal = stat === 'poder' ? statsBaseDe(s, pool[0]).poder : statsBaseDe(s, pool[0]).resistencia
+        for (const cid of pool.slice(1)) {
+          const val = stat === 'poder' ? statsBaseDe(s, cid).poder : statsBaseDe(s, cid).resistencia
+          if (orden === 'mayor' ? val > mejorVal : val < mejorVal) {
+            mejorId = cid
+            mejorVal = val
+          }
+        }
+        if (mejorId !== objetivoId) return null
+      }
+      break
+    case 'equipped_champion':
+      // Fase 3a (FB-020): aura de artefacto equipado — la fuente (Mística/Arcana)
+      // debe estar equipada al target y ser del mismo dueño.
+      aplica = mismoDueno && fuente.equipadoA === objetivoId
+      break
+    default:
+      return null
+  }
+
+  if (!aplica) return null
+  if (excluirSelf && objetivoId === fuente.cardInstanceId) return null
+
+  // Guardas por origen
+  if (origen === 'reserva') {
+    // El Éter debe estar en la Reserva de su dueño
+    if (!s.players[fuente.owner].eterReserva.includes(fuente.cardInstanceId)) return null
+    // controlador del objetivo respecto al DUEÑO DEL ÉTER
+    if (objetivo.controlador === 'rival' && objetivoInst.owner === fuente.owner) return null
+    if (objetivo.controlador === 'propio' && objetivoInst.owner !== fuente.owner) return null
+  }
+
+  if (origen === 'bloqueo') {
+    // El Éter debe estar bloqueado SOBRE esta instancia (anfitrión)
+    if (!(objetivoInst.eterBloqueado ?? []).includes(fuente.cardInstanceId)) return null
+  }
+
+  if (efecto.duracion === 'mientras_ester_bloqueado' && origen !== 'bloqueo') {
+    // Aura condicional: la FUENTE debe tener éter bloqueado actualmente
+    if ((fuente.eterBloqueado?.length ?? 0) === 0) return null
+  }
+
+  // Escala buffPerBlockedEther (auras pasivas): +stats por Éter bloqueado.
+  // Fase 3a (FB-020): cuando el objetivo es equipped_champion, la fuente ES el
+  // artefacto equipado — se cuenta el Éter bloqueado EN LA FUENTE (no en rivales).
+  // Comportamiento existente (Marek): cuenta éter bloqueado de campeones RIVALES.
+  let escala = 1
+  if (efecto.buffPerBlockedEther) {
+    if (objetivo.tipo === 'equipped_champion') {
+      const bloqueadosFuente = fuente.eterBloqueado?.length ?? 0
+      if (bloqueadosFuente === 0) return null
+      escala = efecto.cantidadMax !== undefined ? Math.min(bloqueadosFuente, efecto.cantidadMax) : bloqueadosFuente
+    } else {
+      const rival = objetivoInst.owner === 'A' ? 'B' : 'A'
+      const bloqueadosRival = s.players[rival].campo.campeones
+        .filter((cId): cId is string => cId !== null)
+        .reduce((acc, cId) => acc + (s.instances[cId]?.eterBloqueado?.length ?? 0), 0)
+      if (bloqueadosRival === 0) return null
+      escala = efecto.cantidadMax !== undefined ? Math.min(bloqueadosRival, efecto.cantidadMax) : bloqueadosRival
+    }
+  }
+
+  const signo = efecto.efecto === 'debuff' && !statsDebuffYaNegativos(efecto) ? -1 : 1
+  const resultado: { poder?: number; resistencia?: number; keywords?: string[] } = {}
+
+  if (efecto.stats?.ATQ) resultado.poder = efecto.stats.ATQ * signo * escala
+  if (efecto.stats?.RES) resultado.resistencia = efecto.stats.RES * signo * escala
+  if (efecto.efecto === 'grant_keyword' && efecto.keyword) {
+    resultado.keywords = [efecto.keyword]
+  }
+
+  return resultado
+}
+
+/**
+ * Normalización de signo (Fase 3d): Card-Maker puede emitir stats negativos
+ * para debuffs (DS-002: ATQ:-1) O positivos (FB-030/DS-011/DS-020/DS-023 —
+ * convención documentada: el engine niega "pierde X"). Si debuff y stats ya
+ * negativos → usar as-is (evita doble negación = buff).
+ */
+function statsDebuffYaNegativos(efecto: EfectoData): boolean {
+  const atq = efecto.stats?.ATQ ?? 0
+  const res = efecto.stats?.RES ?? 0
+  return atq < 0 || (atq === 0 && res < 0)
+}
+
+/**
+ * Modificadores continuos derivados del JSON (Fase 1) para la instancia `id`.
+ * Escanea: fuentes en el campo del controlador (campeones + místicas + arcanas),
+ * Éteres en Reserva de ambos jugadores, y Éteres bloqueados sobre la instancia.
+ */
+export function modificadoresJSONDe(s: GameState, id: string): ModificadoresJSON {
+  const vacio: ModificadoresJSON = { poder: 0, resistencia: 0, keywords: [] }
+  const inst = s.instances[id]
+  if (!inst) return vacio
+  const meta = inst.cardId ? getCardMeta(inst.cardId) : null
+  if (!meta || !esCampeon(meta)) return vacio
+
+  const owner = inst.owner
+  const candidatos: CandidatoAura[] = []
+
+  // 1. Fuentes en el CAMPO del controlador del objetivo
+  //    (D6: "que controles" — el controlador, no el owner: robo de control)
+  const campo = s.players[owner].campo
+  const fuentesCampo = [
+    ...campo.campeones,
+    ...campo.misticasTacticas,
+    ...campo.arcanasCombate,
+  ].filter((x): x is string => x !== null)
+
+  for (const fuenteId of fuentesCampo) {
+    const fuenteInst = s.instances[fuenteId]
+    if (!fuenteInst?.cardId) continue
+    const fuenteMeta = getCardMeta(fuenteInst.cardId)
+    if (!fuenteMeta) continue
+
+    if (fuenteMeta.type === 'Campeón' && fuenteMeta.efectoComandante) {
+      candidatos.push({ inst: fuenteInst, meta: fuenteMeta, esComandante: true, origen: 'campo' })
+    }
+    if ('efectos' in fuenteMeta && fuenteMeta.efectos?.some((e) => esAuraZona(e) || esAuraCondicionada(e) || esAuraEquipada(e))) {
+      candidatos.push({ inst: fuenteInst, meta: fuenteMeta, esComandante: false, origen: 'campo' })
+    }
+  }
+
+  // 2. Éteres en RESERVA de AMBOS jugadores (algunas auras afectan al rival)
   for (const eterOwner of ['A', 'B'] as PlayerId[]) {
     for (const eterId of s.players[eterOwner].eterReserva) {
       const eterInst = s.instances[eterId]
-      const eterMeta = eterInst?.cardId ? getCardMeta(eterInst.cardId) : null
+      if (!eterInst?.cardId) continue
+      const eterMeta = getCardMeta(eterInst.cardId)
       if (!eterMeta) continue
-      const fn = aurasReserva.get(eterMeta.id)
-      if (fn) {
-        // La aura decide si aplica a este campeón (recibe eterOwner y championOwner)
-        const resultado = fn(eterInst, eterMeta, championOwner, eterOwner)
-        if (resultado?.poder !== undefined && resultado !== null) reservaAuras.push(resultado)
+      if ('efectos' in eterMeta && eterMeta.efectos?.some((e) => e.tipo === 'reserva' && esAuraZona(e))) {
+        candidatos.push({ inst: eterInst, meta: eterMeta, esComandante: false, origen: 'reserva' })
       }
     }
   }
 
-  // Auras de bloqueo: Éteres en eterBloqueado del Campeón (solo anfitrión)
-  const bloqueoAuras: AurasAplicadas['bloqueo'] = []
+  // 3. Éteres BLOQUEADOS sobre esta instancia (anfitrión)
   for (const eterId of inst.eterBloqueado ?? []) {
     const eterInst = s.instances[eterId]
-    const eterMeta = eterInst?.cardId ? getCardMeta(eterInst.cardId) : null
+    if (!eterInst?.cardId) continue
+    const eterMeta = getCardMeta(eterInst.cardId)
     if (!eterMeta) continue
-    const fn = aurasBloqueo.get(eterMeta.id)
-    if (fn) {
-      const result = fn(eterInst, eterMeta)
-      if (result !== null) bloqueoAuras.push(result)
+    if ('efectos' in eterMeta && eterMeta.efectos?.some((e) => e.tipo === 'bloqueo' && esAuraZona(e))) {
+      candidatos.push({ inst: eterInst, meta: eterMeta, esComandante: false, origen: 'bloqueo' })
     }
   }
 
-  // Auras de campo (D6): fuentes en el campo donde está `id` (el CONTROLADOR,
-  // no el owner: D2 robo de control mueve la instancia). Los textos dicen
-  // "que controles" → solo el campo propio del objetivo.
-  // Escanea campeones + Místicas/Arcanas (Artefactos equipados).
-  const campoAuras: AurasAplicadas['campo'] = []
-  const campoDelObjetivo = (['A', 'B'] as PlayerId[]).find((j) => s.players[j].campo.campeones.includes(id))
-  if (campoDelObjetivo) {
-    const fuentesCampo = [
-      ...s.players[campoDelObjetivo].campo.campeones,
-      ...s.players[campoDelObjetivo].campo.misticasTacticas,
-      ...s.players[campoDelObjetivo].campo.arcanasCombate,
-    ]
-    for (const fuenteId of fuentesCampo) {
-      if (fuenteId === null) continue
-      const fuenteInst = s.instances[fuenteId]
-      const fuenteMeta = fuenteInst?.cardId ? getCardMeta(fuenteInst.cardId) : null
-      if (!fuenteInst || !fuenteMeta) continue
-
-      // Auras de campo registradas (DS-014 Thane, FB-021 Marcha, DS-021 Nudo, etc.)
-      const fnCampo = aurasCampo.get(fuenteMeta.id)
-      if (fnCampo) {
-        const resultado = fnCampo(s, fuenteId, id)
-        if (resultado !== null) {
-          campoAuras.push({ poder: resultado.atq, resistencia: resultado.res })
-        }
-      }
-
-      // Habilidades activas "Bloqueado" (FB-016 Cassandra, DS-016 Korr):
-      // si la fuente tiene éteres bloqueados y tiene efecto con costo de éter bloqueado,
-      // aplica un aura a TODOS los campeones que controla el dueño de la fuente.
-      if (
-        'efectos' in fuenteMeta && fuenteMeta.efectos?.some((e) => e.costo?.tipo === 'eter_bloqueado') &&
-        (fuenteInst.eterBloqueado?.length ?? 0) > 0
-      ) {
-        // Cassandra (FB-016): +1 RES a todos los que controla
-        if (fuenteMeta.id === 'FB-016') {
-          campoAuras.push({ resistencia: 1 })
-        }
-        // Korr (DS-016): +1 ATQ a todos los que controla
-        if (fuenteMeta.id === 'DS-016') {
-          campoAuras.push({ poder: 1 })
-        }
+  // 4. Vínculos de AMBOS jugadores (Fase 3d — FB-030/DS-030): aura mientras_en_campo.
+  //    Los vínculos pueden targetear rivales (FB-030 debuffa rival) o propios (DS-030 buffa propio).
+  for (const vincOwner of ['A', 'B'] as PlayerId[]) {
+    for (const vincId of s.players[vincOwner].vinculos) {
+      if (!vincId) continue
+      const vincInst = s.instances[vincId]
+      if (!vincInst?.cardId) continue
+      const vincMeta = getCardMeta(vincInst.cardId)
+      if (!vincMeta) continue
+      if ('efectos' in vincMeta && vincMeta.efectos?.some((e) => esAuraVinculo(e))) {
+        candidatos.push({ inst: vincInst, meta: vincMeta, esComandante: false, origen: 'vinculo' })
       }
     }
   }
 
-  return { reserva: reservaAuras, bloqueo: bloqueoAuras, campo: campoAuras }
+  let poder = 0
+  let resistencia = 0
+  const keywords: string[] = []
+
+  for (const c of candidatos) {
+    const efectos: EfectoData[] = []
+    if (c.esComandante && c.meta.type === 'Campeón' && c.meta.efectoComandante) {
+      efectos.push(c.meta.efectoComandante)
+    }
+    if ('efectos' in c.meta && c.meta.efectos) {
+      for (const e of c.meta.efectos) {
+        if (c.origen === 'reserva' && e.tipo === 'reserva' && esAuraZona(e)) efectos.push(e)
+        else if (c.origen === 'bloqueo' && e.tipo === 'bloqueo' && esAuraZona(e)) efectos.push(e)
+        else if (c.origen === 'vinculo' && e.tipo === 'vinculo' && esAuraVinculo(e)) efectos.push(e)
+        else if (c.origen === 'campo' && (esAuraZona(e) || esAuraCondicionada(e) || esAuraEquipada(e))) efectos.push(e)
+      }
+    }
+
+    for (const efecto of efectos) {
+      const resultado = evaluarAura(s, efecto, c.inst, c.esComandante, id, inst, c.origen)
+      if (!resultado) continue
+      poder += resultado.poder ?? 0
+      resistencia += resultado.resistencia ?? 0
+      if (resultado.keywords) keywords.push(...resultado.keywords)
+    }
+  }
+
+  return { poder, resistencia, keywords: [...new Set(keywords)] }
+}
+
+/**
+ * true si la carta otorga modificadores continuos a otros desde el JSON
+ * (aura de campo / efectoComandante / aura condicional). Derivado del JSON —
+ * sin registro por cardId. Para foco "rojo" en la UI.
+ */
+export function hasAuraCampoRegistrada(cardId: string): boolean {
+  const meta = getCardMeta(cardId)
+  if (!meta) return false
+  if (meta.type === 'Campeón' && meta.efectoComandante) return true
+  if (!('efectos' in meta) || !meta.efectos) return false
+  return meta.efectos.some((e) => esAuraZona(e) || esAuraCondicionada(e))
+}
+
+/**
+ * Evalúa la condicion JSON de una carta (§5.4 — Arcanas u otros).
+ * ÚNICA fuente de validación de condiciones — reemplaza guards hardcodeados.
+ * Devuelve null si se cumple, o mensaje de error si no.
+ */
+export function condicionCumple(
+  s: GameState,
+  condicion: CondicionEfecto | undefined,
+  jugador: PlayerId,
+): string | null {
+  if (!condicion || typeof condicion !== 'object' || !('trigger' in condicion)) return null
+
+  for (const cond of condicion.condiciones ?? []) {
+    const checkRival =
+      cond.tipo === 'rival_controla_minimo' ||
+      cond.tipo === 'rival_controla_maximo' ||
+      condicion.controladorTrigger === 'rival'
+    const j: PlayerId = checkRival ? (jugador === 'A' ? 'B' : 'A') : jugador
+    const min = cond.cantidad ?? cond.objetivo?.cantidad ?? 1
+
+    if (cond.tipo === 'controlar_maximo' || cond.tipo === 'rival_controla_maximo') {
+      const count = s.players[j].campo.campeones.filter((id) => id !== null).length
+      if (count > min) return `máximo ${min} Campeones en campo`
+    } else if (cond.tipo === 'tener_mano_maximo') {
+      if (s.players[j].mano.length > min) return `máximo ${min} cartas en mano`
+    } else if (cond.tipo === 'tener_mano_minimo') {
+      if (s.players[j].mano.length < min) return `se requieren ${min} cartas en mano`
+    } else if (cond.tipo === 'tener_eter_pagado') {
+      if (s.players[j].eterPagado.length < min) return `se requieren ${min} Éteres pagados`
+    } else if (cond.tipo === 'tener_eter_bloqueado' || cond.objetivo?.tipo === 'campeon_con_eter') {
+      const count = s.players[j].campo.campeones.filter(
+        (id) => id !== null && (s.instances[id]?.eterBloqueado?.length ?? 0) >= 1,
+      ).length
+      if (count < min) return `se requieren ${min} o más Campeones con Éter bloqueado`
+    } else if (cond.tipo === 'controlar_minimo' || cond.tipo === 'rival_controla_minimo') {
+      // Honrar filtros.objetivo.filtros (p.ej. conEterBloqueado en Arcanas)
+      const conEter = cond.objetivo?.filtros?.conEterBloqueado === true
+      const count = s.players[j].campo.campeones.filter(
+        (id) => id !== null && (!conEter || (s.instances[id]?.eterBloqueado?.length ?? 0) >= 1),
+      ).length
+      if (count < min) {
+        return conEter
+          ? `se requieren ${min} o más Campeones con Éter bloqueado`
+          : `se requieren ${min} o más Campeones en campo`
+      }
+    }
+  }
+  return null
+}
+
+/**
+ * ¿Hay al menos un par Campeón-propio + Éter-en-Reserva de facción compartida?
+ * Requisito para ofrecer una opción de bloqueo Pasivo/1A.
+ */
+export function hayParejaBloqueo(s: GameState, jugador: PlayerId): boolean {
+  const p = s.players[jugador]
+  if (!p.campo.campeones.some(Boolean)) return false
+  for (const eterId of p.eterReserva) {
+    const metaE = s.instances[eterId]?.cardId ? getCardMeta(s.instances[eterId]!.cardId!) : null
+    if (!metaE) continue
+    for (const campeonId of p.campo.campeones) {
+      if (!campeonId) continue
+      const metaC = s.instances[campeonId]?.cardId ? getCardMeta(s.instances[campeonId]!.cardId!) : null
+      if (metaC && faccionesCompartidas(metaE.facciones, metaC.facciones)) return true
+    }
+  }
+  return false
+}
+
+/**
+ * Crea una opción de bloqueo (opcionesPendientes + elegir_opcion):
+ * "una vez por turno puedes bloquear 1 Éter de tu Reserva sobre un Campeón sin agotarlo".
+ * Data-driven: lo llaman phases.ts (Éteres en 1A con block_ether sin trigger —
+ * Pasivo 1A) y effectInterpreter (case block_ether — p.ej. vínculos).
+ */
+export function crearOpcionBloqueo(s: GameState, jugador: PlayerId, fuenteInstanceId: string): boolean {
+  const inst = s.instances[fuenteInstanceId]
+  if (!inst) return false
+  if (inst.opcionUsadaEsteTurno) return false
+  if (!hayParejaBloqueo(s, jugador)) return false
+  s.opcionesPendientes = [...(s.opcionesPendientes ?? []), { jugador, eterId: fuenteInstanceId }]
+  return true
+}
+
+/**
+ * ¿La instancia tiene doble ataque ACTIVO? (Fase 2b — FB-015 Elena)
+ * Semántica data-driven: efecto double_attack en efectos[] con duracion
+ * 'mientras_ester_bloqueado' + la instancia tiene Éter bloqueado actualmente
+ * (el "ese Éter" del texto = el costo que pagó al activar).
+ */
+export function tieneDoubleAttackActivo(s: GameState, id: string): boolean {
+  const inst = s.instances[id]
+  if (!inst?.cardId || (inst.eterBloqueado?.length ?? 0) === 0) return false
+  const meta = getCardMeta(inst.cardId)
+  if (!meta || !('efectos' in meta) || !meta.efectos) return false
+  return meta.efectos.some(
+    (e) => e.efecto === 'double_attack' && e.duracion === 'mientras_ester_bloqueado',
+  )
 }
 
 /** Registra el handler de un efecto para (trigger, cardId); reemplaza si existe. */
@@ -235,13 +591,12 @@ export function registrarEfectoGenerico(efectoTipo: string, fn: HandlerGenerico)
 }
 
 /**
- * Dispara un trigger: ejecuta los handlers registrados en orden determinista
- * (cardInstanceId asc). Con `instancias` explícitas usa esas; sin ellas,
- * recolecta por zona el campo del jugador (los triggers de contexto específico
- * —al-invocar, al-matar-en-combate…— SIEMPRE pasan instancias desde C2+).
+ * Dispara un trigger: ejecuta los efectos desde efectos[] del JSON (prioritario),
+ * luego handlers genéricos, y finalmente handlers por cardId (dispatch infra).
  *
- * Después de los handlers por cardId, ejecuta handlers genéricos para cartas
- * que tengan el efecto correspondiente en su efectos[].
+ * El JSON interpreter es la ÚNICA fuente de verdad para efectos de cartas.
+ * Los handlers por cardId sirven para: infraestructura de dispatch (tests),
+ * features del engine (auras, Pasivo 1A, block_ether), y cartas sin JSON.
  */
 export function dispararTrigger(
   s: GameState,
@@ -254,71 +609,118 @@ export function dispararTrigger(
   const porCarta = registro.get(trigger)
   const ids = instancias ?? instanciasEnCampo(s, jugador)
   const orden = [...ids].sort()
-  const payload: PayloadEfecto = { jugador, ...payloadExtra }
+  const payload: PayloadEfecto = { jugador, fromTrigger: true, ...payloadExtra }
+
+  // Mapeo de triggers internos → triggers del JSON
+  const triggerMapping: Record<string, string> = {
+    'al-invocar': 'al_invocar',
+    'al-atacar': 'al_atacar',
+    'al-matar-en-combate': 'al_matar_en_combate',
+    'al-inicio-alba': 'inicio_alba',
+    'al-inicio-choque': 'inicio_choque',
+    'al-pagar-eter': 'al_pagar_eter',
+    'al-jugar-mistica': 'al_jugar_mistica',
+    'al-ser-enviado-al-cementerio': 'al_ser_enviado_al_cementerio',
+    'al-ser-destruido-vinculo': 'al_ser_destruido_vinculo',
+    'al-resolver-cadena': 'al_resolver_cadena',
+    'al-activar-habilidad': 'al_activar_habilidad',
+  }
 
   for (const id of orden) {
     const inst = s.instances[id]
     const cardId = inst?.cardId
     if (!inst || !cardId) continue
 
-    // 1. Handler por cardId (registrado específicamente para esta carta)
-    const fn = porCarta?.get(cardId)
-    if (fn) {
-      fn(s, ctx, inst, payload)
-      continue
-    }
+    let handled = false
 
-    // 2. Handler genérico por tipo de efecto (lee efectos[] de la carta)
-    let genericHandled = false
-    for (const [efectoTipo, genericFn] of registroGenerico) {
-      const meta = getCardMeta(cardId)
-      if (!meta || !('efectos' in meta)) continue
-      const tieneEfecto = (meta as any).efectos?.some((e: any) => e.efecto === efectoTipo)
-      if (tieneEfecto) {
-        genericFn(s, ctx, inst, payload)
-        genericHandled = true
-        break // un solo handler genérico por carta
-      }
-    }
-
-    // 3. If no generic handler, check EfectoData — use interpreter
-    if (!genericHandled) {
-      const meta = getCardMeta(cardId)
-      if (meta && 'efectos' in meta) {
-        const efectos = (meta as AnyCard & { efectos?: any[] }).efectos
-        if (efectos && Array.isArray(efectos)) {
-          // Find effect with matching trigger
-          const triggerMapping: Record<string, string> = {
-            'al-invocar': 'al_invocar',
-            'al-atacar': 'al_atacar',
-            'al-matar-en-combate': 'al_matar_en_combate',
-            'al-inicio-alba': 'inicio_alba',
-            'al-inicio-choque': 'inicio_choque',
-            'al-pagar-eter': 'al_pagar_eter',
-            'al-jugar-mistica': 'al_jugar_mistica',
-            'al-ser-enviado-al-cementerio': 'al_ser_enviado_al_cementerio',
-            'al-ser-destruido-vinculo': 'al_ser_destruido_vinculo',
-            'al-resolver-cadena': 'al_resolver_cadena',
-            'al-activar-habilidad': 'al_activar_habilidad',
-          }
+    // 1. PRIORIDAD: JSON interpreter — lee efectos[] de la carta
+    const meta = getCardMeta(cardId)
+    if (meta && 'efectos' in meta) {
+      // CONDITION CHECK: si la carta tiene condicion JSON cuyo trigger matchea
+      // el disparado, evaluar condiciones (§5.4) — data-driven, sin guards.
+      let conditionPassed = true
+      if ('condicion' in meta) {
+        const condicion = (meta as AnyCard & { condicion?: CondicionEfecto | string }).condicion
+        if (condicion && typeof condicion === 'object' && 'trigger' in condicion) {
           const efectoTrigger = triggerMapping[trigger]
-          
+          if (efectoTrigger === condicion.trigger && condicionCumple(s, condicion, payload.jugador) !== null) {
+            conditionPassed = false
+          }
+        }
+      }
+
+      if (conditionPassed) {
+        const efectos = ('efectos' in meta ? meta.efectos : undefined) as EfectoData[] | undefined
+        if (efectos && Array.isArray(efectos)) {
+          const efectoTrigger = triggerMapping[trigger]
           for (const efecto of efectos) {
             if (efecto.trigger === efectoTrigger && efecto.efecto) {
-              // Found matching EfectoData — use interpreter
+              // D1 pattern: snapshot pending objectives before interpreter
+              const pendientesAntes = s.objetivosPendientes?.length ?? 0
               interpretEffect(s, ctx, inst, efecto, payload)
+              const pendientesDespues = s.objetivosPendientes?.length ?? 0
+
+              // If interpreter created a pending objective → D1 pattern worked
+              if (pendientesDespues > pendientesAntes) {
+                handled = true
+              }
+              // If no pending, check if effect needs targeting
+              else {
+                const needsTargeting = ['steal_champion', 'toggle_exhaust', 'destroy',
+                  'return_ether', 'mover', 'copy', 'tutor', 'block_ether'].includes(efecto.efecto)
+                if (needsTargeting) {
+                  const targetIds = efecto.objetivo
+                    ? resolveTargets(s, efecto.objetivo, payload.jugador)
+                    : []
+                  if (targetIds.length > 0) {
+                    handled = true
+                  }
+                } else {
+                  handled = true
+                }
+              }
               break
             }
           }
         }
       }
     }
+
+    if (handled) continue
+
+    // 2. Handler genérico por tipo de efecto (invocar_y_equipar)
+    // Skip if there's a cardId-specific handler — cardId takes precedence
+    const hasCardHandler = porCarta?.has(cardId) ?? false
+    if (!hasCardHandler) {
+      for (const [efectoTipo, genericFn] of registroGenerico) {
+        if (!meta || !('efectos' in meta) || !meta.efectos) continue
+        const tieneEfecto = meta.efectos.some((e) => e.efecto === efectoTipo)
+        if (tieneEfecto) {
+          genericFn(s, ctx, inst, payload)
+          handled = true
+          break
+        }
+      }
+    }
+
+    if (handled) continue
+
+    // 3. CardId-specific handler — dispatch infrastructure.
+    // The JSON interpreter is the PRIMARY source of truth for card effects.
+    // This path fires when the card has NO JSON effect matching the current trigger.
+    // Serves: test handlers, engine features (block_ether Pasivo, auras), and
+    // cards without JSON structured effects.
+    const fn = porCarta?.get(cardId)
+    if (fn) {
+      fn(s, ctx, inst, payload)
+    }
   }
 }
 
 /**
  * Stats efectivos (ADR-20/22): base del meta + override de instancia
- * (poder?/resistencia?) + Σ de modificadores + Σ de auras (reserva + bloqueo).
+ * (poder?/resistencia?) + Σ de modificadores + Σ de modificadoresJSONDe
+ * (auras derivadas del JSON: campo/reserva/bloqueo + efectoComandante).
  * ÚNICA consulta de stats del motor. No-Campeones → { poder: 0, resistencia: 0 }.
  */
 export function statsDe(s: GameState, id: string): { poder: number; resistencia: number } {
@@ -332,39 +734,28 @@ export function statsDe(s: GameState, id: string): { poder: number; resistencia:
     if (m.stat === 'poder') poder += m.valor
     else resistencia += m.valor
   }
-  // Auras: reserva (2A) + bloqueo (1B-1F) — expiran 'permanente'
-  const auras = aurasDe(s, id)
-  for (const a of auras.reserva) {
-    if (a.poder) poder += a.poder
-    if (a.resistencia) resistencia += a.resistencia
-  }
-  for (const a of auras.bloqueo) {
-    if (a.poder) poder += a.poder
-    if (a.resistencia) resistencia += a.resistencia
-  }
-  for (const a of auras.campo) {
-    if (a.poder) poder += a.poder
-    if (a.resistencia) resistencia += a.resistencia
-  }
+  // Modificadores continuos desde el JSON (Fase 1): auras de campo/reserva/
+  // bloqueo + efectoComandante, derivados de efectos[] — sin handlers.
+  const mods = modificadoresJSONDe(s, id)
+  poder += mods.poder
+  resistencia += mods.resistencia
   // ATQ y RES no pueden ser negativos (mínimo 0)
   return { poder: Math.max(0, poder), resistencia: Math.max(0, resistencia) }
 }
 
 /**
  * Keywords efectivas: data del meta + inst.keywords (permanentes) +
- * inst.keywordsTemporales (ADR-22) + keywords de auras (reserva + bloqueo).
- * Superset de la keywordsDe local de combat (regresión C1: misma semántica pre-auras).
+ * inst.keywordsTemporales (ADR-22) + keywords de modificadoresJSONDe
+ * (auras de bloqueo/reserva/comandante derivadas del JSON).
+ * Superset de la keywordsDe local de combat (regresión C1).
  */
 export function keywordsDe(s: GameState, id: string): readonly string[] {
   const inst = s.instances[id]
   const cardId = inst?.cardId ?? null
   const meta = cardId ? getCardMeta(cardId) : null
   const deData = meta && esCampeon(meta) ? meta.keywords : []
-  const auras = aurasDe(s, id)
-  const auraKeywords: string[] = []
-  for (const a of auras.reserva) if (a.keywords) auraKeywords.push(...a.keywords)
-  for (const a of auras.bloqueo) if (a.keywords) auraKeywords.push(...a.keywords)
-  return [...new Set([...deData, ...(inst?.keywords ?? []), ...(inst?.keywordsTemporales ?? []), ...auraKeywords])]
+  const mods = modificadoresJSONDe(s, id)
+  return [...new Set([...deData, ...(inst?.keywords ?? []), ...(inst?.keywordsTemporales ?? []), ...mods.keywords])]
 }
 
 /**

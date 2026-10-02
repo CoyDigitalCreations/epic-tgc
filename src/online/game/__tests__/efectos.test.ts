@@ -17,11 +17,12 @@ import {
   purgarEfectosTemporales,
 } from '../efectos'
 
-// Cartas reales del paquete (paquetes.ts):
-// FB-010 Aurora · FB-011 Vaela 5/3 Carga · FB-014 Isolde 3/7 Protector
+// Cartas reales del catálogo (fuente de verdad: seed/PrimerColeccionEfectos.json):
+// FB-010 Aurora · FB-011 Vaela (hoy: al_matar_en_combate/mover) · DS-011 Kael (pasivo/al_atacar/debuff)
 const AURORA = 'FB-010'
-const VAELA = 'FB-011' // 5/3 Carga
-const ISOLDE = 'FB-014' // 3/7 Protector
+const VAELA = 'FB-011'
+const KAEL = 'DS-011' // pasivo / al_atacar / debuff −1 ATQ al rival
+const ISOLDE = 'FB-014'
 
 const deckA = expandirMazo(ESTASIS_CARDS)
 const deckB = expandirMazo(DISONANCIA_CARDS)
@@ -102,14 +103,18 @@ const rivalDe = (p: PlayerId): PlayerId => (p === 'A' ? 'B' : 'A')
 describe('registro y dispatch de efectos (F1, ADR-20)', () => {
   afterEach(() => limpiarRegistroEfectos())
 
+  // ─── CardId-specific dispatch path (registrarEfecto) ───
+  // These test the dispatch infrastructure for cards WITHOUT matching JSON effects.
+
   it('dispararTrigger ejecuta el handler registrado para (trigger, cardId) con ctx', () => {
     const ctx = crearCtx()
     const { s, id } = conCampeon(estadoMinimo(), AURORA, 0)
-    registrarEfecto('al-invocar', AURORA, (st, c, inst) => {
+    // Use a custom trigger that doesn't match any JSON effect
+    registrarEfecto('custom-dispatch-test' as any, AURORA, (st, c, inst) => {
       expect(c).toBe(ctx)
       inst.keywords = [...(inst.keywords ?? []), 'Prueba']
     })
-    dispararTrigger(s, ctx, 'al-invocar', 'A', [id])
+    dispararTrigger(s, ctx, 'custom-dispatch-test' as any, 'A', [id])
     expect(s.instances[id].keywords).toContain('Prueba')
   })
 
@@ -129,10 +134,72 @@ describe('registro y dispatch de efectos (F1, ADR-20)', () => {
     s = s1
     const { s: s2, id: id2 } = conCampeon(s, VAELA, 1)
     s = s2
-    registrarEfecto('al-invocar', AURORA, (_st, _c, inst) => orden.push(inst.cardInstanceId))
-    registrarEfecto('al-invocar', VAELA, (_st, _c, inst) => orden.push(inst.cardInstanceId))
-    dispararTrigger(s, ctx, 'al-invocar', 'A', [id2, id1]) // desordenadas
+    // Use custom triggers that don't match JSON effects
+    registrarEfecto('custom-order-1' as any, AURORA, (_st, _c, inst) => orden.push(inst.cardInstanceId))
+    registrarEfecto('custom-order-2' as any, VAELA, (_st, _c, inst) => orden.push(inst.cardInstanceId))
+    // Register both on same custom trigger
+    registrarEfecto('custom-order-test' as any, AURORA, (_st, _c, inst) => orden.push(inst.cardInstanceId))
+    registrarEfecto('custom-order-test' as any, VAELA, (_st, _c, inst) => orden.push(inst.cardInstanceId))
+    dispararTrigger(s, ctx, 'custom-order-test' as any, 'A', [id2, id1]) // desordenadas
     expect(orden).toEqual([id1, id2])
+  })
+
+  // ─── JSON interpreter path (efectos[] + interpretEffect) ───
+  // These test that the JSON interpreter handles effects from paquetes.ts.
+
+  it('JSON path: dispararTrigger ejecuta interpretEffect cuando hay JSON effect matching', () => {
+    const ctx = crearCtx()
+    // DS-011 (Kael) JSON effect: pasivo / trigger='al_atacar' / efecto='debuff' (−1 ATQ al rival)
+    let s = estadoMinimo()
+    const { s: s1, id: kael } = conCampeon(s, KAEL, 0, 'A')
+    s = s1
+    const { s: s2, id: rival } = conCampeon(s, VAELA, 0, 'B')
+    s = s2
+
+    const poderAntes = statsDe(s, rival).poder
+
+    // Fire al-atacar trigger — JSON interpreter creates D1 pending (debuff needs targeting)
+    dispararTrigger(s, ctx, 'al-atacar', 'A', [kael])
+
+    // D1 pattern: pending objective created, player must choose target
+    expect(s.objetivosPendientes).toBeDefined()
+    expect(s.objetivosPendientes![0].opciones).toEqual([rival])
+
+    // Resolve the pending: player chooses the rival champion
+    const r = applyAction(s, { type: 'elegir_objetivo', objetivoId: rival }, ctx)
+    expect(r.ok).toBe(true)
+    if (r.ok) {
+      // Now the effect executes: rival's champion loses 1 ATQ (debuff from JSON)
+      expect(statsDe(r.state, rival).poder).toBe(poderAntes - 1)
+    }
+  })
+
+  it('JSON path: tutor effect creates pending objective from mazo', () => {
+    const ctx = crearCtx()
+    // DS-031 (FB-031 equivalent) has tutor effect with trigger='al_ser_enviado_al_cementerio'
+    let s = estadoMinimo()
+    const { s: s1, id: ds031 } = conCampeon(s, 'DS-031', 0, 'A')
+    s = s1
+    // Add cards to mazo
+    s = {
+      ...s,
+      instances: {
+        ...s.instances,
+        'm-vaela': { cardInstanceId: 'm-vaela', cardId: 'FB-011', owner: 'A' },
+        'm-aurora': { cardInstanceId: 'm-aurora', cardId: 'FB-010', owner: 'A' },
+      },
+      players: {
+        ...s.players,
+        A: { ...s.players.A, mazo: ['m-vaela', 'm-aurora'] },
+      },
+    }
+
+    // Fire al-ser-enviado-al-cementerio — JSON interpreter should create pending
+    dispararTrigger(s, ctx, 'al-ser-enviado-al-cementerio', 'A', [ds031])
+
+    // Should have pending objective with only Vaela (cost ≤ 2 champion)
+    expect(s.objetivosPendientes).toBeDefined()
+    expect(s.objetivosPendientes![0].opciones).toEqual(['m-vaela'])
   })
 })
 

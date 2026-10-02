@@ -1,4 +1,4 @@
-import { esEter, getCardMeta } from './cards'
+import { esEter, getCardMeta, cartaNecesitaEterBloqueado } from './cards'
 import type { AnyCard } from '../../shared/types'
 import { dispararTrigger } from './efectos'
 import type { Ctx, GameState, PlayerId } from './types'
@@ -8,9 +8,10 @@ import type { Ctx, GameState, PlayerId } from './types'
  * - Aporte real: un Éter que comparte facción con la carta pagada vale 1,
  *   el de facción ajena vale ½. Se paga cuando Σ aporte ≥ coste.
  * - NO hay sobrepago: el jugador debe seleccionar exactamente el coste.
- * - Bloquear (v2.1): solo Éter de facción compartida con el Campeón; 2A → Campeón.
- *   Límite por campeón según efecto (máx 2 para FB/DS-008, máx 3 para FB/DS-015).
- * - Reagrupar: en tu Alba, 1A → 2A; el Éter bloqueado permanece en el Campeón.
+ * - Bloquear (v2.1 + Fase 3a): 2A → targetInstanceId.eterBloqueado.
+ *   Targets: Campeones (2B-2F) y — Fase 3a Phase B — Artefactos (3A-3F)
+ *   con costo-bloqueado en efectos[]. Límite por carta según efecto.
+ * - Reagrupar: en tu Alba, 1A → 2A; el Éter bloqueado permanece en la carta.
  *
  * Las funciones mutan el estado YA clonado (ADR-5) y devuelven `s` para encadenar;
  * `validarPago` es read-only y no muta ni consume RNG.
@@ -103,12 +104,11 @@ export function aplicarPago(
     const inst = s.instances[id]
     const meta = inst?.cardId ? getCardMeta(inst.cardId) : null
     if (!meta || !esEter(meta)) return false
-    // Check new system: efectos[] with trigger='al_pagar_eter'
+    // Check efectos[] with trigger='al_pagar_eter' (JSON interpreter path)
     if ('efectos' in meta && meta.efectos) {
       return meta.efectos.some((e) => e.trigger === 'al_pagar_eter')
     }
-    // Fallback: legacy variantePago
-    return (meta as any).variantePago === 'Gatillo'
+    return false
   })
   for (const id of gatillos) {
     dispararTrigger(s, ctx, 'al-pagar-eter', jugador, [id], {
@@ -157,45 +157,66 @@ export function etersParaPagar(state: GameState, jugador: PlayerId, objetivoCard
   return buscar(0, 0, [])
 }
 
-/** Validación read-only del bloqueo: null = válido, string = motivo de rechazo. */
-export function validarBloqueo(state: GameState, jugador: PlayerId, eterIds: string[], campeonSlot: number): string | null {
+/**
+ * Validación read-only del bloqueo: null = válido, string = motivo de rechazo.
+ * Fase 3a: targetInstanceId — Campeón (2B-2F) o Artefacto (3A-3F, Fase 3a Phase B).
+ * El Éter bloqueado vive en `inst.eterBloqueado` de CUALQUIER carta en campo.
+ */
+export function validarBloqueo(state: GameState, jugador: PlayerId, eterIds: string[], targetInstanceId: string): string | null {
+  const inst = state.instances[targetInstanceId]
+  if (!inst) return 'la carta no existe'
   const p = state.players[jugador]
-  const campeonId = p.campo.campeones[campeonSlot]
-  if (!campeonId) return 'el slot de Campeón está vacío'
-  const instCampeon = state.instances[campeonId]
-  const campeon = instCampeon?.cardId ? getCardMeta(instCampeon.cardId) : null
-  if (!campeon) return 'Campeón desconocido'
+  // El target debe estar en el campo del jugador (campeones + artefactos)
+  const enCampo =
+    p.campo.campeones.includes(targetInstanceId) ||
+    p.campo.misticasTacticas.includes(targetInstanceId) ||
+    p.campo.arcanasCombate.includes(targetInstanceId)
+  if (!enCampo) return 'la carta no está en tu campo'
+  const meta = inst.cardId ? getCardMeta(inst.cardId) : null
+  if (!meta) return 'carta desconocida'
+  // Fase 3a: Campeones siempre; Artefactos (Místicas/Arcanas) solo si tienen
+  // efecto con costo-bloqueado en efectos[] (manual §7.7 — soporte continua).
+  if (!p.campo.campeones.includes(targetInstanceId)) {
+    if (!cartaNecesitaEterBloqueado(meta)) {
+      return 'esta carta no tiene efecto que use Éter bloqueado'
+    }
+  }
   if (eterIds.length === 0) return 'no indicaste Éteres para bloquear'
 
-  // Límite máximo de éteres bloqueados por campeón (parseado del efecto)
-  const maxEter = maxEterBloqueado(campeon)
-  const actuales = instCampeon.eterBloqueado?.length ?? 0
+  // Límite máximo de éteres bloqueados por carta (parseado del efecto)
+  const maxEter = maxEterBloqueado(meta)
+  const actuales = inst.eterBloqueado?.length ?? 0
   if (actuales + eterIds.length > maxEter) {
-    return `máximo ${maxEter} Éter(es) bloqueado(s) en este Campeón (ya tiene ${actuales})`
+    return `máximo ${maxEter} Éter(es) bloqueado(s) en esta carta (ya tiene ${actuales})`
   }
 
   for (const id of eterIds) {
-    const inst = state.instances[id]
-    const meta = inst?.cardId ? getCardMeta(inst.cardId) : null
-    if (!inst || !meta || !esEter(meta)) return `no es un Éter: ${id}`
+    const eterInst = state.instances[id]
+    const eterMeta = eterInst?.cardId ? getCardMeta(eterInst.cardId) : null
+    if (!eterInst || !eterMeta || !esEter(eterMeta)) return `no es un Éter: ${id}`
     if (!p.eterReserva.includes(id)) return `el Éter no está en tu Reserva: ${id}`
-    // Verificar que el éter no esté ya bloqueado en ningún campeón
-    if (instCampeon.eterBloqueado?.includes(id)) return `el Éter ya está bloqueado en este Campeón`
-    for (const cid of p.campo.campeones) {
-      if (cid && cid !== campeonId) {
-        const ci = state.instances[cid]
-        if (ci?.eterBloqueado?.includes(id)) return `el Éter ya está bloqueado en otro Campeón`
+    // Verificar que el éter no esté ya bloqueado en esta carta ni en ninguna otra del jugador
+    if (inst.eterBloqueado?.includes(id)) return `el Éter ya está bloqueado en esta carta`
+    for (const grupo of ['campeones', 'misticasTacticas', 'arcanasCombate'] as const) {
+      for (const cid of p.campo[grupo]) {
+        if (cid && cid !== targetInstanceId) {
+          const ci = state.instances[cid]
+          if (ci?.eterBloqueado?.includes(id)) return `el Éter ya está bloqueado en otra carta`
+        }
       }
     }
   }
   return null
 }
 
-/** Extrae el máximo de éteres bloqueados desde efectos[]. */
-function maxEterBloqueado(card: AnyCard): number {
+/** Extrae el máximo de éteres bloqueados desde efectos[]. Exportado (Fase 3a) — usado por validActions. */
+export function maxEterBloqueado(card: AnyCard): number {
   if ('efectos' in card && card.efectos) {
     for (const e of card.efectos) {
       if (e.costo?.tipo === 'eter_bloqueado' && e.costo.cantidad !== undefined) {
+        return e.costo.cantidad
+      }
+      if (e.costo?.tipo === 'bloqueo_fijo' && e.costo.cantidad !== undefined) {
         return e.costo.cantidad
       }
     }
@@ -204,7 +225,8 @@ function maxEterBloqueado(card: AnyCard): number {
 }
 
 /**
- * Bloqueo facción v2.1: valida TODO (sin mutar) y luego mueve 2A → Campeón.eterBloqueado.
+ * Bloqueo facción v2.1: valida TODO (sin mutar) y luego mueve 2A → target.eterBloqueado.
+ * Fase 3a: targetInstanceId — Campeón o (Phase B) Artefacto en campo.
  * Devuelve null si fue válido, o el motivo de rechazo.
  */
 export function bloquearEter(
@@ -212,18 +234,18 @@ export function bloquearEter(
   ctx: Ctx,
   jugador: PlayerId,
   eterIds: string[],
-  campeonSlot: number,
+  targetInstanceId: string,
 ): string | null {
-  const error = validarBloqueo(s, jugador, eterIds, campeonSlot)
+  const error = validarBloqueo(s, jugador, eterIds, targetInstanceId)
   if (error) return error
   const p = s.players[jugador]
-  const campeonId = p.campo.campeones[campeonSlot]!
-  const instCampeon = s.instances[campeonId]
-  instCampeon.eterBloqueado = [...(instCampeon.eterBloqueado ?? []), ...eterIds]
+  const instTarget = s.instances[targetInstanceId]
+  instTarget.eterBloqueado = [...(instTarget.eterBloqueado ?? []), ...eterIds]
   for (const id of eterIds) {
     p.eterReserva.splice(p.eterReserva.indexOf(id), 1)
   }
-  ctx.emit({ type: 'eter_bloqueado', jugador, eterIds, campeonId })
+  // campeonId = id de instancia target (Campeón o Artefacto) — ver events.ts
+  ctx.emit({ type: 'eter_bloqueado', jugador, eterIds, campeonId: targetInstanceId })
   return null
 }
 

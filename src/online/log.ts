@@ -47,6 +47,8 @@ export function formatearEvento(estado: GameState, e: GameEvent): string | null 
       return `${nombreCarta(estado, e.cardInstanceId)} es destruida (${e.causa}).`
     case 'destruccion_prevenida':
       return `${nombreCarta(estado, e.cardInstanceId)} sobrevive (destrucción prevenida).`
+    case 'prevenicion_pendiente':
+      return `${nombreCarta(estado, e.victimId)} está en peligro: ${nombreCarta(estado, e.fuenteId)} puede prevenir la destrucción.`
     case 'ruptura_realizada': {
       const duenio = estado.instances[e.vinculoId]?.owner ?? 'B'
       return `${nombreCarta(estado, e.atacanteId)} rompe un Vínculo de ${duenio}.`

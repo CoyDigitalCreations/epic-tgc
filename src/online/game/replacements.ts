@@ -3,32 +3,15 @@
  *
  * Centraliza la DESTRUCCIÓN (ADR-15): `destruirCarta(s, ctx, id, causa)`
  * consulta keywords según causa (Inmortal→'efecto', Indestructible→'combate',
- * L1209-1210), hooks de reemplazo anti-destrucción (registro VACÍO en este
- * change; Rowena FB-018 / Último Refugio FB-022 se registran en change 3) y
- * el sexto Vínculo (ADR-16, flag anti-bucle) ANTES de `verificarDerrotaVinculos`.
+ * L1209-1210), hooks de reemplazo anti-destrucción (registro vacío — feature
+ * no implementada), y el sexto Vínculo (ADR-16, flag anti-bucle) ANTES de
+ * `verificarDerrotaVinculos`.
  * El SACRIFICIO no pasa por destruirCarta (no es evitable): usa los helpers
  * compartidos `moverAlCementerio` + `liberarEterBloqueado('2A')`.
  */
 import { esCampeon, esVinculo, getCardMeta } from './cards'
 import { dispararTrigger } from './efectos'
 import type { CausaDestruccion, Ctx, GameState, PlayerId } from './types'
-
-/** Registro de reemplazos anti-destrucción (ADR-15): vacío consultable. */
-const reemplazos = new Map<string, (s: GameState, ctx: Ctx, cardInstanceId: string, causa: CausaDestruccion) => boolean>()
-
-/**
- * Registra un reemplazo anti-destrucción para un cardId (change 3: Rowena,
- * Último Refugio). El handler devuelve true si REEMPLAZÓ la destrucción
- * (la carta no se destruye y se emite destruccion_prevenida).
- */
-export function registrarReemplazo(cardId: string, fn: (s: GameState, ctx: Ctx, cardInstanceId: string, causa: CausaDestruccion) => boolean): void {
-  reemplazos.set(cardId, fn)
-}
-
-/** Consulta pública del registro (API de change 3; vacío hoy). */
-export function reemplazosRegistrados(): { cardId: string }[] {
-  return [...reemplazos.keys()].map((cardId) => ({ cardId }))
-}
 
 /** Keywords de la instancia (data + override aditivo, patrón combat.ts). */
 function keywordsDe(s: GameState, id: string): readonly string[] {
@@ -61,6 +44,9 @@ export function moverAlCementerio(s: GameState, cardInstanceId: string): void {
       }
     }
   }
+  // Fase 3a: choke point — toda carta que entra a 2G libera su Éter bloqueado
+  // (manual §7.7 L912). Los sacrificios ya liberaron a '2A' antes — no-op acá.
+  liberarEterBloqueadoCore(s, cardInstanceId, '1A')
   const p = s.players[inst.owner]
   if (!p.cementerio.includes(cardInstanceId)) p.cementerio.push(cardInstanceId)
 }
@@ -108,33 +94,49 @@ export function enviarAlCementerio(s: GameState, ctx: Ctx, cardInstanceId: strin
     }
   }
   moverAlCementerio(s, cardInstanceId)
+  // Fase 3a: carta va a 2G → Éter bloqueado liberado a 1A (reagrupa próximo Alba).
+  // No-op si no tiene eterBloqueado (liberarEterBloqueado lo chequea).
+  // Los sacrificios ya liberaron a '2A' antes de llegar acá — segundo call es no-op.
+  liberarEterBloqueado(s, ctx, cardInstanceId, '1A')
   dispararTrigger(s, ctx, 'al-ser-enviado-al-cementerio', inst.owner, [cardInstanceId])
 }
 
 /**
- * Libera el Éter bloqueado de una instancia que SALE del campo (ADR-17).
- *
- * Destino:
- * - '2A' — sacrificio de Soberano/Emperador: el Éter vuelve a la Reserva
- *   INMEDIATO (glosario L1351-1352; manual 7.2 L937). Fix del gap #1223:
- *   antes el Éter quedaba atascado en la instancia que iba a 2G.
- * - '1A' — muerte en combate (C3): el Éter vuelve a Éter Pagado y se
- *   reagrupa en el próximo Alba (ADR-14), silencioso.
- *
- * Es silencioso: no emite eventos; el reagrupado del 1A lo cubre
- * `eter_reagrupado` en el Alba.
+ * Core de liberación de Éter bloqueado (sin ctx — Fase 3a). Mueve el éter de
+ * `inst.eterBloqueado` a la zona del dueño. No-op si no hay éter bloqueado.
  */
-export function liberarEterBloqueado(s: GameState, _ctx: Ctx, cardInstanceId: string, destino: '1A' | '2A'): void {
+function liberarEterBloqueadoCore(s: GameState, cardInstanceId: string, destino: '1A' | '2A'): void {
   const inst = s.instances[cardInstanceId]
   if (!inst?.eterBloqueado || inst.eterBloqueado.length === 0) return
   const eteres = inst.eterBloqueado
   delete inst.eterBloqueado
+  // Fase 3a Phase D + 3c: efectos de umbral/copy se desactivan al liberar Éter (§7.7)
+  delete inst.efectoUmbralDisparado
+  delete inst.copyOneShotDisparado
   const p = s.players[inst.owner]
   if (destino === '2A') {
     p.eterReserva.push(...eteres)
   } else {
     p.eterPagado.push(...eteres)
   }
+}
+
+/**
+ * Libera el Éter bloqueado de una instancia que SALE del campo (ADR-17 + Fase 3a).
+ *
+ * Destino:
+ * - '2A' — sacrificio de Soberano/Emperador: el Éter vuelve a la Reserva
+ *   INMEDIATO (glosario L1351-1352; manual 7.2 L937). Fix del gap #1223:
+ *   antes el Éter quedaba atascado en la instancia que iba a 2G.
+ * - '1A' — salida del campo (muerte, exilio, return_hand, chain, equipado
+ *   destruido): el Éter vuelve a Éter Pagado y se reagrupa en el próximo
+ *   Alba (ADR-14), silencioso. Manual §7.7 L912.
+ *
+ * Es silencioso: no emite eventos; el reagrupado del 1A lo cubre
+ * `eter_reagrupado` en el Alba.
+ */
+export function liberarEterBloqueado(s: GameState, _ctx: Ctx, cardInstanceId: string, destino: '1A' | '2A'): void {
+  liberarEterBloqueadoCore(s, cardInstanceId, destino)
 }
 
 /**
@@ -159,13 +161,108 @@ export function verificarDerrotaVinculos(s: GameState, ctx: Ctx, owner: PlayerId
 }
 
 /**
+ * Busca en el campo del `dueno` una fuente elegible para prevent_destroy
+ * (Fase 2c — data-driven desde efectos[], sin handlers):
+ * efecto 'prevent_destroy' + trigger 'cuando_vinculo_seria_destruido' +
+ * costo 'exile_self'. Devuelve la primera en orden de slot (determinista).
+ */
+export function buscarFuentePreventDestroy(s: GameState, dueno: PlayerId): string | null {
+  const p = s.players[dueno]
+  for (const fuenteId of p.campo.campeones) {
+    if (!fuenteId) continue
+    const inst = s.instances[fuenteId]
+    const meta = inst?.cardId ? getCardMeta(inst.cardId) : null
+    if (!meta || !('efectos' in meta) || !meta.efectos) continue
+    const elegible = meta.efectos.some(
+      (e) =>
+        e.efecto === 'prevent_destroy' &&
+        e.trigger === 'cuando_vinculo_seria_destruido' &&
+        e.costo?.tipo === 'exile_self',
+    )
+    if (elegible) return fuenteId
+  }
+  return null
+}
+
+/**
+ * Ejecuta la destrucción de un Vínculo (camino diferido y directo comparten
+ * esta función): bocaArriba + al-ser-destruido-vinculo + destruccion +
+ * verificarDerrotaVinculos. Limpia destruccionPendiente.
+ */
+function ejecutarDestruccionVinculo(s: GameState, ctx: Ctx, cardInstanceId: string, causa: CausaDestruccion): boolean {
+  const inst = s.instances[cardInstanceId]
+  if (!inst) return false
+  delete inst.destruccionPendiente
+  // (c) Sexto Vínculo (ADR-16): la destrucción deja al dueño con 0 Vivos →
+  // hook NO-OP (change 3 registra el efecto real) resuelto UNA vez (flag).
+  const vivos = s.players[inst.owner].vinculos.filter((id): id is string => {
+    if (!id) return false
+    const v = s.instances[id]
+    return !!v && !v.bocaArriba
+  }).length
+  if (vivos - 1 <= 0 && !s.sextoVinculoResuelto) {
+    s.sextoVinculoResuelto = true
+  }
+  inst.bocaArriba = true
+  // §5.5: al destruirse, activa su efecto PERMANENTE a favor del jugador que recibió el daño
+  dispararTrigger(s, ctx, 'al-ser-destruido-vinculo', inst.owner, [cardInstanceId])
+  ctx.emit({ type: 'destruccion', cardInstanceId, jugador: inst.owner, causa })
+  verificarDerrotaVinculos(s, ctx, inst.owner)
+  return true
+}
+
+/** Validador responder_prevenicion (Fase 2c — checkpoint): solo el frente de la cola. */
+export function validarResponderPrevenicion(state: GameState, jugador: PlayerId): string | null {
+  const front = state.preventivosPendientes?.[0]
+  if (!front) return 'no hay prevenicion pendiente'
+  if (front.jugador !== jugador) return 'no es tu turno de responder la prevenicion'
+  return null
+}
+
+/**
+ * Resuelve el frente de la cola de preveniciones (Fase 2c).
+ * - prevenir=true (y la fuente sigue en campo): la fuente se exilia (costo
+ *   exile_self), la víctima queda viva, destruccion_prevenida.
+ * - prevenir=false (o la fuente ya no está): se ejecuta AHORA la destrucción
+ *   diferida (mismo camino que destruirCarta para vínculos).
+ */
+export function ejecutarResponderPrevenicion(s: GameState, ctx: Ctx, jugador: PlayerId, prevenir: boolean): void {
+  const pendientes = s.preventivosPendientes ?? []
+  const front = pendientes[0]
+  if (!front || front.jugador !== jugador) return
+  s.preventivosPendientes = pendientes.slice(1)
+
+  const victim = s.instances[front.victimId]
+  const fuenteEnCampo = s.players[jugador].campo.campeones.includes(front.fuenteId)
+
+  if (prevenir && fuenteEnCampo && victim && victim.destruccionPendiente) {
+    // Costo exile_self: la fuente sale del campo al exilio (1G)
+    const p = s.players[jugador]
+    const slot = p.campo.campeones.indexOf(front.fuenteId)
+    if (slot !== -1) p.campo.campeones[slot] = null
+    if (!p.exilio.includes(front.fuenteId)) p.exilio.push(front.fuenteId)
+    ctx.emit({ type: 'carta_exiliada', cardInstanceId: front.fuenteId, jugador })
+    // La víctima queda viva
+    delete victim.destruccionPendiente
+    ctx.emit({ type: 'destruccion_prevenida', cardInstanceId: front.victimId, jugador, causa: front.causa })
+    return
+  }
+
+  // Declinar (o fuente ya no elegible): ejecutar la destrucción diferida
+  if (victim?.destruccionPendiente) {
+    ejecutarDestruccionVinculo(s, ctx, front.victimId, front.causa)
+  }
+}
+
+/**
  * Destrucción centralizada (ADR-15): Campeón → 2G + Éter 1A + carta_muerta +
  * destruccion; Vínculo → bocaArriba=true (permanece en su slot, L848) + solo
  * destruccion. Prevenido (keywords según causa o reemplazo registrado) →
  * SOLO destruccion_prevenida, sin movimiento.
- * @returns true si la carta se destruyó; false si se previno (keyword/reemplazo)
- * o la instancia no existe. Aditivo (C3 D5): los callers actuales ignoran el
- * retorno; al-matar-en-combate lo usa para confirmar la muerte.
+ * Fase 2c: prevent_destroy (FB-018) DIFIERE la muerte del Vínculo hasta
+ * responder_prevenicion (checkpoint de elección del controlador).
+ * @returns true si la carta se destruyó; false si se previno (keyword/reemplazo),
+ * quedó pendiente de prevenión, o la instancia no existe.
  */
 export function destruirCarta(s: GameState, ctx: Ctx, cardInstanceId: string, causa: CausaDestruccion): boolean {
   const inst = s.instances[cardInstanceId]
@@ -184,30 +281,27 @@ export function destruirCarta(s: GameState, ctx: Ctx, cardInstanceId: string, ca
     }
   }
 
-  // (b) Hooks de reemplazo anti-destrucción (registro vacío en este change)
-  const fn = cardId ? reemplazos.get(cardId) : undefined
-  if (fn && fn(s, ctx, cardInstanceId, causa)) {
-    ctx.emit({ type: 'destruccion_prevenida', cardInstanceId, jugador: inst.owner, causa })
-    return false
+  // (a2) prevent_destroy (Fase 2c): Vínculo con fuente elegible → muerte DIFERIDA
+  // hasta que el controlador responda (checkpoint preventivosPendientes).
+  if (esVinculoCard && !inst.destruccionPendiente) {
+    const fuente = buscarFuentePreventDestroy(s, inst.owner)
+    if (fuente) {
+      inst.destruccionPendiente = true
+      s.preventivosPendientes = [...(s.preventivosPendientes ?? []), {
+        jugador: inst.owner,
+        fuenteId: fuente,
+        victimId: cardInstanceId,
+        causa,
+      }]
+      ctx.emit({ type: 'prevenicion_pendiente', victimId: cardInstanceId, fuenteId: fuente, jugador: inst.owner, causa })
+      return false
+    }
   }
 
+  // (b) Hooks de reemplazo anti-destrucción — feature no implementada (registro vacío)
+
   if (esVinculoCard) {
-    // (c) Sexto Vínculo (ADR-16): la destrucción deja al dueño con 0 Vivos →
-    // hook NO-OP (change 3 registra el efecto real) resuelto UNA vez (flag).
-    const vivos = s.players[inst.owner].vinculos.filter((id): id is string => {
-      if (!id) return false
-      const v = s.instances[id]
-      return !!v && !v.bocaArriba
-    }).length
-    if (vivos - 1 <= 0 && !s.sextoVinculoResuelto) {
-      s.sextoVinculoResuelto = true
-    }
-    inst.bocaArriba = true
-    // §5.5: al destruirse, activa su efecto PERMANENTE a favor del jugador que recibió el daño
-    dispararTrigger(s, ctx, 'al-ser-destruido-vinculo', inst.owner, [cardInstanceId])
-    ctx.emit({ type: 'destruccion', cardInstanceId, jugador: inst.owner, causa })
-    verificarDerrotaVinculos(s, ctx, inst.owner)
-    return true
+    return ejecutarDestruccionVinculo(s, ctx, cardInstanceId, causa)
   }
 
   // Campeón: → 2G + Éter 1A + carta_muerta + destruccion (ADR-14)

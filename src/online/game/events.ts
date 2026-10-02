@@ -57,6 +57,45 @@ export interface CartaDescartadaEvent {
   cardInstanceIds: string[]
 }
 
+export interface CartaDevueltaAManoEvent {
+  type: 'carta_devuelta_a_mano'
+  cardInstanceId: string
+  jugador: PlayerId
+}
+
+export interface CartaExiliadaEvent {
+  type: 'carta_exiliada'
+  cardInstanceId: string
+  jugador: PlayerId
+}
+
+export interface CampeonRobadoEvent {
+  type: 'campeon_robado'
+  cardInstanceId: string
+  jugador: PlayerId
+  rival: PlayerId
+}
+
+export interface EterRobadoEvent {
+  type: 'eter_robado'
+  cardInstanceId: string
+  jugador: PlayerId
+  rival: PlayerId
+}
+
+export interface EterLiberadoEvent {
+  type: 'eter_liberado'
+  cardInstanceId: string
+  jugador: PlayerId
+}
+
+export interface EterMovidoEvent {
+  type: 'eter_movido'
+  cardInstanceId: string
+  destino: 'pagado' | 'reserva' | 'bloqueado'
+  jugador: PlayerId
+}
+
 export interface EterPagadoEvent {
   type: 'eter_pagado'
   jugador: PlayerId
@@ -71,6 +110,7 @@ export interface EterBloqueadoEvent {
   type: 'eter_bloqueado'
   jugador: PlayerId
   eterIds: string[]
+  /** ID de instancia target que recibió el Éter bloqueado (Campeón 2B-2F o Artefacto 3A-3F). */
   campeonId: string
 }
 
@@ -138,6 +178,17 @@ export interface DestruccionPrevenidaEvent {
   causa: CausaDestruccion
 }
 
+export interface PrevenicionPendienteEvent {
+  type: 'prevenicion_pendiente'
+  /** Vínculo en peligro (aún vivo, destruccionPendiente=true). */
+  victimId: string
+  /** Fuente con prevent_destroy (Rowena) que puede prevenir. */
+  fuenteId: string
+  /** Controlador del vínculo — el que debe responder. */
+  jugador: PlayerId
+  causa: CausaDestruccion
+}
+
 export interface RupturaRealizadaEvent {
   type: 'ruptura_realizada'
   atacanteId: string
@@ -173,6 +224,12 @@ export type GameEvent =
   | CartaRobadaEvent
   | CartaInvocadaEvent
   | CartaDescartadaEvent
+  | CartaDevueltaAManoEvent
+  | CartaExiliadaEvent
+  | CampeonRobadoEvent
+  | EterRobadoEvent
+  | EterLiberadoEvent
+  | EterMovidoEvent
   | EterPagadoEvent
   | EterBloqueadoEvent
   | EterReagrupadoEvent
@@ -185,6 +242,7 @@ export type GameEvent =
   | CartaMuertaEvent
   | DestruccionEvent
   | DestruccionPrevenidaEvent
+  | PrevenicionPendienteEvent
   | RupturaRealizadaEvent
   | RespuestaEncadenadaEvent
   | PrioridadPasadaEvent
@@ -200,6 +258,12 @@ export const CATALOGO_EVENTOS: readonly GameEvent[] = [
   { type: 'carta_robada', jugador: 'A', cardInstanceId: 'c1' },
   { type: 'carta_invocada', cardInstanceId: 'c1', tipo: 'Campeón', slot: 0 },
   { type: 'carta_descartada', jugador: 'A', cardInstanceIds: ['c1'] },
+  { type: 'carta_devuelta_a_mano', cardInstanceId: 'c1', jugador: 'A' },
+  { type: 'carta_exiliada', cardInstanceId: 'c1', jugador: 'A' },
+  { type: 'campeon_robado', cardInstanceId: 'c1', jugador: 'A', rival: 'B' },
+  { type: 'eter_robado', cardInstanceId: 'c1', jugador: 'A', rival: 'B' },
+  { type: 'eter_liberado', cardInstanceId: 'c1', jugador: 'A' },
+  { type: 'eter_movido', cardInstanceId: 'c1', destino: 'reserva', jugador: 'A' },
   { type: 'eter_pagado', jugador: 'A', eterIds: ['c2'], costo: 3, aportado: 3 },
   { type: 'eter_bloqueado', jugador: 'A', eterIds: ['c2'], campeonId: 'c1' },
   { type: 'eter_reagrupado', jugador: 'A', eterIds: ['c2'] },
@@ -213,6 +277,7 @@ export const CATALOGO_EVENTOS: readonly GameEvent[] = [
   { type: 'carta_muerta', cardInstanceId: 'c2', jugador: 'B', causa: 'combate' },
   { type: 'destruccion', cardInstanceId: 'c2', jugador: 'B', causa: 'combate' },
   { type: 'destruccion_prevenida', cardInstanceId: 'c1', jugador: 'A', causa: 'combate' },
+  { type: 'prevenicion_pendiente', victimId: 'c3', fuenteId: 'c1', jugador: 'A', causa: 'efecto' },
   { type: 'ruptura_realizada', atacanteId: 'c1', vinculoSlot: 2, vinculoId: 'c3' },
   { type: 'respuesta_encadenada', jugador: 'B', cardInstanceId: 'c4' },
   { type: 'prioridad_pasada', jugador: 'A' },
@@ -239,6 +304,12 @@ export function validarExhaustividadEventos(tipo: GameEvent['type']): void {
     case 'carta_robada': return
     case 'carta_invocada': return
     case 'carta_descartada': return
+    case 'carta_devuelta_a_mano': return
+    case 'carta_exiliada': return
+    case 'campeon_robado': return
+    case 'eter_robado': return
+    case 'eter_liberado': return
+    case 'eter_movido': return
     case 'eter_pagado': return
     case 'eter_bloqueado': return
     case 'eter_reagrupado': return
@@ -251,6 +322,7 @@ export function validarExhaustividadEventos(tipo: GameEvent['type']): void {
     case 'carta_muerta': return
     case 'destruccion': return
     case 'destruccion_prevenida': return
+    case 'prevenicion_pendiente': return
     case 'ruptura_realizada': return
     case 'respuesta_encadenada': return
     case 'prioridad_pasada': return

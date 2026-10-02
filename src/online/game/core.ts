@@ -33,6 +33,9 @@ import {
   validarResponderCadena, validarPasarPrioridad,
   ejecutarResponderCadena, ejecutarPasarPrioridad,
 } from './chain'
+import {
+  validarResponderPrevenicion, ejecutarResponderPrevenicion,
+} from './replacements'
 
 /**
  * Acciones atomicas del jugador (superficie de applyAction/getValidActions).
@@ -54,7 +57,7 @@ export type Action =
   | { type: 'colocar_arcana'; cardInstanceId: string; slot: number }
   | { type: 'activar_arcana'; cardInstanceId: string; slot: number; eterIds: string[] }
   | { type: 'equipar_artefacto'; cardInstanceId: string; campeonInstanceId: string }
-  | { type: 'bloquear_eter'; eterIds: string[]; campeonSlot: number }
+  | { type: 'bloquear_eter'; eterIds: string[]; targetInstanceId: string }
   | { type: 'descartar_carta'; cardInstanceIds: string[] }
   | { type: 'elegir_opcion'; opcionId: string }
   | { type: 'elegir_objetivo'; objetivoId: string }
@@ -65,6 +68,7 @@ export type Action =
   | { type: 'elegir_ruptura'; atacanteId: string | null; vinculoSlot?: number }
   | { type: 'responder_cadena'; cardInstanceId: string }
   | { type: 'pasar_prioridad' }
+  | { type: 'responder_prevenicion'; prevenir: boolean }
 
 export type ApplyActionResult =
   | { ok: true; state: GameState; events: GameEvent[] }
@@ -86,9 +90,17 @@ export function applyAction(state: GameState, action: Action, ctx: Ctx): ApplyAc
 }
 
 function validarAccion(state: GameState, action: Action): string | null {
+  // Checkpoint prevent_destroy (Fase 2c): mientras haya pendiente de prevenión,
+  // SOLO se acepta responder_prevenicion (del jugador que debe elegir).
+  const preven = state.preventivosPendientes?.[0]
+  if (preven && action.type !== 'responder_prevenicion') {
+    return 'hay una prevenicion pendiente de resolver'
+  }
   switch (action.type) {
     case 'rendirse':
       return state.fase === 'terminada' ? 'la partida ya termino' : null
+    case 'responder_prevenicion':
+      return validarResponderPrevenicion(state, preven?.jugador ?? state.turno)
     case 'mulligan':
       return validarMulligan(state)
     case 'pasar_mulligan':
@@ -230,6 +242,11 @@ function ejecutarAccion(s: GameState, action: Action, ctx: Ctx): void {
     }
     case 'pasar_prioridad': {
       ejecutarPasarPrioridad(s, ctx)
+      return
+    }
+    case 'responder_prevenicion': {
+      const front = s.preventivosPendientes?.[0]
+      ejecutarResponderPrevenicion(s, ctx, front?.jugador ?? s.turno, action.prevenir)
       return
     }
   }

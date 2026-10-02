@@ -47,7 +47,7 @@ export function PriorityModal({ state, playerId, acciones, onAccion, onZoom }: P
           <p className="text-xs text-gray-400">
             {cadena.prioridad === playerId
               ? 'Es tu turno para responder'
-              : `Es turno de ${cadena.prioridad === 'A' ? 'Vos' : 'el rival'}`}
+              : `Es turno de ${cadena.prioridad === 'A' ? 'Tú' : 'el rival'}`}
           </p>
         </div>
 
@@ -70,7 +70,7 @@ export function PriorityModal({ state, playerId, acciones, onAccion, onZoom }: P
                   {efectoMeta?.name ?? efectoActual.cardInstanceId}
                 </p>
                 <p className="text-[10px] text-gray-400">
-                  por {efectoActual.jugador === playerId ? 'Vos' : 'el rival'}
+                  por {efectoActual.jugador === playerId ? 'Tú' : 'el rival'}
                 </p>
               </div>
             </div>

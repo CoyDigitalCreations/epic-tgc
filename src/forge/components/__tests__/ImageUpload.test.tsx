@@ -7,7 +7,7 @@ describe('ImageUpload', () => {
     const onChange = vi.fn()
     render(<ImageUpload value={undefined} onChange={onChange} />)
     expect(screen.getByText('Arte de la carta')).toBeInTheDocument()
-    expect(screen.getByText(/Soltó una imagen acá/)).toBeInTheDocument()
+    expect(screen.getByText(/Suelta una imagen aquí/)).toBeInTheDocument()
   })
 
   it('shows the image preview when value is set', () => {

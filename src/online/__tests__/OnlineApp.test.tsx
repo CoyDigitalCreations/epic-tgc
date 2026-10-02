@@ -55,7 +55,7 @@ describe('OnlineApp', () => {
     await user.click(screen.getByRole('button', { name: 'Comenzar partida' }))
     // Tablero montado con las dos zonas
     expect(screen.getByText('Rival (B)')).toBeInTheDocument()
-    expect(screen.getByText(/Vos decidís el mulligan/)).toBeInTheDocument()
+    expect(screen.getByText(/Tú decides el mulligan/)).toBeInTheDocument()
     expect(screen.getByText('Cadena 9.6')).toBeInTheDocument()
     // Le toca al humano: rendirse disponible
     expect(screen.getByRole('button', { name: 'Rendirse' })).toBeInTheDocument()
@@ -75,7 +75,7 @@ describe('OnlineApp', () => {
       },
       { timeout: 5000 },
     )
-    expect(screen.queryByText(/Vos decidís el mulligan/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Tú decides el mulligan/)).not.toBeInTheDocument()
   })
 
   it('rendirse termina la partida con derrota y permite volver', async () => {
@@ -151,7 +151,7 @@ describe('OnlineApp — mazo personalizado', () => {
     await user.click(screen.getByRole('button', { name: 'Comenzar partida' }))
     // Tablero montado con las dos zonas
     expect(screen.getByText('Rival (B)')).toBeInTheDocument()
-    expect(screen.getByText(/Vos decidís el mulligan/)).toBeInTheDocument()
+    expect(screen.getByText(/Tú decides el mulligan/)).toBeInTheDocument()
   })
 
   it('un mazo personalizado no pisa los sets (los sets siguen con diseños originales)', () => {

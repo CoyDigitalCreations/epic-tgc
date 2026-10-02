@@ -3,7 +3,7 @@
  * Puros: solo leen GameState, no mutan.
  */
 import type { GameState } from './types'
-import { statsDe, aurasDe, hasAuraCampoRegistrada } from './efectos'
+import { statsDe, modificadoresJSONDe, hasAuraCampoRegistrada } from './efectos'
 import { getCardMeta, esCampeon } from './cards'
 
 export interface StatChip {
@@ -50,7 +50,8 @@ export function statsComparativos(s: GameState, id: string): StatsComparativos |
 
 /**
  * Estado de focos de un Campeón:
- * - continuo: 'gris' sin efectos continuos | 'verde' aura activa | 'rojo' aura registrada pero inactiva
+ * - continuo: 'gris' sin modificadores continuos | 'verde' aura activa
+ *   (mods JSON ≠ 0) | 'rojo' la carta PUEDE dar aura (JSON) pero no aplica
  * - temporal: 'gris' sin efectos temporales | 'verde' tiene mods temporales o keywords temporales
  */
 export function focosState(s: GameState, id: string): FocosState | null {
@@ -59,15 +60,15 @@ export function focosState(s: GameState, id: string): FocosState | null {
   const meta = cardId ? getCardMeta(cardId) : null
   if (!meta || !esCampeon(meta)) return null
 
-  const auras = aurasDe(s, id)
-  const hasContinuo = auras.campo.length > 0 || auras.reserva.length > 0 || auras.bloqueo.length > 0
+  const mods = modificadoresJSONDe(s, id)
+  const hasContinuo = mods.poder !== 0 || mods.resistencia !== 0 || mods.keywords.length > 0
   const hasAuraRegistrada = cardId ? hasAuraCampoRegistrada(cardId) : false
 
   let continuo: FocoEstado = 'gris'
   if (hasContinuo) {
     continuo = 'verde'
   } else if (hasAuraRegistrada) {
-    continuo = 'rojo' // aura registrada pero condición no se cumple
+    continuo = 'rojo' // la carta puede dar aura (JSON) pero la condición no se cumple
   }
 
   const hasTemporal =

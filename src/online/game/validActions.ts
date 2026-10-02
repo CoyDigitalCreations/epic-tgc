@@ -1,10 +1,12 @@
-import { getCardMeta, esArcana, esCampeon, costeEterHabilidad, campeonNecesitaEterBloqueado } from './cards'
+import { getCardMeta, esArcana, costeEterHabilidad, cartaNecesitaEterBloqueado } from './cards'
+import type { AnyCard } from '../../shared/types'
 import type { Action } from './actions'
 import { generarAccionesForja, validarActivarArcana } from './actions'
 import { atacantesElegibles, asignacionForzada, ataquesSinBloquear, rivalDe, tieneKeyword } from './combat'
 import { respondiblesDe } from './chain'
-import { etersParaPagar } from './payments'
-import type { GameState, PlayerId } from './types'
+import { etersParaPagar, maxEterBloqueado } from './payments'
+import { validarEquiparArtefacto } from './movimientos'
+import type { GameState, PlayerId, CardInstance } from './types'
 
 /**
  * getValidActions(state, playerId) — acciones legales del jugador ACTIVO
@@ -23,6 +25,17 @@ import type { GameState, PlayerId } from './types'
  * (R12, R15; Ruptura C3/ADR-13)
  */
 export function getValidActions(state: GameState, playerId: PlayerId): Action[] {
+  // Checkpoint prevent_destroy (Fase 2c): mientras haya pendiente de prevenión,
+  // SOLO el jugador que debe elegir recibe responder_prevenicion (ambas opciones).
+  // El resto del motor queda congelado hasta resolver (determinismo ADR-5).
+  const preven = state.preventivosPendientes?.[0]
+  if (preven) {
+    if (playerId !== preven.jugador) return []
+    return [
+      { type: 'responder_prevenicion', prevenir: true },
+      { type: 'responder_prevenicion', prevenir: false },
+    ]
+  }
   if (state.fase === 'terminada') return []
   const acciones: Action[] = [{ type: 'rendirse' }]
 
@@ -70,11 +83,10 @@ export function getValidActions(state: GameState, playerId: PlayerId): Action[] 
         acciones.push({ type: 'usar_transmutar', cardInstanceId: champId, eterIds: p.eterPagado.slice(0, 2) })
       }
     }
-    // Activar Habilidades: Campeones con efectoContinuo o efectoDisparo
+    // Activar Habilidades: Campeones con efectos[] tipo continuo o disparo
     // Continuo (bloquea éter): NO puede activar si agotado; agota al activar.
     // Disparo (paga éter): SÍ puede activar si agotado; NO agota.
-    // Restricción: NO se pueden activar en Alba (solo efectos automáticos).
-    if (state.fase !== 'alba') {
+    // NOTE: Alba is auto-resolved (ADR-3) and never an observable state.
     for (const champId of p.campo.campeones) {
       if (!champId) continue
       const inst = state.instances[champId]
@@ -125,55 +137,43 @@ export function getValidActions(state: GameState, playerId: PlayerId): Action[] 
         }
       }
     }
-    } // end if (fase !== 'alba')
-    // FB-022 Último Refugio: campeón equipado puede invocar del cementerio (sin éter)
-    for (const champId of p.campo.campeones) {
-      if (!champId) continue
-      const inst = state.instances[champId]
-      if (!inst || inst.agotado) continue
-      // Buscar si tiene FB-022 equipado
-      const tieneFB022 = Object.values(state.instances).some(
-        (i) => i?.cardId === 'FB-022' && i.equipadoA === champId,
-      )
-      if (!tieneFB022) continue
-      // Verificar que hay campeones en el cementerio con coste ≤3
-      const enCementerio = p.cementerio.filter((id): id is string => {
-        const ci = state.instances[id]
-        const cardId = ci?.cardId
-        if (!cardId) return false
-        const meta = getCardMeta(cardId)
-        return !!meta && esCampeon(meta) && (meta.stats.cost ?? 99) <= 3
-      })
-      if (enCementerio.length > 0) {
-        acciones.push({ type: 'activar_habilidad', cardInstanceId: champId, eterIds: [] })
-      }
-    }
     if (state.fase === 'forja') {
       // Jugadas por carta en mano (el generador garantiza payloads válidos)
       for (const id of p.mano) {
         const accion = generarAccionesForja(state, playerId, id)
         if (accion) acciones.push(accion)
       }
-      // Bloqueo de Éter: solo para Campeones que TENGAN RAZÓN para bloquear
-      // (habilidad activa/pasiva que use éter bloqueado, o Transmutar).
-      // Draven, Emisario, etc. NO generan esta acción.
-      // No genera acciones si el campeón ya tiene éteres bloqueados.
-      p.campo.campeones.forEach((campeonId, slot) => {
-        if (!campeonId) return
-        const inst = state.instances[campeonId]
-        const campeon = inst?.cardId ? getCardMeta(inst.cardId) : null
-        if (!campeon) return
-        if (!campeonNecesitaEterBloqueado(campeon)) return
-        // No generar si ya tiene éteres bloqueados
-        if ((inst.eterBloqueado?.length ?? 0) > 0) return
-        const eterId = p.eterReserva.find((id) => {
-          const meta = state.instances[id]?.cardId ? getCardMeta(state.instances[id]!.cardId!) : null
-          return meta !== null
-        })
-        if (eterId !== undefined) {
-          acciones.push({ type: 'bloquear_eter', eterIds: [eterId], campeonSlot: slot })
+      // Bloqueo de Éter (Fase 3a): Campeones y Artefactos (Místicas/Arcanas)
+      // con costo-bloqueado en efectos[]. Una acción por Éter disponible hasta
+      // el máximo (maxEterBloqueado desde payments — única fuente).
+      const generarBloqueos = (targets: { id: string; inst: CardInstance; meta: AnyCard }[]) => {
+        for (const t of targets) {
+          if (!cartaNecesitaEterBloqueado(t.meta)) continue
+          const actuales = t.inst.eterBloqueado?.length ?? 0
+          const maxEter = maxEterBloqueado(t.meta)
+          const disponibles = p.eterReserva.filter((id) => {
+            const meta = state.instances[id]?.cardId ? getCardMeta(state.instances[id]!.cardId!) : null
+            return meta !== null
+          })
+          let generados = actuales
+          for (const eterId of disponibles) {
+            if (generados >= maxEter) break
+            acciones.push({ type: 'bloquear_eter', eterIds: [eterId], targetInstanceId: t.id })
+            generados++
+          }
         }
-      })
+      }
+      const campeonesBloqueo = p.campo.campeones
+        .filter((id): id is string => id !== null)
+        .map((id) => ({ id, inst: state.instances[id], meta: state.instances[id]?.cardId ? getCardMeta(state.instances[id]!.cardId!) : null }))
+        .filter((t): t is { id: string; inst: CardInstance; meta: AnyCard } => t.inst != null && t.meta != null)
+      generarBloqueos(campeonesBloqueo)
+      // Fase 3a: Artefactos en 3A-3C / 3D-3F con costo-bloqueado (manual §7.7)
+      const artefactosBloqueo = [...p.campo.misticasTacticas, ...p.campo.arcanasCombate]
+        .filter((id): id is string => id !== null)
+        .map((id) => ({ id, inst: state.instances[id], meta: state.instances[id]?.cardId ? getCardMeta(state.instances[id]!.cardId!) : null }))
+        .filter((t): t is { id: string; inst: CardInstance; meta: AnyCard } => t.inst != null && t.meta != null)
+      generarBloqueos(artefactosBloqueo)
       // C2: elegir_opcion — opciones pendientes del Pasivo 1A (FB-005/DS-006)
       for (const opcion of state.opcionesPendientes ?? []) {
         if (opcion.jugador === playerId) {
@@ -193,6 +193,21 @@ export function getValidActions(state: GameState, playerId: PlayerId): Action[] 
         const accion: Action = { type: 'activar_arcana', cardInstanceId: id, slot, eterIds }
         if (validarActivarArcana(state, accion) !== null) continue
         acciones.push(accion)
+      }
+      // Equipar Artefacto: cartas con keyword ARTEFACTO en campo (3A-3C / 3D-3F) → Campeón propio (2B-2F)
+      for (const id of [...p.campo.misticasTacticas, ...p.campo.arcanasCombate]) {
+        if (!id) continue
+        const inst = state.instances[id]
+        if (!inst || inst.equipadoA) continue // ya equipada
+        const meta = inst.cardId ? getCardMeta(inst.cardId) : null
+        if (!meta || !('keywords' in meta) || !meta.keywords?.includes('Artefacto')) continue
+        // Generar una acción por cada campeón propio elegible
+        for (const campeonId of p.campo.campeones) {
+          if (!campeonId) continue
+          const accion: Action = { type: 'equipar_artefacto', cardInstanceId: id, campeonInstanceId: campeonId }
+          if (validarEquiparArtefacto(state, accion) !== null) continue
+          acciones.push(accion)
+        }
       }
       acciones.push({ type: 'pasar_turno' })
     } else if (state.fase === 'choque') {

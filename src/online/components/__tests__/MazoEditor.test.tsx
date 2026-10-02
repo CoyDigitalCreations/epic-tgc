@@ -100,8 +100,10 @@ describe('MazoEditor', () => {
     useCardStore.getState().loadCards([
       campeonCustom({
         stats: { cost: 3, poder: 4, resistencia: 4 },
-        efectoPasivo: 'Gana +1 poder por Éter bloqueado.',
-        efectoDisparo: 'Paga 1 Éter: agota un Campeón rival.',
+        efectos: [
+          { tipo: 'pasivo', texto: 'Gana +1 poder por Éter bloqueado.' },
+          { tipo: 'disparo', texto: 'Paga 1 Éter: agota un Campeón rival.' },
+        ],
       }),
     ])
     render(<MazoEditor onGuardar={vi.fn()} onCancelar={vi.fn()} />)
@@ -130,9 +132,11 @@ describe('MazoEditor', () => {
         flavorText: '',
         limiteCopias: 15,
         stats: { cost: 1 },
-        efectoReserva: 'Se reserva en tu zona de Éter.',
-        efectoPago: 'Págalo para pagar costes.',
-        efectoBloqueo: 'Bloquéalo sobre un Campeón.',
+        efectos: [
+          { tipo: 'reserva', texto: 'Se reserva en tu zona de Éter.' },
+          { tipo: 'pago', texto: 'Págalo para pagar costes.' },
+          { tipo: 'bloqueo', texto: 'Bloquéalo sobre un Campeón.' },
+        ],
         createdAt: '2026-01-01T00:00:00.000Z',
         updatedAt: '2026-01-01T00:00:00.000Z',
       },

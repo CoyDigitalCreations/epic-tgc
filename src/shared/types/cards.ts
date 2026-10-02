@@ -38,6 +38,10 @@ export interface EfectoData {
   /** Whose turn the trigger applies to (default: propio) */
   controladorTrigger?: 'propio' | 'rival'
 
+  // ── Capa 2d: CONTEXTO DE USO (opcional) ──
+  /** Restricts when this effect fires — e.g., 'invocar' means only when summoning a champion */
+  contextoUso?: 'invocar' | 'habilidad' | 'combate' | 'ninguno'
+
   // ── Capa 3: COSTO (opcional, anidado) ──
   /** What the player must pay to activate */
   costo?: CostoEfecto
@@ -62,7 +66,11 @@ export interface EfectoData {
   /** When true, the buff applies per blocked ether (e.g., +2 ATQ per blocked ether) */
   buffPerBlockedEther?: boolean
 
-  // ── Capa 6c: HASTA (para cantidades flexibles) ──
+  // ── Capa 6c: CANTIDAD MÁXIMA (tope para buffs escalados) ──
+  /** Tope para buffs escalados por buffPerBlockedEther (p.ej. Marek "máx. +3") */
+  cantidadMax?: number
+
+  // ── Capa 6d: HASTA (para cantidades flexibles) ──
   /** When true, the quantity is "up to N" instead of exact */
   esHasta?: boolean
 
@@ -94,8 +102,13 @@ export interface EfectoData {
   reagrupar?: { fase: 'alba' | 'choque'; turno: 'propio' | 'oponente' }
 
   // ── Capa 11: CONDICIÓN (solo para Arcana) ──
-  /** Activation condition for Arcanas — accepts string (legacy) or CondicionEfecto */
-  condicion?: CondicionEfecto | string
+  /** Activation condition for Arcanas — CondicionEfecto estructurado (string legacy eliminado Fase 3e: 0 hits en JSON) */
+  condicion?: CondicionEfecto
+
+  // ── Capa 12: FILTROS A NIVEL RAÍZ (opcional) ──
+  /** Root-level filters — merged with objetivo.filtros when resolving targets.
+   *  Top-level takes precedence. Used by tutor and other filtered effects. */
+  filtros?: FiltroObjetivo
 
   // ── Capa 5b: COPY ATTRIBUTES (solo cuando efecto = 'copy') ──
   /** Qué atributos se copian del objetivo. Solo aplica cuando efecto = 'copy'. */
@@ -144,7 +157,8 @@ export interface CostoEfecto {
   cantidad?: number
 }
 
-/** All available effect actions */
+/** All available effect actions — sección viva (JSON PrimerColeccionEfectos.json).
+ * 13 strings legacy eliminados en Fase 3e (cero hits en JSON de 65 cartas). */
 export type EfectoAccion =
   | 'buff' | 'debuff' | 'destroy' | 'exile' | 'return_hand'
   | 'draw' | 'steal_champion' | 'steal_ether' | 'block_ether'
@@ -155,12 +169,7 @@ export type EfectoAccion =
   | 'recuperar_mazo_barajar' | 'recuperar_mazo_top' | 'recuperar_mazo_bottom'
   | 'recuperar_exilio'
   | 'invocar' | 'invocar_y_equipar'
-  | 'mover' | 'negar'
-  // Legacy compatibility
-  | 'keyword' | 'robar' | 'destruir' | 'bloquear_ether' | 'mover_ether'
-  | 'release_ether' | 'devolver_mano' | 'equipar' | 'invocar_cementerio'
-  | 'conditional_trigger' | 'equip_grant_ability' | 'force_return_ether'
-  | 'rival_discard' | 'modificar_stat'
+  | 'mover' | 'negar' | 'rival_discard'
 
 /** Structured target — 4-layer system: type + controller + zone + filters + destination */
 export interface ObjetivoEfecto {
@@ -284,10 +293,6 @@ export interface CampeonCard extends CardMeta {
   efectos?: EfectoData[]
   /** Comandante effect — applies to ALL champions of same faction you control */
   efectoComandante?: EfectoData
-  /** ¿el Disparo agota al Campeón? */
-  disparoAgota?: boolean
-  /** ¿el Disparo es de un solo uso? */
-  disparoUnSoloUso?: boolean
 }
 
 export interface MisticaCard extends CardMeta {
@@ -303,10 +308,8 @@ export interface ArcanaCard extends CardMeta {
   stats: BaseStats
   /** Unified effect list — first effect is condition (pasivo), second is reward (hechizo) */
   efectos?: EfectoData[]
-  /** Condición de activación estructurada */
-  condicion?: CondicionEfecto | string
-  /** Recompensa text (for display) */
-  recompensa?: string
+  /** Condición de activación estructurada (string legacy eliminado Fase 3e) */
+  condicion?: CondicionEfecto
 }
 
 export interface EterCard extends CardMeta {
@@ -315,8 +318,6 @@ export interface EterCard extends CardMeta {
   stats: BaseStats
   /** Unified effect list — up to 3 effects (reserva, pago, bloqueo) */
   efectos?: EfectoData[]
-  /** Variante de pago: Pasivo o Gatillo */
-  variantePago?: 'Pasivo' | 'Gatillo'
 }
 
 export interface VinculoCard extends CardMeta {

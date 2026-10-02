@@ -57,24 +57,10 @@ function efectosDe(card: AnyCard): { etiqueta: string; texto: string }[] {
   }
 
   switch (card.type) {
-    case 'Campeón': {
-      const l: { etiqueta: string; texto: string }[] = []
-      if (card.efectoPasivo) l.push({ etiqueta: 'Pasivo', texto: card.efectoPasivo })
-      if (card.efectoDisparo) l.push({ etiqueta: 'Disparo', texto: card.efectoDisparo })
-      if (card.efectoContinuo) l.push({ etiqueta: 'Continuo', texto: card.efectoContinuo })
-      return l
-    }
+    case 'Campeón':
+    case 'Éter':
     case 'Mística':
-      return card.efecto ? [{ etiqueta: 'Efecto', texto: card.efecto }] : []
-    case 'Éter': {
-      const l: { etiqueta: string; texto: string }[] = []
-      if (card.efectoReserva) l.push({ etiqueta: 'Reserva', texto: card.efectoReserva })
-      if (card.efectoPago) l.push({ etiqueta: 'Pago', texto: card.efectoPago })
-      if (card.efectoBloqueo) l.push({ etiqueta: 'Bloqueo', texto: card.efectoBloqueo })
-      return l
-    }
     case 'Vínculo':
-      return card.efecto ? [{ etiqueta: 'Efecto', texto: card.efecto }] : []
     default:
       return []
   }
@@ -131,43 +117,6 @@ function MiniDeckCard({
       </div>
       <span className="text-[10px] text-gray-300 truncate max-w-[80px]">{card.name}</span>
       <span className="text-[10px] text-ether-400 font-mono">×{count}</span>
-    </div>
-  )
-}
-
-/** Scaled card wrapper for the center catalog and right detail panels. */
-function ScaledCard({
-  card,
-  imageUrl,
-  scale,
-  onClick,
-  className = '',
-}: {
-  card: AnyCard
-  imageUrl?: string
-  scale: number
-  onClick?: () => void
-  className?: string
-}) {
-  return (
-    <div
-      className={`relative cursor-pointer ${className}`}
-      style={{
-        width: 744 * scale,
-        height: 1038 * scale,
-      }}
-      onClick={onClick}
-    >
-      <div
-        style={{
-          transform: `scale(${scale})`,
-          transformOrigin: 'top left',
-          width: 744,
-          height: 1038,
-        }}
-      >
-        <RenderCarta card={card} imageUrl={imageUrl} />
-      </div>
     </div>
   )
 }
@@ -286,7 +235,7 @@ export function MazoEditor({ inicial, onGuardar, onCancelar }: MazoEditorProps) 
             ) : (
               <div className="text-center text-gray-500">
                 <div className="text-4xl mb-2">✦</div>
-                <p className="text-sm">Seleccioná una carta</p>
+                <p className="text-sm">Selecciona una carta</p>
               </div>
             )}
           </div>
@@ -405,7 +354,7 @@ export function MazoEditor({ inicial, onGuardar, onCancelar }: MazoEditorProps) 
             ) : (
               <div className="text-center text-gray-500">
                 <div className="text-4xl mb-2">✦</div>
-                <p className="text-sm">Seleccioná una carta</p>
+                <p className="text-sm">Selecciona una carta</p>
               </div>
             )}
           </div>

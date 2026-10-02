@@ -1,30 +1,25 @@
 /**
  * Economía de éter — bloquear éter.
  * Extraído de actions.ts para separación de dominios (change: refactor-engine).
+ * Fase 3a: targetInstanceId (Campeón o Artefacto en campo).
  */
 import type { GameState, Ctx } from './types'
-import { validarBloqueo } from './payments'
+import { validarBloqueo, bloquearEter } from './payments'
+import { dispararUmbralBloqueo } from './effectInterpreter'
 import type { Action } from './core'
 
 /* ─────────────────────── Validador ─────────────────────── */
 
 export function validarBloquearEter(state: GameState, action: Extract<Action, { type: 'bloquear_eter' }>): string | null {
   if (state.fase !== 'forja') return 'bloquear_eter solo en Forja'
-  return validarBloqueo(state, state.turno, action.eterIds, action.campeonSlot)
+  return validarBloqueo(state, state.turno, action.eterIds, action.targetInstanceId)
 }
 
 /* ──────────────────── Ejecución ──────────────────── */
 
-/** Bloqueo facción v2.1: 2A → Campeón.eterBloqueado (el clon ya fue validado). */
+/** Bloqueo: 2A → target.eterBloqueado. Tras bloquear, chequea one-shot de umbral (FB-032). */
 export function ejecutarBloquearEter(s: GameState, action: Extract<Action, { type: 'bloquear_eter' }>, ctx: Ctx): void {
-  const error = validarBloqueo(s, s.turno, action.eterIds, action.campeonSlot)
-  if (error) return // defensivo: ya validado en validarAccion
-  const p = s.players[s.turno]
-  const campeonId = p.campo.campeones[action.campeonSlot]!
-  const instCampeon = s.instances[campeonId]
-  instCampeon.eterBloqueado = [...(instCampeon.eterBloqueado ?? []), ...action.eterIds]
-  for (const id of action.eterIds) {
-    p.eterReserva.splice(p.eterReserva.indexOf(id), 1)
-  }
-  ctx.emit({ type: 'eter_bloqueado', jugador: s.turno, eterIds: action.eterIds, campeonId })
+  bloquearEter(s, ctx, s.turno, action.eterIds, action.targetInstanceId)
+  // Fase 3a Phase D: one-shot al alcanzar umbral de costo-bloqueado
+  dispararUmbralBloqueo(s, ctx, action.targetInstanceId)
 }

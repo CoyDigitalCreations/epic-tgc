@@ -4,6 +4,7 @@ import { useCardStore } from '../forge/store/useCardStore'
 import { useCardImage } from '../forge/hooks/useCardImage'
 import { ALL_CARDS } from '../shared/data/paquetes'
 import { registrarCartas, visibleState, getCardMeta } from './game'
+import type { Dificultad } from './game/bot'
 import { MAZOS, mazoParaBot } from './mazos'
 import { useMazosStore, type MazoPersonalizado } from './useMazosStore'
 import { usePartida, type PartidaConfig } from './usePartida'
@@ -30,6 +31,7 @@ export default function OnlineApp() {
   const [mazoHumano, setMazoHumano] = useState<MazoSeleccionado>({ tipo: 'set', id: 'estasis' })
   const [mazoEditando, setMazoEditando] = useState<MazoPersonalizado | undefined>(undefined)
   const [seed, setSeed] = useState(() => Math.floor(Math.random() * 100_000))
+  const [dificultad, setDificultad] = useState<Dificultad>('medio')
   const coleccion = useCardStore((s) => s.cards)
   const mazosPersonalizados = useMazosStore((s) => s.mazosPersonalizados)
 
@@ -90,6 +92,8 @@ export default function OnlineApp() {
         }}
         seed={seed}
         onSeed={setSeed}
+        dificultad={dificultad}
+        onDificultad={setDificultad}
         onEmpezar={empezar}
       />
     )
@@ -101,7 +105,7 @@ export default function OnlineApp() {
     MAZOS[0].cardIds
   const setHumano = mazoHumano.tipo === 'custom' ? 'custom' : mazoHumano.id
   const deckB = mazoParaBot(seed, setHumano).cardIds
-  const config: PartidaConfig = { deckA, deckB, seed, delayMs: 350 }
+  const config: PartidaConfig = { deckA, deckB, seed, delayMs: 350, dificultad }
   const keyPartida = `${mazoHumano.tipo}:${mazoHumano.id}-${seed}-${mazoCustomElegido?.cardIds.length ?? 0}`
   return (
     <Partida key={keyPartida} config={config} onAbandonar={salir} />
@@ -133,6 +137,8 @@ interface MenuProps {
   onEditarMazo: (m: MazoPersonalizado) => void
   seed: number
   onSeed: (n: number) => void
+  dificultad: Dificultad
+  onDificultad: (d: Dificultad) => void
   onEmpezar: () => void
 }
 
@@ -182,6 +188,8 @@ function Menu({
   onEditarMazo,
   seed,
   onSeed,
+  dificultad,
+  onDificultad,
   onEmpezar,
 }: MenuProps) {
   const seleccionado = (id: string) =>
@@ -285,6 +293,30 @@ function Menu({
             Mismo seed + mismas decisiones → misma partida.
             {mazoHumano.tipo === 'custom' && ' Con mazo personalizado el bot elige su set según el seed.'}
           </p>
+        </div>
+
+        {/* Selector de dificultad del bot */}
+        <div className="mb-8 max-w-2xl">
+          <p className="text-sm text-gray-400 mb-2">Dificultad del bot:</p>
+          <div className="flex gap-3">
+            {([
+              { id: 'facil' as const, label: 'Fácil', desc: 'Prioridades básicas', color: 'text-green-400' },
+              { id: 'medio' as const, label: 'Medio', desc: 'Considera combate y habilidades', color: 'text-yellow-400' },
+              { id: 'dificil' as const, label: 'Difícil', desc: 'Evalúa el tablero completo', color: 'text-red-400' },
+            ]).map((d) => (
+              <button
+                key={d.id}
+                onClick={() => onDificultad(d.id)}
+                className={`flex-1 text-left border rounded-lg px-4 py-3 transition-all cursor-pointer
+                  ${dificultad === d.id
+                    ? 'border-ether-400 ring-1 ring-ether-400 bg-ether-600/10'
+                    : 'border-card-border hover:border-gray-500 bg-surface-2'}`}
+              >
+                <p className={`font-display text-sm font-bold ${d.color}`}>{d.label}</p>
+                <p className="text-[11px] text-gray-500 mt-0.5">{d.desc}</p>
+              </button>
+            ))}
+          </div>
         </div>
 
         <button

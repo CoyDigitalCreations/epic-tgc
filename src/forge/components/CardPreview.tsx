@@ -488,10 +488,9 @@ export function RenderCarta({
               const pasivo = getEffectText('pasivo')
               const disparo = getEffectText('disparo')
               const continuo = getEffectText('continuo')
-              // Fallback: legacy text fields
-              const pasivoText = pasivo ?? c.efectoPasivo
-              const disparoText = disparo ?? c.efectoDisparo
-              const continuoText = continuo ?? c.efectoContinuo
+              const pasivoText = pasivo
+              const disparoText = disparo
+              const continuoText = continuo
               
               const comandanteText = ('efectoComandante' in c && c.efectoComandante?.texto) ? c.efectoComandante.texto : ''
               const totalLen = (pasivoText?.length || 0) + (disparoText?.length || 0) + (continuoText?.length || 0) + (comandanteText.length || 0)
@@ -531,7 +530,7 @@ export function RenderCarta({
             case 'Mística': {
               // New system: read from efectos[]
               const hechizo = getEffectText('hechizo')
-              const texto = hechizo ?? c.efecto
+              const texto = hechizo
               return texto ? (
                 <p
                   style={{
@@ -583,10 +582,9 @@ export function RenderCarta({
               const reserva = getEffectText('reserva')
               const pago = getEffectText('pago')
               const bloqueo = getEffectText('bloqueo')
-              // Fallback: legacy text fields
-              const reservaText = reserva ?? c.efectoReserva
-              const pagoText = pago ?? c.efectoPago
-              const bloqueoText = bloqueo ?? c.efectoBloqueo
+              const reservaText = reserva
+              const pagoText = pago
+              const bloqueoText = bloqueo
               const totalLen = (reservaText?.length || 0) + (pagoText?.length || 0) + (bloqueoText?.length || 0)
 
               if (reservaText) {
@@ -619,7 +617,7 @@ export function RenderCarta({
             case 'Vínculo': {
               // New system: read from efectos[]
               const vinculo = getEffectText('vinculo')
-              const texto = vinculo ?? c.efecto
+              const texto = vinculo
               return texto ? (
                 <p
                   style={{
@@ -768,7 +766,7 @@ export function CardPreview({
       >
         <div className="text-center">
           <div className="text-6xl mb-4">✦</div>
-          <p className="text-lg">Seleccioná o creá una carta</p>
+          <p className="text-lg">Selecciona o crea una carta</p>
           <p className="text-sm text-gray-600 mt-2">744 × 1038 px</p>
         </div>
       </div>

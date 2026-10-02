@@ -1,15 +1,20 @@
 /**
- * Effect Registry — Sistema centralizado de efectos pendientes (Fase 1).
+ * Effect Registry — ACCIONES pendientes por fase del turno.
  *
- * Reemplaza la dispersión de: Modificador.turnosRestantes, liberarEnAlba,
- * keywordsTemporales, purgarEfectosTemporales. Cada efecto queda registrado
- * como un EfectoPendiente con trigger por fase, acción a ejecutar y duración.
+ * DOMINIO (Fase 2b — unificación de expiración):
+ * - ESTE módulo: acciones que se ejecutan en una fase futura —
+ *   p.ej. liberar-eter/reagrupar de Aurora/Ragnar (activaron continuo con
+ *   reagrupar alba). Se registran al activar y resuelven en la fase indicada.
+ * - Purga clásica ADR-22 (efectos.ts purgarEfectosTemporales/
+ *   purgarKeywordsTemporales): expiración de stats/keywords temporales
+ *   (modificadores.turnosRestantes, keywordsTemporales). Es el ÚNICO sistema
+ *   de expiración de modificadores — este registry NO la reemplaza.
  *
  * Uso:
- *   1. `registrar()` cuando un efecto se activa (ej: Aurora paga habilidad)
- *   2. `resolverFase()` se llama al inicio de cada fase del turno
- *   3. `purgarExpirados()` elimina efectos cuya duración expiró
- *   4. `limpiarFuente()` cuando una carta sale del campo (cementerio/exilio)
+ *   1. `registrarEfectoPendiente()` cuando un efecto se activa
+ *   2. `resolverFaseEfectos()` se llama al inicio de cada fase (phases.ts/partida.ts)
+ *   3. `purgarEfectosPendientes()` interna elimina los que expiraron
+ *   4. Los pendientes mueren con su fuente (limpiarFuente al salir del campo)
  */
 
 import type { Ctx, GameState, PlayerId, Zona } from './types'
@@ -23,15 +28,16 @@ export type FaseTrigger = 'alba' | 'forja' | 'choque' | 'ocaso'
 /** Condición de_OWNER del trigger (quién controla la carta fuente). */
 export type OwnerTrigger = 'dueño' | 'rival' | 'cualquiera'
 
-/** Acción concreta que el efecto ejecuta al resolverse. */
-export type EfectoAccion =
+/** Acción concreta que el efecto pendiente ejecuta al resolverse.
+ * Fase 3e: renombrado de EfectoAccion → AccionPendiente (resolvía la colisión
+ * de nombre con el string union EfectoAccion de shared/types/cards.ts). */
+export type AccionPendiente =
   | { tipo: 'modificar'; objetivo: string; stat: 'poder' | 'resistencia'; delta: number }
   | { tipo: 'liberar-eter'; eterIds: string[]; destino: 'reserva' }
   | { tipo: 'destruir'; objetivo: string }
   | { tipo: 'agotar'; objetivo: string }
   | { tipo: 'robar-cartas'; cantidad: number }
   | { tipo: 'keyword-temporal'; objetivo: string; keyword: string }
-  | { tipo: 'mover-terreno'; objetivo: string; origen: string; destino: string }
   | { tipo: 'enviar-cementerio'; objetivo: string }
 
 /** Duración del efecto: cuánto tiempo vive. */
@@ -58,7 +64,7 @@ export interface EfectoPendiente {
   /** ¿En cuyo turno se resuelve? */
   triggerOwner: OwnerTrigger
   /** La acción a ejecutar. */
-  accion: EfectoAccion
+  accion: AccionPendiente
   /** Cuánto tiempo vive el efecto. */
   duracion: EfectoDuracion
   /** Si el efecto ya fue resuelto esta fase (evita doble-resolución). */
@@ -84,7 +90,7 @@ export function registrarEfectoPendiente(
     owner: PlayerId
     triggerFase: FaseTrigger
     triggerOwner?: OwnerTrigger
-    accion: EfectoAccion
+    accion: AccionPendiente
     duracion: EfectoDuracion
   },
 ): string {
@@ -216,12 +222,6 @@ function ejecutarAccionEfecto(s: GameState, ctx: Ctx, ep: EfectoPendiente): void
       break
     }
 
-    case 'mover-terreno': {
-      // Movimiento genérico de una carta entre zonas del campo
-      // Se implementará según sea necesario
-      break
-    }
-
     case 'enviar-cementerio': {
       const inst = s.instances[accion.objetivo]
       if (!inst) break
@@ -299,42 +299,9 @@ function purgarEfectosPendientes(s: GameState, fase: FaseTrigger, jugadorActual:
   })
 }
 
-/**
- * Limpia todos los efectos pendientes de una carta fuente.
- * Se llama cuando la carta sale del campo (cementerio, exilio, etc.).
- */
-export function limpiarEfectosFuente(s: GameState, fuenteCardInstanceId: string): void {
-  if (!s.efectosPendientes) return
-  s.efectosPendientes = s.efectosPendientes.filter((ep) => ep.fuente !== fuenteCardInstanceId)
-}
-
-/**
- * Cancela un efecto pendiente por ID.
- */
-export function cancelarEfectoPendiente(s: GameState, efectoId: string): void {
-  if (!s.efectosPendientes) return
-  s.efectosPendientes = s.efectosPendientes.filter((ep) => ep.id !== efectoId)
-}
-
-/**
- * Obtiene todos los efectos pendientes de un jugador.
- */
-export function efectosPendientesDe(s: GameState, jugador: PlayerId): EfectoPendiente[] {
-  if (!s.efectosPendientes) return []
-  return s.efectosPendientes.filter((ep) => ep.owner === jugador)
-}
-
-/**
- * Cuenta cuántos efectos de un tipo específico están pendientes.
- */
-export function contarEfectosPendientes(s: GameState, triggerFase: FaseTrigger): number {
-  if (!s.efectosPendientes) return 0
-  return s.efectosPendientes.filter((ep) => ep.triggerFase === triggerFase).length
-}
-
 /* ───────────────────── Helpers ───────────────────── */
 
-/** Convierte una EfectoDuracion al tipo ExpiraModificador legacy (para backward compat). */
+/** Convierte una EfectoDuracion al tipo ExpiraModificador (type bridge). */
 function duracionAExpira(duracion: EfectoDuracion): 'ocaso' | 'alba-dueño' | 'permanente' {
   switch (duracion.tipo) {
     case 'turnos':
@@ -347,29 +314,8 @@ function duracionAExpira(duracion: EfectoDuracion): 'ocaso' | 'alba-dueño' | 'p
 }
 
 /**
- * Helper: crea un EfectoDuracion para "dura N turnos" (decrementa en Ocaso del dueño).
- */
-export function duracionTurnos(n: number): EfectoDuracion {
-  return { tipo: 'turnos', restantes: n }
-}
-
-/**
  * Helper: crea un EfectoDuracion para "hasta tu próxima Alba".
  */
 export function hastaAlba(): EfectoDuracion {
   return { tipo: 'hasta-fase', hastaFase: 'alba', ownerTrigger: 'dueño' }
-}
-
-/**
- * Helper: crea un EfectoDuracion para "hasta el final de este turno".
- */
-export function hastaFinTurno(): EfectoDuracion {
-  return { tipo: 'hasta-fase', hastaFase: 'ocaso', ownerTrigger: 'dueño' }
-}
-
-/**
- * Helper: crea un EfectoDuracion permanente.
- */
-export function permanente(): EfectoDuracion {
-  return { tipo: 'permanente' }
 }

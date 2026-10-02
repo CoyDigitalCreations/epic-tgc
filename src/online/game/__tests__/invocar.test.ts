@@ -4,13 +4,14 @@ import { applyAction } from '../actions'
 import type { Action } from '../actions'
 import { sacrificiosRequeridos } from '../campo'
 import { bloquearEter } from '../payments'
+import { getCardMeta } from '../cards'
 import type { Ctx, GameState, PlayerId } from '../types'
 
-// Cartas reales del paquete (paquetes.ts):
-// FB-011 Campeón Normal cost 2 · FB-010 Aurora Soberano Singular cost 4 ·
-// FB-019 Mística cost 2 · FB-021 Táctica cost 0 · FB-023 Arcana cost 3 ·
-// FB-024 Combate cost 0 · FB-001 Éter Orden cost 1 · DS-002 Éter Caos ·
-// DS-011 Campeón Caos Normal cost 2 (para sacrificio de facción AJENA).
+// Cartas reales del catálogo (fuente de verdad: seed/PrimerColeccionEfectos.json):
+// FB-011 Campeón Normal · FB-010 Aurora Soberano Singular cost 4 ·
+// FB-019 Mística · FB-021 Táctica · FB-023 Arcana (coste se lee del JSON) ·
+// FB-024 Combate · FB-001 Éter Orden · DS-002 Éter Caos ·
+// DS-011 Campeón Caos (para sacrificio de facción AJENA).
 const CAMPEON = 'FB-011'
 const AURORA = 'FB-010' // Soberano Singular
 const MISTICA = 'FB-019'
@@ -19,7 +20,7 @@ const ARCANA = 'FB-023'
 const COMBATE = 'FB-024'
 const ETER_ORDEN = 'FB-001'
 const ETER_CAOS = 'DS-002'
-const ETER_BLOQUEO_ORDEN = 'FB-007' // tiene efectoBloqueo
+const ETER_BLOQUEO_ORDEN = 'FB-007' // Éter con aura de bloqueo
 const CAMPEON_CAOS = 'DS-011'
 
 function estadoMinimo(): GameState {
@@ -332,15 +333,27 @@ describe('jugar_mistica (R10)', () => {
   })
 })
 
-// TODO: Phase 3 eliminará colocar_tactica y colocar_combate del motor
-// describe('colocar_tactica (5.4 — no cuesta Éter)', () => { ... })
-// describe('colocar_combate (3D-3F, no cuesta Éter)', () => { ... })
-
 describe('colocar_arcana (boca abajo 3D-3F, gratis) + activar_arcana (paga coste)', () => {
   it('coloca la Arcana GRATIS boca abajo, luego activa pagando coste (en turno siguiente)', () => {
+    // El coste de activación sale del JSON (fuente de verdad), no hardcodeado
+    const metaArc = getCardMeta(ARCANA)
+    const costeArc = metaArc && 'stats' in metaArc ? metaArc.stats.cost : 2
     let s = conMano(estadoMinimo(), { arc: ARCANA })
-    const { s: s2, ids } = conEteres(s, ETER_ORDEN, 3)
+    const { s: s2, ids } = conEteres(s, ETER_ORDEN, costeArc)
     s = s2
+    // §5.4 (Fase 2a): FB-023 exige condicion JSON — 2 Campeones con Éter bloqueado
+    const { s: s3, id: champ1 } = conCampeonEnCampo(s, CAMPEON, 0)
+    s = s3
+    const { s: s4, id: champ2 } = conCampeonEnCampo(s, CAMPEON_CAOS, 1)
+    s = s4
+    s.instances[champ1].eterBloqueado = ['eb1']
+    s.instances[champ2].eterBloqueado = ['eb2']
+    s.instances['eb1'] = { cardInstanceId: 'eb1', cardId: ETER_ORDEN, owner: 'A' }
+    s.instances['eb2'] = { cardInstanceId: 'eb2', cardId: ETER_ORDEN, owner: 'A' }
+    s.players.A.mazo = ['m1', 'm2', 'm3']
+    s.instances['m1'] = { cardInstanceId: 'm1', cardId: CAMPEON, owner: 'A' }
+    s.instances['m2'] = { cardInstanceId: 'm2', cardId: CAMPEON, owner: 'A' }
+    s.instances['m3'] = { cardInstanceId: 'm3', cardId: CAMPEON, owner: 'A' }
     const ctx = crearCtx()
     // Paso 1: colocar (gratis)
     s = aplicar(s, { type: 'colocar_arcana', cardInstanceId: 'arc', slot: 0 }, ctx)
@@ -363,7 +376,7 @@ describe('colocar_arcana (boca abajo 3D-3F, gratis) + activar_arcana (paga coste
     // Simular turno siguiente: limpiar entradaEsteTurno (como hace phases.ts en Alba)
     delete s.instances['arc']!.entradaEsteTurno
 
-    // Paso 2: activar (paga coste) — ahora sí funciona
+    // Paso 2: activar (paga coste + resuelve recompensa hechizo del JSON)
     ctx.events.length = 0
     s = aplicar(s, { type: 'activar_arcana', cardInstanceId: 'arc', slot: 0, eterIds: ids }, ctx)
 
@@ -372,35 +385,37 @@ describe('colocar_arcana (boca abajo 3D-3F, gratis) + activar_arcana (paga coste
     expect(s.instances['arc']!.bocaArriba).toBe(true)
     expect(ctx.events[0]).toMatchObject({ type: 'eter_pagado', jugador: 'A', eterIds: ids })
     expect(ctx.events[1]).toMatchObject({ type: 'carta_activada', cardInstanceId: 'arc', jugador: 'A', slot: 0 })
+    // Recompensa FB-023 (hechizo/draw cantidad 2): roba 2 del mazo
+    expect(s.players.A.mano).toEqual(['m1', 'm2'])
   })
 })
 
 describe('bloquear_eter (acción de forja, facción v2.1)', () => {
-  it('bloquea Éter con efectoBloqueo de facción compartida sobre un Campeón propio', () => {
+  it('bloquea Éter con aura de bloqueo de facción compartida sobre un Campeón propio', () => {
     const ctx = crearCtx()
     const conCampo = conCampeonEnCampo(estadoMinimo(), CAMPEON, 0)
     const { s, ids } = conEteres(conCampo.s, ETER_BLOQUEO_ORDEN, 1)
-    const s2 = aplicar(s, { type: 'bloquear_eter', eterIds: ids, campeonSlot: 0 }, ctx)
+    const s2 = aplicar(s, { type: 'bloquear_eter', eterIds: ids, targetInstanceId: conCampo.id }, ctx)
 
-    expect(s2.instances['campo-FB-011-0'].eterBloqueado).toEqual(ids)
+    expect(s2.instances[conCampo.id].eterBloqueado).toEqual(ids)
     expect(s2.players.A.eterReserva).toHaveLength(0)
     expect(ctx.events).toEqual([
-      { type: 'eter_bloqueado', jugador: 'A', eterIds: ids, campeonId: 'campo-FB-011-0' },
+      { type: 'eter_bloqueado', jugador: 'A', eterIds: ids, campeonId: conCampo.id },
     ])
   })
 
-  it('rechaza slots vacíos y valida bloqueo de Éter', () => {
+  it('rechaza targets inexistentes y valida bloqueo de Éter', () => {
     const ctx = crearCtx()
     const conCampo = conCampeonEnCampo(estadoMinimo(), CAMPEON, 0)
     const { s, ids } = conEteres(conCampo.s, ETER_ORDEN, 1)
 
-    const r2 = applyAction(s, { type: 'bloquear_eter', eterIds: ids, campeonSlot: 3 }, ctx)
+    const r2 = applyAction(s, { type: 'bloquear_eter', eterIds: ids, targetInstanceId: 'no-existe' }, ctx)
     expect(r2.ok).toBe(false)
-    expect(bloquearEter(s, ctx, 'A', ids, 3)).toMatch(/vacío/)
+    expect(bloquearEter(s, ctx, 'A', ids, 'no-existe')).toMatch(/no existe/)
 
-    // Éter sin efectoBloqueo se acepta si comparte facción (sin límite)
+    // Éter sin aura de bloqueo se acepta si comparte facción (sin límite)
     const { s: s3, ids: idsSinBloqueo } = conEteres(conCampo.s, ETER_ORDEN, 1)
-    const r3 = applyAction(s3, { type: 'bloquear_eter', eterIds: idsSinBloqueo, campeonSlot: 0 }, ctx)
+    const r3 = applyAction(s3, { type: 'bloquear_eter', eterIds: idsSinBloqueo, targetInstanceId: conCampo.id }, ctx)
     expect(r3.ok).toBe(true)
   })
 })

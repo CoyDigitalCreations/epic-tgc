@@ -719,14 +719,14 @@ export function CardList() {
         <div className="text-center py-12 text-gray-500">
           <p className="text-4xl mb-2">📜</p>
           <p className="font-display text-lg">No hay cartas todavía</p>
-          <p className="text-sm mt-1">Importá un archivo JSON o creá tu primera carta arriba</p>
+          <p className="text-sm mt-1">Importa un archivo JSON o crea tu primera carta arriba</p>
         </div>
       ) : filteredCards.length === 0 ? (
         <div className="text-center py-12 text-gray-500">
           <p className="text-4xl mb-2">🔍</p>
           <p className="font-display text-lg">No se encontraron cartas</p>
           <p className="text-sm mt-1">
-            Probá con otro término de búsqueda o{' '}
+            Prueba con otro término de búsqueda o{' '}
               <button
               onClick={() => {
                 setSearch('')
@@ -739,7 +739,7 @@ export function CardList() {
               }}
               className="text-ether-400 hover:text-ether-300 underline cursor-pointer"
             >
-              limpiá los filtros
+              limpia los filtros
             </button>
           </p>
         </div>
@@ -768,7 +768,7 @@ export function CardList() {
         isOpen={showClearModal}
         title="¿Limpiar toda la colección?"
         message="Esta acción va a eliminar TODAS las cartas de la colección local. 
-                 No se puede deshacer. Asegurate de haber exportado los datos antes si querés conservarlos."
+                 No se puede deshacer. Asegúrate de haber exportado los datos antes si quieres conservarlos."
         confirmLabel="Sí, limpiar todo"
         cancelLabel="Cancelar"
         variant="danger"

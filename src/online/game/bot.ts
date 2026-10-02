@@ -4,20 +4,26 @@ import { getValidActions } from './validActions'
 import { createInitialState } from './initialState'
 import type { GameEvent } from './events'
 import type { GameState, PlayerId } from './types'
+import { botFacil, botMedio, botDificil, elegirPrevenicion, type Dificultad } from './botStrategies'
+
+export type { Dificultad }
 
 /**
- * Bot TONTO para simulación (5.7): elige la primera acción legal no-rendirse
- * de getValidActions, o null si no es el turno del jugador. Determinista:
- * decide solo con el estado, que a su vez depende solo del seed.
- * Excepción (9.3, ADR-11): en paso bloqueo el actor es el DEFENSOR (rival del
- * activo) — el bot del rival decide el bloqueo forzoso.
- * Excepción (9.6, ADR-19): con la cadena abierta el bot NUNCA responde — si
- * tiene la prioridad, pasa (pasar_prioridad directo); si no, null.
- * Excepción (C3d, D4): no activa habilidades opcionales que SACRIFICAN su
- * propia carta (usar_transmutar) — consistente con elegir_ruptura, donde
- * elige la variante null ("no romper").
+ * Bot principal: delega a la estrategia según la dificultad.
+ * Determinista por seed. Mismas excepciones que botTonto:
+ * - Checkpoint prevenición (Fase 2c) → responder_prevenicion con heurística
+ * - Cadena abierta → pasar_prioridad
+ * - Paso bloqueo → actor es el DEFENSOR
+ * - No usa usar_transmutar (sacrifica su propia carta)
  */
-export function botTonto(state: GameState, playerId: PlayerId): Action | null {
+export function botTonto(state: GameState, playerId: PlayerId, dificultad: Dificultad = 'facil'): Action | null {
+  // Checkpoint prevent_destroy: si el frente de la cola es de este jugador,
+  // responde con la heurística (prevenir solo si es el último vínculo vivo).
+  const preven = state.preventivosPendientes?.[0]
+  if (preven) {
+    if (preven.jugador !== playerId) return null
+    return { type: 'responder_prevenicion', prevenir: elegirPrevenicion(state, playerId) }
+  }
   // Cadena (combate 9.6 O global): el bot nunca encadena cartas
   const cadena = state.combate?.cadena ?? state.cadena
   if (cadena) {
@@ -25,8 +31,28 @@ export function botTonto(state: GameState, playerId: PlayerId): Action | null {
   }
   const esDefensor = state.fase === 'choque' && state.combate?.paso === 'bloqueo' && playerId !== state.turno
   if (state.turno !== playerId && !esDefensor) return null
-  const acciones = getValidActions(state, playerId)
-  return acciones.find((a) => a.type !== 'rendirse' && a.type !== 'usar_transmutar') ?? null
+
+  let accion: Action | null
+  switch (dificultad) {
+    case 'dificil':
+      accion = botDificil(state, playerId)
+      break
+    case 'medio':
+      accion = botMedio(state, playerId)
+      break
+    case 'facil':
+    default:
+      accion = botFacil(state, playerId)
+      break
+  }
+
+  // Filtro de seguridad: nunca rendirse ni usar transmutar
+  if (accion && (accion.type === 'rendirse' || accion.type === 'usar_transmutar')) {
+    const acciones = getValidActions(state, playerId)
+    return acciones.find((a) => a.type !== 'rendirse' && a.type !== 'usar_transmutar') ?? null
+  }
+
+  return accion
 }
 
 export interface ResultadoSimulacion {
@@ -38,29 +64,36 @@ export interface ResultadoSimulacion {
 }
 
 /**
- * Simula una partida completa con dos bots tontos (5.7): mulligan de ambos,
+ * Simula una partida completa con dos bots: mulligan de ambos,
  * y luego cada turno el jugador activo ejecuta su primera acción legal.
  * La partida termina por mazo_vacio o al llegar a maxTurnos (defensivo).
  * Consume el MISMO ctx del estado inicial (reproducibilidad por seed).
  */
-export function simularPartida(deckA: string[], deckB: string[], seed: number, maxTurnos = 500): ResultadoSimulacion {
+export function simularPartida(
+  deckA: string[],
+  deckB: string[],
+  seed: number,
+  maxTurnos = 500,
+  dificultadA: Dificultad = 'facil',
+  dificultadB: Dificultad = 'facil',
+): ResultadoSimulacion {
   const { state, ctx } = createInitialState(deckA, deckB, seed)
   const eventos: GameEvent[] = []
   let iteraciones = 0
   let estado = state
   while (estado.fase !== 'terminada' && iteraciones < maxTurnos) {
-    // Cadena (combate 9.6 O global): el actor es el jugador con prioridad — sin esta
-    // excepción simularPartida deadlockea pidiendo acciones a quien no puede.
-    // En paso bloqueo el actor es el DEFENSOR (9.3, ADR-11): sin esta
-    // excepción simularPartida deadlockea pidiendo acciones al activo.
+    // Checkpoint prevent_destroy: el actor es el jugador que debe elegir (Fase 2c)
+    const preven = estado.preventivosPendientes?.[0]
     const cadena = estado.combate?.cadena ?? estado.cadena
-    const actor: PlayerId =
-      cadena
+    const actor: PlayerId = preven
+      ? preven.jugador
+      : cadena
         ? cadena.prioridad
         : estado.fase === 'choque' && estado.combate?.paso === 'bloqueo'
           ? (estado.turno === 'A' ? 'B' : 'A')
           : estado.turno
-    const accion = botTonto(estado, actor)
+    const dif = actor === 'A' ? dificultadA : dificultadB
+    const accion = botTonto(estado, actor, dif)
     if (!accion) throw new Error('el bot no encontró acción válida (sin progreso)')
     const r = applyAction(estado, accion, ctx)
     if (!r.ok) throw new Error(`la acción del bot falló (${accion.type}): ${r.error}`)

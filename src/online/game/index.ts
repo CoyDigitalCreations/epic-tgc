@@ -29,7 +29,7 @@ export { resolverAlba, robarCarta } from './phases'
 export { createCtx, shuffleFisherYates } from './rng'
 
 // Catálogo de cartas
-export { getCardMeta, registrarCartas, faccionesCompartidas, esCampeon, esMistica, esArcana, esEter, esVinculo, campeonNecesitaEterBloqueado, esContinuo, costeEterHabilidad } from './cards'
+export { getCardMeta, registrarCartas, faccionesCompartidas, esCampeon, esMistica, esArcana, esEter, esVinculo, campeonNecesitaEterBloqueado, costeEterHabilidad } from './cards'
 
 // Reglas de campo
 export { sacrificiosRequeridos, esSingular, copiasEnCampo, campeonesSacrificables } from './campo'
@@ -49,7 +49,7 @@ export { CATALOGO_EVENTOS, validarExhaustividadEventos } from './events'
 
 // Bot y simulación
 export { botTonto, simularPartida } from './bot'
-export type { ResultadoSimulacion } from './bot'
+export type { ResultadoSimulacion, Dificultad } from './bot'
 
 // Efectos de carta (change 3, ADR-20..29): infraestructura + handlers
 export {
@@ -69,15 +69,8 @@ export type { Modificador, ExpiraModificador } from './types'
 export {
   registrarEfectoPendiente,
   resolverFaseEfectos,
-  limpiarEfectosFuente,
-  cancelarEfectoPendiente,
-  efectosPendientesDe,
-  contarEfectosPendientes,
-  duracionTurnos,
   hastaAlba,
-  hastaFinTurno,
-  permanente,
 } from './effectRegistry'
-export type { EfectoPendiente, EfectoAccion, EfectoDuracion, FaseTrigger, OwnerTrigger } from './effectRegistry'
+export type { EfectoPendiente, AccionPendiente, EfectoDuracion, FaseTrigger, OwnerTrigger } from './effectRegistry'
 import { registrarEfectos } from './handlers'
 registrarEfectos() // C1 (ADR-20): registra los handlers de efectos al importar el motor

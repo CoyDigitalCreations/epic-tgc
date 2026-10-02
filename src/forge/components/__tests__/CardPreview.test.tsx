@@ -20,7 +20,7 @@ describe('CardPreview', () => {
       draft: {},
     })
     render(<CardPreview />)
-    expect(screen.getByText('Seleccioná o creá una carta')).toBeInTheDocument()
+    expect(screen.getByText('Selecciona o crea una carta')).toBeInTheDocument()
   })
 
   it('renders a card from draft', () => {
@@ -32,8 +32,7 @@ describe('CardPreview', () => {
         keywords: ['Carga'],
         flavorText: 'El portador del Éter.',
         stats: { cost: 5, poder: 2000, resistencia: 1500 },
-        tipoEfecto: 'Activo',
-        efectoActivo: 'Brilla como el sol',
+        efectos: [{ tipo: 'pasivo', texto: 'Brilla como el sol' }],
       },
     })
     render(<CardPreview />)
@@ -52,7 +51,7 @@ describe('CardPreview', () => {
       createdAt: '2024-01-01',
       updatedAt: '2024-01-01',
       stats: { cost: 3 },
-      efecto: 'Hace daño en área',
+      efectos: [{ tipo: 'hechizo' as const, texto: 'Hace daño en área' }],
     }
     render(<CardPreview card={card} standalone />)
     expect(screen.getByText('Tormenta')).toBeInTheDocument()
@@ -68,8 +67,7 @@ describe('CardPreview', () => {
         keywords: [],
         flavorText: '',
         stats: { cost: 7, poder: 3000, resistencia: 4000 },
-        tipoEfecto: 'Pasivo',
-        efectoPasivo: 'Gana poder cada turno',
+        efectos: [{ tipo: 'pasivo', texto: 'Gana poder cada turno' }],
       },
     })
     render(<CardPreview />)
@@ -136,7 +134,7 @@ describe('CardPreview', () => {
         keywords: [],
         flavorText: '',
         stats: { cost: 9 },
-        efectoReserva: 'No tiene coste visible',
+        efectos: [{ tipo: 'reserva', texto: 'No tiene coste visible' }],
       },
     })
     render(<CardPreview />)

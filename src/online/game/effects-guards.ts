@@ -1,11 +1,12 @@
 /**
- * Guards de resolución de efectos (perfeccionamiento-tablero):
- * registro declarativo de requisitos por cardId, consumido por
- * generarAccionesForja y validadores para bloquear activaciones
- * cuyo efecto no puede resolverse con el estado actual.
+ * Guards de resolución de efectos — infraestructura de registro genérico.
  *
- * Arcana conditions (§5.4): antes de activar una Arcana con `condicion`,
- * se verifica que la condición se cumpla en el estado actual.
+ * FASE 2: los guards de Arcanas por cardId (FB-023, DS-024, DS-032, DS-033,
+ * FB-024) fueron ELIMINADOS — las condiciones se evalúan desde el JSON vía
+ * `condicionCumple` (efectos.ts) en validarActivarArcana y dispararTrigger.
+ *
+ * Este módulo se mantiene como infraestructura para requisitos de gameplay
+ * registrados por tests o features futuras (registrarRequisito/validarRequisito).
  */
 import type { GameState, PlayerId } from './types'
 
@@ -21,57 +22,4 @@ export function registrarRequisito(cardId: string, fn: RequisitoFn): void {
 export function validarRequisito(s: GameState, jugador: PlayerId, cardId: string): string | null {
   const fn = requisitos.get(cardId)
   return fn ? fn(s, jugador) : null
-}
-
-/** Cuenta campeones en campo que tienen ≥1 Éter bloqueado. */
-function campeonesConEterBloqueado(s: GameState, jugador: PlayerId): number {
-  return s.players[jugador].campo.campeones.filter((id): id is string => {
-    if (id === null) return false
-    const inst = s.instances[id]
-    return !!inst && (inst.eterBloqueado?.length ?? 0) > 0
-  }).length
-}
-
-/** Cuenta campeones en campo del jugador. */
-function campeonesEnCampo(s: GameState, jugador: PlayerId): number {
-  return s.players[jugador].campo.campeones.filter((id): id is string => id !== null).length
-}
-
-/** Registra los guards de condiciones de Arcanas (§5.4). */
-export function registrarGuardsArcanas(): void {
-  // FB-023 El Reino Perdido: "Al inicio del Choque, si controlas 2 o más Campeones con Éter bloqueado."
-  registrarRequisito('FB-023', (s, jugador) => {
-    const count = campeonesConEterBloqueado(s, jugador)
-    if (count < 2) return 'se requieren 2 o más Campeones con Éter bloqueado'
-    return null
-  })
-
-  // DS-024 Golpe del Nudo: "Mientras controles 2 o más Campeones."
-  registrarRequisito('DS-024', (s, jugador) => {
-    const count = campeonesEnCampo(s, jugador)
-    if (count < 2) return 'se requieren 2 o más Campeones en campo'
-    return null
-  })
-
-  // DS-032 El Nudo Desata: "Al inicio del Choque, si el rival controla 2 o más Campeones con Éter bloqueado."
-  registrarRequisito('DS-032', (s, jugador) => {
-    const rival = jugador === 'A' ? 'B' : 'A'
-    const count = campeonesConEterBloqueado(s, rival)
-    if (count < 2) return 'el rival no tiene 2 o más Campeones con Éter bloqueado'
-    return null
-  })
-
-  // DS-033: "Al inicio del Choque, si controlas 2 o más Campeones con Éter bloqueado."
-  registrarRequisito('DS-033', (s, jugador) => {
-    const count = campeonesConEterBloqueado(s, jugador)
-    if (count < 2) return 'se requieren 2 o más Campeones con Éter bloqueado'
-    return null
-  })
-
-  // FB-024 Filo del Éter Primigenio: "Si controlas al menos 1 Campeón."
-  registrarRequisito('FB-024', (s, jugador) => {
-    const count = campeonesEnCampo(s, jugador)
-    if (count < 1) return 'se requiere al menos 1 Campeón en campo'
-    return null
-  })
 }

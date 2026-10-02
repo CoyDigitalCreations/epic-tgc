@@ -4,7 +4,7 @@
  * Resolves targets from ObjetivoEfecto structure. Handles all target types,
  * controllers, zones, and filters defined in the structured effect system.
  */
-import { getCardMeta, esCampeon, esMistica, esArcana, esEter } from './cards'
+import { getCardMeta, esCampeon, esMistica, esArcana } from './cards'
 import type { AnyCard } from '../../shared/types'
 import type { GameState, PlayerId } from './types'
 import type { ObjetivoEfecto, FiltroObjetivo } from '../../shared/types/cards'
@@ -22,6 +22,25 @@ export function resolveTargets(
 
   // 1. Get base targets by zone and controller
   const baseTargets = getTargetsByZone(s, tipo, zona, controlador, jugador)
+
+  // Protector rule (D3): if rival has a Protector, only Protectors are valid targets
+  // for enemy champion targeting effects
+  if (controlador === 'rival' && tipo === 'campeon' && zona === 'campo') {
+    const rival: PlayerId = jugador === 'A' ? 'B' : 'A'
+    const rivalChamps = s.players[rival].campo.campeones.filter((id): id is string => id !== null)
+    const hasProtector = rivalChamps.some((id) => {
+      const inst = s.instances[id]
+      const meta = inst?.cardId ? getCardMeta(inst.cardId) : null
+      return meta !== null && esCampeon(meta) && meta.keywords?.includes('Protector')
+    })
+    if (hasProtector) {
+      return rivalChamps.filter((id) => {
+        const inst = s.instances[id]
+        const meta = inst?.cardId ? getCardMeta(inst.cardId) : null
+        return meta !== null && esCampeon(meta) && meta.keywords?.includes('Protector')
+      })
+    }
+  }
 
   // 2. Apply filters
   const filtered = applyFilters(s, baseTargets, filtros)
@@ -155,8 +174,17 @@ function getTargetsByZone(
       }
 
       case 'mazo': {
-        // For tutor effects — return card IDs from deck
-        targets.push(...p.mazo.filter((id): id is string => id !== null))
+        // For tutor effects — return card IDs from deck, filtered by tipo
+        targets.push(...p.mazo.filter((id): id is string => {
+          if (id === null) return false
+          if (tipo === 'carta') return true // 'carta' matches any card type
+          const meta = s.instances[id]?.cardId ? getCardMeta(s.instances[id]!.cardId!) : null
+          if (!meta) return false
+          if (tipo === 'campeon') return esCampeon(meta)
+          if (tipo === 'mistica') return esMistica(meta)
+          if (tipo === 'arcana') return esArcana(meta)
+          return true
+        }))
         break
       }
     }
@@ -248,7 +276,7 @@ function applyFilters(
 
     // Keyword filter
     if (filtros.keyword) {
-      const keywords = meta.keywords ?? []
+      const keywords = (meta.keywords ?? []) as string[]
       if (!keywords.includes(filtros.keyword)) return false
     }
 
@@ -285,7 +313,7 @@ function selectByRanking(
     if (seleccionar.stat === 'coste') {
       valueA = metaA?.stats?.cost ?? 0
       valueB = metaB?.stats?.cost ?? 0
-    } else if (esCampeon(metaA) && esCampeon(metaB)) {
+    } else if (metaA && metaB && esCampeon(metaA) && esCampeon(metaB)) {
       valueA = seleccionar.stat === 'poder' ? (metaA.stats?.poder ?? 0) : (metaA.stats?.resistencia ?? 0)
       valueB = seleccionar.stat === 'poder' ? (metaB.stats?.poder ?? 0) : (metaB.stats?.resistencia ?? 0)
     }

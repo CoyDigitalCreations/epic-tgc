@@ -281,7 +281,6 @@ export function generateEffectText(data: EfectoData): string {
       targetText = 'el Campeón que tenga este Éter'
     } else {
       const tieneCantidad = data.efecto === 'tutor' || ['draw', 'destroy', 'exile', 'scry', 'mover', 'return_ether', 'return_hand'].includes(data.efecto ?? '')
-      const esTutor = data.efecto === 'tutor'
       const sinCtrl = data.efecto === 'return_ether'
       const sinDestino = data.efecto === 'tutor' || data.efecto === 'return_ether' || data.efecto === 'mover'
       targetText = generateTargetText(data.objetivo, tieneCantidad, sinDestino, sinCtrl)
@@ -380,7 +379,7 @@ export function generateEffectText(data: EfectoData): string {
         effectVerb = `puedes ${infinitive}`
       }
 
-      // Stats handling
+// Stats handling
       if (data.efecto === 'buff' || data.efecto === 'debuff') {
         const statParts: string[] = []
         if (data.stats?.ATQ) statParts.push(`${Math.abs(data.stats.ATQ)} de ATQ`)
@@ -388,13 +387,13 @@ export function generateEffectText(data: EfectoData): string {
         if (statParts.length > 0) {
           if (data.buffPerBlockedEther) {
             targetText = `${targetText} gana ${statParts.join(' y ')} por cada Éter bloqueado`
-      } else if (data.efecto === 'rival_discard') {
-        const qty = data.cantidad ?? 1
-        targetText = `descarta ${qty} carta${qty > 1 ? 's' : ''} de su mano`
-      } else {
+          } else {
             targetText = `${targetText} ${effectVerb} ${statParts.join(' y ')}`
           }
         }
+      } else if (data.efecto === 'rival_discard') {
+        const qty = data.cantidad ?? 1
+        targetText = `descarta ${qty} carta${qty > 1 ? 's' : ''} de su mano`
       } else if (data.efecto === 'grant_keyword' && data.keyword) {
         targetText = `${targetText} ${effectVerb} ${data.keyword}`
       } else if (['draw', 'destroy', 'exile', 'scry', 'tutor', 'return_hand', 'recuperar_campo', 'recuperar_mano', 'recuperar_mazo', 'recuperar_mazo_barajar', 'recuperar_mazo_top', 'recuperar_mazo_bottom', 'recuperar_exilio', 'steal_champion', 'steal_ether', 'free_ether', 'invocar', 'invocar_y_equipar'].includes(data.efecto)) {

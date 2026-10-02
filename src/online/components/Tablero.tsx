@@ -9,6 +9,7 @@ import { ChampionStatus, FocosChampion } from './ChampionStatus'
 import { BlockingInterface } from './BlockingInterface'
 import { ActiveAbilitiesPanel } from './ActiveAbilitiesPanel'
 import { PriorityModal } from './PriorityModal'
+import { PreventionModal } from './PreventionModal'
 
 interface TableroProps {
   /** Proyección 6.2 del estado para el jugador A (cartas ocultas con cardId null). */
@@ -43,8 +44,9 @@ interface TableroProps {
 
 type Seleccion =
   | { tipo: 'pagar'; accionBase: Action; objetivoCardId: string; coste: number }
-  | { tipo: 'bloquear'; accionBase: Action; objetivoCardId: string; campeonSlot: number }
+  | { tipo: 'bloquear'; accionBase: Action; objetivoCardId: string; targetInstanceId: string }
   | { tipo: 'elegir_slot'; accionBase: Action; objetivoCardId: string; slotsDisponibles: number[]; slotLabels: string[] }
+  | { tipo: 'equipar'; artefactoCardId: string; opciones: Extract<Action, { type: 'equipar_artefacto' }>[] }
   | null
 
 /** Zonas que abren el panel inferior con su lista completa. */
@@ -86,6 +88,7 @@ function labelAccion(a: Action, fase?: string): string {
     case 'declarar_ataque': return a.atacanteIds.length > 1 ? 'Atacar con todos' : 'Atacar'
     case 'declarar_bloqueo': return 'Bloquear (automático)'
     case 'elegir_ruptura': return a.atacanteId === null ? 'No romper Vínculo' : 'Romper Vínculo'
+    case 'responder_prevenicion': return a.prevenir ? 'Prevenir destrucción' : 'Permitir destrucción'
     case 'pasar_prioridad': return 'Pasar prioridad'
     case 'rendirse': return 'Rendirse'
     default: return TIPO_LABEL[a.type] ?? a.type
@@ -119,7 +122,7 @@ function Boton({ accion, onClick, fase }: { accion: Action; onClick: (a: Action)
 }
 
 /**
- * Opción de búsqueda de mazo (mecánica tutor, soporte.ts): una carta del
+ * Opción de búsqueda de mazo (mecánica tutor, JSON interpreter): una carta del
  * propio mazo que cumple el filtro del efecto. Muestra arte, nombre, coste
  * y ATQ/RES para que el jugador VEA qué cartas puede elegir (bug reportado:
  * antes eran botones genéricos "elegir_objetivo" sin nombre).
@@ -271,7 +274,7 @@ interface GrillaProps {
   acciones: Action[]
   onAccion: (a: Action) => void
   /** Click en una carta de la mano con coste / botón Bloquear de un Campeón. */
-  abrirSelector: (accionBase: Action, objetivoCardId: string, campeonSlot?: number) => void
+  abrirSelector: (accionBase: Action, objetivoCardId: string) => void
   /** Abre la carta en grande (CartaZoom) para revisar su efecto. */
   abrirZoom: (inst: CardInstance) => void
   /** Abre el panel inferior con la lista completa de una zona (Éter 2A/1A, Cementerio 2G, Exilio 1G). */
@@ -279,6 +282,7 @@ interface GrillaProps {
   /** Grilla del rival: se renderiza de cabeza (vista desde el otro lado de la mesa). */
   invertida?: boolean
   seleccion: Seleccion
+  setSeleccion: (s: Seleccion) => void
   /** Animaciones de movimiento (glow en celda destino). */
   animaciones?: Array<{ tipo: string; zona?: string; jugador?: PlayerId; atacantes?: string[]; cardInstanceId?: string; key: number }>
 }
@@ -329,6 +333,7 @@ function GrillaJugador({
   abrirPanel,
   invertida,
   seleccion,
+  setSeleccion,
   animaciones,
 }: GrillaProps) {
   const p = vista.players[jugador]
@@ -387,12 +392,12 @@ function GrillaJugador({
   }
 
   /** Campeón propio 2B-2F con sus acciones (Atacar / Bloquear / Activar). */
-  const campeonPropio = (slot: number, id: string) => {
+  const campeonPropio = (id: string) => {
     const inst = vista.instances[id]
     const ataque = acciones.find(
       (a) => a.type === 'declarar_ataque' && a.atacanteIds.length === 1 && a.atacanteIds[0] === id,
     )
-    const bloquear = acciones.find((a) => a.type === 'bloquear_eter' && a.campeonSlot === slot)
+    const bloquear = acciones.find((a) => a.type === 'bloquear_eter' && a.targetInstanceId === id)
     const transmutar = acciones.find((a) => a.type === 'usar_transmutar' && a.cardInstanceId === id)
     const activarHabilidad = acciones.find((a) => a.type === 'activar_habilidad' && a.cardInstanceId === id)
     const rotStyle = invertida ? { transform: 'rotate(180deg)' } : undefined
@@ -406,7 +411,7 @@ function GrillaJugador({
                 onClick={() => {
                   const meta = inst.cardId ? getCardMeta(inst.cardId) : null
                   if (meta && bloquear.type === 'bloquear_eter') {
-                    abrirSelector(bloquear, meta.id, slot)
+                    abrirSelector(bloquear, meta.id)
                   }
                 }}
                 className="text-[10px] bg-cyan-600/30 hover:bg-cyan-600/50 text-cyan-200 px-1.5 py-0.5 rounded 
@@ -421,7 +426,7 @@ function GrillaJugador({
                   if (activarHabilidad && activarHabilidad.type === 'activar_habilidad') {
                     // Abrir selector de pago para que el usuario elija qué éteres pagar
                     const meta = inst.cardId ? getCardMeta(inst.cardId) : null
-                    if (meta) abrirSelector(activarHabilidad, meta.id, slot)
+                    if (meta) abrirSelector(activarHabilidad, meta.id)
                   } else if (transmutar) {
                     onAccion(transmutar)
                   }
@@ -516,7 +521,7 @@ function GrillaJugador({
       <Celda key={zona} zona={zona} glow={hayGlow || hayAtaque} glowColor={hayAtaque ? 'red' : 'green'} invertida={invertida}>
         {id ? (
           <div className="relative">
-            {soy && leTocaA ? campeonPropio(slot, id) : <MiniCard inst={vista.instances[id]} tamano="md" onZoom={() => abrirZoom(vista.instances[id])} invertida={invertida} />}
+            {soy && leTocaA ? campeonPropio(id) : <MiniCard inst={vista.instances[id]} tamano="md" onZoom={() => abrirZoom(vista.instances[id])} invertida={invertida} />}
             <ChampionStatus s={vista} id={id} invertida={invertida} />
             <FocosChampion s={vista} id={id} invertida={invertida} />
           </div>
@@ -539,10 +544,49 @@ function GrillaJugador({
   for (let slot = 0; slot < 3; slot++) {
     const zona = `3${String.fromCharCode(65 + slot)}` // 3A…3C (Místicas/Tácticas)
     const id = p.campo.misticasTacticas[slot]
+    // Buscar acciones de equipar_artefacto para esta carta
+    const accionesEquipar = soy && leTocaA && id
+      ? acciones.filter((a) => a.type === 'equipar_artefacto' && a.cardInstanceId === id)
+      : []
+    // Fase 3a: Bloquear Éter en Artefactos (Místicas con costo-bloqueado, §7.7)
+    const bloquearMist = soy && leTocaA && id
+      ? acciones.find((a) => a.type === 'bloquear_eter' && a.targetInstanceId === id)
+      : undefined
     celdas.push(
       <Celda key={zona} zona={zona} invertida={invertida}>
         {id ? (
-          <MiniCard inst={vista.instances[id]} tamano="md" onZoom={() => abrirZoom(vista.instances[id])} invertida={invertida} />
+          <MiniCard inst={vista.instances[id]} tamano="md" onZoom={() => abrirZoom(vista.instances[id])} invertida={invertida}>
+            {(accionesEquipar.length > 0 || bloquearMist) && (
+              <div className="flex gap-1 flex-wrap justify-center">
+                {accionesEquipar.length > 0 && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      const meta = vista.instances[id]?.cardId ? getCardMeta(vista.instances[id]!.cardId!) : null
+                      setSeleccion({ tipo: 'equipar', artefactoCardId: meta?.id ?? '', opciones: accionesEquipar as Extract<Action, { type: 'equipar_artefacto' }[]> })
+                    }}
+                    className="text-[10px] bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-200 px-1.5 py-0.5 rounded 
+                               transition-colors cursor-pointer whitespace-nowrap"
+                  >
+                    Equipar
+                  </button>
+                )}
+                {bloquearMist && bloquearMist.type === 'bloquear_eter' && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      const meta = vista.instances[id]?.cardId ? getCardMeta(vista.instances[id]!.cardId!) : null
+                      if (meta) abrirSelector(bloquearMist, meta.id)
+                    }}
+                    className="text-[10px] bg-cyan-600/30 hover:bg-cyan-600/50 text-cyan-200 px-1.5 py-0.5 rounded 
+                               transition-colors cursor-pointer whitespace-nowrap"
+                  >
+                    Bloquear
+                  </button>
+                )}
+              </div>
+            )}
+          </MiniCard>
         ) : undefined}
       </Celda>,
     )
@@ -554,6 +598,10 @@ function GrillaJugador({
     // Buscar acción de activar_arcana para esta Arcana
     const activarArcana = soy && leTocaA && id && !inst?.bocaArriba
       ? acciones.find((a) => a.type === 'activar_arcana' && a.cardInstanceId === id)
+      : undefined
+    // Fase 3a: Bloquear Éter en Artefactos (Arcanas con costo-bloqueado)
+    const bloquearArc = soy && leTocaA && id
+      ? acciones.find((a) => a.type === 'bloquear_eter' && a.targetInstanceId === id)
       : undefined
     celdas.push(
       <Celda key={zona} zona={zona} invertida={invertida}>
@@ -569,19 +617,36 @@ function GrillaJugador({
             }
             invertida={invertida}
           >
-            {activarArcana && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  // Abrir selector de pago para que el usuario elija qué éteres pagar
-                  const meta = inst.cardId ? getCardMeta(inst.cardId) : null
-                  if (meta) abrirSelector(activarArcana, meta.id)
-                }}
-                className="text-[10px] bg-purple-600/30 hover:bg-purple-600/50 text-purple-200 px-1.5 py-0.5 rounded 
-                           transition-colors cursor-pointer whitespace-nowrap"
-              >
-                Activar
-              </button>
+            {(activarArcana || bloquearArc) && (
+              <div className="flex gap-1 flex-wrap justify-center">
+                {activarArcana && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      // Abrir selector de pago para que el usuario elija qué éteres pagar
+                      const meta = inst.cardId ? getCardMeta(inst.cardId) : null
+                      if (meta) abrirSelector(activarArcana, meta.id)
+                    }}
+                    className="text-[10px] bg-purple-600/30 hover:bg-purple-600/50 text-purple-200 px-1.5 py-0.5 rounded 
+                               transition-colors cursor-pointer whitespace-nowrap"
+                  >
+                    Activar
+                  </button>
+                )}
+                {bloquearArc && bloquearArc.type === 'bloquear_eter' && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      const meta = inst.cardId ? getCardMeta(inst.cardId) : null
+                      if (meta) abrirSelector(bloquearArc, meta.id)
+                    }}
+                    className="text-[10px] bg-cyan-600/30 hover:bg-cyan-600/50 text-cyan-200 px-1.5 py-0.5 rounded 
+                               transition-colors cursor-pointer whitespace-nowrap"
+                  >
+                    Bloquear
+                  </button>
+                )}
+              </div>
             )}
           </MiniCard>
         ) : undefined}
@@ -671,11 +736,11 @@ export function Tablero({ vista, acciones, leTocaA, logDetallado = [], onAccion,
     }
   }, [faseActual, pasoCombate, turnoActual])
 
-  const abrirSelector = (accionBase: Action, objetivoCardId: string, campeonSlot?: number) => {
+  const abrirSelector = (accionBase: Action, objetivoCardId: string) => {
     const meta = getCardMeta(objetivoCardId)
     if (!meta) return
-    if (campeonSlot !== undefined && accionBase.type === 'bloquear_eter') {
-      setSeleccion({ tipo: 'bloquear', accionBase, objetivoCardId, campeonSlot })
+    if (accionBase.type === 'bloquear_eter') {
+      setSeleccion({ tipo: 'bloquear', accionBase, objetivoCardId, targetInstanceId: accionBase.targetInstanceId })
     } else {
       const costo = accionBase.type === 'activar_habilidad'
         ? (costeEterHabilidad(meta) || 1)
@@ -723,9 +788,11 @@ export function Tablero({ vista, acciones, leTocaA, logDetallado = [], onAccion,
     if (cardId) abrirSelector(acc, cardId)
   }
 
-  /** ¿Se puede confirmar la selección? Pago: Σ aporte ≥ coste (+ sacrificios del rol). Bloqueo: todos de facción compartida. */
+  /** ¿Se puede confirmar la selección? Pago: Σ aporte ≥ coste (+ sacrificios del rol). Bloqueo: todos de facción compartida. Equipar: siempre. */
   const puedeConfirmar = useMemo(() => {
-    if (!seleccion || elegidos.size === 0) return false
+    if (!seleccion) return false
+    if (seleccion.tipo === 'equipar') return elegidos.size === 1
+    if (elegidos.size === 0) return false
     if (seleccion.tipo === 'bloquear') {
       return elegidos.size > 0
     }
@@ -749,6 +816,20 @@ export function Tablero({ vista, acciones, leTocaA, logDetallado = [], onAccion,
 
   const confirmar = () => {
     if (!seleccion || !puedeConfirmar) return
+
+    // Equipar: ejecutar directamente la acción elegida
+    if (seleccion.tipo === 'equipar') {
+      const elegidoId = [...elegidos][0]
+      const accion = seleccion.opciones.find((a) => a.campeonInstanceId === elegidoId)
+      if (accion) {
+        onAccion(accion)
+      }
+      setSeleccion(null)
+      setElegidos(new Set())
+      setSacrificiosElegidos([])
+      return
+    }
+
     const accionBase = seleccion.accionBase
     const accionConPago = {
       ...accionBase,
@@ -851,18 +932,20 @@ export function Tablero({ vista, acciones, leTocaA, logDetallado = [], onAccion,
     ? 'Partida terminada'
     : fase === 'pre_partida'
       ? vista.turno === 'A'
-        ? 'Vos decidís el mulligan'
+        ? 'Tú decides el mulligan'
         : 'El rival decide el mulligan'
       : `${FASE_LABEL[fase] ?? fase} — ${vista.turno === 'A' ? 'tu turno' : 'turno del rival'}`
 
   const objetivoSeleccion = seleccion
     ? seleccion.tipo === 'pagar' && 'cardInstanceId' in seleccion.accionBase
       ? vista.instances[seleccion.accionBase.cardInstanceId]
-      : seleccion.tipo === 'bloquear' && seleccion.campeonSlot !== undefined
-        ? vista.players.A.campo.campeones[seleccion.campeonSlot]
-          ? vista.instances[vista.players.A.campo.campeones[seleccion.campeonSlot]!]
+      : seleccion.tipo === 'bloquear'
+        ? vista.instances[seleccion.targetInstanceId] ?? null
+        : seleccion.tipo === 'equipar'
+          ? seleccion.opciones.length > 0
+            ? vista.instances[seleccion.opciones[0].cardInstanceId]
+            : null
           : null
-        : null
     : null
 
   return (
@@ -932,6 +1015,7 @@ export function Tablero({ vista, acciones, leTocaA, logDetallado = [], onAccion,
               abrirPanel={(j, z, slot) => setPanelAbierto({ jugador: j, zona: z, campeonSlot: slot })}
               invertida
               seleccion={null}
+              setSeleccion={setSeleccion}
               animaciones={animaciones}
             />
           </section>
@@ -957,6 +1041,7 @@ export function Tablero({ vista, acciones, leTocaA, logDetallado = [], onAccion,
               abrirZoom={abrirZoom}
               abrirPanel={(j, z, slot) => setPanelAbierto({ jugador: j, zona: z, campeonSlot: slot })}
               seleccion={seleccion}
+              setSeleccion={setSeleccion}
               animaciones={animaciones}
             />
           </section>
@@ -1084,11 +1169,16 @@ export function Tablero({ vista, acciones, leTocaA, logDetallado = [], onAccion,
               <p className="text-[10px] text-gray-400">
                 {seleccion.tipo === 'pagar'
                   ? `Coste: ${seleccion.coste}`
-                  : `Campeón — ${getCardMeta(seleccion.objetivoCardId)?.name ?? ''}`}
+                  : seleccion.tipo === 'equipar'
+                    ? `Artefacto — ${getCardMeta(seleccion.artefactoCardId)?.name ?? ''}`
+                    : `Campeón — ${getCardMeta(seleccion.objetivoCardId)?.name ?? ''}`}
               </p>
             </div>
 
             <div className="flex-1 min-w-70">
+              {/* Selector de éteres (pago/bloqueo) */}
+              {seleccion.tipo !== 'equipar' && (
+                <>
               <p className="text-sm text-gray-200 mb-2">
                 {seleccion.tipo === 'pagar'
                   ? 'Elegí los Éteres de tu Reserva (2A) para pagar:'
@@ -1156,6 +1246,8 @@ export function Tablero({ vista, acciones, leTocaA, logDetallado = [], onAccion,
                   </div>
                 </div>
               )}
+                </>
+              )}
 
               {/* Selector de casilla (después del pago) */}
               {seleccion.tipo === 'elegir_slot' && (
@@ -1185,6 +1277,36 @@ export function Tablero({ vista, acciones, leTocaA, logDetallado = [], onAccion,
                 </div>
               )}
 
+              {/* Selector de equipar: elegir campeón objetivo */}
+              {seleccion.tipo === 'equipar' && (
+                <div className="mt-3 border-t border-card-border/50 pt-3">
+                  <p className="text-sm text-gray-200 mb-2">
+                    Elegí el Campeón al que quieres equipar este Artefacto:
+                  </p>
+                  <div className="flex gap-2 flex-wrap">
+                    {seleccion.opciones.map((a) => {
+                      const inst = vista.instances[a.campeonInstanceId]
+                      if (!inst) return null
+                      const meta = inst.cardId ? getCardMeta(inst.cardId) : null
+                      const elegido = elegidos.has(a.campeonInstanceId)
+                      return (
+                        <button
+                          key={a.campeonInstanceId}
+                          onClick={() => {
+                            setElegidos(new Set([a.campeonInstanceId]))
+                          }}
+                          className="flex flex-col items-center gap-0.5 cursor-pointer bg-transparent border-none p-0"
+                          title={meta?.name}
+                        >
+                          <MiniCard inst={inst} tamano="sm" seleccionada={elegido} />
+                          <span className="text-[9px] font-mono text-gray-400">{meta?.name}</span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+
               <div className="mt-3 flex items-center gap-4 flex-wrap">
                 {seleccion.tipo === 'pagar' && (
                   <p className="text-xs font-mono text-gray-300">
@@ -1206,7 +1328,7 @@ export function Tablero({ vista, acciones, leTocaA, logDetallado = [], onAccion,
                     disabled={!puedeConfirmar}
                     className="text-xs bg-ether-600 hover:bg-ether-500 text-white px-4 py-2 rounded transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                   >
-                    {seleccion.tipo === 'pagar' ? 'Pagar y jugar' : 'Bloquear'}
+                    {seleccion.tipo === 'pagar' ? 'Pagar y jugar' : seleccion.tipo === 'equipar' ? 'Equipar' : 'Bloquear'}
                   </button>
                 </div>
               </div>
@@ -1288,6 +1410,17 @@ export function Tablero({ vista, acciones, leTocaA, logDetallado = [], onAccion,
           </div>
         )
       })()}
+
+      {/* ── Modal de prevenión (checkpoint prevent_destroy, Fase 2c) ── */}
+      {leTocaA && (
+        <PreventionModal
+          state={vista}
+          playerId="A"
+          acciones={acciones}
+          onAccion={onAccion}
+          onZoom={abrirZoom}
+        />
+      )}
 
       {/* ── Modal de prioridad (cadena abierta) ───────────────────── */}
       {leTocaA && (() => {

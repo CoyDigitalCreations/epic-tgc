@@ -80,18 +80,25 @@ describe('Paquetes', () => {
         const { poder, resistencia } = card.stats
         expect(poder).toBeGreaterThanOrEqual(1)
         expect(poder).toBeLessThanOrEqual(12)
-        expect(resistencia).toBeGreaterThanOrEqual(1)
-        expect(resistencia).toBeLessThanOrEqual(12)
+        // Some champions (e.g. Elena FB-015) intentionally have 0 resistencia
+        if (resistencia !== undefined) {
+          expect(resistencia).toBeGreaterThanOrEqual(0)
+          expect(resistencia).toBeLessThanOrEqual(12)
+        }
       }
     })
 
     it('cada tipo de carta tiene los campos de juego que le corresponden', () => {
+      const hasEfectoTipo = (c: AnyCard, tipo: string) =>
+        'efectos' in c && Array.isArray((c as { efectos?: Array<{ tipo: string }> }).efectos) &&
+        (c as { efectos: Array<{ tipo: string }> }).efectos.some((e) => e.tipo === tipo)
+
       const expectations: Record<string, (c: AnyCard) => boolean> = {
-        'Éter': (c) => 'efectoReserva' in c || 'efectoPago' in c || 'efectoBloqueo' in c,
-        'Campeón': (c) => 'stats' in c && ('efectoPasivo' in c || 'efectoDisparo' in c || true),
-        'Mística': (c) => typeof (c as { efecto?: string }).efecto === 'string',
-        'Arcana': (c) => typeof (c as { efecto?: string }).efecto === 'string' || ((c as { condicion?: unknown }).condicion !== undefined && typeof (c as { recompensa?: string }).recompensa === 'string'),
-        'Vínculo': (c) => typeof (c as { efecto?: string }).efecto === 'string',
+        'Éter': (c) => hasEfectoTipo(c, 'reserva') || hasEfectoTipo(c, 'pago') || hasEfectoTipo(c, 'bloqueo'),
+        'Campeón': (c) => 'stats' in c,
+        'Mística': (c) => hasEfectoTipo(c, 'hechizo'),
+        'Arcana': (c) => hasEfectoTipo(c, 'pasivo') || hasEfectoTipo(c, 'hechizo'),
+        'Vínculo': (c) => hasEfectoTipo(c, 'vinculo'),
       }
       for (const card of ESTASIS_CARDS) {
         const check = expectations[card.type]
@@ -162,12 +169,16 @@ describe('Paquetes', () => {
     })
 
     it('cada tipo de carta tiene los campos de juego que le corresponden', () => {
+      const hasEfectoTipo = (c: AnyCard, tipo: string) =>
+        'efectos' in c && Array.isArray((c as { efectos?: Array<{ tipo: string }> }).efectos) &&
+        (c as { efectos: Array<{ tipo: string }> }).efectos.some((e) => e.tipo === tipo)
+
       const expectations: Record<string, (c: AnyCard) => boolean> = {
-        'Éter': (c) => 'efectoReserva' in c || 'efectoPago' in c || 'efectoBloqueo' in c,
-        'Campeón': (c) => 'stats' in c && ('efectoPasivo' in c || 'efectoDisparo' in c || true),
-        'Mística': (c) => typeof (c as { efecto?: string }).efecto === 'string',
-        'Arcana': (c) => typeof (c as { efecto?: string }).efecto === 'string' || ((c as { condicion?: unknown }).condicion !== undefined && typeof (c as { recompensa?: string }).recompensa === 'string'),
-        'Vínculo': (c) => typeof (c as { efecto?: string }).efecto === 'string',
+        'Éter': (c) => hasEfectoTipo(c, 'reserva') || hasEfectoTipo(c, 'pago') || hasEfectoTipo(c, 'bloqueo'),
+        'Campeón': (c) => 'stats' in c,
+        'Mística': (c) => hasEfectoTipo(c, 'hechizo'),
+        'Arcana': (c) => hasEfectoTipo(c, 'pasivo') || hasEfectoTipo(c, 'hechizo'),
+        'Vínculo': (c) => hasEfectoTipo(c, 'vinculo'),
       }
       for (const card of DISONANCIA_CARDS) {
         const check = expectations[card.type]
@@ -193,7 +204,7 @@ describe('Paquetes', () => {
       // Mismo presupuesto: Única, Soberano, Singular, 9/9, coste 4
       expect(ragnar.rarity).toBe('Única')
       expect(ragnar.roles).toEqual(['Soberano'])
-      expect(ragnar.catHabilidad).toEqual(['Singular'])
+      expect(ragnar.catHabilidad).toEqual(['Singular', 'Comandante'])
       expect(ragnar.stats).toEqual({ cost: 4, poder: 9, resistencia: 9 })
 
       // Keywords complementarias: Aurora Inmortal (no muere por efectos),
@@ -203,12 +214,17 @@ describe('Paquetes', () => {
     })
 
     it('las keywords complementarias de Estásis tienen su espejo en Disonancia', () => {
+      // Helper: find effect text by tipo from efectos array
+      const findEfectoTexto = (card: AnyCard, tipo: string): string | undefined => {
+        if (!('efectos' in card) || !card.efectos) return undefined
+        return card.efectos.find((e) => e.tipo === tipo)?.texto
+      }
       // Éter bloqueado: FB-008 da Inmortal ↔ DS-009 da Indestructible
-      expect(ESTASIS_CARDS.find((c) => c.id === 'FB-008')?.efectoBloqueo).toContain('Inmortal')
-      expect(DISONANCIA_CARDS.find((c) => c.id === 'DS-009')?.efectoBloqueo).toContain('Indestructible')
+      expect(findEfectoTexto(ESTASIS_CARDS.find((c) => c.id === 'FB-008')!, 'bloqueo')).toContain('Inmortal')
+      expect(findEfectoTexto(DISONANCIA_CARDS.find((c) => c.id === 'DS-009')!, 'bloqueo')).toContain('Indestructible')
       // Vínculos: FB-028 da Inmortal permanente ↔ DS-028 da Indestructible permanente
-      expect(ESTASIS_CARDS.find((c) => c.id === 'FB-028')?.efecto).toContain('Inmortal')
-      expect(DISONANCIA_CARDS.find((c) => c.id === 'DS-028')?.efecto).toContain('Indestructible')
+      expect(findEfectoTexto(ESTASIS_CARDS.find((c) => c.id === 'FB-028')!, 'vinculo')).toContain('Inmortal')
+      expect(findEfectoTexto(DISONANCIA_CARDS.find((c) => c.id === 'DS-028')!, 'vinculo')).toContain('Indestructible')
     })
 
     it('la colección completa del paquete alcanza las 66 copias (mazo jugable)', () => {

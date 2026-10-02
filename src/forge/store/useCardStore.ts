@@ -448,8 +448,8 @@ export const useCardStore = create<CardStore>()(
               storageWarned = true
               alert(
                 '[Éter Forge] No se pudo guardar la colección: el almacenamiento local ' +
-                  'está lleno o bloqueado por el navegador. Podés seguir trabajando en esta ' +
-                  'sesión, pero los cambios se perderán al recargar. Exportá un JSON como respaldo.',
+                  'está lleno o bloqueado por el navegador. Puedes seguir trabajando en esta ' +
+                  'sesión, pero los cambios se perderán al recargar. Exporta un JSON como respaldo.',
               )
             }
           }

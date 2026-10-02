@@ -21,6 +21,12 @@ export const NOMBRES_EVENTOS = [
   'carta_robada',
   'carta_invocada',
   'carta_descartada',
+  'carta_devuelta_a_mano',
+  'carta_exiliada',
+  'campeon_robado',
+  'eter_robado',
+  'eter_liberado',
+  'eter_movido',
   'eter_pagado',
   'eter_bloqueado',
   'eter_reagrupado',
@@ -34,6 +40,7 @@ export const NOMBRES_EVENTOS = [
   'carta_muerta',
   'destruccion',
   'destruccion_prevenida',
+  'prevenicion_pendiente',
   'ruptura_realizada',
   'respuesta_encadenada',
   'prioridad_pasada',
@@ -55,6 +62,12 @@ function validarExhaustividad(tipo: GameEvent['type']): void {
     case 'carta_robada': return
     case 'carta_invocada': return
     case 'carta_descartada': return
+    case 'carta_devuelta_a_mano': return
+    case 'carta_exiliada': return
+    case 'campeon_robado': return
+    case 'eter_robado': return
+    case 'eter_liberado': return
+    case 'eter_movido': return
     case 'eter_pagado': return
     case 'eter_bloqueado': return
     case 'eter_reagrupado': return
@@ -67,6 +80,7 @@ function validarExhaustividad(tipo: GameEvent['type']): void {
     case 'carta_muerta': return
     case 'destruccion': return
     case 'destruccion_prevenida': return
+    case 'prevenicion_pendiente': return
     case 'ruptura_realizada': return
     case 'respuesta_encadenada': return
     case 'prioridad_pasada': return
@@ -102,6 +116,18 @@ const VALIDADORES: Record<GameEvent['type'], (e: GameEvent) => boolean> = {
     e.type === 'carta_invocada' && esId(e.cardInstanceId) && typeof e.tipo === 'string' && typeof e.slot === 'number',
   carta_descartada: (e) =>
     e.type === 'carta_descartada' && esJugador(e.jugador) && Array.isArray(e.cardInstanceIds) && e.cardInstanceIds.every(esId),
+  carta_devuelta_a_mano: (e) =>
+    e.type === 'carta_devuelta_a_mano' && esId(e.cardInstanceId) && esJugador(e.jugador),
+  carta_exiliada: (e) =>
+    e.type === 'carta_exiliada' && esId(e.cardInstanceId) && esJugador(e.jugador),
+  campeon_robado: (e) =>
+    e.type === 'campeon_robado' && esId(e.cardInstanceId) && esJugador(e.jugador) && esJugador(e.rival),
+  eter_robado: (e) =>
+    e.type === 'eter_robado' && esId(e.cardInstanceId) && esJugador(e.jugador) && esJugador(e.rival),
+  eter_liberado: (e) =>
+    e.type === 'eter_liberado' && esId(e.cardInstanceId) && esJugador(e.jugador),
+  eter_movido: (e) =>
+    e.type === 'eter_movido' && esId(e.cardInstanceId) && typeof e.destino === 'string' && esJugador(e.jugador),
   eter_pagado: (e) =>
     e.type === 'eter_pagado' &&
     esJugador(e.jugador) &&
@@ -117,6 +143,8 @@ const VALIDADORES: Record<GameEvent['type'], (e: GameEvent) => boolean> = {
     esId(e.campeonId),
   eter_reagrupado: (e) =>
     e.type === 'eter_reagrupado' && esJugador(e.jugador) && Array.isArray(e.eterIds) && e.eterIds.every(esId),
+  eter_movido: (e) =>
+    e.type === 'eter_movido' && esJugador(e.jugador) && esId(e.cardInstanceId) && typeof e.destino === 'string',
   mazo_agotado: (e) => e.type === 'mazo_agotado' && esJugador(e.jugador),
   mulligan_realizado: (e) => e.type === 'mulligan_realizado' && esJugador(e.jugador),
   rendicion: (e) => e.type === 'rendicion' && esJugador(e.jugador),
@@ -143,6 +171,12 @@ const VALIDADORES: Record<GameEvent['type'], (e: GameEvent) => boolean> = {
     e.type === 'destruccion' && esId(e.cardInstanceId) && esJugador(e.jugador) && esCausa(e.causa),
   destruccion_prevenida: (e) =>
     e.type === 'destruccion_prevenida' && esId(e.cardInstanceId) && esJugador(e.jugador) && esCausa(e.causa),
+  prevenicion_pendiente: (e) =>
+    e.type === 'prevenicion_pendiente' &&
+    esId(e.victimId) &&
+    esId(e.fuenteId) &&
+    esJugador(e.jugador) &&
+    esCausa(e.causa),
   ruptura_realizada: (e) =>
     e.type === 'ruptura_realizada' && esId(e.atacanteId) && typeof e.vinculoSlot === 'number' && esId(e.vinculoId),
   respuesta_encadenada: (e) =>
@@ -153,10 +187,10 @@ const VALIDADORES: Record<GameEvent['type'], (e: GameEvent) => boolean> = {
 }
 
 describe('contrato de eventos (ADR-10)', () => {
-  it('el catálogo expone exactamente los 23 eventos del contrato en orden', () => {
+  it('el catálogo expone exactamente los 31 eventos del contrato en orden', () => {
     const nombres = CATALOGO_EVENTOS.map((e) => e.type)
     expect(nombres).toEqual([...NOMBRES_EVENTOS])
-    expect(new Set(nombres).size).toBe(24)
+    expect(new Set(nombres).size).toBe(31)
   })
 
   it('el switch exhaustivo cubre TODO el tipo GameEvent (añadir/quitar rompe tsc)', () => {

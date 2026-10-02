@@ -71,6 +71,11 @@ export function formatearEventoDetallado(estado: GameState, e: GameEvent): strin
       const nombre = nombreCarta(estado, e.cardInstanceId)
       return `${ts}   ✨ ${nombre} SOBREVIVE (destrucción prevenida)`
     }
+    case 'prevenicion_pendiente': {
+      const victima = nombreCarta(estado, e.victimId)
+      const fuente = nombreCarta(estado, e.fuenteId)
+      return `${ts}   🛡 PREVENCIÓN PENDIENTE: ${victima} en peligro — ${fuente} puede prevenir [${e.jugador}]`
+    }
     case 'ruptura_realizada': {
       const atacante = nombreCarta(estado, e.atacanteId)
       const vinculo = nombreCarta(estado, e.vinculoId)

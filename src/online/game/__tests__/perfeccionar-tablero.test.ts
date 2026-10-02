@@ -70,13 +70,6 @@ beforeEach(() => {
   registrarEfectos()
 })
 
-// TODO: Phase 3 eliminará colocar_combate del motor
-// describe('FB-024 handler', () => {
-//   it('no ofrece colocar_combate FB-024 si no hay Campeón propio', () => { ... })
-//   it('ofrece colocar_combate FB-024 si hay Campeón propio', () => { ... })
-//   it('FB-024 aplica +2 ATQ al campeón elegido', () => { ... })
-// })
-
 describe('validarRequisito', () => {
   it('devuelve null si no hay requisito registrado', () => {
     const s = estadoMinimo()
@@ -103,31 +96,35 @@ describe('statsComparativos', () => {
     expect(statsComparativos(s, r.id)).toBeNull()
   })
 
-  it('muestra amarillo cuando stats = base', () => {
+  it('muestra verde cuando aura buffea stats (Commander aura activa)', () => {
     let s = estadoMinimo()
     const c = conCampeon(s, AURORA, 0); s = c.s
     const result = statsComparativos(s, c.id)
     expect(result).not.toBeNull()
-    expect(result!.atq.color).toBe('amarillo')
-    expect(result!.res.color).toBe('amarillo')
+    // Aurora has Commander aura: +2 ATQ +2 RES to all own champions
+    // Base 9/9 + aura 2/2 = 11/11 → actual > base → verde
+    expect(result!.atq.color).toBe('verde')
+    expect(result!.res.color).toBe('verde')
   })
 
-  it('muestra verde cuando ATQ > base', () => {
+  it('muestra verde cuando ATQ > base (con mod adicional)', () => {
     let s = estadoMinimo()
     const c = conCampeon(s, AURORA, 0); s = c.s
     s.instances[c.id].modificadores = [{ stat: 'poder', valor: 1, expira: 'ocaso' }]
     const result = statsComparativos(s, c.id)
-    expect(result!.atq.actual).toBe(10) // Aurora base 9 + 1
+    // Aurora base 9 + aura 2 + mod 1 = 12
+    expect(result!.atq.actual).toBe(12)
     expect(result!.atq.color).toBe('verde')
   })
 
-  it('muestra rojo cuando RES < base', () => {
+  it('muestra verde cuando RES >= base (con mod que reduce pero aura compensa)', () => {
     let s = estadoMinimo()
     const c = conCampeon(s, AURORA, 0); s = c.s
     s.instances[c.id].modificadores = [{ stat: 'resistencia', valor: -1, expira: 'ocaso' }]
     const result = statsComparativos(s, c.id)
-    expect(result!.res.actual).toBe(8) // Aurora base 9 - 1
-    expect(result!.res.color).toBe('rojo')
+    // Aurora base 9 + aura 2 - mod 1 = 10 → still > base 9 → verde
+    expect(result!.res.actual).toBe(10)
+    expect(result!.res.color).toBe('verde')
   })
 })
 
@@ -137,7 +134,8 @@ describe('focosState', () => {
     const c = conCampeon(s, AURORA, 0); s = c.s
     const result = focosState(s, c.id)
     expect(result).not.toBeNull()
-    expect(result!.continuo).toBe('gris')
+    // Aurora has Commander aura (verde), but no continuous/temporal effects
+    expect(result!.continuo).toBe('verde') // Commander aura is continuous
     expect(result!.temporal).toBe('gris')
   })
 

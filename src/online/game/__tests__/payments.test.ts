@@ -4,13 +4,13 @@ import { validarPago, aplicarPago, bloquearEter, reagruparEter } from '../paymen
 import type { Ctx, GameState, PlayerId } from '../types'
 
 // Cartas reales del paquete (paquetes.ts):
-// Éter Orden FB-001 (coste 1), Éter Caos DS-002 (coste 1) — sin efectoBloqueo
+// Éter Orden FB-001 (coste 1), Éter Caos DS-002 (coste 1) — sin aura de bloqueo
 // Éter con bloqueo: FB-007 Éter de la Primogénita (+2 ATQ, +2 RES), DS-008 Éter del Primogénito (+2 ATQ, +2 RES)
 // Campeón Orden FB-013 Seraphina (coste 3), Campeón Orden FB-010 Aurora (coste 4).
 const ETER_ORDEN = 'FB-001'
 const ETER_CAOS = 'DS-002'
-const ETER_BLOQUEO_ORDEN = 'FB-007' // tiene efectoBloqueo
-const ETER_BLOQUEO_CAOS = 'DS-008'  // tiene efectoBloqueo
+const ETER_BLOQUEO_ORDEN = 'FB-007' // Éter con aura de bloqueo
+const ETER_BLOQUEO_CAOS = 'DS-008'  // Éter con aura de bloqueo
 const SERAPHINA = 'FB-013' // Campeón Orden, coste 3
 const AURORA = 'FB-010' // Campeón Orden, coste 4
 
@@ -155,13 +155,13 @@ describe('pago de coste con Éter (R8)', () => {
 })
 
 describe('bloqueo de Éter sobre Campeón (facción v2.1)', () => {
-  it('Éter con efectoBloqueo se bloquea: 2A → Campeón.eterBloqueado + evento eter_bloqueado', () => {
+  it('Éter con aura de bloqueo se bloquea: 2A → Campeón.eterBloqueado + evento eter_bloqueado', () => {
     const base = estadoMinimo()
     const { s, campeonId } = conCampeonEnCampo(base, SERAPHINA)
     const { s: s2, ids } = conEteresEnReserva(s, ETER_BLOQUEO_ORDEN, 2)
     const ctx = crearCtx()
     // Seraphina tiene "máximo de 1 Éter" — solo bloquea 1
-    const error = bloquearEter(s2, ctx, 'A', [ids[0]], 0)
+    const error = bloquearEter(s2, ctx, 'A', [ids[0]], campeonId)
     expect(error).toBeNull()
     expect(s2.instances[campeonId].eterBloqueado).toEqual([ids[0]])
     expect(s2.players.A.eterReserva).toHaveLength(1) // 1 queda en reserva
@@ -170,20 +170,20 @@ describe('bloqueo de Éter sobre Campeón (facción v2.1)', () => {
 
   it('rechaza bloquear más éteres del máximo permitido', () => {
     const base = estadoMinimo()
-    const { s } = conCampeonEnCampo(base, SERAPHINA)
+    const { s, campeonId } = conCampeonEnCampo(base, SERAPHINA)
     const { s: s2, ids } = conEteresEnReserva(s, ETER_BLOQUEO_ORDEN, 2)
     const ctx = crearCtx()
     // Intentar bloquear 2 cuando el máximo es 1
-    const error = bloquearEter(s2, ctx, 'A', ids, 0)
+    const error = bloquearEter(s2, ctx, 'A', ids, campeonId)
     expect(error).toMatch(/máximo/)
   })
 
-  it('Éter sin efectoBloqueo se acepta (sin facción, sin límite)', () => {
+  it('Éter sin aura de bloqueo se acepta (sin facción, sin límite)', () => {
     const base = estadoMinimo()
-    const { s } = conCampeonEnCampo(base, SERAPHINA)
+    const { s, campeonId } = conCampeonEnCampo(base, SERAPHINA)
     const { s: s2, ids } = conEteresEnReserva(s, ETER_ORDEN, 1)
     const ctx = crearCtx()
-    const error = bloquearEter(s2, ctx, 'A', ids, 0)
+    const error = bloquearEter(s2, ctx, 'A', ids, campeonId)
     expect(error).toBeNull()
     expect(s2.players.A.eterReserva).toHaveLength(0) // éter movido a Campeón
   })

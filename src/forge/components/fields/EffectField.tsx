@@ -348,7 +348,7 @@ export function EffectField({ label, value, onChange, cardType }: EffectFieldPro
               { value: '', label: 'Tuya' },
               { value: 'rival', label: 'Del rival' },
               { value: 'dueno', label: 'Del dueño' },
-            ]} onChange={(v) => updateObjetivo({ controladorDestino: v || undefined })} />
+            ]} onChange={(v) => updateObjetivo({ controladorDestino: v === 'rival' || v === 'dueno' ? v : undefined })} />
           )}
           {['tutor', 'mover', 'return_ether'].includes(data.efecto ?? '') && data.objetivo?.zonaDestino && (
             <div className="flex items-center gap-2">

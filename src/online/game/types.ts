@@ -74,10 +74,24 @@ export interface CardInstance {
    * (solo las de turnos anteriores); la Alba del dueño lo borra (phases.ts).
    */
   entradaEsteTurno?: boolean
-   /** Éter bloqueado (1B-1F): ids de Éter sobre este Campeón (6.2: boca arriba). */
+   /** Éter bloqueado (1B-1F campeones / 3A-3F artefactos Fase 3a): ids de Éter sobre esta carta. */
    eterBloqueado?: string[]
-   /** IDs de Éteres que deben liberarse (→ Reserva) en Alba del dueño (Aurora/Ragnar activo). */
-   liberarEnAlba?: string[]
+   /** Fase 3a Phase D: one-shot de umbral de costo-bloqueado ya disparado (FB-032).
+    * Se limpia al liberar el Éter (efecto se desactiva). */
+   efectoUmbralDisparado?: boolean
+   /** Fase 3b: ID del campeón target de un efecto negar de esta fuente (FB-021).
+    * Estado derivado: la negación vive mientras la fuente esté en campo
+    * (championNegado scan en efectos.ts). */
+   negadoTargetId?: string
+   /** Fase 3c: ID de la Mística/Arcana rival copiada por efecto copy (FB-022).
+    * Estado derivado copyActivo: copyTargetId + ≥1 Éter bloqueado + target en campo. */
+   copyTargetId?: string
+   /** Fase 3c: one-shot de efectos copiados ya disparado (eventos copy).
+    * Se limpia al liberar el Éter (copy se desactiva — §7.7). */
+   copyOneShotDisparado?: boolean
+  /** Destrucción diferida (Fase 2c — prevent_destroy): la víctima Vínculo está en peligro
+   * y espera la elección responder_prevenicion del controlador. Aún NO está destruida. */
+  destruccionPendiente?: boolean
   /** ID de la carta que robó control de este Campeón (Aurora FB-010). Si el ladrón sale del campo, el control regresa. */
   stolenBy?: string
   /** IDs de Éteres robados por Varek (DS-013). Si Varek sale del campo, regresan al dueño original. */
@@ -193,6 +207,8 @@ export interface GameState {
   motivo?: MotivoFin
   /** Efectos pendientes centralizados (Effect Registry, Fase 1). */
   efectosPendientes?: EfectoPendiente[]
+  /** Checkpoint prevent_destroy (Fase 2c): elecciones de prevenión FIFO. */
+  preventivosPendientes?: PrevenicionPendiente[]
 }
 
 /**
@@ -209,4 +225,20 @@ export interface Ctx {
 export interface SetupOptions {
   vinculosA?: string[]
   vinculosB?: string[]
+}
+
+/**
+ * Pendiente de elección prevent_destroy (Fase 2c — FB-018, checkpoint).
+ * El controlador del Vínculo en peligro decide: prevenir (exiliar la fuente)
+ * o permitir la destrucción. Mientras exista, el motor NO acepta otras acciones.
+ */
+export interface PrevenicionPendiente {
+  /** Controlador del vínculo — el que ELIGE (no es el jugador activo necesariamente). */
+  jugador: PlayerId
+  /** Fuente con prevent_destroy en campo del jugador (Rowena). */
+  fuenteId: string
+  /** Vínculo en peligro de destrucción (aún vivo, marcado destruccionPendiente). */
+  victimId: string
+  /** Causa que originó la destrucción diferida. */
+  causa: CausaDestruccion
 }

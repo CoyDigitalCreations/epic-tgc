@@ -15,11 +15,14 @@ export function verificarInvariantes(estado: GameState): string[] {
     // partida por mazo_vacio puede dejar 7). Cota dura, no la de Ocaso.
     if (st.mano.length > 7) violaciones.push(`${p}: mano ${st.mano.length} > 7`)
 
-    // 15 Éter: 2A + 1A + bloqueados (el bloqueado vive en Campeón.eterBloqueado)
+    // 15 Éter: 2A + 1A + bloqueados (el bloqueado vive en inst.eterBloqueado
+    // de CUALQUIER carta en campo — Campeones 2B-2F y Artefactos 3A-3F, Fase 3a)
     let bloqueados = 0
-    for (const id of st.campo.campeones) {
-      if (!id) continue
-      bloqueados += estado.instances[id]?.eterBloqueado?.length ?? 0
+    for (const grupo of ['campeones', 'misticasTacticas', 'arcanasCombate'] as const) {
+      for (const id of st.campo[grupo]) {
+        if (!id) continue
+        bloqueados += estado.instances[id]?.eterBloqueado?.length ?? 0
+      }
     }
     const eter = st.eterReserva.length + st.eterPagado.length + bloqueados
     if (eter !== 15) violaciones.push(`${p}: ${eter} Éter ≠ 15`)

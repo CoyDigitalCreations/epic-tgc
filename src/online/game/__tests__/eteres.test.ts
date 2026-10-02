@@ -15,31 +15,38 @@ import {
 } from '../efectos'
 import { registrarEfectos } from '../index'
 
-// Cartas reales del paquete (paquetes.ts):
-// FB-010 Aurora · FB-011 Vaela 5/3 Carga · FB-014 Isolde 3/7 Protector
+// Cartas reales del catálogo (fuente de verdad: seed/PrimerColeccionEfectos.json):
+// FB-010 Aurora · FB-011 Vaela · FB-014 Isolde (rediseñada — sin aura)
 const AURORA = 'FB-010'
-const VAELA = 'FB-011' // 5/3 Carga
-const ISOLDE = 'FB-014' // 3/7 Protector
+const VAELA = 'FB-011'
+const ISOLDE = 'FB-014'
 
-// IDs de Éteres (Estásis = FB-001..FB-009, Disonancia = DS-002..DS-010)
-const FB001 = 'FB-001' // +1 ATQ propios en reserva
-const FB002 = 'FB-002' // Vigor inicio-choque
-const FB003 = 'FB-003' // Gatillo robar 1
-const FB004 = 'FB-004' // Gatillo +1 RES invocado
-const FB005 = 'FB-005' // Pasivo bloquear sin agotar
-const FB006 = 'FB-006' // Gatillo 1A→2A propio
-const FB007 = 'FB-007' // Bloqueo +2/+2
-const FB008 = 'FB-008' // Bloqueo Inmortal
-const FB009 = 'FB-009' // Bloqueo +1 RES
-const DS002 = 'DS-002' // -1 ATQ rivales en reserva
-const DS003 = 'DS-003' // Carga inicio-choque
-const DS004 = 'DS-004' // Gatillo descarte rival
-const DS005 = 'DS-005' // Gatillo +1 ATQ invocado
-const DS006 = 'DS-006' // Pasivo igual FB-005
-const DS007 = 'DS-007' // Gatillo 1A→2A rival
-const DS008 = 'DS-008' // Bloqueo +2/+2
-const DS009 = 'DS-009' // Bloqueo Indestructible
-const DS010 = 'DS-010' // Bloqueo +1 ATQ
+// IDs de Éteres — diseños según la fuente de verdad:
+// FB-001 pago/al_pagar_eter (NO aura reserva) · FB-002 pago/grant_keyword Vigor
+// FB-003 pago/draw · FB-004 pago/buff · FB-005 Pasivo 1A · FB-006 pago/mover
+// FB-007 bloqueo/buff +1 ATQ · FB-008 bloqueo/Inmortal · FB-009 bloqueo/+1 RES
+// DS-002 reserva/ninguno/debuff -1 ATQ rivales (SÍ aura reserva)
+// DS-003 reserva/inicio_choque/Carga · DS-004 pago/rival_discard
+// DS-005 pago/buff · DS-006 Pasivo 1A · DS-007 pago/mover
+// DS-008 bloqueo/+1 RES · DS-009 bloqueo/Indestructible · DS-010 bloqueo/+1 ATQ
+const FB001 = 'FB-001'
+const FB002 = 'FB-002'
+const FB003 = 'FB-003'
+const FB004 = 'FB-004'
+const FB005 = 'FB-005'
+const FB006 = 'FB-006'
+const FB007 = 'FB-007'
+const FB008 = 'FB-008'
+const FB009 = 'FB-009'
+const DS002 = 'DS-002' // aura reserva: -1 ATQ rivales
+const DS003 = 'DS-003'
+const DS004 = 'DS-004'
+const DS005 = 'DS-005'
+const DS006 = 'DS-006'
+const DS007 = 'DS-007'
+const DS008 = 'DS-008'
+const DS009 = 'DS-009'
+const DS010 = 'DS-010'
 
 const deckA = expandirMazo(ESTASIS_CARDS)
 const deckB = expandirMazo(DISONANCIA_CARDS)
@@ -184,29 +191,54 @@ beforeEach(() => {
   registrarEfectos()
 })
 
-describe('2.1 Auras por zona — efectoReserva (2A)', () => {
-  it('FB-001 en reserva de A: Campeones de A ganan +1 ATQ', () => {
+describe('2.1 Auras por zona — reserva (2A), derivadas del JSON (Fase 1)', () => {
+  it('DS-002 en reserva de A: debuffa -1 ATQ a campeones RIVALES (no a los propios)', () => {
     let s = estadoMinimo()
-    const { s: s1, id: eter } = conEterReserva(s, FB001, 'A')
+    const { s: s1 } = conEterReserva(s, DS002, 'A')
     s = s1
     const { s: s2, id: campeonA } = conCampeon(s, VAELA, 0, 'A') // Vaela 5/3 base
     s = s2
-    // statsDe del campeón A debe ser 6/3 (base 5 + 1 aura)
-    expect(statsDe(s, campeonA)).toEqual({ poder: 6, resistencia: 3 })
+    const { s: s3, id: campeonB } = conCampeon(s, VAELA, 0, 'B') // Vaela 5/3 base
+    s = s3
+    // Rival de A (= B) pierde 1 ATQ: base 5 - 1 = 4
+    expect(statsDe(s, campeonB)).toEqual({ poder: 4, resistencia: 3 })
+    // Propio de A sin cambio
+    expect(statsDe(s, campeonA)).toEqual({ poder: 5, resistencia: 3 })
   })
 
-  it('FB-001 en reserva de A: Campeones de B NO afectados', () => {
+  it('FB-001 en reserva NO da aura (JSON lo rediseñó a pago/al_pagar_eter)', () => {
     let s = estadoMinimo()
-    const { s: s1, id: eter } = conEterReserva(s, FB001, 'A')
+    const { s: s1 } = conEterReserva(s, FB001, 'A')
     s = s1
-    const { s: s2, id: campeonA } = conCampeon(s, VAELA, 0, 'A') // Vaela 5/3 base
+    const { s: s2, id: campeonA } = conCampeon(s, VAELA, 0, 'A')
     s = s2
-    const { s: s3, id: campeonB } = conCampeon(s2, VAELA, 0, 'B') // Vaela 5/3 base
-    s = s3
-    // statsDe del campeón A debe ser 6/3 (base 5 + 1 aura)
-    // statsDe del campeón B debe ser 5/3 (sin aura)
-    expect(statsDe(s, campeonA)).toEqual({ poder: 6, resistencia: 3 })
-    expect(statsDe(s, campeonB)).toEqual({ poder: 5, resistencia: 3 })
+    // Sin aura: stats base
+    expect(statsDe(s, campeonA)).toEqual({ poder: 5, resistencia: 3 })
+  })
+
+  it('auras de bloqueo: FB-007 da +1 ATQ al anfitrión (JSON nuevo, no +2/+2)', () => {
+    let s = estadoMinimo()
+    const { s: s1, id: campeon } = conCampeon(s, VAELA, 0, 'A')
+    s = s1
+    expect(statsDe(s, campeon)).toEqual({ poder: 5, resistencia: 3 })
+
+    const eterId = 'e-FB-007-bloqueado'
+    s.instances[eterId] = { cardInstanceId: eterId, cardId: FB007, owner: 'A' }
+    s = mutarEterBloqueado(s, campeon, eterId)
+    // FB-007 nuevo: buff +1 ATQ (el handler viejo daba +2/+2 — DRIFT eliminado)
+    expect(statsDe(s, campeon)).toEqual({ poder: 6, resistencia: 3 })
+  })
+
+  it('auras de bloqueo: FB-008 otorga Inmortal al anfitrión via keywordsDe', () => {
+    let s = estadoMinimo()
+    const { s: s1, id: campeon } = conCampeon(s, VAELA, 0, 'A')
+    s = s1
+    expect(keywordsDe(s, campeon)).not.toContain('Inmortal')
+
+    const eterId = 'e-FB-008-bloqueado'
+    s.instances[eterId] = { cardInstanceId: eterId, cardId: FB008, owner: 'A' }
+    s = mutarEterBloqueado(s, campeon, eterId)
+    expect(keywordsDe(s, campeon)).toContain('Inmortal')
   })
 })
 

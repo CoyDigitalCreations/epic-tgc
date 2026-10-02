@@ -3,17 +3,17 @@
  * Extraído de actions.ts para separación de dominios (change: refactor-engine).
  */
 import type { GameState, Ctx } from './types'
-import { getCardMeta, costeEterHabilidad, faccionesCompartidas } from './cards'
+import { getCardMeta, costeEterHabilidad, faccionesCompartidas, type AnyCard } from './cards'
+import type { CondicionEfecto } from '../../shared/types'
 import { validarPago, aplicarPago, type ContextoUso } from './payments'
-import { SLOTS_CAMPEONES } from './zones'
-import { dispararTrigger, type TriggerEfecto } from './efectos'
+import { dispararTrigger, condicionCumple, championNegado, type TriggerEfecto, type PayloadEfecto } from './efectos'
 import { registrarEfectoPendiente, hastaAlba } from './effectRegistry'
+import { interpretEffect } from './effectInterpreter'
 import { tieneKeyword } from './combat'
 import { liberarEterBloqueado, enviarAlCementerio } from './replacements'
 import { slotAZona } from './zones'
 import { validarBloqueo } from './payments'
 import { abrirCadenaGlobal } from './chain'
-import { validarRequisito } from './effects-guards'
 import type { Action } from './core'
 
 /* ─────────────────────── Validadores ─────────────────────── */
@@ -32,9 +32,10 @@ export function validarActivarArcana(state: GameState, action: Extract<Action, {
   if (inst.bocaArriba) return 'la Arcana ya está boca arriba'
   // §5.4: NO se pueden activar el turno en que fueron colocadas
   if (inst.entradaEsteTurno) return 'la Arcana no se puede activar el turno en que fue colocada (§5.4)'
-  // §5.4: la condición de la Arcana debe cumplirse para activar
-  const reqError = validarRequisito(state, state.turno, meta.id)
-  if (reqError) return reqError
+  // §5.4: la condicion JSON de la Arcana debe cumplirse para activar (Fase 2a — data-driven)
+  const condicion = 'condicion' in meta ? (meta as { condicion?: CondicionEfecto }).condicion : undefined
+  const condError = condicionCumple(state, condicion, state.turno)
+  if (condError) return condError
   // Slot coincidence check
   if (action.slot !== idx) return 'el slot no coincide con la posición de la Arcana'
   // Pago de éter
@@ -48,13 +49,17 @@ export function validarActivarArcana(state: GameState, action: Extract<Action, {
  * Lee de efectos[] — el sistema unificado.
  */
 export function validarActivarHabilidad(state: GameState, action: Extract<Action, { type: 'activar_habilidad' }>): string | null {
-  // Las habilidades activas NO se pueden usar en Alba (solo efectos automáticos)
-  if (state.fase === 'alba') return 'no se pueden activar habilidades en la fase de Alba'
+  // NOTE: Alba is auto-resolved (ADR-3) and never an observable state —
+  // no need to guard against it. Fase values: forja, choque, ocaso, etc.
 
   const p = state.players[state.turno]
   const inst = state.instances[action.cardInstanceId]
   if (!inst) return 'la carta no existe'
   if (!p.campo.campeones.includes(action.cardInstanceId)) return 'la carta no está en tu campo'
+  // Fase 3b: campeón negado (FB-021) no puede activar efectos — gate ANTES de todo
+  if (championNegado(state, action.cardInstanceId)) {
+    return 'este campeón está negado: no puede activar efectos'
+  }
   const meta = inst.cardId ? getCardMeta(inst.cardId) : null
   if (!meta) return 'carta desconocida'
 
@@ -143,7 +148,7 @@ export function validarElegirObjetivo(state: GameState, action: Extract<Action, 
 
 /* ──────────────────── Ejecución ──────────────────── */
 
-/** Revela la Arcana (boca arriba) y paga su coste de éter. */
+/** Revela la Arcana (boca arriba), paga su coste y resuelve la recompensa (Fase 2a). */
 export function ejecutarActivarArcana(s: GameState, action: Extract<Action, { type: 'activar_arcana' }>, ctx: Ctx): void {
   const id = action.cardInstanceId
   const inst = s.instances[id]
@@ -152,17 +157,30 @@ export function ejecutarActivarArcana(s: GameState, action: Extract<Action, { ty
   aplicarPago(s, ctx, s.turno, action.eterIds, inst.cardId!, contextoUso)
   inst.bocaArriba = true
   ctx.emit({ type: 'carta_activada', cardInstanceId: id, jugador: s.turno, slot: action.slot })
-  // Abrir cadena global: el rival podría responder con cartas Disparo
+  // Fase 2a — modelo de activación: la recompensa (efectos tipo hechizo) se
+  // resuelve al activar. El JSON de Card-Maker emite recompensas sin trigger.
   const meta = getCardMeta(inst.cardId!)
+  if (meta && 'efectos' in meta && meta.efectos) {
+    for (const efecto of meta.efectos) {
+      if (efecto.tipo === 'hechizo' && !efecto.trigger && efecto.efecto) {
+        interpretEffect(s, ctx, inst, efecto, { jugador: s.turno, fromTrigger: true })
+      }
+    }
+  }
+  // Abrir cadena global: el rival podría responder con cartas Disparo
   abrirCadenaGlobal(s, s.turno, { cardInstanceId: id, descripcion: meta?.name ?? id })
 }
 
 /**
- * Ejecutar activar_habilidad — dos patrones:
- *  - "Bloqueado" (Cassandra/Korr): eterIds de Reserva → Campeón.eterBloqueado.
- *    El aura se aplica dinámicamente via aurasDe (detección automática).
- *  - "Agota" (Seraphina/Nymeria/Varek/Vorlag): eterIds → 1A + agota + 1/turno
- *    + disparar trigger 'al-activar-habilidad' (handler aplica efecto).
+ * Ejecutar activar_habilidad — data-driven desde efectos[] del JSON.
+ *
+ * Patrones según el JSON:
+ *  - "Bloqueado" (costo.tipo = 'eter_bloqueado' o tipo = 'continuo'):
+ *    eterIds de Reserva → Campeón.eterBloqueado. El aura se aplica vía modificadoresJSONDe.
+ *  - "Disparo/Agota" (cualquier otro costo):
+ *    eterIds → 1A (pagado) + 1/turno. El efecto se ejecuta directo desde JSON.
+ *
+ * El efecto se resuelve leyendo efectos[] de la carta — sin hardcodear nada.
  */
 export function ejecutarActivarHabilidad(s: GameState, action: Extract<Action, { type: 'activar_habilidad' }>, ctx: Ctx): void {
   const p = s.players[s.turno]
@@ -170,7 +188,6 @@ export function ejecutarActivarHabilidad(s: GameState, action: Extract<Action, {
   const meta = inst.cardId ? getCardMeta(inst.cardId) : null
   if (!meta) return
 
-  // Check efectos[] for active abilities
   const tieneEfectos = 'efectos' in meta && meta.efectos
   const esContinuo = tieneEfectos && meta.efectos!.some((e) => e.tipo === 'continuo')
   const esBloqueado = esContinuo || (tieneEfectos && meta.efectos!.some((e) => e.costo?.tipo === 'eter_bloqueado'))
@@ -196,14 +213,11 @@ export function ejecutarActivarHabilidad(s: GameState, action: Extract<Action, {
       }
     }
     ctx.emit({ type: 'eter_bloqueado', jugador: s.turno, eterIds: action.eterIds, campeonId: action.cardInstanceId })
-    // Continuo: agota al activar
     if (esContinuo) {
       inst.agotado = true
     }
-    // Disparar trigger para handlers con targeting (Aurora/Ragnar).
-    dispararTrigger(s, ctx, 'al-activar-habilidad', s.turno, [action.cardInstanceId], {
-      objetivoId: action.objetivoId,
-    })
+    // Ejecutar el efecto directo desde JSON (targeting si es necesario)
+    ejecutarEfectoDesdeJSON(s, ctx, meta, action.cardInstanceId, action.objetivoId)
   } else {
     // Patrón "Disparo/Agota": éteres → 1A (pagado) + 1/turno
     for (const eterId of action.eterIds) {
@@ -213,13 +227,42 @@ export function ejecutarActivarHabilidad(s: GameState, action: Extract<Action, {
     if (action.eterIds.length > 0) {
       ctx.emit({ type: 'eter_pagado', jugador: s.turno, eterIds: action.eterIds, costo: action.eterIds.length, aportado: action.eterIds.length })
     }
-    // Disparo: NO agota (puede usar agotado)
     inst.opcionUsadaEsteTurno = true
-    // Disparar trigger para que el handler aplique el efecto
-    dispararTrigger(s, ctx, 'al-activar-habilidad', s.turno, [action.cardInstanceId], {
-      objetivoId: action.objetivoId,
-    })
+    // Ejecutar el efecto directo desde JSON (targeting si es necesario)
+    ejecutarEfectoDesdeJSON(s, ctx, meta, action.cardInstanceId, action.objetivoId)
   }
+}
+
+/**
+ * Ejecuta el efecto de una carta leyendo directo efectos[] del JSON.
+ * Sin hardcodear — el motor no necesita saber qué carta es.
+ */
+function ejecutarEfectoDesdeJSON(
+  s: GameState,
+  ctx: Ctx,
+  meta: AnyCard,
+  cardInstanceId: string,
+  objetivoId?: string,
+): void {
+  if (!('efectos' in meta) || !meta.efectos) return
+
+  const inst = s.instances[cardInstanceId]
+  if (!inst) return
+
+  // Buscar el efecto apropiado: si hay objetivoId, buscar el continuo; si no, buscar el disparo
+  // This ensures the player activates the RIGHT effect when a card has multiple
+  const efecto = objetivoId
+    ? meta.efectos.find((e) => e.tipo === 'continuo')
+    : meta.efectos.find((e) => e.tipo === 'disparo')
+  if (!efecto) return
+
+  const payload: PayloadEfecto = {
+    jugador: s.turno,
+    contextoUso: objetivoId ? 'objetivo-elegido' : undefined,
+    objetivoId,
+  }
+
+  interpretEffect(s, ctx, inst, efecto, payload)
 }
 
 /**
@@ -261,16 +304,15 @@ export function ejecutarElegirOpcion(s: GameState, action: Extract<Action, { typ
   if (!pendiente) return // ya validado
 
   // Greedy determinista: primer Campeón con facción compartida + primer Éter Reserva compatible
-  let elegido: { campeonSlot: number; eterId: string } | null = null
-  for (let slot = 0; slot < SLOTS_CAMPEONES && !elegido; slot++) {
-    const campeonId = p.campo.campeones[slot]
+  let elegido: { targetInstanceId: string; eterId: string } | null = null
+  for (const campeonId of p.campo.campeones) {
     if (!campeonId) continue
     const metaC = s.instances[campeonId]?.cardId ? getCardMeta(s.instances[campeonId]!.cardId!) : null
     if (!metaC) continue
     for (const eterId of p.eterReserva) {
       const metaE = s.instances[eterId]?.cardId ? getCardMeta(s.instances[eterId]!.cardId!) : null
       if (metaE && faccionesCompartidas(metaE.facciones, metaC.facciones)) {
-        elegido = { campeonSlot: slot, eterId }
+        elegido = { targetInstanceId: campeonId, eterId }
         break
       }
     }
@@ -280,17 +322,16 @@ export function ejecutarElegirOpcion(s: GameState, action: Extract<Action, { typ
     s.opcionesPendientes = s.opcionesPendientes!.filter((o) => !(o.jugador === j && o.eterId === action.opcionId))
     return
   }
-  const error = validarBloqueo(s, j, [elegido.eterId], elegido.campeonSlot)
+  const error = validarBloqueo(s, j, [elegido.eterId], elegido.targetInstanceId)
   if (error) {
     s.opcionesPendientes = s.opcionesPendientes!.filter((o) => !(o.jugador === j && o.eterId === action.opcionId))
     return
   }
   // Ejecutar bloqueo (reutiliza lógica de ejecutarBloquearEter)
-  const campeonId = p.campo.campeones[elegido.campeonSlot]!
-  const instCampeon = s.instances[campeonId]
+  const instCampeon = s.instances[elegido.targetInstanceId]
   instCampeon.eterBloqueado = [...(instCampeon.eterBloqueado ?? []), elegido.eterId]
   p.eterReserva.splice(p.eterReserva.indexOf(elegido.eterId), 1)
-  ctx.emit({ type: 'eter_bloqueado', jugador: j, eterIds: [elegido.eterId], campeonId })
+  ctx.emit({ type: 'eter_bloqueado', jugador: j, eterIds: [elegido.eterId], campeonId: elegido.targetInstanceId })
 
   // Marcar opción usada en el Éter Pasivo
   const eterPasivo = s.instances[pendiente.eterId]

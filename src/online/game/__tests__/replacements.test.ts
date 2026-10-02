@@ -1,12 +1,23 @@
 // @vitest-environment node
 import { describe, it, expect } from 'vitest'
-import { destruirCarta, reemplazosRegistrados, verificarDerrotaVinculos } from '../replacements'
+import {
+  destruirCarta, verificarDerrotaVinculos,
+  buscarFuentePreventDestroy, ejecutarResponderPrevenicion, validarResponderPrevenicion,
+} from '../replacements'
+import { applyAction } from '../actions'
+import { getValidActions } from '../validActions'
+import { registrarCartas } from '../cards'
+import { elegirPrevenicion } from '../botStrategies'
+import type { Action } from '../actions'
+import type { AnyCard } from '../../../shared/types/cards'
 import type { Ctx, GameState, PlayerId } from '../types'
 
-// Cartas reales del paquete (paquetes.ts):
+// Cartas reales del catálogo (fuente de verdad: seed/PrimerColeccionEfectos.json):
 // FB-011 Vaela 5/3 (sin keywords anti-destrucción) · FB-025 Primer Juramento (Vínculo Orden)
+// FB-018 Rowena, Vínculo Eterno — prevent_destroy + cuando_vinculo_seria_destruido + exile_self
 const VAELA = 'FB-011'
 const VINCULO = 'FB-025'
+const ROWENA = 'FB-018'
 
 function estadoMinimo(): GameState {
   const jugador = (id: PlayerId) => ({
@@ -128,10 +139,6 @@ describe('destruirCarta por causa (ADR-15)', () => {
     expect(v.s.instances[v.id].bocaArriba).toBe(true)
     expect(v.s.players.B.cementerio).toEqual([])
   })
-
-  it('registro de reemplazos VACÍO y consultable (ni Rowena FB-018 ni Último Refugio registrados)', () => {
-    expect(reemplazosRegistrados()).toEqual([])
-  })
 })
 
 describe('sexto Vínculo y derrota por vínculos (ADR-16)', () => {
@@ -175,5 +182,193 @@ describe('sexto Vínculo y derrota por vínculos (ADR-16)', () => {
     verificarDerrotaVinculos(v.s, ctx, 'B')
     expect(ctx.events).toEqual([])
     expect(v.s.fase).toBe('choque')
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════════
+// prevent_destroy (Fase 2c) — checkpoint de elección data-driven
+// Tests genéricos por tipo: sintético + FB-018 Rowena real.
+// ═══════════════════════════════════════════════════════════════════
+
+describe('prevent_destroy (Fase 2c) — checkpoint de elección data-driven', () => {
+  const PREVENT = 'TEST-PREVENT'
+  registrarCartas([{
+    id: PREVENT,
+    name: 'Prevent Test',
+    type: 'Campeón',
+    rarity: 'Común',
+    keywords: [],
+    flavorText: '',
+    createdAt: '2026-01-01T00:00:00.000Z',
+    updatedAt: '2026-01-01T00:00:00.000Z',
+    paqueteId: 'test',
+    limiteCopias: '1',
+    stats: { cost: 3, poder: 3, resistencia: 6 },
+    efectos: [{
+      tipo: 'pasivo',
+      efecto: 'prevent_destroy',
+      trigger: 'cuando_vinculo_seria_destruido',
+      objetivo: { tipo: 'vinculo', controlador: 'propio', zona: 'campo' },
+      costo: { tipo: 'exile_self' },
+      texto: 'Cuando un Vínculo que controles fuera a ser destruido, puedes enviar esta carta a tu exilio, previniendo la destrucción.',
+    }],
+  } as unknown as AnyCard])
+
+  /** Vínculo vivo de `owner` + fuente PREVENT en campo de `owner` (si hay). */
+  function conEscena(owner: PlayerId, conFuente: boolean): { s: GameState; fuenteId: string; victimId: string } {
+    let s = estadoMinimo()
+    const v = conVinculo(s, 0, owner)
+    s = v.s
+    let fuenteId = 'sin-fuente'
+    if (conFuente) {
+      const f = conCampeon(s, PREVENT, 0, owner)
+      s = f.s
+      fuenteId = f.id
+    }
+    return { s, fuenteId, victimId: v.id }
+  }
+
+  it('scan data-driven: FB-018 Rowena real es fuente elegible; Vaela no', () => {
+    let s = estadoMinimo()
+    const rowena = conCampeon(s, ROWENA, 0, 'A')
+    expect(buscarFuentePreventDestroy(rowena.s, 'A')).toBe(rowena.id)
+    expect(buscarFuentePreventDestroy(rowena.s, 'B')).toBeNull()
+
+    let s2 = estadoMinimo()
+    const vaela = conCampeon(s2, VAELA, 0, 'A')
+    expect(buscarFuentePreventDestroy(vaela.s, 'A')).toBeNull()
+  })
+
+  it('con fuente en campo: destruirCarta DIFIERE la muerte (pending, sin destruccion)', () => {
+    const { s, fuenteId, victimId } = conEscena('A', true)
+    const ctx = crearCtx()
+    const destruida = destruirCarta(s, ctx, victimId, 'efecto')
+
+    expect(destruida).toBe(false)
+    expect(s.instances[victimId].destruccionPendiente).toBe(true)
+    expect(s.instances[victimId].bocaArriba).toBeFalsy()
+    expect(s.preventivosPendientes).toEqual([
+      { jugador: 'A', fuenteId, victimId, causa: 'efecto' },
+    ])
+    expect(ctx.events).toContainEqual({
+      type: 'prevenicion_pendiente', victimId, fuenteId, jugador: 'A', causa: 'efecto',
+    })
+    expect(ctx.events.filter((e) => e.type === 'destruccion')).toHaveLength(0)
+  })
+
+  it('responder prevenir=true: fuente al exilio, víctima viva, destruccion_prevenida', () => {
+    const { s, fuenteId, victimId } = conEscena('A', true)
+    const ctx = crearCtx()
+    destruirCarta(s, ctx, victimId, 'efecto')
+
+    ejecutarResponderPrevenicion(s, ctx, 'A', true)
+
+    expect(s.preventivosPendientes).toEqual([])
+    expect(s.players.A.exilio).toContain(fuenteId)
+    expect(s.players.A.campo.campeones).not.toContain(fuenteId)
+    expect(s.instances[victimId].destruccionPendiente).toBeUndefined()
+    expect(s.instances[victimId].bocaArriba).toBeFalsy()
+    expect(s.players.A.vinculos).toContain(victimId)
+    expect(ctx.events).toContainEqual({ type: 'carta_exiliada', cardInstanceId: fuenteId, jugador: 'A' })
+    expect(ctx.events).toContainEqual({
+      type: 'destruccion_prevenida', cardInstanceId: victimId, jugador: 'A', causa: 'efecto',
+    })
+  })
+
+  it('responder prevenir=false: la destrucción diferida se ejecuta ahora', () => {
+    const { s, victimId } = conEscena('A', true)
+    const ctx = crearCtx()
+    destruirCarta(s, ctx, victimId, 'efecto')
+
+    ejecutarResponderPrevenicion(s, ctx, 'A', false)
+
+    expect(s.preventivosPendientes).toEqual([])
+    expect(s.instances[victimId].bocaArriba).toBe(true)
+    expect(s.instances[victimId].destruccionPendiente).toBeUndefined()
+    expect(ctx.events).toContainEqual({
+      type: 'destruccion', cardInstanceId: victimId, jugador: 'A', causa: 'efecto',
+    })
+  })
+
+  it('sin fuente elegible: destrucción directa (sin pending)', () => {
+    const { s, victimId } = conEscena('A', false)
+    const ctx = crearCtx()
+    const destruida = destruirCarta(s, ctx, victimId, 'combate')
+
+    expect(destruida).toBe(true)
+    expect(s.preventivosPendientes ?? []).toEqual([])
+    expect(s.instances[victimId].bocaArriba).toBe(true)
+  })
+
+  it('prevenir=true pero la fuente ya no está en campo: se ejecuta la destrucción', () => {
+    const { s, victimId } = conEscena('A', true)
+    const ctx = crearCtx()
+    destruirCarta(s, ctx, victimId, 'efecto')
+    // Simular que la fuente murió/salió entre el pending y la respuesta
+    const fuenteId = s.preventivosPendientes![0].fuenteId
+    s.players.A.campo.campeones = s.players.A.campo.campeones.map((c) => (c === fuenteId ? null : c))
+
+    ejecutarResponderPrevenicion(s, ctx, 'A', true)
+
+    expect(s.instances[victimId].bocaArriba).toBe(true)
+    expect(ctx.events).toContainEqual({
+      type: 'destruccion', cardInstanceId: victimId, jugador: 'A', causa: 'efecto',
+    })
+  })
+
+  it('prevenir el ÚLTIMO vínculo vivo evita la derrota por vínculos', () => {
+    const { s, fuenteId, victimId } = conEscena('A', true) // UN solo vínculo vivo
+    const ctx = crearCtx()
+    destruirCarta(s, ctx, victimId, 'efecto')
+    ejecutarResponderPrevenicion(s, ctx, 'A', true)
+
+    expect(s.fase).toBe('choque') // no terminó
+    expect(s.ganador).toBeUndefined()
+    expect(s.players.A.vinculos.filter((v) => v && !s.instances[v]?.bocaArriba)).toHaveLength(1)
+    expect(s.players.A.exilio).toContain(fuenteId)
+  })
+
+  it('declinar el último vínculo vivo SÍ produce derrota por vínculos', () => {
+    const { s, victimId } = conEscena('A', true)
+    const ctx = crearCtx()
+    destruirCarta(s, ctx, victimId, 'efecto')
+    ejecutarResponderPrevenicion(s, ctx, 'A', false)
+
+    expect(s.fase).toBe('terminada')
+    expect(s.ganador).toBe('B')
+    expect(s.motivo).toBe('vinculos')
+  })
+
+  it('checkpoint: getValidActions solo da responder_prevenicion al elegido; el resto queda congelado', () => {
+    const { s, victimId } = conEscena('A', true)
+    const ctx = crearCtx()
+    destruirCarta(s, ctx, victimId, 'efecto')
+
+    const accionesA = getValidActions(s, 'A')
+    expect(accionesA).toEqual([
+      { type: 'responder_prevenicion', prevenir: true },
+      { type: 'responder_prevenicion', prevenir: false },
+    ])
+    expect(getValidActions(s, 'B')).toEqual([])
+
+    // Otras acciones del elegido son rechazadas por el checkpoint
+    const r = applyAction(s, { type: 'pasar_turno' } as Action, ctx)
+    expect(r.ok).toBe(false)
+    if (!r.ok) expect(r.error).toContain('prevenicion')
+
+    // validarResponderPrevenicion
+    expect(validarResponderPrevenicion(s, 'A')).toBeNull()
+    expect(validarResponderPrevenicion(s, 'B')).toContain('no es tu turno')
+  })
+
+  it('heurística del bot: prevenir solo si es el último vínculo vivo', () => {
+    const { s: sUno } = conEscena('A', true) // 1 vínculo vivo → prevenir
+    expect(elegirPrevenicion(sUno, 'A')).toBe(true)
+
+    let s = estadoMinimo()
+    const v0 = conVinculo(s, 0, 'A')
+    const v1 = conVinculo(v0.s, 1, 'A')
+    s = v1.s
+    expect(elegirPrevenicion(s, 'A')).toBe(false) // 2 vínculos vivos → conservar fuente
   })
 })

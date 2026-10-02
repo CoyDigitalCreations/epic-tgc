@@ -4,9 +4,10 @@ import type { AnyCard, ArcanaCard, CampeonCard, EterCard, MisticaCard, VinculoCa
 export type { AnyCard }
 
 /**
- * Índice cardId → AnyCard sobre ALL_CARDS (60 diseños).
+ * Índice cardId → AnyCard sobre ALL_CARDS.
  * Construido UNA vez al cargar el módulo: getCardMeta no re-indexa por llamada.
- * Fuente única de metadatos: paquetes.ts (ADR-2: el meta vive en shared, no en el estado).
+ * Fuente única de metadatos: seed/PrimerColeccionEfectos.json vía
+ * shared/data/paquetes.ts (ADR-2: el meta vive en shared, no en el estado).
  */
 
 const INDICE_CARTAS: Map<string, AnyCard> = new Map(ALL_CARDS.map((c) => [c.id, c]))
@@ -27,9 +28,11 @@ export function registrarCartas(cartas: AnyCard[]): void {
   }
 }
 
-/** true si las facciones A y B comparten al menos una facción. */
+/** true si las facciones A y B comparten al menos una facción.
+ *  Si alguno no tiene facciones (undefined/vacío), es compatible con todo (v2.0). */
 export function faccionesCompartidas(a?: Faccion[], b?: Faccion[]): boolean {
-  if (!a || !b || a.length === 0 || b.length === 0) return false
+  // Si alguno no tiene facciones definidas, es compatible con cualquier otra
+  if (!a || a.length === 0 || !b || b.length === 0) return true
   return a.some((f) => b.includes(f))
 }
 
@@ -66,22 +69,20 @@ export function costeEterHabilidad(card: AnyCard): number {
 }
 
 /**
- * true si el campeón tiene una habilidad que requiere (o puede usar) éter bloqueado.
- * Lee de efectos[] — el sistema unificado.
+ * true si la carta tiene una habilidad que requiere (o puede usar) éter bloqueado.
+ * Lee de efectos[] — el sistema unificado. Genérico: Campeones y Artefactos
+ * (Místicas/Arcanas con costo eter_bloqueado/bloqueo_fijo — Fase 3a).
  */
 export function campeonNecesitaEterBloqueado(card: AnyCard): boolean {
-  if ('efectos' in card && card.efectos) {
-    for (const e of card.efectos) {
-      if (e.costo?.tipo === 'eter_bloqueado') return true
-    }
-  }
-  return false
+  return cartaNecesitaEterBloqueado(card)
 }
 
-/** true si el campeón tiene efecto Continuo (bloquea éter, agota al activar). */
-export function esContinuo(card: AnyCard): boolean {
+/** Alias genérico (Fase 3a): cualquier carta con costo-bloqueado en efectos[]. */
+export function cartaNecesitaEterBloqueado(card: AnyCard): boolean {
   if ('efectos' in card && card.efectos) {
-    return card.efectos.some((e) => e.tipo === 'continuo')
+    for (const e of card.efectos) {
+      if (e.costo?.tipo === 'eter_bloqueado' || e.costo?.tipo === 'bloqueo_fijo') return true
+    }
   }
   return false
 }

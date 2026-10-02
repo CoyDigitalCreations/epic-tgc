@@ -1,5 +1,6 @@
 import { reagruparEter } from './payments'
-import { purgarEfectosTemporales, dispararTrigger } from './efectos'
+import { purgarEfectosTemporales, dispararTrigger, crearOpcionBloqueo } from './efectos'
+import { getCardMeta } from './cards'
 import { resolverFaseEfectos } from './effectRegistry'
 import type { Ctx, GameState, PlayerId } from './types'
 
@@ -33,11 +34,27 @@ export function resolverAlba(s: GameState, ctx: Ctx, jugador: PlayerId): void {
     if (id && s.instances[id]?.entradaEsteTurno) delete s.instances[id].entradaEsteTurno
   }
 
-  // 2. C2: Disparo al-inicio-alba ANTES de reagrupar (instancias = eterPagado del jugador)
+  // 2. C2: Disparo al-inicio-alba ANTES de reagrupar (instancias = eterPagado + vínculos del jugador)
   //    El Pasivo 1A (FB-005/DS-006) evalúa su condición en zona 1A viva.
-  const eterPagadoSnapshot = [...p.eterPagado]
-  if (eterPagadoSnapshot.length > 0) {
-    dispararTrigger(s, ctx, 'al-inicio-alba', jugador, eterPagadoSnapshot)
+  //    Los vínculos con efectos periódicos (FB-025, FB-029, DS-025, DS-029) también se evalúan aquí.
+  const vinculosSnapshot = p.vinculos.filter((id): id is string => id !== null)
+  const albaInstances = [...p.eterPagado, ...vinculosSnapshot]
+  if (albaInstances.length > 0) {
+    dispararTrigger(s, ctx, 'al-inicio-alba', jugador, albaInstances)
+  }
+
+  // Fase 2a — Pasivo 1A data-driven: Éteres en 1A con block_ether sin trigger
+  // (tipo pago — FB-005/DS-006) ofrecen bloquear 1 Éter sin agotar, 1/turno.
+  for (const eterId of p.eterPagado) {
+    const eterInst = s.instances[eterId]
+    const eterMeta = eterInst?.cardId ? getCardMeta(eterInst.cardId) : null
+    if (!eterMeta || !('efectos' in eterMeta) || !eterMeta.efectos) continue
+    const esPasivoBloqueo = eterMeta.efectos.some(
+      (e) => e.efecto === 'block_ether' && !e.trigger && e.tipo === 'pago',
+    )
+    if (!esPasivoBloqueo) continue
+    if (eterInst) eterInst.opcionUsadaEsteTurno = false
+    crearOpcionBloqueo(s, jugador, eterId)
   }
 
   // 3. Reagrupar Éter pagado 1A → 2A (los bloqueados permanecen en el Campeón)

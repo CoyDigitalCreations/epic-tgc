@@ -7,12 +7,20 @@ import { esCampeon, esMistica, esArcana, esVinculo, faccionesCompartidas, getCar
 import { esSingular, sacrificiosRequeridos, copiasEnCampo, campeonesSacrificables } from './campo'
 import { aplicarPago, validarPago, etersParaPagar, type ContextoUso } from './payments'
 import { SLOTS_CAMPEONES, SLOTS_MISTICAS_TACTICAS, SLOTS_ARCANAS_COMBATE, slotAZona } from './zones'
-import { dispararTrigger } from './efectos'
+import { dispararTrigger, condicionCumple } from './efectos'
+import { interpretEffect } from './effectInterpreter'
 import { liberarEterBloqueado, enviarAlCementerio } from './replacements'
 import { abrirCadenaGlobal } from './chain'
-import { validarRequisito } from './effects-guards'
 import type { Action } from './core'
 import type { Ctx } from './types'
+import type { CondicionEfecto } from '../../shared/types'
+
+/** Requisito de juego data-driven: evalúa condicion JSON si la carta tiene. */
+function requisitoDeMeta(state: GameState, meta: ReturnType<typeof getCardMeta>, jugador: PlayerId): string | null {
+  if (!meta || !('condicion' in meta)) return null
+  const condicion = (meta as { condicion?: CondicionEfecto }).condicion
+  return condicionCumple(state, condicion, jugador)
+}
 
 /* ─────────────────────── Helpers compartidos ─────────────────────── */
 
@@ -182,6 +190,16 @@ export function ejecutarJugarMistica(s: GameState, action: Extract<Action, { typ
   ctx.emit({ type: 'carta_invocada', cardInstanceId: id, tipo: 'Mística', slot: action.slot })
   // C5 (change 4): al-jugar-mística se dispara con la instancia YA en campo
   dispararTrigger(s, ctx, 'al-jugar-mistica', s.turno, [id])
+  // Fase 2a: hechizos SIN trigger se resuelven al jugar la mística (data-driven)
+  const inst = s.instances[id]!
+  const meta = inst.cardId ? getCardMeta(inst.cardId) : null
+  if (meta && 'efectos' in meta && meta.efectos) {
+    for (const efecto of meta.efectos) {
+      if (efecto.tipo === 'hechizo' && !efecto.trigger && efecto.efecto) {
+        interpretEffect(s, ctx, inst, efecto, { jugador: s.turno, fromTrigger: true })
+      }
+    }
+  }
   // §9.6: abrir cadena global — el rival puede responder con efectos
   const metaM = getCardMeta(s.instances[id]!.cardId!)
   abrirCadenaGlobal(s, s.turno, { cardInstanceId: id, descripcion: metaM?.name ?? id })
@@ -255,7 +273,7 @@ export function generarAccionesForja(state: GameState, playerId: PlayerId, cardI
       }
       const accion: Action = { type: 'jugar_campeon', cardInstanceId, slot, eterIds, sacrificios }
       if (validarJugarCampeon(state, accion) !== null) return null
-      if (validarRequisito(state, playerId, meta.id) !== null) return null
+      if (requisitoDeMeta(state, meta, playerId) !== null) return null
       return accion
     }
     case 'Mística': {
@@ -265,7 +283,7 @@ export function generarAccionesForja(state: GameState, playerId: PlayerId, cardI
       if (slot === -1) return null
       const accion: Action = { type: 'jugar_mistica', cardInstanceId, slot, eterIds }
       if (validarJugarMistica(state, accion) !== null) return null
-      if (validarRequisito(state, playerId, meta.id) !== null) return null
+      if (requisitoDeMeta(state, meta, playerId) !== null) return null
       return accion
     }
     case 'Arcana': {
