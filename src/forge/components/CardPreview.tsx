@@ -3,7 +3,7 @@ import { useCardStore } from '../store/useCardStore'
 import { exportCardToPng } from '../utils/export-png'
 import { fileToCompressedDataUrl, isValidImageFile } from '../utils/file-to-data-url'
 import { useCardImage } from '../hooks/useCardImage'
-import type { AnyCard, CondicionEfecto } from '../../shared/types'
+import type { AnyCard } from '../../shared/types'
 import { FACCION_COLORS, FACCION_IMAGES, KEYWORDS } from '../../shared/types'
 import { CardFrame, CostGem, EtherHexagon, NamePlate, RuneIcon, StatBadge, TextScroll } from './card-art'
 import { condicionArcanaTexto } from './fields/CondicionArcanaField'
@@ -548,14 +548,13 @@ export function RenderCarta({
 
             case 'Arcana': {
               const parts: React.ReactNode[] = []
-              // New system: read condition from dedicated field, reward from efectos[]
-              const rawCondicion = ('condicion' in c && c.condicion) ? c.condicion : undefined
-              const condicionData = (rawCondicion && typeof rawCondicion === 'object' && 'trigger' in rawCondicion)
-                ? rawCondicion as CondicionEfecto
+              // condicion: campo dedicado estructurado CondicionEfecto (Fase 3e: sin string legacy)
+              const rawCondicion = ('condicion' in c && c.condicion && typeof c.condicion === 'object')
+                ? c.condicion
                 : undefined
-              const condicionText = condicionData
-                ? condicionArcanaTexto(condicionData)
-                : typeof rawCondicion === 'string' ? rawCondicion : getEffectText('pasivo') // legacy fallback
+              const condicionText = rawCondicion
+                ? condicionArcanaTexto(rawCondicion)
+                : getEffectText('pasivo')
               const recompensaText = getEffectText('hechizo')
               const totalLen = (condicionText?.length || 0) + (recompensaText?.length || 0)
 

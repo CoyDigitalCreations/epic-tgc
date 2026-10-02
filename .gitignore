@@ -12,8 +12,14 @@ dist
 dist-ssr
 *.local
 
-# Datos de exportación local (colecciones con arte en base64 — ~130MB)
-seed/
+# Datos de exportación local con arte embebido en base64 (~130MB) — NO trackear.
+# EXCEPCIÓN: PrimerColeccionEfectos.json es la fuente de verdad del motor
+# (66KB, sin arte base64) — DEBE viajar al repo para que Vercel/fresh clone buildee.
+seed/*
+!seed/PrimerColeccionEfectos.json
+
+# Artefactos de debugging locales
+simulacion-partida.txt
 
 # Editor directories and files
 .vscode/*

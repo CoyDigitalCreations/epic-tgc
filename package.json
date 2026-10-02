@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "seed": "tsx scripts/generate-seed.ts",
+    "coverage-map": "tsx scripts/coverage-map.ts",
     "test": "vitest run",
     "test:watch": "vitest"
   },

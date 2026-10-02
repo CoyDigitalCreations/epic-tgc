@@ -110,10 +110,11 @@ export function condicionArcanaTexto(condicion: CondicionEfecto): string {
 }
 
 export function CondicionArcanaField({ value, onChange }: CondicionArcanaFieldProps) {
-  // Handle legacy string values and undefined — normalize to CondicionEfecto
-  const condicion: CondicionEfecto = (value && typeof value === 'object' && 'trigger' in value)
-    ? value as CondicionEfecto
-    : { trigger: 'inicio_choque', condiciones: [] }
+  // value?: CondicionEfecto — normaliza undefined/dato corrupto a un default válido
+  const condicion: CondicionEfecto =
+    value && typeof value === 'object' && 'trigger' in value
+      ? value
+      : { trigger: 'inicio_choque', condiciones: [] }
 
   const updateTrigger = (trigger: string | undefined) => {
     if (trigger) onChange({ ...condicion, trigger: trigger as CondicionEfecto['trigger'] })

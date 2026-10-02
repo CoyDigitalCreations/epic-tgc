@@ -324,10 +324,10 @@ function evaluarAura(
 }
 
 /**
- * Normalización de signo (Fase 3d): Card-Maker puede emitir stats negativos
- * para debuffs (DS-002: ATQ:-1) O positivos (FB-030/DS-011/DS-020/DS-023 —
- * convención documentada: el engine niega "pierde X"). Si debuff y stats ya
- * negativos → usar as-is (evita doble negación = buff).
+ * Normalización de signo (Fase 3e — convención estandarizada): el JSON emite
+ * magnitudes POSITIVAS para debuffs ("pierde X" → stats.ATQ: X). DS-002 se
+ * corrigió de ATQ:-1 a ATQ:1. Este check tolera negativos residuales (dato
+ * corrupto / export Card-Maker viejo) para no convertir un debuff en buff.
  */
 function statsDebuffYaNegativos(efecto: EfectoData): boolean {
   const atq = efecto.stats?.ATQ ?? 0

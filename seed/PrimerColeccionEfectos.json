@@ -1,0 +1,2686 @@
+[
+  {
+    "id": "FB-001",
+    "name": "Éter del Alba Primigenia",
+    "type": "Éter",
+    "rarity": "Rara",
+    "keywords": [],
+    "flavorText": "El primer latido del Éter se sintió en el norte, y las casas abrieron los ojos.",
+    "paqueteId": "estasis",
+    "limiteCopias": "2",
+    "createdAt": "2026-08-03T00:00:00.000Z",
+    "updatedAt": "2026-09-29T05:03:05.407Z",
+    "stats": {
+      "cost": 1
+    },
+    "efectos": [
+      {
+        "tipo": "pago",
+        "efecto": "buff",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 1,
+          "RES": 0
+        },
+        "texto": "Cuando pagues esta carta, un Campeón que controles gana 1 de ATQ, hasta el final del turno.",
+        "duracion": "turno",
+        "trigger": "al_pagar_eter"
+      }
+    ]
+  },
+  {
+    "id": "FB-002",
+    "name": "Éter del Reino Perdido",
+    "type": "Éter",
+    "rarity": "Poco Común",
+    "keywords": [],
+    "flavorText": "Las casas cayeron, pero su memoria no.",
+    "paqueteId": "estasis",
+    "limiteCopias": "1",
+    "createdAt": "2026-08-03T00:00:00.000Z",
+    "updatedAt": "2026-09-29T05:03:18.487Z",
+    "stats": {
+      "cost": 1
+    },
+    "efectos": [
+      {
+        "tipo": "pago",
+        "efecto": "grant_keyword",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "texto": "Cuando pagues esta carta, un Campeón que controles gana Vigor, hasta el final del turno.",
+        "keyword": "Vigor",
+        "duracion": "turno",
+        "trigger": "al_pagar_eter"
+      }
+    ]
+  },
+  {
+    "id": "FB-003",
+    "name": "Éter de la Sangre Eterna",
+    "type": "Éter",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "Lo que corre por sus venas no es sangre: es promesa.",
+    "paqueteId": "estasis",
+    "limiteCopias": "2",
+    "createdAt": "2026-08-03T00:00:00.000Z",
+    "updatedAt": "2026-09-29T05:03:30.287Z",
+    "stats": {
+      "cost": 1
+    },
+    "variantePago": "Gatillo",
+    "efectos": [
+      {
+        "tipo": "pago",
+        "efecto": "draw",
+        "objetivo": {
+          "tipo": "carta",
+          "controlador": "propio",
+          "zona": "mazo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "texto": "Cuando pagues esta carta, roba 1 carta de tu mazo.",
+        "trigger": "al_pagar_eter",
+        "cantidad": 1
+      }
+    ]
+  },
+  {
+    "id": "FB-004",
+    "name": "Éter del Conducto Roto",
+    "type": "Éter",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "Aún roto, el cristal recuerda cómo cantar.",
+    "paqueteId": "estasis",
+    "limiteCopias": "2",
+    "createdAt": "2026-08-03T00:00:00.000Z",
+    "updatedAt": "2026-09-29T05:04:09.856Z",
+    "stats": {
+      "cost": 1
+    },
+    "variantePago": "Gatillo",
+    "efectos": [
+      {
+        "tipo": "pago",
+        "efecto": "buff",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 2
+        },
+        "texto": "Cuando pagues esta carta, un Campeón que controles gana 2 de RES, hasta el final del turno.",
+        "trigger": "al_pagar_eter",
+        "duracion": "turno"
+      }
+    ]
+  },
+  {
+    "id": "FB-005",
+    "name": "Éter de la Voz de las Casas",
+    "type": "Éter",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "Cada hermana es la voz de una casa que ya no existe.",
+    "paqueteId": "estasis",
+    "limiteCopias": "2",
+    "createdAt": "2026-08-03T00:00:00.000Z",
+    "updatedAt": "2026-09-29T05:04:33.760Z",
+    "stats": {
+      "cost": 1
+    },
+    "variantePago": "Pasivo",
+    "efectos": [
+      {
+        "tipo": "pago",
+        "efecto": "block_ether",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "campo",
+          "filtros": {
+            "puedeBloquearEter": true
+          }
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "texto": "Bloquea 1 Éter de tu Reserva sobre un Campeón que pueda recibir éter bloqueado que controles."
+      }
+    ]
+  },
+  {
+    "id": "FB-006",
+    "name": "Éter del Cristal Huérfano",
+    "type": "Éter",
+    "rarity": "Rara",
+    "keywords": [],
+    "flavorText": "Ninguna casa las reclamó. El Éter sí.",
+    "paqueteId": "estasis",
+    "limiteCopias": "1",
+    "createdAt": "2026-08-03T00:00:00.000Z",
+    "updatedAt": "2026-09-29T05:04:43.456Z",
+    "stats": {
+      "cost": 1
+    },
+    "variantePago": "Gatillo",
+    "efectos": [
+      {
+        "tipo": "pago",
+        "texto": "Cuando pagues esta carta, devuelve 1 Éter de la zona de pago a tu Reserva.",
+        "trigger": "al_pagar_eter",
+        "efecto": "return_ether",
+        "objetivo": {
+          "tipo": "eter",
+          "controlador": "propio",
+          "zona": "pagado",
+          "zonaDestino": "reserva"
+        },
+        "cantidad": 1
+      }
+    ]
+  },
+  {
+    "id": "FB-007",
+    "name": "Éter de la Primogénita",
+    "type": "Éter",
+    "rarity": "Épica",
+    "keywords": [],
+    "flavorText": "La primera en fusionarse. La que marcó el camino.",
+    "paqueteId": "estasis",
+    "limiteCopias": "1",
+    "createdAt": "2026-08-03T00:00:00.000Z",
+    "updatedAt": "2026-09-03T23:46:08.738Z",
+    "stats": {
+      "cost": 1
+    },
+    "efectos": [
+      {
+        "tipo": "bloqueo",
+        "efecto": "buff",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 1,
+          "RES": 0
+        },
+        "texto": "Mientras esté bloqueado, el Campeón que tenga este Éter gana +1 de ATQ."
+      }
+    ]
+  },
+  {
+    "id": "FB-008",
+    "name": "Éter del Despertar",
+    "type": "Éter",
+    "rarity": "Poco Común",
+    "keywords": [],
+    "flavorText": "Cuando el cristal despierta, la hija despierta con él.",
+    "paqueteId": "estasis",
+    "limiteCopias": "2",
+    "createdAt": "2026-08-03T00:00:00.000Z",
+    "updatedAt": "2026-09-29T05:05:47.218Z",
+    "stats": {
+      "cost": 1
+    },
+    "efectos": [
+      {
+        "tipo": "bloqueo",
+        "efecto": "grant_keyword",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "texto": "Mientras esté bloqueado, el Campeón que tenga este Éter gana Inmortal.",
+        "keyword": "Inmortal"
+      }
+    ]
+  },
+  {
+    "id": "FB-009",
+    "name": "Éter de la Última Casa",
+    "type": "Éter",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "La última en caer no fue la más débil: fue la que resistió.",
+    "paqueteId": "estasis",
+    "limiteCopias": "2",
+    "createdAt": "2026-08-03T00:00:00.000Z",
+    "updatedAt": "2026-09-29T05:06:06.106Z",
+    "stats": {
+      "cost": 1
+    },
+    "efectos": [
+      {
+        "tipo": "bloqueo",
+        "texto": "Mientras esté bloqueado, el Campeón que tenga este Éter gana 1 de RES.",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "campo"
+        },
+        "efecto": "buff",
+        "stats": {
+          "RES": 1
+        },
+        "zonaActivacion": "bloqueo"
+      }
+    ]
+  },
+  {
+    "id": "FB-010",
+    "name": "Aurora, La Primogénita",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [
+      "Inmortal"
+    ],
+    "flavorText": "No somos hijas de ningún reino. Somos el Reino.",
+    "paqueteId": "estasis",
+    "limiteCopias": "1",
+    "createdAt": "2026-08-03T00:00:00.000Z",
+    "updatedAt": "2026-09-29T05:06:58.179Z",
+    "facciones": [
+      "Orden"
+    ],
+    "esencia": "Céleste",
+    "roles": [
+      "Soberano"
+    ],
+    "catHabilidad": [
+      "Comandante",
+      "Singular"
+    ],
+    "stats": {
+      "cost": 4,
+      "poder": 9,
+      "resistencia": 9
+    },
+    "disparoAgota": "No",
+    "disparoUnSoloUso": "No",
+    "efectos": [
+      {
+        "tipo": "disparo",
+        "efecto": "destroy",
+        "objetivo": {
+          "tipo": "mistica_arcana",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "texto": "Puedes pagar 2 Éter, destruye 1 Mística o Arcana que controla el rival, una vez por turno.",
+        "duracion": "1_por_turno",
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 2
+        }
+      },
+      {
+        "tipo": "continuo",
+        "efecto": "steal_champion",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "texto": "Bloquea 4 Éter, toma control de 1 un Campeón que controla el rival, mientras ese Éter esté bloqueado, Al inicio de tu Alba reagrupa el Éter usado por este efecto.",
+        "duracion": "mientras_ester_bloqueado",
+        "costo": {
+          "tipo": "bloqueo_fijo",
+          "cantidad": 4
+        },
+        "reagrupar": {
+          "fase": "alba",
+          "turno": "propio"
+        }
+      }
+    ],
+    "efectoComandante": {
+      "tipo": "pasivo",
+      "efecto": "buff",
+      "texto": "Todos tus Campeones ganan 2 de ATQ y 2 de RES.",
+      "stats": {
+        "ATQ": 2,
+        "RES": 2
+      },
+      "costo": {},
+      "objetivo": {
+        "tipo": "todos_campeones_propios",
+        "controlador": "propio",
+        "zona": "campo"
+      }
+    }
+  },
+  {
+    "id": "FB-011",
+    "name": "Vaela, Sed de Alba",
+    "type": "Campeón",
+    "rarity": "Común",
+    "keywords": [
+      "Carga"
+    ],
+    "flavorText": "Ataca antes de que el alba termine de cantar.",
+    "paqueteId": "estasis",
+    "limiteCopias": "3",
+    "createdAt": "2026-08-03T00:00:00.000Z",
+    "updatedAt": "2026-09-29T05:07:17.147Z",
+    "facciones": [
+      "Orden"
+    ],
+    "esencia": "Céleste",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Efecto"
+    ],
+    "stats": {
+      "cost": 2,
+      "poder": 5,
+      "resistencia": 3
+    },
+    "efectos": [
+      {
+        "tipo": "pasivo",
+        "efecto": "mover",
+        "objetivo": {
+          "tipo": "eter",
+          "controlador": "rival",
+          "zona": "reserva",
+          "zonaDestino": "pagado",
+          "controladorDestino": "rival"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "texto": "Al matar en combate, puedes mover 1 Éter que controla el rival de la Reserva a la zona de pago del rival.",
+        "trigger": "al_matar_en_combate"
+      }
+    ]
+  },
+  {
+    "id": "FB-012",
+    "name": "Mira, Cristal Huérfano",
+    "type": "Campeón",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "Recupera lo que otros dan por perdido.",
+    "paqueteId": "estasis",
+    "limiteCopias": "3",
+    "createdAt": "2026-08-03T00:00:00.000Z",
+    "updatedAt": "2026-09-29T05:07:54.116Z",
+    "facciones": [
+      "Orden"
+    ],
+    "esencia": "Céleste",
+    "roles": [
+      "Éter"
+    ],
+    "catHabilidad": [
+      "Efecto"
+    ],
+    "stats": {
+      "cost": 2,
+      "poder": 4,
+      "resistencia": 4
+    },
+    "efectos": [
+      {
+        "tipo": "pasivo",
+        "efecto": "tutor",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "cementerio",
+          "zonaDestino": "mano",
+          "filtros": {
+            "faccion": "Orden",
+            "esencia": "Céleste"
+          }
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "texto": "Al ser enviada al Cementerio desde cualquier zona, puedes buscar 1 Campeón de facción Orden de esencia Céleste de tu Cementerio y agregalo a tu mano.",
+        "trigger": "al_ser_enviado_al_cementerio",
+        "triggerZona": "cualquier_zona"
+      }
+    ]
+  },
+  {
+    "id": "FB-013",
+    "name": "Seraphina, Voz de las Casas",
+    "type": "Campeón",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "Sus palabras aún resuenan en las ruinas de las casas.",
+    "paqueteId": "estasis",
+    "limiteCopias": "3",
+    "createdAt": "2026-08-03T00:00:00.000Z",
+    "updatedAt": "2026-09-20T04:17:50.942Z",
+    "facciones": [
+      "Orden"
+    ],
+    "esencia": "Espectro",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Efecto"
+    ],
+    "stats": {
+      "cost": 3,
+      "poder": 4,
+      "resistencia": 3
+    },
+    "disparoAgota": true,
+    "disparoUnSoloUso": true,
+    "efectos": [
+      {
+        "tipo": "disparo",
+        "efecto": "toggle_exhaust",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "texto": "Puedes pagar 3 Éter, cambia el agotamiento de un Campeón que controles, una vez por turno.",
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 3
+        },
+        "duracion": "1_por_turno"
+      }
+    ]
+  },
+  {
+    "id": "FB-014",
+    "name": "Isolde, Última Casa",
+    "type": "Campeón",
+    "rarity": "Poco Común",
+    "keywords": [
+      "Protector"
+    ],
+    "flavorText": "Muro de carne, promesa de cristal.",
+    "paqueteId": "estasis",
+    "limiteCopias": "2",
+    "createdAt": "2026-08-03T00:00:00.000Z",
+    "updatedAt": "2026-09-29T05:08:34.741Z",
+    "facciones": [
+      "Orden"
+    ],
+    "esencia": "Céleste",
+    "roles": [
+      "Soporte"
+    ],
+    "catHabilidad": [
+      "Efecto"
+    ],
+    "stats": {
+      "cost": 3,
+      "poder": 3,
+      "resistencia": 7
+    },
+    "disparoAgota": true,
+    "disparoUnSoloUso": true,
+    "efectos": [
+      {
+        "tipo": "disparo",
+        "efecto": "destroy",
+        "objetivo": {
+          "tipo": "mistica_arcana",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "texto": "Puedes pagar 2 Éter, destruye 1 Mística o Arcana que controla el rival, una vez por turno.",
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 2
+        },
+        "duracion": "1_por_turno"
+      }
+    ]
+  },
+  {
+    "id": "FB-015",
+    "name": "Elena, Despertar del Éter",
+    "type": "Campeón",
+    "rarity": "Poco Común",
+    "keywords": [
+      "Recarga"
+    ],
+    "flavorText": "El Éter que la despierta también la alimenta.",
+    "paqueteId": "estasis",
+    "limiteCopias": "2",
+    "createdAt": "2026-08-03T00:00:00.000Z",
+    "updatedAt": "2026-09-29T05:18:22.728Z",
+    "facciones": [
+      "Orden"
+    ],
+    "esencia": "Céleste",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Efecto"
+    ],
+    "stats": {
+      "cost": 3,
+      "poder": 3,
+      "resistencia": 0
+    },
+    "efectos": [
+      {
+        "tipo": "continuo",
+        "efecto": "double_attack",
+        "objetivo": {
+          "tipo": "self"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "texto": "Bloquea 3 Éter, esta carta puede declarar 2 veces ataque, mientras ese Éter esté bloqueado.",
+        "costo": {
+          "tipo": "bloqueo_fijo",
+          "cantidad": 3
+        },
+        "duracion": "mientras_ester_bloqueado"
+      }
+    ],
+    "variante": "normal"
+  },
+  {
+    "id": "FB-016",
+    "name": "Cassandra, Vigía del Reino Perdido",
+    "type": "Campeón",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "Vio caer su reino y juró que el próximo no caerá.",
+    "paqueteId": "estasis",
+    "limiteCopias": "3",
+    "createdAt": "2026-08-03T00:00:00.000Z",
+    "updatedAt": "2026-09-29T05:20:29.050Z",
+    "facciones": [
+      "Orden"
+    ],
+    "esencia": "Espectro",
+    "roles": [
+      "Soporte"
+    ],
+    "catHabilidad": [
+      "Efecto"
+    ],
+    "stats": {
+      "cost": 4,
+      "poder": 3,
+      "resistencia": 5
+    },
+    "disparoAgota": false,
+    "disparoUnSoloUso": false,
+    "efectos": [
+      {
+        "tipo": "continuo",
+        "efecto": "toggle_exhaust",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "texto": "Al ser invocada, bloquea 4 Éter, cambia el agotamiento de un Campeón que controla el rival, mientras ese Éter esté bloqueado.",
+        "costo": {
+          "tipo": "bloqueo_fijo",
+          "cantidad": 4
+        },
+        "duracion": "mientras_ester_bloqueado",
+        "trigger": "al_invocar"
+      }
+    ]
+  },
+  {
+    "id": "FB-017",
+    "name": "Nymeria, Conducto Roto",
+    "type": "Campeón",
+    "rarity": "Poco Común",
+    "keywords": [],
+    "flavorText": "Rompe lo que ata. Libera lo que fue tomado.",
+    "paqueteId": "estasis",
+    "limiteCopias": "2",
+    "createdAt": "2026-08-03T00:00:00.000Z",
+    "updatedAt": "2026-09-20T04:19:59.201Z",
+    "facciones": [
+      "Orden"
+    ],
+    "esencia": "Espectro",
+    "roles": [
+      "Éter"
+    ],
+    "catHabilidad": [
+      "Efecto"
+    ],
+    "stats": {
+      "cost": 4,
+      "poder": 4,
+      "resistencia": 5
+    },
+    "disparoAgota": true,
+    "disparoUnSoloUso": true,
+    "efectos": [
+      {
+        "tipo": "disparo",
+        "efecto": "mover",
+        "objetivo": {
+          "tipo": "eter",
+          "controlador": "rival",
+          "zona": "bloqueado",
+          "zonaDestino": "pagado"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "texto": "Puedes pagar 2 Éter, mueve 1 Éter que controla el rival bloqueado a su zona de pago, hasta la próxima Alba del oponente, negando su efecto.",
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 2
+        },
+        "cantidad": 1,
+        "sinActivarEfecto": true,
+        "duracion": "hasta_alba_oponente"
+      }
+    ]
+  },
+  {
+    "id": "FB-018",
+    "name": "Rowena, Vínculo Eterno",
+    "type": "Campeón",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "El vínculo es la vida. Nadie lo tocará.",
+    "paqueteId": "estasis",
+    "limiteCopias": "3",
+    "createdAt": "2026-08-03T00:00:00.000Z",
+    "updatedAt": "2026-09-29T05:25:08.295Z",
+    "facciones": [
+      "Orden"
+    ],
+    "esencia": "Céleste",
+    "roles": [
+      "Soporte"
+    ],
+    "catHabilidad": [
+      "Efecto"
+    ],
+    "stats": {
+      "cost": 4,
+      "poder": 3,
+      "resistencia": 6
+    },
+    "efectos": [
+      {
+        "tipo": "pasivo",
+        "efecto": "prevent_destroy",
+        "objetivo": {
+          "tipo": "vinculo",
+          "controlador": "propio",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "texto": "Cuando un Vínculo que controles fuera a ser destruido, puedes enviar esta carta a tu exilio, previniendo la destrucción de ese vínculo.",
+        "trigger": "cuando_vinculo_seria_destruido",
+        "costo": {
+          "tipo": "exile_self"
+        }
+      }
+    ]
+  },
+  {
+    "id": "FB-019",
+    "name": "Heredad del Alba",
+    "type": "Mística",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "Lo que la casa construyó, la casa reclama.",
+    "paqueteId": "estasis",
+    "limiteCopias": "3",
+    "createdAt": "2026-08-03T00:00:00.000Z",
+    "updatedAt": "2026-09-24T05:20:42.139Z",
+    "stats": {
+      "cost": 2
+    },
+    "efectos": [
+      {
+        "tipo": "hechizo",
+        "efecto": "return_hand",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo",
+          "filtros": {
+            "atqMax": 5
+          }
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "texto": "Devuelve a la mano de su dueño 1 un Campeón ATQ 5 o menos que controla el rival."
+      }
+    ]
+  },
+  {
+    "id": "FB-020",
+    "name": "Lamento de las Casas",
+    "type": "Mística",
+    "rarity": "Común",
+    "keywords": [
+      "Artefacto"
+    ],
+    "flavorText": "El dolor de una casa es el poder de otra.",
+    "paqueteId": "estasis",
+    "limiteCopias": "3",
+    "createdAt": "2026-08-03T00:00:00.000Z",
+    "updatedAt": "2026-09-29T00:47:03.948Z",
+    "stats": {
+      "cost": 1
+    },
+    "efectos": [
+      {
+        "tipo": "hechizo",
+        "efecto": "buff",
+        "objetivo": {
+          "tipo": "equipped_champion",
+          "controlador": "propio",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 2,
+          "RES": 0
+        },
+        "texto": "Puedes bloquear hasta un máximo de 3 Éter (Max. 3), el Campeón equipado con esta carta gana 2 de ATQ por cada Éter bloqueado.",
+        "costo": {
+          "tipo": "eter_bloqueado",
+          "cantidad": 3
+        },
+        "buffPerBlockedEther": true
+      }
+    ]
+  },
+  {
+    "id": "FB-021",
+    "name": "Marcha de las Primeras",
+    "type": "Mística",
+    "rarity": "Común",
+    "keywords": [
+      "Presteza"
+    ],
+    "flavorText": "Unidas por la sangre y el Éter, no hay muro que las detenga.",
+    "paqueteId": "estasis",
+    "limiteCopias": "3",
+    "createdAt": "2026-08-03T00:00:00.000Z",
+    "updatedAt": "2026-09-20T04:23:33.301Z",
+    "stats": {
+      "cost": 3
+    },
+    "efectos": [
+      {
+        "tipo": "hechizo",
+        "efecto": "negar",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "texto": "Niega la activación del efecto de un Campeón que controla el rival.",
+        "tipoNegacion": "activacion"
+      }
+    ]
+  },
+  {
+    "id": "FB-022",
+    "name": "Último Refugio",
+    "type": "Mística",
+    "rarity": "Común",
+    "keywords": [
+      "Fugaz"
+    ],
+    "flavorText": "Cuando todo cae, queda el juramento.",
+    "paqueteId": "estasis",
+    "limiteCopias": "3",
+    "createdAt": "2026-08-03T00:00:00.000Z",
+    "updatedAt": "2026-09-20T04:24:17.470Z",
+    "stats": {
+      "cost": 3
+    },
+    "efectos": [
+      {
+        "tipo": "hechizo",
+        "efecto": "copy",
+        "objetivo": {
+          "tipo": "mistica_arcana",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "texto": "Puedes bloquear hasta un máximo de 3 Éter (Max. 3), copia el efecto de hechizo, el efecto continuo y la recompensa de una Mística o Arcana que controla el rival, mientras ese Éter esté bloqueado.",
+        "duracion": "mientras_ester_bloqueado",
+        "costo": {
+          "tipo": "eter_bloqueado",
+          "cantidad": 3
+        },
+        "copyAttributes": [
+          "mistica_hechizo",
+          "mistica_continuo",
+          "arcana_recompensa"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "FB-023",
+    "name": "El Reino Perdido",
+    "type": "Arcana",
+    "rarity": "Rara",
+    "keywords": [],
+    "flavorText": "El trono vacío aún exige respuestas.",
+    "paqueteId": "estasis",
+    "limiteCopias": "3",
+    "createdAt": "2026-08-03T00:00:00.000Z",
+    "updatedAt": "2026-09-24T05:23:08.788Z",
+    "stats": {
+      "cost": 2
+    },
+    "condicion": {
+      "trigger": "inicio_alba",
+      "condiciones": [
+        {
+          "tipo": "controlar_minimo",
+          "cantidad": 2,
+          "objetivo": {
+            "tipo": "campeon",
+            "controlador": "propio",
+            "filtros": {
+              "conEterBloqueado": true
+            }
+          }
+        }
+      ]
+    },
+    "recompensa": "Roba 2 cartas y un Campeón que controles gana +3 de Poder hasta el final del turno.",
+    "efectos": [
+      {
+        "tipo": "hechizo",
+        "efecto": "draw",
+        "objetivo": {
+          "tipo": "carta",
+          "controlador": "propio",
+          "zona": "mazo",
+          "filtros": {}
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "texto": "Roba 2 carta de tu mazo.",
+        "cantidad": 2
+      }
+    ]
+  },
+  {
+    "id": "FB-024",
+    "name": "Filo del Éter Primigenio",
+    "type": "Arcana",
+    "rarity": "Común",
+    "keywords": [
+      "Artefacto",
+      "Presteza"
+    ],
+    "flavorText": "El cristal no corta: recuerda.",
+    "paqueteId": "estasis",
+    "limiteCopias": "3",
+    "createdAt": "2026-08-03T00:00:00.000Z",
+    "updatedAt": "2026-09-24T05:25:15.643Z",
+    "facciones": [
+      "Orden"
+    ],
+    "stats": {
+      "cost": 2
+    },
+    "recompensa": "Un Campeón que controles gana +2 de ATQ hasta el final del turno. Si destruye a un Campeón que controla el rival este turno, roba 1 carta.\"",
+    "condicion": {
+      "trigger": "inicio_alba",
+      "condiciones": [
+        {
+          "tipo": "controlar_minimo",
+          "cantidad": 2,
+          "objetivo": {
+            "tipo": "campeon",
+            "controlador": "rival"
+          }
+        }
+      ]
+    },
+    "efectos": [
+      {
+        "tipo": "hechizo",
+        "efecto": "buff",
+        "objetivo": {
+          "tipo": "equipped_champion",
+          "controlador": "propio",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 2,
+          "RES": 0
+        },
+        "texto": "El Campeón equipado con esta carta gana 2 de ATQ.",
+        "costo": {
+          "cantidad": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "FB-025",
+    "name": "Primer Juramento",
+    "type": "Vínculo",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "El primero de todos los pactos no se rompe jamás.",
+    "paqueteId": "estasis",
+    "limiteCopias": "1",
+    "createdAt": "2026-08-03T00:00:00.000Z",
+    "updatedAt": "2026-09-20T04:25:45.232Z",
+    "stats": {
+      "cost": 0
+    },
+    "efectos": [
+      {
+        "tipo": "vinculo",
+        "efecto": "block_ether",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "campo",
+          "filtros": {
+            "puedeBloquearEter": true
+          }
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "texto": "Al inicio de tu Alba, puedes bloquear hasta un máximo de 1 Éter (Max. 1), sobre un Campeón que pueda recibir éter bloqueado que controles, una vez por turno.",
+        "trigger": "inicio_alba",
+        "duracion": "1_por_turno",
+        "costo": {
+          "tipo": "eter_bloqueado",
+          "cantidad": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "FB-026",
+    "name": "Heredad de Orden",
+    "type": "Vínculo",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "El norte recuerda a sus hijas.",
+    "paqueteId": "estasis",
+    "limiteCopias": "1",
+    "createdAt": "2026-08-03T00:00:00.000Z",
+    "updatedAt": "2026-09-20T03:46:49.106Z",
+    "stats": {
+      "cost": 0
+    },
+    "efectos": [
+      {
+        "tipo": "vinculo",
+        "efecto": "toggle_exhaust",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "texto": "Al inicio del Choque del rival, cambia el agotamiento de un Campeón que controla el rival.",
+        "trigger": "inicio_choque",
+        "controladorTrigger": "rival"
+      }
+    ]
+  },
+  {
+    "id": "FB-027",
+    "name": "Refugio de las Casas",
+    "type": "Vínculo",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "En la caída, las hermanas se abrazan.",
+    "paqueteId": "estasis",
+    "limiteCopias": "1",
+    "createdAt": "2026-08-03T00:00:00.000Z",
+    "updatedAt": "2026-09-20T04:45:14.270Z",
+    "stats": {
+      "cost": 0
+    },
+    "efectos": [
+      {
+        "tipo": "vinculo",
+        "efecto": "mover",
+        "objetivo": {
+          "tipo": "eter",
+          "controlador": "ambos",
+          "zona": "campo",
+          "zonaDestino": "pagado"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "texto": "Al inicio de tu Alba, mueve hasta 3 Éter en juego a la zona de pago de su dueño, una vez por turno.",
+        "esHasta": true,
+        "cantidad": 3,
+        "duracion": "1_por_turno",
+        "trigger": "inicio_alba"
+      }
+    ]
+  },
+  {
+    "id": "FB-028",
+    "name": "Cristal de la Última Casa",
+    "type": "Vínculo",
+    "rarity": "Poco Común",
+    "keywords": [],
+    "flavorText": "El último fragmento sigue ardiendo.",
+    "paqueteId": "estasis",
+    "limiteCopias": "1",
+    "createdAt": "2026-08-03T00:00:00.000Z",
+    "updatedAt": "2026-09-20T04:52:52.280Z",
+    "stats": {
+      "cost": 0
+    },
+    "efectos": [
+      {
+        "tipo": "vinculo",
+        "efecto": "grant_keyword",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "texto": "Al inicio de la Alba del rival, un Campeón que controles gana Inmortal, una vez por turno.",
+        "duracion": "1_por_turno",
+        "keyword": "Inmortal",
+        "trigger": "inicio_alba",
+        "controladorTrigger": "rival"
+      }
+    ]
+  },
+  {
+    "id": "FB-029",
+    "name": "Voz del Alba",
+    "type": "Vínculo",
+    "rarity": "Poco Común",
+    "keywords": [],
+    "flavorText": "El alba devuelve lo que la noche tomó.",
+    "paqueteId": "estasis",
+    "limiteCopias": "1",
+    "createdAt": "2026-08-03T00:00:00.000Z",
+    "updatedAt": "2026-09-24T05:27:02.124Z",
+    "stats": {
+      "cost": 0
+    },
+    "efectos": [
+      {
+        "tipo": "vinculo",
+        "efecto": "return_hand",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "cementerio",
+          "filtros": {
+            "costeMax": 3
+          }
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "texto": "Al inicio de tu Alba, puedes devolver a la mano de su dueño 1 un Campeón coste 3 o menos de tu Cementerio, una vez por turno.",
+        "trigger": "inicio_alba",
+        "duracion": "1_por_turno"
+      }
+    ]
+  },
+  {
+    "id": "FB-030",
+    "name": "Lamento de la Primogénita",
+    "type": "Vínculo",
+    "rarity": "Rara",
+    "keywords": [],
+    "flavorText": "El lamento de la primera todavía se escucha.",
+    "paqueteId": "estasis",
+    "limiteCopias": "1",
+    "createdAt": "2026-08-03T00:00:00.000Z",
+    "updatedAt": "2026-09-20T04:57:19.829Z",
+    "stats": {
+      "cost": 0
+    },
+    "efectos": [
+      {
+        "tipo": "vinculo",
+        "efecto": "debuff",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo",
+          "filtros": {
+            "seleccionar": {
+              "stat": "resistencia",
+              "orden": "mayor"
+            }
+          }
+        },
+        "stats": {
+          "ATQ": 3,
+          "RES": 3
+        },
+        "texto": "El Campeón con mayor RES que controla el rival pierde 3 de ATQ y 3 de RES, mientras esta carta esté en el campo.",
+        "duracion": "mientras_en_campo"
+      }
+    ]
+  },
+  {
+    "id": "FB-031",
+    "name": "Enviada de las Casas, Voz del Este",
+    "type": "Campeón",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "Cae una enviada; llegan las casas.",
+    "paqueteId": "estasis",
+    "limiteCopias": "3",
+    "createdAt": "2026-08-12T00:00:00.000Z",
+    "updatedAt": "2026-09-29T02:11:25.346Z",
+    "facciones": [
+      "Orden"
+    ],
+    "esencia": "Céleste",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Efecto"
+    ],
+    "stats": {
+      "cost": 2,
+      "poder": 4,
+      "resistencia": 3
+    },
+    "efectos": [
+      {
+        "tipo": "pasivo",
+        "efecto": "tutor",
+        "objetivo": {
+          "tipo": "campeon",
+          "zonaDestino": "mano",
+          "filtros": {
+            "faccion": "Orden",
+            "esencia": "Céleste",
+            "costeMax": 4
+          }
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "texto": "Al ser enviada al Cementerio desde el campo, puedes buscar 1 Campeón de facción Orden coste 4 o menos de esencia Céleste de tu mazo y agregalo a tu mano.",
+        "trigger": "al_ser_enviado_al_cementerio",
+        "triggerZona": "campo",
+        "zonaOrigen": "mazo"
+      }
+    ]
+  },
+  {
+    "id": "FB-032",
+    "name": "Rito del Alba",
+    "type": "Mística",
+    "rarity": "Poco Común",
+    "keywords": [
+      "Artefacto"
+    ],
+    "flavorText": "El alba devuelve lo que la noche escondió.",
+    "paqueteId": "estasis",
+    "limiteCopias": "2",
+    "createdAt": "2026-08-12T00:00:00.000Z",
+    "updatedAt": "2026-09-21T02:14:22.895Z",
+    "stats": {
+      "cost": 2
+    },
+    "efectos": [
+      {
+        "tipo": "hechizo",
+        "efecto": "invocar_y_equipar",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "texto": "Bloquea 4 Éter, invoca un Campeón del Exilio de su dueño y equipa esta carta a ese Campeón, mientras ese Éter esté bloqueado.",
+        "zonaOrigen": "exilio",
+        "duracion": "mientras_ester_bloqueado",
+        "costo": {
+          "tipo": "bloqueo_fijo",
+          "cantidad": 4
+        }
+      }
+    ]
+  },
+  {
+    "id": "DS-001",
+    "name": "Ragnar, Voz del Nudo",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [
+      "Indestructible"
+    ],
+    "flavorText": "El norte canta su Reino. El sur aprieta su Nudo.",
+    "paqueteId": "disonancia",
+    "limiteCopias": "1",
+    "createdAt": "2026-08-03T00:00:00.000Z",
+    "updatedAt": "2026-09-24T05:29:37.077Z",
+    "facciones": [
+      "Caos"
+    ],
+    "esencia": "Abisal",
+    "roles": [
+      "Soberano"
+    ],
+    "catHabilidad": [
+      "Singular",
+      "Comandante"
+    ],
+    "stats": {
+      "cost": 4,
+      "poder": 9,
+      "resistencia": 9
+    },
+    "efectos": [
+      {
+        "tipo": "disparo",
+        "efecto": "destroy",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "texto": "Puedes pagar 4 Éter, destruye 1 Campeón que controla el rival, una vez por turno.",
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 4
+        },
+        "duracion": "1_por_turno",
+        "cantidad": 1
+      },
+      {
+        "tipo": "continuo",
+        "efecto": "grant_keyword",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 4,
+          "RES": 0
+        },
+        "texto": "Bloquea 2 Éter, un Campeón que controles gana Indestructible, mientras ese Éter esté bloqueado, Al inicio de tu Alba reagrupa el Éter usado por este efecto.",
+        "keyword": "Indestructible",
+        "costo": {
+          "tipo": "bloqueo_fijo",
+          "cantidad": 2
+        },
+        "duracion": "mientras_ester_bloqueado",
+        "reagrupar": {
+          "fase": "alba",
+          "turno": "propio"
+        }
+      }
+    ],
+    "efectoComandante": {
+      "tipo": "pasivo",
+      "efecto": "grant_keyword",
+      "stats": {
+        "ATQ": 3
+      },
+      "objetivo": {
+        "tipo": "todos_campeones_propios",
+        "controlador": "propio",
+        "zona": "campo"
+      },
+      "texto": "Todos tus Campeones ganan Indestructible.",
+      "keyword": "Indestructible"
+    }
+  },
+  {
+    "id": "DS-002",
+    "name": "Éter del Nudo",
+    "type": "Éter",
+    "rarity": "Rara",
+    "keywords": [],
+    "flavorText": "El Nudo aprieta todo lo que toca.",
+    "paqueteId": "disonancia",
+    "limiteCopias": "2",
+    "createdAt": "2026-08-03T00:00:00.000Z",
+    "updatedAt": "2026-09-21T00:00:00.000Z",
+    "stats": {
+      "cost": 1
+    },
+    "efectos": [
+      {
+        "tipo": "reserva",
+        "trigger": "ninguno",
+        "efecto": "debuff",
+        "stats": {
+          "ATQ": 1
+        },
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "texto": "Mientras esté en tu Reserva, los Campeones que controla el rival pierden 1 de ATQ."
+      }
+    ]
+  },
+  {
+    "id": "DS-003",
+    "name": "Éter de la Tormenta",
+    "type": "Éter",
+    "rarity": "Poco Común",
+    "keywords": [],
+    "flavorText": "La Tormenta no anuncia su llegada: la sientes.",
+    "paqueteId": "disonancia",
+    "limiteCopias": "1",
+    "createdAt": "2026-08-03T00:00:00.000Z",
+    "updatedAt": "2026-09-21T00:00:00.000Z",
+    "stats": {
+      "cost": 1
+    },
+    "efectos": [
+      {
+        "tipo": "reserva",
+        "trigger": "inicio_choque",
+        "efecto": "grant_keyword",
+        "keyword": "Carga",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "campo"
+        },
+        "texto": "Al inicio de tu Choque, si está en tu Reserva, un Campeón que controlas gana Carga hasta el final del turno.",
+        "duracion": "turno"
+      }
+    ]
+  },
+  {
+    "id": "DS-004",
+    "name": "Éter del Trueno",
+    "type": "Éter",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "El trueno no avisa: llega.",
+    "paqueteId": "disonancia",
+    "limiteCopias": "2",
+    "createdAt": "2026-08-03T00:00:00.000Z",
+    "updatedAt": "2026-09-21T00:00:00.000Z",
+    "stats": {
+      "cost": 1
+    },
+    "efectos": [
+      {
+        "tipo": "pago",
+        "trigger": "al_pagar_eter",
+        "efecto": "rival_discard",
+        "objetivo": {
+          "tipo": "mano",
+          "controlador": "rival",
+          "zona": "mano"
+        },
+        "cantidad": 1,
+        "texto": "Cuando pagues esta carta, el rival pierde 1 carta de su mano al azar."
+      }
+    ]
+  },
+  {
+    "id": "DS-005",
+    "name": "Éter de la Marea",
+    "type": "Éter",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "La marea del sur no retrocede.",
+    "paqueteId": "disonancia",
+    "limiteCopias": "2",
+    "createdAt": "2026-08-03T00:00:00.000Z",
+    "updatedAt": "2026-09-21T00:00:00.000Z",
+    "stats": {
+      "cost": 1
+    },
+    "efectos": [
+      {
+        "tipo": "pago",
+        "trigger": "al_pagar_eter",
+        "efecto": "buff",
+        "stats": {
+          "ATQ": 1
+        },
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "campo"
+        },
+        "texto": "Cuando pagues esta carta para invocar un Campeón, ese Campeón gana 1 de ATQ hasta el final del próximo turno.",
+        "duracion": "n_turnos",
+        "duracionTurnos": 2
+      }
+    ]
+  },
+  {
+    "id": "DS-006",
+    "name": "Éter del Viento",
+    "type": "Éter",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "El viento no pide permiso para moverse.",
+    "paqueteId": "disonancia",
+    "limiteCopias": "2",
+    "createdAt": "2026-08-03T00:00:00.000Z",
+    "updatedAt": "2026-09-22T04:22:48.600Z",
+    "stats": {
+      "cost": 1
+    },
+    "efectos": [
+      {
+        "tipo": "pago",
+        "efecto": "block_ether",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "campo",
+          "filtros": {
+            "puedeBloquearEter": true
+          }
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "texto": "Bloquea 1 Éter de tu Reserva sobre un Campeón que pueda recibir éter bloqueado que controles, una vez por turno.",
+        "duracion": "1_por_turno"
+      }
+    ]
+  },
+  {
+    "id": "DS-007",
+    "name": "Éter del Desgarro",
+    "type": "Éter",
+    "rarity": "Rara",
+    "keywords": [],
+    "flavorText": "Lo que el sur toma, el norte lo llora.",
+    "paqueteId": "disonancia",
+    "limiteCopias": "1",
+    "createdAt": "2026-08-03T00:00:00.000Z",
+    "updatedAt": "2026-09-22T05:28:16.218Z",
+    "stats": {
+      "cost": 1
+    },
+    "efectos": [
+      {
+        "tipo": "pago",
+        "efecto": "mover",
+        "objetivo": {
+          "tipo": "eter",
+          "controlador": "rival",
+          "zona": "reserva",
+          "zonaDestino": "pagado",
+          "controladorDestino": "rival"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "texto": "Cuando pagues esta carta, mueve 1 Éter de la Reserva a la zona de pago del rival.",
+        "trigger": "al_pagar_eter"
+      }
+    ]
+  },
+  {
+    "id": "DS-008",
+    "name": "Éter del Primogénito",
+    "type": "Éter",
+    "rarity": "Épica",
+    "keywords": [],
+    "flavorText": "El primero del sur despertó con el Nudo en el pecho.",
+    "paqueteId": "disonancia",
+    "limiteCopias": "1",
+    "createdAt": "2026-08-03T00:00:00.000Z",
+    "updatedAt": "2026-09-22T18:49:22.302Z",
+    "stats": {
+      "cost": 1
+    },
+    "efectos": [
+      {
+        "tipo": "bloqueo",
+        "efecto": "buff",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "campo"
+        },
+        "stats": {
+          "RES": 1
+        },
+        "texto": "Mientras esté bloqueado, el Campeón que tenga este Éter gana 1 de RES."
+      }
+    ]
+  },
+  {
+    "id": "DS-009",
+    "name": "Éter de la Ruptura",
+    "type": "Éter",
+    "rarity": "Poco Común",
+    "keywords": [],
+    "flavorText": "Nada rompe lo que el Nudo aprieta.",
+    "paqueteId": "disonancia",
+    "limiteCopias": "2",
+    "createdAt": "2026-08-03T00:00:00.000Z",
+    "updatedAt": "2026-09-22T18:48:41.813Z",
+    "stats": {
+      "cost": 1
+    },
+    "efectos": [
+      {
+        "tipo": "bloqueo",
+        "efecto": "grant_keyword",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "texto": "Mientras esté bloqueado, el Campeón que tenga este Éter gana Indestructible.",
+        "keyword": "Indestructible"
+      }
+    ]
+  },
+  {
+    "id": "DS-010",
+    "name": "Éter del Último Trueno",
+    "type": "Éter",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "El último trueno es el que más duele.",
+    "paqueteId": "disonancia",
+    "limiteCopias": "2",
+    "createdAt": "2026-08-03T00:00:00.000Z",
+    "updatedAt": "2026-09-22T18:49:47.863Z",
+    "stats": {
+      "cost": 1
+    },
+    "efectos": [
+      {
+        "tipo": "bloqueo",
+        "efecto": "buff",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 1,
+          "RES": 0
+        },
+        "texto": "Mientras esté bloqueado, el Campeón que tenga este Éter gana 1 de ATQ."
+      }
+    ]
+  },
+  {
+    "id": "DS-011",
+    "name": "Kael, Filo del Nudo",
+    "type": "Campeón",
+    "rarity": "Común",
+    "keywords": [
+      "Carga"
+    ],
+    "flavorText": "El Nudo corta lo que toca.",
+    "paqueteId": "disonancia",
+    "limiteCopias": "3",
+    "createdAt": "2026-08-03T00:00:00.000Z",
+    "updatedAt": "2026-09-22T19:36:31.857Z",
+    "facciones": [
+      "Caos"
+    ],
+    "esencia": "Abisal",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Efecto"
+    ],
+    "stats": {
+      "cost": 2,
+      "poder": 5,
+      "resistencia": 3
+    },
+    "efectos": [
+      {
+        "tipo": "pasivo",
+        "efecto": "debuff",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 1,
+          "RES": 0
+        },
+        "texto": "Al atacar, un Campeón que controla el rival pierde 1 de ATQ.",
+        "trigger": "al_atacar"
+      }
+    ]
+  },
+  {
+    "id": "DS-012",
+    "name": "Draven, Rompecadenas",
+    "type": "Campeón",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "Lo que rompe, lo cobra.",
+    "paqueteId": "disonancia",
+    "limiteCopias": "3",
+    "createdAt": "2026-08-03T00:00:00.000Z",
+    "updatedAt": "2026-09-22T21:05:01.655Z",
+    "facciones": [
+      "Caos"
+    ],
+    "esencia": "Abisal",
+    "roles": [
+      "Éter"
+    ],
+    "catHabilidad": [
+      "Efecto"
+    ],
+    "stats": {
+      "cost": 2,
+      "poder": 4,
+      "resistencia": 4
+    },
+    "efectos": [
+      {
+        "tipo": "pasivo",
+        "trigger": "al_matar_en_combate",
+        "efecto": "return_ether",
+        "objetivo": {
+          "tipo": "eter",
+          "controlador": "rival",
+          "zona": "pagado",
+          "zonaDestino": "reserva",
+          "controladorDestino": "rival"
+        },
+        "zonaDestino": "reserva",
+        "cantidad": 1,
+        "texto": "Al matar en combate, devuelve 1 Éter de la zona de pago a la Reserva del rival."
+      },
+      {
+        "tipo": "disparo",
+        "trigger": "al_activar_habilidad",
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 2
+        },
+        "efecto": "destroy",
+        "objetivo": {
+          "tipo": "mistica",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "texto": "Al activar esta habilidad, puedes pagar 2 Éter, destruye 1 Mística que controla el rival, una vez por turno.",
+        "duracion": "1_por_turno"
+      }
+    ]
+  },
+  {
+    "id": "DS-013",
+    "name": "Varek, Cazador de Agotados",
+    "type": "Campeón",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "El agotado ya está muerto: solo falta cobrar.",
+    "paqueteId": "disonancia",
+    "limiteCopias": "3",
+    "createdAt": "2026-08-03T00:00:00.000Z",
+    "updatedAt": "2026-09-22T21:05:35.592Z",
+    "facciones": [
+      "Caos"
+    ],
+    "esencia": "Abisal",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Efecto"
+    ],
+    "stats": {
+      "cost": 3,
+      "poder": 4,
+      "resistencia": 3
+    },
+    "efectos": [
+      {
+        "tipo": "disparo",
+        "trigger": "al_activar_habilidad",
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 1
+        },
+        "efecto": "destroy",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo",
+          "filtros": {
+            "resMax": 3
+          }
+        },
+        "texto": "Al activar esta habilidad, puedes pagar 1 Éter, destruye 1 Campeón RES 3 o menos que controla el rival, una vez por turno.",
+        "duracion": "1_por_turno"
+      }
+    ]
+  },
+  {
+    "id": "DS-014",
+    "name": "Thane, Voz del Trueno",
+    "type": "Campeón",
+    "rarity": "Poco Común",
+    "keywords": [
+      "Protector"
+    ],
+    "flavorText": "El trueno abre paso a los suyos.",
+    "paqueteId": "disonancia",
+    "limiteCopias": "2",
+    "createdAt": "2026-08-03T00:00:00.000Z",
+    "updatedAt": "2026-09-21T00:00:00.000Z",
+    "facciones": [
+      "Caos"
+    ],
+    "esencia": "Abisal",
+    "roles": [
+      "Soporte"
+    ],
+    "catHabilidad": [
+      "Efecto"
+    ],
+    "stats": {
+      "cost": 3,
+      "poder": 3,
+      "resistencia": 7
+    },
+    "efectos": [
+      {
+        "tipo": "pasivo",
+        "trigger": "ninguno",
+        "efecto": "buff",
+        "stats": {
+          "ATQ": 1
+        },
+        "objetivo": {
+          "tipo": "todos_campeones_propios"
+        },
+        "texto": "Los otros Campeones que controlas ganan 1 de ATQ."
+      }
+    ]
+  },
+  {
+    "id": "DS-015",
+    "name": "Marek, Cosecha del Nudo",
+    "type": "Campeón",
+    "rarity": "Poco Común",
+    "keywords": [
+      "Recarga"
+    ],
+    "flavorText": "Cada nudo que aprieta el norte lo alimenta.",
+    "paqueteId": "disonancia",
+    "limiteCopias": "2",
+    "createdAt": "2026-08-03T00:00:00.000Z",
+    "updatedAt": "2026-09-21T00:00:00.000Z",
+    "facciones": [
+      "Caos"
+    ],
+    "esencia": "Abisal",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Efecto"
+    ],
+    "stats": {
+      "cost": 3,
+      "poder": 5,
+      "resistencia": 4
+    },
+    "efectos": [
+      {
+        "tipo": "pasivo",
+        "trigger": "ninguno",
+        "efecto": "buff",
+        "buffPerBlockedEther": true,
+        "stats": {
+          "ATQ": 1
+        },
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "texto": "Mientras un Campeón que controla el rival tenga al menos 1 Éter bloqueado, esta carta gana 1 de ATQ (máx. +3)."
+      }
+    ]
+  },
+  {
+    "id": "DS-016",
+    "name": "Korr, Viento del Sur",
+    "type": "Campeón",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "El sur empuja a los suyos hacia adelante.",
+    "paqueteId": "disonancia",
+    "limiteCopias": "3",
+    "createdAt": "2026-08-03T00:00:00.000Z",
+    "updatedAt": "2026-09-21T00:00:00.000Z",
+    "facciones": [
+      "Caos"
+    ],
+    "esencia": "Abisal",
+    "roles": [
+      "Soporte"
+    ],
+    "catHabilidad": [
+      "Efecto"
+    ],
+    "stats": {
+      "cost": 3,
+      "poder": 3,
+      "resistencia": 5
+    },
+    "efectos": [
+      {
+        "tipo": "disparo",
+        "trigger": "al_activar_habilidad",
+        "costo": {
+          "tipo": "eter_bloqueado",
+          "cantidad": 1
+        },
+        "efecto": "buff",
+        "stats": {
+          "ATQ": 1
+        },
+        "objetivo": {
+          "tipo": "todos_campeones_propios"
+        },
+        "texto": "Puedes bloquear 1 Éter para que los Campeones que controlas ganen 1 de ATQ mientras esté bloqueado.",
+        "duracion": "mientras_ester_bloqueado"
+      }
+    ]
+  },
+  {
+    "id": "DS-017",
+    "name": "Vorlag, El Que Aprieta",
+    "type": "Campeón",
+    "rarity": "Poco Común",
+    "keywords": [],
+    "flavorText": "El Nudo cobra lo que el norte bloquea.",
+    "paqueteId": "disonancia",
+    "limiteCopias": "2",
+    "createdAt": "2026-08-03T00:00:00.000Z",
+    "updatedAt": "2026-09-24T05:33:27.061Z",
+    "facciones": [
+      "Caos"
+    ],
+    "esencia": "Abisal",
+    "roles": [
+      "Éter"
+    ],
+    "catHabilidad": [
+      "Efecto"
+    ],
+    "stats": {
+      "cost": 4,
+      "poder": 4,
+      "resistencia": 5
+    },
+    "efectos": [
+      {
+        "tipo": "disparo",
+        "efecto": "mover",
+        "objetivo": {
+          "tipo": "eter",
+          "controlador": "rival",
+          "zona": "pagado",
+          "zonaDestino": "reserva"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "texto": "Bloquea 3 Éter, mueve 1 Éter que controla el rival de la zona de pago a tu Reserva, mientras ese Éter esté bloqueado.",
+        "costo": {
+          "tipo": "bloqueo_fijo",
+          "cantidad": 3
+        },
+        "duracion": "mientras_ester_bloqueado"
+      }
+    ]
+  },
+  {
+    "id": "DS-018",
+    "name": "Skarn, Rompevínculos",
+    "type": "Campeón",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "Los vínculos del norte se rompen como el hielo.",
+    "paqueteId": "disonancia",
+    "limiteCopias": "3",
+    "createdAt": "2026-08-03T00:00:00.000Z",
+    "updatedAt": "2026-09-21T00:00:00.000Z",
+    "facciones": [
+      "Caos"
+    ],
+    "esencia": "Abisal",
+    "roles": [
+      "Soporte"
+    ],
+    "catHabilidad": [
+      "Efecto"
+    ],
+    "stats": {
+      "cost": 4,
+      "poder": 3,
+      "resistencia": 6
+    },
+    "efectos": [
+      {
+        "tipo": "pasivo",
+        "trigger": "inicio_choque",
+        "efecto": "destroy",
+        "objetivo": {
+          "tipo": "vinculo",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "texto": "Una vez por turno, al inicio de tu Choque, si controlas otro Campeón, destruye un Vínculo que controla el rival.",
+        "duracion": "1_por_turno"
+      }
+    ]
+  },
+  {
+    "id": "DS-019",
+    "name": "Tormenta del Sur",
+    "type": "Mística",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "La tormenta no negocia: arrasa.",
+    "paqueteId": "disonancia",
+    "limiteCopias": "3",
+    "createdAt": "2026-08-03T00:00:00.000Z",
+    "updatedAt": "2026-09-22T21:06:01.065Z",
+    "facciones": [
+      "Caos"
+    ],
+    "stats": {
+      "cost": 2
+    },
+    "efectos": [
+      {
+        "tipo": "hechizo",
+        "efecto": "destroy",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo",
+          "filtros": {
+            "resMax": 3
+          }
+        },
+        "texto": "Destruye 1 Campeón RES 3 o menos que controla el rival."
+      }
+    ]
+  },
+  {
+    "id": "DS-020",
+    "name": "Grito del Nudo",
+    "type": "Mística",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "El Nudo aprieta: el aliento del rival se acorta.",
+    "paqueteId": "disonancia",
+    "limiteCopias": "3",
+    "createdAt": "2026-08-03T00:00:00.000Z",
+    "updatedAt": "2026-09-22T21:06:58.050Z",
+    "stats": {
+      "cost": 1
+    },
+    "efectos": [
+      {
+        "tipo": "hechizo",
+        "efecto": "debuff",
+        "stats": {
+          "ATQ": 3
+        },
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "texto": "Un Campeón que controla el rival pierde 3 de ATQ, hasta el final del turno.",
+        "duracion": "turno"
+      }
+    ]
+  },
+  {
+    "id": "DS-021",
+    "name": "El Nudo Aprieta",
+    "type": "Mística",
+    "rarity": "Común",
+    "keywords": [
+      "Artefacto"
+    ],
+    "flavorText": "Cada cristal que el norte ancla, el sur lo aprieta.",
+    "paqueteId": "disonancia",
+    "limiteCopias": "3",
+    "createdAt": "2026-08-03T00:00:00.000Z",
+    "updatedAt": "2026-09-22T21:30:39.855Z",
+    "stats": {
+      "cost": 1
+    },
+    "efectos": [
+      {
+        "tipo": "hechizo",
+        "efecto": "buff",
+        "objetivo": {
+          "tipo": "equipped_champion",
+          "controlador": "propio",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 3,
+          "RES": 0
+        },
+        "texto": "El Campeón equipado con esta carta gana 3 de ATQ."
+      }
+    ]
+  },
+  {
+    "id": "DS-022",
+    "name": "Maldición del Sur",
+    "type": "Mística",
+    "rarity": "Común",
+    "keywords": [
+      "Artefacto"
+    ],
+    "flavorText": "El sur no llora a sus muertos: los cobra.",
+    "paqueteId": "disonancia",
+    "limiteCopias": "3",
+    "createdAt": "2026-08-03T00:00:00.000Z",
+    "updatedAt": "2026-09-22T21:40:36.428Z",
+    "stats": {
+      "cost": 3
+    },
+    "efectos": [
+      {
+        "tipo": "hechizo",
+        "efecto": "invocar_y_equipar",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "exilio",
+          "filtros": {
+            "faccion": "Caos",
+            "costeMax": 5
+          }
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "texto": "Puedes pagar 3 Éter, invoca un Campeón de facción Caos de coste 5 éter o menos del Exilio de su dueño y equipa esta carta a ese Campeón.",
+        "zonaOrigen": "exilio",
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 3
+        }
+      }
+    ]
+  },
+  {
+    "id": "DS-023",
+    "name": "El Nudo",
+    "type": "Arcana",
+    "rarity": "Rara",
+    "keywords": [],
+    "flavorText": "El Nudo aprieta cuando el Eje tiembla. Y el Eje siempre tiembla.",
+    "paqueteId": "disonancia",
+    "limiteCopias": "3",
+    "createdAt": "2026-08-03T00:00:00.000Z",
+    "updatedAt": "2026-09-22T21:43:48.000Z",
+    "facciones": [
+      "Caos"
+    ],
+    "stats": {
+      "cost": 3
+    },
+    "condicion": {
+      "trigger": "inicio_choque",
+      "condiciones": [
+        {
+          "tipo": "rival_controla_minimo",
+          "cantidad": 3,
+          "objetivo": {
+            "tipo": "campeon",
+            "controlador": "rival",
+            "filtros": {
+              "conEterBloqueado": true
+            }
+          }
+        }
+      ]
+    },
+    "recompensa": "Un Campeón que controla el rival pierde 3 de RES de forma permanente. Roba 1 carta.",
+    "efectos": [
+      {
+        "tipo": "hechizo",
+        "efecto": "debuff",
+        "stats": {
+          "RES": 3
+        },
+        "duracion": "permanente",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "texto": "Un Campeón que controla el rival pierde 3 de RES, de forma permanente."
+      },
+      {
+        "tipo": "hechizo",
+        "efecto": "draw",
+        "cantidad": 1,
+        "objetivo": {
+          "tipo": "carta"
+        },
+        "texto": "Roba 1 carta."
+      }
+    ]
+  },
+  {
+    "id": "DS-024",
+    "name": "Golpe del Nudo",
+    "type": "Arcana",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "El golpe no recompensa: cobra.",
+    "paqueteId": "disonancia",
+    "limiteCopias": "3",
+    "createdAt": "2026-08-03T00:00:00.000Z",
+    "updatedAt": "2026-09-22T21:44:39.977Z",
+    "stats": {
+      "cost": 1
+    },
+    "condicion": {
+      "trigger": "activacion",
+      "condiciones": [
+        {
+          "tipo": "controlar_minimo",
+          "cantidad": 2,
+          "objetivo": {
+            "tipo": "campeon",
+            "controlador": "propio"
+          }
+        }
+      ]
+    },
+    "recompensa": "Un Campeón que controlas gana 2 de ATQ hasta el final del turno. Si destruye a un Campeón que controla el rival este turno, el rival pierde 1 carta de su mano al azar.",
+    "efectos": [
+      {
+        "tipo": "hechizo",
+        "efecto": "buff",
+        "stats": {
+          "ATQ": 2,
+          "RES": 2
+        },
+        "duracion": "turno",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "campo"
+        },
+        "texto": "Un Campeón que controles gana 2 de ATQ y 2 de RES, hasta el final del turno."
+      }
+    ]
+  },
+  {
+    "id": "DS-025",
+    "name": "Primer Nudo",
+    "type": "Vínculo",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "El primer nudo ató el sur al Caos.",
+    "paqueteId": "disonancia",
+    "limiteCopias": "1",
+    "createdAt": "2026-08-03T00:00:00.000Z",
+    "updatedAt": "2026-09-22T22:00:25.165Z",
+    "stats": {
+      "cost": 0
+    },
+    "efectos": [
+      {
+        "tipo": "vinculo",
+        "trigger": "inicio_alba",
+        "efecto": "buff",
+        "stats": {
+          "ATQ": 2
+        },
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "campo"
+        },
+        "texto": "Al inicio de tu Alba, un Campeón que controles gana 2 de ATQ, hasta el final del turno.",
+        "duracion": "turno"
+      }
+    ]
+  },
+  {
+    "id": "DS-026",
+    "name": "Heredad de Caos",
+    "type": "Vínculo",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "El sur no hereda: arrebata.",
+    "paqueteId": "disonancia",
+    "limiteCopias": "1",
+    "createdAt": "2026-08-03T00:00:00.000Z",
+    "updatedAt": "2026-10-01T23:56:39.123Z",
+    "stats": {
+      "cost": 0
+    },
+    "efectos": [
+      {
+        "tipo": "vinculo",
+        "efecto": "rival_discard",
+        "objetivo": {
+          "tipo": "carta",
+          "controlador": "rival",
+          "zona": "mano"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "texto": "Al inicio de tu Alba, puedes descartar una carta de la mano del rival, una vez por turno.",
+        "duracion": "1_por_turno",
+        "trigger": "inicio_alba"
+      }
+    ]
+  },
+  {
+    "id": "DS-027",
+    "name": "Refugio del Nudo",
+    "type": "Vínculo",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "Lo que el norte pagó, el sur lo devuelve.",
+    "paqueteId": "disonancia",
+    "limiteCopias": "1",
+    "createdAt": "2026-08-03T00:00:00.000Z",
+    "updatedAt": "2026-10-01T23:57:22.156Z",
+    "stats": {
+      "cost": 0
+    },
+    "efectos": [
+      {
+        "tipo": "vinculo",
+        "efecto": "mover",
+        "objetivo": {
+          "tipo": "eter",
+          "controlador": "rival",
+          "zona": "reserva",
+          "zonaDestino": "pagado",
+          "controladorDestino": "rival"
+        },
+        "zonaDestino": "reserva",
+        "cantidad": 2,
+        "esHasta": true,
+        "texto": "Al inicio del Choque del rival, puedes mover hasta 2 Éter que controla el rival de la Reserva a la zona de pago del rival, una vez por turno.",
+        "duracion": "1_por_turno",
+        "trigger": "inicio_choque",
+        "controladorTrigger": "rival"
+      }
+    ]
+  },
+  {
+    "id": "DS-028",
+    "name": "Cristal del Nudo",
+    "type": "Vínculo",
+    "rarity": "Poco Común",
+    "keywords": [],
+    "flavorText": "El cristal del sur no brilla: aguanta.",
+    "paqueteId": "disonancia",
+    "limiteCopias": "1",
+    "createdAt": "2026-08-03T00:00:00.000Z",
+    "updatedAt": "2026-09-29T00:49:28.982Z",
+    "stats": {
+      "cost": 0
+    },
+    "efectos": [
+      {
+        "tipo": "vinculo",
+        "efecto": "grant_keyword",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "texto": "Al inicio de tu Alba, un Campeón que controles puedes ganar Indestructible, hasta la próxima Forja del rival.",
+        "duracion": "hasta_fase",
+        "duracionFase": "forja",
+        "duracionControlador": "rival",
+        "keyword": "Indestructible",
+        "trigger": "inicio_alba"
+      }
+    ]
+  },
+  {
+    "id": "DS-029",
+    "name": "Voz del Nudo",
+    "type": "Vínculo",
+    "rarity": "Poco Común",
+    "keywords": [],
+    "flavorText": "El Nudo no devuelve lo que cobra.",
+    "paqueteId": "disonancia",
+    "limiteCopias": "1",
+    "createdAt": "2026-08-03T00:00:00.000Z",
+    "updatedAt": "2026-09-23T04:29:18.291Z",
+    "stats": {
+      "cost": 0
+    },
+    "efectos": [
+      {
+        "tipo": "vinculo",
+        "efecto": "exile",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "ambos",
+          "zona": "cementerio"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "texto": "Al inicio de tu Alba, puedes exiliar 1 Campeón de cualquier Cementerio, una vez por turno.",
+        "trigger": "inicio_alba",
+        "duracion": "1_por_turno"
+      }
+    ]
+  },
+  {
+    "id": "DS-030",
+    "name": "Grito del Primogénito",
+    "type": "Vínculo",
+    "rarity": "Rara",
+    "keywords": [],
+    "flavorText": "El primer grito del sur todavía rompe.",
+    "paqueteId": "disonancia",
+    "limiteCopias": "1",
+    "createdAt": "2026-08-03T00:00:00.000Z",
+    "updatedAt": "2026-10-02T00:21:14.360Z",
+    "stats": {
+      "cost": 0
+    },
+    "efectos": [
+      {
+        "tipo": "vinculo",
+        "efecto": "buff",
+        "stats": {
+          "RES": 4
+        },
+        "duracion": "mientras_en_campo",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "campo",
+          "filtros": {
+            "seleccionar": {
+              "stat": "resistencia",
+              "orden": "menor"
+            }
+          }
+        },
+        "texto": "El Campeón con menor RES gana 4 de RES, mientras esta carta esté en el campo."
+      }
+    ]
+  },
+  {
+    "id": "DS-031",
+    "name": "Emisario del Nudo, Voz del Sur",
+    "type": "Campeón",
+    "rarity": "Poco Común",
+    "keywords": [],
+    "flavorText": "El Nudo cobra, y el Nudo reparte.",
+    "paqueteId": "disonancia",
+    "limiteCopias": "2",
+    "createdAt": "2026-08-03T00:00:00.000Z",
+    "updatedAt": "2026-09-23T04:37:25.717Z",
+    "facciones": [
+      "Caos"
+    ],
+    "esencia": "Abisal",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Efecto"
+    ],
+    "stats": {
+      "cost": 2,
+      "poder": 4,
+      "resistencia": 3
+    },
+    "efectos": [
+      {
+        "tipo": "pasivo",
+        "trigger": "al_ser_enviado_al_cementerio",
+        "triggerZona": "cualquier_zona",
+        "efecto": "tutor",
+        "cantidad": 1,
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "mazo",
+          "filtros": {
+            "costeMax": 2
+          },
+          "zonaDestino": "mano"
+        },
+        "zonaDestino": "mano",
+        "texto": "Al ser enviada al Cementerio desde cualquier zona, puedes buscar 1 Campeón coste 2 o menos de tu mazo y agregalo a tu mano."
+      }
+    ]
+  },
+  {
+    "id": "DS-032",
+    "name": "El Nudo Desata",
+    "type": "Arcana",
+    "rarity": "Poco Común",
+    "keywords": [],
+    "flavorText": "El Nudo se desata cuando la tormenta aprieta.",
+    "paqueteId": "disonancia",
+    "limiteCopias": "2",
+    "createdAt": "2026-08-03T00:00:00.000Z",
+    "updatedAt": "2026-09-23T04:40:37.001Z",
+    "stats": {
+      "cost": 3
+    },
+    "condicion": {
+      "trigger": "inicio_choque",
+      "condiciones": [
+        {
+          "tipo": "controlar_minimo",
+          "cantidad": 2,
+          "objetivo": {
+            "tipo": "campeon",
+            "controlador": "propio",
+            "filtros": {
+              "conEterBloqueado": true
+            }
+          }
+        }
+      ]
+    },
+    "recompensa": "Agrega de tu cementerio a tu mano 1 carta de coste 3 o menos.",
+    "efectos": [
+      {
+        "tipo": "hechizo",
+        "efecto": "tutor",
+        "cantidad": 1,
+        "objetivo": {
+          "tipo": "carta",
+          "controlador": "propio",
+          "zona": "cementerio",
+          "filtros": {
+            "costeMax": 3
+          },
+          "zonaDestino": "mano"
+        },
+        "zonaDestino": "mano",
+        "texto": "Busca 1 carta coste 3 o menos de tu Cementerio y agregalo a tu mano."
+      }
+    ]
+  },
+  {
+    "id": "DS-033",
+    "name": "Invocación del Sur",
+    "type": "Mística",
+    "rarity": "Rara",
+    "keywords": [],
+    "flavorText": "El sur no llama dos veces.",
+    "paqueteId": "disonancia",
+    "limiteCopias": "1",
+    "createdAt": "2026-08-03T00:00:00.000Z",
+    "updatedAt": "2026-09-23T04:41:34.498Z",
+    "facciones": [
+      "Caos"
+    ],
+    "stats": {
+      "cost": 3
+    },
+    "efectos": [
+      {
+        "tipo": "hechizo",
+        "efecto": "tutor",
+        "cantidad": 1,
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "mazo",
+          "filtros": {
+            "costeMax": 4
+          },
+          "zonaDestino": "mano"
+        },
+        "zonaDestino": "mano",
+        "texto": "Busca 1 Campeón coste 4 o menos de tu mazo y agregalo a tu mano."
+      }
+    ]
+  }
+]
