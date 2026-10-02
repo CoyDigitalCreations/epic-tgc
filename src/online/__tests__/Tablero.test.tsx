@@ -48,9 +48,18 @@ function forjaDeA(): GameState {
 }
 
 describe('Selección de Éter en el tablero 4×7', () => {
-  it.skip('permite elegir los Éteres de la Reserva para pagar y confirma la acción con esos ids', async () => {
+  it('permite elegir los Éteres de la Reserva para pagar y confirma la acción con esos ids', { timeout: 15000 }, async () => {
     const user = userEvent.setup()
-    const estado = forjaDeAConCoste()
+    // Estado determinista: Mística cost 2 (FB-019) en mano + 3 Éteres en Reserva
+    const estado = forjaDeA()
+    estado.instances['inst-mist'] = { cardInstanceId: 'inst-mist', cardId: 'FB-019', owner: 'A' }
+    estado.players.A.mano = ['inst-mist']
+    const eterIds = ['e-pay-0', 'e-pay-1', 'e-pay-2']
+    eterIds.forEach((id) => {
+      estado.instances[id] = { cardInstanceId: id, cardId: 'FB-001', owner: 'A' }
+      if (!estado.players.A.eterReserva.includes(id)) estado.players.A.eterReserva.push(id)
+    })
+
     const vista = visibleState(estado, 'A')
     const acciones = getValidActions(estado, 'A')
     const onAccion = vi.fn()
@@ -65,20 +74,14 @@ describe('Selección de Éter en el tablero 4×7', () => {
       />,
     )
 
-    // 1. Hay al menos un botón "Pagar" (carta con coste en la mano)
+    // 1. Hay un botón "Pagar" (FB-019 en mano con coste 2)
     expect(screen.getAllByRole('button', { name: 'Pagar' }).length).toBeGreaterThan(0)
 
-    // 2. Click en el botón Pagar de la primera carta con coste → abre el selector
+    // 2. Click en Pagar → abre el selector de Éteres de la Reserva
     await user.click(screen.getAllByRole('button', { name: 'Pagar' })[0])
     expect(screen.getByText(/Elegí los Éteres de tu Reserva/)).toBeInTheDocument()
 
-    // Si el Campeón exige sacrificio (Soberano/Emperador), elegir uno antes de pagar
-    const sacrificables = screen
-      .getAllByRole('button')
-      .filter((b) => b.getAttribute('title') && !b.textContent?.includes('aporte'))
-    if (sacrificables.length > 0) await user.click(sacrificables[0])
-
-    // 3. Toggle de Éteres de la Reserva hasta que el pago alcance (Σ aporte ≥ coste)
+    // 3. Toggle Éteres hasta Σ aporte ≥ coste (2) — aporteDe = 1 por Éter
     const confirmar = () => screen.getByRole('button', { name: 'Pagar y jugar' })
     const botonesEter = screen.getAllByRole('button').filter((b) => b.textContent?.includes('aporte'))
     expect(botonesEter.length).toBeGreaterThan(0)
@@ -88,31 +91,33 @@ describe('Selección de Éter en el tablero 4×7', () => {
       titulosElegidos.push(botonesEter[i].getAttribute('title')!)
     }
     expect((confirmar() as HTMLButtonElement).disabled).toBe(false)
+    expect(titulosElegidos.length).toBeGreaterThanOrEqual(2)
 
-    // 4. Confirmar → la acción se ejecuta (el selector de casilla es automático si solo hay 1 slot)
+    // 4. Confirmar → selector de casilla (3A-3C vacío = 3 slots → elegir)
     await user.click(confirmar())
-    // El selector de casilla puede aparecer si hay múltiples slots
-    const slotBtns = screen.queryAllByText(/^2[BCDEF]$/)
-    if (slotBtns.length > 0 && onAccion.mock.calls.length === 0) {
-      await user.click(slotBtns[0])
+    // Click en el BOTÓN de casilla (no en el span de texto)
+    const slotBtn = screen
+      .getAllByRole('button')
+      .find((b) => /^3[ABC]/.test((b.textContent ?? '').trim()))
+    if (slotBtn && onAccion.mock.calls.length === 0) {
+      await user.click(slotBtn)
     }
-    // La acción se ejecuta eventualmente
-    await vi.waitFor(() => expect(onAccion).toHaveBeenCalled(), { timeout: 3000 })
+    await vi.waitFor(() => expect(onAccion).toHaveBeenCalled(), { timeout: 5000 })
     expect(onAccion).toHaveBeenCalledTimes(1)
     const accion = onAccion.mock.calls[0][0] as Action & { eterIds: string[] }
+    expect(accion.type).toBe('jugar_mistica')
     expect(accion.eterIds.length).toBe(titulosElegidos.length)
     for (const id of accion.eterIds) {
       const nombre = getCardMeta(vista.instances[id]?.cardId ?? '')?.name
       expect(titulosElegidos).toContain(nombre)
     }
-    // El selector se cierra tras confirmar
     expect(screen.queryByRole('button', { name: 'Pagar y jugar' })).not.toBeInTheDocument()
   })
 
-  it.skip('permite elegir los Éteres a bloquear sobre un Campeón propio', async () => {
+  it('permite elegir los Éteres a bloquear sobre un Campeón propio', async () => {
     const user = userEvent.setup()
     const estado = forjaDeA()
-    // Campeón con habilidad que necesita éter bloqueado (FB-010 Aurora)
+    // Campeón con habilidad que necesita éter bloqueado (FB-010 Aurora, bloqueo_fijo:4)
     const campeon = ESTASIS_CARDS.find((c) => c.id === 'FB-010')
     expect(campeon).toBeDefined()
     estado.instances['inst-camp'] = { cardInstanceId: 'inst-camp', cardId: campeon!.id, owner: 'A' }
@@ -120,7 +125,10 @@ describe('Selección de Éter en el tablero 4×7', () => {
 
     const vista = visibleState(estado, 'A')
     const acciones = getValidActions(estado, 'A')
-    expect(acciones.some((a) => a.type === 'bloquear_eter' && a.campeonSlot === 0)).toBe(true)
+    // Fase 3a: bloquear_eter usa targetInstanceId (no campeonSlot)
+    expect(
+      acciones.some((a) => a.type === 'bloquear_eter' && a.targetInstanceId === 'inst-camp'),
+    ).toBe(true)
 
     const onAccion = vi.fn()
     render(
@@ -149,9 +157,9 @@ describe('Selección de Éter en el tablero 4×7', () => {
     await user.click(confirmar[confirmar.length - 1])
 
     expect(onAccion).toHaveBeenCalledTimes(1)
-    const accion = onAccion.mock.calls[0][0] as Action & { eterIds: string[]; campeonSlot: number }
+    const accion = onAccion.mock.calls[0][0] as Action & { eterIds: string[]; targetInstanceId: string }
     expect(accion.type).toBe('bloquear_eter')
-    expect(accion.campeonSlot).toBe(0)
+    expect(accion.targetInstanceId).toBe('inst-camp')
     expect(accion.eterIds.length).toBe(1)
     expect(estado.players.A.eterReserva).toContain(accion.eterIds[0])
   })
@@ -431,19 +439,22 @@ describe('Botones de acción en la mano y zoom', () => {
 })
 
 describe('Sacrificio de Campeones (rol Soberano/Emperador)', () => {
-  it.skip('permite elegir qué Campeón sacrificar y lo envía en la acción', async () => {
+  it('permite elegir qué Campeón sacrificar y lo envía en la acción', { timeout: 15000 }, async () => {
     const user = userEvent.setup()
+    // Estado determinista: Aurora (Soberano, cost 4) en mano + Vaela en campo + 4 Éteres
     const estado = forjaDeA()
-    // Vaela (FB-011, Orden) en 2B (slot 0) como sacrificable
     estado.instances['inst-sac'] = { cardInstanceId: 'inst-sac', cardId: 'FB-011', owner: 'A' }
     estado.players.A.campo.campeones[0] = 'inst-sac'
-    // Aurora (FB-010, Soberano Orden, coste 4) en mano
     estado.instances['inst-aurora'] = { cardInstanceId: 'inst-aurora', cardId: 'FB-010', owner: 'A' }
-    estado.players.A.mano.push('inst-aurora')
+    estado.players.A.mano = ['inst-aurora']
+    const eterIds = ['e-sac-0', 'e-sac-1', 'e-sac-2', 'e-sac-3']
+    eterIds.forEach((id) => {
+      estado.instances[id] = { cardInstanceId: id, cardId: 'FB-001', owner: 'A' }
+      if (!estado.players.A.eterReserva.includes(id)) estado.players.A.eterReserva.push(id)
+    })
 
     const vista = visibleState(estado, 'A')
     const acciones = getValidActions(estado, 'A')
-    // El motor genera la acción con sacrificio automático; la UI lo reemplaza por la elección
     const jugar = acciones.find((a) => a.type === 'jugar_campeon' && a.cardInstanceId === 'inst-aurora')
     expect(jugar).toBeDefined()
 
@@ -459,7 +470,7 @@ describe('Sacrificio de Campeones (rol Soberano/Emperador)', () => {
       />,
     )
 
-    // Abrir el selector desde el botón Pagar de Aurora (hermano del div con title)
+    // Abrir el selector: botón Pagar bajo la MiniCard de Aurora en la mano
     const auroras = screen.getAllByTitle('Aurora, La Primogénita')
     const botonAurora = auroras
       .map((el) => el.nextElementSibling)
@@ -468,7 +479,7 @@ describe('Sacrificio de Campeones (rol Soberano/Emperador)', () => {
     await user.click(botonAurora!)
     expect(screen.getByText(/Elegí 1 Campeón de tu campo para sacrificar/)).toBeInTheDocument()
 
-    // Elegir Vaela: la miniatura del selector está envuelta en un <button>
+    // Elegir Vaela como sacrificio (botón del selector con title=Vaela)
     const vaelaSelector = screen
       .getAllByTitle('Vaela, Sed de Alba')
       .find((el) => el.closest('button'))
@@ -484,14 +495,19 @@ describe('Sacrificio de Campeones (rol Soberano/Emperador)', () => {
     expect((confirmar() as HTMLButtonElement).disabled).toBe(false)
 
     await user.click(confirmar())
-    const slotBtns2 = screen.queryAllByText(/^2[BCDEF]$/)
-    if (slotBtns2.length > 0 && onAccion.mock.calls.length === 0) {
-      await user.click(slotBtns2[0])
+    // Slots 2B-2F: click en el BOTÓN de casilla (no en el span de texto)
+    const slotBtn = screen
+      .getAllByRole('button')
+      .find((b) => /^2[BCDEF]/.test((b.textContent ?? '').trim()))
+    if (slotBtn && onAccion.mock.calls.length === 0) {
+      await user.click(slotBtn)
     }
-    await vi.waitFor(() => expect(onAccion).toHaveBeenCalled(), { timeout: 3000 })
+    await vi.waitFor(() => expect(onAccion).toHaveBeenCalled(), { timeout: 5000 })
     expect(onAccion).toHaveBeenCalledTimes(1)
     const accion = onAccion.mock.calls[0][0] as Action & { eterIds: string[]; sacrificios: string[] }
+    expect(accion.type).toBe('jugar_campeon')
     expect(accion.sacrificios).toEqual(['inst-sac'])
+    expect(accion.eterIds.length).toBe(4)
   })
 })
 

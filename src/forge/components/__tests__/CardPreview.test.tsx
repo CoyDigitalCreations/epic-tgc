@@ -125,7 +125,8 @@ describe('CardPreview', () => {
     ).toBeTruthy()
   })
 
-  it.skip('hides cost gem for Éter and Vínculo cards', () => {
+  it('Éter y Vínculo NO muestran la gema de coste de esquina (sinGem); Éter sí muestra el hexágono central', () => {
+    // Éter: sinCoste gem de esquina (hexagono_eter.png) — el valor vive en EtherHexagon central (eter_solo.png)
     useCardStore.setState({
       draft: {
         name: 'SinCoste',
@@ -134,12 +135,28 @@ describe('CardPreview', () => {
         keywords: [],
         flavorText: '',
         stats: { cost: 9 },
-        efectos: [{ tipo: 'reserva', texto: 'No tiene coste visible' }],
+        efectos: [{ tipo: 'reserva', texto: 'No tiene coste de esquina' }],
       },
     })
-    render(<CardPreview />)
-    // Éter should NOT show the cost value
-    expect(screen.queryByText('9')).not.toBeInTheDocument()
+    const { container: eter } = render(<CardPreview />)
+    expect(eter.querySelector('img[src="/hexagono_eter.png"]')).toBeNull()
+    expect(eter.querySelector('img[src="/eter_solo.png"]')).toBeInTheDocument()
+
+    // Vínculo: sin gema de esquina Y sin hexágono central — no muestra coste
+    useCardStore.setState({
+      draft: {
+        name: 'Juramento',
+        type: 'Vínculo',
+        rarity: 'Común',
+        keywords: [],
+        flavorText: '',
+        stats: { cost: 9 },
+        efectos: [{ tipo: 'vinculo', texto: 'Vínculo sin coste visible' }],
+      },
+    })
+    const { container: vinculo } = render(<CardPreview />)
+    expect(vinculo.querySelector('img[src="/hexagono_eter.png"]')).toBeNull()
+    expect(vinculo.querySelector('img[src="/eter_solo.png"]')).toBeNull()
   })
 })
 

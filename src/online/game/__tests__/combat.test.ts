@@ -116,6 +116,22 @@ function aplicar(s: GameState, accion: Action, ctx: Ctx): GameState {
   return r.state
 }
 
+/**
+ * Cierra la cadena 9.6 si quedó abierta (2 pases consecutivos, L1183).
+ * Tras declarar_ataque, si el defensor tiene respondibles (campeones con
+ * disparo no agotados §9.6), la cadena se abre y getValidActions congela
+ * el bloqueo hasta cerrarla. Los tests de §9.3 NO son de cadena: cierran
+ * para llegar al paso bloqueo.
+ */
+function cerrarCadena(s: GameState, ctx: Ctx): GameState {
+  let estado = s
+  for (let i = 0; i < 8; i++) {
+    if (!(estado.combate?.cadena ?? estado.cadena)) return estado
+    estado = aplicar(estado, { type: 'pasar_prioridad' }, ctx)
+  }
+  throw new Error('la cadena 9.6 no se cerró con 8 pases')
+}
+
 const tiposDe = (s: GameState, p: PlayerId): string[] => getValidActions(s, p).map((a) => a.type)
 
 describe('sub-máquina de combate en Choque (9.1, ADR-11)', () => {
@@ -235,11 +251,11 @@ describe('declarar_ataque (9.2)', () => {
   })
 })
 
-describe.skip('declarar_bloqueo (9.3, forzoso)', () => {
+describe('declarar_bloqueo (9.3, forzoso)', () => {
   /**
    * A declara ataques (slots 0..n). `defensa` (opcional) coloca campeones de B
-   * ANTES de declarar: con un enderezado en mesa el paso queda en 'bloqueo'
-   * (sin él, el auto-avance 9.3 salta a 'resolucion' y no hay bloqueo posible).
+   * ANTES de declarar. Si el defensor tiene respondibles (disparo §9.6), la
+   * cadena se abre y se CIERRA aquí para llegar al paso bloqueo de §9.3.
    * El id de cada campeón es determinista: `c-${cardId}-${slot}` (conCampeon).
    */
   function conAtaque(ids: string[], defensa?: (s: GameState) => GameState): { s: GameState; atacantes: string[]; ctx: Ctx } {
@@ -254,7 +270,8 @@ describe.skip('declarar_bloqueo (9.3, forzoso)', () => {
     if (defensa) s = defensa(s)
     const r = applyAction(s, { type: 'declarar_ataque', atacanteIds: idsAtacantes }, ctx)
     if (!r.ok) throw new Error(`declarar_ataque falló: ${r.error}`)
-    return { s: r.state, atacantes: idsAtacantes, ctx }
+    // §9.6: defensor con respondibles → cadena abierta; cerrar para §9.3
+    return { s: cerrarCadena(r.state, ctx), atacantes: idsAtacantes, ctx }
   }
 
   it('ej.2: con 1 bloqueador disponible no se puede dejar el ataque sin bloquear (forzoso)', () => {
@@ -325,20 +342,25 @@ describe.skip('declarar_bloqueo (9.3, forzoso)', () => {
     expect(r.events.some((e) => e.type === 'bloqueo_declarado')).toBe(false)
   })
 
-  it('rechaza asignar un bloqueador agotado o un atacante inexistente', () => {
-    // B: 1 enderezado (evita el auto-avance) + 1 agotado (el que se intenta asignar)
-    const { s, atacantes } = conAtaque([VAELA, CASSANDRA], (st) => {
+  it('rechaza atacante inexistente o bloqueador que no está en el campo', () => {
+    // 1 atacante + 2 bloqueadores (1 enderezado + 1 agotado) → k=1
+    const { s, atacantes } = conAtaque([VAELA], (st) => {
       const listo = conCampeon(st, ISOLDE, 0, { owner: 'B' })
       return conCampeon(listo.s, ROWENA, 1, { owner: 'B', agotado: true }).s
     })
-    const agotadoId = `c-${ROWENA}-1`
     const ctx = crearCtx()
+    // Atacante que no está en la pila de combate → inválido
     expect(
-      applyAction(s, { type: 'declarar_bloqueo', asignaciones: { [atacantes[0]]: agotadoId } }, ctx).ok,
+      applyAction(s, { type: 'declarar_bloqueo', asignaciones: { 'no-existe': 'c-FB-014-0' } }, ctx).ok,
     ).toBe(false)
+    // Bloqueador que no está en el campo de B → inválido
     expect(
-      applyAction(s, { type: 'declarar_bloqueo', asignaciones: { 'no-existe': agotadoId } }, ctx).ok,
+      applyAction(s, { type: 'declarar_bloqueo', asignaciones: { [atacantes[0]]: 'no-existe' } }, ctx).ok,
     ).toBe(false)
+    // Agotados SÍ bloquean (L1098): k=1, asignar SOLO el agotado es válido
+    expect(
+      applyAction(s, { type: 'declarar_bloqueo', asignaciones: { [atacantes[0]]: 'c-FB-018-1' } }, ctx).ok,
+    ).toBe(true)
   })
 })
 

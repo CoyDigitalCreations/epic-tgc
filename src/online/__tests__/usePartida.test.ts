@@ -37,7 +37,11 @@ describe('usePartida', () => {
     expect(result.current.log.some((l) => l.includes('mulligan'))).toBe(true)
   })
 
-  it.skip(
+  // Soak test (NO unit): partida completa humano-vs-bot hasta 20k iteraciones /
+// 30s. Sensible a timing bajo paralelismo de vitest — correr a mano o en e2e:
+//   npx vitest run src/online/__tests__/usePartida.test.ts -t 'partida completa'
+// (descomentar it.skip para habilitar).
+it.skip(
     'una partida completa humano-vs-bot termina sin deadlock (jugadas válidas hasta el final)',
     async () => {
       const { result } = renderHook(() => usePartida(config()))
