@@ -122,13 +122,22 @@ describe('Selección de Éter en el tablero 4×7', () => {
     expect(campeon).toBeDefined()
     estado.instances['inst-camp'] = { cardInstanceId: 'inst-camp', cardId: campeon!.id, owner: 'A' }
     estado.players.A.campo.campeones[0] = 'inst-camp'
+    // Garantizar ≥4 Éteres en Reserva para el bloqueo fijo de Aurora
+    while (estado.players.A.eterReserva.length < 4) {
+      const id = `eter-extra-${estado.players.A.eterReserva.length}`
+      estado.instances[id] = { cardInstanceId: id, cardId: 'FB-001', owner: 'A' }
+      estado.players.A.eterReserva.push(id)
+    }
 
     const vista = visibleState(estado, 'A')
     const acciones = getValidActions(estado, 'A')
     // Fase 3a: bloquear_eter usa targetInstanceId (no campeonSlot)
-    expect(
-      acciones.some((a) => a.type === 'bloquear_eter' && a.targetInstanceId === 'inst-camp'),
-    ).toBe(true)
+    // bloqueo_fijo:4 → UNA acción con los 4 Éteres exactos
+    const accBloqueo = acciones.find((a) => a.type === 'bloquear_eter' && a.targetInstanceId === 'inst-camp')
+    expect(accBloqueo).toBeDefined()
+    if (accBloqueo?.type === 'bloquear_eter') {
+      expect(accBloqueo.eterIds).toHaveLength(4)
+    }
 
     const onAccion = vi.fn()
     render(
@@ -144,24 +153,33 @@ describe('Selección de Éter en el tablero 4×7', () => {
 
     // Botón "Bloquear" bajo el campeón → abre el selector (no ejecuta directo)
     await user.click(screen.getAllByRole('button', { name: 'Bloquear' })[0])
-    expect(screen.getByText(/Elegí los Éteres a bloquear/)).toBeInTheDocument()
+    // Label de bloqueo FIJO: pago exacto
+    expect(screen.getByText(/Bloquea exactamente 4 Éter/)).toBeInTheDocument()
 
-    // Elegir UN éter de la Reserva (botón habilitado del selector) y confirmar
-    const eterCompartido = estado.players.A.eterReserva.find((id) => {
-      const meta = getCardMeta(estado.instances[id].cardId ?? '')
-      return meta !== null
-    })!
-    const nombreEter = getCardMeta(estado.instances[eterCompartido].cardId ?? '')?.name!
-    await user.click(screen.getAllByTitle(nombreEter)[0])
-    const confirmar = screen.getAllByRole('button', { name: 'Bloquear' })
-    await user.click(confirmar[confirmar.length - 1])
+    // Confirmar deshabilitado con 0 Éteres seleccionados
+    let confirmar = screen.getAllByRole('button', { name: 'Bloquear' })
+    expect(confirmar[confirmar.length - 1]).toBeDisabled()
+
+    // Seleccionar 4 Éteres habilitados del selector (botones con título de Éter)
+    const candidatos = screen.getAllByRole('button').filter((b) => {
+      const t = b.getAttribute('title') ?? ''
+      return t.startsWith('Éter') && !b.disabled
+    })
+    expect(candidatos.length).toBeGreaterThanOrEqual(4)
+    for (let i = 0; i < 4; i++) {
+      await user.click(candidatos[i])
+    }
+
+    confirmar = screen.getAllByRole('button', { name: 'Bloquear' })
+    const btnConfirmar = confirmar[confirmar.length - 1]
+    expect(btnConfirmar).not.toBeDisabled()
+    await user.click(btnConfirmar)
 
     expect(onAccion).toHaveBeenCalledTimes(1)
     const accion = onAccion.mock.calls[0][0] as Action & { eterIds: string[]; targetInstanceId: string }
     expect(accion.type).toBe('bloquear_eter')
     expect(accion.targetInstanceId).toBe('inst-camp')
-    expect(accion.eterIds.length).toBe(1)
-    expect(estado.players.A.eterReserva).toContain(accion.eterIds[0])
+    expect(accion.eterIds.length).toBe(4)
   })
 })
 
@@ -713,6 +731,140 @@ describe('Búsqueda de mazo (tutores)', () => {
     await user.click(boton)
     expect(onAccion).toHaveBeenCalledTimes(1)
     expect(onAccion).toHaveBeenCalledWith({ type: 'elegir_objetivo', objetivoId: 'm-ds031' })
+  })
+
+  it('label de campo cuando las opciones están en el campo (no en mazo)', () => {
+    const jugador = (id: 'A' | 'B') => ({
+      id,
+      mano: [],
+      mazo: [],
+      cementerio: [],
+      exilio: [],
+      eterReserva: [],
+      eterPagado: [],
+      campo: {
+        campeones: id === 'A' ? ['cam-a1', 'cam-a2', null, null, null] : [null, null, null, null, null],
+        misticasTacticas: [null, null, null],
+        arcanasCombate: [null, null, null],
+      },
+      vinculos: [null, null, null, null, null, null],
+      mulliganUsado: true,
+    })
+    const estado: GameState = {
+      version: 1,
+      seed: 99,
+      fase: 'forja' as const,
+      turno: 'A' as const,
+      primerJugador: 'A' as const,
+      primerTurno: false,
+      players: { A: jugador('A'), B: jugador('B') },
+      instances: {
+        'cam-a1': { cardInstanceId: 'cam-a1', cardId: 'FB-001', owner: 'A' },
+        'cam-a2': { cardInstanceId: 'cam-a2', cardId: 'FB-002', owner: 'A' },
+      },
+      objetivosPendientes: [
+        {
+          jugador: 'A',
+          instId: 'src-x',
+          trigger: 'al-invocar',
+          opciones: ['cam-a1', 'cam-a2'],
+        },
+      ],
+    }
+    render(
+      <Tablero
+        vista={visibleState(estado, 'A')}
+        acciones={getValidActions(estado, 'A')}
+        leTocaA={true}
+        log={[]}
+        logDetallado={[]}
+        onAccion={vi.fn()}
+        onAbandonar={vi.fn()}
+      />,
+    )
+    expect(screen.getByText(/Elección en campo — elige un Campeón/)).toBeInTheDocument()
+    expect(screen.queryByText(/Búsqueda de mazo/)).not.toBeInTheDocument()
+  })
+
+  it('muestra el nombre de la carta fuente arriba del label de elección', () => {
+    const jugador = (id: 'A' | 'B') => ({
+      id,
+      mano: [],
+      mazo: ['m-ds031'],
+      cementerio: [],
+      exilio: [],
+      eterReserva: [],
+      eterPagado: [],
+      campo: { campeones: [null, null, null, null, null], misticasTacticas: [null, null, null], arcanasCombate: [null, null, null] },
+      vinculos: [null, null, null, null, null, null],
+      mulliganUsado: true,
+    })
+    // Fuente: DS-031 (campeón tutor) — nombre real del JSON
+    const nombreFuente = getCardMeta('DS-031')?.name ?? 'DS-031'
+    const estado: GameState = {
+      version: 1,
+      seed: 5,
+      fase: 'choque' as const,
+      turno: 'A' as const,
+      primerJugador: 'A' as const,
+      primerTurno: false,
+      players: { A: jugador('A'), B: jugador('B') },
+      instances: {
+        'src-ds031': { cardInstanceId: 'src-ds031', cardId: 'DS-031', owner: 'A' },
+        'm-ds031': { cardInstanceId: 'm-ds031', cardId: 'DS-031', owner: 'A' },
+      },
+      objetivosPendientes: [
+        {
+          jugador: 'A',
+          instId: 'src-ds031',
+          trigger: 'al-ser-enviado-al-cementerio',
+          opciones: ['m-ds031'],
+        },
+      ],
+    }
+    render(
+      <Tablero
+        vista={visibleState(estado, 'A')}
+        acciones={getValidActions(estado, 'A')}
+        leTocaA={true}
+        log={[]}
+        logDetallado={[]}
+        onAccion={vi.fn()}
+        onAbandonar={vi.fn()}
+      />,
+    )
+    // Nombre de la fuente visible ARRIBA del label de zona (puede repetir en opciones)
+    expect(screen.getAllByText(nombreFuente).length).toBeGreaterThanOrEqual(1)
+    expect(screen.getByText(/Búsqueda de mazo/)).toBeInTheDocument()
+  })
+})
+
+describe('Log detallado — botón copiar', () => {
+  it('copia todo el log al portapapeles con un click', async () => {
+    const user = userEvent.setup()
+    const writeText = vi.fn().mockResolvedValue(undefined)
+    vi.stubGlobal('navigator', { ...navigator, clipboard: { writeText } })
+
+    const lineas = ['=== PARTIDA SEED 66676 ===', '▶ A ejecuta: pasar_mulligan', '▶ B ejecuta: mulligan']
+    render(
+      <Tablero
+        vista={partidaEnForja(42)}
+        acciones={[]}
+        leTocaA={false}
+        log={[]}
+        logDetallado={lineas}
+        onAccion={vi.fn()}
+        onAbandonar={vi.fn()}
+      />,
+    )
+
+    await user.click(screen.getByRole('button', { name: /log detallado/i }))
+    await user.click(screen.getByRole('button', { name: /copiar/i }))
+
+    expect(writeText).toHaveBeenCalledTimes(1)
+    expect(writeText).toHaveBeenCalledWith(lineas.join('\n'))
+    expect(screen.getByRole('button', { name: /copiado/i })).toBeInTheDocument()
+    vi.unstubAllGlobals()
   })
 })
 

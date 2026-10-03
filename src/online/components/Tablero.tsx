@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
-import { aporteDe, campeonesSacrificables, costeEterHabilidad, faccionesCompartidas, getCardMeta, sacrificiosRequeridos } from '../game'
+import { aporteDe, campeonesSacrificables, costeEterHabilidad, faccionesCompartidas, getCardMeta, sacrificiosRequeridos, esBloqueoFijo, maxEterBloqueado } from '../game'
 import type { Action, CardInstance, GameState, PlayerId } from '../game'
 import { useCardImage } from '../../forge/hooks/useCardImage'
 import { MiniCard, TAMANOS } from './MiniCard'
@@ -121,11 +121,63 @@ function Boton({ accion, onClick, fase }: { accion: Action; onClick: (a: Action)
   )
 }
 
+/** Zonas donde puede estar una instancia (para el label de elegir_objetivo). */
+type ZonaInstancia =
+  | 'mazo' | 'mano' | 'cementerio' | 'exilio'
+  | 'reserva' | 'pagado'
+  | 'campeon' | 'mistica' | 'arcana' | 'vinculo'
+  | 'desconocida'
+
+const ZONA_LABEL: Record<ZonaInstancia, string> = {
+  mazo: 'Búsqueda de mazo — elige una carta',
+  mano: 'Elección en mano — elige una carta',
+  cementerio: 'Elección en cementerio — elige una carta',
+  exilio: 'Elección en exilio — elige una carta',
+  reserva: 'Elección en Reserva de Éter',
+  pagado: 'Elección en Éter pagado',
+  campeon: 'Elección en campo — elige un Campeón',
+  mistica: 'Elección en campo — elige una Mística/Táctica',
+  arcana: 'Elección en campo — elige una Arcana',
+  vinculo: 'Elección en campo — elige un Vínculo',
+  desconocida: 'Elige un objetivo',
+}
+
+/** Ubica una instancia en las zonas (propia o rival — robos/copias). */
+function zonaDeInstancia(vista: GameState, instId: string): ZonaInstancia {
+  for (const pid of ['A', 'B'] as PlayerId[]) {
+    const p = vista.players[pid]
+    if (!p) continue
+    if (p.mazo.includes(instId)) return 'mazo'
+    if (p.mano.includes(instId)) return 'mano'
+    if (p.cementerio.includes(instId)) return 'cementerio'
+    if (p.exilio.includes(instId)) return 'exilio'
+    if (p.eterReserva.includes(instId)) return 'reserva'
+    if (p.eterPagado.includes(instId)) return 'pagado'
+    if (p.campo.campeones.includes(instId)) return 'campeon'
+    if (p.campo.misticasTacticas.includes(instId)) return 'mistica'
+    if (p.campo.arcanasCombate.includes(instId)) return 'arcana'
+    if (p.vinculos.includes(instId)) return 'vinculo'
+  }
+  return 'desconocida'
+}
+
 /**
- * Opción de búsqueda de mazo (mecánica tutor, JSON interpreter): una carta del
- * propio mazo que cumple el filtro del efecto. Muestra arte, nombre, coste
- * y ATQ/RES para que el jugador VEA qué cartas puede elegir (bug reportado:
- * antes eran botones genéricos "elegir_objetivo" sin nombre).
+ * Label del bloque de opciones `elegir_objetivo` según la zona REAL de las
+ * opciones (antes hardcodeaba "Búsqueda de mazo" aunque fueran del campo).
+ * Si todas las opciones están en la misma zona → su label; si es mixto → genérico.
+ */
+function labelOpcionesElegir(vista: GameState, opciones: string[]): string {
+  if (opciones.length === 0) return ZONA_LABEL.desconocida
+  const zonas = opciones.map((id) => zonaDeInstancia(vista, id))
+  const unicas = new Set(zonas)
+  if (unicas.size === 1) return ZONA_LABEL[zonas[0]]
+  return ZONA_LABEL.desconocida
+}
+
+/**
+ * Opción de elegir_objetivo (tutor, negar, retorno, etc.): una carta
+ * seleccionable con arte, nombre, coste y ATQ/RES para que el jugador VEA
+ * qué cartas puede elegir.
  */
 function OpcionTutor({
   inst,
@@ -287,24 +339,59 @@ interface GrillaProps {
   animaciones?: Array<{ tipo: string; zona?: string; jugador?: PlayerId; atacantes?: string[]; cardInstanceId?: string; key: number }>
 }
 
-/** Panel colapsable de log detallado para debugging. */
+/** Panel colapsable de log detallado para debugging, con botón de copiar. */
 function LogDetallado({ lineas }: { lineas: string[] }) {
   const [abierto, setAbierto] = useState(false)
+  const [copiado, setCopiado] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
     if (abierto && scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight
     }
   }, [lineas.length, abierto])
+
+  const copiarLog = async () => {
+    const texto = lineas.join('\n')
+    try {
+      await navigator.clipboard.writeText(texto)
+    } catch {
+      // Fallback para contextos sin clipboard API (http, permisos)
+      const ta = document.createElement('textarea')
+      ta.value = texto
+      ta.style.position = 'fixed'
+      ta.style.left = '-9999px'
+      document.body.appendChild(ta)
+      ta.select()
+      document.execCommand('copy')
+      document.body.removeChild(ta)
+    }
+    setCopiado(true)
+    window.setTimeout(() => setCopiado(false), 2000)
+  }
+
   return (
     <div className="bg-[#0a0a12] border border-card-border rounded-lg p-2">
-      <button
-        onClick={() => setAbierto(!abierto)}
-        className="text-[9px] uppercase tracking-wider text-gray-500 hover:text-gray-300 transition-colors cursor-pointer w-full text-left flex items-center gap-1"
-      >
-        <span className={`text-[8px] transition-transform ${abierto ? 'rotate-90' : ''}`}>▶</span>
-        Log Detallado ({lineas.length})
-      </button>
+      <div className="flex items-center justify-between gap-2">
+        <button
+          onClick={() => setAbierto(!abierto)}
+          className="text-[9px] uppercase tracking-wider text-gray-500 hover:text-gray-300 transition-colors cursor-pointer flex items-center gap-1"
+        >
+          <span className={`text-[8px] transition-transform ${abierto ? 'rotate-90' : ''}`}>▶</span>
+          Log Detallado ({lineas.length})
+        </button>
+        {lineas.length > 0 && (
+          <button
+            onClick={copiarLog}
+            disabled={copiado}
+            title="Copiar todo el log al portapapeles"
+            className="text-[9px] uppercase tracking-wider px-2 py-0.5 rounded transition-colors cursor-pointer
+                       bg-surface-2 hover:bg-card-border text-gray-400 hover:text-gray-200
+                       disabled:text-ether-300 disabled:bg-ether-600/20"
+          >
+            {copiado ? '¡Copiado!' : 'Copiar'}
+          </button>
+        )}
+      </div>
       {abierto && lineas.length > 0 && (
         <div ref={scrollRef} className="mt-1.5 max-h-60 overflow-y-auto font-mono text-[10px] leading-relaxed">
           {lineas.map((linea, i) => (
@@ -770,7 +857,19 @@ export function Tablero({ vista, acciones, leTocaA, logDetallado = [], onAccion,
     setElegidos((prev) => {
       const next = new Set(prev)
       if (next.has(instanceId)) next.delete(instanceId)
-      else next.add(instanceId)
+      else {
+        // Bloqueo fijo: no dejar seleccionar de más (el confirm ya exige el exacto)
+        if (seleccion?.tipo === 'bloquear') {
+          const meta = getCardMeta(seleccion.objetivoCardId)
+          if (meta && esBloqueoFijo(meta)) {
+            const inst = vista.instances[seleccion.targetInstanceId]
+            const actuales = inst?.eterBloqueado?.length ?? 0
+            const requerido = maxEterBloqueado(meta) - actuales
+            if (next.size >= requerido) return prev
+          }
+        }
+        next.add(instanceId)
+      }
       return next
     })
   }
@@ -788,12 +887,21 @@ export function Tablero({ vista, acciones, leTocaA, logDetallado = [], onAccion,
     if (cardId) abrirSelector(acc, cardId)
   }
 
-  /** ¿Se puede confirmar la selección? Pago: Σ aporte ≥ coste (+ sacrificios del rol). Bloqueo: todos de facción compartida. Equipar: siempre. */
+  /** ¿Se puede confirmar la selección? Pago: Σ aporte ≥ coste (+ sacrificios del rol). Bloqueo: fijo=exacto, flexible=>0. Equipar: siempre. */
   const puedeConfirmar = useMemo(() => {
     if (!seleccion) return false
     if (seleccion.tipo === 'equipar') return elegidos.size === 1
     if (elegidos.size === 0) return false
     if (seleccion.tipo === 'bloquear') {
+      const meta = getCardMeta(seleccion.objetivoCardId)
+      if (meta && esBloqueoFijo(meta)) {
+        // "Bloquea X Éter" → pago EXACTO
+        const inst = vista.instances[seleccion.targetInstanceId]
+        const actuales = inst?.eterBloqueado?.length ?? 0
+        const requerido = maxEterBloqueado(meta) - actuales
+        return elegidos.size === requerido
+      }
+      // "hasta X" → al menos 1 (el validador del motor corta el exceso)
       return elegidos.size > 0
     }
     if (seleccion.tipo === 'elegir_slot') {
@@ -907,7 +1015,7 @@ export function Tablero({ vista, acciones, leTocaA, logDetallado = [], onAccion,
   // Acciones generales (no van sobre una carta ni son de la mano)
   const generales = acciones.filter((a) => {
     if (a.type === 'rendirse') return false // va en el header
-    if (a.type === 'elegir_objetivo') return false // búsqueda de mazo: se lista como opciones (OpcionTutor)
+    if (a.type === 'elegir_objetivo') return false // se lista como opciones con label de zona (OpcionTutor)
     if (a.type === 'descartar_carta') return false // va debajo de la carta de la mano
     if (esDeMano(a)) return false // va sobre la carta de la mano
     if (conCarta(a)) return false // va sobre la carta en la pila
@@ -916,10 +1024,15 @@ export function Tablero({ vista, acciones, leTocaA, logDetallado = [], onAccion,
     if (a.type === 'elegir_ruptura' && a.atacanteId !== null) return false // se resume en un botón aparte
     return true
   })
-  /** Búsqueda de mazo (tutor): una acción por carta que cumple el filtro. */
+  /** elegir_objetivo: una acción por carta opción (zona según pendiente). */
   const tutores = acciones.filter(
     (a): a is Extract<Action, { type: 'elegir_objetivo' }> => a.type === 'elegir_objetivo',
   )
+  /** Carta fuente del pendiente actual (para el label: "Enviada de las Casas" + "Búsqueda de mazo"). */
+  const pendienteActual = vista.objetivosPendientes?.[0]
+  const fuenteNombre = pendienteActual
+    ? (getCardMeta(vista.instances[pendienteActual.instId]?.cardId ?? '')?.name ?? null)
+    : null
   const ruptura = acciones.find((a) => a.type === 'elegir_ruptura' && a.atacanteId !== null)
   /** ¿Hay jugadas reales (no solo pasar/rendirse)? Para el hint de "sin jugadas". */
   const hayJugablesSignificativas = acciones.some((a) =>
@@ -1149,11 +1262,16 @@ export function Tablero({ vista, acciones, leTocaA, logDetallado = [], onAccion,
               </div>
             )}
 
-            {/* ── Búsqueda de mazo (tutor): opciones con nombre y arte ── */}
+            {/* ── elegir_objetivo: opciones con nombre y arte ── */}
             {leTocaA && tutores.length > 0 && (
               <div className="mt-2 border border-ether-600/40 rounded-lg p-2 bg-ether-600/10">
+                {fuenteNombre && (
+                  <p className="text-[11px] font-display font-semibold text-ether-200 mb-0.5">
+                    {fuenteNombre}
+                  </p>
+                )}
                 <p className="text-[9px] uppercase tracking-wider text-ether-300 mb-1.5">
-                  Búsqueda de mazo — elige una carta
+                  {labelOpcionesElegir(vista, tutores.map((a) => a.objetivoId))}
                 </p>
                 <div className="flex gap-2 flex-wrap">
                   {tutores.map((a) => {
@@ -1196,7 +1314,16 @@ export function Tablero({ vista, acciones, leTocaA, logDetallado = [], onAccion,
               <p className="text-sm text-gray-200 mb-2">
                 {seleccion.tipo === 'pagar'
                   ? 'Elegí los Éteres de tu Reserva (2A) para pagar:'
-                  : 'Elegí los Éteres a bloquear:'}
+                  : (() => {
+                      const meta = getCardMeta(seleccion.objetivoCardId)
+                      if (meta && esBloqueoFijo(meta)) {
+                        const inst = vista.instances[seleccion.targetInstanceId]
+                        const actuales = inst?.eterBloqueado?.length ?? 0
+                        const requerido = maxEterBloqueado(meta) - actuales
+                        return `Bloquea exactamente ${requerido} Éter(es) sobre ${meta.name}:`
+                      }
+                      return 'Elegí los Éteres a bloquear (hasta el máximo):'
+                    })()}
               </p>
               {yo.eterReserva.length === 0 ? (
                 <p className="text-xs text-gray-500 italic">Tu Reserva está vacía.</p>
