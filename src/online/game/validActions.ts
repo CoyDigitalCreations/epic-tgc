@@ -4,7 +4,7 @@ import type { Action } from './actions'
 import { generarAccionesForja, validarActivarArcana } from './actions'
 import { atacantesElegibles, asignacionForzada, ataquesSinBloquear, rivalDe, tieneKeyword } from './combat'
 import { respondiblesDe } from './chain'
-import { etersParaPagar, maxEterBloqueado } from './payments'
+import { etersParaPagar, maxEterBloqueado, esBloqueoFijo } from './payments'
 import { validarEquiparArtefacto } from './movimientos'
 import type { GameState, PlayerId, CardInstance } from './types'
 
@@ -144,22 +144,36 @@ export function getValidActions(state: GameState, playerId: PlayerId): Action[] 
         if (accion) acciones.push(accion)
       }
       // Bloqueo de Éter (Fase 3a): Campeones y Artefactos (Místicas/Arcanas)
-      // con costo-bloqueado en efectos[]. Una acción por Éter disponible hasta
-      // el máximo (maxEterBloqueado desde payments — única fuente).
+      // con costo-bloqueado en efectos[].
+      // - bloqueo_fijo ("Bloquea X Éter") → UNA acción con el juego EXACTO.
+      // - eter_bloqueado ("hasta X") → una acción por Éter hasta el máximo.
       const generarBloqueos = (targets: { id: string; inst: CardInstance; meta: AnyCard }[]) => {
         for (const t of targets) {
           if (!cartaNecesitaEterBloqueado(t.meta)) continue
           const actuales = t.inst.eterBloqueado?.length ?? 0
           const maxEter = maxEterBloqueado(t.meta)
+          const fijo = esBloqueoFijo(t.meta)
           const disponibles = p.eterReserva.filter((id) => {
             const meta = state.instances[id]?.cardId ? getCardMeta(state.instances[id]!.cardId!) : null
             return meta !== null
           })
-          let generados = actuales
-          for (const eterId of disponibles) {
-            if (generados >= maxEter) break
-            acciones.push({ type: 'bloquear_eter', eterIds: [eterId], targetInstanceId: t.id })
-            generados++
+          if (fijo) {
+            // Pago exacto: arma la acción completa con los Éteres que faltan.
+            const falta = maxEter - actuales
+            if (falta > 0 && disponibles.length >= falta) {
+              acciones.push({
+                type: 'bloquear_eter',
+                eterIds: disponibles.slice(0, falta),
+                targetInstanceId: t.id,
+              })
+            }
+          } else {
+            let generados = actuales
+            for (const eterId of disponibles) {
+              if (generados >= maxEter) break
+              acciones.push({ type: 'bloquear_eter', eterIds: [eterId], targetInstanceId: t.id })
+              generados++
+            }
           }
         }
       }

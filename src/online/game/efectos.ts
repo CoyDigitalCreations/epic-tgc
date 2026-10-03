@@ -40,6 +40,7 @@ export type TriggerEfecto =
   | 'al-ser-destruido-vinculo'
   | 'al-resolver-cadena'
   | 'al-activar-habilidad'
+  | 'al-bloquear-eter'
   | 'activable'
 
 /** Payload de contexto del dispatch (C2+ lo puebla; C1 usa solo `jugador`). */
@@ -398,12 +399,15 @@ export function modificadoresJSONDe(s: GameState, id: string): ModificadoresJSON
   }
 
   // 4. Vínculos de AMBOS jugadores (Fase 3d — FB-030/DS-030): aura mientras_en_campo.
-  //    Los vínculos pueden targetear rivales (FB-030 debuffa rival) o propios (DS-030 buffa propio).
+  //    §5.5 manual: SOLO vínculos DESTRUIDOS (bocaArriba) tienen efectos vigentes.
+  //    Los boca-abajo son solo vida. Los destruidos permanecen boca arriba y
+  //    sus auras se acumulan.
   for (const vincOwner of ['A', 'B'] as PlayerId[]) {
     for (const vincId of s.players[vincOwner].vinculos) {
       if (!vincId) continue
       const vincInst = s.instances[vincId]
       if (!vincInst?.cardId) continue
+      if (vincInst.bocaArriba !== true) continue // §5.5: boca-abajo = sin efectos
       const vincMeta = getCardMeta(vincInst.cardId)
       if (!vincMeta) continue
       if ('efectos' in vincMeta && vincMeta.efectos?.some((e) => esAuraVinculo(e))) {
@@ -635,6 +639,10 @@ export function dispararTrigger(
 
     // 1. PRIORIDAD: JSON interpreter — lee efectos[] de la carta
     const meta = getCardMeta(cardId)
+    // §5.5 manual: Vínculos BOCA ABAJO (vivos) NO tienen efectos vigentes.
+    // Solo los DESTRUIDOS (bocaArriba) firean/auras. Garantía de motor,
+    // no solo de los call sites (phases.ts/partida.ts).
+    if (meta && meta.type === 'Vínculo' && inst.bocaArriba !== true) continue
     if (meta && 'efectos' in meta) {
       // CONDITION CHECK: si la carta tiene condicion JSON cuyo trigger matchea
       // el disparado, evaluar condiciones (§5.4) — data-driven, sin guards.
@@ -654,7 +662,16 @@ export function dispararTrigger(
         if (efectos && Array.isArray(efectos)) {
           const efectoTrigger = triggerMapping[trigger]
           for (const efecto of efectos) {
-            if (efecto.trigger === efectoTrigger && efecto.efecto) {
+            // Match por trigger JSON. 'al-bloquear-eter' (re-dispatch de umbral
+            // Aurora steal_champion) SOLO matchea efectos sin trigger propios
+            // con costo de bloqueo — nunca otros efectos triggerless (destroy, etc.).
+            const esUmbral = trigger === 'al-bloquear-eter'
+            const matchea = esUmbral
+              ? !efecto.trigger &&
+                (efecto.costo?.tipo === 'bloqueo_fijo' || efecto.costo?.tipo === 'eter_bloqueado') &&
+                !!efecto.efecto
+              : efecto.trigger === efectoTrigger && !!efecto.efecto
+            if (matchea && efecto.efecto) {
               // D1 pattern: snapshot pending objectives before interpreter
               const pendientesAntes = s.objetivosPendientes?.length ?? 0
               interpretEffect(s, ctx, inst, efecto, payload)

@@ -19,6 +19,7 @@
 
 import type { Ctx, GameState, PlayerId, Zona } from './types'
 import { enviarAlCementerio } from './replacements'
+import { getCardMeta } from './cards'
 
 /* ───────────────────── Types ───────────────────── */
 
@@ -177,6 +178,33 @@ function ejecutarAccionEfecto(s: GameState, ctx: Ctx, ep: EfectoPendiente): void
       const p = s.players[ep.owner]
       p.eterReserva.push(...eteresVivos)
       ctx.emit({ type: 'eter_reagrupado', jugador: ep.owner, eterIds: eteresVivos })
+      // Steal 'mientras_ester_bloqueado' (Aurora): al liberar el Éter del efecto
+      // termina el robo — retorno condicional al rival si hay slot libre.
+      if (inst.cardId) {
+        const meta = getCardMeta(inst.cardId)
+        const stealEfecto = meta && 'efectos' in meta
+          ? meta.efectos?.find((e) => e.efecto === 'steal_champion')
+          : undefined
+        if (stealEfecto?.duracion === 'mientras_ester_bloqueado') {
+          for (const other of Object.values(s.instances)) {
+            if (other.stolenBy !== ep.fuente) continue
+            const enCampoLadron = s.players[ep.owner].campo.campeones.includes(other.cardInstanceId)
+            if (!enCampoLadron) {
+              delete other.stolenBy
+              continue
+            }
+            const duenoOriginal = other.owner
+            const campoOriginal = s.players[duenoOriginal].campo.campeones
+            const slotLibre = campoOriginal.indexOf(null)
+            if (slotLibre !== -1 && duenoOriginal !== ep.owner) {
+              const idxLadron = s.players[ep.owner].campo.campeones.indexOf(other.cardInstanceId)
+              if (idxLadron !== -1) s.players[ep.owner].campo.campeones[idxLadron] = null
+              campoOriginal[slotLibre] = other.cardInstanceId
+            }
+            delete other.stolenBy
+          }
+        }
+      }
       break
     }
 

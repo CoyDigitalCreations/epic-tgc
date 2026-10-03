@@ -111,20 +111,23 @@ export function ejecutarPasarTurno(s: GameState, ctx: Ctx): void {
       const p = s.players[s.turno]
       const campeones = p.campo.campeones.filter((x): x is string => x !== null)
       const arcanas = p.campo.arcanasCombate.filter((x): x is string => x !== null)
-      const vinculos = p.vinculos.filter((x): x is string => x !== null)
+      // §5.5: solo vínculos destruidos (bocaArriba) tienen efectos vigentes
+      const vinculos = p.vinculos.filter((x): x is string => x !== null && s.instances[x]?.bocaArriba === true)
       const choqueInstances = [...p.eterReserva, ...campeones, ...arcanas, ...vinculos]
       if (choqueInstances.length > 0) {
         dispararTrigger(s, ctx, 'al-inicio-choque', s.turno, choqueInstances)
       }
-      // Fase 3d: vínculos RIVALES con controladorTrigger:'rival' firean EN el
-      // choque del activo (DS-027 "Al inicio del Choque del RIVAL"). Se
+      // Fase 3d: vínculos RIVALES destruidos con controladorTrigger:'rival' firean
+      // EN el choque del activo (DS-027 "Al inicio del Choque del RIVAL"). Se
       // dispatchan con jugador=DUEÑO del vínculo para que "rival" resuelva
       // al activo (perspectiva correcta del efecto).
+      // §5.5: solo bocaArriba (destruidos) — los vivos boca-abajo no firean.
       const rival: PlayerId = s.turno === 'A' ? 'B' : 'A'
       const vinculosRivales = s.players[rival].vinculos.filter((x): x is string => {
         if (!x) return false
         const vInst = s.instances[x]
-        const vMeta = vInst?.cardId ? getCardMeta(vInst.cardId) : null
+        if (!vInst || vInst.bocaArriba !== true) return false
+        const vMeta = vInst.cardId ? getCardMeta(vInst.cardId) : null
         return !!vMeta && 'efectos' in vMeta && !!vMeta.efectos?.some(
           (e) => e.trigger === 'inicio_choque' && e.controladorTrigger === 'rival',
         )

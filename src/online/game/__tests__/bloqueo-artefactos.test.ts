@@ -18,8 +18,9 @@ import type { Action } from '../actions'
 import { getValidActions } from '../validActions'
 import { bloquearEter, validarBloqueo, reagruparEter } from '../payments'
 import { statsDe } from '../efectos'
-import { dispararUmbralBloqueo } from '../effectInterpreter'
+import { dispararUmbralBloqueo, reagruparEfectosBloqueoAlba } from '../effectInterpreter'
 import { destruirCarta, liberarEterBloqueado } from '../replacements'
+import { resolverAlba } from '../phases'
 import type { Ctx, GameState, PlayerId } from '../types'
 
 const FB020 = 'FB-020' // Mística Artefacto, eter_bloqueado:3, buffPerBlockedEther
@@ -244,13 +245,16 @@ describe('bloqueo en Artefactos — getValidActions (Fase 3a)', () => {
     expect(bloqueos).toHaveLength(0)
   })
 
-  it('genera bloquear_eter para FB-032 (bloqueo_fijo:4) y respeta el máximo', () => {
+  it('genera bloquear_eter para FB-032 (bloqueo_fijo:4) como acción EXACTA', () => {
     const conCampo = conMisticaEnCampo(estadoMinimo(), FB032, 0)
     const { s } = conEteres(conCampo.s, ETER_ORDEN, 6)
 
     const bloqueos = getValidActions(s, 'A').filter((a) => a.type === 'bloquear_eter')
-    // Genera una acción por éter disponible hasta el máximo (4)
-    expect(bloqueos).toHaveLength(4)
+    // bloqueo_fijo → UNA acción con los 4 Éteres exactos (no 4 acciones sueltas)
+    expect(bloqueos).toHaveLength(1)
+    if (bloqueos[0]?.type === 'bloquear_eter') {
+      expect(bloqueos[0].eterIds).toHaveLength(4)
+    }
   })
 
   it('NO genera el path hardcodeado stale de FB-022 (activar_habilidad con eterIds vacíos)', () => {
@@ -283,14 +287,16 @@ describe('bloqueo en Artefactos — getValidActions (Fase 3a)', () => {
 })
 
 describe('bloqueo en Artefactos — regresión Campeones (Fase 3a)', () => {
-  it('Campeón con habilidad "bloqueado" sigue generando bloquear_eter', () => {
+  it('Campeón con habilidad "bloqueado" sigue generando bloquear_eter (exacto)', () => {
+    // FB-016 Cassandra: bloqueo_fijo:4 → necesita 4 Éteres para generar la acción
     const conCampo = conCampeonEnCampo(estadoMinimo(), CAMPEON_BLOQUEO, 0)
-    const { s } = conEteres(conCampo.s, ETER_ORDEN, 1)
+    const { s } = conEteres(conCampo.s, ETER_ORDEN, 4)
 
     const bloqueos = getValidActions(s, 'A').filter((a) => a.type === 'bloquear_eter')
     expect(bloqueos).toHaveLength(1)
     if (bloqueos[0]?.type === 'bloquear_eter') {
       expect(bloqueos[0].targetInstanceId).toBe(conCampo.id)
+      expect(bloqueos[0].eterIds).toHaveLength(4)
     }
   })
 
@@ -304,20 +310,26 @@ describe('bloqueo en Artefactos — regresión Campeones (Fase 3a)', () => {
 
   it('Campeón y Mística conviven: cada uno recibe bloqueo en su target', () => {
     const ctx = crearCtx()
+    // FB-016 Cassandra (fijo 4) + FB-022 (flexible 3) → 4+ Éteres
     const conCamp = conCampeonEnCampo(estadoMinimo(), CAMPEON_BLOQUEO, 0)
     const conMist = conMisticaEnCampo(conCamp.s, FB022, 0)
-    const { s, ids } = conEteres(conMist.s, ETER_ORDEN, 2)
+    const { s } = conEteres(conMist.s, ETER_ORDEN, 5)
 
     const bloqueos = getValidActions(s, 'A').filter((a) => a.type === 'bloquear_eter')
     const targets = bloqueos.map((b) => (b.type === 'bloquear_eter' ? b.targetInstanceId : ''))
     expect(targets).toContain(conCamp.id)
     expect(targets).toContain(conMist.id)
 
-    // Bloquear uno en cada target
-    const s2 = aplicar(s, { type: 'bloquear_eter', eterIds: [ids[0]], targetInstanceId: conCamp.id }, ctx)
-    const s3 = aplicar(s2, { type: 'bloquear_eter', eterIds: [ids[1]], targetInstanceId: conMist.id }, ctx)
-    expect(s3.instances[conCamp.id].eterBloqueado).toEqual([ids[0]])
-    expect(s3.instances[conMist.id].eterBloqueado).toEqual([ids[1]])
+    // Bloquear exacto en el campeón (4) — sale de la Reserva
+    const accCamp = bloqueos.find((b) => b.type === 'bloquear_eter' && b.targetInstanceId === conCamp.id)!
+    const s2 = aplicar(s, accCamp, ctx)
+    expect(s2.instances[conCamp.id].eterBloqueado).toHaveLength(4)
+
+    // Regenerar acciones (la Reserva cambió) y bloquear en la mística
+    const bloqueos2 = getValidActions(s2, 'A').filter((a) => a.type === 'bloquear_eter')
+    const accMist = bloqueos2.find((b) => b.type === 'bloquear_eter' && b.targetInstanceId === conMist.id)!
+    const s3 = aplicar(s2, accMist, ctx)
+    expect(s3.instances[conMist.id].eterBloqueado).toHaveLength(1)
   })
 })
 
@@ -446,29 +458,22 @@ describe('FB-032 Rito del Alba — one-shot invocar_y_equipar (Fase 3a Phase D)'
     return { s, fb032Id: conMist.id, campeonExilioId, ids }
   }
 
-  it('bloquear 3 (< umbral 4) NO dispara la invocación', () => {
+  it('bloqueo_fijo rechaza monto INCOMPLETO (no es "hasta")', () => {
     const ctx = crearCtx()
     let { s, fb032Id, ids } = conFB032Setup(4)
-    for (let i = 0; i < 3; i++) {
-      s = aplicar(s, { type: 'bloquear_eter', eterIds: [ids[i]], targetInstanceId: fb032Id }, ctx)
-    }
-    expect(s.instances[fb032Id].eterBloqueado).toHaveLength(3)
-    expect(s.players.A.campo.campeones.filter(Boolean)).toHaveLength(0)
-    expect(s.players.A.exilio).toEqual([expect.any(String)]) // campeón sigue en exilio
-    expect(s.instances[fb032Id].equipadoA).toBeUndefined()
+    // FB-032 es bloqueo_fijo:4 → 3 Éteres NO son válidos
+    const error = bloquearEter(s, ctx, 'A', ids.slice(0, 3), fb032Id)
+    expect(error).toMatch(/exactamente/)
+    expect(s.instances[fb032Id].eterBloqueado).toBeUndefined()
   })
 
-  it('bloquear el 4° (alcanza umbral) → invoca campeón del exilio y equipa FB-032', () => {
+  it('bloqueo_fijo: bloquear los 4 exactos alcanza umbral → invoca y equipa', () => {
     const ctx = crearCtx()
     let { s, fb032Id, campeonExilioId, ids } = conFB032Setup(4)
-    for (let i = 0; i < 4; i++) {
-      s = aplicar(s, { type: 'bloquear_eter', eterIds: [ids[i]], targetInstanceId: fb032Id }, ctx)
-    }
-    // Campeón invocado al campo (cansado)
+    s = aplicar(s, { type: 'bloquear_eter', eterIds: ids.slice(0, 4), targetInstanceId: fb032Id }, ctx)
     expect(s.players.A.campo.campeones).toContain(campeonExilioId)
     expect(s.instances[campeonExilioId].agotado).toBe(true)
     expect(s.players.A.exilio).toHaveLength(0)
-    // FB-032 equipada al campeón invocado
     expect(s.instances[fb032Id].equipadoA).toBe(campeonExilioId)
     expect(s.instances[fb032Id].eterBloqueado).toHaveLength(4)
   })
@@ -476,9 +481,7 @@ describe('FB-032 Rito del Alba — one-shot invocar_y_equipar (Fase 3a Phase D)'
   it('no re-dispara mientras el flag esté activo (sin liberación)', () => {
     const ctx = crearCtx()
     let { s, fb032Id, ids } = conFB032Setup(4)
-    for (let i = 0; i < 4; i++) {
-      s = aplicar(s, { type: 'bloquear_eter', eterIds: [ids[i]], targetInstanceId: fb032Id }, ctx)
-    }
+    s = aplicar(s, { type: 'bloquear_eter', eterIds: ids.slice(0, 4), targetInstanceId: fb032Id }, ctx)
     const campeonesTrasDisparo = s.players.A.campo.campeones.filter(Boolean).length
     expect(campeonesTrasDisparo).toBe(1)
     // Llamar dispararUmbralBloqueo directamente: flag activo → no-op
@@ -486,7 +489,7 @@ describe('FB-032 Rito del Alba — one-shot invocar_y_equipar (Fase 3a Phase D)'
     expect(s.players.A.campo.campeones.filter(Boolean)).toHaveLength(campeonesTrasDisparo)
   })
 
-  it('tras liberar el Éter (flag limpiado), re-bloquear hasta umbral RE-DISPARA', () => {
+  it('tras liberar el Éter (flag limpiado), re-bloquear exacto RE-DISPARA', () => {
     const ctx = crearCtx()
     const conMist = conMisticaEnCampo(estadoMinimo(), FB032, 0)
     const champ1 = 'camp-exilio-1'
@@ -507,10 +510,8 @@ describe('FB-032 Rito del Alba — one-shot invocar_y_equipar (Fase 3a Phase D)'
     }
     const fb032Id = conMist.id
 
-    // Primer disparo: bloquear 4 → champ1 invocado
-    for (let i = 0; i < 4; i++) {
-      s = aplicar(s, { type: 'bloquear_eter', eterIds: [ids[i]], targetInstanceId: fb032Id }, ctx)
-    }
+    // Primer disparo: bloquear 4 exactos → champ1 invocado
+    s = aplicar(s, { type: 'bloquear_eter', eterIds: ids.slice(0, 4), targetInstanceId: fb032Id }, ctx)
     expect(s.players.A.campo.campeones).toContain(champ1)
     expect(s.instances[fb032Id].efectoUmbralDisparado).toBe(true)
 
@@ -518,10 +519,8 @@ describe('FB-032 Rito del Alba — one-shot invocar_y_equipar (Fase 3a Phase D)'
     liberarEterBloqueado(s, ctx, fb032Id, '1A')
     expect(s.instances[fb032Id].efectoUmbralDisparado).toBeUndefined()
 
-    // Re-bloquear 4 → RE-DISPARA (champ2 invocado)
-    for (let i = 4; i < 8; i++) {
-      s = aplicar(s, { type: 'bloquear_eter', eterIds: [ids[i]], targetInstanceId: fb032Id }, ctx)
-    }
+    // Re-bloquear 4 exactos → RE-DISPARA (champ2 invocado)
+    s = aplicar(s, { type: 'bloquear_eter', eterIds: ids.slice(4, 8), targetInstanceId: fb032Id }, ctx)
     expect(s.players.A.campo.campeones).toContain(champ2)
     expect(s.instances[fb032Id].equipadoA).toBe(champ2)
   })
@@ -529,9 +528,7 @@ describe('FB-032 Rito del Alba — one-shot invocar_y_equipar (Fase 3a Phase D)'
   it('alba: el Éter permanece bloqueado en FB-032 (no se reagrupa)', () => {
     const ctx = crearCtx()
     let { s, fb032Id, ids } = conFB032Setup(4)
-    for (let i = 0; i < 4; i++) {
-      s = aplicar(s, { type: 'bloquear_eter', eterIds: [ids[i]], targetInstanceId: fb032Id }, ctx)
-    }
+    s = aplicar(s, { type: 'bloquear_eter', eterIds: ids.slice(0, 4), targetInstanceId: fb032Id }, ctx)
     // Simular alba: reagruparEter mueve 1A→2A; el bloqueado NO está en 1A
     s = { ...s, players: { ...s.players, A: { ...s.players.A, eterPagado: ['pagado-x'] } } }
     reagruparEter(s, ctx, 'A')
@@ -542,14 +539,185 @@ describe('FB-032 Rito del Alba — one-shot invocar_y_equipar (Fase 3a Phase D)'
   it('destruir FB-032 libera el Éter a 1A; el campeón invocado permanece en campo', () => {
     const ctx = crearCtx()
     let { s, fb032Id, campeonExilioId, ids } = conFB032Setup(4)
-    for (let i = 0; i < 4; i++) {
-      s = aplicar(s, { type: 'bloquear_eter', eterIds: [ids[i]], targetInstanceId: fb032Id }, ctx)
-    }
+    s = aplicar(s, { type: 'bloquear_eter', eterIds: ids.slice(0, 4), targetInstanceId: fb032Id }, ctx)
     destruirCarta(s, ctx, fb032Id, 'efecto')
     // Éter liberado a 1A (pagado)
     expect(s.instances[fb032Id]?.eterBloqueado).toBeUndefined()
     expect(s.players.A.eterPagado).toEqual(expect.arrayContaining(ids))
     // Campeón invocado sigue en campo
     expect(s.players.A.campo.campeones).toContain(campeonExilioId)
+  })
+})
+
+describe('Aurora FB-010 — steal_champion vía bloqueo_fijo', () => {
+  const AURORA = 'FB-010'
+  const RIVAL = 'FB-011' // Vaela — campeón rival
+
+  function setupAurora(): { s: GameState; auroraId: string; rivalId: string; ids: string[] } {
+    const base = estadoMinimo()
+    const auroraId = 'aurora-1'
+    const rivalId = 'rival-1'
+    const ids = Array.from({ length: 6 }, (_, i) => `ea-${i}`)
+    const s: GameState = {
+      ...base,
+      instances: {
+        [auroraId]: { cardInstanceId: auroraId, cardId: AURORA, owner: 'A' },
+        [rivalId]: { cardInstanceId: rivalId, cardId: RIVAL, owner: 'B' },
+        ...Object.fromEntries(ids.map((id) => [id, { cardInstanceId: id, cardId: ETER_ORDEN, owner: 'A' }])),
+      },
+      players: {
+        ...base.players,
+        A: {
+          ...base.players.A,
+          campo: { ...base.players.A.campo, campeones: [auroraId, null, null, null, null] },
+          eterReserva: ids,
+        },
+        B: {
+          ...base.players.B,
+          campo: { ...base.players.B.campo, campeones: [rivalId, null, null, null, null] },
+        },
+      },
+    }
+    return { s, auroraId, rivalId, ids }
+  }
+
+  it('bloqueo_fijo de Aurora exige exactamente 4 (rechaza 2)', () => {
+    const ctx = crearCtx()
+    const { s, auroraId, ids } = setupAurora()
+    const error = bloquearEter(s, ctx, 'A', ids.slice(0, 2), auroraId)
+    expect(error).toMatch(/exactamente 4/)
+  })
+
+  it('al bloquear 4 exactos → arma pendiente steal_champion (D1)', () => {
+    const ctx = crearCtx()
+    const { s, auroraId, rivalId, ids } = setupAurora()
+    const s2 = aplicar(s, { type: 'bloquear_eter', eterIds: ids.slice(0, 4), targetInstanceId: auroraId }, ctx)
+    expect(s2.instances[auroraId].eterBloqueado).toHaveLength(4)
+    expect(s2.instances[auroraId].efectoUmbralDisparado).toBe(true)
+    // Pendiente D1: jugador elige qué campeón rival robar
+    expect(s2.objetivosPendientes).toBeDefined()
+    expect(s2.objetivosPendientes![0].opciones).toContain(rivalId)
+    expect(s2.objetivosPendientes![0].jugador).toBe('A')
+  })
+
+  it('al elegir el objetivo → roba el campeón (agotado, dueño original)', () => {
+    const ctx = crearCtx()
+    const { s, auroraId, rivalId, ids } = setupAurora()
+    let s2 = aplicar(s, { type: 'bloquear_eter', eterIds: ids.slice(0, 4), targetInstanceId: auroraId }, ctx)
+    s2 = aplicar(s2, { type: 'elegir_objetivo', objetivoId: rivalId }, ctx)
+    expect(s2.players.A.campo.campeones).toContain(rivalId)
+    expect(s2.players.B.campo.campeones[0]).toBeNull()
+    expect(s2.instances[rivalId].agotado).toBe(true)
+    expect(s2.instances[rivalId].stolenBy).toBe(auroraId)
+    // Dueño original se conserva (control prestado)
+    expect(s2.instances[rivalId].owner).toBe('B')
+  })
+
+  it('al liberar el Éter de Aurora → el campeón robado regresa al rival', () => {
+    const ctx = crearCtx()
+    const { s, auroraId, rivalId, ids } = setupAurora()
+    let s2 = aplicar(s, { type: 'bloquear_eter', eterIds: ids.slice(0, 4), targetInstanceId: auroraId }, ctx)
+    s2 = aplicar(s2, { type: 'elegir_objetivo', objetivoId: rivalId }, ctx)
+    expect(s2.players.A.campo.campeones).toContain(rivalId)
+
+    liberarEterBloqueado(s2, ctx, auroraId, '1A')
+    expect(s2.players.B.campo.campeones).toContain(rivalId)
+    expect(s2.players.A.campo.campeones).not.toContain(rivalId)
+    expect(s2.instances[rivalId].stolenBy).toBeUndefined()
+  })
+
+  it('Alba propia: reagrupa el Éter del efecto steal a la Reserva + retorno del robado', () => {
+    const ctx = crearCtx()
+    const { s, auroraId, rivalId, ids } = setupAurora()
+    let s2 = aplicar(s, { type: 'bloquear_eter', eterIds: ids.slice(0, 4), targetInstanceId: auroraId }, ctx)
+    s2 = aplicar(s2, { type: 'elegir_objetivo', objetivoId: rivalId }, ctx)
+    expect(s2.instances[auroraId].eterBloqueado).toHaveLength(4)
+    expect(s2.players.A.campo.campeones).toContain(rivalId)
+
+    // Simular Alba de A (dueño de Aurora)
+    const antesReserva = s2.players.A.eterReserva.length
+    resolverAlba(s2, ctx, 'A')
+
+    // Éter del efecto → Reserva (NO solo 1A)
+    expect(s2.instances[auroraId].eterBloqueado).toBeUndefined()
+    expect(s2.players.A.eterReserva.length).toBe(antesReserva + 4)
+    // Aurora puede volver a bloquear (sin bloqueo activo)
+    expect(s2.instances[auroraId].efectoUmbralDisparado).toBeUndefined()
+    // Campeón robado regresa al rival (tenía slot libre)
+    expect(s2.players.B.campo.campeones).toContain(rivalId)
+    expect(s2.players.A.campo.campeones).not.toContain(rivalId)
+    expect(s2.instances[rivalId].stolenBy).toBeUndefined()
+  })
+
+  it('Alba propia: si el rival está LLENO, el campeón robado se queda controlado', () => {
+    const ctx = crearCtx()
+    const { s, auroraId, rivalId, ids } = setupAurora()
+    // B empieza con 5 campeones (campo lleno). Robamos el de slot 0.
+    const extras = ['b-full-1', 'b-full-2', 'b-full-3', 'b-full-4']
+    const extra: GameState = {
+      ...s,
+      instances: {
+        ...s.instances,
+        ...Object.fromEntries(extras.map((id) => [id, { cardInstanceId: id, cardId: RIVAL, owner: 'B' as PlayerId }])),
+      },
+      players: {
+        ...s.players,
+        B: {
+          ...s.players.B,
+          campo: { ...s.players.B.campo, campeones: [rivalId, ...extras] },
+        },
+      },
+    }
+    let s2 = aplicar(extra, { type: 'bloquear_eter', eterIds: ids.slice(0, 4), targetInstanceId: auroraId }, ctx)
+    s2 = aplicar(s2, { type: 'elegir_objetivo', objetivoId: rivalId }, ctx)
+    // Tras el robo: A tiene el robado; B quedó con 4 (slot 0 libre)...
+    // ¡OJO! El robo QUITA al rival de B → B queda con slot libre.
+    // Para simular "rival lleno AL MOMENTO del reagrupar", llenamos DESPUÉS del robo.
+    extras.forEach((id, i) => {
+      s2 = {
+        ...s2,
+        instances: { ...s2.instances, [id]: { ...s2.instances[id], owner: 'B' } },
+        players: {
+          ...s2.players,
+          B: {
+            ...s2.players.B,
+            campo: {
+              ...s2.players.B.campo,
+              campeones: s2.players.B.campo.campeones.map((c, idx) =>
+                c === null && idx < extras.length ? extras[idx] : c,
+              ),
+            },
+          },
+        },
+      }
+    })
+    // Verificar: B lleno (5), A tiene el robado
+    expect(s2.players.B.campo.campeones.filter(Boolean)).toHaveLength(5)
+    expect(s2.players.A.campo.campeones).toContain(rivalId)
+
+    const reservaAntes = s2.players.A.eterReserva.length
+    resolverAlba(s2, ctx, 'A')
+
+    // Éter reagrupado
+    expect(s2.instances[auroraId].eterBloqueado).toBeUndefined()
+    expect(s2.players.A.eterReserva.length).toBe(reservaAntes + 4)
+    // Rival lleno al reagrupar → el campeón SE QUEDA con A
+    expect(s2.players.A.campo.campeones).toContain(rivalId)
+    expect(s2.players.B.campo.campeones).not.toContain(rivalId)
+  })
+
+  it('Alba propia: campeón destruido mientras robado → no regresa', () => {
+    const ctx = crearCtx()
+    const { s, auroraId, rivalId, ids } = setupAurora()
+    let s2 = aplicar(s, { type: 'bloquear_eter', eterIds: ids.slice(0, 4), targetInstanceId: auroraId }, ctx)
+    s2 = aplicar(s2, { type: 'elegir_objetivo', objetivoId: rivalId }, ctx)
+    // Destruir el campeón robado (está en campo de A)
+    destruirCarta(s2, ctx, rivalId, 'efecto')
+    expect(s2.players.A.campo.campeones).not.toContain(rivalId)
+
+    resolverAlba(s2, ctx, 'A')
+    // No regresa al campo de B (fue destruido)
+    expect(s2.players.B.campo.campeones).not.toContain(rivalId)
+    expect(s2.instances[rivalId]?.stolenBy).toBeUndefined()
   })
 })

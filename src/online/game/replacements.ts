@@ -113,6 +113,35 @@ function liberarEterBloqueadoCore(s: GameState, cardInstanceId: string, destino:
   // Fase 3a Phase D + 3c: efectos de umbral/copy se desactivan al liberar Éter (§7.7)
   delete inst.efectoUmbralDisparado
   delete inst.copyOneShotDisparado
+  // Aurora steal_champion "mientras_ester_bloqueado": al liberar el Éter
+  // (salida del campo de la fuente), los Campeones robados por esta fuente
+  // retornan al rival si hay slot libre; si no, se queda el control donde está.
+  if (inst.cardId) {
+    const meta = getCardMeta(inst.cardId)
+    const stealEfecto = meta && 'efectos' in meta
+      ? meta.efectos?.find((e) => e.efecto === 'steal_champion')
+      : undefined
+    if (stealEfecto?.duracion === 'mientras_ester_bloqueado') {
+      // Import local evitado: lógica compartida inline (sin ciclos)
+      for (const other of Object.values(s.instances)) {
+        if (other.stolenBy !== cardInstanceId) continue
+        const enCampoLadron = s.players[inst.owner].campo.campeones.includes(other.cardInstanceId)
+        if (!enCampoLadron) {
+          delete other.stolenBy
+          continue
+        }
+        const duenoOriginal = other.owner
+        const campoOriginal = s.players[duenoOriginal].campo.campeones
+        const slotLibre = campoOriginal.indexOf(null)
+        if (slotLibre !== -1 && duenoOriginal !== inst.owner) {
+          const idxLadron = s.players[inst.owner].campo.campeones.indexOf(other.cardInstanceId)
+          if (idxLadron !== -1) s.players[inst.owner].campo.campeones[idxLadron] = null
+          campoOriginal[slotLibre] = other.cardInstanceId
+        }
+        delete other.stolenBy
+      }
+    }
+  }
   const p = s.players[inst.owner]
   if (destino === '2A') {
     p.eterReserva.push(...eteres)

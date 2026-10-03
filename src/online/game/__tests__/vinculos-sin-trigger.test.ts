@@ -84,11 +84,14 @@ function conCampeon(s: GameState, cardId: string, owner: PlayerId, slot: number,
   }
 }
 
-function conVinculo(s: GameState, cardId: string, owner: PlayerId, slot: number): { s: GameState; id: string } {
+function conVinculo(s: GameState, cardId: string, owner: PlayerId, slot: number, opts?: { destruido?: boolean }): { s: GameState; id: string } {
   const id = `vinc-${cardId}-${owner}-${slot}`
+  // §5.5 manual: solo vínculos DESTRUIDOS (bocaArriba) tienen efectos vigentes.
+  // Los destruidos son el estado "activo" para efectos; los vivos son boca-abajo.
+  const bocaArriba = opts?.destruido === true
   return {
     s: {
-      ...conInstancias(s, { [id]: { cardId, owner } }),
+      ...conInstancias(s, { [id]: { cardId, owner, extra: { bocaArriba } } }),
       players: {
         ...s.players,
         [owner]: {
@@ -115,18 +118,25 @@ describe('FB-030 Lamento de la Primogénita — aura vínculo (Fase 3d)', () => 
    * Con otro campeón rival de mayor RES, Vaela NO recibe el debuff.
    */
 
-  it('debuff -3/-3 al único campeón rival (mayor RES por default)', () => {
+  it('debuff -3/-3 al único campeón rival (mayor RES por default) — vínculo DESTRUIDO', () => {
     const conCamp = conCampeon(estadoMinimo(), CAMPEON, 'B', 0) // Vaela 5/3 rival
-    const conVinc = conVinculo(conCamp.s, FB030, 'A', 0) // vínculo de A
+    const conVinc = conVinculo(conCamp.s, FB030, 'A', 0, { destruido: true }) // boca arriba
     // Vaela es el único campeón de B → es el de mayor RES → -3/-3 → 2/0
     expect(statsDe(conVinc.s, conCamp.id)).toEqual({ poder: 2, resistencia: 0 })
+  })
+
+  it('§5.5: vínculo BOCA ABAJO (vivo) NO aplica aura', () => {
+    const conCamp = conCampeon(estadoMinimo(), CAMPEON, 'B', 0)
+    const conVinc = conVinculo(conCamp.s, FB030, 'A', 0, { destruido: false }) // vivo
+    // Sin debuff: stats base de Vaela
+    expect(statsDe(conVinc.s, conCamp.id)).toEqual({ poder: 5, resistencia: 3 })
   })
 
   it('NO debuffa si hay otro campeón rival de MAYOR RES', () => {
     // Camp0: Vaela 5/3; Camp1: campeón con RES mayor (usar extra para simular stats altos)
     const conCamp0 = conCampeon(estadoMinimo(), CAMPEON, 'B', 0) // Vaela 5/3
     const conCamp1 = conCampeon(conCamp0.s, CAMPEON, 'B', 1, { resistencia: 10 }) // RES 10 override
-    const conVinc = conVinculo(conCamp1.s, FB030, 'A', 0)
+    const conVinc = conVinculo(conCamp1.s, FB030, 'A', 0, { destruido: true })
     // El de mayor RES es camp1 (10) → él recibe el debuff; Vaela queda intacta
     expect(statsDe(conVinc.s, conCamp0.id)).toEqual({ poder: 5, resistencia: 3 }) // Vaela sin debuff
     // camp1 con override resistencia 10 + debuff -3 → 7 (poder base 5 - 3 = 2)
@@ -136,7 +146,7 @@ describe('FB-030 Lamento de la Primogénita — aura vínculo (Fase 3d)', () => 
   it('el campeón PROPIO no recibe el debuff (controlador rival)', () => {
     const conCampPropio = conCampeon(estadoMinimo(), CAMPEON, 'A', 0) // propio de A
     const conCampRival = conCampeon(conCampPropio.s, CAMPEON, 'B', 0) // rival
-    const conVinc = conVinculo(conCampRival.s, FB030, 'A', 0)
+    const conVinc = conVinculo(conCampRival.s, FB030, 'A', 0, { destruido: true })
     // Propio de A: sin debuff (5/3)
     expect(statsDe(conVinc.s, conCampPropio.id)).toEqual({ poder: 5, resistencia: 3 })
     // Rival de A (único de B): con debuff (2/0)
@@ -148,19 +158,26 @@ describe('DS-030 Grito del Primogénito — aura vínculo buff propio (Fase 3d)'
   /**
    * "El Campeón con menor RES gana 4 de RES, mientras esta carta esté en el campo."
    * Aura: buff +4 RES al campeón PROPIO de MENOR RES. Vaela base 5/3.
+   * §5.5: solo aplica si el vínculo está DESTRUIDO (boca arriba).
    */
 
-  it('buff +4 RES al único campeón propio (menor RES por default)', () => {
+  it('buff +4 RES al único campeón propio (menor RES por default) — destruido', () => {
     const conCamp = conCampeon(estadoMinimo(), CAMPEON, 'A', 0) // Vaela 5/3 propio
-    const conVinc = conVinculo(conCamp.s, DS030, 'A', 0)
+    const conVinc = conVinculo(conCamp.s, DS030, 'A', 0, { destruido: true })
     // Vaela única → menor RES → +4 → 5/7
     expect(statsDe(conVinc.s, conCamp.id)).toEqual({ poder: 5, resistencia: 7 })
+  })
+
+  it('§5.5: vínculo BOCA ABAJO NO buffa', () => {
+    const conCamp = conCampeon(estadoMinimo(), CAMPEON, 'A', 0)
+    const conVinc = conVinculo(conCamp.s, DS030, 'A', 0, { destruido: false })
+    expect(statsDe(conVinc.s, conCamp.id)).toEqual({ poder: 5, resistencia: 3 })
   })
 
   it('NO buffa si hay otro campeón propio de MENOR RES', () => {
     const conCamp0 = conCampeon(estadoMinimo(), CAMPEON, 'A', 0) // Vaela 5/3
     const conCamp1 = conCampeon(conCamp0.s, CAMPEON, 'A', 1, { resistencia: 1 }) // RES 1 override
-    const conVinc = conVinculo(conCamp1.s, DS030, 'A', 0)
+    const conVinc = conVinculo(conCamp1.s, DS030, 'A', 0, { destruido: true })
     // El de menor RES es camp1 (1) → él recibe +4 → 5; Vaela queda 5/3
     expect(statsDe(conVinc.s, conCamp0.id)).toEqual({ poder: 5, resistencia: 3 }) // Vaela sin buff
     expect(statsDe(conVinc.s, conCamp1.id).resistencia).toBe(5) // 1 + 4
@@ -169,7 +186,7 @@ describe('DS-030 Grito del Primogénito — aura vínculo buff propio (Fase 3d)'
   it('el campeón RIVAL no recibe el buff (controlador propio)', () => {
     const conCampPropio = conCampeon(estadoMinimo(), CAMPEON, 'A', 0)
     const conCampRival = conCampeon(conCampPropio.s, CAMPEON, 'B', 0)
-    const conVinc = conVinculo(conCampRival.s, DS030, 'A', 0)
+    const conVinc = conVinculo(conCampRival.s, DS030, 'A', 0, { destruido: true })
     // Rival de A: sin buff (5/3)
     expect(statsDe(conVinc.s, conCampRival.id)).toEqual({ poder: 5, resistencia: 3 })
     // Propio de A: con buff (5/7)
@@ -181,11 +198,27 @@ describe('DS-026 Heredad de Caos — inicio_alba discard (Fase 3d)', () => {
   /**
    * "Al inicio de tu Alba, puedes descartar una carta de la mano del rival,
    * una vez por turno." trigger inicio_alba — patrón FB-025 existente.
+   * §5.5: solo firea si el vínculo está DESTRUIDO (boca arriba).
    */
 
-  it('al inicio_alba del dueño, rival_discard ejecuta (rival pierde carta)', () => {
+  it('§5.5: vínculo BOCA ABAJO NO firea el discard en el alba', () => {
     const ctx = crearCtx()
-    const conVinc = conVinculo(estadoMinimo(), DS026, 'A', 0)
+    const conVinc = conVinculo(estadoMinimo(), DS026, 'A', 0, { destruido: false })
+    const s0: GameState = {
+      ...conVinc.s,
+      players: {
+        ...conVinc.s.players,
+        B: { ...conVinc.s.players.B, mano: ['carta-x', 'carta-y'] },
+      },
+    }
+    dispararTrigger(s0, ctx, 'al-inicio-alba', 'A', [conVinc.id])
+    // Vínculo vivo: NO descarta
+    expect(s0.players.B.mano.length).toBe(2)
+  })
+
+  it('al inicio_alba del dueño, rival_discard ejecuta si el vínculo está destruido', () => {
+    const ctx = crearCtx()
+    const conVinc = conVinculo(estadoMinimo(), DS026, 'A', 0, { destruido: true })
     // B (rival de A) tiene 2 cartas en mano
     const s0: GameState = {
       ...conVinc.s,
@@ -210,10 +243,10 @@ describe('DS-027 Refugio del Nudo — inicio_choque controladorTrigger rival (Fa
    * Mueve Éter del rival del DUEÑO (A→rival=B): éter de B res→pagado de B.
    */
 
-  it('al pasar turno a B (choque de B), el vínculo de A mueve éter de B', () => {
+  it('al pasar turno a B (choque de B), el vínculo DESTRUIDO de A mueve éter de B', () => {
     const ctx = crearCtx()
-    // A tiene DS-027; B tiene 2 éteres en Reserva
-    const conVinc = conVinculo(estadoMinimo(), DS027, 'A', 0)
+    // A tiene DS-027 destruido (boca arriba); B tiene 2 éteres en Reserva
+    const conVinc = conVinculo(estadoMinimo(), DS027, 'A', 0, { destruido: true })
     const s0: GameState = {
       ...conVinc.s,
       fase: 'choque',
@@ -246,5 +279,32 @@ describe('DS-027 Refugio del Nudo — inicio_choque controladorTrigger rival (Fa
     // B perdió 2 éteres de Reserva (movidos a pagado) — "hasta 2"
     expect(s0.players.B.eterReserva.length).toBe(1) // 3 - 2
     expect(s0.players.B.eterPagado.length).toBe(2)
+  })
+
+  it('§5.5: vínculo BOCA ABAJO NO firea en el choque del rival', () => {
+    const ctx = crearCtx()
+    const conVinc = conVinculo(estadoMinimo(), DS027, 'A', 0, { destruido: false })
+    const s0: GameState = {
+      ...conVinc.s,
+      fase: 'choque',
+      turno: 'B',
+      players: {
+        ...conVinc.s.players,
+        B: {
+          ...conVinc.s.players.B,
+          eterReserva: ['e-b-0', 'e-b-1', 'e-b-2'],
+        },
+      },
+      instances: {
+        ...conVinc.s.instances,
+        'e-b-0': { cardInstanceId: 'e-b-0', cardId: ETER_ORDEN, owner: 'B' },
+        'e-b-1': { cardInstanceId: 'e-b-1', cardId: ETER_ORDEN, owner: 'B' },
+        'e-b-2': { cardInstanceId: 'e-b-2', cardId: ETER_ORDEN, owner: 'B' },
+      },
+    }
+    dispararTrigger(s0, ctx, 'al-inicio-choque', 'A', [conVinc.id])
+    // Vivo: NO mueve éter
+    expect(s0.players.B.eterReserva.length).toBe(3)
+    expect(s0.players.B.eterPagado.length).toBe(0)
   })
 })

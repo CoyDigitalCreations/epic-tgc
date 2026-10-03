@@ -2,6 +2,7 @@ import { reagruparEter } from './payments'
 import { purgarEfectosTemporales, dispararTrigger, crearOpcionBloqueo } from './efectos'
 import { getCardMeta } from './cards'
 import { resolverFaseEfectos } from './effectRegistry'
+import { reagruparEfectosBloqueoAlba } from './effectInterpreter'
 import type { Ctx, GameState, PlayerId } from './types'
 
 /**
@@ -37,7 +38,13 @@ export function resolverAlba(s: GameState, ctx: Ctx, jugador: PlayerId): void {
   // 2. C2: Disparo al-inicio-alba ANTES de reagrupar (instancias = eterPagado + vínculos del jugador)
   //    El Pasivo 1A (FB-005/DS-006) evalúa su condición en zona 1A viva.
   //    Los vínculos con efectos periódicos (FB-025, FB-029, DS-025, DS-029) también se evalúan aquí.
-  const vinculosSnapshot = p.vinculos.filter((id): id is string => id !== null)
+  //    §5.5: SOLO vínculos DESTRUIDOS (bocaArriba) tienen efectos vigentes —
+  //    los boca-abajo son solo vida. Los destruidos permanecen boca arriba y
+  //    sus efectos se acumulan.
+  const vinculosSnapshot = p.vinculos.filter((id): id is string => {
+    if (!id) return false
+    return s.instances[id]?.bocaArriba === true
+  })
   const albaInstances = [...p.eterPagado, ...vinculosSnapshot]
   if (albaInstances.length > 0) {
     dispararTrigger(s, ctx, 'al-inicio-alba', jugador, albaInstances)
@@ -59,6 +66,12 @@ export function resolverAlba(s: GameState, ctx: Ctx, jugador: PlayerId): void {
 
   // 3. Reagrupar Éter pagado 1A → 2A (los bloqueados permanecen en el Campeón)
   reagruparEter(s, ctx, jugador)
+
+  // 3b. Efectos con reagrupar alba propio (Aurora steal, Ragnar grant_keyword):
+  //     liberan el Éter que bloquearon CON SU EFECTO a la Reserva (independiente
+  //     del reagrupado 1A→2A). Si el efecto es steal con duracion
+  //     'mientras_ester_bloqueado', termina el robo (retorno condicional).
+  reagruparEfectosBloqueoAlba(s, ctx, jugador)
 
   // 4. Robar 1 (no consume RNG: toma del tope)
   robarCarta(s, ctx, jugador)

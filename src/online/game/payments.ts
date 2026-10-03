@@ -183,10 +183,17 @@ export function validarBloqueo(state: GameState, jugador: PlayerId, eterIds: str
   }
   if (eterIds.length === 0) return 'no indicaste Éteres para bloquear'
 
-  // Límite máximo de éteres bloqueados por carta (parseado del efecto)
+  // Límite de éteres bloqueados por carta (parseado del efecto).
+  // bloqueo_fijo ("Bloquea X Éter") → EXACTO; eter_bloqueado ("hasta X") → ≤ X.
   const maxEter = maxEterBloqueado(meta)
+  const fijo = esBloqueoFijo(meta)
   const actuales = inst.eterBloqueado?.length ?? 0
-  if (actuales + eterIds.length > maxEter) {
+  const total = actuales + eterIds.length
+  if (fijo) {
+    if (total !== maxEter) {
+      return `bloqueo fijo: debes bloquear exactamente ${maxEter} Éter(es) en esta carta (ya tiene ${actuales}, seleccionaste ${eterIds.length})`
+    }
+  } else if (total > maxEter) {
     return `máximo ${maxEter} Éter(es) bloqueado(s) en esta carta (ya tiene ${actuales})`
   }
 
@@ -222,6 +229,18 @@ export function maxEterBloqueado(card: AnyCard): number {
     }
   }
   return 1 // default: 1 Éter
+}
+
+/**
+ * ¿El costo de bloqueo es FIJO? ("Bloquea X Éter" → pago exacto)
+ * vs flexible ("hasta un máximo de X" → eter_bloqueado, hasta X).
+ * Aurora FB-010 y FB-032 usan bloqueo_fijo; FB-022 usa eter_bloqueado.
+ */
+export function esBloqueoFijo(card: AnyCard): boolean {
+  if ('efectos' in card && card.efectos) {
+    return card.efectos.some((e) => e.costo?.tipo === 'bloqueo_fijo')
+  }
+  return false
 }
 
 /**

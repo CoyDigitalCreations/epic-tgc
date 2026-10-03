@@ -109,7 +109,7 @@ export function interpretEffect(
     s.objetivosPendientes = [...(s.objetivosPendientes ?? []), {
       jugador,
       instId: inst.cardInstanceId,
-      trigger: toHyphenTrigger(efectoData.trigger) ?? 'ninguno',
+      trigger: toHyphenTrigger(efectoData.trigger) ?? umbralTrigger(efectoData) ?? 'ninguno',
       opciones: targetIds,
     }]
     return
@@ -180,6 +180,15 @@ function toHyphenTrigger(trigger?: string): string | undefined {
     'al_activar_habilidad': 'al-activar-habilidad',
   }
   return triggerMap[trigger] ?? trigger.replace(/_/g, '-')
+}
+
+/** Trigger interno para efectos de umbral bloqueo sin trigger JSON (Aurora steal_champion). */
+function umbralTrigger(efectoData: EfectoData): string | undefined {
+  if (efectoData.trigger) return undefined
+  if (efectoData.costo?.tipo === 'bloqueo_fijo' || efectoData.costo?.tipo === 'eter_bloqueado') {
+    return 'al-bloquear-eter'
+  }
+  return undefined
 }
 
 /**
@@ -340,10 +349,12 @@ function invocarAlCampo(s: GameState, ctx: Ctx, jugador: PlayerId, campeonId: st
 }
 
 /**
- * Fase 3a Phase D: one-shot al alcanzar umbral de costo-bloqueado (FB-032).
+ * Fase 3a Phase D: one-shot al alcanzar umbral de costo-bloqueado.
  * Después de bloquear Éter en una carta, chequea si algún efecto con costo
  * eter_bloqueado/bloqueo_fijo alcanzó su umbral y aún no disparó.
- * invocar_y_equipar: invoca el primer campeón de zonaOrigen + equipa la fuente.
+ * - invocar_y_equipar (FB-032): invoca el primer campeón de zonaOrigen + equipa.
+ * - steal_champion (Aurora FB-010): arma D1 pendiente (o resuelve) para robar
+ *   un Campeón rival mientras el Éter esté bloqueado.
  * Flag efectoUmbralDisparado evita re-disparo; liberarEterBloqueado lo limpia
  * (manual §7.7: el efecto se desactiva cuando el Éter se libera).
  */
@@ -358,12 +369,130 @@ export function dispararUmbralBloqueo(s: GameState, ctx: Ctx, targetInstanceId: 
     const umbral = efecto.costo?.cantidad
     if (!umbral) continue
     if (efecto.costo?.tipo !== 'eter_bloqueado' && efecto.costo?.tipo !== 'bloqueo_fijo') continue
-    // One-shot: efectos que ejecutan al alcanzar el umbral (no auras stat derivadas)
-    if (efecto.efecto !== 'invocar_y_equipar') continue
     if (bloqueados < umbral) continue
 
+    // One-shot steal_champion (Aurora): no re-steal si ya controla uno robado por esta fuente
+    if (efecto.efecto === 'steal_champion') {
+      const yaRobo = Object.values(s.instances).some((i) => i.stolenBy === inst.cardInstanceId)
+      if (yaRobo) continue
+      if (!canExecuteSteal(s, inst.owner)) continue
+      inst.efectoUmbralDisparado = true
+      // D1: interpretEffect arma pendiente si hay opciones (incluso 1 — elección explícita)
+      interpretEffect(s, ctx, inst, efecto, { jugador: inst.owner, fromTrigger: true })
+      continue
+    }
+
+    // One-shot: efectos que ejecutan al alcanzar el umbral (no auras stat derivadas)
+    if (efecto.efecto !== 'invocar_y_equipar') continue
     inst.efectoUmbralDisparado = true
     ejecutarInvocarEquiparUmbral(s, ctx, inst, efecto, inst.owner)
+  }
+}
+
+/** ¿Hay slot libre para robar un Campeón? (mismo check que canExecuteEffect steal_champion) */
+function canExecuteSteal(s: GameState, jugador: PlayerId): boolean {
+  return s.players[jugador].campo.campeones.includes(null)
+}
+
+/**
+ * Alba del dueño (§ efectos con reagrupar): libera a la Reserva el Éter que
+ * ciertos efectos bloquearon CON SU EFECTO (Aurora steal, Ragnar grant_keyword).
+ * Independiente del reagrupado normal 1A→2A de Éter pagado.
+ *
+ * Reglas del diseñador:
+ * - "Al inicio de tu Alba reagrupa el Éter usado por este efecto" → 2A del dueño.
+ * - Si el efecto es steal_champion con duracion 'mientras_ester_bloqueado':
+ *   termina el robo. El campeón robado REGRESA al campo del rival original
+ *   solo si el rival tiene slot libre (cualquier slot, no necesariamente el
+ *   original). Si el rival está lleno, el campeón SE QUEDA controlado.
+ * - Si el campeón ya salió del campo del ladrón (destruido/exilio/mano):
+ *   no regresa — solo se limpia stolenBy.
+ * - Si el steal no tiene duración o es 'permanente': el Éter se reagrupa
+ *   (si el efecto tiene reagrupar) pero el campeón NO regresa.
+ * - Tras reagrupar, la fuente puede volver a bloquear Éter (sin bloqueo activo).
+ */
+export function reagruparEfectosBloqueoAlba(s: GameState, ctx: Ctx, jugador: PlayerId): void {
+  const p = s.players[jugador]
+  const enCampo = [
+    ...p.campo.campeones,
+    ...p.campo.misticasTacticas,
+    ...p.campo.arcanasCombate,
+  ].filter((id): id is string => id !== null)
+
+  for (const id of enCampo) {
+    const inst = s.instances[id]
+    if (!inst?.cardId || !inst.eterBloqueado || inst.eterBloqueado.length === 0) continue
+    const meta = getCardMeta(inst.cardId)
+    if (!meta || !('efectos' in meta) || !meta.efectos) continue
+
+    const efectoReagrupar = meta.efectos.find(
+      (e) =>
+        e.reagrupar?.fase === 'alba' &&
+        e.reagrupar?.turno === 'propio' &&
+        (e.costo?.tipo === 'bloqueo_fijo' || e.costo?.tipo === 'eter_bloqueado'),
+    )
+    if (!efectoReagrupar) continue
+
+    // Liberar el Éter del efecto → Reserva del dueño (NO 1A)
+    const eteres = [...inst.eterBloqueado]
+    delete inst.eterBloqueado
+    delete inst.efectoUmbralDisparado
+    delete inst.copyOneShotDisparado
+    p.eterReserva.push(...eteres)
+    ctx.emit({ type: 'eter_reagrupado', jugador, eterIds: eteres })
+
+    // Steal con duración ligada al Éter bloqueado → termina el robo
+    if (
+      efectoReagrupar.efecto === 'steal_champion' &&
+      efectoReagrupar.duracion === 'mientras_ester_bloqueado'
+    ) {
+      retornarCampeonesRobados(s, ctx, id, jugador)
+    }
+  }
+}
+
+/**
+ * Termina un steal 'mientras_ester_bloqueado': campeones con stolenBy=fuente.
+ * - Siguientes en el campo del ladrón:
+ *   - Rival (dueño original del campeón) con slot libre → regresa a ese slot.
+ *   - Rival lleno → SE QUEDA controlado por el ladrón (stolenBy se limpia;
+ *     el control vive en la posición del campo).
+ * - Ya fuera del campo del ladrón (muerte/exilio/mano): solo limpia stolenBy.
+ */
+export function retornarCampeonesRobados(
+  s: GameState,
+  ctx: Ctx,
+  fuenteId: string,
+  ladron: PlayerId,
+): void {
+  for (const other of Object.values(s.instances)) {
+    if (other.stolenBy !== fuenteId) continue
+    const enCampoLadron = s.players[ladron].campo.campeones.includes(other.cardInstanceId)
+    if (!enCampoLadron) {
+      // Salió del campo del ladrón: ya no hay control que devolver
+      delete other.stolenBy
+      continue
+    }
+    // Dueño original del campeón robado (other.owner se conservó al robar)
+    const duenoOriginal = other.owner
+    const campoOriginal = s.players[duenoOriginal].campo.campeones
+    const slotLibre = campoOriginal.indexOf(null)
+    if (slotLibre !== -1 && duenoOriginal !== ladron) {
+      const idxLadron = s.players[ladron].campo.campeones.indexOf(other.cardInstanceId)
+      if (idxLadron !== -1) s.players[ladron].campo.campeones[idxLadron] = null
+      campoOriginal[slotLibre] = other.cardInstanceId
+      delete other.stolenBy
+      ctx.emit({
+        type: 'carta_entrada_a_zona',
+        cardInstanceId: other.cardInstanceId,
+        zona: `2${String.fromCharCode(66 + slotLibre)}`,
+        jugador: duenoOriginal,
+        bocaArriba: true,
+      })
+    } else {
+      // Campo rival lleno (o edge case): el control persiste en el campo del ladrón
+      delete other.stolenBy
+    }
   }
 }
 

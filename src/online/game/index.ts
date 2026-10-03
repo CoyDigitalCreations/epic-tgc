@@ -19,7 +19,7 @@ export { getValidActions } from './validActions'
 export { visibleState } from './visibleState'
 
 // Economía de Éter
-export { aporteDe, validarPago, aplicarPago, bloquearEter, reagruparEter } from './payments'
+export { aporteDe, validarPago, aplicarPago, bloquearEter, reagruparEter, maxEterBloqueado, esBloqueoFijo } from './payments'
 export type { ContextoUso } from './payments'
 
 // Fases
@@ -71,6 +71,7 @@ export {
   resolverFaseEfectos,
   hastaAlba,
 } from './effectRegistry'
+export { dispararUmbralBloqueo, reagruparEfectosBloqueoAlba, retornarCampeonesRobados } from './effectInterpreter'
 export type { EfectoPendiente, AccionPendiente, EfectoDuracion, FaseTrigger, OwnerTrigger } from './effectRegistry'
 import { registrarEfectos } from './handlers'
 registrarEfectos() // C1 (ADR-20): registra los handlers de efectos al importar el motor
