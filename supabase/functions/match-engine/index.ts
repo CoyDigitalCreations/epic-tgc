@@ -2,18 +2,20 @@
  * match-engine — Edge Function server-authoritative para Éter TGC.
  *
  * El motor es el bundle de src/online/game (TS puro, determinista), servido
- * desde el repo público vía raw.githubusercontent (commit pineado abajo).
- * El servidor es la única fuente de verdad: valida actor, aplica applyAction,
- * persiste { state, rngDraws } y devuelve visibleState por jugador.
+ * desde el repo público vía raw.githubusercontent. El servidor es la única
+ * fuente de verdad: valida actor, aplica applyAction, persiste { state,
+ * rngDraws } y devuelve visibleState por jugador.
  *
  * Acciones:
- *   start    — ambos jugadores listos → createInitialState + status=playing
- *   act      — aplica una Action del jugador autenticado
- *   state    — reconnect: devuelve visibleState del solicitante
- *   forfeit  — rendirse
+ *   create  — crea sala con código + deck del creador (player A)
+ *   join    — une a sala por código + deck del rival (player B)
+ *   start   — ambos listos → createInitialState + status=playing
+ *   act     — aplica una Action del jugador autenticado
+ *   state   — reconnect: devuelve visibleState del solicitante
+ *   forfeit — rendirse
  *
  * Auth: JWT de Supabase (verify_jwt=true). Leemos `sub` y lo comparamos
- * con player_a_id/player_b_id. Crear/unirse a salas va por PostgREST+RLS.
+ * con player_a_id/player_b_id.
  */
 
 // Bundle del motor en el repo (regenerar: npx esbuild src/online/game/index.ts
@@ -91,6 +93,20 @@ function userIdFromJwt(req: Request): string | null {
   }
 }
 
+/** Código de sala: 6 chars, sin confusibles (0/O/1/I). */
+function generarCodigoSala(): string {
+  const alfabeto = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+  let code = ''
+  for (let i = 0; i < 6; i++) {
+    code += alfabeto[Math.floor(Math.random() * alfabeto.length)]
+  }
+  return code
+}
+
+function esMazoValido(deck: unknown): deck is string[] {
+  return Array.isArray(deck) && deck.length === 66 && deck.every((x) => typeof x === 'string')
+}
+
 Deno.serve(async (req) => {
   if (req.method !== 'POST') return err('POST only', 405)
 
@@ -98,8 +114,10 @@ Deno.serve(async (req) => {
   if (!userId) return err('unauthorized', 401)
 
   let body: {
-    action?: 'start' | 'act' | 'state' | 'forfeit'
+    action?: 'create' | 'join' | 'start' | 'act' | 'state' | 'forfeit'
     gameId?: string
+    code?: string
+    deck?: string[]
     playerAction?: unknown
   }
   try {
@@ -108,19 +126,70 @@ Deno.serve(async (req) => {
     return err('invalid JSON')
   }
 
-  const { action, gameId, playerAction } = body
-  if (!gameId) return err('gameId required')
+  const { action, gameId, code, deck, playerAction } = body
   if (!action) return err('action required')
 
-  let engine: EngineModule
-  try {
-    engine = await loadEngine()
-  } catch (e) {
-    console.error('engine load failed', e)
-    return err('engine unavailable', 503)
+  // ── create: genera sala lobby con código + deck del creador ──────────────
+  if (action === 'create') {
+    if (!esMazoValido(deck)) return err('deck must be 66 cardIds')
+    const roomCode = generarCodigoSala()
+    const seed = Math.floor(Math.random() * 1_000_000)
+    const insertRes = await sb('games', {
+      method: 'POST',
+      headers: { Prefer: 'return=representation' },
+      body: JSON.stringify({
+        code: roomCode,
+        status: 'lobby',
+        seed,
+        deck_a: deck,
+        deck_b: [],
+        player_a_id: userId,
+        state_json: null,
+      }),
+    })
+    if (!insertRes.ok) {
+      const text = await insertRes.text()
+      console.error('create failed', text)
+      return err('failed to create room', 500)
+    }
+    const rows = await insertRes.json()
+    const game = rows?.[0]
+    if (!game) return err('failed to create room', 500)
+    return json({ ok: true, gameId: game.id, code: game.code, seed: game.seed, player: 'A' })
   }
 
-  // Load game
+  // ── join: une a sala lobby por código + deck del rival ───────────────────
+  if (action === 'join') {
+    if (!code) return err('code required')
+    if (!esMazoValido(deck)) return err('deck must be 66 cardIds')
+    const findRes = await sb(
+      `games?code=eq.${encodeURIComponent(code.toUpperCase())}&status=eq.lobby&player_b_id=is.null&select=*`,
+    )
+    if (!findRes.ok) return err('db error finding room', 500)
+    const rooms = await findRes.json()
+    const room = rooms?.[0]
+    if (!room) return err('room not found or full', 404)
+    if (room.player_a_id === userId) return err('cannot join your own room', 400)
+
+    const updRes = await sb(`games?id=eq.${room.id}`, {
+      method: 'PATCH',
+      headers: { Prefer: 'return=representation' },
+      body: JSON.stringify({ player_b_id: userId, deck_b: deck }),
+    })
+    if (!updRes.ok) {
+      const text = await updRes.text()
+      console.error('join failed', text)
+      return err('failed to join room', 500)
+    }
+    const updated = await updRes.json()
+    const game = updated?.[0]
+    if (!game) return err('failed to join room', 500)
+    return json({ ok: true, gameId: game.id, code: game.code, seed: game.seed, player: 'B' })
+  }
+
+  if (!gameId) return err('gameId required')
+
+  // Load game (start/act/state/forfeit)
   const gameRes = await sb(`games?id=eq.${encodeURIComponent(gameId)}&select=*`)
   if (!gameRes.ok) return err('db error loading game', 500)
   const games = await gameRes.json()
@@ -148,13 +217,19 @@ Deno.serve(async (req) => {
   async function loadPersist(): Promise<MatchPersist | null> {
     const raw = game.state_json
     if (!raw || typeof raw !== 'object') return null
-    // New shape: { state, rngDraws }; legacy: bare GameState with version+seed
     if ('state' in raw && 'rngDraws' in raw) return raw as MatchPersist
     if ('version' in raw && 'seed' in raw) {
-      // Migrate legacy bare state: unknown draws — treat as 0 (broken mid-game)
       return { state: raw, rngDraws: 0 }
     }
     return null
+  }
+
+  let engine: EngineModule
+  try {
+    engine = await loadEngine()
+  } catch (e) {
+    console.error('engine load failed', e)
+    return err('engine unavailable', 503)
   }
 
   // ── state (reconnect / poll) ──────────────────────────────────────────────
@@ -171,6 +246,7 @@ Deno.serve(async (req) => {
       validActions: [],
       winner: game.winner ?? null,
       finishReason: game.finish_reason ?? null,
+      code: game.code,
     })
   }
 
@@ -194,10 +270,12 @@ Deno.serve(async (req) => {
   if (action === 'start') {
     if (game.status !== 'lobby') return err('game not in lobby', 409)
     if (!game.player_a_id || !game.player_b_id) return err('waiting for both players', 409)
-    if (!isA && !isB) return err('forbidden', 403)
 
     const deckA = game.deck_a as string[]
     const deckB = game.deck_b as string[]
+    if (!esMazoValido(deckA) || !esMazoValido(deckB)) {
+      return err('decks not ready (66 cardIds each)', 422)
+    }
     const seed = Number(game.seed)
     try {
       const { state, ctx } = engine.createInitialState(deckA, deckB, seed)
@@ -264,7 +342,6 @@ Deno.serve(async (req) => {
 
     await persist(nextPersist, extra)
 
-    // Append events for audit/replay (best-effort)
     try {
       const events = (result.events ?? []).map((e: Record<string, unknown>) => ({
         game_id: gameId,

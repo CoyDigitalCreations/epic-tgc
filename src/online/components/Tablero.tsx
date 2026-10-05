@@ -1314,16 +1314,18 @@ export function Tablero({ vista, acciones, leTocaA, logDetallado = [], onAccion,
               <p className="text-sm text-gray-200 mb-2">
                 {seleccion.tipo === 'pagar'
                   ? 'Elegí los Éteres de tu Reserva (2A) para pagar:'
-                  : (() => {
-                      const meta = getCardMeta(seleccion.objetivoCardId)
-                      if (meta && esBloqueoFijo(meta)) {
-                        const inst = vista.instances[seleccion.targetInstanceId]
-                        const actuales = inst?.eterBloqueado?.length ?? 0
-                        const requerido = maxEterBloqueado(meta) - actuales
-                        return `Bloquea exactamente ${requerido} Éter(es) sobre ${meta.name}:`
-                      }
-                      return 'Elegí los Éteres a bloquear (hasta el máximo):'
-                    })()}
+                  : seleccion.tipo === 'bloquear'
+                    ? (() => {
+                        const meta = getCardMeta(seleccion.objetivoCardId)
+                        if (meta && esBloqueoFijo(meta)) {
+                          const inst = vista.instances[seleccion.targetInstanceId]
+                          const actuales = inst?.eterBloqueado?.length ?? 0
+                          const requerido = maxEterBloqueado(meta) - actuales
+                          return `Bloquea exactamente ${requerido} Éter(es) sobre ${meta.name}:`
+                        }
+                        return 'Elegí los Éteres a bloquear (hasta el máximo):'
+                      })()
+                    : 'Elegí los Éteres:'}
               </p>
               {yo.eterReserva.length === 0 ? (
                 <p className="text-xs text-gray-500 italic">Tu Reserva está vacía.</p>

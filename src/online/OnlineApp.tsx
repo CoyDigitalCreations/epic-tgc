@@ -229,7 +229,22 @@ function Menu({
       <main className="max-w-7xl mx-auto px-6 py-10">
         <h2 className="font-display text-xl text-ether-200 mb-6">Nueva partida</h2>
 
-        <p className="text-sm text-gray-400 mb-3">Elegí tu mazo:</p>
+        <div className="mb-8 max-w-2xl border border-ether-600/40 bg-ether-600/10 rounded-lg p-4 flex items-center justify-between gap-4">
+          <div>
+            <p className="font-display text-sm font-bold text-ether-200">Jugar con amigos</p>
+            <p className="text-[11px] text-gray-400 mt-0.5">
+              Salas en línea con código · servidor oficial · sin bot
+            </p>
+          </div>
+          <Link
+            to="/epiconline/amigos"
+            className="shrink-0 bg-ether-600 hover:bg-ether-500 text-white px-4 py-2 rounded-lg text-xs font-display tracking-wider transition-colors"
+          >
+            Abrir lobby
+          </Link>
+        </div>
+
+        <p className="text-sm text-gray-400 mb-3">O jugá contra el bot (partida local):</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl mb-4">
           {MAZOS.map((mazo) => {
             const sel = seleccionado(mazo.id)

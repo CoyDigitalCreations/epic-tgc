@@ -485,7 +485,7 @@ export function retornarCampeonesRobados(
       ctx.emit({
         type: 'carta_entrada_a_zona',
         cardInstanceId: other.cardInstanceId,
-        zona: `2${String.fromCharCode(66 + slotLibre)}`,
+        zona: `2${String.fromCharCode(66 + slotLibre)}` as '2B' | '2C' | '2D' | '2E' | '2F',
         jugador: duenoOriginal,
         bocaArriba: true,
       })

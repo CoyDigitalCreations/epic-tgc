@@ -31,3 +31,6 @@ simulacion-partida.txt
 *.njsproj
 *.sln
 *.sw?
+.env.local
+.env
+
