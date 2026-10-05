@@ -214,11 +214,15 @@ export interface GameState {
 /**
  * Contexto de ejecución: stream RNG único (la posición = extracciones previas,
  * contrato de reproducibilidad) + acumulador de eventos por acción.
+ * `draws` cuenta las extracciones consumidas — permite persistir la posición
+ * del stream entre invocaciones serverless (Edge Functions).
  */
 export interface Ctx {
   next(): number
   emit(e: GameEvent): void
   readonly events: GameEvent[]
+  /** Extracciones RNG consumidas desde createCtx (para snapshot serverless). */
+  readonly draws: number
 }
 
 /** Opciones de setup: orden de Vínculos elegido por cada jugador (default: filtro Vínculo de deckX). */

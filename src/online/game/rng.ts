@@ -8,19 +8,40 @@ export { hashStr, mulberry32 }
  * Crea el contexto de ejecución de una partida: stream RNG único (la posición
  * = extracciones previas, contrato de reproducibilidad §6) + acumulador de
  * eventos. applyAction limpia ctx.events al inicio de cada acción (ADR-5).
+ *
+ * `draws` acumula las extracciones de `next()`. Para restaurar el stream en
+ * otro proceso (Edge Function stateless): createCtx(seed) + llamar next()
+ * `draws` veces, o usar createCtxFromDraws(seed, draws).
  */
 export function createCtx(seed: number): Ctx {
   const rand = mulberry32(seed)
   let eventos: GameEvent[] = []
+  let draws = 0
   return {
-    next: () => rand(),
+    next: () => {
+      draws += 1
+      return rand()
+    },
     emit: (e: GameEvent) => {
       eventos.push(e)
     },
     get events() {
       return eventos
     },
+    get draws() {
+      return draws
+    },
   }
+}
+
+/**
+ * Restaura un stream RNG en la posición `draws` (serverless: misma seed +
+ * mismas extracciones previas → misma continuación, contrato §6).
+ */
+export function createCtxFromDraws(seed: number, draws: number): Ctx {
+  const ctx = createCtx(seed)
+  for (let i = 0; i < draws; i++) ctx.next()
+  return ctx
 }
 
 /**

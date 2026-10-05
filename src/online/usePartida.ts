@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { applyAction, botTonto, createInitialState, getValidActions } from './game'
+import { applyAction, botTonto, createInitialState, getValidActions, actorActual } from './game'
 import type { Action, Ctx, GameState, PlayerId } from './game'
 import type { Dificultad } from './game/bot'
 import { getCardMeta } from './game/cards'
@@ -71,26 +71,10 @@ function efectosSeActivanCon(accion: Action, efectos: { tipo?: string; trigger?:
 }
 
 /**
- * El actor de la jugada actual NO es siempre `estado.turno`:
- * - Checkpoint prevent_destroy (Fase 2c) → el jugador que debe elegir.
- * - Cadena 9.6 abierta → el actor es `cadena.prioridad` (el turno queda congelado).
- * - Paso bloqueo (9.3, ADR-11) → el actor es el DEFENSOR (rival del activo).
- * - Resto → el jugador activo.
+ * El actor de la jugada actual vive en el motor (validActions.actorActual).
+ * Re-exportado por comodidad en tests/UI que ya importaban de este módulo.
  */
-export function actorActual(estado: GameState): PlayerId | null {
-  if (estado.fase === 'terminada') return null
-  const preven = estado.preventivosPendientes?.[0]
-  if (preven) return preven.jugador
-  // Cadena GLOBAL (state.cadena) o de combate: el actor es SIEMPRE prioridad —
-  // aunque la fase sea Forja. Sin esto, cadena global en Forja congela al
-  // humano (solo rendirse) y el bot nunca pasa prioridad → FREEZE (seed 66676).
-  const cadena = estado.combate?.cadena ?? estado.cadena
-  if (cadena) return cadena.prioridad
-  if (estado.fase === 'choque' && estado.combate?.paso === 'bloqueo') {
-    return estado.turno === 'A' ? 'B' : 'A'
-  }
-  return estado.turno
-}
+export { actorActual } from './game'
 
 function labelAccionCorta(a: Action): string {
   if (a.type === 'jugar_campeon' || a.type === 'jugar_mistica' || a.type === 'colocar_arcana' || a.type === 'activar_arcana' || a.type === 'activar_habilidad') {

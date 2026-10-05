@@ -15,7 +15,7 @@ export { applyAction } from './actions'
 export type { Action, ApplyActionResult } from './actions'
 
 // Validación y visión
-export { getValidActions } from './validActions'
+export { getValidActions, actorActual } from './validActions'
 export { visibleState } from './visibleState'
 
 // Economía de Éter
@@ -26,7 +26,7 @@ export type { ContextoUso } from './payments'
 export { resolverAlba, robarCarta } from './phases'
 
 // RNG y determinismo
-export { createCtx, shuffleFisherYates } from './rng'
+export { createCtx, createCtxFromDraws, shuffleFisherYates } from './rng'
 
 // Catálogo de cartas
 export { getCardMeta, registrarCartas, faccionesCompartidas, esCampeon, esMistica, esArcana, esEter, esVinculo, campeonNecesitaEterBloqueado, costeEterHabilidad } from './cards'

@@ -9,6 +9,29 @@ import { validarEquiparArtefacto } from './movimientos'
 import type { GameState, PlayerId, CardInstance } from './types'
 
 /**
+ * El actor de la jugada actual NO es siempre `estado.turno`:
+ * - Checkpoint prevent_destroy (Fase 2c) → el jugador que debe elegir.
+ * - Cadena 9.6 abierta → el actor es `cadena.prioridad` (el turno queda congelado).
+ * - Paso bloqueo (9.3, ADR-11) → el actor es el DEFENSOR (rival del activo).
+ * - Resto → el jugador activo.
+ * Usado por UI y por el servidor (Edge Function) para validar de quién es el turno.
+ */
+export function actorActual(estado: GameState): PlayerId | null {
+  if (estado.fase === 'terminada') return null
+  const preven = estado.preventivosPendientes?.[0]
+  if (preven) return preven.jugador
+  // Cadena GLOBAL (state.cadena) o de combate: el actor es SIEMPRE prioridad —
+  // aunque la fase sea Forja. Sin esto, cadena global en Forja congela al
+  // humano (solo rendirse) y el bot nunca pasa prioridad → FREEZE (seed 66676).
+  const cadena = estado.combate?.cadena ?? estado.cadena
+  if (cadena) return cadena.prioridad
+  if (estado.fase === 'choque' && estado.combate?.paso === 'bloqueo') {
+    return estado.turno === 'A' ? 'B' : 'A'
+  }
+  return estado.turno
+}
+
+/**
  * getValidActions(state, playerId) — acciones legales del jugador ACTIVO
  * (state.turno) en la fase activa; `rendirse` siempre (ADR-5: nunca acciones
  * que fallarán por validación; operan sobre el estado interno completo,
