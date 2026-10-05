@@ -26,6 +26,8 @@ export interface MatchStateResponse {
   status: EterGame['status']
   state: GameState | null
   player: PlayerId
+  /** Sala de espera: ¿ya entró el rival? (poll sin query directa a games) */
+  bothPlayers?: boolean
   winner?: PlayerId | null
   finishReason?: string | null
   code?: string

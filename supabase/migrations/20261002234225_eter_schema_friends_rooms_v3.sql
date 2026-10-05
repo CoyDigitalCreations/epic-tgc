@@ -1,5 +1,7 @@
 -- =============================================================================
--- eter schema v1 — Backend MVP "salas de amigos" para Éter TGC
+-- eter schema v3 — Backend MVP "salas de amigos" para Éter TGC
+-- (versión alineada a lo aplicado en remoto; ver también
+--  20261002234254_eter_fix_search_path_trigger_fn.sql)
 --
 -- Diseño (ADR pendiente de escribir en .atl/ cuando se integre el cliente):
 --   - Auth: Supabase Auth (amigos). Perfil auto-creado al registrarse.
@@ -7,10 +9,9 @@
 --   - Autoridad: el ESTADO de la partida (state_json) solo lo escribe el
 --     servidor (Edge Function con service_role). Los clientes JAMÁS pueden
 --     tocar state_json, seed, decks ni winner.
---   - Cliente autenticado solo puede: crear sala (insert), buscar lobby por
---     código (select), y UNirse (update de player_b_id).
---   - game_events: bitácora append-only escrita por el servidor; los
---     participantes solo leen.
+--   - Post 2026-10-05 (eter_rls_hardening): el cliente NO tiene SELECT/
+--     INSERT/UPDATE sobre games ni game_events — todo pasa por match-engine.
+--   - game_events: bitácora append-only escrita por el servidor.
 --   - Mazos: snapshot jsonb (array de cardIds) en games.deck_a/deck_b al
 --     crear/unirse. validarDeck del motor corre server-side al iniciar.
 -- =============================================================================

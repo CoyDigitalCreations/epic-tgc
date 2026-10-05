@@ -3,7 +3,7 @@ import { Link } from 'react-router'
 import { MAZOS } from '../mazos'
 import { visibleState } from '../game'
 import { Tablero } from '../components/Tablero'
-import { getSupabase, supabaseConfigurado, supabaseUrl } from '../backend/supabase'
+import { supabaseConfigurado, supabaseUrl } from '../backend/supabase'
 import {
   asegurarSesion,
   crearSala,
@@ -53,25 +53,20 @@ export default function Lobby() {
     }
   }, [])
 
-  // Poll de sala: cuando ambos jugadores están → start → partida
+  // Poll de sala: cuando ambos jugadores están → start → partida.
+  // Server-authoritative: NO query-eamos eter.games (RLS prohíbe SELECT al
+  // cliente); el Edge Function devuelve bothPlayers + status en `state`.
   useEffect(() => {
     if (vista !== 'espera' || !sala || enPartida) return
     const t = window.setInterval(async () => {
       try {
-        const supabase = getSupabase()
-        if (!supabase) return
-        const { data } = await supabase
-          .from('games')
-          .select('player_a_id,player_b_id,status')
-          .eq('id', sala.gameId)
-          .single()
-        if (!data) return
-        if (data.status === 'playing') {
+        const resp = await obtenerEstado(sala.gameId)
+        if (resp.status === 'playing') {
           setAmbosListos(true)
           setEnPartida(true)
           return
         }
-        if (data.player_a_id && data.player_b_id) {
+        if (resp.bothPlayers) {
           setAmbosListos(true)
           // Cualquiera puede dar start; lo intenta este cliente
           try {
@@ -79,8 +74,8 @@ export default function Lobby() {
             setEnPartida(true)
           } catch {
             // el otro quizás ya lo hizo
-            const resp = await obtenerEstado(sala.gameId)
-            if (resp.status === 'playing') setEnPartida(true)
+            const again = await obtenerEstado(sala.gameId)
+            if (again.status === 'playing') setEnPartida(true)
           }
         }
       } catch {

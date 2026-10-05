@@ -22,7 +22,12 @@ vi.mock('../../backend/matchApi', () => ({
   crearSala: vi.fn(async () => ({ gameId: 'g1', code: 'ABCDEF', seed: 1, player: 'A' })),
   unirseASala: vi.fn(async () => ({ gameId: 'g1', code: 'ABCDEF', seed: 1, player: 'B' })),
   iniciarPartida: vi.fn(),
-  obtenerEstado: vi.fn(async () => ({ status: 'lobby', state: null, player: 'A' })),
+  obtenerEstado: vi.fn(async () => ({
+    status: 'lobby',
+    state: null,
+    player: 'A',
+    bothPlayers: false,
+  })),
   enviarAccion: vi.fn(),
   rendirse: vi.fn(),
 }))

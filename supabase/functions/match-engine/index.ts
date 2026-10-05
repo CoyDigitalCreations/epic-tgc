@@ -49,6 +49,10 @@ function loadEngine(): Promise<EngineModule> {
   return enginePromise
 }
 
+// PostgREST solo expone schemas listados en Settings → API → Exposed schemas.
+// El schema del juego es `eter` (no `public`) — paths deben calificarlo.
+const REST = (path: string) => `eter/${path}`
+
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 
@@ -134,7 +138,7 @@ Deno.serve(async (req) => {
     if (!esMazoValido(deck)) return err('deck must be 66 cardIds')
     const roomCode = generarCodigoSala()
     const seed = Math.floor(Math.random() * 1_000_000)
-    const insertRes = await sb('games', {
+    const insertRes = await sb(REST('games'), {
       method: 'POST',
       headers: { Prefer: 'return=representation' },
       body: JSON.stringify({
@@ -163,7 +167,7 @@ Deno.serve(async (req) => {
     if (!code) return err('code required')
     if (!esMazoValido(deck)) return err('deck must be 66 cardIds')
     const findRes = await sb(
-      `games?code=eq.${encodeURIComponent(code.toUpperCase())}&status=eq.lobby&player_b_id=is.null&select=*`,
+      REST(`games?code=eq.${encodeURIComponent(code.toUpperCase())}&status=eq.lobby&player_b_id=is.null&select=*`),
     )
     if (!findRes.ok) return err('db error finding room', 500)
     const rooms = await findRes.json()
@@ -171,7 +175,7 @@ Deno.serve(async (req) => {
     if (!room) return err('room not found or full', 404)
     if (room.player_a_id === userId) return err('cannot join your own room', 400)
 
-    const updRes = await sb(`games?id=eq.${room.id}`, {
+    const updRes = await sb(REST(`games?id=eq.${room.id}`), {
       method: 'PATCH',
       headers: { Prefer: 'return=representation' },
       body: JSON.stringify({ player_b_id: userId, deck_b: deck }),
@@ -190,7 +194,7 @@ Deno.serve(async (req) => {
   if (!gameId) return err('gameId required')
 
   // Load game (start/act/state/forfeit)
-  const gameRes = await sb(`games?id=eq.${encodeURIComponent(gameId)}&select=*`)
+  const gameRes = await sb(REST(`games?id=eq.${encodeURIComponent(gameId)}&select=*`))
   if (!gameRes.ok) return err('db error loading game', 500)
   const games = await gameRes.json()
   const game = games?.[0]
@@ -202,7 +206,7 @@ Deno.serve(async (req) => {
   const playerId: 'A' | 'B' = isA ? 'A' : 'B'
 
   async function persist(persistObj: MatchPersist, extra: Record<string, unknown>) {
-    const res = await sb(`games?id=eq.${encodeURIComponent(gameId)}`, {
+    const res = await sb(REST(`games?id=eq.${encodeURIComponent(gameId)}`), {
       method: 'PATCH',
       headers: { Prefer: 'return=minimal' },
       body: JSON.stringify({ state_json: persistObj, ...extra }),
@@ -232,11 +236,21 @@ Deno.serve(async (req) => {
     return err('engine unavailable', 503)
   }
 
-  // ── state (reconnect / poll) ──────────────────────────────────────────────
+  // ── state (reconnect / poll / sala de espera) ────────────────────────────
   if (action === 'state') {
     const persistObj = await loadPersist()
+    // bothPlayers: el lobby necesita saber si el rival ya entró (sin leer
+    // la tabla directamente — RLS prohíbe SELECT al cliente sobre games).
+    const bothPlayers = Boolean(game.player_a_id && game.player_b_id)
     if (!persistObj) {
-      return json({ status: game.status, state: null, player: playerId, validActions: [] })
+      return json({
+        status: game.status,
+        state: null,
+        player: playerId,
+        validActions: [],
+        bothPlayers,
+        code: game.code,
+      })
     }
     const st = persistObj.state as never
     return json({
@@ -244,6 +258,7 @@ Deno.serve(async (req) => {
       state: engine.visibleState(st, playerId),
       player: playerId,
       validActions: [],
+      bothPlayers,
       winner: game.winner ?? null,
       finishReason: game.finish_reason ?? null,
       code: game.code,
@@ -350,7 +365,7 @@ Deno.serve(async (req) => {
         payload: e,
       }))
       if (events.length > 0) {
-        await sb('game_events', {
+        await sb(REST('game_events'), {
           method: 'POST',
           headers: { Prefer: 'return=minimal' },
           body: JSON.stringify(events),
