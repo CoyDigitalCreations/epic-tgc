@@ -159,27 +159,6 @@ export function MiniCard({
 
   return (
     <div className="group relative flex flex-col items-center gap-1" style={{ width: ancho }}>
-      {/* Éteres bloqueados como cartas encima (Místicas/Arcanas) — los puntos
-          azules en la carta se mantienen como indicador adicional */}
-      {eteresVisibles && (
-        <div
-          className="flex gap-[2px] cursor-pointer"
-          onClick={(e) => {
-            e.stopPropagation()
-            onÉterClick?.()
-          }}
-          title="Ver Éteres bloqueados"
-        >
-          {eteresBloqueados!.map((e) => (
-            <MiniCard
-              key={e.cardInstanceId}
-              inst={e}
-              tamano="xs"
-              invertida={invertida}
-            />
-          ))}
-        </div>
-      )}
       {/* Tooltip hover: nombre de la carta + vínculo equipado */}
       {meta && (
         <div
@@ -269,6 +248,39 @@ export function MiniCard({
             }}
           >
             Roto
+          </div>
+        )}
+
+        {/* Éteres bloqueados como overlay SOBRE la imagen (Místicas/Arcanas).
+            Los puntos azules abajo se mantienen como indicador adicional. */}
+        {eteresVisibles && (
+          <div
+            className="flex gap-[2px] cursor-pointer"
+            onClick={(e) => {
+              e.stopPropagation()
+              onÉterClick?.()
+            }}
+            title="Ver Éteres bloqueados"
+            style={{
+              position: 'absolute',
+              bottom: 8,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              zIndex: 4,
+              padding: '2px 3px',
+              borderRadius: 4,
+              background: 'rgba(0,0,0,0.55)',
+              border: '1px solid rgba(34,211,238,0.3)',
+            }}
+          >
+            {eteresBloqueados!.map((e) => (
+              <MiniCard
+                key={e.cardInstanceId}
+                inst={e}
+                tamano="xs"
+                invertida={invertida}
+              />
+            ))}
           </div>
         )}
 
