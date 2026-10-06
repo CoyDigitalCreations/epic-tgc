@@ -251,11 +251,12 @@ export function MiniCard({
           </div>
         )}
 
-        {/* Éteres bloqueados como overlay SOBRE la imagen (Místicas/Arcanas).
-            Los puntos azules abajo se mantienen como indicador adicional. */}
-        {eteresVisibles && (
+        {/* Último Éter bloqueado como overlay SOBRE la imagen (Místicas/Arcanas).
+            Solo la última carta, en posición rotada (como agotado). Los puntos
+            azules abajo indican el total. Clic abre el panel con todas. */}
+        {eteresVisibles && eterRender && (
           <div
-            className="flex gap-[2px] cursor-pointer"
+            className="cursor-pointer"
             onClick={(e) => {
               e.stopPropagation()
               onÉterClick?.()
@@ -267,20 +268,60 @@ export function MiniCard({
               left: '50%',
               transform: 'translateX(-50%)',
               zIndex: 4,
-              padding: '2px 3px',
-              borderRadius: 4,
-              background: 'rgba(0,0,0,0.55)',
-              border: '1px solid rgba(34,211,238,0.3)',
+              pointerEvents: 'auto',
             }}
           >
-            {eteresBloqueados!.map((e) => (
-              <MiniCard
-                key={e.cardInstanceId}
-                inst={e}
-                tamano="xs"
-                invertida={invertida}
-              />
-            ))}
+            <div
+              style={{
+                width: ancho * 0.55,
+                height: ancho * 0.55,
+                position: 'relative',
+              }}
+            >
+              {/* Carta rotada 90° (posición agotado) escalada al tamaño del overlay */}
+              <div
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  pointerEvents: 'none',
+                }}
+              >
+                <div
+                  style={{
+                    transform: `scale(${(ancho * 0.55) / ANCHO_CARTA}) rotate(-90deg)`,
+                    transformOrigin: 'center',
+                    width: ANCHO_CARTA,
+                    height: ALTO_CARTA,
+                  }}
+                >
+                  <RenderCarta card={eterRender} imageUrl={imgEter} />
+                </div>
+              </div>
+            </div>
+            {/* Badge ×N si hay más de una */}
+            {eteresBloqueados!.length > 1 && (
+              <span
+                style={{
+                  position: 'absolute',
+                  bottom: -2,
+                  right: -4,
+                  background: 'rgba(0,0,0,0.8)',
+                  color: '#22d3ee',
+                  fontSize: 8,
+                  fontWeight: 700,
+                  padding: '1px 4px',
+                  borderRadius: 4,
+                  border: '1px solid rgba(34,211,238,0.4)',
+                  pointerEvents: 'none',
+                  ...(invertida ? { transform: 'rotate(180deg)' } : undefined),
+                }}
+              >
+                ×{eteresBloqueados!.length}
+              </span>
+            )}
           </div>
         )}
 
