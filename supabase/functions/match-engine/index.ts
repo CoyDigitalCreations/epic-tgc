@@ -18,10 +18,24 @@
  * con player_a_id/player_b_id.
  */
 
-// Bundle del motor en el repo (regenerar: npx esbuild src/online/game/index.ts
-// --bundle --format=esm --platform=neutral --outfile=supabase/functions/match-engine/engine.js)
-const ENGINE_URL =
-  'https://raw.githubusercontent.com/CoyDigitalCreations/epic-tgc/master/supabase/functions/match-engine/engine.js'
+// Bundle del motor incluido LOCALMENTE en la Edge Function.
+// El Edge Runtime de Supabase BLOQUEA imports remotos (GitHub raw, jsDelivr)
+// → 503 engine unavailable. La única forma confiable es tener engine.js
+// como archivo local e import relativo './engine.js'.
+//
+// Regenerar el bundle cuando cambie src/online/game:
+//   npx esbuild src/online/game/index.ts --bundle --format=esm --platform=neutral \
+//     --outfile=supabase/functions/match-engine/engine.js
+//
+// Deploy: npx supabase functions deploy match-engine --project-ref kznvighndocgebhejvol
+// (requiere npx supabase login una vez)
+import {
+  actorActual,
+  applyAction,
+  createCtxFromDraws,
+  createInitialState,
+  visibleState,
+} from './engine.js'
 
 type EngineModule = {
   createInitialState: (deckA: string[], deckB: string[], seed: number) => {
@@ -43,16 +57,17 @@ type EngineModule = {
   actorActual: (state: never) => 'A' | 'B' | null
 }
 
-let enginePromise: Promise<EngineModule> | null = null
-function loadEngine(): Promise<EngineModule> {
-  if (!enginePromise) enginePromise = import(ENGINE_URL) as Promise<EngineModule>
-  return enginePromise
+const engine: EngineModule = {
+  createInitialState: createInitialState as EngineModule['createInitialState'],
+  createCtxFromDraws: createCtxFromDraws as EngineModule['createCtxFromDraws'],
+  applyAction: applyAction as EngineModule['applyAction'],
+  visibleState: visibleState as EngineModule['visibleState'],
+  actorActual: actorActual as EngineModule['actorActual'],
 }
 
-// PostgREST solo expone schemas listados en Settings → API → Exposed schemas.
-// El schema del juego es `eter` (no `public`) — paths deben calificarlo.
-const REST = (path: string) => `eter/${path}`
-
+// PostgREST de Supabase NO usa prefijo de schema en la URL para schemas
+// custom — se selecciona con headers Accept-Profile / Content-Profile.
+// Docs: https://supabase.com/docs/guides/api/using-custom-schemas
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 
@@ -80,6 +95,9 @@ async function sb(path: string, init?: RequestInit): Promise<Response> {
       apikey: SERVICE_KEY,
       Authorization: `Bearer ${SERVICE_KEY}`,
       'Content-Type': 'application/json',
+      // Schema custom `eter`: URL queda /rest/v1/<table>, el schema va en header
+      'Accept-Profile': 'eter',
+      'Content-Profile': 'eter',
       ...(init?.headers ?? {}),
     },
   })
@@ -138,7 +156,7 @@ Deno.serve(async (req) => {
     if (!esMazoValido(deck)) return err('deck must be 66 cardIds')
     const roomCode = generarCodigoSala()
     const seed = Math.floor(Math.random() * 1_000_000)
-    const insertRes = await sb(REST('games'), {
+    const insertRes = await sb('games', {
       method: 'POST',
       headers: { Prefer: 'return=representation' },
       body: JSON.stringify({
@@ -167,7 +185,7 @@ Deno.serve(async (req) => {
     if (!code) return err('code required')
     if (!esMazoValido(deck)) return err('deck must be 66 cardIds')
     const findRes = await sb(
-      REST(`games?code=eq.${encodeURIComponent(code.toUpperCase())}&status=eq.lobby&player_b_id=is.null&select=*`),
+      `games?code=eq.${encodeURIComponent(code.toUpperCase())}&status=eq.lobby&player_b_id=is.null&select=*`,
     )
     if (!findRes.ok) return err('db error finding room', 500)
     const rooms = await findRes.json()
@@ -175,7 +193,7 @@ Deno.serve(async (req) => {
     if (!room) return err('room not found or full', 404)
     if (room.player_a_id === userId) return err('cannot join your own room', 400)
 
-    const updRes = await sb(REST(`games?id=eq.${room.id}`), {
+    const updRes = await sb(`games?id=eq.${room.id}`, {
       method: 'PATCH',
       headers: { Prefer: 'return=representation' },
       body: JSON.stringify({ player_b_id: userId, deck_b: deck }),
@@ -194,7 +212,7 @@ Deno.serve(async (req) => {
   if (!gameId) return err('gameId required')
 
   // Load game (start/act/state/forfeit)
-  const gameRes = await sb(REST(`games?id=eq.${encodeURIComponent(gameId)}&select=*`))
+  const gameRes = await sb(`games?id=eq.${encodeURIComponent(gameId)}&select=*`)
   if (!gameRes.ok) return err('db error loading game', 500)
   const games = await gameRes.json()
   const game = games?.[0]
@@ -206,7 +224,7 @@ Deno.serve(async (req) => {
   const playerId: 'A' | 'B' = isA ? 'A' : 'B'
 
   async function persist(persistObj: MatchPersist, extra: Record<string, unknown>) {
-    const res = await sb(REST(`games?id=eq.${encodeURIComponent(gameId)}`), {
+    const res = await sb(`games?id=eq.${encodeURIComponent(gameId)}`, {
       method: 'PATCH',
       headers: { Prefer: 'return=minimal' },
       body: JSON.stringify({ state_json: persistObj, ...extra }),
@@ -226,14 +244,6 @@ Deno.serve(async (req) => {
       return { state: raw, rngDraws: 0 }
     }
     return null
-  }
-
-  let engine: EngineModule
-  try {
-    engine = await loadEngine()
-  } catch (e) {
-    console.error('engine load failed', e)
-    return err('engine unavailable', 503)
   }
 
   // ── state (reconnect / poll / sala de espera) ────────────────────────────
@@ -365,7 +375,7 @@ Deno.serve(async (req) => {
         payload: e,
       }))
       if (events.length > 0) {
-        await sb(REST('game_events'), {
+        await sb('game_events', {
           method: 'POST',
           headers: { Prefer: 'return=minimal' },
           body: JSON.stringify(events),
