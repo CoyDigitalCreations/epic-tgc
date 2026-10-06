@@ -289,8 +289,8 @@ export function MiniCard({
           >
             <div
               style={{
-                width: ancho * 0.55,
-                height: ancho * 0.55,
+                width: ancho * 0.75,
+                height: ancho * 0.75,
                 position: 'relative',
               }}
             >
@@ -307,7 +307,7 @@ export function MiniCard({
               >
                 <div
                   style={{
-                    transform: `scale(${(ancho * 0.55) / ANCHO_CARTA}) rotate(-90deg)`,
+                    transform: `scale(${(ancho * 0.75) / ANCHO_CARTA}) rotate(-90deg)`,
                     transformOrigin: 'center',
                     width: ANCHO_CARTA,
                     height: ALTO_CARTA,
