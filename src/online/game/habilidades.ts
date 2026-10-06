@@ -3,7 +3,7 @@
  * Extraído de actions.ts para separación de dominios (change: refactor-engine).
  */
 import type { GameState, Ctx } from './types'
-import { getCardMeta, costeEterHabilidad, faccionesCompartidas, type AnyCard } from './cards'
+import { getCardMeta, costeEterHabilidad, esArtefactoEquipable, faccionesCompartidas, type AnyCard } from './cards'
 import type { CondicionEfecto } from '../../shared/types'
 import { validarPago, aplicarPago, type ContextoUso } from './payments'
 import { dispararTrigger, condicionCumple, championNegado, type TriggerEfecto, type PayloadEfecto } from './efectos'
@@ -41,6 +41,12 @@ export function validarActivarArcana(state: GameState, action: Extract<Action, {
   // Pago de éter
   const pago = validarPago(state, state.turno, action.eterIds, meta.id)
   if (!pago.ok) return pago.error ?? 'pago inválido'
+  // ARTEFACTO equipable: requiere al menos un Campeón en el campo propio
+  if (esArtefactoEquipable(meta)) {
+    if (!p.campo.campeones.some((id) => id !== null)) {
+      return 'no puedes activar un ARTEFACTO sin un Campeón en tu campo'
+    }
+  }
   return null
 }
 
@@ -157,9 +163,14 @@ export function ejecutarActivarArcana(s: GameState, action: Extract<Action, { ty
   aplicarPago(s, ctx, s.turno, action.eterIds, inst.cardId!, contextoUso)
   inst.bocaArriba = true
   ctx.emit({ type: 'carta_activada', cardInstanceId: id, jugador: s.turno, slot: action.slot })
+  const meta = getCardMeta(inst.cardId!)
+  // ARTEFACTO equipable: crear pendiente — efectos diferidos hasta equipar
+  if (meta && esArtefactoEquipable(meta)) {
+    s.equiparPendiente = { artefactoId: id, jugador: s.turno, contexto: 'activar_arcana' }
+    return
+  }
   // Fase 2a — modelo de activación: la recompensa (efectos tipo hechizo) se
   // resuelve al activar. El JSON de Card-Maker emite recompensas sin trigger.
-  const meta = getCardMeta(inst.cardId!)
   if (meta && 'efectos' in meta && meta.efectos) {
     for (const efecto of meta.efectos) {
       if (efecto.tipo === 'hechizo' && !efecto.trigger && efecto.efecto) {

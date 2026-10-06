@@ -3,7 +3,7 @@
  * Extraído de actions.ts para separación de dominios (change: refactor-engine).
  */
 import type { GameState, PlayerId, CardInstance, Zona } from './types'
-import { esCampeon, esMistica, esArcana, esVinculo, faccionesCompartidas, getCardMeta } from './cards'
+import { esCampeon, esMistica, esArcana, esVinculo, esArtefactoEquipable, faccionesCompartidas, getCardMeta } from './cards'
 import { esSingular, sacrificiosRequeridos, copiasEnCampo, campeonesSacrificables } from './campo'
 import { aplicarPago, validarPago, etersParaPagar, type ContextoUso } from './payments'
 import { SLOTS_CAMPEONES, SLOTS_MISTICAS_TACTICAS, SLOTS_ARCANAS_COMBATE, slotAZona } from './zones'
@@ -80,6 +80,13 @@ export function validarJugarMistica(state: GameState, action: Extract<Action, { 
   if (state.players[state.turno].campo.misticasTacticas[action.slot] !== null) return 'slot ocupado'
   const pago = validarPago(state, state.turno, action.eterIds, meta.id)
   if (!pago.ok) return pago.error ?? 'pago inválido'
+  // ARTEFACTO equipable: requiere al menos un Campeón en el campo propio
+  if (esArtefactoEquipable(meta)) {
+    const p = state.players[state.turno]
+    if (!p.campo.campeones.some((id) => id !== null)) {
+      return 'no puedes jugar un ARTEFACTO sin un Campeón en tu campo'
+    }
+  }
   return null
 }
 
@@ -188,11 +195,16 @@ export function ejecutarJugarMistica(s: GameState, action: Extract<Action, { typ
   s.instances[id]!.entradaEsteTurno = true  // §5.5: no puede responder en cadena el turno que entra
   ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: id, zona, jugador: s.turno, bocaArriba: true })
   ctx.emit({ type: 'carta_invocada', cardInstanceId: id, tipo: 'Mística', slot: action.slot })
+  // ARTEFACTO equipable: crear pendiente — los efectos se resuelven DESPUÉS de equipar
+  const inst = s.instances[id]!
+  const meta = inst.cardId ? getCardMeta(inst.cardId) : null
+  if (meta && esArtefactoEquipable(meta)) {
+    s.equiparPendiente = { artefactoId: id, jugador: s.turno, contexto: 'jugar_mistica' }
+    return // efectos diferidos hasta ejecutarEquiparArtefacto
+  }
   // C5 (change 4): al-jugar-mística se dispara con la instancia YA en campo
   dispararTrigger(s, ctx, 'al-jugar-mistica', s.turno, [id])
   // Fase 2a: hechizos SIN trigger se resuelven al jugar la mística (data-driven)
-  const inst = s.instances[id]!
-  const meta = inst.cardId ? getCardMeta(inst.cardId) : null
   if (meta && 'efectos' in meta && meta.efectos) {
     for (const efecto of meta.efectos) {
       if (efecto.tipo === 'hechizo' && !efecto.trigger && efecto.efecto) {
@@ -238,6 +250,36 @@ export function ejecutarEquiparArtefacto(s: GameState, action: Extract<Action, {
   if (!inst) return
   inst.equipadoA = action.campeonInstanceId
   ctx.emit({ type: 'carta_activada', cardInstanceId: action.cardInstanceId, jugador: s.turno, slot: -1 })
+  // Si había un pendiente de equipar, resolver los efectos diferidos AHORA
+  if (s.equiparPendiente && s.equiparPendiente.artefactoId === action.cardInstanceId) {
+    const { contexto } = s.equiparPendiente
+    delete s.equiparPendiente
+    resolverEfectosArtefacto(s, ctx, action.cardInstanceId, contexto)
+  }
+}
+
+/**
+ * Resuelve los efectos diferidos de un ARTEFACTO después de equiparse.
+ * Misma lógica que en ejecutarJugarMistica/ejecutarActivarArcana pero
+ * post-equip: trigger + hechizos + cadena.
+ */
+function resolverEfectosArtefacto(s: GameState, ctx: Ctx, id: string, contexto: 'jugar_mistica' | 'activar_arcana'): void {
+  const inst = s.instances[id]
+  if (!inst) return
+  const meta = inst.cardId ? getCardMeta(inst.cardId) : null
+  if (contexto === 'jugar_mistica') {
+    dispararTrigger(s, ctx, 'al-jugar-mistica', s.turno, [id])
+  }
+  // Fase 2a: hechizos SIN trigger se resuelven (data-driven)
+  if (meta && 'efectos' in meta && meta.efectos) {
+    for (const efecto of meta.efectos) {
+      if (efecto.tipo === 'hechizo' && !efecto.trigger && efecto.efecto) {
+        interpretEffect(s, ctx, inst, efecto, { jugador: s.turno, fromTrigger: true })
+      }
+    }
+  }
+  // §9.6: abrir cadena global
+  abrirCadenaGlobal(s, s.turno, { cardInstanceId: id, descripcion: meta?.name ?? id })
 }
 
 /* ─────────────────── Generador de acciones de Forja ─────────────────── */

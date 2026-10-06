@@ -59,6 +59,30 @@ export function getValidActions(state: GameState, playerId: PlayerId): Action[] 
       { type: 'responder_prevenicion', prevenir: false },
     ]
   }
+  // Pendiente de equipar ARTEFACTO: solo equipar_artefacto (+ rendirse).
+  // El artefacto ya está en campo; los efectos se resuelven tras el equip.
+  const equipPend = state.equiparPendiente
+  if (equipPend) {
+    // Defensa: si el artefacto ya está equipado (equip vía efecto u otro
+    // camino), limpiar el pendiente y continuar con el flujo normal.
+    const instPend = state.instances[equipPend.artefactoId]
+    if (instPend?.equipadoA) {
+      delete state.equiparPendiente
+    } else {
+      if (playerId !== equipPend.jugador) return [{ type: 'rendirse' }]
+      const accionesEquip: Action[] = [{ type: 'rendirse' }]
+      if (instPend) {
+        const p = state.players[playerId]
+        for (const campeonId of p.campo.campeones) {
+          if (!campeonId) continue
+          const accion: Action = { type: 'equipar_artefacto', cardInstanceId: equipPend.artefactoId, campeonInstanceId: campeonId }
+          if (validarEquiparArtefacto(state, accion) !== null) continue
+          accionesEquip.push(accion)
+        }
+      }
+      return accionesEquip
+    }
+  }
   if (state.fase === 'terminada') return []
   const acciones: Action[] = [{ type: 'rendirse' }]
 

@@ -55,6 +55,20 @@ export function esVinculo(card: AnyCard): card is VinculoCard {
 }
 
 /**
+ * true si la carta es un ARTEfacto que requiere selección manual de campeón.
+ * - Keyword 'Artefacto' presente
+ * - NO tiene efecto invocar_y_equipar (ese se auto-equipa al invocar)
+ * Aplica a Místicas y Arcanas con esa keyword.
+ */
+export function esArtefactoEquipable(card: AnyCard): boolean {
+  if (!('keywords' in card) || !card.keywords?.includes('Artefacto')) return false
+  if ('efectos' in card && card.efectos) {
+    if (card.efectos.some((e) => e.efecto === 'invocar_y_equipar')) return false
+  }
+  return true
+}
+
+/**
  * Extrae el costo en Éteres de una habilidad activa.
  * Lee de efectos[] — el sistema unificado.
  */

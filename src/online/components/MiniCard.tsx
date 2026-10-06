@@ -269,7 +269,8 @@ export function MiniCard({
 
         {/* Último Éter bloqueado como overlay SOBRE la imagen (Místicas/Arcanas).
             Solo la última carta, en posición rotada (como agotado). Los puntos
-            azules abajo indican el total. Clic abre el panel con todas. */}
+            azules abajo indican el total. Clic abre el panel con todas.
+            El overlay es MÁS GRANDE que la carta y sobresale de ella. */}
         {eteresVisibles && eterRender && (
           <div
             className="cursor-pointer"
@@ -280,7 +281,7 @@ export function MiniCard({
             title="Ver Éteres bloqueados"
             style={{
               position: 'absolute',
-              bottom: 8,
+              bottom: 6,
               left: '50%',
               transform: 'translateX(-50%)',
               zIndex: 4,
@@ -289,12 +290,12 @@ export function MiniCard({
           >
             <div
               style={{
-                width: ancho * 0.75,
-                height: ancho * 0.75,
+                width: ancho * 1.3,
+                height: ancho * 0.85,
                 position: 'relative',
               }}
             >
-              {/* Carta rotada 90° (posición agotado) escalada al tamaño del overlay */}
+              {/* Carta rotada 90° (posición agotado) — claramente más ancha que la carta madre */}
               <div
                 style={{
                   position: 'absolute',
@@ -307,7 +308,7 @@ export function MiniCard({
               >
                 <div
                   style={{
-                    transform: `scale(${(ancho * 0.75) / ANCHO_CARTA}) rotate(-90deg)`,
+                    transform: `scale(${(ancho * 0.85) / ANCHO_CARTA}) rotate(-90deg)`,
                     transformOrigin: 'center',
                     width: ANCHO_CARTA,
                     height: ALTO_CARTA,

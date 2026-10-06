@@ -209,6 +209,16 @@ export interface GameState {
   efectosPendientes?: EfectoPendiente[]
   /** Checkpoint prevent_destroy (Fase 2c): elecciones de prevenión FIFO. */
   preventivosPendientes?: PrevenicionPendiente[]
+  /**
+   * Pendiente de equipar ARTEFACTO (keyword) — se crea al jugar/activar un
+   * artefacto que requiere selección de campeón ANTES de resolver efectos.
+   * Mientras exista, solo se permiten acciones equipar_artefacto.
+   */
+  equiparPendiente?: {
+    artefactoId: string
+    jugador: PlayerId
+    contexto: 'jugar_mistica' | 'activar_arcana'
+  }
 }
 
 /**
