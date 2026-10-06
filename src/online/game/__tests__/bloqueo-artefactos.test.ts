@@ -600,14 +600,16 @@ describe('Aurora FB-010 — steal_champion vía bloqueo_fijo', () => {
     expect(s2.objetivosPendientes![0].jugador).toBe('A')
   })
 
-  it('al elegir el objetivo → roba el campeón (agotado, dueño original)', () => {
+  it('al elegir el objetivo → roba el campeón (conserva agotamiento, dueño original)', () => {
     const ctx = crearCtx()
     const { s, auroraId, rivalId, ids } = setupAurora()
     let s2 = aplicar(s, { type: 'bloquear_eter', eterIds: ids.slice(0, 4), targetInstanceId: auroraId }, ctx)
     s2 = aplicar(s2, { type: 'elegir_objetivo', objetivoId: rivalId }, ctx)
     expect(s2.players.A.campo.campeones).toContain(rivalId)
     expect(s2.players.B.campo.campeones[0]).toBeNull()
-    expect(s2.instances[rivalId].agotado).toBe(true)
+    // El robado NO se agota forzadamente: conserva su estado previo
+    // (en este setup el rival no estaba agotado → llega sin agotar)
+    expect(s2.instances[rivalId].agotado).toBeFalsy()
     expect(s2.instances[rivalId].stolenBy).toBe(auroraId)
     // Dueño original se conserva (control prestado)
     expect(s2.instances[rivalId].owner).toBe('B')

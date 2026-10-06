@@ -57,6 +57,8 @@ interface PanelAbierto {
   zona: ZonaPanel
   /** Slot del Campeón (0-4) cuando zona='bloqueado' — solo mostrar sus éteres. */
   campeonSlot?: number
+  /** Instance ID de un artefacto (Mística/Arcana) cuando zona='bloqueado'. */
+  artefactoId?: string
 }
 
 const FASE_LABEL: Record<string, string> = {
@@ -330,7 +332,7 @@ interface GrillaProps {
   /** Abre la carta en grande (CartaZoom) para revisar su efecto. */
   abrirZoom: (inst: CardInstance) => void
   /** Abre el panel inferior con la lista completa de una zona (Éter 2A/1A, Cementerio 2G, Exilio 1G). */
-  abrirPanel: (jugador: 'A' | 'B', zona: ZonaPanel, campeonSlot?: number) => void
+  abrirPanel: (jugador: 'A' | 'B', zona: ZonaPanel, campeonSlot?: number, artefactoId?: string) => void
   /** Grilla del rival: se renderiza de cabeza (vista desde el otro lado de la mesa). */
   invertida?: boolean
   seleccion: Seleccion
@@ -631,6 +633,7 @@ function GrillaJugador({
   for (let slot = 0; slot < 3; slot++) {
     const zona = `3${String.fromCharCode(65 + slot)}` // 3A…3C (Místicas/Tácticas)
     const id = p.campo.misticasTacticas[slot]
+    const instMist = id ? vista.instances[id] : null
     // Buscar acciones de equipar_artefacto para esta carta
     const accionesEquipar = soy && leTocaA && id
       ? acciones.filter((a) => a.type === 'equipar_artefacto' && a.cardInstanceId === id)
@@ -639,10 +642,25 @@ function GrillaJugador({
     const bloquearMist = soy && leTocaA && id
       ? acciones.find((a) => a.type === 'bloquear_eter' && a.targetInstanceId === id)
       : undefined
+    // Éteres bloqueados como cartas encima + nombre del campeón equipado
+    const eteresMist = (instMist?.eterBloqueado ?? [])
+      .map((eid) => vista.instances[eid])
+      .filter((e): e is NonNullable<typeof e> => e != null)
+    const equipadoAMist = instMist?.equipadoA
+      ? getCardMeta(vista.instances[instMist.equipadoA]?.cardId ?? '')?.name ?? undefined
+      : undefined
     celdas.push(
       <Celda key={zona} zona={zona} invertida={invertida}>
         {id ? (
-          <MiniCard inst={vista.instances[id]} tamano="md" onZoom={() => abrirZoom(vista.instances[id])} invertida={invertida}>
+          <MiniCard
+            inst={vista.instances[id]}
+            tamano="md"
+            onZoom={() => abrirZoom(vista.instances[id])}
+            invertida={invertida}
+            equipadoANombre={equipadoAMist}
+            eteresBloqueados={eteresMist.length > 0 ? eteresMist : undefined}
+            onÉterClick={eteresMist.length > 0 ? () => abrirPanel(jugador, 'bloqueado', undefined, id) : undefined}
+          >
             {(accionesEquipar.length > 0 || bloquearMist) && (
               <div className="flex gap-1 flex-wrap justify-center">
                 {accionesEquipar.length > 0 && (
@@ -690,6 +708,13 @@ function GrillaJugador({
     const bloquearArc = soy && leTocaA && id
       ? acciones.find((a) => a.type === 'bloquear_eter' && a.targetInstanceId === id)
       : undefined
+    // Éteres bloqueados como cartas encima + nombre del campeón equipado
+    const eteresArc = (inst?.eterBloqueado ?? [])
+      .map((eid) => vista.instances[eid])
+      .filter((e): e is NonNullable<typeof e> => e != null)
+    const equipadoAArc = inst?.equipadoA
+      ? getCardMeta(vista.instances[inst.equipadoA]?.cardId ?? '')?.name ?? undefined
+      : undefined
     celdas.push(
       <Celda key={zona} zona={zona} invertida={invertida}>
         {inst ? (
@@ -703,6 +728,9 @@ function GrillaJugador({
                 : undefined
             }
             invertida={invertida}
+            equipadoANombre={equipadoAArc}
+            eteresBloqueados={eteresArc.length > 0 ? eteresArc : undefined}
+            onÉterClick={eteresArc.length > 0 ? () => abrirPanel(jugador, 'bloqueado', undefined, id) : undefined}
           >
             {(activarArcana || bloquearArc) && (
               <div className="flex gap-1 flex-wrap justify-center">
@@ -1134,7 +1162,7 @@ export function Tablero({ vista, acciones, leTocaA, logDetallado = [], onAccion,
               onAccion={onAccion}
               abrirSelector={abrirSelector}
               abrirZoom={abrirZoom}
-              abrirPanel={(j, z, slot) => setPanelAbierto({ jugador: j, zona: z, campeonSlot: slot })}
+              abrirPanel={(j, z, slot, artefactoId) => setPanelAbierto({ jugador: j, zona: z, campeonSlot: slot, artefactoId })}
               invertida
               seleccion={null}
               setSeleccion={setSeleccion}
@@ -1161,7 +1189,7 @@ export function Tablero({ vista, acciones, leTocaA, logDetallado = [], onAccion,
               onAccion={onAccion}
               abrirSelector={abrirSelector}
               abrirZoom={abrirZoom}
-              abrirPanel={(j, z, slot) => setPanelAbierto({ jugador: j, zona: z, campeonSlot: slot })}
+              abrirPanel={(j, z, slot, artefactoId) => setPanelAbierto({ jugador: j, zona: z, campeonSlot: slot, artefactoId })}
               seleccion={seleccion}
               setSeleccion={setSeleccion}
               animaciones={animaciones}
@@ -1492,11 +1520,16 @@ export function Tablero({ vista, acciones, leTocaA, logDetallado = [], onAccion,
                 ? pj.cementerio
                 : panelAbierto.zona === 'exilio'
                   ? pj.exilio
-                  : panelAbierto.campeonSlot !== undefined && pj.campo.campeones[panelAbierto.campeonSlot] !== null
-                    ? vista.instances[pj.campo.campeones[panelAbierto.campeonSlot]!]?.eterBloqueado ?? []
-                    : pj.campo.campeones
-                      .filter((id): id is string => id !== null)
-                      .flatMap((cid) => vista.instances[cid]?.eterBloqueado ?? [])
+                  : panelAbierto.artefactoId !== undefined && vista.instances[panelAbierto.artefactoId]
+                    ? vista.instances[panelAbierto.artefactoId]?.eterBloqueado ?? []
+                    : panelAbierto.campeonSlot !== undefined && pj.campo.campeones[panelAbierto.campeonSlot] !== null
+                      ? vista.instances[pj.campo.campeones[panelAbierto.campeonSlot]!]?.eterBloqueado ?? []
+                      : pj.campo.campeones
+                        .filter((id): id is string => id !== null)
+                        .flatMap((cid) => vista.instances[cid]?.eterBloqueado ?? [])
+        const nombreArtefacto = panelAbierto.artefactoId
+          ? getCardMeta(vista.instances[panelAbierto.artefactoId]?.cardId ?? '')?.name ?? 'Artefacto'
+          : null
         const titulo =
           panelAbierto.zona === 'reserva'
             ? 'Reserva de Éter'
@@ -1506,9 +1539,11 @@ export function Tablero({ vista, acciones, leTocaA, logDetallado = [], onAccion,
                 ? 'Cementerio'
                 : panelAbierto.zona === 'exilio'
                   ? 'Exilio'
-                  : panelAbierto.campeonSlot !== undefined
-                    ? `Éteres bloqueados — Campeón ${panelAbierto.campeonSlot + 1}`
-                    : 'Éteres bloqueados'
+                  : nombreArtefacto
+                    ? `Éteres bloqueados — ${nombreArtefacto}`
+                    : panelAbierto.campeonSlot !== undefined
+                      ? `Éteres bloqueados — Campeón ${panelAbierto.campeonSlot + 1}`
+                      : 'Éteres bloqueados'
         const posesivo =
           panelAbierto.jugador === 'A'
             ? panelAbierto.zona === 'pagado'

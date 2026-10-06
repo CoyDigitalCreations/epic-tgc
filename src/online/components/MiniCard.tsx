@@ -36,6 +36,19 @@ interface MiniCardProps {
    */
   onZoom?: () => void
   title?: string
+  /**
+   * Nombre del campeón al que está equipado este artefacto (Mística/Arcana).
+   * Se muestra en el tooltip hover: "→ equipado a [nombre]".
+   */
+  equipadoANombre?: string
+  /**
+   * Éteres bloqueados como MiniCards encima de la carta (Místicas/Arcanas).
+   * Los puntos azules en la carta se mantienen como indicador adicional.
+   * Si se pasa, se renderizan horizontalmente SOBRE la carta.
+   */
+  eteresBloqueados?: CardInstance[]
+  /** Click en la fila de Éteres bloqueados (abre el panel de bloqueados). */
+  onÉterClick?: () => void
   /** Marcador extra superpuesto (badges de estado de zona). */
   marca?: ReactNode
   /** Tablero invertido: counter-rotate la lupita de zoom. */
@@ -65,6 +78,9 @@ export function MiniCard({
   onClick,
   onZoom,
   title,
+  equipadoANombre,
+  eteresBloqueados,
+  onÉterClick,
   marca,
   invertida,
   rotarSiAgotado = false,
@@ -79,6 +95,13 @@ export function MiniCard({
   // Rotación SOLO en campo (rotarSiAgotado): modales/mano/cadena siempre vertical
   const agotada = rotarSiAgotado && (agotado ?? inst.agotado === true) && !tieneCarga
   const eteres = inst.eterBloqueado?.length ?? 0
+  // Éteres bloqueados como cartas encima (solo Místicas/Arcanas)
+  const esArtefacto = meta?.type === 'Mística' || meta?.type === 'Arcana'
+  const eteresVisibles = esArtefacto && eteresBloqueados && eteresBloqueados.length > 0
+  // Tooltip hover: nombre + vínculo de equipamiento
+  const tooltipTexto = equipadoANombre
+    ? `${meta?.name ?? ''} → equipado a ${equipadoANombre}`
+    : (title ?? meta?.name ?? '')
   /**
    * Campeón cansado: la carta se gira 90° (parte de arriba hacia la IZQUIERDA)
    * con la MISMA escala que la vertical: la rotada ocupa altoCarta × ancho,
@@ -135,7 +158,37 @@ export function MiniCard({
     : meta
 
   return (
-    <div className="flex flex-col items-center gap-1" style={{ width: ancho }}>
+    <div className="group relative flex flex-col items-center gap-1" style={{ width: ancho }}>
+      {/* Éteres bloqueados como cartas encima (Místicas/Arcanas) — los puntos
+          azules en la carta se mantienen como indicador adicional */}
+      {eteresVisibles && (
+        <div
+          className="flex gap-[2px] cursor-pointer"
+          onClick={(e) => {
+            e.stopPropagation()
+            onÉterClick?.()
+          }}
+          title="Ver Éteres bloqueados"
+        >
+          {eteresBloqueados!.map((e) => (
+            <MiniCard
+              key={e.cardInstanceId}
+              inst={e}
+              tamano="xs"
+              invertida={invertida}
+            />
+          ))}
+        </div>
+      )}
+      {/* Tooltip hover: nombre de la carta + vínculo equipado */}
+      {meta && (
+        <div
+          className="pointer-events-none absolute left-1/2 -translate-x-1/2 z-30 opacity-0 group-hover:opacity-100 transition-opacity duration-150 whitespace-nowrap px-2 py-1 rounded bg-black/85 border border-gray-600 text-[10px] text-gray-200"
+          style={{ bottom: '100%', marginBottom: 4 }}
+        >
+          {tooltipTexto}
+        </div>
+      )}
       <div
         style={{
           width: agotada ? altoCarta : ancho,
@@ -145,7 +198,7 @@ export function MiniCard({
           transition: 'transform 150ms ease, box-shadow 150ms ease',
         }}
         onClick={onClick ?? onZoom}
-        title={title ?? meta.name}
+        title={tooltipTexto}
       >
         {agotada ? (
           <div
@@ -219,7 +272,7 @@ export function MiniCard({
           </div>
         )}
 
-        {/* Éteres bloqueados (1B-1F) */}
+        {/* Éteres bloqueados — indicador (puntos azules, 1B-1F) */}
         {eteres > 0 && (
           <div
             style={{

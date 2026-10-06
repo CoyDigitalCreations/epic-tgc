@@ -852,8 +852,8 @@ function executeStealChampion(
 
     playerCampo[slotLibre] = targetId
     targetInst.stolenBy = inst.cardInstanceId
-    // Aurora's stolen champion is exhausted (game rule: "agotada")
-    targetInst.agotado = true
+    // El campeón robado conserva su estado de agotamiento tal cual estaba:
+    // si estaba agotado llega agotado; si no, no. (regla del usuario / manual)
 
     ctx.emit({ type: 'campeon_robado', cardInstanceId: targetId, jugador, rival })
   }
