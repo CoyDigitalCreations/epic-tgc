@@ -102,6 +102,22 @@ export function MiniCard({
   const tooltipTexto = equipadoANombre
     ? `${meta?.name ?? ''} → equipado a ${equipadoANombre}`
     : (title ?? meta?.name ?? '')
+  // Último Éter bloqueado para el overlay rotado (hooks arriba del return)
+  const ultimoEter = eteresVisibles ? eteresBloqueados![eteresBloqueados!.length - 1] : null
+  const metaEter = ultimoEter?.cardId ? getCardMeta(ultimoEter.cardId) : null
+  const imgEter = useCardImage(ultimoEter?.cardId ?? undefined, metaEter?.hasImage, metaEter?.imageUrl)
+  const eterRender: AnyCard | null = metaEter
+    ? ultimoEter && (ultimoEter.poder !== undefined || ultimoEter.resistencia !== undefined)
+      ? {
+          ...metaEter,
+          stats: {
+            ...metaEter.stats,
+            poder: ultimoEter.poder ?? metaEter.stats.poder,
+            resistencia: ultimoEter.resistencia ?? metaEter.stats.resistencia,
+          },
+        }
+      : metaEter
+    : null
   /**
    * Campeón cansado: la carta se gira 90° (parte de arriba hacia la IZQUIERDA)
    * con la MISMA escala que la vertical: la rotada ocupa altoCarta × ancho,
