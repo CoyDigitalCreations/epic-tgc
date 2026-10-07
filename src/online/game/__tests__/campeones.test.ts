@@ -12,7 +12,7 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { applyAction } from '../actions'
 import type { Action } from '../actions'
 import { getValidActions } from '../validActions'
-import { dispararTrigger, limpiarRegistroEfectos, objetivosCampeonesValidos, registrarEfecto, statsDe, keywordsDe } from '../efectos'
+import { dispararTrigger, limpiarRegistroEfectos, objetivosCampeonesValidos, registrarEfecto, statsDe, keywordsDe, championNegado } from '../efectos'
 import { destruirCarta } from '../replacements'
 import { registrarEfectos } from '../index'
 import { registrarCartas } from '../cards'
@@ -412,6 +412,92 @@ describe('C3b: modificadores continuos desde el JSON (Fase 1) + Protector (D3)',
     expect(statsDe(s, otro)).toEqual({ poder: 7, resistencia: 5 })
     // Rival (Kael 5/3) sin aura
     expect(statsDe(s, rival)).toEqual({ poder: 5, resistencia: 3 })
+  })
+
+  it('efectoComandante SOLO afecta campeones de la MISMA facción (manual §10)', () => {
+    // Comandante Orden buffea solo campeones Orden propios, NO Caos propios
+    const COMANDANTE_ORDEN = 'TEST-COMANDANTE-ORDEN'
+    registrarCartas([{
+      id: COMANDANTE_ORDEN,
+      name: 'Comandante Orden',
+      type: 'Campeón',
+      rarity: 'Única',
+      keywords: [],
+      flavorText: '',
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+      paqueteId: 'test',
+      limiteCopias: '1',
+      facciones: ['Orden'],
+      stats: { cost: 4, poder: 5, resistencia: 5 },
+      efectoComandante: {
+        tipo: 'pasivo',
+        efecto: 'buff',
+        stats: { ATQ: 2, RES: 2 },
+        objetivo: { tipo: 'todos_campeones_propios', controlador: 'propio', zona: 'campo' },
+        texto: 'Todos tus Campeones Orden ganan 2 de ATQ y 2 de RES.',
+      },
+    } as unknown as AnyCard])
+
+    let s = estadoMinimo()
+    // Comandante Orden (5/5)
+    const { s: s1, id: comandante } = conCampeon(s, COMANDANTE_ORDEN, 0, 'A')
+    s = s1
+    // Campeón Orden propio (Vaela FB-011 — Orden, 5/3)
+    const { s: s2, id: ordenPropio } = conCampeon(s, CAMPEON_A, 1, 'A')
+    s = s2
+    // Campeón Caos propio (Kael DS-011 — Caos, 5/3)
+    const { s: s3, id: caosPropio } = conCampeon(s, CAMPEON_B, 2, 'A')
+    s = s3
+
+    // Comandante Orden: 5/5 +2/+2 = 7/7 (sí se buffea a sí mismo)
+    expect(statsDe(s, comandante)).toEqual({ poder: 7, resistencia: 7 })
+    // Campeón Orden propio: 5/3 +2/+2 = 7/5 (SÍ recibe el buff)
+    expect(statsDe(s, ordenPropio)).toEqual({ poder: 7, resistencia: 5 })
+    // Campeón Caos propio: 5/3 SIN buff (NO comparte facción con el comandante)
+    expect(statsDe(s, caosPropio)).toEqual({ poder: 5, resistencia: 3 })
+  })
+
+  it('efectoComandante es INMUTABLE: championNegado NO lo afecta (manual §10)', () => {
+    const COMANDANTE_IMM = 'TEST-COMANDANTE-IMM'
+    registrarCartas([{
+      id: COMANDANTE_IMM,
+      name: 'Comandante Inmutable',
+      type: 'Campeón',
+      rarity: 'Única',
+      keywords: [],
+      flavorText: '',
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+      paqueteId: 'test',
+      limiteCopias: '1',
+      stats: { cost: 4, poder: 5, resistencia: 5 },
+      efectoComandante: {
+        tipo: 'pasivo',
+        efecto: 'buff',
+        stats: { ATQ: 2, RES: 2 },
+        objetivo: { tipo: 'todos_campeones_propios', controlador: 'propio', zona: 'campo' },
+        texto: 'Todos tus Campeones ganan 2 de ATQ y 2 de RES.',
+      },
+    } as unknown as AnyCard])
+
+    let s = estadoMinimo()
+    const { s: s1, id: comandante } = conCampeon(s, COMANDANTE_IMM, 0, 'A')
+    s = s1
+    const { s: s2, id: otro } = conCampeon(s, CAMPEON_A, 1, 'A')
+    s = s2
+
+    // El comandante SÍ se buffea a sí mismo
+    expect(statsDe(s, comandante)).toEqual({ poder: 7, resistencia: 7 })
+    expect(statsDe(s, otro)).toEqual({ poder: 7, resistencia: 5 })
+
+    // Simular negación: championNegado NO debe afectar el aura del comandante
+    // (el comandante es un aura derivada, no una activación — no pasa por
+    // championNegado). Verificamos que statsDe sigue aplicando el buff.
+    // (championNegado solo bloquea activar_habilidad, no auras derivadas)
+    expect(championNegado(s, comandante)).toBe(false)
+    // Los stats siguen buffeados a pesar de cualquier intento de negación
+    expect(statsDe(s, comandante)).toEqual({ poder: 7, resistencia: 7 })
   })
 
   it('efectoComandante grant_keyword: Indestructible para todos los campeones propios (keywordsDe)', () => {

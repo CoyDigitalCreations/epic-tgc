@@ -100,3 +100,17 @@ export function cartaNecesitaEterBloqueado(card: AnyCard): boolean {
   }
   return false
 }
+
+/**
+ * true si el Campeón es elegible para recibir Éter bloqueado vía elegir_opcion
+ * (Pasivo 1A FB-005/DS-006). Solo campeones con efecto CONTINUO que usa
+ * costo eter_bloqueado/bloqueo_fijo. Campeones con solo pasivo/disparo NO
+ * califican (ej: Vaela solo tiene pasivo al_matar_en_combate).
+ */
+export function campeonElegibleBloqueoEter(card: AnyCard): boolean {
+  if (!esCampeon(card)) return false
+  if (!('efectos' in card) || !card.efectos) return false
+  return card.efectos.some(
+    (e) => e.tipo === 'continuo' && (e.costo?.tipo === 'eter_bloqueado' || e.costo?.tipo === 'bloqueo_fijo'),
+  )
+}

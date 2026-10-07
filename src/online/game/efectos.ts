@@ -199,6 +199,15 @@ interface CandidatoAura {
 /**
  * Evalúa si un efecto continuo aplica a `objetivoId` dado el contexto de la
  * fuente, y calcula los modificadores resultantes. null = no aplica.
+ *
+ * REGLAS DEL EFECTO COMANDANTE (manual §10):
+ * 1. INMUTABLE: no puede ser negado, copiado ni afectado por ningún efecto.
+ *    Es un aura derivada del JSON — no pasa por la cadena de prioridad ni por
+ *    championNegado ni por copy. Si el comandante sale del campo, el aura
+ *    termina (patrón estado derivado).
+ * 2. SOLO MISMA FACCIÓN: afecta únicamente a campeones de la misma facción
+ *    que el comandante y que controla el jugador. Aurora (Orden) NO buffea
+ *    campeones Caos propios.
  */
 function evaluarAura(
   s: GameState,
@@ -224,6 +233,16 @@ function evaluarAura(
       break
     case 'todos_campeones_propios':
       aplica = mismoDueno
+      // EfectoComandante: solo afecta campeones de la MISMA FACCIÓN que el
+      // comandante (manual §10 — "Todos tus Campeones de [facción]").
+      // Aurora (Orden) NO buffea campeones Caos, aunque sean tuyos.
+      if (esComandante && aplica) {
+        const fuenteMeta = fuente.cardId ? getCardMeta(fuente.cardId) : null
+        const objetivoMeta = objetivoInst.cardId ? getCardMeta(objetivoInst.cardId) : null
+        if (fuenteMeta && objetivoMeta && 'facciones' in fuenteMeta && 'facciones' in objetivoMeta) {
+          aplica = faccionesCompartidas(fuenteMeta.facciones, objetivoMeta.facciones)
+        }
+      }
       // Convención del motor (por semántica del JSON, no por cardId):
       // - efectoComandante → INCLUYE self ("Todos tus Campeones ganan…")
       // - aura condicional (mientras_ester_bloqueado) → INCLUYE self

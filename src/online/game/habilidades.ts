@@ -3,7 +3,7 @@
  * Extraído de actions.ts para separación de dominios (change: refactor-engine).
  */
 import type { GameState, Ctx } from './types'
-import { getCardMeta, costeEterHabilidad, esArtefactoEquipable, faccionesCompartidas, type AnyCard } from './cards'
+import { getCardMeta, costeEterHabilidad, esArtefactoEquipable, campeonElegibleBloqueoEter, faccionesCompartidas, type AnyCard } from './cards'
 import type { CondicionEfecto } from '../../shared/types'
 import { validarPago, aplicarPago, type ContextoUso } from './payments'
 import { dispararTrigger, condicionCumple, championNegado, type TriggerEfecto, type PayloadEfecto } from './efectos'
@@ -314,17 +314,21 @@ export function ejecutarElegirOpcion(s: GameState, action: Extract<Action, { typ
   const pendiente = s.opcionesPendientes!.find((o) => o.jugador === j && o.eterId === action.opcionId)
   if (!pendiente) return // ya validado
 
-  // Greedy determinista: primer Campeón con facción compartida + primer Éter Reserva compatible
+  // Greedy determinista: PRIMER Campeón elegible (continuo con costo-bloqueado)
+  // + primer Éter Reserva con facción compartida. Solo califican campeones
+  // con efecto continuo que usa eter_bloqueado/bloqueo_fijo (ej: Aurora,
+  // Elena, Cassandra). Campeones con solo pasivo/disparo NO califican.
   let elegido: { targetInstanceId: string; eterId: string } | null = null
-  for (const campeonId of p.campo.campeones) {
+  outer: for (const campeonId of p.campo.campeones) {
     if (!campeonId) continue
     const metaC = s.instances[campeonId]?.cardId ? getCardMeta(s.instances[campeonId]!.cardId!) : null
     if (!metaC) continue
+    if (!campeonElegibleBloqueoEter(metaC)) continue
     for (const eterId of p.eterReserva) {
       const metaE = s.instances[eterId]?.cardId ? getCardMeta(s.instances[eterId]!.cardId!) : null
       if (metaE && faccionesCompartidas(metaE.facciones, metaC.facciones)) {
         elegido = { targetInstanceId: campeonId, eterId }
-        break
+        break outer
       }
     }
   }

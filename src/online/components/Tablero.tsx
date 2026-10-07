@@ -179,7 +179,7 @@ function labelOpcionesElegir(vista: GameState, opciones: string[]): string {
 /**
  * Opción de elegir_objetivo (tutor, negar, retorno, etc.): una carta
  * seleccionable con arte, nombre, coste y ATQ/RES para que el jugador VEA
- * qué cartas puede elegir.
+ * qué cartas puede elegir. Cartas boca abajo (Arcanas) se muestran como dorso.
  */
 function OpcionTutor({
   inst,
@@ -191,14 +191,15 @@ function OpcionTutor({
   const cardId = inst.cardId ?? undefined
   const meta = cardId ? getCardMeta(cardId) : null
   const imageUrl = useCardImage(cardId, meta?.hasImage, meta?.imageUrl)
+  const bocaAbajo = inst.bocaArriba === false
   const combate =
-    meta?.type === 'Campeón' && 'poder' in meta.stats
+    !bocaAbajo && meta?.type === 'Campeón' && 'poder' in meta.stats
       ? `ATQ ${meta.stats.poder} RES ${meta.stats.resistencia}`
       : null
   return (
     <button
       onClick={() => onAccion({ type: 'elegir_objetivo', objetivoId: inst.cardInstanceId })}
-      title={meta?.flavorText}
+      title={bocaAbajo ? 'Carta boca abajo' : meta?.flavorText}
       className="flex items-center gap-2 bg-surface-2 hover:bg-card-border border border-card-border rounded-lg
                  px-2 py-1.5 transition-colors cursor-pointer text-left max-w-50"
     >
@@ -207,10 +208,16 @@ function OpcionTutor({
         style={{
           width: 26,
           aspectRatio: '744/1038',
-          background: 'linear-gradient(135deg, #14142b 0%, #1e1e3a 60%, #2a2a4e 100%)',
+          background: bocaAbajo
+            ? 'linear-gradient(135deg, #14142b 0%, #1e1e3a 60%, #2a2a4e 100%)'
+            : 'linear-gradient(135deg, #14142b 0%, #1e1e3a 60%, #2a2a4e 100%)',
         }}
       >
-        {imageUrl ? (
+        {bocaAbajo ? (
+          <span style={{ color: '#4b4b7a', fontFamily: '"Cinzel", serif', fontSize: 8, fontWeight: 700 }}>
+            ✦
+          </span>
+        ) : imageUrl ? (
           <img src={imageUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         ) : (
           <span style={{ color: '#4b4b7a', fontFamily: '"Cinzel", serif', fontSize: 8, fontWeight: 700 }}>
@@ -219,7 +226,7 @@ function OpcionTutor({
         )}
       </div>
       <div className="min-w-0">
-        <p className="text-[11px] text-gray-100 truncate">{meta?.name ?? 'Carta'}</p>
+        <p className="text-[11px] text-gray-100 truncate">{bocaAbajo ? 'Carta boca abajo' : (meta?.name ?? 'Carta')}</p>
         <p className="text-[9px] text-gray-500">
           {meta?.type}
           {meta ? ` · Coste ${meta.stats.cost}` : ''}
@@ -867,8 +874,11 @@ export function Tablero({ vista, acciones, leTocaA, logDetallado = [], onAccion,
     setPanelAbierto(null)
   }
 
-  /** Sacrificios exigidos por el rol del Campeón objetivo (Soberano 1 / Emperador 2). */
-  const requeridos = seleccion?.tipo === 'pagar' ? sacrificiosRequeridos(getCardMeta(seleccion.objetivoCardId)?.roles) : 0
+  /** Sacrificios exigidos por el rol del Campeón — SOLO al invocar (jugar_campeon).
+   *  Activar habilidad NO requiere sacrificio (el costo es solo Éter). */
+  const requeridos = seleccion?.tipo === 'pagar' && seleccion.accionBase.type === 'jugar_campeon'
+    ? sacrificiosRequeridos(getCardMeta(seleccion.objetivoCardId)?.roles)
+    : 0
   /** Campeones propios en 2B-2F con facción compartida, elegibles como sacrificio. */
   const sacrificables =
     seleccion?.tipo === 'pagar' && requeridos > 0 ? campeonesSacrificables(vista, 'A', seleccion.objetivoCardId) : []
