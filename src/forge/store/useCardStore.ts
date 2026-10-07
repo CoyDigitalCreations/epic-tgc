@@ -8,6 +8,7 @@ import {
   deleteCardImage,
   isDataUrl,
 } from '../utils/image-store'
+import { subirCartaCustom } from '../../online/backend/customCardsApi'
 
 /** Colección de cartas: fuente de verdad del card maker (A3). */
 export interface Coleccion {
@@ -216,6 +217,8 @@ export const useCardStore = create<CardStore>()(
             cards: activaDe(colecciones, state.coleccionActivaId).cards,
           }
         })
+        // Subir a Supabase para partidas JvJ (fire-and-forget)
+        void subirCartaCustom(card)
       },
       updateCard: (id, card) => {
         const old = get().cards.find((c) => c.id === id)
@@ -243,6 +246,8 @@ export const useCardStore = create<CardStore>()(
             cards: activaDe(colecciones, state.coleccionActivaId).cards,
           }
         })
+        // Subir a Supabase para partidas JvJ (fire-and-forget)
+        void subirCartaCustom(preserved)
       },
       deleteCard: (id) => {
         const old = get().cards.find((c) => c.id === id)

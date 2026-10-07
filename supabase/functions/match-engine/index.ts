@@ -34,6 +34,7 @@ import {
   applyAction,
   createCtxFromDraws,
   createInitialState,
+  registrarCartas,
   visibleState,
 } from './engine.js'
 
@@ -55,6 +56,7 @@ type EngineModule = {
     | { ok: false; state: never; error: string }
   visibleState: (state: never, playerId: 'A' | 'B') => never
   actorActual: (state: never) => 'A' | 'B' | null
+  registrarCartas: (cartas: unknown[]) => void
 }
 
 const engine: EngineModule = {
@@ -63,6 +65,7 @@ const engine: EngineModule = {
   applyAction: applyAction as EngineModule['applyAction'],
   visibleState: visibleState as EngineModule['visibleState'],
   actorActual: actorActual as EngineModule['actorActual'],
+  registrarCartas: registrarCartas as EngineModule['registrarCartas'],
 }
 
 // PostgREST de Supabase NO usa prefijo de schema en la URL para schemas
@@ -127,6 +130,25 @@ function generarCodigoSala(): string {
 
 function esMazoValido(deck: unknown): deck is string[] {
   return Array.isArray(deck) && deck.length === 66 && deck.every((x) => typeof x === 'string')
+}
+
+/**
+ * Carga cartas custom de eter.custom_cards y las registra en el motor.
+ * Necesario para que createInitialState resuelva cardIds que no están en
+ * PrimerColeccionEfectos (cartas creadas en Éter Forge por colaboradores).
+ */
+async function registrarCartasCustom(): Promise<void> {
+  try {
+    const res = await sb('custom_cards?select=definition')
+    if (!res.ok) return
+    const rows = await res.json()
+    if (Array.isArray(rows) && rows.length > 0) {
+      const defs = rows.map((r: { definition: unknown }) => r.definition).filter(Boolean)
+      engine.registrarCartas(defs)
+    }
+  } catch {
+    // si falla, el motor solo tendrá las cartas de PrimerColeccion
+  }
 }
 
 Deno.serve(async (req) => {
@@ -301,6 +323,8 @@ Deno.serve(async (req) => {
     if (!esMazoValido(deckA) || !esMazoValido(deckB)) {
       return err('decks not ready (66 cardIds each)', 422)
     }
+    // Registrar cartas custom antes de crear el estado inicial
+    await registrarCartasCustom()
     const seed = Number(game.seed)
     try {
       const { state, ctx } = engine.createInitialState(deckA, deckB, seed)

@@ -13,6 +13,7 @@ import {
   type RoomInfo,
 } from '../backend/matchApi'
 import { useOnlineMatch } from './useOnlineMatch'
+import { useMazosStore } from '../useMazosStore'
 
 type Vista = 'auth' | 'menu' | 'espera' | 'partida'
 
@@ -26,18 +27,22 @@ export default function Lobby() {
   const [cargandoAuth, setCargandoAuth] = useState(false)
   const [errorAuth, setErrorAuth] = useState<string | null>(null)
 
-  const [mazoId, setMazoId] = useState<'estasis' | 'disonancia'>('estasis')
+  const [mazoId, setMazoId] = useState<string>('estasis')
   const [codigoInput, setCodigoInput] = useState('')
   const [sala, setSala] = useState<RoomInfo | null>(null)
   const [errorSala, setErrorSala] = useState<string | null>(null)
   const [ocupado, setOcupado] = useState(false)
   const [enPartida, setEnPartida] = useState(false)
   const [ ambosListos, setAmbosListos ] = useState(false)
+  const mazosPersonalizados = useMazosStore((s) => s.mazosPersonalizados)
 
-  const deck = useMemo(
-    () => MAZOS.find((m) => m.id === mazoId)?.cardIds ?? MAZOS[0].cardIds,
-    [mazoId],
-  )
+  // Resolver deck: preset (MAZOS) o custom (useMazosStore)
+  const deck = useMemo(() => {
+    const preset = MAZOS.find((m) => m.id === mazoId)
+    if (preset) return preset.cardIds
+    const custom = mazosPersonalizados.find((m) => m.id === mazoId)
+    return custom?.cardIds ?? MAZOS[0].cardIds
+  }, [mazoId, mazosPersonalizados])
 
   const entrar = useCallback(async () => {
     setCargandoAuth(true)
@@ -218,7 +223,7 @@ VITE_SUPABASE_ANON_KEY=sb_publishable_...`}
               {ambosListos ? '¡Rival listo! Iniciando…' : 'Esperando al rival…'}
             </p>
             <p className="text-[11px] text-gray-500 mt-1">
-              Mazo: {MAZOS.find((m) => m.id === mazoId)?.nombre ?? mazoId} · sos el jugador {sala.player}
+              Mazo: {MAZOS.find((m) => m.id === mazoId)?.nombre ?? mazosPersonalizados.find((m) => m.id === mazoId)?.nombre ?? mazoId} · sos el jugador {sala.player}
             </p>
           </div>
           {errorSala && (
@@ -259,7 +264,29 @@ VITE_SUPABASE_ANON_KEY=sb_publishable_...`}
                 <p className="text-[11px] text-gray-500 mt-1">{m.cardIds.length} cartas</p>
               </button>
             ))}
+            {mazosPersonalizados.map((m) => (
+              <button
+                key={m.id}
+                onClick={() => setMazoId(m.id)}
+                className={`text-left border rounded-lg p-4 transition-all cursor-pointer
+                  ${mazoId === m.id
+                    ? 'border-ether-400 ring-1 ring-ether-400 bg-ether-600/10'
+                    : 'border-card-border hover:border-gray-500 bg-surface-2'}`}
+              >
+                <p className="font-display font-bold text-ether-300">
+                  {m.nombre}
+                </p>
+                <p className="text-[11px] text-gray-500 mt-1">
+                  {m.cardIds.length} cartas · custom
+                </p>
+              </button>
+            ))}
           </div>
+          {mazosPersonalizados.length === 0 && (
+            <p className="text-[11px] text-gray-600 mt-3">
+              No tenés mazos custom. Creá uno en Éter Forge para usarlo acá.
+            </p>
+          )}
         </div>
 
         <div className="border border-card-border bg-surface rounded-lg p-5">
