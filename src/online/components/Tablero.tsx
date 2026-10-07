@@ -806,10 +806,10 @@ function GrillaJugador({
   celdas.push(<Celda key="4G" zona="4G" invertida={invertida} />)
 
   return (
-    <div className="overflow-x-auto pb-1">
+    <div className="pb-1">
       <div
         data-testid={`grilla-${jugador}`}
-        className="grid grid-cols-7 gap-3 w-max"
+        className="grid grid-cols-7 gap-3 w-max overflow-hidden"
         style={invertida ? { transform: 'rotate(180deg)' } : undefined}
       >
         {celdas}
