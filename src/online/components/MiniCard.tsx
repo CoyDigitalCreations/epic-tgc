@@ -106,18 +106,8 @@ export function MiniCard({
   const ultimoEter = eteresVisibles ? eteresBloqueados![eteresBloqueados!.length - 1] : null
   const metaEter = ultimoEter?.cardId ? getCardMeta(ultimoEter.cardId) : null
   const imgEter = useCardImage(ultimoEter?.cardId ?? undefined, metaEter?.hasImage, metaEter?.imageUrl)
+  // Éter cards don't have combat stats (poder/resistencia) — metaEter is enough
   const eterRender: AnyCard | null = metaEter
-    ? ultimoEter && (ultimoEter.poder !== undefined || ultimoEter.resistencia !== undefined)
-      ? {
-          ...metaEter,
-          stats: {
-            ...metaEter.stats,
-            poder: ultimoEter.poder ?? metaEter.stats.poder,
-            resistencia: ultimoEter.resistencia ?? metaEter.stats.resistencia,
-          },
-        }
-      : metaEter
-    : null
   /**
    * Campeón cansado: la carta se gira 90° (parte de arriba hacia la IZQUIERDA)
    * con la MISMA escala que la vertical: la rotada ocupa altoCarta × ancho,

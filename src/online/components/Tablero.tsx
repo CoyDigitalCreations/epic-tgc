@@ -730,7 +730,7 @@ function GrillaJugador({
             invertida={invertida}
             equipadoANombre={equipadoAArc}
             eteresBloqueados={eteresArc.length > 0 ? eteresArc : undefined}
-            onÉterClick={eteresArc.length > 0 ? () => abrirPanel(jugador, 'bloqueado', undefined, id) : undefined}
+            onÉterClick={eteresArc.length > 0 ? () => abrirPanel(jugador, 'bloqueado', undefined, id ?? undefined) : undefined}
           >
             {(activarArcana || bloquearArc) && (
               <div className="flex gap-1 flex-wrap justify-center">
