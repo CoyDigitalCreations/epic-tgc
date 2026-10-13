@@ -34,3 +34,5 @@ simulacion-partida.txt
 .env.local
 .env
 
+
+supabase/.temp/
