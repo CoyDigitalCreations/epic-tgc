@@ -43,6 +43,10 @@ export function moverAlCementerio(s: GameState, cardInstanceId: string): void {
         break
       }
     }
+    // También remover de mano (bug: tutor retornaba carta a mano mientras
+    // otro efecto la enviaba al cementerio — quedaba en ambas zonas)
+    const manoIdx = p.mano.indexOf(cardInstanceId)
+    if (manoIdx !== -1) p.mano.splice(manoIdx, 1)
   }
   // Fase 3a: choke point — toda carta que entra a 2G libera su Éter bloqueado
   // (manual §7.7 L912). Los sacrificios ya liberaron a '2A' antes — no-op acá.

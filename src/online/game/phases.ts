@@ -28,6 +28,7 @@ export function resolverAlba(s: GameState, ctx: Ctx, jugador: PlayerId): void {
       const inst = s.instances[slot]
       if (inst.agotado) delete inst.agotado
       if (inst.atacoEsteTurno) delete inst.atacoEsteTurno
+      if (inst.opcionUsadaEsteTurno) delete inst.opcionUsadaEsteTurno
     }
   }
   // 1b. Activación diferida (§5.5, C4)

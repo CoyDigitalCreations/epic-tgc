@@ -1,4 +1,5 @@
 import { getCardMeta, esArcana, costeEterHabilidad, cartaNecesitaEterBloqueado } from './cards'
+import { championNegado } from './efectos'
 import type { AnyCard } from '../../shared/types'
 import type { Action } from './actions'
 import { generarAccionesForja, validarActivarArcana } from './actions'
@@ -140,14 +141,17 @@ export function getValidActions(state: GameState, playerId: PlayerId): Action[] 
       const meta = inst?.cardId ? getCardMeta(inst.cardId) : null
       if (!meta) continue
 
+      // Fase 3b: campeón negado no puede activar efectos
+      if (championNegado(state, champId)) continue
+
       // Check efectos[] for active abilities
       const tieneEfectos = 'efectos' in meta && meta.efectos
       const tieneContinuo = tieneEfectos && meta.efectos!.some((e) => e.tipo === 'continuo')
       const tieneDisparo = tieneEfectos && meta.efectos!.some((e) => e.tipo === 'disparo')
 
       if (tieneContinuo) {
-        // Continuo: NO puede activar si agotado
-        if (inst!.agotado) continue
+        // Continuo: NO puede activar si agotado; 1/turno
+        if (inst!.agotado || inst!.opcionUsadaEsteTurno) continue
         const costo = costeEterHabilidad(meta)
         const eteresValidos = p.eterReserva.filter((id) => {
           const eterMeta = state.instances[id]?.cardId ? getCardMeta(state.instances[id]!.cardId!) : null
@@ -163,6 +167,8 @@ export function getValidActions(state: GameState, playerId: PlayerId): Action[] 
         // Check if it's a "blocked ether" pattern
         const esBloqueado = meta.efectos!.some((e) => e.costo?.tipo === 'eter_bloqueado')
         if (esBloqueado) {
+          // 1/turno: si ya se usó esta habilidad este turno, no generar acción
+          if (inst!.opcionUsadaEsteTurno) continue
           const costo = costeEterHabilidad(meta)
           const eteresValidos = p.eterReserva.filter((id) => {
             const eterMeta = state.instances[id]?.cardId ? getCardMeta(state.instances[id]!.cardId!) : null

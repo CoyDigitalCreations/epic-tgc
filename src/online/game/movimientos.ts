@@ -167,7 +167,8 @@ export function ejecutarJugarCampeon(s: GameState, action: Extract<Action, { typ
     ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: sacId, zona: '2G', jugador: s.turno, bocaArriba: true })
   }
   // 3. Invocar: mano → slot, CANSADO (agotado)
-  p.mano.splice(p.mano.indexOf(id), 1)
+  const manoIdx = p.mano.indexOf(id)
+  if (manoIdx !== -1) p.mano.splice(manoIdx, 1)
   const zona = slotAZona('campeones', action.slot) ?? '2B'
   ctx.emit({ type: 'carta_salida_de_zona', cardInstanceId: id, zona: 'mano', jugador: s.turno })
   p.campo.campeones[action.slot] = id
@@ -188,7 +189,8 @@ export function ejecutarJugarMistica(s: GameState, action: Extract<Action, { typ
   const id = action.cardInstanceId
   const contextoUso: ContextoUso = { tipo: 'jugar', cardInstanceId: id }
   aplicarPago(s, ctx, s.turno, action.eterIds, s.instances[id]!.cardId!, contextoUso)
-  p.mano.splice(p.mano.indexOf(id), 1)
+  const manoIdxM = p.mano.indexOf(id)
+  if (manoIdxM !== -1) p.mano.splice(manoIdxM, 1)
   const zona = slotAZona('misticasTacticas', action.slot) ?? '3A'
   ctx.emit({ type: 'carta_salida_de_zona', cardInstanceId: id, zona: 'mano', jugador: s.turno })
   p.campo.misticasTacticas[action.slot] = id
@@ -221,7 +223,8 @@ export function ejecutarJugarMistica(s: GameState, action: Extract<Action, { typ
 export function ejecutarColocarArcana(s: GameState, action: Extract<Action, { type: 'colocar_arcana' }>, ctx: Ctx): void {
   const p = s.players[s.turno]
   const id = action.cardInstanceId
-  p.mano.splice(p.mano.indexOf(id), 1)
+  const manoIdxA = p.mano.indexOf(id)
+  if (manoIdxA !== -1) p.mano.splice(manoIdxA, 1)
   const zona = slotAZona('arcanasCombate', action.slot) ?? '3D'
   ctx.emit({ type: 'carta_salida_de_zona', cardInstanceId: id, zona: 'mano', jugador: s.turno })
   p.campo.arcanasCombate[action.slot] = id
@@ -235,7 +238,8 @@ export function ejecutarColocarArcana(s: GameState, action: Extract<Action, { ty
 export function ejecutarColocarVinculo(s: GameState, action: Extract<Action, { type: 'colocar_vinculo' }>, ctx: Ctx): void {
   const p = s.players[s.turno]
   const id = action.cardInstanceId
-  p.mano.splice(p.mano.indexOf(id), 1)
+  const manoIdxV = p.mano.indexOf(id)
+  if (manoIdxV !== -1) p.mano.splice(manoIdxV, 1)
   const zona = `4${String.fromCharCode(65 + action.slot)}` as Zona
   ctx.emit({ type: 'carta_salida_de_zona', cardInstanceId: id, zona: 'mano', jugador: s.turno })
   p.vinculos[action.slot] = id

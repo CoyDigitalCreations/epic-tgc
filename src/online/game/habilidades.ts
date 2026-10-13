@@ -81,6 +81,7 @@ export function validarActivarHabilidad(state: GameState, action: Extract<Action
 
   if (esBloqueado) {
     // Patrón "Bloqueado": eterIds de la Reserva → Campeón.eterBloqueado
+    if (inst.opcionUsadaEsteTurno) return 'ya usaste esta habilidad este turno'
     const costoEsperado = costeEterHabilidad(meta)
     if (costoEsperado > 0 && action.eterIds.length !== costoEsperado) {
       return `${meta.name} requiere exactamente ${costoEsperado} Éter(es), indicaste ${action.eterIds.length}`
@@ -206,7 +207,8 @@ export function ejecutarActivarHabilidad(s: GameState, action: Extract<Action, {
   if (esContinuo || esBloqueado) {
     // Patrón "Bloqueado": mueve éteres de Reserva → Campeón.eterBloqueado
     for (const eterId of action.eterIds) {
-      p.eterReserva.splice(p.eterReserva.indexOf(eterId), 1)
+      const idx = p.eterReserva.indexOf(eterId)
+      if (idx !== -1) p.eterReserva.splice(idx, 1)
     }
     inst.eterBloqueado = [...(inst.eterBloqueado ?? []), ...action.eterIds]
     // Check if effect has reagrupar (Alba) — register pending effect
@@ -224,6 +226,7 @@ export function ejecutarActivarHabilidad(s: GameState, action: Extract<Action, {
       }
     }
     ctx.emit({ type: 'eter_bloqueado', jugador: s.turno, eterIds: action.eterIds, campeonId: action.cardInstanceId })
+    inst.opcionUsadaEsteTurno = true
     if (esContinuo) {
       inst.agotado = true
     }
@@ -232,7 +235,8 @@ export function ejecutarActivarHabilidad(s: GameState, action: Extract<Action, {
   } else {
     // Patrón "Disparo/Agota": éteres → 1A (pagado) + 1/turno
     for (const eterId of action.eterIds) {
-      p.eterReserva.splice(p.eterReserva.indexOf(eterId), 1)
+      const idx = p.eterReserva.indexOf(eterId)
+      if (idx !== -1) p.eterReserva.splice(idx, 1)
       p.eterPagado.push(eterId)
     }
     if (action.eterIds.length > 0) {
@@ -345,7 +349,8 @@ export function ejecutarElegirOpcion(s: GameState, action: Extract<Action, { typ
   // Ejecutar bloqueo (reutiliza lógica de ejecutarBloquearEter)
   const instCampeon = s.instances[elegido.targetInstanceId]
   instCampeon.eterBloqueado = [...(instCampeon.eterBloqueado ?? []), elegido.eterId]
-  p.eterReserva.splice(p.eterReserva.indexOf(elegido.eterId), 1)
+  const eterIdx = p.eterReserva.indexOf(elegido.eterId)
+  if (eterIdx !== -1) p.eterReserva.splice(eterIdx, 1)
   ctx.emit({ type: 'eter_bloqueado', jugador: j, eterIds: [elegido.eterId], campeonId: elegido.targetInstanceId })
 
   // Marcar opción usada en el Éter Pasivo

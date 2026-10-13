@@ -378,7 +378,17 @@ export function dispararUmbralBloqueo(s: GameState, ctx: Ctx, targetInstanceId: 
       if (!canExecuteSteal(s, inst.owner)) continue
       inst.efectoUmbralDisparado = true
       // D1: interpretEffect arma pendiente si hay opciones (incluso 1 — elección explícita)
+      const pendientesAntes = s.objetivosPendientes?.length ?? 0
       interpretEffect(s, ctx, inst, efecto, { jugador: inst.owner, fromTrigger: true })
+      // Mover el pendiente recién creado al FRENTE de la cola — el steal
+      // es consecuencia directa de la acción del jugador (bloquear_eter),
+      // no un trigger diferido. Sin esto queda enterrado detrás de
+      // pendientes acumulados y getValidActions nunca lo expone.
+      const pendientesDespues = s.objetivosPendientes?.length ?? 0
+      if (pendientesDespues > pendientesAntes && s.objetivosPendientes) {
+        const nuevo = s.objetivosPendientes.pop()!
+        s.objetivosPendientes.unshift(nuevo)
+      }
       continue
     }
 
@@ -530,7 +540,9 @@ function executeTutor(
   jugador: PlayerId,
   efectoData: EfectoData,
 ): void {
-  const zonaOrigen = efectoData.objetivo?.zona ?? 'mazo'
+  // Fallback chain: objetivo.zona → efectoData.zonaOrigen → 'mazo'
+  // (FB-012: Card-Maker pone zonaOrigen a nivel carta, no en objetivo)
+  const zonaOrigen = efectoData.objetivo?.zona ?? efectoData.zonaOrigen ?? 'mazo'
   const zonaDestino = efectoData.objetivo?.zonaDestino ?? 'mano'
   const p = s.players[jugador]
 

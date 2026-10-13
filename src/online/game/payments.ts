@@ -88,7 +88,8 @@ export function aplicarPago(
   if (!objetivo) return s // defensivo: validarPago ya lo comprobó
   const p = s.players[jugador]
   for (const id of eterIds) {
-    p.eterReserva.splice(p.eterReserva.indexOf(id), 1)
+    const idx = p.eterReserva.indexOf(id)
+    if (idx !== -1) p.eterReserva.splice(idx, 1)
     p.eterPagado.push(id)
   }
   ctx.emit({
@@ -261,7 +262,8 @@ export function bloquearEter(
   const instTarget = s.instances[targetInstanceId]
   instTarget.eterBloqueado = [...(instTarget.eterBloqueado ?? []), ...eterIds]
   for (const id of eterIds) {
-    p.eterReserva.splice(p.eterReserva.indexOf(id), 1)
+    const idx = p.eterReserva.indexOf(id)
+    if (idx !== -1) p.eterReserva.splice(idx, 1)
   }
   // campeonId = id de instancia target (Campeón o Artefacto) — ver events.ts
   ctx.emit({ type: 'eter_bloqueado', jugador, eterIds, campeonId: targetInstanceId })
