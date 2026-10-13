@@ -1266,7 +1266,7 @@
     "paqueteId": "estasis",
     "limiteCopias": "3",
     "createdAt": "2026-08-12T00:00:00.000Z",
-    "updatedAt": "2026-09-29T02:11:25.346Z",
+    "updatedAt": "2026-10-08T05:35:12.479Z",
     "facciones": [
       "Orden"
     ],
@@ -1455,7 +1455,7 @@
         "trigger": "ninguno",
         "efecto": "debuff",
         "stats": {
-          "ATQ": 1
+          "ATQ": -1
         },
         "objetivo": {
           "tipo": "campeon",
@@ -1776,7 +1776,7 @@
     "paqueteId": "disonancia",
     "limiteCopias": "3",
     "createdAt": "2026-08-03T00:00:00.000Z",
-    "updatedAt": "2026-09-22T21:05:01.655Z",
+    "updatedAt": "2026-10-08T05:22:20.065Z",
     "facciones": [
       "Caos"
     ],
@@ -1800,13 +1800,13 @@
         "objetivo": {
           "tipo": "eter",
           "controlador": "rival",
-          "zona": "pagado",
-          "zonaDestino": "reserva",
+          "zona": "reserva",
+          "zonaDestino": "pagado",
           "controladorDestino": "rival"
         },
         "zonaDestino": "reserva",
         "cantidad": 1,
-        "texto": "Al matar en combate, devuelve 1 Éter de la zona de pago a la Reserva del rival."
+        "texto": "Al matar en combate, puedes devolver 1 Éter de la Reserva a la zona de pago del rival."
       },
       {
         "tipo": "disparo",
@@ -1836,7 +1836,7 @@
     "paqueteId": "disonancia",
     "limiteCopias": "3",
     "createdAt": "2026-08-03T00:00:00.000Z",
-    "updatedAt": "2026-09-22T21:05:35.592Z",
+    "updatedAt": "2026-10-03T05:03:49.072Z",
     "facciones": [
       "Caos"
     ],
@@ -1858,7 +1858,7 @@
         "trigger": "al_activar_habilidad",
         "costo": {
           "tipo": "eter",
-          "cantidad": 1
+          "cantidad": 4
         },
         "efecto": "destroy",
         "objetivo": {
@@ -1869,7 +1869,7 @@
             "resMax": 3
           }
         },
-        "texto": "Al activar esta habilidad, puedes pagar 1 Éter, destruye 1 Campeón RES 3 o menos que controla el rival, una vez por turno.",
+        "texto": "Al activar esta habilidad, puedes pagar 4 Éter, destruye 1 Campeón RES 3 o menos que controla el rival, una vez por turno.",
         "duracion": "1_por_turno"
       }
     ]
@@ -1886,7 +1886,7 @@
     "paqueteId": "disonancia",
     "limiteCopias": "2",
     "createdAt": "2026-08-03T00:00:00.000Z",
-    "updatedAt": "2026-09-21T00:00:00.000Z",
+    "updatedAt": "2026-10-10T01:26:30.860Z",
     "facciones": [
       "Caos"
     ],
@@ -1900,20 +1900,31 @@
     "stats": {
       "cost": 3,
       "poder": 3,
-      "resistencia": 7
+      "resistencia": 4
     },
     "efectos": [
       {
-        "tipo": "pasivo",
+        "tipo": "disparo",
         "trigger": "ninguno",
-        "efecto": "buff",
+        "efecto": "negar",
         "stats": {
           "ATQ": 1
         },
         "objetivo": {
-          "tipo": "todos_campeones_propios"
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
         },
-        "texto": "Los otros Campeones que controlas ganan 1 de ATQ."
+        "texto": "Puedes pagar 3 Éter, Niega el efecto activo de un Campeón que controla el rival, hasta el final del turno.",
+        "duracion": "turno",
+        "copyAttributes": [
+          "atq"
+        ],
+        "tipoNegacion": "efecto_activo",
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 3
+        }
       }
     ]
   },
@@ -1929,7 +1940,7 @@
     "paqueteId": "disonancia",
     "limiteCopias": "2",
     "createdAt": "2026-08-03T00:00:00.000Z",
-    "updatedAt": "2026-09-21T00:00:00.000Z",
+    "updatedAt": "2026-10-08T05:31:28.150Z",
     "facciones": [
       "Caos"
     ],
@@ -1948,8 +1959,8 @@
     "efectos": [
       {
         "tipo": "pasivo",
-        "trigger": "ninguno",
-        "efecto": "buff",
+        "trigger": "al_invocar",
+        "efecto": "copy",
         "buffPerBlockedEther": true,
         "stats": {
           "ATQ": 1
@@ -1959,7 +1970,11 @@
           "controlador": "rival",
           "zona": "campo"
         },
-        "texto": "Mientras un Campeón que controla el rival tenga al menos 1 Éter bloqueado, esta carta gana 1 de ATQ (máx. +3)."
+        "texto": "Al ser invocada, puedes copiar el ATQ de un Campeón que controla el rival, hasta el final del turno.",
+        "duracion": "turno",
+        "copyAttributes": [
+          "atq"
+        ]
       }
     ]
   },
@@ -1973,7 +1988,7 @@
     "paqueteId": "disonancia",
     "limiteCopias": "3",
     "createdAt": "2026-08-03T00:00:00.000Z",
-    "updatedAt": "2026-09-21T00:00:00.000Z",
+    "updatedAt": "2026-10-08T05:20:29.945Z",
     "facciones": [
       "Caos"
     ],
@@ -1994,8 +2009,8 @@
         "tipo": "disparo",
         "trigger": "al_activar_habilidad",
         "costo": {
-          "tipo": "eter_bloqueado",
-          "cantidad": 1
+          "tipo": "eter",
+          "cantidad": 2
         },
         "efecto": "buff",
         "stats": {
@@ -2004,8 +2019,8 @@
         "objetivo": {
           "tipo": "todos_campeones_propios"
         },
-        "texto": "Puedes bloquear 1 Éter para que los Campeones que controlas ganen 1 de ATQ mientras esté bloqueado.",
-        "duracion": "mientras_ester_bloqueado"
+        "texto": "Al activar esta habilidad, puedes pagar 2 Éter, todos tus Campeones ganan 1 de ATQ, hasta el final del turno.",
+        "duracion": "turno"
       }
     ]
   },
@@ -2019,7 +2034,7 @@
     "paqueteId": "disonancia",
     "limiteCopias": "2",
     "createdAt": "2026-08-03T00:00:00.000Z",
-    "updatedAt": "2026-09-24T05:33:27.061Z",
+    "updatedAt": "2026-10-10T01:27:47.542Z",
     "facciones": [
       "Caos"
     ],
@@ -2049,10 +2064,10 @@
           "ATQ": 0,
           "RES": 0
         },
-        "texto": "Bloquea 3 Éter, mueve 1 Éter que controla el rival de la zona de pago a tu Reserva, mientras ese Éter esté bloqueado.",
+        "texto": "Bloquea 2 Éter, mueve 1 Éter que controla el rival de la zona de pago a tu Reserva, mientras ese Éter esté bloqueado.",
         "costo": {
           "tipo": "bloqueo_fijo",
-          "cantidad": 3
+          "cantidad": 2
         },
         "duracion": "mientras_ester_bloqueado"
       }
@@ -2068,7 +2083,7 @@
     "paqueteId": "disonancia",
     "limiteCopias": "3",
     "createdAt": "2026-08-03T00:00:00.000Z",
-    "updatedAt": "2026-09-21T00:00:00.000Z",
+    "updatedAt": "2026-10-08T05:34:53.056Z",
     "facciones": [
       "Caos"
     ],
@@ -2086,16 +2101,19 @@
     },
     "efectos": [
       {
-        "tipo": "pasivo",
-        "trigger": "inicio_choque",
-        "efecto": "destroy",
+        "tipo": "disparo",
+        "efecto": "return_hand",
         "objetivo": {
-          "tipo": "vinculo",
+          "tipo": "campeon",
           "controlador": "rival",
           "zona": "campo"
         },
-        "texto": "Una vez por turno, al inicio de tu Choque, si controlas otro Campeón, destruye un Vínculo que controla el rival.",
-        "duracion": "1_por_turno"
+        "texto": "Puedes pagar 3 Éter, devuelve a la mano de su dueño 1 Campeón que controla el rival, una vez por turno.",
+        "duracion": "1_por_turno",
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 3
+        }
       }
     ]
   },
@@ -2657,7 +2675,7 @@
     "paqueteId": "disonancia",
     "limiteCopias": "1",
     "createdAt": "2026-08-03T00:00:00.000Z",
-    "updatedAt": "2026-09-23T04:41:34.498Z",
+    "updatedAt": "2026-10-10T01:30:30.657Z",
     "facciones": [
       "Caos"
     ],
@@ -2674,12 +2692,12 @@
           "controlador": "propio",
           "zona": "mazo",
           "filtros": {
-            "costeMax": 4
+            "costeMax": 3
           },
           "zonaDestino": "mano"
         },
         "zonaDestino": "mano",
-        "texto": "Busca 1 Campeón coste 4 o menos de tu mazo y agregalo a tu mano."
+        "texto": "Busca 1 Campeón coste 3 o menos de tu mazo y agregalo a tu mano."
       }
     ]
   }
