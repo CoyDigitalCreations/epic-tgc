@@ -37,8 +37,8 @@ function App() {
       </header>
 
       {/* Main Layout */}
-      <main className="max-w-7xl mx-auto px-6 py-6">
-        <div className="grid grid-cols-1 xl:grid-cols-[400px_1fr] gap-6">
+      <main className="max-w-[1600px] mx-auto px-6 py-6">
+        <div className="grid grid-cols-1 xl:grid-cols-[380px_320px_1fr] gap-6">
           {/* Left: Form */}
           <section className="bg-surface border border-card-border rounded-xl p-5 h-fit">
             <ErrorBoundary>
@@ -46,24 +46,21 @@ function App() {
             </ErrorBoundary>
           </section>
 
-          {/* Right: Preview + Collection */}
-          <section className="flex flex-col gap-6">
-            {/* Preview */}
-            <div className="bg-surface border border-card-border rounded-xl p-6 flex justify-center">
-              <ErrorBoundary>
-                <CardPreview
-                  editable
-                  onImageChange={(dataUrl) => updateDraft('imageUrl', dataUrl)}
-                />
-              </ErrorBoundary>
-            </div>
+          {/* Middle: Preview (sticky) */}
+          <section className="bg-surface border border-card-border rounded-xl p-5 h-fit xl:sticky xl:top-6">
+            <ErrorBoundary>
+              <CardPreview
+                editable
+                onImageChange={(dataUrl) => updateDraft('imageUrl', dataUrl)}
+              />
+            </ErrorBoundary>
+          </section>
 
-            {/* Collection */}
-            <div className="bg-surface border border-card-border rounded-xl p-5">
-              <ErrorBoundary>
-                <CardList />
-              </ErrorBoundary>
-            </div>
+          {/* Right: Collection */}
+          <section className="bg-surface border border-card-border rounded-xl p-5">
+            <ErrorBoundary>
+              <CardList />
+            </ErrorBoundary>
           </section>
         </div>
       </main>

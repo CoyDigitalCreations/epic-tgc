@@ -758,9 +758,9 @@ export function CardPreview({
       <div
         className="flex items-center justify-center text-gray-500 font-display"
         style={{
-          width: standalone ? 744 : '100%',
-          height: standalone ? 1038 : 500,
-          minHeight: 500,
+          width: standalone ? 744 : 744 * 0.38,
+          height: standalone ? 1038 : 1038 * 0.38,
+          minHeight: standalone ? 1038 : 200,
         }}
       >
         <div className="text-center">
@@ -883,17 +883,25 @@ export function CardPreview({
     )
   }
 
+  const SCALE = 0.38
   return (
     <div className="flex flex-col items-center gap-2">
       <div
         style={{
-          transform: 'scale(0.45)',
-          transformOrigin: 'top center',
-          width: 744,
-          height: 1038,
+          width: 744 * SCALE,
+          height: 1038 * SCALE,
         }}
       >
-        {cardContent}
+        <div
+          style={{
+            transform: `scale(${SCALE})`,
+            transformOrigin: 'top left',
+            width: 744,
+            height: 1038,
+          }}
+        >
+          {cardContent}
+        </div>
       </div>
       <button
         onClick={handleExport}
