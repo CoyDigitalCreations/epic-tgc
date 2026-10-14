@@ -644,7 +644,7 @@
     "paqueteId": "estasis",
     "limiteCopias": "3",
     "createdAt": "2026-08-03T00:00:00.000Z",
-    "updatedAt": "2026-09-29T05:20:29.050Z",
+    "updatedAt": "2026-10-14T04:57:30.581Z",
     "facciones": [
       "Orden"
     ],
@@ -665,7 +665,6 @@
     "efectos": [
       {
         "tipo": "continuo",
-        "efecto": "toggle_exhaust",
         "objetivo": {
           "tipo": "campeon",
           "controlador": "rival",
@@ -675,13 +674,26 @@
           "ATQ": 0,
           "RES": 0
         },
-        "texto": "Al ser invocada, bloquea 4 Éter, cambia el agotamiento de un Campeón que controla el rival, mientras ese Éter esté bloqueado.",
+        "texto": "Puedes bloquear hasta un máximo de 4 Éter (Max. 4), con 2 Éteres bloqueados, cambia el agotamiento de un Campeón que controla el rival, con 4 Éteres bloqueados, fija el agotamiento de un Campeón que esté agotado que controla el rival, mientras ese Éter esté bloqueado.",
         "costo": {
-          "tipo": "bloqueo_fijo",
-          "cantidad": 4
+          "tipo": "eter_bloqueado",
+          "cantidad": 4,
+          "umbral": 2
         },
-        "duracion": "mientras_ester_bloqueado",
-        "trigger": "al_invocar"
+        "tramos": [
+          {
+            "umbral": 2,
+            "efecto": "toggle_exhaust"
+          },
+          {
+            "umbral": 4,
+            "efecto": "fix_exhaust",
+            "filtros": {
+              "agotado": true
+            },
+            "duracion": "mientras_ester_bloqueado"
+          }
+        ]
       }
     ]
   },
@@ -1258,7 +1270,7 @@
   },
   {
     "id": "FB-031",
-    "name": "Enviada de las Casas, Voz del Este",
+    "name": "Titania, Voz del Este",
     "type": "Campeón",
     "rarity": "Común",
     "keywords": [],
@@ -1266,7 +1278,7 @@
     "paqueteId": "estasis",
     "limiteCopias": "3",
     "createdAt": "2026-08-12T00:00:00.000Z",
-    "updatedAt": "2026-10-08T05:35:12.479Z",
+    "updatedAt": "2026-10-14T05:03:38.300Z",
     "facciones": [
       "Orden"
     ],
@@ -2226,7 +2238,7 @@
     "paqueteId": "disonancia",
     "limiteCopias": "3",
     "createdAt": "2026-08-03T00:00:00.000Z",
-    "updatedAt": "2026-09-22T21:40:36.428Z",
+    "updatedAt": "2026-10-13T05:16:59.993Z",
     "stats": {
       "cost": 3
     },
@@ -2240,14 +2252,14 @@
           "zona": "exilio",
           "filtros": {
             "faccion": "Caos",
-            "costeMax": 5
+            "costeMax": 3
           }
         },
         "stats": {
           "ATQ": 0,
           "RES": 0
         },
-        "texto": "Puedes pagar 3 Éter, invoca un Campeón de facción Caos de coste 5 éter o menos del Exilio de su dueño y equipa esta carta a ese Campeón.",
+        "texto": "Puedes pagar 3 Éter, invoca un Campeón de facción Caos de coste 3 éter o menos del Exilio de su dueño y equipa esta carta a ese Campeón.",
         "zonaOrigen": "exilio",
         "costo": {
           "tipo": "eter",
