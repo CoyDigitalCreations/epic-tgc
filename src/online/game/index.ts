@@ -71,7 +71,7 @@ export {
   resolverFaseEfectos,
   hastaAlba,
 } from './effectRegistry'
-export { dispararUmbralBloqueo, reagruparEfectosBloqueoAlba, retornarCampeonesRobados } from './effectInterpreter'
+export { dispararUmbralBloqueo, reagruparEfectosBloqueoAlba, retornarCampeonesRobados, ejecutarTramo, exhaustFijado } from './effectInterpreter'
 export type { EfectoPendiente, AccionPendiente, EfectoDuracion, FaseTrigger, OwnerTrigger } from './effectRegistry'
 import { registrarEfectos } from './handlers'
 registrarEfectos() // C1 (ADR-20): registra los handlers de efectos al importar el motor

@@ -360,16 +360,55 @@ function invocarAlCampo(s: GameState, ctx: Ctx, jugador: PlayerId, campeonId: st
  */
 export function dispararUmbralBloqueo(s: GameState, ctx: Ctx, targetInstanceId: string): void {
   const inst = s.instances[targetInstanceId]
-  if (!inst?.cardId || inst.efectoUmbralDisparado) return
+  if (!inst?.cardId) return
   const meta = getCardMeta(inst.cardId)
   if (!meta || !('efectos' in meta) || !meta.efectos) return
   const bloqueados = inst.eterBloqueado?.length ?? 0
 
   for (const efecto of meta.efectos) {
+    // Capa 3b: tramos escalonados — UN bloqueo "hasta" con recompensas por
+    // umbral. Cada tramo alcanzado arma su pendiente D1 (una elección por
+    // tramo); tramosDisparados evita re-disparo mientras el Éter se sostiene
+    // y se limpia al liberar (nuevo ciclo → tramos re-armados).
+    if (efecto.tramos && efecto.tramos.length > 0) {
+      if (efecto.costo?.tipo !== 'eter_bloqueado' && efecto.costo?.tipo !== 'bloqueo_fijo') continue
+      // Acumular los pendientes del batch — se insertan al frente PRESERVANDO
+      // el orden de umbral (2 antes que 4; unshift directo los invertiría)
+      const nuevosPendientes: typeof s.objetivosPendientes = []
+      for (const tramo of [...efecto.tramos].sort((a, b) => a.umbral - b.umbral)) {
+        if (bloqueados < tramo.umbral) continue
+        if (inst.tramosDisparados?.includes(tramo.umbral)) continue
+        // Objetivo del tramo: base del raíz + filtros propios del tramo (merge)
+        if (!efecto.objetivo) continue
+        const objetivoTramo = {
+          ...efecto.objetivo,
+          filtros: { ...efecto.objetivo.filtros, ...tramo.filtros },
+        }
+        const opciones = resolveTargets(s, objetivoTramo, inst.owner)
+        if (opciones.length === 0) continue // sin válidos → se re-evalúa al próximo bloqueo
+        inst.tramosDisparados = [...(inst.tramosDisparados ?? []), tramo.umbral]
+        ctx.emit({ type: 'tramo_disparado', jugador: inst.owner, fuenteId: inst.cardInstanceId, umbral: tramo.umbral, efecto: tramo.efecto })
+        // D1: una elección por tramo (mismo patrón steal)
+        nuevosPendientes.push({
+          jugador: inst.owner,
+          instId: inst.cardInstanceId,
+          trigger: 'al-bloquear-eter',
+          opciones,
+          tramoUmbral: tramo.umbral,
+        })
+      }
+      if (nuevosPendientes.length > 0) {
+        s.objetivosPendientes = [...nuevosPendientes, ...(s.objetivosPendientes ?? [])]
+      }
+      continue
+    }
+
     const umbral = efecto.costo?.cantidad
     if (!umbral) continue
     if (efecto.costo?.tipo !== 'eter_bloqueado' && efecto.costo?.tipo !== 'bloqueo_fijo') continue
     if (bloqueados < umbral) continue
+    // Legacy one-shot (sin tramos): flag de protección — se limpia al liberar
+    if (inst.efectoUmbralDisparado) continue
 
     // One-shot steal_champion (Aurora): no re-steal si ya controla uno robado por esta fuente
     if (efecto.efecto === 'steal_champion') {
@@ -402,6 +441,90 @@ export function dispararUmbralBloqueo(s: GameState, ctx: Ctx, targetInstanceId: 
 /** ¿Hay slot libre para robar un Campeón? (mismo check que canExecuteEffect steal_champion) */
 function canExecuteSteal(s: GameState, jugador: PlayerId): boolean {
   return s.players[jugador].campo.campeones.includes(null)
+}
+
+/**
+ * Capa 3b: ejecuta un TRAMO escalonado tras la elección D1 del jugador.
+ * Reconstruye el efecto sintético del tramo (raíz + filtros mergeados) y:
+ * - one-shot (toggle_exhaust, etc.): interpretEffect con objetivo elegido;
+ * - fix_exhaust (sostén): setea fijadoExhaustTargetId — estado derivado que
+ *   vive mientras la fuente tenga Éter bloqueado >= umbral del tramo.
+ */
+export function ejecutarTramo(
+  s: GameState,
+  ctx: Ctx,
+  fuenteId: string,
+  umbral: number,
+  objetivoId: string,
+): void {
+  const inst = s.instances[fuenteId]
+  if (!inst?.cardId) return
+  const meta = getCardMeta(inst.cardId)
+  if (!meta || !('efectos' in meta) || !meta.efectos) return
+
+  const efectoRaiz = meta.efectos.find((e) => e.tramos?.some((t) => t.umbral === umbral))
+  const tramo = efectoRaiz?.tramos?.find((t) => t.umbral === umbral)
+  if (!efectoRaiz || !tramo) return
+
+  // fix_exhaust: sostén — el estado vive en la fuente (derived state)
+  if (tramo.efecto === 'fix_exhaust') {
+    inst.fijadoExhaustTargetId = objetivoId
+    ctx.emit({ type: 'exhaust_fijado', jugador: inst.owner, campeonId: objetivoId, fuenteId: inst.cardInstanceId })
+    return
+  }
+
+  // One-shot: efecto sintético con el objetivo mergeado — interpretEffect
+  // ejecuta directo (contextoUso 'objetivo-elegido' = resolución)
+  const efectoTramo = {
+    ...efectoRaiz,
+    efecto: tramo.efecto,
+    stats: tramo.stats ?? efectoRaiz.stats,
+    keyword: tramo.keyword,
+    cantidad: tramo.cantidad,
+    duracion: tramo.duracion ?? efectoRaiz.duracion,
+    duracionTurnos: tramo.duracionTurnos,
+    costo: undefined, // el costo lo declara el raíz — ya pagado con el bloqueo
+    trigger: undefined,
+    tramos: undefined,
+    objetivo: {
+      ...efectoRaiz.objetivo!,
+      filtros: { ...efectoRaiz.objetivo?.filtros, ...tramo.filtros },
+    },
+  }
+  interpretEffect(s, ctx, inst, efectoTramo, {
+    jugador: inst.owner,
+    contextoUso: 'objetivo-elegido',
+    objetivoId,
+  })
+}
+
+/**
+ * Estado derivado: ¿el campeón tiene el agotamiento fijado por un tramo
+ * fix_exhaust activo? El fijado vive mientras la FUENTE siga en campo con
+ * Éter bloqueado >= umbral del tramo (si libera Éter o sale la fuente, el
+ * estado cae solo — patrón championNegado, sin flags de limpieza).
+ */
+export function exhaustFijado(s: GameState, champId: string): boolean {
+  for (const jugador of ['A', 'B'] as PlayerId[]) {
+    const campo = [
+      ...s.players[jugador].campo.campeones,
+      ...s.players[jugador].campo.misticasTacticas,
+      ...s.players[jugador].campo.arcanasCombate,
+    ]
+    for (const id of campo) {
+      if (!id) continue
+      const fuente = s.instances[id]
+      if (fuente?.fijadoExhaustTargetId !== champId) continue
+      if (!fuente.cardId) continue
+      const meta = getCardMeta(fuente.cardId)
+      if (!meta || !('efectos' in meta) || !meta.efectos) continue
+      const efecto = meta.efectos.find((e) => e.tramos?.some((t) => t.efecto === 'fix_exhaust'))
+      const tramo = efecto?.tramos?.find((t) => t.efecto === 'fix_exhaust')
+      if (!tramo) continue
+      if ((fuente.eterBloqueado?.length ?? 0) >= tramo.umbral) return true
+    }
+  }
+  return false
 }
 
 /**
@@ -448,6 +571,9 @@ export function reagruparEfectosBloqueoAlba(s: GameState, ctx: Ctx, jugador: Pla
     delete inst.eterBloqueado
     delete inst.efectoUmbralDisparado
     delete inst.copyOneShotDisparado
+    // Capa 3b: nuevo ciclo de bloqueo re-arme los tramos y cae el fijado
+    delete inst.tramosDisparados
+    delete inst.fijadoExhaustTargetId
     p.eterReserva.push(...eteres)
     ctx.emit({ type: 'eter_reagrupado', jugador, eterIds: eteres })
 
@@ -1011,6 +1137,8 @@ function executeMover(
 
 /**
  * Execute toggle_exhaust effect.
+ * Capa 3b: el campeón con agotamiento FIJADO (fix_exhaust activo) no puede
+ * cambiar su estado de agotamiento — el toggle no lo afecta.
  */
 function executeToggleExhaust(
   s: GameState,
@@ -1019,6 +1147,7 @@ function executeToggleExhaust(
   for (const targetId of targetIds) {
     const inst = s.instances[targetId]
     if (!inst) continue
+    if (exhaustFijado(s, targetId)) continue
 
     inst.agotado = !inst.agotado
   }

@@ -116,9 +116,16 @@ describe('Card-Maker JSON → engine integration', () => {
     for (const card of jsonCards) {
       if (!('efectos' in card) || !card.efectos) continue
       for (const efecto of card.efectos) {
-        // Every effect must have tipo and efecto fields
+        // Every effect must have tipo; efecto can be defined by tramos[] (Capa 3b)
         expect(efecto.tipo).toBeDefined()
-        expect(efecto.efecto).toBeDefined()
+        expect(efecto.efecto ?? (efecto.tramos && efecto.tramos.length > 0 ? 'tramos' : undefined)).toBeDefined()
+        // Tramos: each must have umbral + efecto
+        if (efecto.tramos) {
+          for (const tramo of efecto.tramos) {
+            expect(tramo.umbral).toBeDefined()
+            expect(tramo.efecto).toBeDefined()
+          }
+        }
         // If objective exists, it must have tipo
         if (efecto.objetivo) {
           expect(efecto.objetivo.tipo).toBeDefined()
@@ -188,7 +195,7 @@ describe('Card-Maker JSON → engine integration', () => {
   })
 
   it('DS-022 invocar_y_equipar with faccion+costeMax filter works', () => {
-    // DS-022: "Invoca un Campeón de facción Caos de coste 5 o menos del Exilio"
+    // DS-022: "Invoca un Campeón de facción Caos de coste 3 o menos del Exilio"
     const card = jsonCards.find(c => c.id === 'DS-022')
     expect(card).toBeDefined()
     const meta = getCardMeta('DS-022')
@@ -196,7 +203,7 @@ describe('Card-Maker JSON → engine integration', () => {
 
     const efecto = meta!.efectos![0]
     expect(efecto.objetivo?.filtros?.faccion).toBe('Caos')
-    expect(efecto.objetivo?.filtros?.costeMax).toBe(5)
+    expect(efecto.objetivo?.filtros?.costeMax).toBe(3)
   })
 
   it('draw effect works via interpreter with JSON card data', () => {

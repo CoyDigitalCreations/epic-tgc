@@ -117,6 +117,10 @@ function liberarEterBloqueadoCore(s: GameState, cardInstanceId: string, destino:
   // Fase 3a Phase D + 3c: efectos de umbral/copy se desactivan al liberar Éter (§7.7)
   delete inst.efectoUmbralDisparado
   delete inst.copyOneShotDisparado
+  // Capa 3b: tramos escalonados — nuevo ciclo de bloqueo re-arme los tramos
+  // y el fijado de agotamiento se cae (estado derivado: sin Éter, sin fijado)
+  delete inst.tramosDisparados
+  delete inst.fijadoExhaustTargetId
   // Aurora steal_champion "mientras_ester_bloqueado": al liberar el Éter
   // (salida del campo de la fuente), los Campeones robados por esta fuente
   // retornan al rival si hay slot libre; si no, se queda el control donde está.

@@ -8,7 +8,7 @@ import type { CondicionEfecto } from '../../shared/types'
 import { validarPago, aplicarPago, type ContextoUso } from './payments'
 import { dispararTrigger, condicionCumple, championNegado, type TriggerEfecto, type PayloadEfecto } from './efectos'
 import { registrarEfectoPendiente, hastaAlba } from './effectRegistry'
-import { interpretEffect } from './effectInterpreter'
+import { interpretEffect, ejecutarTramo } from './effectInterpreter'
 import { tieneKeyword } from './combat'
 import { liberarEterBloqueado, enviarAlCementerio } from './replacements'
 import { slotAZona } from './zones'
@@ -352,6 +352,15 @@ export function ejecutarElegirObjetivo(s: GameState, action: Extract<Action, { t
   const pendiente = s.objetivosPendientes?.[0]
   if (!pendiente) return // defensivo: ya validado en validarAccion
   s.objetivosPendientes = s.objetivosPendientes!.slice(1)
+
+  // Capa 3b: pendiente de un TRAMO escalonado — el trigger re-dispatch no
+  // aplica (el tramo vive dentro de efecto.tramos, no como efecto.raíz).
+  // Se resuelve aquí directamente con el objetivo elegido.
+  if (pendiente.tramoUmbral !== undefined) {
+    ejecutarTramo(s, ctx, pendiente.instId, pendiente.tramoUmbral, action.objetivoId)
+    return
+  }
+
   dispararTrigger(s, ctx, pendiente.trigger as TriggerEfecto, pendiente.jugador, [pendiente.instId], {
     contextoUso: 'objetivo-elegido',
     objetivoId: action.objetivoId,

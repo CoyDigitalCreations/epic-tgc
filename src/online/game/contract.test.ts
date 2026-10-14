@@ -29,6 +29,8 @@ export const NOMBRES_EVENTOS = [
   'eter_movido',
   'eter_pagado',
   'eter_bloqueado',
+  'tramo_disparado',
+  'exhaust_fijado',
   'eter_reagrupado',
   'mazo_agotado',
   'mulligan_realizado',
@@ -70,6 +72,8 @@ function validarExhaustividad(tipo: GameEvent['type']): void {
     case 'eter_movido': return
     case 'eter_pagado': return
     case 'eter_bloqueado': return
+    case 'tramo_disparado': return
+    case 'exhaust_fijado': return
     case 'eter_reagrupado': return
     case 'mazo_agotado': return
     case 'mulligan_realizado': return
@@ -141,6 +145,14 @@ const VALIDADORES: Record<GameEvent['type'], (e: GameEvent) => boolean> = {
     Array.isArray(e.eterIds) &&
     e.eterIds.every(esId) &&
     esId(e.campeonId),
+  tramo_disparado: (e) =>
+    e.type === 'tramo_disparado' &&
+    esJugador(e.jugador) &&
+    esId(e.fuenteId) &&
+    typeof e.umbral === 'number' &&
+    typeof e.efecto === 'string',
+  exhaust_fijado: (e) =>
+    e.type === 'exhaust_fijado' && esJugador(e.jugador) && esId(e.campeonId) && esId(e.fuenteId),
   eter_reagrupado: (e) =>
     e.type === 'eter_reagrupado' && esJugador(e.jugador) && Array.isArray(e.eterIds) && e.eterIds.every(esId),
   eter_movido: (e) =>
@@ -187,10 +199,10 @@ const VALIDADORES: Record<GameEvent['type'], (e: GameEvent) => boolean> = {
 }
 
 describe('contrato de eventos (ADR-10)', () => {
-  it('el catálogo expone exactamente los 31 eventos del contrato en orden', () => {
+  it('el catálogo expone exactamente los 33 eventos del contrato en orden', () => {
     const nombres = CATALOGO_EVENTOS.map((e) => e.type)
     expect(nombres).toEqual([...NOMBRES_EVENTOS])
-    expect(new Set(nombres).size).toBe(31)
+    expect(new Set(nombres).size).toBe(33)
   })
 
   it('el switch exhaustivo cubre TODO el tipo GameEvent (añadir/quitar rompe tsc)', () => {

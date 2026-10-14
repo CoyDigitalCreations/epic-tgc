@@ -6,7 +6,7 @@ import { getValidActions } from '../validActions'
 import type { Ctx, GameState, PlayerId } from '../types'
 
 const CAMPEON = 'FB-011' // cost 2
-const CAMPEON_BLOQUEO = 'FB-016' // Cassandra: habilidad activa con patrón "bloqueado"
+const CAMPEON_BLOQUEO = 'FB-015' // Elena: habilidad con patrón "bloqueo_fijo" 3
 const MISTICA = 'FB-019' // cost 2
 const TACTICA = 'FB-021' // cost 0
 const ARCANA = 'FB-023' // cost 3
@@ -147,20 +147,20 @@ describe('getValidActions en Forja (5.5)', () => {
   it('incluye bloquear_eter por Campeón propio con habilidad activa "bloqueado" y Éter de facción compartida en la Reserva', () => {
     let s = conInstancias(estadoMinimo(), { cam1: { cardId: CAMPEON_BLOQUEO, owner: 'A' } })
     s = { ...s, players: { ...s.players, A: { ...s.players.A, campo: { ...s.players.A.campo, campeones: ['cam1', null, null, null, null] } } } }
-    // Cassandra FB-016: bloqueo_fijo:4 → necesita 4 Éteres Orden para generar la acción exacta
-    s = conEteres(s, 'FB-001', 4)
+    // FB-015 Elena: bloqueo_fijo:3 → necesita 3 Éteres Orden para generar la acción exacta
+    s = conEteres(s, 'FB-001', 3)
 
     const bloqueos = getValidActions(s, 'A').filter((a) => a.type === 'bloquear_eter')
     expect(bloqueos).toHaveLength(1)
     if (bloqueos[0]?.type === 'bloquear_eter') {
-      expect(bloqueos[0].eterIds).toHaveLength(4)
+      expect(bloqueos[0].eterIds).toHaveLength(3)
     }
   })
 
   it('NO genera bloquear_eter fijo si faltan Éteres para el monto exacto', () => {
     let s = conInstancias(estadoMinimo(), { cam1: { cardId: CAMPEON_BLOQUEO, owner: 'A' } })
     s = { ...s, players: { ...s.players, A: { ...s.players.A, campo: { ...s.players.A.campo, campeones: ['cam1', null, null, null, null] } } } }
-    // Solo 2 de 4 requeridos → sin acción posible
+    // Solo 2 de 3 requeridos → sin acción posible
     s = conEteres(s, 'FB-001', 2)
 
     const bloqueos = getValidActions(s, 'A').filter((a) => a.type === 'bloquear_eter')

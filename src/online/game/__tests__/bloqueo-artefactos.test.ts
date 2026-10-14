@@ -29,7 +29,7 @@ const FB032 = 'FB-032' // Mística Artefacto, bloqueo_fijo:4, invocar_y_equipar
 const MISTICA_SIN_BLOQUEO = 'FB-019' // Mística sin costo bloqueado
 const ETER_ORDEN = 'FB-001'
 const CAMPEON = 'FB-011' // Vaela 5/3 — sin habilidad de bloqueo
-const CAMPEON_BLOQUEO = 'FB-016' // Cassandra: continuo con bloqueo_fijo
+const CAMPEON_BLOQUEO = 'FB-015' // Elena: continuo double_attack, bloqueo_fijo 3
 
 function estadoMinimo(): GameState {
   const jugador = (id: PlayerId) => ({
@@ -288,15 +288,15 @@ describe('bloqueo en Artefactos — getValidActions (Fase 3a)', () => {
 
 describe('bloqueo en Artefactos — regresión Campeones (Fase 3a)', () => {
   it('Campeón con habilidad "bloqueado" sigue generando bloquear_eter (exacto)', () => {
-    // FB-016 Cassandra: bloqueo_fijo:4 → necesita 4 Éteres para generar la acción
+    // FB-015 Elena: bloqueo_fijo:3 → necesita 3 Éteres para generar la acción
     const conCampo = conCampeonEnCampo(estadoMinimo(), CAMPEON_BLOQUEO, 0)
-    const { s } = conEteres(conCampo.s, ETER_ORDEN, 4)
+    const { s } = conEteres(conCampo.s, ETER_ORDEN, 3)
 
     const bloqueos = getValidActions(s, 'A').filter((a) => a.type === 'bloquear_eter')
     expect(bloqueos).toHaveLength(1)
     if (bloqueos[0]?.type === 'bloquear_eter') {
       expect(bloqueos[0].targetInstanceId).toBe(conCampo.id)
-      expect(bloqueos[0].eterIds).toHaveLength(4)
+      expect(bloqueos[0].eterIds).toHaveLength(3)
     }
   })
 
@@ -310,7 +310,7 @@ describe('bloqueo en Artefactos — regresión Campeones (Fase 3a)', () => {
 
   it('Campeón y Mística conviven: cada uno recibe bloqueo en su target', () => {
     const ctx = crearCtx()
-    // FB-016 Cassandra (fijo 4) + FB-022 (flexible 3) → 4+ Éteres
+    // FB-015 Elena (fijo 3) + FB-022 (flexible 3) → 4+ Éteres
     const conCamp = conCampeonEnCampo(estadoMinimo(), CAMPEON_BLOQUEO, 0)
     const conMist = conMisticaEnCampo(conCamp.s, FB022, 0)
     const { s } = conEteres(conMist.s, ETER_ORDEN, 5)
@@ -320,10 +320,10 @@ describe('bloqueo en Artefactos — regresión Campeones (Fase 3a)', () => {
     expect(targets).toContain(conCamp.id)
     expect(targets).toContain(conMist.id)
 
-    // Bloquear exacto en el campeón (4) — sale de la Reserva
+    // Bloquear exacto en el campeón (3) — sale de la Reserva
     const accCamp = bloqueos.find((b) => b.type === 'bloquear_eter' && b.targetInstanceId === conCamp.id)!
     const s2 = aplicar(s, accCamp, ctx)
-    expect(s2.instances[conCamp.id].eterBloqueado).toHaveLength(4)
+    expect(s2.instances[conCamp.id].eterBloqueado).toHaveLength(3)
 
     // Regenerar acciones (la Reserva cambió) y bloquear en la mística
     const bloqueos2 = getValidActions(s2, 'A').filter((a) => a.type === 'bloquear_eter')

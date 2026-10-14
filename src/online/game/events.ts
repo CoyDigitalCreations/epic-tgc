@@ -114,6 +114,26 @@ export interface EterBloqueadoEvent {
   campeonId: string
 }
 
+export interface TramoDisparadoEvent {
+  type: 'tramo_disparado'
+  jugador: PlayerId
+  /** ID de instancia fuente del tramo (la carta con el bloqueo "hasta"). */
+  fuenteId: string
+  /** Umbral del tramo que se activó (p.ej. 2 o 4 en Cassandra). */
+  umbral: number
+  /** Efecto del tramo (toggle_exhaust, fix_exhaust, etc.). */
+  efecto: string
+}
+
+export interface ExhaustFijadoEvent {
+  type: 'exhaust_fijado'
+  jugador: PlayerId
+  /** Campeón cuyo agotamiento queda fijado. */
+  campeonId: string
+  /** Fuente del fijado (tramo fix_exhaust). */
+  fuenteId: string
+}
+
 export interface EterReagrupadoEvent {
   type: 'eter_reagrupado'
   jugador: PlayerId
@@ -232,6 +252,8 @@ export type GameEvent =
   | EterMovidoEvent
   | EterPagadoEvent
   | EterBloqueadoEvent
+  | TramoDisparadoEvent
+  | ExhaustFijadoEvent
   | EterReagrupadoEvent
   | MazoAgotadoEvent
   | MulliganRealizadoEvent
@@ -266,6 +288,8 @@ export const CATALOGO_EVENTOS: readonly GameEvent[] = [
   { type: 'eter_movido', cardInstanceId: 'c1', destino: 'reserva', jugador: 'A' },
   { type: 'eter_pagado', jugador: 'A', eterIds: ['c2'], costo: 3, aportado: 3 },
   { type: 'eter_bloqueado', jugador: 'A', eterIds: ['c2'], campeonId: 'c1' },
+  { type: 'tramo_disparado', jugador: 'A', fuenteId: 'c1', umbral: 2, efecto: 'toggle_exhaust' },
+  { type: 'exhaust_fijado', jugador: 'A', campeonId: 'c2', fuenteId: 'c1' },
   { type: 'eter_reagrupado', jugador: 'A', eterIds: ['c2'] },
   { type: 'mazo_agotado', jugador: 'A' },
   { type: 'mulligan_realizado', jugador: 'A' },
@@ -312,6 +336,8 @@ export function validarExhaustividadEventos(tipo: GameEvent['type']): void {
     case 'eter_movido': return
     case 'eter_pagado': return
     case 'eter_bloqueado': return
+    case 'tramo_disparado': return
+    case 'exhaust_fijado': return
     case 'eter_reagrupado': return
     case 'mazo_agotado': return
     case 'mulligan_realizado': return

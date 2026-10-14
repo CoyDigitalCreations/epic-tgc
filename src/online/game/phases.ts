@@ -2,7 +2,7 @@ import { reagruparEter } from './payments'
 import { purgarEfectosTemporales, dispararTrigger, crearOpcionBloqueo } from './efectos'
 import { getCardMeta } from './cards'
 import { resolverFaseEfectos } from './effectRegistry'
-import { reagruparEfectosBloqueoAlba } from './effectInterpreter'
+import { reagruparEfectosBloqueoAlba, exhaustFijado } from './effectInterpreter'
 import type { Ctx, GameState, PlayerId } from './types'
 
 /**
@@ -23,10 +23,13 @@ export function resolverAlba(s: GameState, ctx: Ctx, jugador: PlayerId): void {
   purgarEfectosTemporales(s, 'alba-dueño', jugador, ctx)
 
   // 1. Enderezar Campeones (silencioso)
+  //    Capa 3b: el campeón con agotamiento FIJADO por un tramo fix_exhaust
+  //    activo NO se endereza (su agotamiento queda fijo mientras la fuente
+  //    tenga Éter bloqueado >= umbral — estado derivado exhaustFijado).
   for (const slot of p.campo.campeones) {
     if (slot) {
       const inst = s.instances[slot]
-      if (inst.agotado) delete inst.agotado
+      if (inst.agotado && !exhaustFijado(s, slot)) delete inst.agotado
       if (inst.atacoEsteTurno) delete inst.atacoEsteTurno
       if (inst.opcionUsadaEsteTurno) delete inst.opcionUsadaEsteTurno
     }

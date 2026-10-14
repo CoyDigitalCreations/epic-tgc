@@ -146,7 +146,7 @@ describe('Routing por efecto — activar_habilidad vs bloquear_eter (§7.7)', ()
     expect(s2.players.B.campo.campeones[0]).toBeNull()
   })
 
-  it('FB-016 Cassandra (solo continuo bloqueo_fijo): NINGÚN activar_habilidad — solo bloquear_eter', () => {
+  it('FB-016 Cassandra (continuo eter_bloqueado con tramos): NINGÚN activar_habilidad — solo bloquear_eter', () => {
     const base = estadoMinimo()
     const cassId = 'cass-1'
     const ids = Array.from({ length: 5 }, (_, i) => `ec-${i}`)
@@ -169,9 +169,12 @@ describe('Routing por efecto — activar_habilidad vs bloquear_eter (§7.7)', ()
 
     const acciones = getValidActions(s, 'A')
     expect(acciones.filter((a) => a.type === 'activar_habilidad')).toHaveLength(0)
+    // eter_bloqueado flexible (hasta 4): una acción por Éter hasta el máximo
     const bloquear = acciones.filter((a) => a.type === 'bloquear_eter')
-    expect(bloquear).toHaveLength(1)
-    if (bloquear[0]?.type === 'bloquear_eter') expect(bloquear[0].eterIds).toHaveLength(4)
+    expect(bloquear.length).toBeGreaterThan(0)
+    for (const b of bloquear) {
+      if (b.type === 'bloquear_eter') expect(b.targetInstanceId).toBe(cassId)
+    }
 
     // El validador también cierra la puerta (defensa en profundidad)
     const error = validarActivarHabilidad(s, {

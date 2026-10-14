@@ -79,6 +79,14 @@ export interface CardInstance {
    /** Fase 3a Phase D: one-shot de umbral de costo-bloqueado ya disparado (FB-032).
     * Se limpia al liberar el Éter (efecto se desactiva). */
    efectoUmbralDisparado?: boolean
+   /** Capa 3b: umbrales de tramos escalonados ya resueltos para esta fuente
+    * (p.ej. [2] tras activar el tramo toggle de Cassandra). Se limpian al
+    * liberar el Éter — un nuevo ciclo de bloqueo re-arme los tramos. */
+   tramosDisparados?: number[]
+   /** Capa 3b fix_exhaust: ID del campeón cuyo agotamiento está fijado por
+    * este tramo. Estado derivado: el fijado vive mientras la fuente tenga
+    * Éter bloqueado >= umbral del tramo (exhaustFijado scan). */
+   fijadoExhaustTargetId?: string
    /** Fase 3b: ID del campeón target de un efecto negar de esta fuente (FB-021).
     * Estado derivado: la negación vive mientras la fuente esté en campo
     * (championNegado scan en efectos.ts). */
@@ -201,8 +209,10 @@ export interface GameState {
    * C3 (D1): objetivos pendientes de elegir_objetivo — cola FIFO (Vaela+Kael
    * atacan juntos → 2 pendientes). `trigger` guarda el trigger que originó el
    * pendiente; la resolución re-despacha con contextoUso 'objetivo-elegido'.
+   * `tramoUmbral`: pendiente de un tramo escalonado (Capa 3b) — la resolución
+   * ejecuta ese tramo directamente en vez de re-despachar por trigger.
    */
-  objetivosPendientes?: { jugador: PlayerId; instId: string; trigger: string; opciones: string[] }[]
+  objetivosPendientes?: { jugador: PlayerId; instId: string; trigger: string; opciones: string[]; tramoUmbral?: number }[]
   ganador?: PlayerId
   motivo?: MotivoFin
   /** Efectos pendientes centralizados (Effect Registry, Fase 1). */
