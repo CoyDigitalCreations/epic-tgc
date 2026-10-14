@@ -1,4 +1,4 @@
-import { getCardMeta, esArcana, costeEterHabilidad, cartaNecesitaEterBloqueado } from './cards'
+import { getCardMeta, esArcana, efectoActivableDe, esCostoBloqueo, cartaBloqueaPorAccion } from './cards'
 import { championNegado } from './efectos'
 import type { AnyCard } from '../../shared/types'
 import type { Action } from './actions'
@@ -144,45 +144,38 @@ export function getValidActions(state: GameState, playerId: PlayerId): Action[] 
       // Fase 3b: campeón negado no puede activar efectos
       if (championNegado(state, champId)) continue
 
-      // Check efectos[] for active abilities
-      const tieneEfectos = 'efectos' in meta && meta.efectos
-      const tieneContinuo = tieneEfectos && meta.efectos!.some((e) => e.tipo === 'continuo')
-      const tieneDisparo = tieneEfectos && meta.efectos!.some((e) => e.tipo === 'disparo')
-
-      if (tieneContinuo) {
-        // Continuo: NO puede activar si agotado; 1/turno
-        if (inst!.agotado || inst!.opcionUsadaEsteTurno) continue
-        const costo = costeEterHabilidad(meta)
+      // Check efectos[] for active abilities — ROUTING POR EFECTO (§7.7).
+      // El efecto que activar_habilidad ejecuta lo decide SU costo:
+      // - costo-bloqueo (disparo) → patrón "Bloqueado": bloquea N y ejecuta,
+      //   1/turno (puede activar agotado);
+      // - pago 'eter' → patrón "Agota"/Continuo: paga a 1A, no agotado, 1/turno.
+      // Continuos con costo-bloqueo (steal Aurora, double_attack FB-015) NO
+      // llegan acá: su acción es bloquear_eter (aura/umbral), nunca activar.
+      const efectoAct = efectoActivableDe(meta, false)
+      if (efectoAct && inst) {
+        const costoBloqueo = esCostoBloqueo(efectoAct.costo)
+        const costo = efectoAct.costo?.cantidad ?? 0
         const eteresValidos = p.eterReserva.filter((id) => {
           const eterMeta = state.instances[id]?.cardId ? getCardMeta(state.instances[id]!.cardId!) : null
           return eterMeta !== null
         })
-        if (costo > 0 && eteresValidos.length >= costo) {
-          acciones.push({ type: 'activar_habilidad', cardInstanceId: champId, eterIds: eteresValidos.slice(0, costo) })
-        } else if (costo === 0 && eteresValidos.length > 0) {
-          acciones.push({ type: 'activar_habilidad', cardInstanceId: champId, eterIds: [eteresValidos[0]] })
-        }
-      } else if (tieneDisparo) {
-        // Disparo: SÍ puede activar si agotado; NO agota
-        // Check if it's a "blocked ether" pattern
-        const esBloqueado = meta.efectos!.some((e) => e.costo?.tipo === 'eter_bloqueado')
-        if (esBloqueado) {
-          // 1/turno: si ya se usó esta habilidad este turno, no generar acción
-          if (inst!.opcionUsadaEsteTurno) continue
-          const costo = costeEterHabilidad(meta)
-          const eteresValidos = p.eterReserva.filter((id) => {
-            const eterMeta = state.instances[id]?.cardId ? getCardMeta(state.instances[id]!.cardId!) : null
-            return eterMeta !== null
-          })
+        if (costoBloqueo) {
+          // Patrón "Bloqueado": 1/turno, costo exacto, sin check de agotado
+          if (inst.opcionUsadaEsteTurno) continue
+          if (costo > 0 && eteresValidos.length >= costo) {
+            acciones.push({ type: 'activar_habilidad', cardInstanceId: champId, eterIds: eteresValidos.slice(0, costo) })
+          }
+        } else if (efectoAct.tipo === 'continuo') {
+          // Continuo pagado: NO puede activar si agotado; 1/turno
+          if (inst.agotado || inst.opcionUsadaEsteTurno) continue
           if (costo > 0 && eteresValidos.length >= costo) {
             acciones.push({ type: 'activar_habilidad', cardInstanceId: champId, eterIds: eteresValidos.slice(0, costo) })
           } else if (costo === 0 && eteresValidos.length > 0) {
             acciones.push({ type: 'activar_habilidad', cardInstanceId: champId, eterIds: [eteresValidos[0]] })
           }
         } else {
-          // Patrón "Agota": necesita no agotado + no usado + N éteres
-          if (inst!.agotado || inst!.opcionUsadaEsteTurno) continue
-          const costo = costeEterHabilidad(meta)
+          // Patrón "Agota" (disparo pago): necesita no agotado + no usado
+          if (inst.agotado || inst.opcionUsadaEsteTurno) continue
           const costoReal = costo > 0 ? costo : 1
           if (p.eterReserva.length >= costoReal) {
             acciones.push({ type: 'activar_habilidad', cardInstanceId: champId, eterIds: p.eterReserva.slice(0, costoReal) })
@@ -202,7 +195,9 @@ export function getValidActions(state: GameState, playerId: PlayerId): Action[] 
       // - eter_bloqueado ("hasta X") → una acción por Éter hasta el máximo.
       const generarBloqueos = (targets: { id: string; inst: CardInstance; meta: AnyCard }[]) => {
         for (const t of targets) {
-          if (!cartaNecesitaEterBloqueado(t.meta)) continue
+          // Solo efectos NO-disparo con costo-bloqueo reciben vía bloquear_eter
+          // (aura derivada/umbral). Disparos bloqueados van por activar_habilidad.
+          if (!cartaBloqueaPorAccion(t.meta)) continue
           const actuales = t.inst.eterBloqueado?.length ?? 0
           const maxEter = maxEterBloqueado(t.meta)
           const fijo = esBloqueoFijo(t.meta)

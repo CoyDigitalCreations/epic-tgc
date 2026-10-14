@@ -1,5 +1,5 @@
 import { ALL_CARDS } from '../../shared/data/paquetes'
-import type { AnyCard, ArcanaCard, CampeonCard, EterCard, MisticaCard, VinculoCard, Faccion } from '../../shared/types'
+import type { AnyCard, ArcanaCard, CampeonCard, EfectoData, EterCard, MisticaCard, VinculoCard, Faccion } from '../../shared/types'
 
 export type { AnyCard }
 
@@ -69,14 +69,58 @@ export function esArtefactoEquipable(card: AnyCard): boolean {
 }
 
 /**
- * Extrae el costo en Éteres de una habilidad activa.
+ * true si el costo del efecto se paga BLOQUEANDO Éter (activación vía
+ * bloquear_eter, manual §7.7) en vez de pagarlo a 1A (activar_habilidad).
+ * Genérico: aplica a Campeones y Artefactos, cualquier efecto con
+ * costo eter_bloqueado/bloqueo_fijo.
+ */
+export function esCostoBloqueo(costo?: { tipo?: string } | null): boolean {
+  return costo?.tipo === 'eter_bloqueado' || costo?.tipo === 'bloqueo_fijo'
+}
+
+/**
+ * Efecto que activar_habilidad activa en esta carta — SELECCIÓN por tipo de
+ * costo (data-driven, sin cardIds). REGLA UNIFICADA (§7.7):
+ * - con objetivoId → el continuo de PAGO (aura/buff pagado con objetivo);
+ * - sin → el disparo (pago → patrón Agota; costo-bloqueo → patrón Bloqueado:
+ *   bloquea N y ejecuta, 1/turno), o en su ausencia el continuo de pago.
+ * Continuos con costo-bloqueo (steal_champion Aurora, double_attack FB-015,
+ * grant_keyword DS-001) NO son seleccionables acá: se activan exclusivamente
+ * vía bloquear_eter → aura derivada / dispararUmbralBloqueo (manual §7.7).
+ */
+export function efectoActivableDe(card: AnyCard, conObjetivo: boolean): EfectoData | null {
+  if (!('efectos' in card) || !card.efectos) return null
+  if (conObjetivo) {
+    return card.efectos.find((e) => e.tipo === 'continuo' && !esCostoBloqueo(e.costo)) ?? null
+  }
+  const continuoPago = card.efectos.find((e) => e.tipo === 'continuo' && !esCostoBloqueo(e.costo))
+  return card.efectos.find((e) => e.tipo === 'disparo') ?? continuoPago ?? null
+}
+
+/**
+ * true si la carta recibe Éter bloqueado vía la acción bloquear_eter: tiene
+ * algún efecto con costo-bloqueo que NO es disparo (continuo/hechizo/vinculo
+ * → aura derivada o one-shot de umbral). Los disparos con costo-bloqueo son
+ * habilidad "Bloqueado" — se activan vía activar_habilidad (bloquean y
+ * ejecutan), nunca vía bloquear_eter (evita doble camino).
+ */
+export function cartaBloqueaPorAccion(card: AnyCard): boolean {
+  if ('efectos' in card && card.efectos) {
+    return card.efectos.some((e) => esCostoBloqueo(e.costo) && e.tipo !== 'disparo')
+  }
+  return false
+}
+
+/**
+ * Extrae el costo en Éteres de la habilidad activa que activar_habilidad
+ * ejecuta (patrón Agota/Bloqueado del disparo; continuos solo si pagan).
  * Lee de efectos[] — el sistema unificado.
  */
 export function costeEterHabilidad(card: AnyCard): number {
   if ('efectos' in card && card.efectos) {
     const disparo = card.efectos.find((e) => e.tipo === 'disparo')
     if (disparo?.costo?.cantidad !== undefined) return disparo.costo.cantidad
-    const continuo = card.efectos.find((e) => e.tipo === 'continuo')
+    const continuo = card.efectos.find((e) => e.tipo === 'continuo' && !esCostoBloqueo(e.costo))
     if (continuo?.costo?.cantidad !== undefined) return continuo.costo.cantidad
   }
   return 0

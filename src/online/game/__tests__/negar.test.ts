@@ -21,7 +21,7 @@ import type { Action } from '../actions'
 import type { Ctx, GameState, PlayerId } from '../types'
 
 const FB021 = 'FB-021' // Mística Presteza, hechizo negar, cost 3
-const CASSANDRA = 'FB-016' // Campeón continuo (bloqueo_fijo 4, grant_keyword)
+const KORR = 'DS-016' // Campeón disparo buff, costo eter:2 (patrón Agota — paga vía activar_habilidad)
 const ETER_ORDEN = 'FB-001'
 
 function estadoMinimo(): GameState {
@@ -139,13 +139,13 @@ function aplicar(s: GameState, accion: Action, ctx: Ctx): GameState {
 
 describe('championNegado — estado derivado (Fase 3b)', () => {
   it('true cuando una fuente negar en campo tiene negadoTargetId === champ', () => {
-    const conCamp = conCampeon(estadoMinimo(), CASSANDRA, 'B', 0)
+    const conCamp = conCampeon(estadoMinimo(), KORR, 'B', 0)
     const conMist = conMistica(conCamp.s, FB021, 'A', 0, { negadoTargetId: conCamp.id })
     expect(championNegado(conMist.s, conCamp.id)).toBe(true)
   })
 
   it('false cuando la fuente negar NO está en campo (salió)', () => {
-    const conCamp = conCampeon(estadoMinimo(), CASSANDRA, 'B', 0)
+    const conCamp = conCampeon(estadoMinimo(), KORR, 'B', 0)
     // FB-021 registrada como instancia pero FUERA del campo (en cementerio)
     const s = conInstancias(conCamp.s, {
       'mist-fuera': { cardId: FB021, owner: 'A', extra: { negadoTargetId: conCamp.id } },
@@ -154,15 +154,15 @@ describe('championNegado — estado derivado (Fase 3b)', () => {
   })
 
   it('false cuando el negadoTargetId no coincide con el champ consultado', () => {
-    const conCamp = conCampeon(estadoMinimo(), CASSANDRA, 'B', 0)
-    const conOtro = conCampeon(conCamp.s, CASSANDRA, 'B', 1)
+    const conCamp = conCampeon(estadoMinimo(), KORR, 'B', 0)
+    const conOtro = conCampeon(conCamp.s, KORR, 'B', 1)
     const conMist = conMistica(conOtro.s, FB021, 'A', 0, { negadoTargetId: 'otro-id' })
     expect(championNegado(conMist.s, conCamp.id)).toBe(false)
     expect(championNegado(conMist.s, conOtro.id)).toBe(false)
   })
 
   it('false cuando la fuente no tiene efecto negar en el JSON', () => {
-    const conCamp = conCampeon(estadoMinimo(), CASSANDRA, 'B', 0)
+    const conCamp = conCampeon(estadoMinimo(), KORR, 'B', 0)
     // Mística sin negar (FB-019) con negadoTargetId seteado — el scan verifica efectos[]
     const conMist = conMistica(conCamp.s, 'FB-019', 'A', 0, { negadoTargetId: conCamp.id })
     expect(championNegado(conMist.s, conCamp.id)).toBe(false)
@@ -170,28 +170,28 @@ describe('championNegado — estado derivado (Fase 3b)', () => {
 })
 
 describe('validarActivarHabilidad con negación (Fase 3b)', () => {
-  /** Setup: Cassandra (B) en campo + FB-021 (A) en campo negándola + éteres para B. */
-  function conCassandraNegada(): { s: GameState; cassandraId: string; fb021Id: string; eterIds: string[] } {
-    const conCamp = conCampeon(estadoMinimo(), CASSANDRA, 'B', 0)
+  /** Setup: Korr (B) en campo + FB-021 (A) en campo negándolo + éteres para B. */
+  function conKorrNegado(): { s: GameState; korrId: string; fb021Id: string; eterIds: string[] } {
+    const conCamp = conCampeon(estadoMinimo(), KORR, 'B', 0)
     const conMist = conMistica(conCamp.s, FB021, 'A', 0, { negadoTargetId: conCamp.id })
     const { s: sConEteres, ids } = conEteres(conMist.s, 'B', ETER_ORDEN, 4)
-    // turno = B (el controlador de Cassandra intenta activar)
+    // turno = B (el controlador de Korr intenta activar)
     const s: GameState = { ...sConEteres, turno: 'B' }
-    return { s, cassandraId: conCamp.id, fb021Id: conMist.id, eterIds: ids }
+    return { s, korrId: conCamp.id, fb021Id: conMist.id, eterIds: ids }
   }
 
   it('RECHAZA activación de campeón negado', () => {
-    const { s, cassandraId, eterIds } = conCassandraNegada()
+    const { s, korrId, eterIds } = conKorrNegado()
     const error = validarActivarHabilidad(s, {
       type: 'activar_habilidad',
-      cardInstanceId: cassandraId,
-      eterIds: eterIds.slice(0, 4),
+      cardInstanceId: korrId,
+      eterIds: eterIds.slice(0, 2),
     })
     expect(error).toMatch(/negado/)
   })
 
   it('PERMITE activación cuando la fuente negar salió del campo', () => {
-    const { s, cassandraId, fb021Id, eterIds } = conCassandraNegada()
+    const { s, korrId, fb021Id, eterIds } = conKorrNegado()
     // Sacar FB-021 del campo de A (simular destrucción/retorno)
     const sSinFuente: GameState = {
       ...s,
@@ -204,19 +204,19 @@ describe('validarActivarHabilidad con negación (Fase 3b)', () => {
       },
     }
     // La instancia sigue existiendo pero FUERA de campo → sin negación
-    expect(championNegado(sSinFuente, cassandraId)).toBe(false)
+    expect(championNegado(sSinFuente, korrId)).toBe(false)
     const error = validarActivarHabilidad(sSinFuente, {
       type: 'activar_habilidad',
-      cardInstanceId: cassandraId,
-      eterIds: eterIds.slice(0, 4),
+      cardInstanceId: korrId,
+      eterIds: eterIds.slice(0, 2),
     })
     expect(error).toBeNull()
   })
 
   it('NO afecta campeones no negados (mismo estado)', () => {
-    const { s, cassandraId } = conCassandraNegada()
+    const { s } = conKorrNegado()
     // Segundo campeón de B NO negado
-    const conSegundo = conCampeon(s, CASSANDRA, 'B', 1)
+    const conSegundo = conCampeon(s, KORR, 'B', 1)
     const error = validarActivarHabilidad(conSegundo.s, {
       type: 'activar_habilidad',
       cardInstanceId: conSegundo.id,
@@ -231,7 +231,7 @@ describe('flujo integral jugar FB-021 (Fase 3b)', () => {
   it('al jugar FB-021 contra el único campeón rival → D1 pendiente; al elegir → negado', () => {
     const ctx = crearCtx()
     // B tiene Cassandra en campo; A juega FB-021 (cost 3)
-    const conCamp = conCampeon(estadoMinimo(), CASSANDRA, 'B', 0)
+    const conCamp = conCampeon(estadoMinimo(), KORR, 'B', 0)
     let s = conMano(conCamp.s, 'A', { fb021: FB021 })
     const { s: sEteres, ids } = conEteres(s, 'A', ETER_ORDEN, 3)
     s = sEteres
@@ -267,8 +267,8 @@ describe('flujo integral jugar FB-021 (Fase 3b)', () => {
 
   it('D1: con DOS campeones rivales → pendiente elegir_objetivo; al elegir, solo el chosen queda negado', () => {
     const ctx = crearCtx()
-    const conCamp0 = conCampeon(estadoMinimo(), CASSANDRA, 'B', 0)
-    const conCamp1 = conCampeon(conCamp0.s, CASSANDRA, 'B', 1)
+    const conCamp0 = conCampeon(estadoMinimo(), KORR, 'B', 0)
+    const conCamp1 = conCampeon(conCamp0.s, KORR, 'B', 1)
     let s = conMano(conCamp1.s, 'A', { fb021: FB021 })
     const { s: sEteres, ids } = conEteres(s, 'A', ETER_ORDEN, 3)
     s = sEteres

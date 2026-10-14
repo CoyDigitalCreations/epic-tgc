@@ -3,7 +3,7 @@
  * Extraído de actions.ts para separación de dominios (change: refactor-engine).
  */
 import type { GameState, Ctx } from './types'
-import { getCardMeta, costeEterHabilidad, esArtefactoEquipable, campeonElegibleBloqueoEter, faccionesCompartidas, type AnyCard } from './cards'
+import { getCardMeta, efectoActivableDe, esCostoBloqueo, esArtefactoEquipable, campeonElegibleBloqueoEter, faccionesCompartidas } from './cards'
 import type { CondicionEfecto } from '../../shared/types'
 import { validarPago, aplicarPago, type ContextoUso } from './payments'
 import { dispararTrigger, condicionCumple, championNegado, type TriggerEfecto, type PayloadEfecto } from './efectos'
@@ -69,20 +69,21 @@ export function validarActivarHabilidad(state: GameState, action: Extract<Action
   const meta = inst.cardId ? getCardMeta(inst.cardId) : null
   if (!meta) return 'carta desconocida'
 
-  // Check efectos[] for active abilities
-  const tieneEfectos = 'efectos' in meta && meta.efectos
-  const tieneContinuo = tieneEfectos && meta.efectos!.some((e) => e.tipo === 'continuo')
-  const tieneDisparo = tieneEfectos && meta.efectos!.some((e) => e.tipo === 'disparo')
-  if (!tieneContinuo && !tieneDisparo) return 'esta carta no tiene efecto activo'
+  // ROUTING POR EFECTO (§7.7): el efecto que activar_habilidad ejecuta lo
+  // decide SU costo — mismo selector que validActions y el ejecutor.
+  const efectoSel = efectoActivableDe(meta, !!action.objetivoId)
+  if (!efectoSel) {
+    // Continuo con costo-bloqueo (Aurora steal, FB-015): activación exclusiva
+    // vía bloquear_eter → aura/umbral. Nunca por pago.
+    return 'esta carta se activa bloqueando Éter (usa la acción bloquear_eter)'
+  }
 
-  const esContinuo = tieneContinuo
-  // Check if it's a "blocked ether" pattern (continuo) or "exhaust" pattern
-  const esBloqueado = esContinuo || meta.efectos!.some((e) => e.costo?.tipo === 'eter_bloqueado')
+  const esBloqueado = esCostoBloqueo(efectoSel.costo)
 
   if (esBloqueado) {
     // Patrón "Bloqueado": eterIds de la Reserva → Campeón.eterBloqueado
     if (inst.opcionUsadaEsteTurno) return 'ya usaste esta habilidad este turno'
-    const costoEsperado = costeEterHabilidad(meta)
+    const costoEsperado = efectoSel.costo?.cantidad ?? 0
     if (costoEsperado > 0 && action.eterIds.length !== costoEsperado) {
       return `${meta.name} requiere exactamente ${costoEsperado} Éter(es), indicaste ${action.eterIds.length}`
     }
@@ -95,10 +96,10 @@ export function validarActivarHabilidad(state: GameState, action: Extract<Action
       if (!eterMeta) return `Éter desconocido: ${eterId}`
     }
   } else {
-    // Patrón "Agota": eterIds de la Reserva → pagados (1A) + agota + 1/turno
-    if (inst.agotado) return 'la carta ya está agotada'
+    // Patrón "Agota"/Continuo pago: eterIds de la Reserva → pagados (1A) + 1/turno
+    if (efectoSel.tipo === 'continuo' && inst.agotado) return 'la carta ya está agotada'
     if (inst.opcionUsadaEsteTurno) return 'ya usaste esta habilidad este turno'
-    const costoEsperado = costeEterHabilidad(meta)
+    const costoEsperado = efectoSel.costo?.cantidad ?? 0
     const costoReal = costoEsperado > 0 ? costoEsperado : 1 // fallback: 1 éter
     if (action.eterIds.length !== costoReal) {
       return `${meta.name} requiere exactamente ${costoReal} Éter(es), indicaste ${action.eterIds.length}`
@@ -200,11 +201,12 @@ export function ejecutarActivarHabilidad(s: GameState, action: Extract<Action, {
   const meta = inst.cardId ? getCardMeta(inst.cardId) : null
   if (!meta) return
 
-  const tieneEfectos = 'efectos' in meta && meta.efectos
-  const esContinuo = tieneEfectos && meta.efectos!.some((e) => e.tipo === 'continuo')
-  const esBloqueado = esContinuo || (tieneEfectos && meta.efectos!.some((e) => e.costo?.tipo === 'eter_bloqueado'))
+  // Mismo selector que el validador y validActions — el costo DEL EFECTO
+  // elegido decide el patrón (defensa en profundidad: sin selector = no-op).
+  const efectoSel = efectoActivableDe(meta, !!action.objetivoId)
+  if (!efectoSel) return
 
-  if (esContinuo || esBloqueado) {
+  if (esCostoBloqueo(efectoSel.costo)) {
     // Patrón "Bloqueado": mueve éteres de Reserva → Campeón.eterBloqueado
     for (const eterId of action.eterIds) {
       const idx = p.eterReserva.indexOf(eterId)
@@ -212,28 +214,33 @@ export function ejecutarActivarHabilidad(s: GameState, action: Extract<Action, {
     }
     inst.eterBloqueado = [...(inst.eterBloqueado ?? []), ...action.eterIds]
     // Check if effect has reagrupar (Alba) — register pending effect
-    if (tieneEfectos) {
-      const efectoConReagrupar = meta.efectos!.find((e) => e.reagrupar)
-      if (efectoConReagrupar?.reagrupar) {
-        registrarEfectoPendiente(s, {
-          fuente: action.cardInstanceId,
-          owner: s.turno,
-          triggerFase: efectoConReagrupar.reagrupar.fase,
-          triggerOwner: efectoConReagrupar.reagrupar.turno === 'propio' ? 'dueño' : 'rival',
-          accion: { tipo: 'liberar-eter', eterIds: [...action.eterIds], destino: 'reserva' },
-          duracion: hastaAlba(),
-        })
-      }
+    const efectoConReagrupar = meta.efectos && 'efectos' in meta
+      ? meta.efectos.find((e) => e.reagrupar && esCostoBloqueo(e.costo))
+      : undefined
+    if (efectoConReagrupar?.reagrupar) {
+      registrarEfectoPendiente(s, {
+        fuente: action.cardInstanceId,
+        owner: s.turno,
+        triggerFase: efectoConReagrupar.reagrupar.fase,
+        triggerOwner: efectoConReagrupar.reagrupar.turno === 'propio' ? 'dueño' : 'rival',
+        accion: { tipo: 'liberar-eter', eterIds: [...action.eterIds], destino: 'reserva' },
+        duracion: hastaAlba(),
+      })
     }
     ctx.emit({ type: 'eter_bloqueado', jugador: s.turno, eterIds: action.eterIds, campeonId: action.cardInstanceId })
     inst.opcionUsadaEsteTurno = true
-    if (esContinuo) {
+    if (efectoSel.tipo === 'continuo') {
       inst.agotado = true
     }
-    // Ejecutar el efecto directo desde JSON (targeting si es necesario)
-    ejecutarEfectoDesdeJSON(s, ctx, meta, action.cardInstanceId, action.objetivoId)
+    // Ejecutar el efecto elegido directo desde JSON (targeting si es necesario)
+    const payloadBloqueo: PayloadEfecto = {
+      jugador: s.turno,
+      contextoUso: action.objetivoId ? 'objetivo-elegido' : undefined,
+      objetivoId: action.objetivoId,
+    }
+    interpretEffect(s, ctx, inst, efectoSel, payloadBloqueo)
   } else {
-    // Patrón "Disparo/Agota": éteres → 1A (pagado) + 1/turno
+    // Patrón "Agota"/Continuo pago: éteres → 1A (pagado) + 1/turno
     for (const eterId of action.eterIds) {
       const idx = p.eterReserva.indexOf(eterId)
       if (idx !== -1) p.eterReserva.splice(idx, 1)
@@ -243,41 +250,14 @@ export function ejecutarActivarHabilidad(s: GameState, action: Extract<Action, {
       ctx.emit({ type: 'eter_pagado', jugador: s.turno, eterIds: action.eterIds, costo: action.eterIds.length, aportado: action.eterIds.length })
     }
     inst.opcionUsadaEsteTurno = true
-    // Ejecutar el efecto directo desde JSON (targeting si es necesario)
-    ejecutarEfectoDesdeJSON(s, ctx, meta, action.cardInstanceId, action.objetivoId)
+    // Ejecutar el efecto elegido directo desde JSON (targeting si es necesario)
+    const payload: PayloadEfecto = {
+      jugador: s.turno,
+      contextoUso: action.objetivoId ? 'objetivo-elegido' : undefined,
+      objetivoId: action.objetivoId,
+    }
+    interpretEffect(s, ctx, inst, efectoSel, payload)
   }
-}
-
-/**
- * Ejecuta el efecto de una carta leyendo directo efectos[] del JSON.
- * Sin hardcodear — el motor no necesita saber qué carta es.
- */
-function ejecutarEfectoDesdeJSON(
-  s: GameState,
-  ctx: Ctx,
-  meta: AnyCard,
-  cardInstanceId: string,
-  objetivoId?: string,
-): void {
-  if (!('efectos' in meta) || !meta.efectos) return
-
-  const inst = s.instances[cardInstanceId]
-  if (!inst) return
-
-  // Buscar el efecto apropiado: si hay objetivoId, buscar el continuo; si no, buscar el disparo
-  // This ensures the player activates the RIGHT effect when a card has multiple
-  const efecto = objetivoId
-    ? meta.efectos.find((e) => e.tipo === 'continuo')
-    : meta.efectos.find((e) => e.tipo === 'disparo')
-  if (!efecto) return
-
-  const payload: PayloadEfecto = {
-    jugador: s.turno,
-    contextoUso: objetivoId ? 'objetivo-elegido' : undefined,
-    objetivoId,
-  }
-
-  interpretEffect(s, ctx, inst, efecto, payload)
 }
 
 /**
