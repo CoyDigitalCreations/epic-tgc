@@ -46,6 +46,13 @@ export interface EfectoData {
   /** What the player must pay to activate */
   costo?: CostoEfecto
 
+  // ── Capa 3b: TRAMOS de Éter bloqueado (opcional) ──
+  /** Recompensas por umbrales dentro de UN bloqueo "hasta" (CostoEfecto.cantidad).
+   *  Cada tramo se activa cuando Éteres bloqueados >= umbral. El efecto raíz
+   *  declara el costo y el objetivo base; los tramos aportan efecto+duración.
+   *  Texto: "Con N Éteres bloqueados, <efecto>..." ordenado por umbral. */
+  tramos?: TramoEfecto[]
+
   // ── Capa 4: OBJETIVO (opcional) ──
   /** Who/what this effect acts upon */
   objetivo?: ObjetivoEfecto
@@ -155,6 +162,36 @@ export interface CostoEfecto {
   tipo: 'ninguno' | 'eter' | 'eter_bloqueado' | 'bloqueo_fijo' | 'exhaust' | 'exile_self' | 'cemetery_self'
   /** Amount (for ether costs) */
   cantidad?: number
+  /** eter_bloqueado: umbral mínimo de Éter bloqueado para activar el efecto
+   * (p.ej. Max. 4, umbral 2 → "con 2 Éteres bloqueados..."). Si falta o es
+   * igual a cantidad, el efecto simplemente requiere el bloqueo completo. */
+  umbral?: number
+}
+
+/** Tramo de recompensa por umbral dentro de UN bloqueo "hasta" (Capa 3b).
+ * El efecto raíz declara el costo (Max.) y el objetivo base; cada tramo
+ * aporta qué pasa al alcanzar su umbral. Hereda del raíz: efecto, duración,
+ * objetivo (los filtros del tramo se MERGEAN sobre el objetivo base).
+ * Ejemplo Cassandra FB-016: Max. 4 → tramos [{umbral:2, toggle_exhaust},
+ * {umbral:4, fix_exhaust con filtro agotado}]. */
+export interface TramoEfecto {
+  /** Mínimo de Éter bloqueado que activa este tramo (>= umbral) */
+  umbral: number
+  /** Qué hace este tramo (mismo vocabulario que EfectoData.efecto) */
+  efecto: EfectoAccion
+  /** Duración del efecto de este tramo (default: la del raíz) */
+  duracion?: EfectoData['duracion']
+  /** Número de turnos si duracion='n_turnos' */
+  duracionTurnos?: number
+  /** Stats del efecto (buff/debuff por tramo) */
+  stats?: { ATQ?: number; RES?: number }
+  /** Keyword a otorgar (grant_keyword por tramo) */
+  keyword?: string
+  /** Cantidad de objetivos/cartas (destroy, draw, etc. por tramo) */
+  cantidad?: number
+  /** Filtros de objetivo SOLO de este tramo — se mergean sobre el objetivo
+   * base del raíz (p.ej. fix_exhaust agrega agotado: true) */
+  filtros?: FiltroObjetivo
 }
 
 /** All available effect actions — sección viva (JSON PrimerColeccionEfectos.json).
@@ -163,6 +200,7 @@ export type EfectoAccion =
   | 'buff' | 'debuff' | 'destroy' | 'exile' | 'return_hand'
   | 'draw' | 'steal_champion' | 'steal_ether' | 'block_ether'
   | 'free_ether' | 'return_ether' | 'toggle_exhaust' | 'prevent_destroy'
+  | 'fix_exhaust'
   | 'scry' | 'tutor' | 'copy' | 'redirect'
   | 'double_attack' | 'direct_attack' | 'change_type' | 'grant_keyword'
   | 'recuperar_campo' | 'recuperar_mano' | 'recuperar_mazo'

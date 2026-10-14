@@ -215,6 +215,8 @@ function joinCopyAttributes(attrs: CopyAttribute[]): string {
 /** Generate human-readable text from EfectoData — 11-layer system */
 export function generateEffectText(data: EfectoData): string {
   const parts: string[] = []
+  // Con tramos, los efectos y duraciones los definen los tramos (Capa 3b)
+  const hayTramos = !!data.tramos && data.tramos.length > 0
 
   // Helper: add part with trailing comma (will be cleaned at the end)
   const addPart = (text: string) => parts.push(text)
@@ -260,6 +262,12 @@ export function generateEffectText(data: EfectoData): string {
       else addPart(`puedes pagar ${data.costo.cantidad} Éter,`)
     } else if (data.costo.tipo === 'eter_bloqueado' && data.costo.cantidad) {
       addPart(`puedes bloquear hasta un máximo de ${data.costo.cantidad} Éter (Max. ${data.costo.cantidad}),`)
+      // Umbral simple: solo sin tramos — con tramos, cada uno emite su
+      // propia cláusula "con N Éteres bloqueados, ..."
+      if (!hayTramos && data.costo.umbral && data.costo.umbral > 0) {
+        const pluralUmb = data.costo.umbral === 1 ? 'Éter bloqueado' : 'Éteres bloqueados'
+        addPart(`con ${data.costo.umbral} ${pluralUmb},`)
+      }
     } else if (data.costo.tipo === 'bloqueo_fijo' && data.costo.cantidad) {
       addPart(`bloquea ${data.costo.cantidad} Éter,`)
     } else if (data.costo.tipo === 'exhaust') {
@@ -271,11 +279,37 @@ export function generateEffectText(data: EfectoData): string {
     }
   }
 
-  // Capa 4+5: Objetivo + Efecto
+  // Capa 3b: Cláusulas de tramos — "con N Éteres bloqueados, <efecto>..."
+  // Cada tramo reutiliza toda la maquinaria (verbos, filtros, stats) vía
+  // recursión con un EfectoData sintético sin costo/trigger.
+  if (hayTramos) {
+    const ordenados = [...data.tramos!].sort((a, b) => a.umbral - b.umbral)
+    for (const tramo of ordenados) {
+      const subData: EfectoData = {
+        tipo: data.tipo,
+        efecto: tramo.efecto,
+        trigger: 'ninguno',
+        objetivo: data.objetivo
+          ? { ...data.objetivo, filtros: { ...data.objetivo.filtros, ...tramo.filtros } }
+          : undefined,
+        stats: tramo.stats,
+        keyword: tramo.keyword,
+        cantidad: tramo.cantidad,
+        duracion: tramo.duracion ?? data.duracion,
+        duracionTurnos: tramo.duracionTurnos ?? data.duracionTurnos,
+      }
+      const textoTramo = generateEffectText(subData).replace(/\.$/, '')
+      const lower = textoTramo.charAt(0).toLowerCase() + textoTramo.slice(1)
+      const plural = tramo.umbral === 1 ? 'Éter bloqueado' : 'Éteres bloqueados'
+      addPart(`con ${tramo.umbral} ${plural}, ${lower},`)
+    }
+  }
+
+  // Capa 4+5: Objetivo + Efecto (sin tramos — el raíz no tiene efecto propio)
   let targetText = ''
   let effectVerb = ''
 
-  if (data.objetivo && data.efecto) {
+  if (!hayTramos && data.objetivo && data.efecto) {
     // Special case: bloqueo effects reference the champion that has this ether
     if (data.tipo === 'bloqueo' && data.objetivo.tipo === 'campeon') {
       targetText = 'el Campeón que tenga este Éter'
@@ -292,6 +326,7 @@ export function generateEffectText(data: EfectoData): string {
       'return_hand': 'devuelve a la mano de su dueño', 'draw': 'roba', 'steal_champion': 'toma control de',
       'steal_ether': 'toma control de', 'block_ether': 'bloquea', 'free_ether': 'libera',
       'return_ether': 'devuelve', 'mover': 'mueve', 'toggle_exhaust': 'cambia el agotamiento de',
+      'fix_exhaust': 'fija el agotamiento de',
       'prevent_destroy': 'no es destruido', 'scry': 'mira', 'tutor': 'busca',
       'copy': 'copia', 'redirect': 'cambia',
       'rival_discard': 'descarta',
@@ -311,6 +346,7 @@ export function generateEffectText(data: EfectoData): string {
       'roba': 'robar', 'toma control de': 'tomar control de',
       'bloquea': 'bloquear', 'libera': 'liberar', 'devuelve': 'devolver',
       'mueve': 'mover', 'cambia el agotamiento de': 'cambiar el agotamiento de',
+      'fija el agotamiento de': 'fijar el agotamiento de',
       'mira': 'mirar', 'busca': 'buscar', 'copia': 'copiar', 'cambia': 'cambiar',
       'descarta': 'descartar', 'ataca directamente': 'atacar directamente',
       'se convierte en': 'convertirse en', 'invoca del Cementerio': 'invocar del Cementerio',
@@ -456,8 +492,8 @@ export function generateEffectText(data: EfectoData): string {
   // Capa 4+5 merged: push target+effect text into parts
   if (targetText) addPart(`${targetText},`)
 
-  // Capa 7: Duración
-  if (data.duracion) {
+  // Capa 7: Duración (sin tramos — cada cláusula de tramo ya lleva la suya)
+  if (!hayTramos && data.duracion) {
     if (data.duracion === 'hasta_fase' && data.duracionFase) {
       const esRival = data.duracionControlador === 'rival'
       const faseTexts: Record<string, { propio: string; rival: string }> = {

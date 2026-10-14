@@ -475,10 +475,13 @@ export function RenderCarta({
         {/* Habilidades según tipo — reads from efectos[].texto (unified system) */}
         {(() => {
           const c = card
-          // Helper: get effect text by tipo from efectos array
+          // Helper: get effect text by tipo from efectos array.
+          // Múltiples efectos del mismo tipo se unen (p.ej. Cassandra: dos
+          // continuos con umbrales distintos) — .find() descartaba el resto.
           const getEffectText = (tipo: string): string | undefined => {
             if (!('efectos' in c) || !c.efectos) return undefined
-            return c.efectos.find((e) => e.tipo === tipo)?.texto
+            const texts = c.efectos.filter((e) => e.tipo === tipo && e.texto).map((e) => e.texto!)
+            return texts.length > 0 ? texts.join(' ') : undefined
           }
 
           switch (c.type) {

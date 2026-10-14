@@ -2,7 +2,7 @@
  * EffectField — Structured effect editor with 11-layer system.
  * Shows/hides fields based on effect type selection.
  */
-import type { EfectoData, CardType, CostoEfecto, ObjetivoEfecto, FiltroObjetivo, CopyAttribute } from '../../../shared/types/cards'
+import type { EfectoData, TramoEfecto, CardType, CostoEfecto, ObjetivoEfecto, FiltroObjetivo, CopyAttribute } from '../../../shared/types/cards'
 import { FACCIONES, ESENCIAS, ROLES, KEYWORDS, CAT_HABILIDAD } from '../../../shared/types/enums'
 
 interface EffectFieldProps {
@@ -47,7 +47,7 @@ const REQUISITO_OPTIONS = [
 export const EFFECT_CATEGORIES = [
   {
     nombre: 'Modificadores',
-    efectos: ['buff', 'debuff', 'grant_keyword', 'toggle_exhaust'] as const,
+    efectos: ['buff', 'debuff', 'grant_keyword', 'toggle_exhaust', 'fix_exhaust'] as const,
   },
   {
     nombre: 'Control',
@@ -92,6 +92,7 @@ const EFECTO_OPTIONS = [
   { value: 'return_ether', label: 'Devolver éter' }, { value: 'mover', label: 'Mover éter' },
   { value: 'negar', label: 'Negar' },
   { value: 'toggle_exhaust', label: 'Toggle agotamiento' },
+  { value: 'fix_exhaust', label: 'Fijar agotamiento' },
   { value: 'prevent_destroy', label: 'Prevenir destrucción' }, { value: 'scry', label: 'Mirar cartas' },
   { value: 'tutor', label: 'Buscar carta' },
   { value: 'copy', label: 'Copiar' }, { value: 'redirect', label: 'Redirigir' },
@@ -234,6 +235,29 @@ export function EffectField({ label, value, onChange, cardType }: EffectFieldPro
     update({ objetivo: { ...currentObjetivo, filtros: { ...currentObjetivo.filtros, ...patch } } })
   }
 
+  // ── Tramos escalonados (Capa 3b) — lista "Con N Éteres → efecto" ──
+  const tramos = data.tramos ?? []
+  const maxBloqueo = data.costo?.cantidad ?? 10
+  const updateTramo = (idx: number, patch: Partial<TramoEfecto>) => {
+    const next = tramos.map((t, i) => (i === idx ? { ...t, ...patch } : t))
+    // Mantener orden por umbral — la lista siempre se lee de menor a mayor
+    next.sort((a, b) => a.umbral - b.umbral)
+    update({ tramos: next })
+  }
+  const addTramo = () => {
+    // Umbral sugerido: siguiente tramo vacío o el máximo
+    const usado = new Set(tramos.map((t) => t.umbral))
+    let sugerido = maxBloqueo
+    for (let u = 1; u <= maxBloqueo; u++) { if (!usado.has(u)) { sugerido = u; break } }
+    const next = [...tramos, { umbral: sugerido, efecto: 'toggle_exhaust' as const }]
+    next.sort((a, b) => a.umbral - b.umbral)
+    update({ tramos: next })
+  }
+  const removeTramo = (idx: number) => {
+    const next = tramos.filter((_, i) => i !== idx)
+    update({ tramos: next.length > 0 ? next : undefined })
+  }
+
   // Filter types by card type
   const tipoOptions = cardType ? TIPO_OPTIONS.filter((o) => (CARD_TYPE_EFFECTS[cardType] || []).includes(o.value)) : TIPO_OPTIONS
   const showCost = data.tipo === 'disparo' || data.tipo === 'continuo' || data.tipo === 'hechizo' || data.tipo === 'vinculo'
@@ -269,8 +293,26 @@ export function EffectField({ label, value, onChange, cardType }: EffectFieldPro
             { value: 'cualquier_zona', label: 'Desde cualquier zona' },
           ]} onChange={(v) => update({ triggerZona: v as any })} />
         )}
-        {/* Capa 5: Efecto */}
-        <GroupedSelectField label="Efecto" value={data.efecto} categories={EFFECT_CATEGORIES} onChange={(v) => update({ efecto: v as any })} />
+        {/* Capa 5: Efecto (oculto con tramos — los tramos definen sus efectos) */}
+        {tramos.length === 0 ? (
+          <GroupedSelectField label="Efecto" value={data.efecto} categories={EFFECT_CATEGORIES} onChange={(v) => {
+            // fix_exhaust solo aplica a campeones agotados — forzar el filtro
+            // para que el JSON siempre salga con el requisito correcto
+            if (v === 'fix_exhaust') {
+              const obj = data.objetivo ?? { tipo: 'campeon' as const, controlador: 'rival' as const, zona: 'campo' as const }
+              update({ efecto: v as any, objetivo: { ...obj, tipo: 'campeon', controlador: obj.controlador === 'propio' ? 'rival' : obj.controlador, filtros: { ...obj.filtros, agotado: true } } })
+            } else {
+              update({ efecto: v as any })
+            }
+          }} />
+        ) : (
+          <div className="flex flex-col gap-1">
+            <label className="text-[10px] uppercase tracking-wider text-gray-400">Efecto</label>
+            <p className="text-xs text-gray-400 bg-gray-800/50 border border-gray-700/50 rounded px-2 py-1">
+              Definido por los tramos ↓
+            </p>
+          </div>
+        )}
         {/* Capa 5b: Tipo Negación (for negar effect) */}
         {data.efecto === 'negar' && (
           <SelectField label="Tipo de negación" value={data.tipoNegacion} options={[
@@ -313,6 +355,108 @@ export function EffectField({ label, value, onChange, cardType }: EffectFieldPro
         <div className="grid grid-cols-2 gap-2 mt-2">
           <SelectField label="Costo" value={data.costo?.tipo} options={COSTO_OPTIONS.filter((o) => o.value !== 'exile_self' && o.value !== 'cemetery_self')} onChange={(v) => updateCosto({ tipo: v as any })} />
           {data.costo?.tipo && data.costo.tipo !== 'ninguno' && <NumberInput label="Cantidad" value={data.costo?.cantidad} onChange={(v) => updateCosto({ cantidad: v })} min={1} max={10} />}
+          {/* Umbral simple (solo "hasta" SIN tramos) — con tramos, la lista
+              de tramos define los umbrales */}
+          {data.costo?.tipo === 'eter_bloqueado' && data.costo?.cantidad && tramos.length === 0 && (
+            <NumberInput
+              label="Umbral (con N Éteres)"
+              value={data.costo?.umbral}
+              onChange={(v) => updateCosto({ umbral: v && v <= (data.costo?.cantidad ?? 0) ? v : undefined })}
+              min={1}
+              max={data.costo.cantidad}
+            />
+          )}
+        </div>
+      )}
+
+      {/* Capa 3b: Tramos escalonados — recompensas por umbral dentro del bloqueo */}
+      {data.costo?.tipo === 'eter_bloqueado' && data.costo?.cantidad && (
+        <div className="border border-ether-500/30 rounded-lg p-2 mt-2 bg-gray-900/40">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-[10px] uppercase tracking-wider text-ether-500/80">
+              Tramos de recompensa (Max. {data.costo.cantidad})
+            </p>
+            <button
+              type="button"
+              onClick={addTramo}
+              className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded bg-ether-500/20 text-ether-300 hover:bg-ether-500/30 border border-ether-500/40"
+            >
+              + Agregar tramo
+            </button>
+          </div>
+          {tramos.length === 0 && (
+            <p className="text-[10px] text-gray-500">
+              Sin tramos: un solo efecto que requiere el bloqueo completo. Agrega tramos para recompensas por umbrales (ej. "con 2 Éteres..., con 4 Éteres...").
+            </p>
+          )}
+          {tramos.map((t, idx) => (
+            <div key={`${idx}-${t.umbral}`} className="border-t border-gray-700/50 pt-2 mt-2 first:border-t-0 first:pt-0 first:mt-0">
+              {/* Fila 1: Umbral + quitar */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1">
+                  <span className="text-xs text-gray-300 whitespace-nowrap">Con</span>
+                  <input
+                    type="number"
+                    value={t.umbral}
+                    onChange={(e) => updateTramo(idx, { umbral: Math.max(1, Math.min(maxBloqueo, parseInt(e.target.value) || 1)) })}
+                    min={1}
+                    max={maxBloqueo}
+                    className="bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs text-gray-200 w-14"
+                  />
+                  <span className="text-xs text-gray-300 whitespace-nowrap">Éter(es) bloqueados</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => removeTramo(idx)}
+                  title="Quitar tramo"
+                  className="text-xs text-red-400 hover:text-red-300 border border-red-500/30 rounded px-2 py-1"
+                >
+                  ✕
+                </button>
+              </div>
+              {/* Fila 2: Efecto a ancho completo */}
+              <div className="mt-2">
+                <GroupedSelectField label="Efecto" value={t.efecto} categories={EFFECT_CATEGORIES} onChange={(v) => {
+                  const patch: Partial<TramoEfecto> = { efecto: v as TramoEfecto['efecto'] }
+                  // fix_exhaust solo aplica a campeones agotados — filtro forzado
+                  if (v === 'fix_exhaust') patch.filtros = { ...t.filtros, agotado: true }
+                  updateTramo(idx, patch)
+                }} />
+              </div>
+              {/* Fila 3: Duración + campos condicionales del efecto */}
+              <div className="grid grid-cols-2 gap-2 mt-2">
+                <div className="flex gap-2">
+                  <SelectField
+                    label="Duración"
+                    value={t.duracion}
+                    options={[{ value: '', label: 'Heredar' }, ...DURACION_OPTIONS]}
+                    onChange={(v) => updateTramo(idx, { duracion: v as TramoEfecto['duracion'], duracionTurnos: undefined })}
+                  />
+                  {t.duracion === 'n_turnos' && (
+                    <NumberInput label="Turnos" value={t.duracionTurnos} onChange={(v) => updateTramo(idx, { duracionTurnos: v })} min={1} max={10} />
+                  )}
+                </div>
+                {(t.efecto === 'buff' || t.efecto === 'debuff') && (
+                  <>
+                    <NumberInput label="ATQ" value={t.stats?.ATQ} onChange={(v) => updateTramo(idx, { stats: { ...t.stats, ATQ: v } })} min={-10} max={10} />
+                    <NumberInput label="RES" value={t.stats?.RES} onChange={(v) => updateTramo(idx, { stats: { ...t.stats, RES: v } })} min={-10} max={10} />
+                  </>
+                )}
+                {t.efecto === 'grant_keyword' && (
+                  <SelectField label="Keyword" value={t.keyword} options={[{ value: '', label: 'Seleccionar...' }, ...KEYWORDS.map((k) => ({ value: k, label: k }))]} onChange={(v) => updateTramo(idx, { keyword: v || undefined })} />
+                )}
+                {['draw', 'destroy', 'exile', 'scry', 'mover', 'return_ether', 'return_hand', 'steal_champion', 'steal_ether', 'block_ether', 'free_ether'].includes(t.efecto) && (
+                  <NumberInput label="Cantidad" value={t.cantidad} onChange={(v) => updateTramo(idx, { cantidad: v })} min={1} max={20} />
+                )}
+              </div>
+              {/* Nota del tramo — fuera del grid para no encimarse */}
+              {t.efecto === 'fix_exhaust' && (
+                <p className="text-[10px] text-gray-500 mt-1.5">
+                  Solo aplica a Campeones agotados (filtro automático).
+                </p>
+              )}
+            </div>
+          ))}
         </div>
       )}
 
