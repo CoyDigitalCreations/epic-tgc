@@ -306,20 +306,25 @@ describe('jugar_campeon (R9)', () => {
 })
 
 describe('jugar_mistica (R10)', () => {
-  it('paga el coste y coloca la Mística boca arriba en 3A-3C', () => {
+  it('paga el coste y coloca la Mística boca arriba en 3A-3C (y va al Cementerio si es de un solo uso)', () => {
     let s = conMano(estadoMinimo(), { mist: MISTICA })
     const { s: s2, ids } = conEteres(s, ETER_ORDEN, 2)
     s = s2
     const ctx = crearCtx()
     s = aplicar(s, { type: 'jugar_mistica', cardInstanceId: 'mist', slot: 0, eterIds: ids }, ctx)
 
-    expect(s.players.A.campo.misticasTacticas[0]).toBe('mist')
+    // §5.3 (fix A4): FB-019 es hechizo de UN SOLO USO → entra a 3A, se
+    // resuelve y va al Cementerio liberando el slot (el Éter pagado queda en 1A)
+    expect(s.players.A.campo.misticasTacticas[0]).toBeNull()
+    expect(s.players.A.cementerio).toContain('mist')
     expect(s.players.A.eterPagado).toEqual(ids)
     expect(ctx.events).toEqual([
       { type: 'eter_pagado', jugador: 'A', eterIds: ids, costo: 2, aportado: 2 },
       { type: 'carta_salida_de_zona', cardInstanceId: 'mist', zona: 'mano', jugador: 'A' },
       { type: 'carta_entrada_a_zona', cardInstanceId: 'mist', zona: '3A', jugador: 'A', bocaArriba: true },
       { type: 'carta_invocada', cardInstanceId: 'mist', tipo: 'Mística', slot: 0 },
+      { type: 'carta_salida_de_zona', cardInstanceId: 'mist', zona: '3A', jugador: 'A' },
+      { type: 'carta_entrada_a_zona', cardInstanceId: 'mist', zona: '2G', jugador: 'A', bocaArriba: true },
     ])
   })
 

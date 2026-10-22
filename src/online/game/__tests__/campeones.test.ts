@@ -244,11 +244,26 @@ describe('C3a: infraestructura de targeting + dispatch de triggers', () => {
   it('getValidActions: expone elegir_objetivo solo para el jugador activo con pendiente', () => {
     const s = estadoMinimo()
     s.fase = 'forja'
+    // Fix 2026-10-14: las opciones se re-validan contra instances — las
+    // registramos para que el pendiente tenga opciones vivas.
+    s.instances['obj-A'] = { cardInstanceId: 'obj-A', cardId: CAMPEON_A, owner: 'B' }
+    s.instances['obj-B'] = { cardInstanceId: 'obj-B', cardId: CAMPEON_A, owner: 'B' }
     s.objetivosPendientes = [{ jugador: 'A', instId: 'inst-1', trigger: 'al-invocar', opciones: ['obj-A', 'obj-B'] }]
     const accionesA = getValidActions(s, 'A')
     expect(accionesA).toContainEqual({ type: 'elegir_objetivo', objetivoId: 'obj-A' })
     expect(accionesA).toContainEqual({ type: 'elegir_objetivo', objetivoId: 'obj-B' })
     expect(getValidActions(s, 'B').some((a) => a.type === 'elegir_objetivo')).toBe(false)
+  })
+
+  it('getValidActions: descarta pendiente D1 sin opciones vivas (fix panel vacío)', () => {
+    const s = estadoMinimo()
+    s.fase = 'forja'
+    // Opciones apuntan a instancias que ya no existen → el pendiente se purga
+    s.objetivosPendientes = [{ jugador: 'A', instId: 'inst-1', trigger: 'al-invocar', opciones: ['ghost-1', 'ghost-2'] }]
+    const accionesA = getValidActions(s, 'A')
+    expect(accionesA.some((a) => a.type === 'elegir_objetivo')).toBe(false)
+    // El pendiente fantasma se descartó (no atasca la FIFO)
+    expect(s.objetivosPendientes).toHaveLength(0)
   })
 })
 

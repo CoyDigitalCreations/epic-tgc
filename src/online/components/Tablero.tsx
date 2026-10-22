@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
-import { aporteDe, campeonesSacrificables, costeEterHabilidad, faccionesCompartidas, getCardMeta, sacrificiosRequeridos, esBloqueoFijo, maxEterBloqueado } from '../game'
+import { aporteDe, atacantesElegibles, campeonesSacrificables, costeEterHabilidad, faccionesCompartidas, getCardMeta, sacrificiosRequeridos, esBloqueoFijo, maxEterBloqueado } from '../game'
 import type { Action, CardInstance, GameState, PlayerId } from '../game'
 import { useCardImage } from '../../forge/hooks/useCardImage'
 import { MiniCard, TAMANOS } from './MiniCard'
@@ -76,6 +76,7 @@ const TIPO_LABEL: Record<string, string> = {
   activar_arcana: 'Activar',
   descartar_carta: 'Descartar',
   responder_cadena: 'Responder',
+  elegir_opcion: 'Elegir opción',
 }
 
 function labelAccion(a: Action, fase?: string): string {
@@ -89,7 +90,7 @@ function labelAccion(a: Action, fase?: string): string {
       return 'Pasar turno'
     case 'declarar_ataque': return a.atacanteIds.length > 1 ? 'Atacar con todos' : 'Atacar'
     case 'declarar_bloqueo': return 'Bloquear (automático)'
-    case 'elegir_ruptura': return a.atacanteId === null ? 'No romper Vínculo' : 'Romper Vínculo'
+    case 'elegir_ruptura': return 'Romper Vínculo'
     case 'responder_prevenicion': return a.prevenir ? 'Prevenir destrucción' : 'Permitir destrucción'
     case 'pasar_prioridad': return 'Pasar prioridad'
     case 'rendirse': return 'Rendirse'
@@ -502,6 +503,19 @@ function GrillaJugador({
         {leTocaA && (ataque || bloquear || transmutar || activarHabilidad) && (
           <div className="flex gap-1 flex-wrap justify-center" style={rotStyle}>
             {ataque && <Boton accion={ataque} onClick={onAccion} />}
+            {ataque && esPasoAtaquePropio && (
+              <button
+                onClick={() => toggleSelAtaque(id)}
+                title="Agregar a la selección de atacantes (A6: elige con cuántos atacar)"
+                className={`text-[10px] px-1.5 py-0.5 rounded transition-colors cursor-pointer whitespace-nowrap ${
+                  selAtaque.includes(id)
+                    ? 'bg-ether-600 text-white ring-1 ring-ether-400'
+                    : 'bg-surface-2 text-gray-400 hover:text-gray-200 border border-card-border'
+                }`}
+              >
+                {selAtaque.includes(id) ? '✓' : '+'}
+              </button>
+            )}
             {bloquear && (
               <button
                 onClick={() => {
@@ -840,7 +854,26 @@ export function Tablero({ vista, acciones, leTocaA, logDetallado = [], onAccion,
   const [panelAbierto, setPanelAbierto] = useState<PanelAbierto | null>(null)
   /** Interfaz de bloqueo manual abierta */
   const [bloqueoAbierto, setBloqueoAbierto] = useState(false)
+  /** A6 (2026-10-22): subconjunto de atacantes elegidos para declarar un único ataque múltiple */
+  const [selAtaque, setSelAtaque] = useState<string[]>([])
   const abrirZoom = (inst: CardInstance) => setZoom(inst)
+
+  // A6: paso de ataque propio (sin combate en curso) — habilita la selección multi
+  const esPasoAtaquePropio = vista.fase === 'choque' && !vista.combate && vista.turno === 'A'
+  const toggleSelAtaque = (id: string) =>
+    setSelAtaque((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
+  const atacarSeleccionados = () => {
+    const acc = acciones.find(
+      (a) =>
+        a.type === 'declarar_ataque' &&
+        a.atacanteIds.length === selAtaque.length &&
+        selAtaque.every((id) => a.atacanteIds.includes(id)),
+    )
+    if (acc) {
+      onAccion(acc)
+      setSelAtaque([])
+    }
+  }
 
   // Abrir interfaz de bloqueo automáticamente cuando es turno del defensor y hay bloqueo pendiente
   // NOTA: dependemos de propiedades PRIMITIVAS (fase, paso, turno) para evitar loops infinitos.
@@ -856,6 +889,12 @@ export function Tablero({ vista, acciones, leTocaA, logDetallado = [], onAccion,
         if (sinBloquear.length > 0) setBloqueoAbierto(true)
       }
     }
+  }, [faseActual, pasoCombate, turnoActual])
+
+  // A6: la selección de atacantes vive solo en el paso de ataque propio —
+  // si cambia la fase/combate/turno, se limpia (evita subsets obsoletos).
+  useEffect(() => {
+    if (!(faseActual === 'choque' && !pasoCombate && turnoActual === 'A')) setSelAtaque([])
   }, [faseActual, pasoCombate, turnoActual])
 
   const abrirSelector = (accionBase: Action, objetivoCardId: string) => {
@@ -1055,9 +1094,16 @@ export function Tablero({ vista, acciones, leTocaA, logDetallado = [], onAccion,
     if (a.type === 'rendirse') return false // va en el header
     if (a.type === 'elegir_objetivo') return false // se lista como opciones con label de zona (OpcionTutor)
     if (a.type === 'descartar_carta') return false // va debajo de la carta de la mano
+    if (a.type === 'pasar_prioridad') return false // vive SOLO en el PriorityModal (2026-10-14)
     if (esDeMano(a)) return false // va sobre la carta de la mano
     if (conCarta(a)) return false // va sobre la carta en la pila
-    if (a.type === 'declarar_ataque') return a.atacanteIds.length > 1 // individual va en el campeón
+    if (a.type === 'declarar_ataque') {
+      // A6 (2026-10-22): en Acciones solo vive "Atacar con todos" (conjunto
+      // completo) — los subconjuntos se arman con la selección multi (+) de
+      // cada campeón y se confirman con el botón "Atacar con N".
+      const elegibles = atacantesElegibles(vista)
+      return elegibles.length > 1 && a.atacanteIds.length === elegibles.length
+    }
     if (a.type === 'bloquear_eter') return false // abre el selector desde el campeón
     if (a.type === 'elegir_ruptura' && a.atacanteId !== null) return false // se resume en un botón aparte
     return true
@@ -1086,7 +1132,6 @@ export function Tablero({ vista, acciones, leTocaA, logDetallado = [], onAccion,
   const pila = pilaCombate.length > 0 ? pilaCombate : pilaGlobal
   const cadenaActiva = vista.combate?.cadena ?? vista.cadena
   const efectoActual = cadenaActiva?.efectoActual
-  const responderDe = (id: string) => acciones.find((a) => a.type === 'responder_cadena' && a.cardInstanceId === id)
 
   const faseTurno = terminada
     ? 'Partida terminada'
@@ -1232,9 +1277,7 @@ export function Tablero({ vista, acciones, leTocaA, logDetallado = [], onAccion,
                       inst={vista.instances[id]}
                       tamano="sm"
                       onZoom={() => abrirZoom(vista.instances[id])}
-                    >
-                      {leTocaA && responderDe(id) && <Boton accion={responderDe(id)!} onClick={onAccion} />}
-                    </MiniCard>
+                    />
                   ))}
                 </div>
               )}
@@ -1285,7 +1328,7 @@ export function Tablero({ vista, acciones, leTocaA, logDetallado = [], onAccion,
             </div>
 
             {/* ── Acciones generales ───────────────────────────────── */}
-            {leTocaA && (generales.length > 0 || ruptura) && (
+            {leTocaA && (generales.length > 0 || ruptura || selAtaque.length > 0) && (
               <div className="flex gap-1.5 flex-wrap items-center pt-2 border-t border-card-border/50">
                 <p className="text-[9px] uppercase tracking-wider text-gray-500 mr-1">Acciones</p>
                 {!hayJugablesSignificativas && (fase === 'forja' || fase === 'choque') && (
@@ -1297,6 +1340,15 @@ export function Tablero({ vista, acciones, leTocaA, logDetallado = [], onAccion,
                   <Boton key={i} accion={a} onClick={onAccion} fase={fase} />
                 ))}
                 {ruptura && <Boton accion={ruptura} onClick={onAccion} fase={fase} />}
+                {/* A6: confirmación del subconjunto de atacantes seleccionado con los (+) */}
+                {selAtaque.length > 0 && esPasoAtaquePropio && (
+                  <button
+                    onClick={atacarSeleccionados}
+                    className="text-[10px] bg-ether-600 hover:bg-ether-500 text-white px-2 py-0.5 rounded transition-colors cursor-pointer whitespace-nowrap ring-1 ring-ether-400"
+                  >
+                    Atacar con {selAtaque.length} campeón{selAtaque.length > 1 ? 'es' : ''} (✓)
+                  </button>
+                )}
               </div>
             )}
 

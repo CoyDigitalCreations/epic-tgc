@@ -13,6 +13,7 @@ import {
 import type { Action, GameState } from '../game'
 import { MAZOS } from '../mazos'
 import { Tablero } from '../components/Tablero'
+import { PriorityModal } from '../components/PriorityModal'
 
 const SEEDS = [42, 1, 2, 3, 4, 5, 7, 11, 13, 17, 19, 23, 29]
 
@@ -1006,5 +1007,88 @@ describe('Panel de Cementerio y Exilio (lista completa)', () => {
 
     expect(tituloPanel('del rival').textContent).toContain('Cementerio')
     nombresListados(nombres)
+  })
+})
+
+describe('PriorityModal — unificación de respuesta a cadenas (2026-10-14)', () => {
+  /** Estado base: cadena global abierta con prioridad de A, sin cartas respondibles. */
+  function estadoConCadena(prevPendiente?: GameState['preventivosPendientes']): GameState {
+    const s = forjaDeA()
+    s.cadena = {
+      pila: [],
+      prioridad: 'A',
+      pasesConsecutivos: 0,
+      faseAbierta: 'forja',
+      efectoActual: { jugador: 'B', cardInstanceId: 'inst-efecto', descripcion: 'Efecto de prueba' },
+    }
+    s.instances['inst-efecto'] = { cardInstanceId: 'inst-efecto', cardId: 'FB-019', owner: 'B' }
+    if (prevPendiente) s.preventivosPendientes = prevPendiente
+    return s
+  }
+
+  it('se muestra SIEMPRE con tu prioridad, aunque no tengas respondibles', () => {
+    const s = estadoConCadena()
+    const acciones = getValidActions(s, 'A')
+    // Sin cartas respondibles en campo: solo rendirse + pasar_prioridad
+    expect(acciones.filter((a) => a.type === 'responder_cadena')).toHaveLength(0)
+    render(
+      <PriorityModal
+        state={visibleState(s, 'A')}
+        playerId="A"
+        acciones={acciones}
+        onAccion={vi.fn()}
+        onZoom={vi.fn()}
+      />,
+    )
+    // El modal visible con su botón "Pasar prioridad" (un solo lugar para responder)
+    expect(screen.getByText('Cadena Global')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Pasar prioridad' })).toBeInTheDocument()
+    // Y el mensaje para el caso 0 respondibles
+    expect(screen.getByText(/No tenés cartas que puedan responder/)).toBeInTheDocument()
+  })
+
+  it('NO se muestra cuando la prioridad es del rival', () => {
+    const s = estadoConCadena()
+    s.cadena!.prioridad = 'B'
+    const { container } = render(
+      <PriorityModal
+        state={visibleState(s, 'A')}
+        playerId="A"
+        acciones={getValidActions(s, 'A')}
+        onAccion={vi.fn()}
+        onZoom={vi.fn()}
+      />,
+    )
+    expect(container.firstChild).toBeNull()
+  })
+
+  it('cede al PreventionModal cuando hay prevenión pendiente (Fase 2c no se tapa)', () => {
+    const s = estadoConCadena([{ jugador: 'A', fuenteId: 'fu-1', victimId: 'vi-1', causa: 'ruptura' }])
+    const { container } = render(
+      <PriorityModal
+        state={visibleState(s, 'A')}
+        playerId="A"
+        acciones={getValidActions(s, 'A')}
+        onAccion={vi.fn()}
+        onZoom={vi.fn()}
+      />,
+    )
+    expect(container.firstChild).toBeNull()
+  })
+
+  it('el botón Pasar prioridad no existe suelto en Acciones generales del Tablero', () => {
+    const s = estadoConCadena()
+    render(
+      <Tablero
+        vista={visibleState(s, 'A')}
+        acciones={getValidActions(s, 'A')}
+        leTocaA={true}
+        log={[]}
+        onAccion={vi.fn()}
+        onAbandonar={vi.fn()}
+      />,
+    )
+    // El modal (con su botón) está montado una sola vez
+    expect(screen.getAllByRole('button', { name: 'Pasar prioridad' })).toHaveLength(1)
   })
 })

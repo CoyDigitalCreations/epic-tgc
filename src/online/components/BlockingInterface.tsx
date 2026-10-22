@@ -121,6 +121,10 @@ export function BlockingInterface({ s, defensor, atacantes, onBloquear, onCancel
   const p = s.players[defensor]
   const disponibles = p.campo.campeones.filter((id): id is string => id !== null)
   const [asignaciones, setAsignaciones] = useState<Record<string, string>>({})
+  // Bloqueo forzoso (§9.3): hay que cubrir k = min(disponibles, ataques) —
+  // la elección es QUÉ pares, no CUÁNTOS (A5: el defensor elige con qué
+  // Campeón(es) bloquear, pero debe bloquear el máximo posible).
+  const kMaximo = Math.min(disponibles.length, atacantes.length)
 
   const seleccionarBloqueador = (atacanteId: string, bloqueadorId: string) => {
     setAsignaciones((prev) => {
@@ -209,10 +213,10 @@ export function BlockingInterface({ s, defensor, atacantes, onBloquear, onCancel
           </button>
           <button
             onClick={confirmar}
-            disabled={Object.keys(asignaciones).length === 0}
+            disabled={Object.keys(asignaciones).length !== kMaximo}
             className="text-[10px] bg-cyan-600/30 hover:bg-cyan-600/50 text-cyan-200 px-3 py-1.5 rounded transition-colors disabled:opacity-30"
           >
-            Confirmar bloqueo ({Object.keys(asignaciones).length}/{atacantes.length})
+            Confirmar bloqueo ({Object.keys(asignaciones).length}/{kMaximo})
           </button>
         </div>
       </div>

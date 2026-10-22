@@ -11,9 +11,14 @@ export function verificarInvariantes(estado: GameState): string[] {
   const violaciones: string[] = []
   for (const p of ['A', 'B'] as PlayerId[]) {
     const st = estado.players[p]
-    // Mano ≤ 7: el Alba roba 1 sobre 6 (descarte a 6 recién en Ocaso; el fin de
-    // partida por mazo_vacio puede dejar 7). Cota dura, no la de Ocaso.
-    if (st.mano.length > 7) violaciones.push(`${p}: mano ${st.mano.length} > 7`)
+    // Mano: la cota del MANUAL (≤ 6 tras OCASO) es de FASE y la hace valer el
+    // motor (validarPasarTurno no deja pasar con > 6 — descarte obligatorio).
+    // NO es invariante de estado arbitrario: en Forja/Choque crece con efectos
+    // (p.ej. activar una Arcana que roba 2 → 8 legítimo) y en Ocaso estás en
+    // pleno descarte. Aquí queda solo la cota de SANIDAD: nunca más que las
+    // 45 cartas del Mazo Principal en mano (corta duplicaciones descabelladas;
+    // la integridad total 66 zonas más abajo es la guarda dura real).
+    if (st.mano.length > 45) violaciones.push(`${p}: mano ${st.mano.length} > 45 (imposible: mazo principal = 45)`)
 
     // 15 Éter: 2A + 1A + bloqueados (el bloqueado vive en inst.eterBloqueado
     // de CUALQUIER carta en campo — Campeones 2B-2F y Artefactos 3A-3F, Fase 3a)

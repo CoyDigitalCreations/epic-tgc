@@ -219,11 +219,13 @@ function resolverCadenaCombate(s: GameState, ctx: Ctx): void {
     if (esArcana(meta)) {
       const p = s.players[inst.owner]
       const idx = p.campo.arcanasCombate.indexOf(id)
-      const zona = slotAZona('arcanasCombate', idx) ?? '3D'
-      ctx.emit({ type: 'carta_salida_de_zona', cardInstanceId: id, zona, jugador: inst.owner })
-      // C5 (change 4): 2G con trigger al-ser-enviado-al-cementerio
-      enviarAlCementerio(s, ctx, id)
-      ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: id, zona: '2G', jugador: inst.owner, bocaArriba: true })
+      if (idx !== -1) {
+        const zona = slotAZona('arcanasCombate', idx) ?? '3D'
+        ctx.emit({ type: 'carta_salida_de_zona', cardInstanceId: id, zona, jugador: inst.owner })
+        // C5 (change 4): 2G con trigger al-ser-enviado-al-cementerio
+        enviarAlCementerio(s, ctx, id)
+        ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: id, zona: '2G', jugador: inst.owner, bocaArriba: true })
+      }
       // Perfeccionamiento-tablero: dispatch al-resolver-cadena para efectos de Combate/Arcana
       dispararTrigger(s, ctx, 'al-resolver-cadena', inst.owner, [id])
     }
@@ -247,13 +249,16 @@ function resolverCadenaGlobal(s: GameState, ctx: Ctx): void {
     const meta = inst?.cardId ? getCardMeta(inst.cardId) : null
     if (!meta) continue
     if (esArcana(meta)) {
-      // Arcana se consume: → 2G
+      // Arcana se consume: → 2G (guard: si ya salió del campo — fix A4 — no
+      // se duplica el envío ni el trigger al-ser-enviado-al-cementerio)
       const p = s.players[inst.owner]
       const idx = p.campo.arcanasCombate.indexOf(id)
-      const zona = slotAZona('arcanasCombate', idx) ?? '3D'
-      ctx.emit({ type: 'carta_salida_de_zona', cardInstanceId: id, zona, jugador: inst.owner })
-      enviarAlCementerio(s, ctx, id)
-      ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: id, zona: '2G', jugador: inst.owner, bocaArriba: true })
+      if (idx !== -1) {
+        const zona = slotAZona('arcanasCombate', idx) ?? '3D'
+        ctx.emit({ type: 'carta_salida_de_zona', cardInstanceId: id, zona, jugador: inst.owner })
+        enviarAlCementerio(s, ctx, id)
+        ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: id, zona: '2G', jugador: inst.owner, bocaArriba: true })
+      }
       dispararTrigger(s, ctx, 'al-resolver-cadena', inst.owner, [id])
     } else {
       // Táctica / Campeón Disparo: permanece, pero dispara trigger para efectos

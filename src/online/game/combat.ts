@@ -274,7 +274,11 @@ export function continuarCombateTrasCadena(s: GameState, ctx: Ctx): void {
   }
 }
 
-/* ─────────────────── Ruptura (9.4-A, ADR-13) ─────────────────── */
+/* ─────────────────── Ruptura (9.4-A, FORZOSA — decisión 2026-10-14) ───────────────────
+ * Cambio de regla (manual §9.4): la Ruptura ya NO es voluntaria. Si un ataque
+ * fue declarado y el defensor no tiene forma de bloquearlo, romper 1 Vínculo
+ * es OBLIGATORIO — la única forma voluntaria de no romper es NO ATACANDO.
+ * Por lo tanto atacanteId: null ("no romper") ya NO es una acción válida. */
 
 export function validarElegirRuptura(state: GameState, atacanteId: string | null, vinculoSlot?: number): string | null {
   if (state.fase !== 'choque') return 'elegir_ruptura solo en Choque'
@@ -282,8 +286,8 @@ export function validarElegirRuptura(state: GameState, atacanteId: string | null
   if (!combate || combate.paso !== 'resolucion') return 'no hay resolución pendiente'
   if (combate.rupturaUsadaEsteTurno) return 'ya usaste la Ruptura este turno de ataque'
   if (atacanteId === null) {
-    if (vinculoSlot !== undefined) return 'sin atacante no hay slot de Vínculo'
-    return null // no romper es voluntario (L1107)
+    // Ruptura forzosa (§9.4): no existe "no romper" — la elección se hace al atacar
+    return 'la Ruptura es obligatoria si hay un ataque sin bloquear (§9.4)'
   }
   if (!combate.rupturaDisponible) return 'no hay ataques sin bloquear para romper'
   if (!combate.atacantes.includes(atacanteId)) return 'no es un atacante declarado'
@@ -297,19 +301,16 @@ export function validarElegirRuptura(state: GameState, atacanteId: string | null
 }
 
 export function ejecutarElegirRuptura(s: GameState, atacanteId: string | null, vinculoSlot: number | undefined, ctx: Ctx): void {
-  if (atacanteId !== null && vinculoSlot !== undefined) {
-    const vinculoId = s.players[rivalDe(s)].vinculos[vinculoSlot]!
-    ctx.emit({ type: 'ruptura_realizada', atacanteId, vinculoSlot, vinculoId })
-    destruirCarta(s, ctx, vinculoId, 'ruptura')
-    if (s.combate) s.combate.rupturaUsadaEsteTurno = true
-    // Fase 2b: si algún atacante sobreviviente tiene doble ataque activo,
-    // cerrar el combate para permitir la segunda ola en el mismo turno.
-    cerrarCombateSiDoubleAttack(s)
-    // Sin doble ataque: NO borramos s.combate aquí — que pasar_turno lo limpie
-    // al salir de Choque. Si lo borramos, validarDeclararAtaque permite un
-    // nuevo combate en el mismo turno (comportamiento previo al doble ataque).
-  } else {
-    // "No romper" voluntario (L1107): cierra el combate para permitir pasar turno.
-    s.combate = undefined
-  }
+  // Ruptura forzosa (§9.4): la validación ya rechazó atacanteId === null
+  if (atacanteId === null || vinculoSlot === undefined) return
+  const vinculoId = s.players[rivalDe(s)].vinculos[vinculoSlot]!
+  ctx.emit({ type: 'ruptura_realizada', atacanteId, vinculoSlot, vinculoId })
+  destruirCarta(s, ctx, vinculoId, 'ruptura')
+  if (s.combate) s.combate.rupturaUsadaEsteTurno = true
+  // Fase 2b: si algún atacante sobreviviente tiene doble ataque activo,
+  // cerrar el combate para permitir la segunda ola en el mismo turno.
+  cerrarCombateSiDoubleAttack(s)
+  // Sin doble ataque: NO borramos s.combate aquí — que pasar_turno lo limpie
+  // al salir de Choque. Si lo borramos, validarDeclararAtaque permite un
+  // nuevo combate en el mismo turno (comportamiento previo al doble ataque).
 }

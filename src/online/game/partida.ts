@@ -93,8 +93,7 @@ export function iniciarPartida(s: GameState, ctx: Ctx): void {
  * misma acción (ADR-3): turno_iniciado, fase_iniciada{alba}, Alba, fase_iniciada{forja}.
  */
 export function ejecutarPasarTurno(s: GameState, ctx: Ctx): void {
-  if (s.fase === 'forja' || s.fase === 'choque') {
-    const siguiente: FaseNombre = s.fase === 'forja' ? 'choque' : 'ocaso'
+  if (s.fase === 'forja' || s.fase === 'choque') {    const siguiente: FaseNombre = s.fase === 'forja' ? 'choque' : 'ocaso'
     if (s.fase === 'choque') {
       limpiarCombate(s) // ADR-11: limpieza defensiva al salir de Choque
       // Effect Registry: resolver efectos de fase 'ocaso' antes de la purga temporal (ADR-22)
@@ -110,10 +109,14 @@ export function ejecutarPasarTurno(s: GameState, ctx: Ctx): void {
       // (DS-018 — Fase 2a), Arcanas propias y vínculos periódicos.
       const p = s.players[s.turno]
       const campeones = p.campo.campeones.filter((x): x is string => x !== null)
+      const misticas = p.campo.misticasTacticas.filter((x): x is string => x !== null)
       const arcanas = p.campo.arcanasCombate.filter((x): x is string => x !== null)
       // §5.5: solo vínculos destruidos (bocaArriba) tienen efectos vigentes
       const vinculos = p.vinculos.filter((x): x is string => x !== null && s.instances[x]?.bocaArriba === true)
-      const choqueInstances = [...p.eterReserva, ...campeones, ...arcanas, ...vinculos]
+      // fix A7-choque (2026-10-22): las Místicas también declaran "Al inicio
+      // del Choque" — antes quedaban fuera del snapshot (mismo hueco que el
+      // Alba con ALBA_SOLO_TIPOS).
+      const choqueInstances = [...p.eterReserva, ...campeones, ...misticas, ...arcanas, ...vinculos]
       if (choqueInstances.length > 0) {
         dispararTrigger(s, ctx, 'al-inicio-choque', s.turno, choqueInstances)
       }
@@ -143,6 +146,13 @@ export function ejecutarPasarTurno(s: GameState, ctx: Ctx): void {
   // Ocaso: fin del turno del jugador activo
   const rival: PlayerId = s.turno === 'A' ? 'B' : 'A'
   if (s.primerTurno && s.turno === s.primerJugador) s.primerTurno = false
+  // §5.5 (fix 2026-10-14): "no puede responder/activarse EL TURNO en que fue
+  // colocada" — el flag caduca al TERMINAR el turno en que entró, no en el
+  // próximo Alba del dueño. Antes una Arcana colocada en tu turno quedaba
+  // muda durante TODO el turno rival siguiente (gap vs manual §9.6).
+  for (const inst of Object.values(s.instances)) {
+    if (inst.entradaEsteTurno) delete inst.entradaEsteTurno
+  }
   s.turno = rival
   ctx.emit({ type: 'turno_iniciado', jugador: rival })
   ctx.emit({ type: 'fase_iniciada', fase: 'alba', jugador: rival })

@@ -1,4 +1,5 @@
 import { reagruparEter } from './payments'
+import { robarCarta } from './draw'
 import { purgarEfectosTemporales, dispararTrigger, crearOpcionBloqueo } from './efectos'
 import { getCardMeta } from './cards'
 import { resolverFaseEfectos } from './effectRegistry'
@@ -45,11 +46,21 @@ export function resolverAlba(s: GameState, ctx: Ctx, jugador: PlayerId): void {
   //    §5.5: SOLO vínculos DESTRUIDOS (bocaArriba) tienen efectos vigentes —
   //    los boca-abajo son solo vida. Los destruidos permanecen boca arriba y
   //    sus efectos se acumulan.
+  //    fix A7 (2026-10-22, §8.2 "Se resuelven efectos 'Al inicio de tu turno...'"):
+  //    ANTES solo se evaluaban Éter pagado + Vínculos (ALBA_SOLO_TIPOS) — un
+  //    Campeón/Mística/Arcana con efectos[].trigger 'inicio_alba' NUNCA fireaba.
+  //    Ahora entran TODAS las cartas en campo del jugador; dispararTrigger
+  //    filtra internamente por los que realmente declaran ese trigger.
   const vinculosSnapshot = p.vinculos.filter((id): id is string => {
     if (!id) return false
     return s.instances[id]?.bocaArriba === true
   })
-  const albaInstances = [...p.eterPagado, ...vinculosSnapshot]
+  const enCampoJugador = [
+    ...p.campo.campeones,
+    ...p.campo.misticasTacticas,
+    ...p.campo.arcanasCombate,
+  ].filter((id): id is string => id !== null)
+  const albaInstances = [...p.eterPagado, ...vinculosSnapshot, ...enCampoJugador]
   if (albaInstances.length > 0) {
     dispararTrigger(s, ctx, 'al-inicio-alba', jugador, albaInstances)
   }
@@ -82,21 +93,7 @@ export function resolverAlba(s: GameState, ctx: Ctx, jugador: PlayerId): void {
 }
 
 /** Roba la carta del tope del mazo; mazo vacío → mazo_agotado + partida_terminada. */
-export function robarCarta(s: GameState, ctx: Ctx, jugador: PlayerId): void {
-  const p = s.players[jugador]
-  const tope = p.mazo.shift()
-  if (tope === undefined) {
-    ctx.emit({ type: 'mazo_agotado', jugador })
-    const ganador: PlayerId = jugador === 'A' ? 'B' : 'A'
-    s.fase = 'terminada'
-    s.ganador = ganador
-    s.motivo = 'mazo_vacio'
-    ctx.emit({ type: 'partida_terminada', ganador, motivo: 'mazo_vacio' })
-    return
-  }
-  p.mano.push(tope)
-  ctx.emit({ type: 'carta_robada', jugador, cardInstanceId: tope })
-}
+export { robarCarta } from './draw'
 
 /**
  * Limpieza defensiva del combate al salir de Choque (ADR-11): la transición

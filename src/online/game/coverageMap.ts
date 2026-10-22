@@ -491,8 +491,13 @@ function clasificarActivacion(
 }
 
 function instanciasIncluyen(cardType: string, trigger: string): boolean {
-  if (trigger === 'inicio_choque') return CHOQUE_SOLO_TIPOS.has(cardType)
-  if (trigger === 'inicio_alba') return ALBA_SOLO_TIPOS.has(cardType)
+  // fix A7 (2026-10-22): Alba y Choque evalúan TODOS los tipos de carta en
+  // campo (§8.2/§8.4 no restringen por tipo) — dispararTrigger filtra por
+  // los que declaran el trigger. Antes restringían a ALBA_SOLO_TIPOS /
+  // CHOQUE_SOLO_TIPOS y marcaban en falso cartas que SÍ fireaban.
+  void cardType
+  if (trigger === 'inicio_choque') return true
+  if (trigger === 'inicio_alba') return true
   return true
 }
 

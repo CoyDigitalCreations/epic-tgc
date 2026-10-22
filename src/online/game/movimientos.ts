@@ -3,7 +3,7 @@
  * Extraído de actions.ts para separación de dominios (change: refactor-engine).
  */
 import type { GameState, PlayerId, CardInstance, Zona } from './types'
-import { esCampeon, esMistica, esArcana, esVinculo, esArtefactoEquipable, faccionesCompartidas, getCardMeta } from './cards'
+import { esCampeon, esMistica, esArcana, esVinculo, esArtefactoEquipable, esPermanenteEnMesa, faccionesCompartidas, getCardMeta } from './cards'
 import { esSingular, sacrificiosRequeridos, copiasEnCampo, campeonesSacrificables } from './campo'
 import { aplicarPago, validarPago, etersParaPagar, type ContextoUso } from './payments'
 import { SLOTS_CAMPEONES, SLOTS_MISTICAS_TACTICAS, SLOTS_ARCANAS_COMBATE, slotAZona } from './zones'
@@ -217,6 +217,18 @@ export function ejecutarJugarMistica(s: GameState, action: Extract<Action, { typ
   // §9.6: abrir cadena global — el rival puede responder con efectos
   const metaM = getCardMeta(s.instances[id]!.cardId!)
   abrirCadenaGlobal(s, s.turno, { cardInstanceId: id, descripcion: metaM?.name ?? id })
+  // §5.3 L796 (fix A4): hechizo de UN SOLO USO → tras resolverse va al
+  // Cementerio y libera su slot. El EFECTO CONTINUO (Éter bloqueado en la
+  // carta) y los ARTEFACTOS permanecen — ver esPermanenteEnMesa.
+  if (meta && !esPermanenteEnMesa(meta)) {
+    const slotIdx = p.campo.misticasTacticas.indexOf(id)
+    if (slotIdx !== -1) {
+      const zonaSlot = slotAZona('misticasTacticas', slotIdx) ?? '3A'
+      ctx.emit({ type: 'carta_salida_de_zona', cardInstanceId: id, zona: zonaSlot, jugador: s.turno })
+      enviarAlCementerio(s, ctx, id)
+      ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: id, zona: '2G', jugador: s.turno, bocaArriba: true })
+    }
+  }
 }
 
 /** Coloca la Arcana BOCA ABAJO en 3D-3F SIN pagar (pago al activar). */

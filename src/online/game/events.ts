@@ -92,7 +92,9 @@ export interface EterLiberadoEvent {
 export interface EterMovidoEvent {
   type: 'eter_movido'
   cardInstanceId: string
-  destino: 'pagado' | 'reserva' | 'bloqueado'
+  // Capa 2 (Doctrina 2026-10-22): un efecto puede mover Éter a cualquier
+  // zona que pida — el destino deja de ser solo las zonas naturales.
+  destino: 'pagado' | 'reserva' | 'bloqueado' | 'mano' | 'cementerio' | 'exilio'
   jugador: PlayerId
 }
 

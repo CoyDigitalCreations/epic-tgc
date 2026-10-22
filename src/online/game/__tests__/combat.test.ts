@@ -290,12 +290,14 @@ describe('declarar_bloqueo (9.3, forzoso)', () => {
     expect(r.combate?.bloqueos).toEqual({ [atacantes[0]]: defensor })
   })
 
-  it('ej.6: 3 atacantes y 1 bloqueador → k = mín(1,3) = 1; 2 ataques quedan sin bloquear', () => {
+  it('ej.6: 3 atacantes y 1 bloqueador → k = mín(1,3) = 1; el DEFENSOR ELIGE cuál cubrir (A5)', () => {
     const { s, atacantes, ctx } = conAtaque([VAELA, ROWENA, CASSANDRA], (st) => conCampeon(st, ISOLDE, 0, { owner: 'B' }).s)
     const defensor = `c-${ISOLDE}-0`
 
     const bloqueos = getValidActions(s, 'B').filter((a) => a.type === 'declarar_bloqueo')
-    expect(bloqueos).toHaveLength(1)
+    // A5: C(3,1) × P(1,1) = 3 — el defensor elige SOBRE QUÉ atacante va su
+    // único bloqueador (la primera asignación sigue siendo la greedy)
+    expect(bloqueos).toHaveLength(3)
     if (bloqueos[0]?.type === 'declarar_bloqueo') {
       expect(Object.keys(bloqueos[0].asignaciones)).toHaveLength(1)
       expect(bloqueos[0].asignaciones[atacantes[0]]).toBe(defensor)
@@ -324,7 +326,9 @@ describe('declarar_bloqueo (9.3, forzoso)', () => {
     const listo2 = `c-${ROWENA}-1`
 
     const bloqueos = getValidActions(s, 'B').filter((a) => a.type === 'declarar_bloqueo')
-    expect(bloqueos).toHaveLength(1)
+    // A5: C(2,2) × P(2,2) = 2 — el defensor elige LOS PARES (cuál bloqueador
+    // va con cuál atacante); la primera es la greedy (compat bots)
+    expect(bloqueos).toHaveLength(2)
     if (bloqueos[0]?.type === 'declarar_bloqueo') {
       // AMBOS campeones bloquean (agotados incluidos): k = mín(2, 2) = 2
       expect(Object.values(bloqueos[0].asignaciones)).toEqual([listo1, listo2])
@@ -486,15 +490,29 @@ describe('resolución: Ruptura (9.4-A, ADR-13)', () => {
     expect(ctx.events.some((e) => e.type === 'carta_muerta' && e.cardInstanceId === vinculoId)).toBe(false) // solo destruccion
   })
 
-  it('ej.6: elegir_ruptura null = NO romper (voluntaria, L1107) — vínculo intacto, sin eventos de destrucción', () => {
-    const { s, atacanteId, ctx } = conRupturaPendiente([2])
+  it('ej.6: Ruptura FORZOSA (§9.4, cambio 2026-10-14) — "no romper" (null) es RECHAZADO', () => {
+    const { s, ctx } = conRupturaPendiente([2])
 
+    // La ruptura es obligatoria: atacanteId null ("no romper") ya no existe
     const r = applyAction(s, { type: 'elegir_ruptura', atacanteId: null }, ctx)
-    expect(r.ok).toBe(true)
-    if (!r.ok) return
-    expect(r.state.players.B.vinculos[2]).toBe('vin-2')
-    expect(r.state.instances['vin-2'].bocaArriba).toBeUndefined()
-    expect(ctx.events.some((e) => e.type === 'ruptura_realizada' || e.type === 'destruccion')).toBe(false)
+    expect(r.ok).toBe(false)
+    if (r.ok) return
+    expect(r.error).toMatch(/obligatoria/)
+    // El vínculo queda intacto tras el rechazo
+    expect(s.players.B.vinculos[2]).toBe('vin-2')
+    expect(s.instances['vin-2'].bocaArriba).toBeUndefined()
+  })
+
+  it('Ruptura forzosa: getValidActions NO ofrece pasar_turno mientras haya Ruptura pendiente', () => {
+    const { s, atacanteId } = conRupturaPendiente([2])
+    const acciones = getValidActions(s, 'A')
+    const tipos = acciones.map((a) => a.type)
+    expect(tipos).toContain('elegir_ruptura')
+    expect(tipos).not.toContain('pasar_turno') // forzosa: no puedes esquivar rompiendo
+    // Tampoco existe la variante "no romper"
+    expect(acciones.some((a) => a.type === 'elegir_ruptura' && a.atacanteId === null)).toBe(false)
+    // La opción offered apunta al atacante real
+    expect(acciones.some((a) => a.type === 'elegir_ruptura' && a.atacanteId === atacanteId)).toBe(true)
   })
 
   it('máx 1 Ruptura por turno de ataque (rupturaUsadaEsteTurno): la segunda elegir_ruptura es rechazada', () => {

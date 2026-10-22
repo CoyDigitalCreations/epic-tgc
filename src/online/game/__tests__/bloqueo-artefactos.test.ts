@@ -23,8 +23,8 @@ import { destruirCarta, liberarEterBloqueado } from '../replacements'
 import { resolverAlba } from '../phases'
 import type { Ctx, GameState, PlayerId } from '../types'
 
-const FB020 = 'FB-020' // Mística Artefacto, eter_bloqueado:3, buffPerBlockedEther
-const FB022 = 'FB-022' // Mística Fugaz, eter_bloqueado:3, copy mientras_ester_bloqueado
+const FB020 = 'FB-020' // Mística Artefacto, eter_bloqueado:3 (flexible "hasta"), buffPerBlockedEther
+const FB022 = 'FB-022' // Mística Fugaz, bloqueo_fijo:3 (exactly — cambiada por el usuario en Card-Maker 2026-10-22), copy
 const FB032 = 'FB-032' // Mística Artefacto, bloqueo_fijo:4, invocar_y_equipar
 const MISTICA_SIN_BLOQUEO = 'FB-019' // Mística sin costo bloqueado
 const ETER_ORDEN = 'FB-001'
@@ -140,7 +140,9 @@ function aplicar(s: GameState, accion: Action, ctx: Ctx): GameState {
 describe('bloqueo de Éter en Artefactos — mecánica genérica (Fase 3a)', () => {
   it('Mística con costo-bloqueado acepta bloquear_eter: 2A → inst.eterBloqueado + evento', () => {
     const ctx = crearCtx()
-    const conCampo = conMisticaEnCampo(estadoMinimo(), FB022, 0)
+    // FB-020 (hasta 3): acepta bloqueos parciales — ejemplar flexible desde
+    // que FB-022 pasó a bloqueo_fijo (2026-10-22)
+    const conCampo = conMisticaEnCampo(estadoMinimo(), FB020, 0)
     const { s, ids } = conEteres(conCampo.s, ETER_ORDEN, 1)
     const s2 = aplicar(s, { type: 'bloquear_eter', eterIds: ids, targetInstanceId: conCampo.id }, ctx)
 
@@ -164,9 +166,10 @@ describe('bloqueo de Éter en Artefactos — mecánica genérica (Fase 3a)', () 
   })
 
   it('capacidad máxima: acepta hasta costo.cantidad, rechaza el exceso', () => {
-    // FB-022: eter_bloqueado cantidad 3 → máximo 3
+    // FB-020: eter_bloqueado cantidad 3 → máximo 3 (FB-022 ya no sirve como
+    // ejemplar flexible: es bloqueo_fijo desde 2026-10-22)
     const ctx = crearCtx()
-    const conCampo = conMisticaEnCampo(estadoMinimo(), FB022, 0)
+    const conCampo = conMisticaEnCampo(estadoMinimo(), FB020, 0)
     let { s, ids } = conEteres(conCampo.s, ETER_ORDEN, 4)
 
     // Bloquear 2 → OK (quedan 2 en reserva)
@@ -185,7 +188,7 @@ describe('bloqueo de Éter en Artefactos — mecánica genérica (Fase 3a)', () 
 
   it('rechaza Éter que no está en la Reserva', () => {
     const ctx = crearCtx()
-    const conCampo = conMisticaEnCampo(estadoMinimo(), FB022, 0)
+    const conCampo = conMisticaEnCampo(estadoMinimo(), FB020, 0)
     const { s } = conEteres(conCampo.s, ETER_ORDEN, 1)
     // Éter registrado pero fuera de la Reserva
     const sConFuera = conInstancias(s, { 'fuera-1': { cardId: ETER_ORDEN, owner: 'A' } })
@@ -215,7 +218,7 @@ describe('bloqueo de Éter en Artefactos — mecánica genérica (Fase 3a)', () 
   })
 
   it('validarBloqueo es read-only: no muta el estado', () => {
-    const conCampo = conMisticaEnCampo(estadoMinimo(), FB022, 0)
+    const conCampo = conMisticaEnCampo(estadoMinimo(), FB020, 0)
     const { s, ids } = conEteres(conCampo.s, ETER_ORDEN, 1)
     const antes = JSON.parse(JSON.stringify(s))
     const error = validarBloqueo(s, 'A', ids, conCampo.id)
@@ -226,7 +229,7 @@ describe('bloqueo de Éter en Artefactos — mecánica genérica (Fase 3a)', () 
 
 describe('bloqueo en Artefactos — getValidActions (Fase 3a)', () => {
   it('genera bloquear_eter para Mística con costo-bloqueado en campo', () => {
-    const conCampo = conMisticaEnCampo(estadoMinimo(), FB022, 0)
+    const conCampo = conMisticaEnCampo(estadoMinimo(), FB020, 0)
     const { s } = conEteres(conCampo.s, ETER_ORDEN, 2)
 
     const bloqueos = getValidActions(s, 'A').filter((a) => a.type === 'bloquear_eter')
@@ -255,6 +258,23 @@ describe('bloqueo en Artefactos — getValidActions (Fase 3a)', () => {
     if (bloqueos[0]?.type === 'bloquear_eter') {
       expect(bloqueos[0].eterIds).toHaveLength(4)
     }
+  })
+
+  it('FB-022 (ahora bloqueo_fijo:3): UNA acción exacta de 3 Éteres — sin parciales', () => {
+    // Cambio del usuario en Card-Maker (2026-10-22): FB-022 dejó de ser
+    // "hasta 3" y pasó a pago EXACTO — misma semántica que FB-032/FB-015.
+    const conCampo = conMisticaEnCampo(estadoMinimo(), FB022, 0)
+    const { s } = conEteres(conCampo.s, ETER_ORDEN, 6)
+
+    const bloqueos = getValidActions(s, 'A').filter((a) => a.type === 'bloquear_eter' && a.targetInstanceId === conCampo.id)
+    expect(bloqueos).toHaveLength(1)
+    if (bloqueos[0]?.type === 'bloquear_eter') expect(bloqueos[0].eterIds).toHaveLength(3)
+
+    // Bloqueo parcial → rechazado (fijo exige exactamente 3 de una)
+    const ctx = crearCtx()
+    const { s: s2, ids } = conEteres(conCampo.s, ETER_ORDEN, 4)
+    const error = bloquearEter(s2, ctx, 'A', ids.slice(0, 2), conCampo.id)
+    expect(error).toMatch(/exactamente 3/)
   })
 
   it('NO genera el path hardcodeado stale de FB-022 (activar_habilidad con eterIds vacíos)', () => {
@@ -310,9 +330,9 @@ describe('bloqueo en Artefactos — regresión Campeones (Fase 3a)', () => {
 
   it('Campeón y Mística conviven: cada uno recibe bloqueo en su target', () => {
     const ctx = crearCtx()
-    // FB-015 Elena (fijo 3) + FB-022 (flexible 3) → 4+ Éteres
+    // FB-015 Elena (fijo 3) + FB-020 (flexible "hasta 3") → 5 Éteres
     const conCamp = conCampeonEnCampo(estadoMinimo(), CAMPEON_BLOQUEO, 0)
-    const conMist = conMisticaEnCampo(conCamp.s, FB022, 0)
+    const conMist = conMisticaEnCampo(conCamp.s, FB020, 0)
     const { s } = conEteres(conMist.s, ETER_ORDEN, 5)
 
     const bloqueos = getValidActions(s, 'A').filter((a) => a.type === 'bloquear_eter')
@@ -721,5 +741,62 @@ describe('Aurora FB-010 — steal_champion vía bloqueo_fijo', () => {
     // No regresa al campo de B (fue destruido)
     expect(s2.players.B.campo.campeones).not.toContain(rivalId)
     expect(s2.instances[rivalId]?.stolenBy).toBeUndefined()
+  })
+
+  // ── §7.8: Éter en Campeón robado (regla nueva 2026-10-14) ─────────
+  // El Éter bloqueado pertenece al jugador que LO PAGÓ: al robar vuelve
+  // de inmediato al dueño original; el ladrón toma el Campeón SIN Éter.
+
+  it('§7.8: al robar, el Éter del Campeón robado vuelve DE INMEDIATO al dueño original', () => {
+    const ctx = crearCtx()
+    const { s, auroraId, rivalId, ids } = setupAurora()
+    // B tiene 2 Éter bloqueados en su propio campeón (pagados por B)
+    const eterB = ['eb-0', 'eb-1']
+    const sBase: GameState = {
+      ...s,
+      instances: {
+        ...s.instances,
+        ...Object.fromEntries(eterB.map((id) => [id, { cardInstanceId: id, cardId: ETER_ORDEN, owner: 'B' as PlayerId }])),
+      },
+    }
+    sBase.instances[rivalId].eterBloqueado = eterB
+    expect(sBase.instances[rivalId].eterBloqueado).toHaveLength(2)
+
+    // A roba a Ragnar tras bloquear su Éter de steal en Aurora
+    let s2 = aplicar(sBase, { type: 'bloquear_eter', eterIds: ids.slice(0, 4), targetInstanceId: auroraId }, ctx)
+    s2 = aplicar(s2, { type: 'elegir_objetivo', objetivoId: rivalId }, ctx)
+
+    // El campeón robado llega SIN Éter
+    expect(s2.instances[rivalId].eterBloqueado).toBeUndefined()
+    // Y el Éter de B volvió a la Reserva de B (el dueño original) — NO a la de A
+    expect(s2.players.B.eterReserva).toEqual(expect.arrayContaining(eterB))
+    expect(s2.players.A.eterReserva).not.toEqual(expect.arrayContaining(eterB))
+  })
+
+  it('§7.8: al perder el control, el Éter que el LADRÓN bloqueó vuelve a la Reserva del ladrón', () => {
+    const ctx = crearCtx()
+    const { s, auroraId, rivalId, ids } = setupAurora()
+    // A roba al campeón (sin Éter, §7.8)
+    let s2 = aplicar(s, { type: 'bloquear_eter', eterIds: ids.slice(0, 4), targetInstanceId: auroraId }, ctx)
+    s2 = aplicar(s2, { type: 'elegir_objetivo', objetivoId: rivalId }, ctx)
+    expect(s2.players.A.campo.campeones).toContain(rivalId)
+
+    // El LADRÓN (A) bloquea su PROPIO Éter en el campeón que controla.
+    // El campeón robado (Vaela, FB-011) admite 1 Éter — usamos la API real
+    // de bloqueo para que el owner del Éter quede en A.
+    const eterA = ids.slice(4, 5)
+    const errorBloq = bloquearEter(s2, ctx, 'A', eterA, rivalId)
+    expect(errorBloq).toBeNull()
+    expect(s2.instances[rivalId].eterBloqueado).toHaveLength(1)
+
+    // Termina el robo (Alba de A libera el Éter de Aurora) → el campeón vuelve a B
+    resolverAlba(s2, ctx, 'A')
+
+    // El campeón regresó a B
+    expect(s2.players.B.campo.campeones).toContain(rivalId)
+    expect(s2.players.A.campo.campeones).not.toContain(rivalId)
+    // El Éter del LADRÓN (A) se reagrupó a la Reserva de A (evento explícito)
+    expect(ctx.events).toContainEqual({ type: 'eter_reagrupado', jugador: 'A', eterIds: eterA })
+    expect(s2.instances[rivalId].eterBloqueado).toBeUndefined()
   })
 })

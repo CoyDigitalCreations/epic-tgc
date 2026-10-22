@@ -228,9 +228,11 @@ describe('flujo integral jugar FB-022 (Fase 3c)', () => {
     const ctx = crearCtx()
     const conTarget = conMistica(estadoMinimo(), DS021, 'B', 0)
     const conFB022 = conMistica(conTarget.s, FB022, 'A', 0, { copyTargetId: conTarget.id })
-    const { s: sEteres, ids } = conEteres(conFB022.s, 'A', ETER_ORDEN, 1)
+    // FB-022 ahora es bloqueo_fijo:3 (cambio del usuario en Card-Maker,
+    // 2026-10-22) — exige exactamente 3 Éteres de una
+    const { s: sEteres, ids } = conEteres(conFB022.s, 'A', ETER_ORDEN, 3)
 
-    const s = aplicar(sEteres, { type: 'bloquear_eter', eterIds: [ids[0]], targetInstanceId: conFB022.id }, ctx)
+    const s = aplicar(sEteres, { type: 'bloquear_eter', eterIds: ids, targetInstanceId: conFB022.id }, ctx)
     expect(copyActivo(s, conFB022.id)).toBe(true)
   })
 

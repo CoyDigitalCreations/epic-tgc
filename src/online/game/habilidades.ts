@@ -3,7 +3,7 @@
  * Extraído de actions.ts para separación de dominios (change: refactor-engine).
  */
 import type { GameState, Ctx } from './types'
-import { getCardMeta, efectoActivableDe, esCostoBloqueo, esArtefactoEquipable, campeonElegibleBloqueoEter, faccionesCompartidas } from './cards'
+import { getCardMeta, efectoActivableDe, esCostoBloqueo, esArtefactoEquipable, esPermanenteEnMesa, campeonElegibleBloqueoEter, faccionesCompartidas } from './cards'
 import type { CondicionEfecto } from '../../shared/types'
 import { validarPago, aplicarPago, type ContextoUso } from './payments'
 import { dispararTrigger, condicionCumple, championNegado, type TriggerEfecto, type PayloadEfecto } from './efectos'
@@ -20,7 +20,12 @@ import type { Action } from './core'
 
 /** Activar_arcana: revela la Arcana boca arriba y paga su coste de éter. */
 export function validarActivarArcana(state: GameState, action: Extract<Action, { type: 'activar_arcana' }>): string | null {
-  if (state.fase !== 'forja') return 'activar_arcana solo en Forja'
+  // §8.3a + decisión A8 (2026-10-22): cualquier fase EXCEPTO Alba (las
+  // Arcanas son "trampas" — se activan cuando su condición se cumple, no
+  // solo en Forja; §8.1 también las ubica en Choque).
+  if (state.fase !== 'forja' && state.fase !== 'choque' && state.fase !== 'ocaso') {
+    return 'activar_arcana solo en Forja/Choque/Ocaso (§8.3a: nunca en Alba)'
+  }
   const inst = state.instances[action.cardInstanceId]
   if (!inst) return 'instancia no encontrada'
   const meta = inst.cardId ? getCardMeta(inst.cardId) : null
@@ -182,6 +187,20 @@ export function ejecutarActivarArcana(s: GameState, action: Extract<Action, { ty
   }
   // Abrir cadena global: el rival podría responder con cartas Disparo
   abrirCadenaGlobal(s, s.turno, { cardInstanceId: id, descripcion: meta?.name ?? id })
+  // §5.4 L809 (fix A4): recompensa de UN SOLO USO → la Arcana va al Cementerio
+  // y libera su slot. Efecto CONTINUO → permanece boca arriba. Si la Arcana
+  // misma quedó en la PILA (se activó respondiendo en cadena), la consume el
+  // resolutor de cadena — acá no se toca.
+  const enPila = (s.cadena?.pila ?? []).includes(id) || (s.combate?.cadena?.pila ?? []).includes(id)
+  if (!enPila && meta && !esPermanenteEnMesa(meta)) {
+    const slotIdx = s.players[s.turno].campo.arcanasCombate.indexOf(id)
+    if (slotIdx !== -1) {
+      const zonaSlot = slotAZona('arcanasCombate', slotIdx) ?? '3D'
+      ctx.emit({ type: 'carta_salida_de_zona', cardInstanceId: id, zona: zonaSlot, jugador: s.turno })
+      enviarAlCementerio(s, ctx, id)
+      ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: id, zona: '2G', jugador: s.turno, bocaArriba: true })
+    }
+  }
 }
 
 /**

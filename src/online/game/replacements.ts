@@ -10,17 +10,8 @@
  * compartidos `moverAlCementerio` + `liberarEterBloqueado('2A')`.
  */
 import { esCampeon, esVinculo, getCardMeta } from './cards'
-import { dispararTrigger } from './efectos'
+import { dispararTrigger, keywordsDe } from './efectos'
 import type { CausaDestruccion, Ctx, GameState, PlayerId } from './types'
-
-/** Keywords de la instancia (data + override aditivo, patrón combat.ts). */
-function keywordsDe(s: GameState, id: string): readonly string[] {
-  const inst = s.instances[id]
-  const cardId = inst?.cardId
-  const meta = cardId ? getCardMeta(cardId) : null
-  const deData = meta && esCampeon(meta) ? meta.keywords : []
-  return [...new Set([...deData, ...(inst?.keywords ?? [])])]
-}
 
 /**
  * Mueve una instancia a 2G (cementerio de su dueño). Remueve del grupo de
@@ -81,28 +72,38 @@ export function enviarAlCementerio(s: GameState, ctx: Ctx, cardInstanceId: strin
       ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: vinculadoId, zona: '2G', jugador: inst.owner, bocaArriba: true })
     }
   }
-  // ARTEFACTO: si esta carta es un Campeón, buscar artefactos equipados y enviarlos al cementerio
-  if (inst.cardId) {
-    const meta = getCardMeta(inst.cardId)
-    if (meta && esCampeon(meta)) {
-      for (const otherId of Object.keys(s.instances)) {
-        const other = s.instances[otherId]
-        if (other && other.equipadoA === cardInstanceId) {
-          // Artefacto equipado a este campeón → al cementerio
-          other.equipadoA = undefined
-          moverAlCementerio(s, otherId)
-          ctx.emit({ type: 'carta_salida_de_zona', cardInstanceId: otherId, zona: '3A', jugador: other.owner })
-          ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: otherId, zona: '2G', jugador: other.owner, bocaArriba: true })
-        }
-      }
-    }
-  }
+  // ARTEFACTO: si esta carta es un Campeón, los artefactos equipados van con él (§10)
+  liberarArtefactosEquipados(s, ctx, cardInstanceId)
   moverAlCementerio(s, cardInstanceId)
   // Fase 3a: carta va a 2G → Éter bloqueado liberado a 1A (reagrupa próximo Alba).
   // No-op si no tiene eterBloqueado (liberarEterBloqueado lo chequea).
   // Los sacrificios ya liberaron a '2A' antes de llegar acá — segundo call es no-op.
   liberarEterBloqueado(s, ctx, cardInstanceId, '1A')
   dispararTrigger(s, ctx, 'al-ser-enviado-al-cementerio', inst.owner, [cardInstanceId])
+}
+
+/**
+ * §10 (ARTEFACTO): "Si el Campeón sale, la carta va al Cementerio."
+ * Choke point compartido para TODOS los caminos de salida de un Campeón:
+ * muerte (destruirCarta), exilio, devolución a mano, descarte/envío directo
+ * (enviarAlCementerio), sacrificio. Si la carta no tiene artefactos
+ * equipados es no-op. El artefacto sale SIN disparar
+ * al-ser-enviado-al-cementerio (no es un evento del artefacto — era cleanup).
+ */
+export function liberarArtefactosEquipados(s: GameState, ctx: Ctx, campeonId: string): void {
+  const inst = s.instances[campeonId]
+  if (!inst?.cardId) return
+  const meta = getCardMeta(inst.cardId)
+  if (!meta || !esCampeon(meta)) return
+  for (const otherId of Object.keys(s.instances)) {
+    const other = s.instances[otherId]
+    if (other && other.equipadoA === campeonId) {
+      other.equipadoA = undefined
+      moverAlCementerio(s, otherId)
+      ctx.emit({ type: 'carta_salida_de_zona', cardInstanceId: otherId, zona: '3A', jugador: other.owner })
+      ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: otherId, zona: '2G', jugador: other.owner, bocaArriba: true })
+    }
+  }
 }
 
 /**
@@ -138,6 +139,17 @@ function liberarEterBloqueadoCore(s: GameState, cardInstanceId: string, destino:
           delete other.stolenBy
           continue
         }
+        // §7.8: el Éter bloqueado mientras fue robado es del LADRÓN (inst.owner)
+        // → vuelve a la Reserva del ladrón antes de devolver el Campeón.
+        if (other.eterBloqueado && other.eterBloqueado.length > 0) {
+          const eterRobado = other.eterBloqueado
+          delete other.eterBloqueado
+          delete other.efectoUmbralDisparado
+          delete other.copyOneShotDisparado
+          delete other.tramosDisparados
+          delete other.fijadoExhaustTargetId
+          s.players[inst.owner].eterReserva.push(...eterRobado)
+        }
         const duenoOriginal = other.owner
         const campoOriginal = s.players[duenoOriginal].campo.campeones
         const slotLibre = campoOriginal.indexOf(null)
@@ -150,7 +162,12 @@ function liberarEterBloqueadoCore(s: GameState, cardInstanceId: string, destino:
       }
     }
   }
-  const p = s.players[inst.owner]
+  // §7.8: si el Campeón está ROBADO, el Éter bloqueado lo pagó el LADRÓN
+  // (quien controla) — no el dueño original. El LADRÓN = dueño de la fuente
+  // del steal (stolenBy → instancia fuente → su owner).
+  const fuenteSteal = inst.stolenBy ? s.instances[inst.stolenBy] : undefined
+  const duenoDelEter = fuenteSteal ? fuenteSteal.owner : inst.owner
+  const p = s.players[duenoDelEter]
   if (destino === '2A') {
     p.eterReserva.push(...eteres)
   } else {
@@ -344,6 +361,9 @@ export function destruirCarta(s: GameState, ctx: Ctx, cardInstanceId: string, ca
   // Campeón: → 2G + Éter 1A + carta_muerta + destruccion (ADR-14)
   moverAlCementerio(s, cardInstanceId)
   liberarEterBloqueado(s, ctx, cardInstanceId, '1A')
+  // §10: los artefactos equipados van con el Campeón que sale (antes del trigger
+  // del Campeón para que sus eventos queden en orden — cleanup sin trigger propio)
+  liberarArtefactosEquipados(s, ctx, cardInstanceId)
   // C5 (change 4): trigger al-ser-enviado-al-cementerio (carta YA en 2G)
   dispararTrigger(s, ctx, 'al-ser-enviado-al-cementerio', inst.owner, [cardInstanceId])
   ctx.emit({ type: 'carta_muerta', cardInstanceId, jugador: inst.owner, causa })

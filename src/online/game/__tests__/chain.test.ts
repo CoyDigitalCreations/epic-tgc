@@ -3,6 +3,7 @@ import { describe, it, expect } from 'vitest'
 import { applyAction } from '../actions'
 import type { Action } from '../actions'
 import { getValidActions } from '../validActions'
+import { respondiblesDe } from '../chain'
 import { visibleState } from '../visibleState'
 import type { GameEvent } from '../events'
 import type { Ctx, GameState, PlayerId } from '../types'
@@ -114,5 +115,28 @@ describe('visibleState con cadena (6.2)', () => {
 
     const visA = visibleState(s2, 'A') // el RIVAL ve la Arcana respondida
     expect(visA.instances[arcB.id].cardId).toBe(ARCANA)
+  })
+})
+
+describe('entradaEsteTurno — caduca al terminar TU turno (fix 2026-10-14)', () => {
+  it('una Arcana colocada en tu turno SÍ puede responder en el turno del rival siguiente', () => {
+    // Este era el bug de "Marcha de las Primeras": el flag se limpiaba recién
+    // en tu próximo Alba, dejando a la Arcana muda durante TODO el turno rival.
+    const ctx = crearCtx()
+    // Arcana de A colocada en el turno de A (entradaEsteTurno=true), luego A
+    // pasa el turno → el flag debe caducar.
+    const arc = conCarta(estadoMinimo(), ARCANA, 'arcanasCombate', 0, { entradaEsteTurno: true })
+    // respondibles de A con el flag puesto: NO puede responder (mismo turno)
+    expect(respondiblesDe(arc.s, 'A')).not.toContain(arc.id)
+    // A termina su turno (forja→choque→ocaso→alba del rival)
+    let s = arc.s
+    s.fase = 'forja'
+    const finTurno = aplicar(s, { type: 'pasar_turno' }, ctx) // forja→choque
+    const finChoque = aplicar(finTurno, { type: 'pasar_turno' }, ctx) // choque→ocaso
+    const cambio = aplicar(finChoque, { type: 'pasar_turno' }, ctx) // ocaso→turno rival
+    // El flag caducó al terminar el turno de A
+    expect(cambio.instances[arc.id].entradaEsteTurno).toBeUndefined()
+    // Ahora, en el turno del rival, A SÍ puede responder con su Arcana
+    expect(respondiblesDe(cambio, 'A')).toContain(arc.id)
   })
 })

@@ -69,6 +69,32 @@ export function esArtefactoEquipable(card: AnyCard): boolean {
 }
 
 /**
+ * §5.3/§5.4 (fix A4, 2026-10-22): ¿la carta PERMANECE en su slot tras
+ * resolverse o es de UN SOLO USO (→ Cementerio y libera slot)?
+ *
+ * Criterio mecánico (el mismo que usa el manual para describir ambos casos):
+ * - EFECTO CONTINUO: el Éter va de la Reserva directo a la carta (costo
+ *   bloqueo_fijo / eter_bloqueado) → la carta DEBE quedarse (su Éter vive ahí).
+ * - ARTEFACTO (equipable): para servir de soporte equipado permanece en mesa.
+ * - Cualquier otro caso = hechizo/recompensa de un solo uso (pago a 1A) →
+ *   tras resolverse va al Cementerio (§5.3 L796, §5.4 L809).
+ */
+export function esPermanenteEnMesa(card: AnyCard): boolean {
+  if ('efectos' in card && card.efectos) {
+    if (card.efectos.some((e) => e.costo?.tipo === 'eter_bloqueado' || e.costo?.tipo === 'bloqueo_fijo')) {
+      return true
+    }
+    // 'negar': la negación es un CANDADO continuo que vive en la mística en
+    // campo (championNegado la lee desde ahí — "si sale del campo, la
+    // negación terminó"). Texto continuo: "Niega la activación..." mientras
+    // la carta esté en juego. NO es un solo uso.
+    if (card.efectos.some((e) => e.efecto === 'negar')) return true
+  }
+  if ('keywords' in card && card.keywords?.includes('Artefacto')) return true
+  return false
+}
+
+/**
  * true si el costo del efecto se paga BLOQUEANDO Éter (activación vía
  * bloquear_eter, manual §7.7) en vez de pagarlo a 1A (activar_habilidad).
  * Genérico: aplica a Campeones y Artefactos, cualquier efecto con

@@ -915,7 +915,7 @@
     "paqueteId": "estasis",
     "limiteCopias": "3",
     "createdAt": "2026-08-03T00:00:00.000Z",
-    "updatedAt": "2026-09-20T04:24:17.470Z",
+    "updatedAt": "2026-10-22T01:00:26.833Z",
     "stats": {
       "cost": 3
     },
@@ -932,10 +932,10 @@
           "ATQ": 0,
           "RES": 0
         },
-        "texto": "Puedes bloquear hasta un máximo de 3 Éter (Max. 3), copia el efecto de hechizo, el efecto continuo y la recompensa de una Mística o Arcana que controla el rival, mientras ese Éter esté bloqueado.",
+        "texto": "Bloquea 3 Éter, copia el efecto de hechizo, el efecto continuo y la recompensa de una Mística o Arcana que controla el rival, mientras ese Éter esté bloqueado.",
         "duracion": "mientras_ester_bloqueado",
         "costo": {
-          "tipo": "eter_bloqueado",
+          "tipo": "bloqueo_fijo",
           "cantidad": 3
         },
         "copyAttributes": [

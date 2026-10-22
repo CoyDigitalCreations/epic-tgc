@@ -5,8 +5,9 @@
  * Makes the engine data-driven — new cards only need EfectoData definition.
  */
 import { resolveTargets } from './targetResolver'
+import { robarCarta } from './draw'
 import { aplicarMod, otorgarKeyword, crearOpcionBloqueo } from './efectos'
-import { enviarAlCementerio, destruirCarta, liberarEterBloqueado } from './replacements'
+import { enviarAlCementerio, destruirCarta, liberarEterBloqueado, liberarArtefactosEquipados } from './replacements'
 import { esCampeon, getCardMeta } from './cards'
 import type { EfectoData } from '../../shared/types'
 import type { CardInstance, Ctx, GameState, PlayerId } from './types'
@@ -594,6 +595,9 @@ export function reagruparEfectosBloqueoAlba(s: GameState, ctx: Ctx, jugador: Pla
  *   - Rival lleno → SE QUEDA controlado por el ladrón (stolenBy se limpia;
  *     el control vive en la posición del campo).
  * - Ya fuera del campo del ladrón (muerte/exilio/mano): solo limpia stolenBy.
+ *
+ * §7.8 (decisión 2026-10-14): al perder el control, el Éter que el LADRÓN
+ * bloqueó en el Campeón se reagrupa a la Reserva del LADRÓN (quien lo pagó).
  */
 export function retornarCampeonesRobados(
   s: GameState,
@@ -609,11 +613,24 @@ export function retornarCampeonesRobados(
       delete other.stolenBy
       continue
     }
+    // §7.8: el Éter bloqueado en el Campeón mientras fue robado es del LADRÓN
+    // (el del dueño original ya se reagrupó al robar). Si el rival está lleno
+    // el control NO cambia → el Éter permanece bloqueado (sigue controlado).
     // Dueño original del campeón robado (other.owner se conservó al robar)
     const duenoOriginal = other.owner
     const campoOriginal = s.players[duenoOriginal].campo.campeones
     const slotLibre = campoOriginal.indexOf(null)
     if (slotLibre !== -1 && duenoOriginal !== ladron) {
+      if (other.eterBloqueado && other.eterBloqueado.length > 0) {
+        const eteres = [...other.eterBloqueado]
+        delete other.eterBloqueado
+        delete other.efectoUmbralDisparado
+        delete other.copyOneShotDisparado
+        delete other.tramosDisparados
+        delete other.fijadoExhaustTargetId
+        s.players[ladron].eterReserva.push(...eteres)
+        ctx.emit({ type: 'eter_reagrupado', jugador: ladron, eterIds: eteres })
+      }
       const idxLadron = s.players[ladron].campo.campeones.indexOf(other.cardInstanceId)
       if (idxLadron !== -1) s.players[ladron].campo.campeones[idxLadron] = null
       campoOriginal[slotLibre] = other.cardInstanceId
@@ -674,6 +691,12 @@ function executeTutor(
 
   // Destino campo: verificar slot ANTES de remover de la origen (sin leak)
   if (zonaDestino === 'campo' && p.campo.campeones.indexOf(null) === -1) return
+  // Doctrina Capa 2 (bug B7): destino validado ANTES de remover — con un
+  // destino no soportado la carta se removía de su origen y no entraba a
+  // ninguna zona (leak de instancia). Soportados: mano, campo, cementerio,
+  // exilio, mazo (al fondo).
+  if (zonaDestino !== 'mano' && zonaDestino !== 'campo' && zonaDestino !== 'cementerio' &&
+      zonaDestino !== 'exilio' && zonaDestino !== 'mazo') return
 
   for (const targetId of targetIds) {
     // Find and remove from source zone
@@ -718,6 +741,17 @@ function executeTutor(
         p.campo.campeones[slotLibre] = targetId
         ctx.emit({ type: 'carta_invocada', cardInstanceId: targetId, tipo: 'Campeón', slot: slotLibre })
       }
+    } else if (zonaDestino === 'cementerio') {
+      // Ya removida de la origen: enviarAlCementerio solo inserta en 2G (idempotente)
+      // + libera Éter + dispara al-ser-enviado-al-cementerio (capa C5 correcta).
+      enviarAlCementerio(s, ctx, targetId)
+      ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: targetId, zona: '2G', jugador, bocaArriba: true })
+    } else if (zonaDestino === 'exilio') {
+      p.exilio.push(targetId)
+      ctx.emit({ type: 'carta_exiliada', cardInstanceId: targetId, jugador })
+    } else if (zonaDestino === 'mazo') {
+      p.mazo.push(targetId) // al fondo (bottom) — el tope queda intacto
+      ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: targetId, zona: '3G', jugador, bocaArriba: false })
     }
   }
 }
@@ -862,6 +896,7 @@ function executeExile(
     if (campoIdx !== -1) {
       p.campo.campeones[campoIdx] = null
       liberarEterBloqueado(s, ctx, targetId, '1A') // Fase 3a: carta deja el campo → Éter liberado
+      liberarArtefactosEquipados(s, ctx, targetId) // §10: el Artefacto equipado sale con el Campeón
       p.exilio.push(targetId)
       ctx.emit({ type: 'carta_exiliada', cardInstanceId: targetId, jugador: owner })
       continue
@@ -891,6 +926,9 @@ function executeExile(
 
 /**
  * Execute draw effect.
+ * §13.2: robar con el Mazo Principal vacío derrota AL MOMENTO de intentar
+ * robar — sin importar el origen del robo (Alba o efecto). Comparte la misma
+ * primitiva que el Alba (draw.ts) para que la derrota sea idéntica.
  */
 function executeDraw(
   s: GameState,
@@ -898,14 +936,9 @@ function executeDraw(
   jugador: PlayerId,
   cantidad: number,
 ): void {
-  const p = s.players[jugador]
-
   for (let i = 0; i < cantidad; i++) {
-    if (p.mazo.length === 0) break
-
-    const cardId = p.mazo.shift()!
-    p.mano.push(cardId)
-    ctx.emit({ type: 'carta_robada', cardInstanceId: cardId, jugador })
+    if (s.fase === 'terminada') return // la partida ya terminó con este robo
+    robarCarta(s, ctx, jugador)
   }
 }
 
@@ -948,6 +981,8 @@ function executeReturnHand(
 
     // Fase 3a: carta deja el campo → Éter bloqueado liberado (manual §7.7)
     liberarEterBloqueado(s, ctx, targetId, '1A')
+    // §10: si un Campeón vuelve a la mano, su Artefacto equipado va al Cementerio
+    liberarArtefactosEquipados(s, ctx, targetId)
 
     // Add to hand
     p.mano.push(targetId)
@@ -957,6 +992,11 @@ function executeReturnHand(
 
 /**
  * Execute steal_champion effect.
+ *
+ * Regla del Éter (manual §7.8, decisión 2026-10-14): el Éter bloqueado en un
+ * Campeón pertenece al jugador que lo pagó. Al tomar control, el Éter del
+ * Campeón robado se reagrupa DE INMEDIATO a la Reserva del dueño original —
+ * el ladrón toma el Campeón SIN Éter y puede bloquear el suyo propio después.
  */
 function executeStealChampion(
   s: GameState,
@@ -975,6 +1015,19 @@ function executeStealChampion(
     const rivalCampo = s.players[rival].campo.campeones
     const idx = rivalCampo.indexOf(targetId)
     if (idx === -1) continue
+
+    // §7.8: el Éter bloqueado del Campeón (pagado por su dueño) se reagrupa
+    // inmediato a la Reserva del DUEÑO ORIGINAL — el ladrón lo toma sin Éter.
+    if (targetInst.eterBloqueado && targetInst.eterBloqueado.length > 0) {
+      const eteres = [...targetInst.eterBloqueado]
+      delete targetInst.eterBloqueado
+      delete targetInst.efectoUmbralDisparado
+      delete targetInst.copyOneShotDisparado
+      delete targetInst.tramosDisparados
+      delete targetInst.fijadoExhaustTargetId
+      s.players[targetInst.owner].eterReserva.push(...eteres)
+      ctx.emit({ type: 'eter_reagrupado', jugador: targetInst.owner, eterIds: eteres })
+    }
 
     // Remove from rival's field
     rivalCampo[idx] = null
@@ -1073,6 +1126,12 @@ function removeEterFromCurrentZone(
 /**
  * Execute return_ether effect.
  * Respects cantidad field — only returns up to N ethers.
+ *
+ * Doctrina Capa 2 (2026-10-22): el destino se determina ANTES de remover —
+ * un destino desconocido NO remueve (antes solo existía 'reserva' y cualquier
+ * otro destino removía el Éter sin insertarlo a ninguna parte = pérdida de
+ * estado, bug B7). Destinos posibles: reserva, pagado, mano, cementerio,
+ * exilio (si un efecto lo pide explícitamente, Capa 2 > §7.2).
  */
 function executeReturnEther(
   s: GameState,
@@ -1081,6 +1140,7 @@ function executeReturnEther(
   zonaDestino: string | undefined,
   cantidad?: number,
 ): void {
+  if (!esDestinoEter(zonaDestino)) return // destino inválido → sin remoción (sin leak)
   const limit = cantidad ?? targetIds.length
   let count = 0
   for (const targetId of targetIds) {
@@ -1095,17 +1155,41 @@ function executeReturnEther(
     if (!removed) continue
 
     count++
+    moverEterADestino(s, ctx, targetId, owner, zonaDestino!)
+  }
+}
 
-    // Add to destination zone
-    if (zonaDestino === 'reserva') {
-      s.players[owner].eterReserva.push(targetId)
-      ctx.emit({ type: 'eter_reagrupado', jugador: owner, eterIds: [targetId] })
-    }
+/** ¿El destino es una zona válida para Éter? (destino decidido ANTES de remover) */
+function esDestinoEter(zonaDestino: string | undefined): boolean {
+  return zonaDestino === 'reserva' || zonaDestino === 'pagado' || zonaDestino === 'mano' ||
+    zonaDestino === 'cementerio' || zonaDestino === 'exilio'
+}
+
+/** Inserta el Éter en su destino + evento correspondiente. */
+function moverEterADestino(s: GameState, ctx: Ctx, eterId: string, owner: PlayerId, destino: string): void {
+  const p = s.players[owner]
+  if (destino === 'reserva') {
+    p.eterReserva.push(eterId)
+    ctx.emit({ type: 'eter_movido', cardInstanceId: eterId, destino: 'reserva', jugador: owner })
+  } else if (destino === 'pagado') {
+    p.eterPagado.push(eterId)
+    ctx.emit({ type: 'eter_movido', cardInstanceId: eterId, destino: 'pagado', jugador: owner })
+  } else if (destino === 'mano') {
+    p.mano.push(eterId)
+    ctx.emit({ type: 'eter_movido', cardInstanceId: eterId, destino: 'mano', jugador: owner })
+  } else if (destino === 'cementerio') {
+    p.cementerio.push(eterId)
+    ctx.emit({ type: 'eter_movido', cardInstanceId: eterId, destino: 'cementerio', jugador: owner })
+  } else if (destino === 'exilio') {
+    p.exilio.push(eterId)
+    ctx.emit({ type: 'eter_movido', cardInstanceId: eterId, destino: 'exilio', jugador: owner })
   }
 }
 
 /**
  * Execute mover effect.
+ * Doctrina Capa 2: mismo contrato que executeReturnEther — destino válido
+ * ANTES de remover; destino desconocido/ausente → no-op sin pérdida (bug B7).
  */
 function executeMover(
   s: GameState,
@@ -1113,25 +1197,18 @@ function executeMover(
   targetIds: string[],
   zonaDestino: string | undefined,
 ): void {
+  if (!esDestinoEter(zonaDestino)) return
   for (const targetId of targetIds) {
     const inst = s.instances[targetId]
     if (!inst) continue
 
     const owner = inst.owner
-    const p = s.players[owner]
 
     // Remove from ANY current zone
     const removed = removeEterFromCurrentZone(s, targetId, owner)
     if (!removed) continue
 
-    // Add to destination zone
-    if (zonaDestino === 'pagado') {
-      p.eterPagado.push(targetId)
-      ctx.emit({ type: 'eter_movido', cardInstanceId: targetId, destino: 'pagado', jugador: owner })
-    } else if (zonaDestino === 'reserva') {
-      p.eterReserva.push(targetId)
-      ctx.emit({ type: 'eter_movido', cardInstanceId: targetId, destino: 'reserva', jugador: owner })
-    }
+    moverEterADestino(s, ctx, targetId, owner, zonaDestino!)
   }
 }
 

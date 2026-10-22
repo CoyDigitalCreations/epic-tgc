@@ -34,6 +34,9 @@ export { getCardMeta, registrarCartas, faccionesCompartidas, esCampeon, esMistic
 // Reglas de campo
 export { sacrificiosRequeridos, esSingular, copiasEnCampo, campeonesSacrificables } from './campo'
 
+// Combate — sub-máquina 9.x (A6/A5: elección de atacantes y bloqueadores)
+export { atacantesElegibles, bloqueadoresDisponibles } from './combat'
+
 // Cadena de efectos en combate (9.6)
 export { respondiblesDe, validarResponderCadena, validarPasarPrioridad } from './chain'
 

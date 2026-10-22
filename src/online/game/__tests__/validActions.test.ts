@@ -198,14 +198,16 @@ describe('getValidActions en Forja (5.5)', () => {
 })
 
 describe('getValidActions en Choque (9.1-9.3, C2)', () => {
-  it('Choque sin combate: el activo declara_ataque (todos los elegibles + por Campeón) o pasa_turno; el rival solo rendirse', () => {
+  it('Choque sin combate: el activo declara_ataque (cualquier subconjunto — A6) o pasa_turno; el rival solo rendirse', () => {
     let s = conInstancias(estadoMinimo(), { a1: { cardId: CAMPEON, owner: 'A' } })
     s = { ...s, fase: 'choque', primerTurno: false, players: { ...s.players, A: { ...s.players.A, campo: { ...s.players.A.campo, campeones: ['a1', null, null, null, null] } } } }
 
     const activo = getValidActions(s, 'A')
     const tipos = activo.map((a) => a.type)
     expect(tipos).toContain('pasar_turno') // ataque OPCIONAL (9.1, ADR-11)
-    expect(activo.filter((a) => a.type === 'declarar_ataque')).toHaveLength(2) // "todos" + 1 por Campeón
+    // A6: 2^n - 1 subconjuntos — con 1 elegible es UNA sola acción (antes
+    // había duplicado "todos" + "1 por Campeón" para el mismo payload)
+    expect(activo.filter((a) => a.type === 'declarar_ataque')).toHaveLength(1)
     expect(getValidActions(s, 'B').map((a) => a.type)).toEqual(['rendirse'])
   })
 

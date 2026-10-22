@@ -19,6 +19,7 @@
 
 import type { Ctx, GameState, PlayerId, Zona } from './types'
 import { enviarAlCementerio } from './replacements'
+import { robarCarta } from './draw'
 import { getCardMeta } from './cards'
 
 /* ───────────────────── Types ───────────────────── */
@@ -230,12 +231,10 @@ function ejecutarAccionEfecto(s: GameState, ctx: Ctx, ep: EfectoPendiente): void
     }
 
     case 'robar-cartas': {
-      const p = s.players[ep.owner]
+      // §13.2: mazo vacío al robar por efecto → derrota (misma primitiva que el Alba)
       for (let i = 0; i < accion.cantidad; i++) {
-        if (p.mazo.length === 0) break
-        const cartaId = p.mazo.shift()!
-        p.mano.push(cartaId)
-        ctx.emit({ type: 'carta_robada', jugador: ep.owner, cardInstanceId: cartaId })
+        if (s.fase === 'terminada') break
+        robarCarta(s, ctx, ep.owner)
       }
       break
     }
