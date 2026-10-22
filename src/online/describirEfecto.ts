@@ -39,10 +39,15 @@ function describirCosto(e: EfectoData): string {
   const c = e.costo
   if (!c || c.tipo === 'ninguno') return ''
   const cant = c.cantidad ?? 1
+  // Fase 2 (c): origen del pago — SOLO costos de bloqueo (tipo 'eter' ya
+  // paga HACIA 1A por diseño: patrón Agota → Éter Pagado).
+  const origen = c.origen === 'pagado' && (c.tipo === 'eter_bloqueado' || c.tipo === 'bloqueo_fijo')
+    ? ' desde Éter Pagado (1A)'
+    : ''
   switch (c.tipo) {
-    case 'eter': return ` (costo: ${cant} Éter)`
-    case 'eter_bloqueado': return ` (costo: bloquear hasta ${cant} Éter)`
-    case 'bloqueo_fijo': return ` (costo: bloquear ${cant} Éter fijo)`
+    case 'eter': return ` (costo: ${cant} Éter${origen})`
+    case 'eter_bloqueado': return ` (costo: bloquear hasta ${cant} Éter${origen})`
+    case 'bloqueo_fijo': return ` (costo: bloquear ${cant} Éter fijo${origen})`
     case 'exhaust': return ' (costo: agotar esta carta)'
     case 'exile_self': return ' (costo: exiliarse)'
     case 'cemetery_self': return ' (costo: ir al Cementerio)'

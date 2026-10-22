@@ -58,11 +58,13 @@ function accionesBloqueoEter(state: GameState, playerId: PlayerId, enCadena = fa
         .map((efecto, i) => ({ efecto, i }))
         .filter(({ efecto }) => esCostoBloqueo(efecto.costo) && efecto.tipo !== 'disparo')
       if (fuentes.length === 0) continue
-      const disponibles = p.eterReserva.filter((id) => {
-        const meta = state.instances[id]?.cardId ? getCardMeta(state.instances[id]!.cardId!) : null
-        return meta !== null
-      })
       for (const { efecto, i } of fuentes) {
+        // Fase 2 (c): la ZONA de origen del pago define los éteres disponibles
+        const zonaOrigen = efecto.costo?.origen === 'pagado' ? p.eterPagado : p.eterReserva
+        const disponibles = zonaOrigen.filter((id) => {
+          const meta = state.instances[id]?.cardId ? getCardMeta(state.instances[id]!.cardId!) : null
+          return meta !== null
+        })
         const actuales = eterDeEfecto(state, t.id, i).length
         const maxEter = efecto.costo?.cantidad ?? 1
         const fijo = efecto.costo?.tipo === 'bloqueo_fijo'
@@ -303,7 +305,11 @@ export function getValidActions(state: GameState, playerId: PlayerId): Action[] 
       if (efectoAct && inst) {
         const costoBloqueo = esCostoBloqueo(efectoAct.costo)
         const costo = efectoAct.costo?.cantidad ?? 0
-        const eteresValidos = p.eterReserva.filter((id) => {
+        // Fase 2 (c): el patrón Bloqueado paga desde la zona de ORIGEN del
+        // costo ('pagado' 1A / default 'reserva' 2A); el patrón Agota (else)
+        // sigue pagando desde Reserva → 1A por diseño.
+        const zonaAct = costoBloqueo && efectoAct.costo?.origen === 'pagado' ? p.eterPagado : p.eterReserva
+        const eteresValidos = zonaAct.filter((id) => {
           const eterMeta = state.instances[id]?.cardId ? getCardMeta(state.instances[id]!.cardId!) : null
           return eterMeta !== null
         })

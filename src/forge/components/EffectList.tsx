@@ -261,7 +261,9 @@ export function generateEffectText(data: EfectoData): string {
       if (data.efecto === 'block_ether') addPart(`puedes bloquear ${data.costo.cantidad} Éter,`)
       else addPart(`puedes pagar ${data.costo.cantidad} Éter,`)
     } else if (data.costo.tipo === 'eter_bloqueado' && data.costo.cantidad) {
-      addPart(`puedes bloquear hasta un máximo de ${data.costo.cantidad} Éter (Max. ${data.costo.cantidad}),`)
+      // Fase 2 (c): origen 'pagado' → la cláusula declara la zona (FB-025)
+      const origenTxt = data.costo.origen === 'pagado' ? ' desde la zona de éter pagado' : ''
+      addPart(`puedes bloquear hasta un máximo de ${data.costo.cantidad} Éter (Max. ${data.costo.cantidad})${origenTxt},`)
       // Umbral simple: solo sin tramos — con tramos, cada uno emite su
       // propia cláusula "con N Éteres bloqueados, ..."
       if (!hayTramos && data.costo.umbral && data.costo.umbral > 0) {
@@ -269,7 +271,8 @@ export function generateEffectText(data: EfectoData): string {
         addPart(`con ${data.costo.umbral} ${pluralUmb},`)
       }
     } else if (data.costo.tipo === 'bloqueo_fijo' && data.costo.cantidad) {
-      addPart(`bloquea ${data.costo.cantidad} Éter,`)
+      const origenTxt = data.costo.origen === 'pagado' ? ' desde la zona de éter pagado' : ''
+      addPart(`bloquea ${data.costo.cantidad} Éter${origenTxt},`)
     } else if (data.costo.tipo === 'exhaust') {
       addPart('puedes agotar esta carta,')
     } else if (data.costo.tipo === 'exile_self') {

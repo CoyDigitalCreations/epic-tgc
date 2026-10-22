@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
-import { aporteDe, atacantesElegibles, campeonesSacrificables, costeEterHabilidad, faccionesCompartidas, getCardMeta, sacrificiosRequeridos, esBloqueoFijo, maxEterBloqueado } from '../game'
+import { aporteDe, atacantesElegibles, campeonesSacrificables, costeEterHabilidad, faccionesCompartidas, getCardMeta, sacrificiosRequeridos, esBloqueoFijo, maxEterBloqueado, efectoBloqueoAccion } from '../game'
 import type { Action, CardInstance, GameState, PlayerId } from '../game'
 import { useCardImage } from '../../forge/hooks/useCardImage'
 import { MiniCard, TAMANOS } from './MiniCard'
@@ -869,6 +869,14 @@ export function Tablero({ vista, acciones, leTocaA, logDetallado = [], onAccion,
   const [selAtaque, setSelAtaque] = useState<string[]>([])
   const abrirZoom = (inst: CardInstance) => setZoom(inst)
 
+  /** Fase 2 (c): el bloqueo en curso ¿paga desde Éter Pagado (1A)? (costo.origen) */
+  const metaSelBloqueo = seleccion?.tipo === 'bloquear' ? getCardMeta(seleccion.objetivoCardId) : null
+  const origenPagadoBloqueo = metaSelBloqueo
+    ? efectoBloqueoAccion(metaSelBloqueo)?.efecto.costo?.origen === 'pagado'
+    : false
+  /** Zona de la que salen los Éteres del selector (2A Reserva / 1A Éter Pagado). */
+  const eteresSelector = origenPagadoBloqueo ? yo.eterPagado : yo.eterReserva
+
   // A6: paso de ataque propio (sin combate en curso) — habilita la selección multi
   const esPasoAtaquePropio = vista.fase === 'choque' && !vista.combate && vista.turno === 'A'
   const toggleSelAtaque = (id: string) =>
@@ -1421,21 +1429,24 @@ export function Tablero({ vista, acciones, leTocaA, logDetallado = [], onAccion,
                   : seleccion.tipo === 'bloquear'
                     ? (() => {
                         const meta = getCardMeta(seleccion.objetivoCardId)
+                        const zonaTxt = origenPagadoBloqueo ? ' de tu Éter Pagado (1A)' : ''
                         if (meta && esBloqueoFijo(meta)) {
                           const inst = vista.instances[seleccion.targetInstanceId]
                           const actuales = inst?.eterBloqueado?.length ?? 0
                           const requerido = maxEterBloqueado(meta) - actuales
-                          return `Bloquea exactamente ${requerido} Éter(es) sobre ${meta.name}:`
+                          return `Bloquea exactamente ${requerido} Éter(es) sobre ${meta.name}${zonaTxt}:`
                         }
-                        return 'Elegí los Éteres a bloquear (hasta el máximo):'
+                        return `Elegí los Éteres a bloquear${zonaTxt} (hasta el máximo):`
                       })()
                     : 'Elegí los Éteres:'}
               </p>
-              {yo.eterReserva.length === 0 ? (
-                <p className="text-xs text-gray-500 italic">Tu Reserva está vacía.</p>
+              {eteresSelector.length === 0 ? (
+                <p className="text-xs text-gray-500 italic">
+                  {origenPagadoBloqueo ? 'Tu Éter Pagado (1A) está vacío.' : 'Tu Reserva está vacía.'}
+                </p>
               ) : (
                 <div className="flex gap-2 flex-wrap">
-                  {yo.eterReserva.map((id) => {
+                  {eteresSelector.map((id) => {
                     const inst = vista.instances[id]
                     const cardId = inst?.cardId ?? ''
                     const meta = getCardMeta(cardId)

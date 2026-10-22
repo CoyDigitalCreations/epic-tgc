@@ -227,10 +227,12 @@ export function ejecutarActivarHabilidad(s: GameState, action: Extract<Action, {
   if (!efectoSel) return
 
   if (esCostoBloqueo(efectoSel.costo)) {
-    // Patrón "Bloqueado": mueve éteres de Reserva → Campeón.eterBloqueado
+    // Patrón "Bloqueado": mueve éteres de la zona de ORIGEN (Fase 2 (c):
+    // 'reserva' 2A default, 'pagado' 1A) → Campeón.eterBloqueado
+    const zonaOrigen = efectoSel.costo?.origen === 'pagado' ? p.eterPagado : p.eterReserva
     for (const eterId of action.eterIds) {
-      const idx = p.eterReserva.indexOf(eterId)
-      if (idx !== -1) p.eterReserva.splice(idx, 1)
+      const idx = zonaOrigen.indexOf(eterId)
+      if (idx !== -1) zonaOrigen.splice(idx, 1)
     }
     inst.eterBloqueado = [...(inst.eterBloqueado ?? []), ...action.eterIds]
     // Fase 2: filiación — el efecto activado (índice en efectos[]) es la

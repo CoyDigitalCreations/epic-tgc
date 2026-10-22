@@ -355,6 +355,20 @@ export function EffectField({ label, value, onChange, cardType }: EffectFieldPro
         <div className="grid grid-cols-2 gap-2 mt-2">
           <SelectField label="Costo" value={data.costo?.tipo} options={COSTO_OPTIONS.filter((o) => o.value !== 'exile_self' && o.value !== 'cemetery_self')} onChange={(v) => updateCosto({ tipo: v as any })} />
           {data.costo?.tipo && data.costo.tipo !== 'ninguno' && <NumberInput label="Cantidad" value={data.costo?.cantidad} onChange={(v) => updateCosto({ cantidad: v })} min={1} max={10} />}
+          {/* Fase 2 (c): zona de ORIGEN del pago — solo costos de bloqueo
+              ('reserva' 2A default / 'pagado' 1A — FB-025 "desde la zona de
+              éter pagado") */}
+          {(data.costo?.tipo === 'eter_bloqueado' || data.costo?.tipo === 'bloqueo_fijo') && (
+            <SelectField
+              label="Origen del Éter"
+              value={data.costo?.origen ?? 'reserva'}
+              options={[
+                { value: 'reserva', label: 'Reserva (2A)' },
+                { value: 'pagado', label: 'Éter pagado (1A)' },
+              ]}
+              onChange={(v) => updateCosto({ origen: v as 'reserva' | 'pagado' })}
+            />
+          )}
           {/* Umbral simple (solo "hasta" SIN tramos) — con tramos, la lista
               de tramos define los umbrales */}
           {data.costo?.tipo === 'eter_bloqueado' && data.costo?.cantidad && tramos.length === 0 && (

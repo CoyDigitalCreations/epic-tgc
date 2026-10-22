@@ -221,7 +221,12 @@ export function validarBloqueo(
     const eterInst = state.instances[id]
     const eterMeta = eterInst?.cardId ? getCardMeta(eterInst.cardId) : null
     if (!eterInst || !eterMeta || !esEter(eterMeta)) return `no es un Éter: ${id}`
-    if (!p.eterReserva.includes(id)) return `el Éter no está en tu Reserva: ${id}`
+    // Fase 2 (c): zona de ORIGEN del pago — 'reserva' (2A) o 'pagado' (1A)
+    const origenPagado = fuente?.efecto.costo?.origen === 'pagado'
+    const zonaOrigen = origenPagado ? p.eterPagado : p.eterReserva
+    if (!zonaOrigen.includes(id)) {
+      return origenPagado ? `el Éter no está en tu Éter Pagado (1A): ${id}` : `el Éter no está en tu Reserva: ${id}`
+    }
     // Verificar que el éter no esté ya bloqueado en esta carta ni en ninguna otra del jugador
     if (inst.eterBloqueado?.includes(id)) return `el Éter ya está bloqueado en esta carta`
     for (const grupo of ['campeones', 'misticasTacticas', 'arcanasCombate'] as const) {
@@ -283,14 +288,18 @@ export function bloquearEter(
   const p = s.players[jugador]
   const instTarget = s.instances[targetInstanceId]
   instTarget.eterBloqueado = [...(instTarget.eterBloqueado ?? []), ...eterIds]
-  for (const id of eterIds) {
-    const idx = p.eterReserva.indexOf(id)
-    if (idx !== -1) p.eterReserva.splice(idx, 1)
-  }
-  // Fase 2: filiación del Éter — fuente/efecto + pagador
+  // Fase 2 (c): filiación del Éter — fuente/efecto + pagador. El mismo
+  // derivador decide la ZONA DE ORIGEN (2A Reserva / 1A Éter Pagado).
   const meta = instTarget.cardId ? getCardMeta(instTarget.cardId) : null
-  const idxFuente = efectoIdx ?? (meta ? efectoBloqueoAccion(meta)?.indice ?? -1 : -1)
-  etiquetarEter(s, eterIds, targetInstanceId, idxFuente, jugador)
+  const fuente = efectoIdx !== undefined && meta && 'efectos' in meta && meta.efectos?.[efectoIdx]
+    ? { efecto: meta.efectos[efectoIdx], indice: efectoIdx }
+    : meta ? efectoBloqueoAccion(meta) : null
+  const zonaOrigen = fuente?.efecto.costo?.origen === 'pagado' ? p.eterPagado : p.eterReserva
+  for (const id of eterIds) {
+    const idx = zonaOrigen.indexOf(id)
+    if (idx !== -1) zonaOrigen.splice(idx, 1)
+  }
+  etiquetarEter(s, eterIds, targetInstanceId, fuente?.indice ?? -1, jugador)
   // campeonId = id de instancia target (Campeón o Artefacto) — ver events.ts
   ctx.emit({ type: 'eter_bloqueado', jugador, eterIds, campeonId: targetInstanceId })
   return null

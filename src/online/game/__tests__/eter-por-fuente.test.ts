@@ -21,7 +21,9 @@ import { dispararUmbralBloqueo, reagruparEfectosBloqueoAlba } from '../effectInt
 import { liberarEterBloqueado } from '../replacements'
 import { ejecutarActivarHabilidad } from '../habilidades'
 import { claveEfecto, evaluarFinSteal, eterDeEfecto } from '../eter'
-import { efectoBloqueoAccion, getCardMeta } from '../cards'
+import { efectoBloqueoAccion, getCardMeta, registrarCartas } from '../cards'
+import type { AnyCard } from '../cards'
+import { getValidActions } from '../validActions'
 import type { Ctx, GameState, PlayerId } from '../types'
 
 const FB010 = 'FB-010' // Aurora: disparo destroy(eter:2) + continuo steal bloqueo_fijo:4 (reagrupar alba)
@@ -341,5 +343,97 @@ describe('Fase 2 (f) — la liberación devuelve el Éter a SU pagador', () => {
       expect(s.instances[id].bloqueadoPorEfecto).toBeUndefined()
       expect(s.instances[id].pagadoPor).toBeUndefined()
     }
+  })
+})
+
+describe('Fase 2 (c) — costo.origen "pagado": bloqueo desde la zona 1A', () => {
+  const PAGADO = 'TEST-BLOQUEO-PAGADO'
+  registrarCartas([{
+    id: PAGADO,
+    name: 'Bloqueo Pagado Test',
+    type: 'Campeón',
+    rarity: 'Común',
+    keywords: [],
+    flavorText: '',
+    createdAt: '2026-01-01T00:00:00.000Z',
+    updatedAt: '2026-01-01T00:00:00.000Z',
+    paqueteId: 'test',
+    limiteCopias: '1',
+    stats: { cost: 2, poder: 1, resistencia: 1 },
+    efectos: [{
+      tipo: 'continuo',
+      efecto: 'double_attack',
+      duracion: 'mientras_ester_bloqueado',
+      objetivo: { tipo: 'self', zona: 'campo' },
+      costo: { tipo: 'bloqueo_fijo', cantidad: 2, origen: 'pagado' },
+      texto: 'Bloquea 2 Éter desde la zona de éter pagado, mientras ese Éter esté bloqueado.',
+    }],
+  } as unknown as AnyCard])
+
+  /** Mueve éteres de Reserva 2A → Éter Pagado 1A (estado previo al bloqueo). */
+  function pagarEteres(s: GameState, ids: string[]): GameState {
+    return {
+      ...s,
+      players: {
+        ...s.players,
+        A: {
+          ...s.players.A,
+          eterReserva: s.players.A.eterReserva.filter((id) => !ids.includes(id)),
+          eterPagado: [...s.players.A.eterPagado, ...ids],
+        },
+      },
+    }
+  }
+
+  it('validarBloqueo exige el Éter en 1A — en Reserva lo rechaza', () => {
+    let s = estadoMinimo()
+    const camp = conCampeonEnCampo(s, PAGADO, 0)
+    s = camp.s
+    const e = conEteres(s, 2) // en Reserva (zona INCORRECTA para este costo)
+    s = e.s
+
+    const err = validarBloqueo(s, 'A', e.ids, camp.id)
+    expect(err).toContain('Éter Pagado (1A)')
+
+    s = pagarEteres(s, e.ids)
+    expect(validarBloqueo(s, 'A', e.ids, camp.id)).toBeNull()
+  })
+
+  it('bloquear_eter consume desde 1A y deja la Reserva intacta', () => {
+    let s = estadoMinimo()
+    const camp = conCampeonEnCampo(s, PAGADO, 0)
+    s = camp.s
+    const e = conEteres(s, 2)
+    s = pagarEteres(e.s, e.ids)
+
+    s = aplicar(s, { type: 'bloquear_eter', eterIds: e.ids, targetInstanceId: camp.id }, crearCtx())
+
+    expect(s.instances[camp.id].eterBloqueado).toEqual(e.ids)
+    expect(s.players.A.eterPagado).toEqual([])
+    expect(s.players.A.eterReserva).toEqual([])
+    // Etiquetado igual que cualquier bloqueo (filiación no cambia con el origen)
+    const fuente = efectoBloqueoAccion(getCardMeta(PAGADO)!)!
+    expect(s.instances[e.ids[0]].bloqueadoPorEfecto).toBe(claveEfecto(camp.id, fuente.indice))
+    expect(s.instances[e.ids[0]].pagadoPor).toBe('A')
+  })
+
+  it('validActions solo ofrece bloquear_eter cuando la zona origen está poblada', () => {
+    let s = estadoMinimo()
+    const camp = conCampeonEnCampo(s, PAGADO, 0)
+    s = camp.s
+    const e = conEteres(s, 2) // en Reserva: NO debe ofrecer la acción
+    s = e.s
+
+    const sinOrigen = getValidActions(s, 'A').filter(
+      (a) => a.type === 'bloquear_eter' && a.targetInstanceId === camp.id,
+    )
+    expect(sinOrigen).toHaveLength(0)
+
+    s = pagarEteres(s, e.ids)
+    const conOrigen = getValidActions(s, 'A').filter(
+      (a) => a.type === 'bloquear_eter' && a.targetInstanceId === camp.id,
+    )
+    expect(conOrigen).toHaveLength(1)
+    expect(conOrigen[0].type === 'bloquear_eter' && conOrigen[0].eterIds).toEqual(e.ids)
   })
 })

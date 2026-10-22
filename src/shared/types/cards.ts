@@ -166,6 +166,10 @@ export interface CostoEfecto {
    * (p.ej. Max. 4, umbral 2 → "con 2 Éteres bloqueados..."). Si falta o es
    * igual a cantidad, el efecto simplemente requiere el bloqueo completo. */
   umbral?: number
+  /** Fase 2 (c): zona de la que se PAGA el bloqueo — 'reserva' (2A, default)
+   * o 'pagado' (1A — Éter Pagado; FB-025 "desde la zona de éter pagado").
+   * Sin declarar = 'reserva' (compatibilidad con toda la colección actual). */
+  origen?: 'reserva' | 'pagado'
 }
 
 /** Tramo de recompensa por umbral dentro de UN bloqueo "hasta" (Capa 3b).
