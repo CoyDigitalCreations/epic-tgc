@@ -30,8 +30,8 @@ import {
   validarElegirRuptura, ejecutarElegirRuptura,
 } from './combat'
 import {
-  validarResponderCadena, validarPasarPrioridad,
-  ejecutarResponderCadena, ejecutarPasarPrioridad,
+  validarResponderCadena, validarPasarPrioridad, validarJugarRespuesta,
+  ejecutarResponderCadena, ejecutarPasarPrioridad, ejecutarJugarRespuesta,
 } from './chain'
 import {
   validarResponderPrevenicion, ejecutarResponderPrevenicion,
@@ -54,6 +54,7 @@ export type Action =
       sacrificios?: string[]
     }
   | { type: 'jugar_mistica'; cardInstanceId: string; slot: number; eterIds: string[] }
+  | { type: 'jugar_respuesta'; cardInstanceId: string; eterIds: string[] }
   | { type: 'colocar_arcana'; cardInstanceId: string; slot: number }
   | { type: 'activar_arcana'; cardInstanceId: string; slot: number; eterIds: string[] }
   | { type: 'equipar_artefacto'; cardInstanceId: string; campeonInstanceId: string }
@@ -113,6 +114,8 @@ function validarAccion(state: GameState, action: Action): string | null {
       return validarJugarCampeon(state, action)
     case 'jugar_mistica':
       return validarJugarMistica(state, action)
+    case 'jugar_respuesta':
+      return validarJugarRespuesta(state, action.cardInstanceId, action.eterIds)
     case 'colocar_arcana':
       return validarColocarArcana(state, action)
     case 'colocar_vinculo':
@@ -186,6 +189,10 @@ function ejecutarAccion(s: GameState, action: Action, ctx: Ctx): void {
     }
     case 'jugar_mistica': {
       ejecutarJugarMistica(s, action, ctx)
+      return
+    }
+    case 'jugar_respuesta': {
+      ejecutarJugarRespuesta(s, action.cardInstanceId, action.eterIds, ctx)
       return
     }
     case 'colocar_arcana': {

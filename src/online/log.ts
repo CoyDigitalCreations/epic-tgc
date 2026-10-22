@@ -62,6 +62,8 @@ export function formatearEvento(estado: GameState, e: GameEvent): string | null 
       return null // ruido de zonas internas
     case 'carta_activada':
       return `${e.jugador} activa ${nombreCarta(estado, e.cardInstanceId)}.`
+    case 'activacion_negada':
+      return `${nombreCarta(estado, e.fuente)} niega la activación de ${nombreCarta(estado, e.cardInstanceId)}.`
     case 'carta_devuelta_a_mano':
       return `${nombreCarta(estado, e.cardInstanceId)} vuelve a la mano de ${e.jugador}.`
     case 'carta_exiliada':

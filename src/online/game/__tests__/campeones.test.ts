@@ -12,7 +12,7 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { applyAction } from '../actions'
 import type { Action } from '../actions'
 import { getValidActions } from '../validActions'
-import { dispararTrigger, limpiarRegistroEfectos, objetivosCampeonesValidos, registrarEfecto, statsDe, keywordsDe, championNegado } from '../efectos'
+import { dispararTrigger, limpiarRegistroEfectos, objetivosCampeonesValidos, registrarEfecto, statsDe, keywordsDe } from '../efectos'
 import { destruirCarta } from '../replacements'
 import { registrarEfectos } from '../index'
 import { registrarCartas } from '../cards'
@@ -473,7 +473,7 @@ describe('C3b: modificadores continuos desde el JSON (Fase 1) + Protector (D3)',
     expect(statsDe(s, caosPropio)).toEqual({ poder: 5, resistencia: 3 })
   })
 
-  it('efectoComandante es INMUTABLE: championNegado NO lo afecta (manual §10)', () => {
+  it('efectoComandante es INMUTABLE: la negación no toca auras derivadas (manual §10)', () => {
     const COMANDANTE_IMM = 'TEST-COMANDANTE-IMM'
     registrarCartas([{
       id: COMANDANTE_IMM,
@@ -506,12 +506,9 @@ describe('C3b: modificadores continuos desde el JSON (Fase 1) + Protector (D3)',
     expect(statsDe(s, comandante)).toEqual({ poder: 7, resistencia: 7 })
     expect(statsDe(s, otro)).toEqual({ poder: 7, resistencia: 5 })
 
-    // Simular negación: championNegado NO debe afectar el aura del comandante
-    // (el comandante es un aura derivada, no una activación — no pasa por
-    // championNegado). Verificamos que statsDe sigue aplicando el buff.
-    // (championNegado solo bloquea activar_habilidad, no auras derivadas)
-    expect(championNegado(s, comandante)).toBe(false)
-    // Los stats siguen buffeados a pesar de cualquier intento de negación
+    // REDISEÑO obs 1874: la negación es un CONTADOR sobre la activación
+    // pendiente de la ventana (activar_habilidad) — nunca sobre auras
+    // derivadas. El aura del comandante queda intacta.
     expect(statsDe(s, comandante)).toEqual({ poder: 7, resistencia: 7 })
   })
 

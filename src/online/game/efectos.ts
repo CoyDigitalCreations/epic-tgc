@@ -137,30 +137,6 @@ function statsBaseDe(s: GameState, id: string): { poder: number; resistencia: nu
 }
 
 /**
- * ¿El campeón está NEGADO? (Fase 3b — FB-021 Marcha de las Primeras).
- * Estado derivado: scan del campo de AMBOS jugadores buscando fuentes con
- * efecto 'negar' en JSON + negadoTargetId === champId. Si la fuente salió
- * del campo, la negación terminó (patrón modificadoresJSONDe — sin cleanup).
- */
-export function championNegado(s: GameState, champId: string): boolean {
-  const champInst = s.instances[champId]
-  if (!champInst) return false
-  for (const j of ['A', 'B'] as PlayerId[]) {
-    const p = s.players[j]
-    for (const grupo of ['campeones', 'misticasTacticas', 'arcanasCombate'] as const) {
-      for (const id of p.campo[grupo]) {
-        if (!id) continue
-        const inst = s.instances[id]
-        if (!inst?.negadoTargetId || inst.negadoTargetId !== champId) continue
-        const meta = inst.cardId ? getCardMeta(inst.cardId) : null
-        if (meta && 'efectos' in meta && meta.efectos?.some((e) => e.efecto === 'negar')) return true
-      }
-    }
-  }
-  return false
-}
-
-/**
  * ¿El copy de FB-022 está ACTIVO? (Fase 3c — Último Refugio).
  * Estado derivado: copyTargetId + ≥1 Éter bloqueado + target en campo.
  * "copia el efecto... mientras ese Éter esté bloqueado" (§7.7 / manual).

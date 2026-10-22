@@ -14,7 +14,7 @@ import { MiniCard } from './MiniCard'
 import type { Action } from '../game/actions'
 import type { GameState, PlayerId, CardInstance } from '../game/types'
 import { getCardMeta } from '../game/cards'
-import { respondiblesDe } from '../game/chain'
+import { respondiblesDe, respuestasDeMano } from '../game/chain'
 
 interface PriorityModalProps {
   state: GameState
@@ -38,6 +38,13 @@ export function PriorityModal({ state, playerId, acciones, onAccion, onZoom }: P
   // el botón "Pasar prioridad" (antes el modal se ocultaba y el botón vivía
   // suelto en Acciones generales).
   const respondibles = respondiblesDe(state, playerId)
+  // Respuesta desde la MANO (obs 1874): Místicas Presteza jugables con
+  // jugar_respuesta (pagan su coste y entran a la pila — p.ej. Marcha niega
+  // la activación pendiente).
+  const enMano = respuestasDeMano(state, playerId)
+    .map((id) => ({ id, accion: acciones.find((a) => a.type === 'jugar_respuesta' && a.cardInstanceId === id) }))
+    .filter((x): x is { id: string; accion: Action } => !!x.accion)
+  const totalRespondibles = respondibles.length + enMano.length
   const pasar = acciones.find((a) => a.type === 'pasar_prioridad')
 
   const efectoActual = cadena.efectoActual
@@ -55,8 +62,8 @@ export function PriorityModal({ state, playerId, acciones, onAccion, onZoom }: P
             {esCombate ? 'Cadena de Combate (9.6)' : 'Cadena Global'}
           </h2>
           <p className="text-xs text-gray-400">
-            {respondibles.length > 0
-              ? `Tenés ${respondibles.length} carta(s) que puede(n) responder — elegí o pasá prioridad.`
+            {totalRespondibles > 0
+              ? `Tenés ${totalRespondibles} carta(s) que puede(n) responder — elegí o pasá prioridad.`
               : 'No tenés cartas que puedan responder este efecto — pasá la prioridad para continuar.'}
           </p>
         </div>
@@ -136,6 +143,31 @@ export function PriorityModal({ state, playerId, acciones, onAccion, onZoom }: P
                         Responder
                       </button>
                     )}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* ── Presteza en mano (respuesta jugando — obs 1874) ────── */}
+        {enMano.length > 0 && (
+          <div className="mb-4">
+            <p className="text-[9px] uppercase tracking-wider text-amber-400/80 mb-1.5">
+              Presteza en tu mano — jugable como respuesta ({enMano.length})
+            </p>
+            <div className="flex gap-2 flex-wrap items-start">
+              {enMano.map(({ id, accion }) => {
+                const inst = state.instances[id]
+                return (
+                  <div key={id} className="flex flex-col items-center gap-1">
+                    <MiniCard inst={inst} tamano="sm" onZoom={() => onZoom(inst)} />
+                    <button
+                      onClick={() => onAccion(accion)}
+                      className="text-[10px] bg-amber-600 hover:bg-amber-500 text-white px-2 py-0.5 rounded transition-colors cursor-pointer"
+                    >
+                      Jugar
+                    </button>
                   </div>
                 )
               })}

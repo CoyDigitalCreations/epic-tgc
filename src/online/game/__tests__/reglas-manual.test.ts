@@ -184,11 +184,13 @@ describe('§8.2 — "Al inicio de tu turno" aplica a cualquier carta en campo (A
 })
 
 describe('§5.3 — esPermanenteEnMesa: un solo uso vs permanente (A4)', () => {
-  it('hechizo de un solo uso → cementerio; continuo/artefacto/negar → permanece', () => {
+  it('hechizo de un solo uso → cementerio; continuo/artefacto → permanece', () => {
     expect(esPermanenteEnMesa(getCardMeta('FB-019')!)).toBe(false) // Heredad del Alba: hechizo simple
     expect(esPermanenteEnMesa(getCardMeta('FB-020')!)).toBe(true)  // Lamento: Éter bloqueado + Artefacto
     expect(esPermanenteEnMesa(getCardMeta('FB-022')!)).toBe(true)  // Último Refugio: bloqueo_fijo
-    expect(esPermanenteEnMesa(getCardMeta('FB-021')!)).toBe(true)  // Marcha: candado negar continuo
+    // REDISEÑO obs 1874: Marcha (negar) ya NO es candado continuo — contador
+    // de un solo uso que va al Cementerio como cualquier hechizo (§5.3)
+    expect(esPermanenteEnMesa(getCardMeta('FB-021')!)).toBe(false)
   })
 })
 

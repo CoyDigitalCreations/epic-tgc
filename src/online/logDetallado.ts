@@ -111,6 +111,11 @@ export function formatearEventoDetallado(estado: GameState, e: GameEvent): strin
     }
     case 'prioridad_pasada':
       return `${ts}   ⏩ ${e.jugador} pasa prioridad`
+    case 'activacion_negada': {
+      const niega = nombreCarta(estado, e.fuente)
+      const victima = nombreCarta(estado, e.cardInstanceId)
+      return `${ts}   🚫 NIEGA: ${niega} cancela la activación de ${victima} (pago consumido)`
+    }
     case 'carta_entrada_a_zona': {
       const nombre = nombreCarta(estado, e.cardInstanceId)
       const owner = estado.instances[e.cardInstanceId]?.owner ?? '?'

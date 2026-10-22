@@ -87,10 +87,9 @@ export interface CardInstance {
     * este tramo. Estado derivado: el fijado vive mientras la fuente tenga
     * Éter bloqueado >= umbral del tramo (exhaustFijado scan). */
    fijadoExhaustTargetId?: string
-   /** Fase 3b: ID del campeón target de un efecto negar de esta fuente (FB-021).
-    * Estado derivado: la negación vive mientras la fuente esté en campo
-    * (championNegado scan en efectos.ts). */
-   negadoTargetId?: string
+  /** REDISEÑO obs 1874: el candado championNegado se ELIMINÓ — la negación es
+   * un CONTADOR de un solo uso sobre la activación pendiente
+   * (cadena.activacionPendiente), no un estado persistente en la mística. */
    /** Fase 3c: ID de la Mística/Arcana rival copiada por efecto copy (FB-022).
     * Estado derivado copyActivo: copyTargetId + ≥1 Éter bloqueado + target en campo. */
    copyTargetId?: string
@@ -177,6 +176,22 @@ export interface CadenaState {
   efectoActual?: { jugador: PlayerId; cardInstanceId: string; descripcion: string }
   /** Velocidad del último efecto activado en la cadena (PRESTEZA/FUGAZ). */
   velocidadActual?: 'normal' | 'presteza' | 'fugaz'
+  /**
+   * Ventana de negación (obs 1874 — Marcha): activación de activar_habilidad
+   * DECLARADA y ya PAGADA, pendiente de resolverse al cerrar la cadena.
+   * Si una negación (tipoNegacion 'activacion') la cancela → no se resuelve
+   * (el pago NO se devuelve). Vive en la cadena GLOBAL (activar_habilidad
+   * nunca corre con combate en curso).
+   */
+  activacionPendiente?: {
+    jugador: PlayerId
+    cardInstanceId: string
+    /** Índice en efectos[] del efecto activado (resolución diferida). */
+    efectoIdx: number
+    objetivoId?: string
+    /** true si una negación la canceló (se resuelve: fizzled). */
+    negada?: boolean
+  }
 }
 
 /** Sub-máquina de combate en Choque (9.1, ADR-11). Se crea con la PRIMERA declarar_ataque. */

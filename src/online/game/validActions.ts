@@ -1,11 +1,10 @@
 import { getCardMeta, esArcana, efectoActivableDe, esCostoBloqueo } from './cards'
 import { eterDeEfecto } from './eter'
-import { championNegado } from './efectos'
 import type { AnyCard } from '../../shared/types'
 import type { Action } from './actions'
 import { generarAccionesForja, validarActivarArcana } from './actions'
 import { atacantesElegibles, asignacionForzada, ataquesSinBloquear, bloqueadoresDisponibles, rivalDe, tieneKeyword } from './combat'
-import { respondiblesDe } from './chain'
+import { respondiblesDe, respuestasDeMano } from './chain'
 import { etersParaPagar } from './payments'
 import { validarEquiparArtefacto } from './movimientos'
 import type { GameState, PlayerId, CardInstance } from './types'
@@ -241,6 +240,16 @@ export function getValidActions(state: GameState, playerId: PlayerId): Action[] 
       for (const id of respondiblesDe(state, playerId)) {
         acciones.push({ type: 'responder_cadena', cardInstanceId: id })
       }
+      // Respuesta desde la MANO (obs 1874): Místicas Presteza jugadas pagando
+      // su coste — entran directo a la pila (jugar_respuesta).
+      for (const id of respuestasDeMano(state, playerId)) {
+        const instR = state.instances[id]
+        if (!instR?.cardId) continue
+        const eterIds = etersParaPagar(state, playerId, instR.cardId)
+        if (eterIds !== null) {
+          acciones.push({ type: 'jugar_respuesta', cardInstanceId: id, eterIds })
+        }
+      }
       // A9 (§8.3a): el bloqueo de Éter es una activación de continuo válida
       // COMO RESPUESTA — se expone con prioridad en la cadena (estado
       // directo, no entra a la pila; la cadena no avanza por bloquear).
@@ -291,8 +300,8 @@ export function getValidActions(state: GameState, playerId: PlayerId): Action[] 
       const meta = inst?.cardId ? getCardMeta(inst.cardId) : null
       if (!meta) continue
 
-      // Fase 3b: campeón negado no puede activar efectos
-      if (championNegado(state, champId)) continue
+      // Fase 3b → REDISEÑO obs 1874: el candado championNegado se eliminó —
+      // la negación es un contador sobre la activación pendiente de la ventana.
 
       // Check efectos[] for active abilities — ROUTING POR EFECTO (§7.7).
       // El efecto que activar_habilidad ejecuta lo decide SU costo:

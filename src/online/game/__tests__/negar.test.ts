@@ -1,28 +1,55 @@
 // @vitest-environment node
 /**
- * Fase 3b — negar (FB-021 Marcha de las Primeras).
+ * negar (FB-021 Marcha de las Primeras) — REDISEÑO obs 1874: contador de UN
+ * SOLO USO sobre la ACTIVACIÓN declarada en la ventana de activar_habilidad.
  *
- * "Niega la activación del efecto de un Campeón que controla el rival."
- * Efecto: hechizo negar, tipoNegacion: 'activacion', objetivo campeón rival campo.
+ * - activar_habilidad (pago YA aplicado) abre VENTANA si el rival tiene
+ *   respondibles en campo o PRESTEZA EN MANO → cadena.activacionPendiente.
+ * - El rival juega Marcha desde la mano (jugar_respuesta — paga su coste) →
+ *   al cerrar la cadena su efecto 'negar' cancela ESA activación (el pago del
+ *   activador NO se devuelve, el efecto NO se resuelve) → Marcha al
+ *   Cementerio (§5.3, esPermanenteEnMesa ya no la exceptúa).
+ * - Sin respuesta (2 pases) → la activación diferida resuelve normalmente.
+ * - El candado championNegado se ELIMINÓ: el rival puede volver a activar.
  *
- * Semántica V1 (diseño derivado, sin spec en manual): mientras FB-021 esté en
- * campo, el campeón target no puede activar efectos (validarActivarHabilidad
- * rechaza). La negación termina cuando la fuente sale del campo (estado
- * derivado — championNegado scan, patrón modificadoresJSONDe).
- *
- * Cartas: FB-021 Marcha de las Primeras (Mística Presteza cost 3) ·
- * FB-016 Cassandra (Campeón continuo bloqueo_fijo 4) · FB-001 Éter Orden.
+ * Cartas: FB-021 Marcha (Mística Presteza cost 3) · TEST-NEGAR-VICTIMA
+ * (Campeón disparo buff +1 ATQ, costo eter:1) · FB-001 Éter Orden.
  */
 import { describe, it, expect } from 'vitest'
 import { applyAction } from '../actions'
-import { championNegado } from '../efectos'
-import { validarActivarHabilidad } from '../habilidades'
+import { getValidActions } from '../validActions'
+import { statsDe } from '../efectos'
+import { etersParaPagar } from '../payments'
+import { registrarCartas, esPermanenteEnMesa, getCardMeta } from '../cards'
+import type { AnyCard } from '../cards'
 import type { Action } from '../actions'
 import type { Ctx, GameState, PlayerId } from '../types'
 
-const FB021 = 'FB-021' // Mística Presteza, hechizo negar, cost 3
-const KORR = 'DS-016' // Campeón disparo buff, costo eter:2 (patrón Agota — paga vía activar_habilidad)
+const FB021 = 'FB-021' // Mística Presteza, hechizo negar tipoNegacion 'activacion', cost 3
+const VICTIMA = 'TEST-NEGAR-VICTIMA' // Campeón disparo buff self +1 ATQ, costo eter:1
 const ETER_ORDEN = 'FB-001'
+
+registrarCartas([{
+  id: VICTIMA,
+  name: 'Víctima de Negación Test',
+  type: 'Campeón',
+  rarity: 'Común',
+  keywords: [],
+  flavorText: '',
+  createdAt: '2026-01-01T00:00:00.000Z',
+  updatedAt: '2026-01-01T00:00:00.000Z',
+  paqueteId: 'test',
+  limiteCopias: '1',
+  stats: { cost: 2, poder: 2, resistencia: 2 },
+  efectos: [{
+    tipo: 'disparo',
+    efecto: 'buff',
+    stats: { ATQ: 1, RES: 0 },
+    objetivo: { tipo: 'self', zona: 'campo' },
+    costo: { tipo: 'eter', cantidad: 1 },
+    texto: 'Puedes pagar 1 Éter: gana +1 ATQ.',
+  }],
+} as unknown as AnyCard])
 
 function estadoMinimo(): GameState {
   const jugador = (id: PlayerId) => ({
@@ -85,27 +112,7 @@ function conCampeon(s: GameState, cardId: string, owner: PlayerId, slot: number)
   }
 }
 
-/** Mística de `owner` en misticasTacticas[slot] con extras opcionales. */
-function conMistica(s: GameState, cardId: string, owner: PlayerId, slot: number, extra?: Record<string, unknown>): { s: GameState; id: string } {
-  const id = `mist-${cardId}-${owner}-${slot}`
-  return {
-    s: {
-      ...conInstancias(s, { [id]: { cardId, owner, extra } }),
-      players: {
-        ...s.players,
-        [owner]: {
-          ...s.players[owner],
-          campo: {
-            ...s.players[owner].campo,
-            misticasTacticas: s.players[owner].campo.misticasTacticas.map((c, i) => (i === slot ? id : c)),
-          },
-        },
-      },
-    },
-    id,
-  }
-}
-
+/** Instancias en la MANO de `owner` (mapa instanceId → cardId). */
 function conMano(s: GameState, owner: PlayerId, mapa: Record<string, string>): GameState {
   const conInst = conInstancias(s, Object.fromEntries(Object.entries(mapa).map(([id, cardId]) => [id, { cardId, owner }])))
   return {
@@ -114,11 +121,12 @@ function conMano(s: GameState, owner: PlayerId, mapa: Record<string, string>): G
   }
 }
 
-function conEteres(s: GameState, owner: PlayerId, cardId: string, n: number): { s: GameState; ids: string[] } {
-  const ids = Array.from({ length: n }, (_, i) => `${cardId}-${owner}-${i}`)
+/** Éteres de `owner` en Reserva 2A. */
+function conEteres(s: GameState, owner: PlayerId, n: number): { s: GameState; ids: string[] } {
+  const ids = Array.from({ length: n }, (_, i) => `${ETER_ORDEN}-${owner}-${i}`)
   return {
     s: {
-      ...conInstancias(s, Object.fromEntries(ids.map((id) => [id, { cardId, owner }]))),
+      ...conInstancias(s, Object.fromEntries(ids.map((id) => [id, { cardId: ETER_ORDEN, owner }]))),
       players: { ...s.players, [owner]: { ...s.players[owner], eterReserva: [...s.players[owner].eterReserva, ...ids] } },
     },
     ids,
@@ -137,155 +145,128 @@ function aplicar(s: GameState, accion: Action, ctx: Ctx): GameState {
   return r.state
 }
 
-describe('championNegado — estado derivado (Fase 3b)', () => {
-  it('true cuando una fuente negar en campo tiene negadoTargetId === champ', () => {
-    const conCamp = conCampeon(estadoMinimo(), KORR, 'B', 0)
-    const conMist = conMistica(conCamp.s, FB021, 'A', 0, { negadoTargetId: conCamp.id })
-    expect(championNegado(conMist.s, conCamp.id)).toBe(true)
-  })
-
-  it('false cuando la fuente negar NO está en campo (salió)', () => {
-    const conCamp = conCampeon(estadoMinimo(), KORR, 'B', 0)
-    // FB-021 registrada como instancia pero FUERA del campo (en cementerio)
-    const s = conInstancias(conCamp.s, {
-      'mist-fuera': { cardId: FB021, owner: 'A', extra: { negadoTargetId: conCamp.id } },
-    })
-    expect(championNegado(s, conCamp.id)).toBe(false)
-  })
-
-  it('false cuando el negadoTargetId no coincide con el champ consultado', () => {
-    const conCamp = conCampeon(estadoMinimo(), KORR, 'B', 0)
-    const conOtro = conCampeon(conCamp.s, KORR, 'B', 1)
-    const conMist = conMistica(conOtro.s, FB021, 'A', 0, { negadoTargetId: 'otro-id' })
-    expect(championNegado(conMist.s, conCamp.id)).toBe(false)
-    expect(championNegado(conMist.s, conOtro.id)).toBe(false)
-  })
-
-  it('false cuando la fuente no tiene efecto negar en el JSON', () => {
-    const conCamp = conCampeon(estadoMinimo(), KORR, 'B', 0)
-    // Mística sin negar (FB-019) con negadoTargetId seteado — el scan verifica efectos[]
-    const conMist = conMistica(conCamp.s, 'FB-019', 'A', 0, { negadoTargetId: conCamp.id })
-    expect(championNegado(conMist.s, conCamp.id)).toBe(false)
-  })
-})
-
-describe('validarActivarHabilidad con negación (Fase 3b)', () => {
-  /** Setup: Korr (B) en campo + FB-021 (A) en campo negándolo + éteres para B. */
-  function conKorrNegado(): { s: GameState; korrId: string; fb021Id: string; eterIds: string[] } {
-    const conCamp = conCampeon(estadoMinimo(), KORR, 'B', 0)
-    const conMist = conMistica(conCamp.s, FB021, 'A', 0, { negadoTargetId: conCamp.id })
-    const { s: sConEteres, ids } = conEteres(conMist.s, 'B', ETER_ORDEN, 4)
-    // turno = B (el controlador de Korr intenta activar)
-    const s: GameState = { ...sConEteres, turno: 'B' }
-    return { s, korrId: conCamp.id, fb021Id: conMist.id, eterIds: ids }
+/**
+ * Setup canónico: B activa la habilidad de Víctima (turno B); A es el rival,
+ * con Marcha en mano (o sin ella según `conMarcha`).
+ */
+function setupVentana(conMarcha: boolean): { s: GameState; victimaId: string; eterB: string[] } {
+  const camp = conCampeon(estadoMinimo(), VICTIMA, 'B', 0)
+  const eterB = conEteres(camp.s, 'B', 3)
+  let s: GameState = { ...eterB.s, turno: 'B' }
+  if (conMarcha) {
+    s = conMano(s, 'A', { 'marcha-1': FB021 })
+    s = conEteres(s, 'A', 3).s
   }
+  return { s, victimaId: camp.id, eterB: eterB.ids }
+}
 
-  it('RECHAZA activación de campeón negado', () => {
-    const { s, korrId, eterIds } = conKorrNegado()
-    const error = validarActivarHabilidad(s, {
-      type: 'activar_habilidad',
-      cardInstanceId: korrId,
-      eterIds: eterIds.slice(0, 2),
-    })
-    expect(error).toMatch(/negado/)
+describe('ventana de negación en activar_habilidad (obs 1874)', () => {
+  it('con Presteza del rival EN MANO: abre cadena y DIFIERE la activación (pago queda, efecto sin resolver)', () => {
+    const { s, victimaId, eterB } = setupVentana(true)
+    const ctx = crearCtx()
+
+    const s2 = aplicar(s, { type: 'activar_habilidad', cardInstanceId: victimaId, eterIds: eterB.slice(0, 1) }, ctx)
+
+    // Pago YA hecho (pago queda) — 1 Éter a 1A y 1/turno consumido
+    expect(s2.players.B.eterPagado).toHaveLength(1)
+    expect(s2.instances[victimaId].opcionUsadaEsteTurno).toBe(true)
+    // Ventana abierta con la activación DIFERIDA — efecto AÚN sin resolver
+    expect(s2.cadena).toBeTruthy()
+    expect(s2.cadena!.prioridad).toBe('A')
+    expect(s2.cadena!.activacionPendiente).toMatchObject({ jugador: 'B', cardInstanceId: victimaId })
+    expect(statsDe(s2, victimaId).poder).toBe(2) // buff aún pendiente
+    // A (con Marcha en mano) puede responder con jugar_respuesta
+    const accionesA = getValidActions(s2, 'A')
+    const resp = accionesA.find((a) => a.type === 'jugar_respuesta' && a.cardInstanceId === 'marcha-1')
+    expect(resp).toBeTruthy()
+    expect(accionesA.some((a) => a.type === 'pasar_prioridad')).toBe(true)
   })
 
-  it('PERMITE activación cuando la fuente negar salió del campo', () => {
-    const { s, korrId, fb021Id, eterIds } = conKorrNegado()
-    // Sacar FB-021 del campo de A (simular destrucción/retorno)
-    const sSinFuente: GameState = {
-      ...s,
-      players: {
-        ...s.players,
-        A: {
-          ...s.players.A,
-          campo: { ...s.players.A.campo, misticasTacticas: [null, null, null] },
-        },
-      },
-    }
-    // La instancia sigue existiendo pero FUERA de campo → sin negación
-    expect(championNegado(sSinFuente, korrId)).toBe(false)
-    const error = validarActivarHabilidad(sSinFuente, {
-      type: 'activar_habilidad',
-      cardInstanceId: korrId,
-      eterIds: eterIds.slice(0, 2),
-    })
-    expect(error).toBeNull()
+  it('SIN respondibles del rival: la activación resuelve directo (comportamiento previo intacto)', () => {
+    const { s, victimaId, eterB } = setupVentana(false)
+    const ctx = crearCtx()
+
+    const s2 = aplicar(s, { type: 'activar_habilidad', cardInstanceId: victimaId, eterIds: eterB.slice(0, 1) }, ctx)
+
+    expect(s2.cadena).toBeUndefined()
+    expect(statsDe(s2, victimaId).poder).toBe(3) // buff aplicado de entrada
   })
 
-  it('NO afecta campeones no negados (mismo estado)', () => {
-    const { s } = conKorrNegado()
-    // Segundo campeón de B NO negado
-    const conSegundo = conCampeon(s, KORR, 'B', 1)
-    const error = validarActivarHabilidad(conSegundo.s, {
-      type: 'activar_habilidad',
-      cardInstanceId: conSegundo.id,
-      eterIds: [],
-    })
-    // Sin éter → error de éter, NO de negación
-    expect(error).not.toMatch(/negado/)
+  it('pases (sin respuesta): la activación diferida resuelve al cerrar la cadena', () => {
+    const { s, victimaId, eterB } = setupVentana(true)
+    const ctx = crearCtx()
+    let s2 = aplicar(s, { type: 'activar_habilidad', cardInstanceId: victimaId, eterIds: eterB.slice(0, 1) }, ctx)
+
+    s2 = aplicar(s2, { type: 'pasar_prioridad' }, ctx) // A pasa
+    expect(s2.cadena).toBeTruthy()
+    s2 = aplicar(s2, { type: 'pasar_prioridad' }, ctx) // B pasa → cierra
+
+    expect(s2.cadena).toBeUndefined()
+    expect(statsDe(s2, victimaId).poder).toBe(3) // el efecto resolvió
+    expect(ctx.events.some((e) => e.type === 'activacion_negada')).toBe(false)
+  })
+
+  it('Marcha jugada como respuesta: CANCELA la activación (pago queda, Marcha al Cementerio)', () => {
+    const { s, victimaId, eterB } = setupVentana(true)
+    const ctx = crearCtx()
+    let s2 = aplicar(s, { type: 'activar_habilidad', cardInstanceId: victimaId, eterIds: eterB.slice(0, 1) }, ctx)
+
+    // A responde jugando Marcha desde la mano (paga 3)
+    const pagoMarcha = etersParaPagar(s2, 'A', FB021)!
+    s2 = aplicar(s2, { type: 'jugar_respuesta', cardInstanceId: 'marcha-1', eterIds: pagoMarcha }, ctx)
+    expect(s2.cadena!.pila).toEqual(['marcha-1'])
+    expect(s2.players.A.mano).not.toContain('marcha-1')
+    expect(s2.players.A.eterPagado).toHaveLength(3)
+
+    s2 = aplicar(s2, { type: 'pasar_prioridad' }, ctx) // B pasa
+    s2 = aplicar(s2, { type: 'pasar_prioridad' }, ctx) // A pasa → resuelve (LIFO: Marcha primero)
+
+    // La activación NO se resolvió (fizzled) pero el pago del activador queda
+    expect(s2.cadena).toBeUndefined()
+    expect(statsDe(s2, victimaId).poder).toBe(2)
+    expect(s2.players.B.eterPagado).toHaveLength(1)
+    expect(s2.instances[victimaId].opcionUsadaEsteTurno).toBe(true)
+    // Marcha se consumió: al Cementerio de A (§5.3 un solo uso)
+    expect(s2.players.A.cementerio).toContain('marcha-1')
+    expect(s2.players.A.campo.misticasTacticas).not.toContain('marcha-1')
+    // Evento de contrato emitido
+    expect(ctx.events.some((e) => e.type === 'activacion_negada')).toBe(true)
+  })
+
+  it('SIN candado: tras negar, el campeón PUEDE volver a activar (1/turno es lo único que lo frena)', () => {
+    const { s, victimaId, eterB } = setupVentana(true)
+    const ctx = crearCtx()
+    let s2 = aplicar(s, { type: 'activar_habilidad', cardInstanceId: victimaId, eterIds: eterB.slice(0, 1) }, ctx)
+    s2 = aplicar(s2, { type: 'jugar_respuesta', cardInstanceId: 'marcha-1', eterIds: etersParaPagar(s2, 'A', FB021)! }, ctx)
+    s2 = aplicar(s2, { type: 'pasar_prioridad' }, ctx)
+    s2 = aplicar(s2, { type: 'pasar_prioridad' }, ctx)
+    expect(statsDe(s2, victimaId).poder).toBe(2) // negada
+
+    // El mismo turno ya no puede (1/turno — el "pago quedó"), pero NO hay
+    // candado persistente: el bloqueo del viejo championNegado ya no existe.
+    s2 = { ...s2, instances: { ...s2.instances, [victimaId]: { ...s2.instances[victimaId], opcionUsadaEsteTurno: false } } }
+    const r = applyAction(s2, { type: 'activar_habilidad', cardInstanceId: victimaId, eterIds: eterB.slice(1, 2) }, ctx)
+    // Sin Marcha en mano de A ni respondibles en campo → resuelve directo
+    expect(r.ok).toBe(true)
+    if (r.ok) expect(statsDe(r.state, victimaId).poder).toBe(3)
   })
 })
 
-describe('flujo integral jugar FB-021 (Fase 3b)', () => {
-  it('al jugar FB-021 contra el único campeón rival → D1 pendiente; al elegir → negado', () => {
+describe('Marcha fuera de ventana (jugar_mistica normal)', () => {
+  it('FB-021 es de UN SOLO USO: sin activación pendiente hace fizzled y va al Cementerio', () => {
     const ctx = crearCtx()
-    // B tiene Cassandra en campo; A juega FB-021 (cost 3)
-    const conCamp = conCampeon(estadoMinimo(), KORR, 'B', 0)
-    let s = conMano(conCamp.s, 'A', { fb021: FB021 })
-    const { s: sEteres, ids } = conEteres(s, 'A', ETER_ORDEN, 3)
-    s = sEteres
+    // A juega Marcha en su propio forja; B sin respondibles
+    let s = conMano(estadoMinimo(), 'A', { 'marcha-1': FB021 })
+    s = conEteres(s, 'A', 3).s
 
-    s = aplicar(s, { type: 'jugar_mistica', cardInstanceId: 'fb021', slot: 0, eterIds: ids }, ctx)
+    // La excepción 'negar' de esPermanenteEnMesa se eliminó (obs 1874 (a))
+    expect(esPermanenteEnMesa(getCardMeta(FB021)!)).toBe(false)
 
-    // D1: fromTrigger=true fuerza pendiente aunque haya 1 target (patrón del motor)
-    expect(s.objetivosPendientes?.length).toBe(1)
-    expect(s.objetivosPendientes![0].opciones).toContain(conCamp.id)
-    // Todavía NO negado (pendiente sin resolver)
-    expect(championNegado(s, conCamp.id)).toBe(false)
+    s = aplicar(s, { type: 'jugar_mistica', cardInstanceId: 'marcha-1', slot: 0, eterIds: etersParaPagar(s, 'A', FB021)! }, ctx)
 
-    // Resolver el pendiente → re-dispatch con objetivo-elegido → negar ejecuta
-    s = aplicar(s, { type: 'elegir_objetivo', objetivoId: conCamp.id }, ctx)
-
-    const fb021Inst = Object.values(s.instances).find((i) => i?.cardId === FB021)
-    expect(fb021Inst?.negadoTargetId).toBe(conCamp.id)
-    expect(championNegado(s, conCamp.id)).toBe(true)
-  })
-
-  it('FB-021 sin campeones rivales en campo → no nega nada (efecto fizzled)', () => {
-    const ctx = crearCtx()
-    // Campo de B vacío; A juega FB-021
-    let s = conMano(estadoMinimo(), 'A', { fb021: FB021 })
-    const { s: sEteres, ids } = conEteres(s, 'A', ETER_ORDEN, 3)
-    s = sEteres
-
-    s = aplicar(s, { type: 'jugar_mistica', cardInstanceId: 'fb021', slot: 0, eterIds: ids }, ctx)
-
-    const fb021Inst = Object.values(s.instances).find((i) => i?.cardId === FB021)
-    expect(fb021Inst?.negadoTargetId).toBeUndefined()
-  })
-
-  it('D1: con DOS campeones rivales → pendiente elegir_objetivo; al elegir, solo el chosen queda negado', () => {
-    const ctx = crearCtx()
-    const conCamp0 = conCampeon(estadoMinimo(), KORR, 'B', 0)
-    const conCamp1 = conCampeon(conCamp0.s, KORR, 'B', 1)
-    let s = conMano(conCamp1.s, 'A', { fb021: FB021 })
-    const { s: sEteres, ids } = conEteres(s, 'A', ETER_ORDEN, 3)
-    s = sEteres
-
-    s = aplicar(s, { type: 'jugar_mistica', cardInstanceId: 'fb021', slot: 0, eterIds: ids }, ctx)
-
-    // Pendiente D1 creado (múltiples rivales)
-    expect(s.objetivosPendientes?.length).toBe(1)
-    const pend = s.objetivosPendientes![0]
-    expect(pend.opciones).toContain(conCamp0.id)
-    expect(pend.opciones).toContain(conCamp1.id)
-    // Todavía NO nega (pendiente sin resolver)
-    expect(championNegado(s, conCamp0.id)).toBe(false)
-
-    // Elegir el primer campeón → re-dispatch con objetivo-elegido
-    s = aplicar(s, { type: 'elegir_objetivo', objetivoId: conCamp0.id }, ctx)
-    expect(championNegado(s, conCamp0.id)).toBe(true)
-    expect(championNegado(s, conCamp1.id)).toBe(false)
+    // Sin ventana/activación pendiente: fizzled, consumida, al Cementerio
+    expect(s.players.A.cementerio).toContain('marcha-1')
+    expect(s.players.A.campo.misticasTacticas[0]).toBeNull()
+    expect(ctx.events.some((e) => e.type === 'activacion_negada')).toBe(false)
   })
 })

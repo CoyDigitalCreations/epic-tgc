@@ -84,11 +84,9 @@ export function esPermanenteEnMesa(card: AnyCard): boolean {
     if (card.efectos.some((e) => e.costo?.tipo === 'eter_bloqueado' || e.costo?.tipo === 'bloqueo_fijo')) {
       return true
     }
-    // 'negar': la negación es un CANDADO continuo que vive en la mística en
-    // campo (championNegado la lee desde ahí — "si sale del campo, la
-    // negación terminó"). Texto continuo: "Niega la activación..." mientras
-    // la carta esté en juego. NO es un solo uso.
-    if (card.efectos.some((e) => e.efecto === 'negar')) return true
+    // REDISEÑO obs 1874: la excepción 'negar' se ELIMINÓ — Marcha es un
+    // contador de un solo uso (resuelve su negación y va al Cementerio §5.3,
+    // como cualquier hechizo sin continuo-con-Éter).
   }
   if ('keywords' in card && card.keywords?.includes('Artefacto')) return true
   return false

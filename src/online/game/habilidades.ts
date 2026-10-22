@@ -2,12 +2,12 @@
  * Habilidades y efectos — activar arcana, activar habilidad, transmutar, elegir.
  * Extraído de actions.ts para separación de dominios (change: refactor-engine).
  */
-import type { GameState, Ctx } from './types'
+import type { GameState, Ctx, CardInstance } from './types'
 import { getCardMeta, efectoActivableDe, esCostoBloqueo, esArtefactoEquipable, esPermanenteEnMesa, campeonElegibleBloqueoEter, faccionesCompartidas } from './cards'
-import type { CondicionEfecto } from '../../shared/types'
+import type { CondicionEfecto, AnyCard, EfectoData } from '../../shared/types'
 import { validarPago, aplicarPago, type ContextoUso } from './payments'
 import { etiquetarEter } from './eter'
-import { dispararTrigger, condicionCumple, championNegado, type TriggerEfecto, type PayloadEfecto } from './efectos'
+import { dispararTrigger, condicionCumple, type TriggerEfecto, type PayloadEfecto } from './efectos'
 import { registrarEfectoPendiente, hastaAlba } from './effectRegistry'
 import { interpretEffect, ejecutarTramo } from './effectInterpreter'
 import { tieneKeyword } from './combat'
@@ -68,10 +68,6 @@ export function validarActivarHabilidad(state: GameState, action: Extract<Action
   const inst = state.instances[action.cardInstanceId]
   if (!inst) return 'la carta no existe'
   if (!p.campo.campeones.includes(action.cardInstanceId)) return 'la carta no está en tu campo'
-  // Fase 3b: campeón negado (FB-021) no puede activar efectos — gate ANTES de todo
-  if (championNegado(state, action.cardInstanceId)) {
-    return 'este campeón está negado: no puede activar efectos'
-  }
   const meta = inst.cardId ? getCardMeta(inst.cardId) : null
   if (!meta) return 'carta desconocida'
 
@@ -95,8 +91,14 @@ export function validarActivarHabilidad(state: GameState, action: Extract<Action
     }
     if (action.eterIds.length === 0) return 'no indicaste Éteres para bloquear'
     if (new Set(action.eterIds).size !== action.eterIds.length) return 'éteres repetidos'
+    // Fase 2 (c): la zona de ORIGEN del costo define dónde deben estar los Éteres
+    const zonaOrigen = efectoSel.costo?.origen === 'pagado' ? p.eterPagado : p.eterReserva
     for (const eterId of action.eterIds) {
-      if (!p.eterReserva.includes(eterId)) return `el Éter ${eterId} no está en tu Reserva`
+      if (!zonaOrigen.includes(eterId)) {
+        return efectoSel.costo?.origen === 'pagado'
+          ? `el Éter ${eterId} no está en tu Éter Pagado (1A)`
+          : `el Éter ${eterId} no está en tu Reserva`
+      }
       const eterInst = state.instances[eterId]
       const eterMeta = eterInst?.cardId ? getCardMeta(eterInst.cardId) : null
       if (!eterMeta) return `Éter desconocido: ${eterId}`
@@ -264,6 +266,11 @@ export function ejecutarActivarHabilidad(s: GameState, action: Extract<Action, {
       contextoUso: action.objetivoId ? 'objetivo-elegido' : undefined,
       objetivoId: action.objetivoId,
     }
+    // Ventana de negación (obs 1874): la activación está DECLARADA (el pago
+    // del bloqueo ya se aplicó y se MANTIENE). Si el rival puede responder,
+    // la resolución se DIFIERE a la cadena — al cerrar se ejecuta salvo que
+    // una negación (tipoNegacion 'activacion') la haya cancelado.
+    if (diferirActivacion(s, inst, meta, efectoSel, action.objetivoId)) return
     interpretEffect(s, ctx, inst, efectoSel, payloadBloqueo)
   } else {
     // Patrón "Agota"/Continuo pago: éteres → 1A (pagado) + 1/turno
@@ -282,8 +289,46 @@ export function ejecutarActivarHabilidad(s: GameState, action: Extract<Action, {
       contextoUso: action.objetivoId ? 'objetivo-elegido' : undefined,
       objetivoId: action.objetivoId,
     }
+    // Ventana de negación (obs 1874): pago YA hecho (queda) — si hay
+    // respuesta, el efecto se difiere a la cadena (fizzled si lo niegan).
+    if (diferirActivacion(s, inst, meta, efectoSel, action.objetivoId)) return
     interpretEffect(s, ctx, inst, efectoSel, payload)
   }
+}
+
+/**
+ * Ventana de negación (obs 1874): abre la cadena GLOBAL con gate de mano
+ * Presteza (incluirMano) y registra la activación DIFERIDA en la cadena.
+ * true = quedó diferida (NO resolver aún); false = sin respondibles →
+ * resolver directo (comportamiento previo intacto).
+ */
+function diferirActivacion(
+  s: GameState,
+  inst: CardInstance,
+  meta: AnyCard,
+  efectoSel: EfectoData,
+  objetivoId?: string,
+): boolean {
+  const abierto = abrirCadenaGlobal(
+    s,
+    s.turno,
+    { cardInstanceId: inst.cardInstanceId, descripcion: meta.name ?? inst.cardInstanceId },
+    true, // incluirMano: Místicas Presteza del rival en mano pueden responder
+  )
+  if (!abierto || !s.cadena) return false
+  const efectoIdx = 'efectos' in meta && meta.efectos ? meta.efectos.indexOf(efectoSel) : -1
+  if (efectoIdx === -1) {
+    // defensive: sin índice no hay resolución diferida posible → resolver ya
+    s.cadena = undefined
+    return false
+  }
+  s.cadena.activacionPendiente = {
+    jugador: s.turno,
+    cardInstanceId: inst.cardInstanceId,
+    efectoIdx,
+    objetivoId,
+  }
+  return true
 }
 
 /**

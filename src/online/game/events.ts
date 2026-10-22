@@ -237,6 +237,19 @@ export interface CartaActivadaEvent {
   slot: number
 }
 
+/**
+ * Ventana de negación (obs 1874): una Mística Presteza (Marcha) canceló la
+ * ACTIVACIÓN declarada de activar_habilidad — el pago del activador queda y
+ * el efecto no se resuelve. `jugador` = el que niega, `fuente` = la carta
+ * que niega (Marcha), `cardInstanceId` = el Campeón cuya activación se niega.
+ */
+export interface ActivacionNegadaEvent {
+  type: 'activacion_negada'
+  jugador: PlayerId
+  cardInstanceId: string
+  fuente: string
+}
+
 export type GameEvent =
   | PartidaIniciadaEvent
   | TurnoIniciadoEvent
@@ -271,6 +284,7 @@ export type GameEvent =
   | RespuestaEncadenadaEvent
   | PrioridadPasadaEvent
   | CartaActivadaEvent
+  | ActivacionNegadaEvent
 
 /** Catálogo canónico: un payload de muestra por evento (orden = orden del contrato). */
 export const CATALOGO_EVENTOS: readonly GameEvent[] = [
@@ -308,6 +322,7 @@ export const CATALOGO_EVENTOS: readonly GameEvent[] = [
   { type: 'respuesta_encadenada', jugador: 'B', cardInstanceId: 'c4' },
   { type: 'prioridad_pasada', jugador: 'A' },
   { type: 'carta_activada', cardInstanceId: 'c1', jugador: 'A', slot: 0 },
+  { type: 'activacion_negada', jugador: 'B', cardInstanceId: 'c1', fuente: 'c4' },
 ]
 
 function assertNunca(x: never): never {
@@ -355,6 +370,7 @@ export function validarExhaustividadEventos(tipo: GameEvent['type']): void {
     case 'respuesta_encadenada': return
     case 'prioridad_pasada': return
     case 'carta_activada': return
+    case 'activacion_negada': return
     default: assertNunca(tipo)
   }
 }

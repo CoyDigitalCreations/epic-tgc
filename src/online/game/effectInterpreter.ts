@@ -133,10 +133,12 @@ function needsPlayerChoice(objetivo: EfectoData['objetivo'], efecto?: EfectoData
   }
   // Effects that don't need player choice despite having a target
   // draw: draws from top of deck; rival_discard: random; block_ether/double_attack: handled by other systems
-  // negar (Fase 3b) y copy (Fase 3c): SÍ necesitan elección (D1) — el jugador elige target
+  // negar (REDISEÑO obs 1874): target IMPLÍCITO — la activación pendiente de
+  // la ventana; sin elección (el candado con D1 se eliminó).
+  // copy (Fase 3c): SÍ necesita elección (D1) — el jugador elige target
   // return_ether: automatic (target is rival's ether in a specific zone)
   if (efecto === 'draw' || efecto === 'rival_discard' || efecto === 'block_ether' ||
-      efecto === 'double_attack') {
+      efecto === 'double_attack' || efecto === 'negar') {
     return false
   }
   // All other target types need choice when there are multiple options
@@ -281,14 +283,23 @@ function executeEffect(
       // Double attack is handled by combat system
       break
 
-    case 'negar':
-      // Fase 3b: negar activación — almacena el target en la fuente (estado derivado).
-      // La negación vive mientras la fuente esté en campo (championNegado scan).
-      // tipoNegacion='activacion' gatea validarActivarHabilidad del target.
-      if (targetIds.length > 0) {
-        inst.negadoTargetId = targetIds[0]
+    case 'negar': {
+      // REDISEÑO obs 1874 (Marcha de las Primeras): contador de UN SOLO USO —
+      // niega la ACTIVACIÓN pendiente de la ventana (tipoNegacion 'activacion'):
+      // el pago del activador NO se devuelve y el efecto NO se resuelve. Sin
+      // activación pendiente → fizzled (la carta se consume igual: se jugó
+      // como respuesta desde la mano y va al Cementerio §5.3).
+      // El candado championNegado (negadoTargetId) se eliminó — el rival
+      // PUEDE volver a activar. Los otros 7 tipoNegacion siguen sin
+      // implementar (B3).
+      const cadenaNeg = s.cadena ?? s.combate?.cadena
+      const pend = cadenaNeg?.activacionPendiente
+      if (pend && !pend.negada && pend.jugador !== jugador) {
+        pend.negada = true
+        ctx.emit({ type: 'activacion_negada', jugador, cardInstanceId: pend.cardInstanceId, fuente: inst.cardInstanceId })
       }
       break
+    }
 
     case 'copy':
       // Fase 3c: copy almacena el target en la fuente (estado derivado).

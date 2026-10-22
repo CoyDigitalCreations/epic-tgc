@@ -67,13 +67,15 @@ export interface ResultadoSimulacion {
  * Simula una partida completa con dos bots: mulligan de ambos,
  * y luego cada turno el jugador activo ejecuta su primera acción legal.
  * La partida termina por mazo_vacio o al llegar a maxTurnos (defensivo).
+ * CAP 1000 (obs 1874): cada activar_habilidad puede abrir ventana de negación
+ * → 2 pases extra por activación (~66 activaciones = ~132 iteraciones).
  * Consume el MISMO ctx del estado inicial (reproducibilidad por seed).
  */
 export function simularPartida(
   deckA: string[],
   deckB: string[],
   seed: number,
-  maxTurnos = 500,
+  maxTurnos = 1000,
   dificultadA: Dificultad = 'facil',
   dificultadB: Dificultad = 'facil',
 ): ResultadoSimulacion {
