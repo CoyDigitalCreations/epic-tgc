@@ -51,6 +51,11 @@ export interface PayloadEfecto {
   killerId?: string
   victimaId?: string
   fromTrigger?: boolean
+  /** B8: el dispatch viene de dispararTrigger → si el efecto tiene costo
+   * tipo 'eter', se COBRA al resolverse (Reserva → 1A). Sin fondos → fizzled.
+   * Solo lo pone dispararTrigger — los caminos de acción (activar_habilidad,
+   * jugar_mistica, etc.) ya cobraron su pago aparte. */
+  cobrarCosto?: boolean
   extra?: Record<string, unknown>
 }
 
@@ -608,7 +613,9 @@ export function dispararTrigger(
   const porCarta = registro.get(trigger)
   const ids = instancias ?? instanciasEnCampo(s, jugador)
   const orden = [...ids].sort()
-  const payload: PayloadEfecto = { jugador, fromTrigger: true, ...payloadExtra }
+  // cobrarCosto (B8): el dispatch de trigger COBRA el costo tipo 'eter' del
+  // efecto al resolverse (interpretEffect) — antes solo se validaba (o nada).
+  const payload: PayloadEfecto = { jugador, fromTrigger: true, cobrarCosto: true, ...payloadExtra }
 
   // Mapeo de triggers internos → triggers del JSON
   const triggerMapping: Record<string, string> = {
@@ -767,7 +774,10 @@ export function keywordsDe(s: GameState, id: string): readonly string[] {
   const meta = cardId ? getCardMeta(cardId) : null
   const deData = meta && esCampeon(meta) ? meta.keywords : []
   const mods = modificadoresJSONDe(s, id)
-  return [...new Set([...deData, ...(inst?.keywords ?? []), ...(inst?.keywordsTemporales ?? []), ...mods.keywords])]
+  // keywordsHastaFase (B6): viven en su propia lista (NO en keywordsTemporales,
+  // para sobrevivir al Ocaso hasta la fase objetivo) — purgarHastaFase las retira.
+  const hastaFase = (inst?.keywordsHastaFase ?? []).map((k) => k.keyword)
+  return [...new Set([...deData, ...(inst?.keywords ?? []), ...(inst?.keywordsTemporales ?? []), ...hastaFase, ...mods.keywords])]
 }
 
 /**
@@ -806,10 +816,15 @@ export function aplicarMod(
   valor: number,
   expira: ExpiraModificador,
   turnosRestantes?: number,
+  /** B6: metadatos de expiración para expira='hasta-fase'. */
+  hastaFase?: { fase: 'alba' | 'forja' | 'choque' | 'ocaso'; jugador: PlayerId },
 ): void {
   const inst = s.instances[id]
   if (!inst) return
-  inst.modificadores = [...(inst.modificadores ?? []), { stat, valor, expira, turnosRestantes }]
+  inst.modificadores = [
+    ...(inst.modificadores ?? []),
+    { stat, valor, expira, turnosRestantes, ...(hastaFase ? { expiraFase: hastaFase.fase, expiraFaseJugador: hastaFase.jugador } : {}) },
+  ]
 }
 
 /** Otorga una keyword a una instancia (temporal=true → expira en Ocaso, ADR-22). */
@@ -871,6 +886,33 @@ export function purgarEfectosTemporales(s: GameState, expira: ExpiraModificador,
 }
 
 /** Limpia las keywordsTemporales de TODOS los jugadores al llegar el Ocaso (ADR-22). */
+/**
+ * B6 (hasta_fase): purga modificadores y keywords con duración 'hasta_fase'
+ * al ENTRAR `fase` con `s.turno === jugadorDueño` (la fase es DE ese jugador).
+ * Se llama en cada transición de fase (partida.ts) y en el Alba (phases.ts).
+ */
+export function purgarHastaFase(s: GameState, fase: 'alba' | 'forja' | 'choque' | 'ocaso', turno: PlayerId): void {
+  for (const inst of Object.values(s.instances)) {
+    if (inst.modificadores?.length) {
+      const quedan = inst.modificadores.filter(
+        (m) => !(m.expira === 'hasta-fase' && m.expiraFase === fase && m.expiraFaseJugador === turno),
+      )
+      if (quedan.length !== inst.modificadores.length) inst.modificadores = quedan
+    }
+    if (inst.keywordsHastaFase?.length) {
+      const expiradas = inst.keywordsHastaFase.filter((k) => k.fase === fase && k.jugador === turno)
+      if (expiradas.length > 0) {
+        for (const k of expiradas) {
+          inst.keywordsTemporales = (inst.keywordsTemporales ?? []).filter((x) => x !== k.keyword)
+        }
+        const quedan = inst.keywordsHastaFase.filter((k) => !(k.fase === fase && k.jugador === turno))
+        if (quedan.length > 0) inst.keywordsHastaFase = quedan
+        else delete inst.keywordsHastaFase
+      }
+    }
+  }
+}
+
 export function purgarKeywordsTemporales(s: GameState): void {
   for (const j of ['A', 'B'] as PlayerId[]) {
     for (const id of instanciasEnCampo(s, j)) {

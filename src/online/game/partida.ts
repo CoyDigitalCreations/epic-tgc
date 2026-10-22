@@ -3,7 +3,7 @@
  * Extraído de actions.ts para separación de dominios (change: refactor-engine).
  */
 import type { GameState, Ctx, PlayerId, FaseNombre } from './types'
-import { purgarEfectosTemporales, purgarKeywordsTemporales, dispararTrigger } from './efectos'
+import { purgarEfectosTemporales, purgarKeywordsTemporales, purgarHastaFase, dispararTrigger } from './efectos'
 import { getCardMeta } from './cards'
 import { resolverFaseEfectos } from './effectRegistry'
 import { limpiarCombate, resolverAlba } from './phases'
@@ -140,6 +140,9 @@ export function ejecutarPasarTurno(s: GameState, ctx: Ctx): void {
       }
     }
     s.fase = siguiente
+    // B6 (hasta_fase): al ENTRAR una fase se purgan los efectos 'hasta-fase'
+    // cuya fase+dueño coincide con el turno en curso
+    purgarHastaFase(s, siguiente, s.turno)
     ctx.emit({ type: 'fase_iniciada', fase: siguiente, jugador: s.turno })
     return
   }
@@ -159,6 +162,8 @@ export function ejecutarPasarTurno(s: GameState, ctx: Ctx): void {
   resolverAlba(s, ctx, rival)
   if (s.fase !== 'terminada') {
     s.fase = 'forja'
+    // B6 (hasta_fase): entran la Forja del turno nuevo (turno = rival ya seteado)
+    purgarHastaFase(s, 'forja', s.turno)
     ctx.emit({ type: 'fase_iniciada', fase: 'forja', jugador: rival })
   }
 }

@@ -1,6 +1,6 @@
 import { reagruparEter } from './payments'
 import { robarCarta } from './draw'
-import { purgarEfectosTemporales, dispararTrigger, crearOpcionBloqueo } from './efectos'
+import { purgarEfectosTemporales, purgarHastaFase, dispararTrigger, crearOpcionBloqueo } from './efectos'
 import { getCardMeta } from './cards'
 import { resolverFaseEfectos } from './effectRegistry'
 import { reagruparEfectosBloqueoAlba, exhaustFijado } from './effectInterpreter'
@@ -21,6 +21,9 @@ export function resolverAlba(s: GameState, ctx: Ctx, jugador: PlayerId): void {
   resolverFaseEfectos(s, ctx, 'alba', jugador)
 
   // 0. Expiran los efectos 'alba-dueño' del jugador (ADR-22)
+  // B6 (hasta_fase): el Alba de `jugador` es una fase purgadora — los efectos
+  // 'hasta-fase' con fase='alba' de ESTE jugador expiran al entrar.
+  purgarHastaFase(s, 'alba', jugador)
   purgarEfectosTemporales(s, 'alba-dueño', jugador, ctx)
 
   // 1. Enderezar Campeones (silencioso)

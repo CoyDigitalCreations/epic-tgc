@@ -503,10 +503,11 @@ export function EffectField({ label, value, onChange, cardType }: EffectFieldPro
           ]} onChange={(v) => updateObjetivo({ zonaDestino: v as any })} />
           {data.objetivo?.zonaDestino && (
             <SelectField label="Zona de quién" value={data.objetivo?.controladorDestino ?? ''} options={[
-              { value: '', label: 'Tuya' },
+              { value: '', label: 'Del dueño (por defecto)' },
+              { value: 'propio', label: 'Tuya (transfiere a ti)' },
               { value: 'rival', label: 'Del rival' },
-              { value: 'dueno', label: 'Del dueño' },
-            ]} onChange={(v) => updateObjetivo({ controladorDestino: v === 'rival' || v === 'dueno' ? v : undefined })} />
+              { value: 'dueno', label: 'Del dueño (explícito)' },
+            ]} onChange={(v) => updateObjetivo({ controladorDestino: v === 'propio' || v === 'rival' || v === 'dueno' ? v : undefined })} />
           )}
           {['tutor', 'mover', 'return_ether'].includes(data.efecto ?? '') && data.objetivo?.zonaDestino && (
             <div className="flex items-center gap-2">

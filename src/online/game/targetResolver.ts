@@ -105,6 +105,24 @@ function getTargetsByZone(
     return [rival] // Return rival player ID as special target
   }
 
+  // B2 (obs 1860 — doctrina Capa 2): VÍNCULOS (4A-4F) — viven en p.vinculos,
+  // no en campo; solo los VIVOS (boca abajo) son objetivo (los destruidos
+  // están bocaArriba y ya resolvieron su efecto). 'destruye 1 Vínculo' etc.
+  // resuelven acá → destruirCarta ejecuta la destrucción del Vínculo (§5.5).
+  if (tipo === 'vinculo') {
+    const res: string[] = []
+    for (const player of playersToCheck) {
+      res.push(
+        ...s.players[player].vinculos.filter((id): id is string => {
+          if (!id) return false
+          const v = s.instances[id]
+          return !!v && v.bocaArriba !== true
+        }),
+      )
+    }
+    return res
+  }
+
   // Get targets from zone
   const targets: string[] = []
 

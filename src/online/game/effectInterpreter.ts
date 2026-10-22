@@ -7,6 +7,7 @@
 import { resolveTargets } from './targetResolver'
 import { robarCarta } from './draw'
 import { aplicarMod, otorgarKeyword, crearOpcionBloqueo } from './efectos'
+import { aplicarPago } from './payments'
 import { enviarAlCementerio, destruirCarta, liberarEterBloqueado, liberarArtefactosEquipados } from './replacements'
 import { eterDeEfecto, quitarEteres, liberarEterA, limpiarFlagsUmbralSiVacia, evaluarFinSteal } from './eter'
 import { esCampeon, getCardMeta } from './cards'
@@ -55,6 +56,21 @@ export function interpretEffect(
       if (!validateCost(s, jugador, costo, inst)) {
         return
       }
+    }
+  }
+
+  // B8 (obs 1860): costo tipo 'eter' de un efecto TRIGGER-EADO — se COBRA al
+  // resolverse (solo cuando el dispatch viene de dispararTrigger:
+  // payload.cobrarCosto — los caminos de acción [activar_habilidad,
+  // jugar_mistica, ...] ya cobraron su pago aparte y NO duplican). Sin fondos
+  // en Reserva → fizzled: ni cobra ni resuelve.
+  if (payload.cobrarCosto && costo && costo.tipo === 'eter' && inst.cardId) {
+    const cant = costo.cantidad ?? 1
+    const pCobro = s.players[jugador]
+    if (pCobro.eterReserva.length < cant) return
+    if (cant > 0) {
+      const eterIdsCobro = pCobro.eterReserva.slice(0, cant)
+      aplicarPago(s, ctx, jugador, eterIdsCobro, inst.cardId, { tipo: 'habilidad', cardInstanceId: inst.cardInstanceId })
     }
   }
 
@@ -212,7 +228,7 @@ function executeEffect(
   switch (efecto) {
     case 'buff':
     case 'debuff':
-      executeBuffDebuff(s, targetIds, stats, duracion, efectoData.buffPerBlockedEther, efecto, efectoData.duracionTurnos)
+      executeBuffDebuff(s, targetIds, stats, duracion, efectoData.buffPerBlockedEther, efecto, efectoData.duracionTurnos, jugador, efectoData.duracionFase, efectoData.duracionControlador)
       break
 
     case 'destroy':
@@ -228,7 +244,7 @@ function executeEffect(
       break
 
     case 'grant_keyword':
-      executeGrantKeyword(s, targetIds, keyword, duracion)
+      executeGrantKeyword(s, targetIds, keyword, duracion, jugador, efectoData.duracionFase, efectoData.duracionControlador)
       break
 
     case 'return_hand':
@@ -248,12 +264,12 @@ function executeEffect(
       break
 
     case 'return_ether':
-      executeReturnEther(s, ctx, targetIds, objetivo?.zonaDestino, cantidad)
+      executeReturnEther(s, ctx, targetIds, objetivo?.zonaDestino, cantidad, jugador, objetivo?.controladorDestino)
       break
 
     case 'mover':
       // Fase 3d: respeta cantidad (DS-027 "hasta 2") — mueve solo los primeros N
-      executeMover(s, ctx, cantidad ? targetIds.slice(0, cantidad) : targetIds, objetivo?.zonaDestino)
+      executeMover(s, ctx, cantidad ? targetIds.slice(0, cantidad) : targetIds, objetivo?.zonaDestino, jugador, objetivo?.controladorDestino)
       break
 
     case 'toggle_exhaust':
@@ -775,15 +791,25 @@ function executeBuffDebuff(
   buffPerBlockedEther: boolean | undefined,
   efecto: EfectoData['efecto'],
   duracionTurnos?: number,
+  caster?: PlayerId,
+  duracionFase?: 'alba' | 'forja' | 'choque' | 'ocaso',
+  duracionControlador?: 'propio' | 'rival',
 ): void {
   if (!stats) return
 
-  // Calculate modifier expiration — ExpiraModificador = 'ocaso' | 'alba-dueño' | 'permanente'
+  // Calculate modifier expiration — ExpiraModificador = 'ocaso' | 'alba-dueño' | 'permanente' | 'hasta-fase' (B6)
   const expira = duracion === 'permanente' ? 'permanente' :
                  duracion === 'mientras_en_campo' ? 'permanente' :
                  duracion === 'mientras_ester_bloqueado' ? 'permanente' :
                  duracion === 'mientras_equipped' ? 'permanente' :
-                 'ocaso' // turno, 1_por_turno, n_turnos, hasta_fase → expira en Ocaso
+                 duracion === 'hasta_fase' ? 'hasta-fase' :
+                 'ocaso' // turno, 1_por_turno, n_turnos → expira en Ocaso
+
+  // B6: fase+dueño que dispara la purga — 'propio' = fase del que lanza,
+  // 'rival' = fase del rival del que lanza (comparado con s.turno al entrar).
+  const hastaFase = expira === 'hasta-fase' && duracionFase && caster
+    ? { fase: duracionFase, jugador: duracionControlador === 'rival' ? (caster === 'A' ? 'B' : 'A') : caster }
+    : undefined
 
   // For n_turnos: set turnosRestantes counter so the modifier expires after N owner Ocasos
   const turnosRestantes = duracion === 'n_turnos' ? duracionTurnos : undefined
@@ -804,10 +830,10 @@ function executeBuffDebuff(
     }
 
     if (atqDelta !== 0) {
-      aplicarMod(s, targetId, 'poder', atqDelta, expira, turnosRestantes)
+      aplicarMod(s, targetId, 'poder', atqDelta, expira, turnosRestantes, hastaFase)
     }
     if (resDelta !== 0) {
-      aplicarMod(s, targetId, 'resistencia', resDelta, expira, turnosRestantes)
+      aplicarMod(s, targetId, 'resistencia', resDelta, expira, turnosRestantes, hastaFase)
     }
   }
 }
@@ -911,13 +937,29 @@ function executeGrantKeyword(
   targetIds: string[],
   keyword: string | undefined,
   duracion: EfectoData['duracion'],
+  caster?: PlayerId,
+  duracionFase?: 'alba' | 'forja' | 'choque' | 'ocaso',
+  duracionControlador?: 'propio' | 'rival',
 ): void {
   if (!keyword) return
 
-  const temporal = duracion !== 'permanente'
+  // B6 (hasta_fase): la keyword vive en keywordsHastaFase — NO en
+  // keywordsTemporales (así sobrevive al Ocaso hasta la fase objetivo) y
+  // purgarHastaFase la retira al entrar esa fase+dueño.
+  const hastaFase = duracion === 'hasta_fase' && duracionFase && caster
+    ? { fase: duracionFase, jugador: duracionControlador === 'rival' ? (caster === 'A' ? 'B' : 'A') : caster }
+    : undefined
 
   for (const targetId of targetIds) {
-    otorgarKeyword(s, targetId, keyword, temporal)
+    if (hastaFase) {
+      const inst = s.instances[targetId]
+      if (inst) {
+        inst.keywordsHastaFase = [...(inst.keywordsHastaFase ?? []), { keyword, ...hastaFase }]
+      }
+    } else {
+      const temporal = duracion !== 'permanente'
+      otorgarKeyword(s, targetId, keyword, temporal)
+    }
   }
 }
 
@@ -1059,7 +1101,10 @@ function executeFreeEther(
 }
 
 /**
- * Remove an ether from its current zone (Reserva or Pagado).
+ * Remove an ether from its current zone (Reserva or Pagado) — de AMBOS
+ * jugadores: con controladorDestino (B5) un Éter puede haber sido movido a la
+ * zona de OTRO jugador sin cambiar inst.owner — buscar solo en `owner` lo
+ * perdía (found=false → el mover se salteaba).
  * Returns true if removed, false if not found.
  * NOTE: Does NOT touch eterBloqueado — blocked ether has special game semantics.
  */
@@ -1068,23 +1113,42 @@ function removeEterFromCurrentZone(
   targetId: string,
   owner: PlayerId,
 ): boolean {
-  const p = s.players[owner]
+  for (const j of [owner, owner === 'A' ? 'B' : 'A'] as PlayerId[]) {
+    const p = s.players[j]
 
-  // Check Reserva (2A)
-  const resIdx = p.eterReserva.indexOf(targetId)
-  if (resIdx !== -1) {
-    p.eterReserva.splice(resIdx, 1)
-    return true
-  }
+    // Check Reserva (2A)
+    const resIdx = p.eterReserva.indexOf(targetId)
+    if (resIdx !== -1) {
+      p.eterReserva.splice(resIdx, 1)
+      return true
+    }
 
-  // Check Pagado (1A)
-  const paidIdx = p.eterPagado.indexOf(targetId)
-  if (paidIdx !== -1) {
-    p.eterPagado.splice(paidIdx, 1)
-    return true
+    // Check Pagado (1A)
+    const paidIdx = p.eterPagado.indexOf(targetId)
+    if (paidIdx !== -1) {
+      p.eterPagado.splice(paidIdx, 1)
+      return true
+    }
   }
 
   return false
+}
+
+/**
+ * B5 (obs 1860): jugador que recibe la ZONA DESTINO — objetivo.controladorDestino:
+ * 'propio' → el que lanza (TRANSFIERE entre jugadores), 'rival' → rival del que
+ * lanza, 'dueno'/ausente → inst.owner (DEFAULT — decisión usuario 2026-10-22:
+ * FB-017 'a su zona de pago' y FB-027 'de su dueño' son la mayoría del seed;
+ * DS-017 'a tu Reserva' necesita controladorDestino:'propio' en el Card-Maker).
+ */
+function jugadorDestino(
+  controladorDestino: 'propio' | 'rival' | 'dueno' | undefined,
+  jugador: PlayerId,
+  inst: CardInstance,
+): PlayerId {
+  if (controladorDestino === 'propio') return jugador
+  if (controladorDestino === 'rival') return jugador === 'A' ? 'B' : 'A'
+  return inst.owner
 }
 
 /**
@@ -1103,6 +1167,8 @@ function executeReturnEther(
   targetIds: string[],
   zonaDestino: string | undefined,
   cantidad?: number,
+  jugador?: PlayerId,
+  controladorDestino?: 'propio' | 'rival' | 'dueno',
 ): void {
   if (!esDestinoEter(zonaDestino)) return // destino inválido → sin remoción (sin leak)
   const limit = cantidad ?? targetIds.length
@@ -1113,13 +1179,15 @@ function executeReturnEther(
     if (!inst) continue
 
     const owner = inst.owner
+    // B5: destino = jugadorDestino (controladorDestino), remoción del dueño físico
+    const destino = jugador !== undefined ? jugadorDestino(controladorDestino, jugador, inst) : owner
 
     // Remove from ANY current zone
     const removed = removeEterFromCurrentZone(s, targetId, owner)
     if (!removed) continue
 
     count++
-    moverEterADestino(s, ctx, targetId, owner, zonaDestino!)
+    moverEterADestino(s, ctx, targetId, destino, zonaDestino!)
   }
 }
 
@@ -1160,6 +1228,8 @@ function executeMover(
   ctx: Ctx,
   targetIds: string[],
   zonaDestino: string | undefined,
+  jugador?: PlayerId,
+  controladorDestino?: 'propio' | 'rival' | 'dueno',
 ): void {
   if (!esDestinoEter(zonaDestino)) return
   for (const targetId of targetIds) {
@@ -1167,12 +1237,15 @@ function executeMover(
     if (!inst) continue
 
     const owner = inst.owner
+    // B5: la ZONA DESTINO es de jugadorDestino; la REMOCIÓN es del dueño
+    // físico (removeEterFromCurrentZone busca en ambos players de todos modos).
+    const destino = jugador !== undefined ? jugadorDestino(controladorDestino, jugador, inst) : owner
 
     // Remove from ANY current zone
     const removed = removeEterFromCurrentZone(s, targetId, owner)
     if (!removed) continue
 
-    moverEterADestino(s, ctx, targetId, owner, zonaDestino!)
+    moverEterADestino(s, ctx, targetId, destino, zonaDestino!)
   }
 }
 

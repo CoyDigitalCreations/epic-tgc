@@ -468,7 +468,9 @@ export function generateEffectText(data: EfectoData): string {
         targetText = `${effectVerb} ${hasta}${qty} ${targetText}`
         // mover/return_ether: agregar destino
         if (data.objetivo?.zonaDestino) {
-          const ctrlDest = data.objetivo.controladorDestino ?? 'propio'
+          // Default = 'dueno' — mismo contrato que el motor (jugadorDestino:
+          // ausente → inst.owner; 'propio' = TRANSFIERE a ti, texto explícito)
+          const ctrlDest = data.objetivo.controladorDestino ?? 'dueno'
           const destinoTexts: Record<string, Record<string, string>> = {
             'mano':     { propio: 'a tu mano', rival: 'a la mano del rival', dueno: 'a la mano de su dueño' },
             'campo':    { propio: 'al campo', rival: 'al campo del rival', dueno: 'al campo de su dueño' },

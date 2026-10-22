@@ -23,7 +23,7 @@ export type CausaDestruccion = 'combate' | 'efecto' | 'ruptura'
  * cuando el counter llega a 0 (decrementado en cada Ocaso del DUEÑO).
  * Esto permite duraciones como "hasta el final del próximo turno" (= 2).
  */
-export type ExpiraModificador = 'ocaso' | 'alba-dueño' | 'permanente'
+export type ExpiraModificador = 'ocaso' | 'alba-dueño' | 'permanente' | 'hasta-fase'
 
 /** Modificador aditivo de stats aplicado a una instancia (ADR-22). */
 export interface Modificador {
@@ -32,6 +32,10 @@ export interface Modificador {
   expira: ExpiraModificador
   /** Counter-based expiry: undefined = se usa expira; definido = decrementa en Ocaso del dueño. */
   turnosRestantes?: number
+  /** B6 (hasta_fase): fase que dispara la purga — solo si expira='hasta-fase'. */
+  expiraFase?: 'alba' | 'forja' | 'choque' | 'ocaso'
+  /** B6: de QUIÉN es esa fase (se compara con s.turno al entrar la fase). */
+  expiraFaseJugador?: PlayerId
 }
 
 /** Pasos de la sub-máquina de combate en Choque (9.1, ADR-11). */
@@ -126,6 +130,10 @@ export interface CardInstance {
   modificadores?: Modificador[]
    /** Keywords TEMPORALES (ADR-22): expiran en Ocaso (p.ej. Carga/Vigor otorgados por efectos). */
    keywordsTemporales?: string[]
+   /** B6 (hasta_fase): keywords otorgadas con duración 'hasta_fase' — expiran
+    * al ENTRAR la fase+dueño indicados (purgarHastaFase). La keyword vive
+    * también en keywordsTemporales mientras no expire. */
+   keywordsHastaFase?: { keyword: string; fase: 'alba' | 'forja' | 'choque' | 'ocaso'; jugador: PlayerId }[]
    bocaArriba?: boolean
    /** C2: flag 1/turno para Pasivo 1A (FB-005/DS-006) — se resetea en al-inicio-alba. */
    opcionUsadaEsteTurno?: boolean
