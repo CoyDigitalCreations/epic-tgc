@@ -981,6 +981,19 @@
           <span class="example" style="margin:4px 0 0;display:inline-block;padding:6px 12px;">"Mientras esta carta esté bloqueada en un Campeón, ese Campeón gana +1 Resistencia."</span></li>
       </ul>
       <p class="highlight-amber" style="font-weight:600;">NOTA v2.0: el Éter NO se exilia y NO va al Cementerio — los antiguos efectos de "Sacrificio" (exiliar) y "Al ir al Cementerio" quedan ELIMINADOS.</p>
+
+      <div class="section-header sub"><span class="num">7.8</span><h3>CAMPEÓN ROBADO — EL ÉTER BLOQUEADO</h3></div>
+      <p>Cuando un efecto <strong>toma control de un Campeón rival</strong> (ej. "roba campeón"), el Éter que ese Campeón tuviera bloqueado <strong>pertenece al jugador que lo pagó</strong>, no al Campeón ni a quien lo controle:</p>
+      <ul>
+        <li><strong class="highlight-red">AL TOMAR EL CONTROL:</strong> el Éter bloqueado en el Campeón robado se <strong>reagrupa de inmediato a la Reserva de su dueño original</strong>. El ladrón toma el Campeón <strong>SIN ÉTER</strong> y puede bloquear el suyo propio en él después.</li>
+        <li><strong class="highlight-red">AL PERDER EL CONTROL:</strong> si el Campeón vuelve a su dueño original (o el efecto termina), el Éter que el <strong>ladrón</strong> hubiera bloqueado en él se reagrupa a la Reserva del <strong>ladrón</strong>.</li>
+        <li>Si el Campeón robado <strong>muere</strong> mientras está robado, su Éter bloqueado (que es del ladrón) vuelve a la Reserva del ladrón en su próximo Alba.</li>
+        <li>El Campeón robado <strong>conserva su estado</strong> (agotado o disponible) al cambiar de control.</li>
+      </ul>
+      <div class="example">
+        <div class="ex-title">EJEMPLO — Robar un Campeón con Éter bloqueado</div>
+        El rival tiene Ragnar con 2 Éter bloqueados (pagados por él). Robas a Ragnar con un efecto de robo → <strong>los 2 Éter vuelven de inmediato a la Reserva del rival</strong>; vos tomás a Ragnar sin Éter y podés bloquear tu propio Éter en él. Si más tarde perdés el control de Ragnar (termina el efecto), tu Éter bloqueado vuelve a tu Reserva.
+      </div>
     </div>
   </div>
 
@@ -996,7 +1009,7 @@
           <tr><th style="width:70px">FASE</th><th style="width:100px">NOMBRE</th><th>QUÉ PASA</th></tr>
           <tr><td><span class="highlight">1</span></td><td><strong>ALBA</strong></td><td>Enderezas Campeones. Reagrupas el Éter (todo vuelve a la Reserva salvo el de efectos continuos). Se resuelven efectos "Al inicio de tu turno". Robas 1 carta del Mazo Principal.</td></tr>
           <tr><td><span class="highlight">2</span></td><td><strong>FORJA</strong></td><td>Jugar Campeones, Místicas, Arcanas. Activar efectos.</td></tr>
-          <tr><td><span class="highlight">3</span></td><td><strong>CHOQUE</strong></td><td>Combate (ver sección 9). Arcanas de combate se activan aquí.</td></tr>
+          <tr><td><span class="highlight">3</span></td><td><strong>CHOQUE</strong></td><td>Combate (ver sección 9). Las Arcanas de combate se activan aquí — y en cualquier otra fase excepto Alba (sección 8.3a).</td></tr>
           <tr><td><span class="highlight">4</span></td><td><strong>OCASO</strong></td><td>Descartar al límite de mano (6). Efectos "hasta final del turno" expiran. Pasa el turno al otro jugador.</td></tr>
         </table>
       </div>
@@ -1082,7 +1095,7 @@
       <div class="scene-box">
         <div class="scene-title">ESCENARIO A: ATAQUE DIRECTO (sin bloqueo) — LA RUPTURA</div>
         <ul>
-          <li>Cuando uno o más Campeones quedan <strong>sin bloquear</strong>, el atacante <strong>PUEDE</strong> elegir <strong>UNO</strong> de ellos para realizar la <strong>RUPTURA</strong> &mdash; es una acción <strong class="highlight-red">VOLUNTARIA</strong>: puede elegir no romper ningún Vínculo. Los demás ataques sin bloquear no hacen nada.</li>
+          <li>Cuando uno o más Campeones quedan <strong>sin bloquear</strong>, el atacante <strong class="highlight-red">DEBE</strong> realizar la <strong>RUPTURA</strong> &mdash; es una acción <strong class="highlight-red">OBLIGATORIA</strong>: elige <strong>UNO</strong> de sus Campeones sin bloquear para ejecutarla. La única forma de no romper un Vínculo es <strong>no atacar</strong>. Los demás ataques sin bloquear no hacen nada.</li>
           <li>La Ruptura destruye <strong>1 VÍNCULO</strong> del jugador defensor: el <strong>ATACANTE elige cuál</strong> (posición 4A-4F), a ciegas, ya que los Vínculos del defensor están boca abajo y solo su dueño los conoce.</li>
           <li>El Vínculo destruido se voltea <strong>BOCA ARRIBA</strong> y su efecto <strong>PERMANENTE</strong> se activa <strong>A FAVOR DEL JUGADOR QUE RECIBIÓ EL DAÑO</strong>.</li>
           <li>El valor de <strong>PODER no modifica la Ruptura</strong>: un Campeón con Poder 2 y otro con Poder 10 rompen exactamente 1 Vínculo.</li>
@@ -1143,7 +1156,7 @@
       <div class="example">
         <div class="ex-title">EJEMPLO 6 — Múltiples atacantes, bloqueadores insuficientes</div>
         Tres Campeones atacan. El defensor solo tiene <strong>1 Campeón disponible</strong>: bloquea un ataque (obligatorio) y los otros dos quedan sin bloquear.<br>
-        → El atacante elige <strong>UNO</strong> de los dos sin bloquear para la Ruptura (o puede elegir <strong>NO</strong> romper ningún Vínculo, ya que es voluntaria): se destruye <strong>SOLO 1 Vínculo</strong> (límite de 1 por turno de ataque). El otro ataque directo no tiene efecto.
+        → El atacante elige <strong>UNO</strong> de los dos sin bloquear para la Ruptura (es <strong>OBLIGATORIA</strong>): se destruye <strong>SOLO 1 Vínculo</strong> (límite de 1 por turno de ataque). El otro ataque directo no tiene efecto.
       </div>
 
       <div class="example">
@@ -1329,7 +1342,7 @@
           <tr><td>RESISTENCIA</td><td>Estadística de defensa de un Campeón</td></tr>
           <tr><td>EMPERADOR</td><td>Coste de invocación alternativo: sacrificar DOS Campeones propios de la misma facción (puede sumar coste de Éter si la carta lo indica). El Éter bloqueado de los sacrificados se libera INMEDIATAMENTE</td></tr>
           <tr><td>SOBERANO</td><td>Coste de invocación alternativo: sacrificar un Campeón propio de la misma facción (puede sumar coste de Éter si la carta lo indica). El Éter bloqueado del sacrificado se libera INMEDIATAMENTE</td></tr>
-          <tr><td>RUPTURA</td><td>Acción VOLUNTARIA del atacante: elegir UN Campeón sin bloquear para destruir 1 Vínculo (máx 1 por turno de ataque)</td></tr>
+          <tr><td>RUPTURA</td><td>Acción OBLIGATORIA del atacante cuando tiene un Campeón sin bloquear: destruye 1 Vínculo del defensor (máx 1 por turno de ataque). No romper solo es posible no atacando</td></tr>
           <tr><td>ROBAR</td><td>Tomar la primera carta de un mazo (solo del Mazo Principal; el Éter nunca se roba)</td></tr>
           <tr><td>SLOT</td><td>Espacio en el campo (5 para Campeones, 6 de soporte, 6 para Vínculos)</td></tr>
           <tr><td>VÍNCULO</td><td>Carta de vida del jugador. Boca abajo en 4A-4F. Al destruirse, activa un efecto permanente a favor de quien recibió el daño. Perderlos todos = derrota.</td></tr>
