@@ -100,6 +100,19 @@ export interface CardInstance {
   /** Destrucción diferida (Fase 2c — prevent_destroy): la víctima Vínculo está en peligro
    * y espera la elección responder_prevenicion del controlador. Aún NO está destruida. */
   destruccionPendiente?: boolean
+  /**
+   * Fase 2 (éter por fuente): filiación del Éter bloqueado — vive en la
+   * INSTANCIA del Éter mientras esté bloqueado (eterBloqueado: string[]
+   * queda intacto). `${fuenteInstanceId}#${indiceEfecto}` del efecto que lo
+   * bloqueó: límites por fuente, umbrales/tramos por fuente y release
+   * selectivo del reagrupar (d). Sin tag = compatible con estados de tests.
+   */
+  bloqueadoPorEfecto?: string
+  /**
+   * Fase 2: jugador que PAGÓ este Éter — la liberación se lo devuelve a ÉL
+   * (§7.8), sin heurísticas stolenBy/owner/ladrón. Sin tag → fallback del caller.
+   */
+  pagadoPor?: PlayerId
   /** ID de la carta que robó control de este Campeón (Aurora FB-010). Si el ladrón sale del campo, el control regresa. */
   stolenBy?: string
   /** IDs de Éteres robados por Varek (DS-013). Si Varek sale del campo, regresan al dueño original. */

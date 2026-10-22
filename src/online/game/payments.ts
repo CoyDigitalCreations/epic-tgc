@@ -1,4 +1,5 @@
-import { esEter, getCardMeta, cartaNecesitaEterBloqueado } from './cards'
+import { esEter, getCardMeta, cartaNecesitaEterBloqueado, efectoBloqueoAccion } from './cards'
+import { etiquetarEter, eterDeEfecto } from './eter'
 import type { AnyCard } from '../../shared/types'
 import { dispararTrigger } from './efectos'
 import type { Ctx, GameState, PlayerId } from './types'
@@ -162,8 +163,19 @@ export function etersParaPagar(state: GameState, jugador: PlayerId, objetivoCard
  * Validación read-only del bloqueo: null = válido, string = motivo de rechazo.
  * Fase 3a: targetInstanceId — Campeón (2B-2F) o Artefacto (3A-3F, Fase 3a Phase B).
  * El Éter bloqueado vive en `inst.eterBloqueado` de CUALQUIER carta en campo.
+ *
+ * Fase 2 (b): el LÍMITE se valida contra la FUENTE del efecto que paga la
+ * acción (efectoBloqueoAccion / `efectoIdx` explícito en cartas multi-efecto),
+ * no contra "el primer costo de la carta"; `actuales` cuenta SOLO el Éter de
+ * esa fuente (eterDeEfecto — sin tag cuenta como propio, fallback).
  */
-export function validarBloqueo(state: GameState, jugador: PlayerId, eterIds: string[], targetInstanceId: string): string | null {
+export function validarBloqueo(
+  state: GameState,
+  jugador: PlayerId,
+  eterIds: string[],
+  targetInstanceId: string,
+  efectoIdx?: number,
+): string | null {
   const inst = state.instances[targetInstanceId]
   if (!inst) return 'la carta no existe'
   const p = state.players[jugador]
@@ -184,11 +196,18 @@ export function validarBloqueo(state: GameState, jugador: PlayerId, eterIds: str
   }
   if (eterIds.length === 0) return 'no indicaste Éteres para bloquear'
 
-  // Límite de éteres bloqueados por carta (parseado del efecto).
+  // Fase 2 (b): fuente = el efecto que paga ESTA acción (`efectoIdx` explícito
+  // en cartas con 2+ efectos costo-bloqueo, o el primero NO-disparo).
   // bloqueo_fijo ("Bloquea X Éter") → EXACTO; eter_bloqueado ("hasta X") → ≤ X.
-  const maxEter = maxEterBloqueado(meta)
-  const fijo = esBloqueoFijo(meta)
-  const actuales = inst.eterBloqueado?.length ?? 0
+  // Campeón sin efecto fuente → default 1 (comportamiento previo).
+  const fuente = efectoIdx !== undefined && 'efectos' in meta && meta.efectos?.[efectoIdx]
+    ? { efecto: meta.efectos[efectoIdx], indice: efectoIdx }
+    : efectoBloqueoAccion(meta)
+  const maxEter = fuente?.efecto.costo?.cantidad ?? 1
+  const fijo = fuente?.efecto.costo?.tipo === 'bloqueo_fijo'
+  const actuales = fuente
+    ? eterDeEfecto(state, targetInstanceId, fuente.indice).length
+    : (inst.eterBloqueado?.length ?? 0)
   const total = actuales + eterIds.length
   if (fijo) {
     if (total !== maxEter) {
@@ -247,7 +266,9 @@ export function esBloqueoFijo(card: AnyCard): boolean {
 /**
  * Bloqueo facción v2.1: valida TODO (sin mutar) y luego mueve 2A → target.eterBloqueado.
  * Fase 3a: targetInstanceId — Campeón o (Phase B) Artefacto en campo.
- * Devuelve null si fue válido, o el motivo de rechazo.
+ * Fase 2: etiqueta cada Éter con su fuente/efecto (`efectoIdx` o el primero
+ * NO-disparo con costo-bloqueo) y su PAGADOR — la liberación le devolverá el
+ * Éter a ÉL (§7.8). Devuelve null si fue válido, o el motivo de rechazo.
  */
 export function bloquearEter(
   s: GameState,
@@ -255,8 +276,9 @@ export function bloquearEter(
   jugador: PlayerId,
   eterIds: string[],
   targetInstanceId: string,
+  efectoIdx?: number,
 ): string | null {
-  const error = validarBloqueo(s, jugador, eterIds, targetInstanceId)
+  const error = validarBloqueo(s, jugador, eterIds, targetInstanceId, efectoIdx)
   if (error) return error
   const p = s.players[jugador]
   const instTarget = s.instances[targetInstanceId]
@@ -265,6 +287,10 @@ export function bloquearEter(
     const idx = p.eterReserva.indexOf(id)
     if (idx !== -1) p.eterReserva.splice(idx, 1)
   }
+  // Fase 2: filiación del Éter — fuente/efecto + pagador
+  const meta = instTarget.cardId ? getCardMeta(instTarget.cardId) : null
+  const idxFuente = efectoIdx ?? (meta ? efectoBloqueoAccion(meta)?.indice ?? -1 : -1)
+  etiquetarEter(s, eterIds, targetInstanceId, idxFuente, jugador)
   // campeonId = id de instancia target (Campeón o Artefacto) — ver events.ts
   ctx.emit({ type: 'eter_bloqueado', jugador, eterIds, campeonId: targetInstanceId })
   return null

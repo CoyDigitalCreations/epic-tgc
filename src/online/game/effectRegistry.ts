@@ -20,7 +20,7 @@
 import type { Ctx, GameState, PlayerId, Zona } from './types'
 import { enviarAlCementerio } from './replacements'
 import { robarCarta } from './draw'
-import { getCardMeta } from './cards'
+import { quitarEteres, liberarEterA, evaluarFinSteal } from './eter'
 
 /* ───────────────────── Types ───────────────────── */
 
@@ -175,37 +175,18 @@ function ejecutarAccionEfecto(s: GameState, ctx: Ctx, ep: EfectoPendiente): void
       if (!inst?.eterBloqueado || inst.eterBloqueado.length === 0) break
       const eteresVivos = accion.eterIds.filter((id) => inst.eterBloqueado!.includes(id))
       if (eteresVivos.length === 0) break
-      inst.eterBloqueado = inst.eterBloqueado.filter((id) => !eteresVivos.includes(id))
-      const p = s.players[ep.owner]
-      p.eterReserva.push(...eteresVivos)
-      ctx.emit({ type: 'eter_reagrupado', jugador: ep.owner, eterIds: eteresVivos })
-      // Steal 'mientras_ester_bloqueado' (Aurora): al liberar el Éter del efecto
-      // termina el robo — retorno condicional al rival si hay slot libre.
-      if (inst.cardId) {
-        const meta = getCardMeta(inst.cardId)
-        const stealEfecto = meta && 'efectos' in meta
-          ? meta.efectos?.find((e) => e.efecto === 'steal_champion')
-          : undefined
-        if (stealEfecto?.duracion === 'mientras_ester_bloqueado') {
-          for (const other of Object.values(s.instances)) {
-            if (other.stolenBy !== ep.fuente) continue
-            const enCampoLadron = s.players[ep.owner].campo.campeones.includes(other.cardInstanceId)
-            if (!enCampoLadron) {
-              delete other.stolenBy
-              continue
-            }
-            const duenoOriginal = other.owner
-            const campoOriginal = s.players[duenoOriginal].campo.campeones
-            const slotLibre = campoOriginal.indexOf(null)
-            if (slotLibre !== -1 && duenoOriginal !== ep.owner) {
-              const idxLadron = s.players[ep.owner].campo.campeones.indexOf(other.cardInstanceId)
-              if (idxLadron !== -1) s.players[ep.owner].campo.campeones[idxLadron] = null
-              campoOriginal[slotLibre] = other.cardInstanceId
-            }
-            delete other.stolenBy
-          }
-        }
+      // Fase 2 (f): liberación POR PAGADOR (liberarEterA) — antes iba todo a
+      // ep.owner sin importar quién lo pagó.
+      quitarEteres(s, ep.fuente, eteresVivos)
+      const grupos = liberarEterA(s, eteresVivos, '2A', ep.owner)
+      for (const [pagador, ids] of Object.entries(grupos) as [PlayerId, string[]][]) {
+        ctx.emit({ type: 'eter_reagrupado', jugador: pagador, eterIds: ids })
       }
+      // Steal 'mientras_ester_bloqueado' (Aurora): Fase 2 (d) — el fin del robo
+      // lo decide evaluarFinSteal (fuente SIN Éter de cualquier fuente). Antes
+      // había acá una copia inline que devolvía el control SIN liberar el Éter
+      // del ladrón (bug de auditoría) — retornarCampeonesRobados unificado lo hace.
+      evaluarFinSteal(s, ctx, ep.fuente)
       break
     }
 

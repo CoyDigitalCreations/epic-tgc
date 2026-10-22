@@ -27,14 +27,14 @@ export function validarBloquearEter(state: GameState, action: Extract<Action, { 
   if (state.fase !== 'forja' && state.fase !== 'choque' && state.fase !== 'ocaso') {
     return 'bloquear_eter solo en Forja/Choque/Ocaso (§8.3a: nunca en Alba)'
   }
-  return validarBloqueo(state, actorDeBloqueo(state), action.eterIds, action.targetInstanceId)
+  return validarBloqueo(state, actorDeBloqueo(state), action.eterIds, action.targetInstanceId, action.efectoIdx)
 }
 
 /* ──────────────────── Ejecución ──────────────────── */
 
 /** Bloqueo: 2A → target.eterBloqueado. Tras bloquear, chequea one-shot de umbral (FB-032). */
 export function ejecutarBloquearEter(s: GameState, action: Extract<Action, { type: 'bloquear_eter' }>, ctx: Ctx): void {
-  bloquearEter(s, ctx, actorDeBloqueo(s), action.eterIds, action.targetInstanceId)
+  bloquearEter(s, ctx, actorDeBloqueo(s), action.eterIds, action.targetInstanceId, action.efectoIdx)
   // Fase 3a Phase D: one-shot al alcanzar umbral de costo-bloqueado
   dispararUmbralBloqueo(s, ctx, action.targetInstanceId)
 }

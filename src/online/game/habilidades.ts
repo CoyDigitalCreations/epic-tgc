@@ -6,6 +6,7 @@ import type { GameState, Ctx } from './types'
 import { getCardMeta, efectoActivableDe, esCostoBloqueo, esArtefactoEquipable, esPermanenteEnMesa, campeonElegibleBloqueoEter, faccionesCompartidas } from './cards'
 import type { CondicionEfecto } from '../../shared/types'
 import { validarPago, aplicarPago, type ContextoUso } from './payments'
+import { etiquetarEter } from './eter'
 import { dispararTrigger, condicionCumple, championNegado, type TriggerEfecto, type PayloadEfecto } from './efectos'
 import { registrarEfectoPendiente, hastaAlba } from './effectRegistry'
 import { interpretEffect, ejecutarTramo } from './effectInterpreter'
@@ -232,6 +233,10 @@ export function ejecutarActivarHabilidad(s: GameState, action: Extract<Action, {
       if (idx !== -1) p.eterReserva.splice(idx, 1)
     }
     inst.eterBloqueado = [...(inst.eterBloqueado ?? []), ...action.eterIds]
+    // Fase 2: filiación — el efecto activado (índice en efectos[]) es la
+    // fuente que bloquea; s.turno lo pagó.
+    const idxSel = meta.efectos?.indexOf(efectoSel) ?? -1
+    etiquetarEter(s, action.eterIds, action.cardInstanceId, idxSel, s.turno)
     // Check if effect has reagrupar (Alba) — register pending effect
     const efectoConReagrupar = meta.efectos && 'efectos' in meta
       ? meta.efectos.find((e) => e.reagrupar && esCostoBloqueo(e.costo))
@@ -350,6 +355,15 @@ export function ejecutarElegirOpcion(s: GameState, action: Extract<Action, { typ
   instCampeon.eterBloqueado = [...(instCampeon.eterBloqueado ?? []), elegido.eterId]
   const eterIdx = p.eterReserva.indexOf(elegido.eterId)
   if (eterIdx !== -1) p.eterReserva.splice(eterIdx, 1)
+  // Fase 2: filiación — el continuo costo-bloqueo del campeón es la fuente
+  // (mismo predicado que campeonElegibleBloqueoEter) y j lo pagó.
+  const metaElegido = s.instances[elegido.targetInstanceId]?.cardId
+    ? getCardMeta(s.instances[elegido.targetInstanceId]!.cardId!)
+    : null
+  const idxFuente = metaElegido && 'efectos' in metaElegido && metaElegido.efectos
+    ? metaElegido.efectos.findIndex((e) => e.tipo === 'continuo' && esCostoBloqueo(e.costo))
+    : -1
+  etiquetarEter(s, [elegido.eterId], elegido.targetInstanceId, idxFuente, j)
   ctx.emit({ type: 'eter_bloqueado', jugador: j, eterIds: [elegido.eterId], campeonId: elegido.targetInstanceId })
 
   // Marcar opción usada en el Éter Pasivo

@@ -57,7 +57,7 @@ export type Action =
   | { type: 'colocar_arcana'; cardInstanceId: string; slot: number }
   | { type: 'activar_arcana'; cardInstanceId: string; slot: number; eterIds: string[] }
   | { type: 'equipar_artefacto'; cardInstanceId: string; campeonInstanceId: string }
-  | { type: 'bloquear_eter'; eterIds: string[]; targetInstanceId: string }
+  | { type: 'bloquear_eter'; eterIds: string[]; targetInstanceId: string; efectoIdx?: number }
   | { type: 'descartar_carta'; cardInstanceIds: string[] }
   | { type: 'elegir_opcion'; opcionId: string }
   | { type: 'elegir_objetivo'; objetivoId: string }

@@ -131,10 +131,21 @@ export function efectoActivableDe(card: AnyCard, conObjetivo: boolean): EfectoDa
  * ejecutan), nunca vía bloquear_eter (evita doble camino).
  */
 export function cartaBloqueaPorAccion(card: AnyCard): boolean {
-  if ('efectos' in card && card.efectos) {
-    return card.efectos.some((e) => esCostoBloqueo(e.costo) && e.tipo !== 'disparo')
-  }
-  return false
+  return efectoBloqueoAccion(card) !== null
+}
+
+/**
+ * Fase 2 (éter por fuente): el EFECTO que paga la acción bloquear_eter —
+ * primer NO-disparo con costo-bloqueo (mismo criterio que
+ * cartaBloqueaPorAccion, ahora con su ÍNDICE para etiquetar
+ * eterBloqueadoPorEfecto y contar/validar límites contra la FUENTE, no
+ * contra "el primer costo de la carta"). null si no hay (el efecto pagaría
+ * vía activar_habilidad).
+ */
+export function efectoBloqueoAccion(card: AnyCard): { efecto: EfectoData; indice: number } | null {
+  if (!('efectos' in card) || !card.efectos) return null
+  const indice = card.efectos.findIndex((e) => esCostoBloqueo(e.costo) && e.tipo !== 'disparo')
+  return indice === -1 ? null : { efecto: card.efectos[indice], indice }
 }
 
 /**

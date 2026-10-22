@@ -8,6 +8,7 @@ import { resolveTargets } from './targetResolver'
 import { robarCarta } from './draw'
 import { aplicarMod, otorgarKeyword, crearOpcionBloqueo } from './efectos'
 import { enviarAlCementerio, destruirCarta, liberarEterBloqueado, liberarArtefactosEquipados } from './replacements'
+import { eterDeEfecto, quitarEteres, liberarEterA, limpiarFlagsUmbralSiVacia, evaluarFinSteal } from './eter'
 import { esCampeon, getCardMeta } from './cards'
 import type { EfectoData } from '../../shared/types'
 import type { CardInstance, Ctx, GameState, PlayerId } from './types'
@@ -364,15 +365,17 @@ export function dispararUmbralBloqueo(s: GameState, ctx: Ctx, targetInstanceId: 
   if (!inst?.cardId) return
   const meta = getCardMeta(inst.cardId)
   if (!meta || !('efectos' in meta) || !meta.efectos) return
-  const bloqueados = inst.eterBloqueado?.length ?? 0
+  const bloqueadosEn = (idxEfecto: number): number => eterDeEfecto(s, targetInstanceId, idxEfecto).length
 
-  for (const efecto of meta.efectos) {
+  for (const [idxEfecto, efecto] of meta.efectos.entries()) {
     // Capa 3b: tramos escalonados — UN bloqueo "hasta" con recompensas por
     // umbral. Cada tramo alcanzado arma su pendiente D1 (una elección por
     // tramo); tramosDisparados evita re-disparo mientras el Éter se sostiene
     // y se limpia al liberar (nuevo ciclo → tramos re-armados).
     if (efecto.tramos && efecto.tramos.length > 0) {
       if (efecto.costo?.tipo !== 'eter_bloqueado' && efecto.costo?.tipo !== 'bloqueo_fijo') continue
+      // Fase 2 (e): el umbral cuenta SOLO el Éter de ESTA fuente/efecto
+      const bloqueados = bloqueadosEn(idxEfecto)
       // Acumular los pendientes del batch — se insertan al frente PRESERVANDO
       // el orden de umbral (2 antes que 4; unshift directo los invertiría)
       const nuevosPendientes: typeof s.objetivosPendientes = []
@@ -407,7 +410,8 @@ export function dispararUmbralBloqueo(s: GameState, ctx: Ctx, targetInstanceId: 
     const umbral = efecto.costo?.cantidad
     if (!umbral) continue
     if (efecto.costo?.tipo !== 'eter_bloqueado' && efecto.costo?.tipo !== 'bloqueo_fijo') continue
-    if (bloqueados < umbral) continue
+    // Fase 2 (e): el umbral legacy también cuenta SOLO el Éter de esta fuente
+    if (bloqueadosEn(idxEfecto) < umbral) continue
     // Legacy one-shot (sin tramos): flag de protección — se limpia al liberar
     if (inst.efectoUmbralDisparado) continue
 
@@ -559,95 +563,41 @@ export function reagruparEfectosBloqueoAlba(s: GameState, ctx: Ctx, jugador: Pla
     const meta = getCardMeta(inst.cardId)
     if (!meta || !('efectos' in meta) || !meta.efectos) continue
 
-    const efectoReagrupar = meta.efectos.find(
+    const idxReagrupar = meta.efectos.findIndex(
       (e) =>
         e.reagrupar?.fase === 'alba' &&
         e.reagrupar?.turno === 'propio' &&
         (e.costo?.tipo === 'bloqueo_fijo' || e.costo?.tipo === 'eter_bloqueado'),
     )
-    if (!efectoReagrupar) continue
+    if (idxReagrupar === -1) continue
 
-    // Liberar el Éter del efecto → Reserva del dueño (NO 1A)
-    const eteres = [...inst.eterBloqueado]
-    delete inst.eterBloqueado
-    delete inst.efectoUmbralDisparado
-    delete inst.copyOneShotDisparado
-    // Capa 3b: nuevo ciclo de bloqueo re-arme los tramos y cae el fijado
-    delete inst.tramosDisparados
-    delete inst.fijadoExhaustTargetId
-    p.eterReserva.push(...eteres)
-    ctx.emit({ type: 'eter_reagrupado', jugador, eterIds: eteres })
-
-    // Steal con duración ligada al Éter bloqueado → termina el robo
-    if (
-      efectoReagrupar.efecto === 'steal_champion' &&
-      efectoReagrupar.duracion === 'mientras_ester_bloqueado'
-    ) {
-      retornarCampeonesRobados(s, ctx, id, jugador)
+    // Fase 2 (d): el reagrupar libera SOLO el Éter de SU fuente/efecto — el
+    // Éter de otros efectos de la misma carta permanece (eterDeEfecto: sin tag
+    // cuenta como propio, fallback de compatibilidad).
+    const eteres = eterDeEfecto(s, id, idxReagrupar)
+    if (eteres.length === 0) continue
+    quitarEteres(s, id, eteres)
+    // Reserva de cada PAGADOR (NO 1A) — liberarEterA agrupa por pagadoPor
+    const grupos = liberarEterA(s, eteres, '2A', jugador)
+    for (const [pagador, ids] of Object.entries(grupos) as [PlayerId, string[]][]) {
+      ctx.emit({ type: 'eter_reagrupado', jugador: pagador, eterIds: ids })
     }
+    // Flags de umbrales/copy/tramos: solo si la carta quedó SIN Éter
+    limpiarFlagsUmbralSiVacia(s, id)
+
+    // Steal 'mientras_ester_bloqueado': termina SOLO si la fuente quedó sin
+    // Éter de cualquier fuente (evaluarFinSteal lo decide — ≥1 lo sostiene).
+    evaluarFinSteal(s, ctx, id)
   }
 }
 
 /**
  * Termina un steal 'mientras_ester_bloqueado': campeones con stolenBy=fuente.
- * - Siguientes en el campo del ladrón:
- *   - Rival (dueño original del campeón) con slot libre → regresa a ese slot.
- *   - Rival lleno → SE QUEDA controlado por el ladrón (stolenBy se limpia;
- *     el control vive en la posición del campo).
- * - Ya fuera del campo del ladrón (muerte/exilio/mano): solo limpia stolenBy.
- *
- * §7.8 (decisión 2026-10-14): al perder el control, el Éter que el LADRÓN
- * bloqueó en el Campeón se reagrupa a la Reserva del LADRÓN (quien lo pagó).
+ * MOVIDO a eter.ts (módulo hoja) — unifica las 3 copias inline que había
+ * (replacements, effectRegistry —que ni devolvía el éter del ladrón—, y
+ * ésta). Re-export para no romper imports existentes (index.ts, tests).
  */
-export function retornarCampeonesRobados(
-  s: GameState,
-  ctx: Ctx,
-  fuenteId: string,
-  ladron: PlayerId,
-): void {
-  for (const other of Object.values(s.instances)) {
-    if (other.stolenBy !== fuenteId) continue
-    const enCampoLadron = s.players[ladron].campo.campeones.includes(other.cardInstanceId)
-    if (!enCampoLadron) {
-      // Salió del campo del ladrón: ya no hay control que devolver
-      delete other.stolenBy
-      continue
-    }
-    // §7.8: el Éter bloqueado en el Campeón mientras fue robado es del LADRÓN
-    // (el del dueño original ya se reagrupó al robar). Si el rival está lleno
-    // el control NO cambia → el Éter permanece bloqueado (sigue controlado).
-    // Dueño original del campeón robado (other.owner se conservó al robar)
-    const duenoOriginal = other.owner
-    const campoOriginal = s.players[duenoOriginal].campo.campeones
-    const slotLibre = campoOriginal.indexOf(null)
-    if (slotLibre !== -1 && duenoOriginal !== ladron) {
-      if (other.eterBloqueado && other.eterBloqueado.length > 0) {
-        const eteres = [...other.eterBloqueado]
-        delete other.eterBloqueado
-        delete other.efectoUmbralDisparado
-        delete other.copyOneShotDisparado
-        delete other.tramosDisparados
-        delete other.fijadoExhaustTargetId
-        s.players[ladron].eterReserva.push(...eteres)
-        ctx.emit({ type: 'eter_reagrupado', jugador: ladron, eterIds: eteres })
-      }
-      const idxLadron = s.players[ladron].campo.campeones.indexOf(other.cardInstanceId)
-      if (idxLadron !== -1) s.players[ladron].campo.campeones[idxLadron] = null
-      campoOriginal[slotLibre] = other.cardInstanceId
-      delete other.stolenBy
-      ctx.emit({
-        type: 'carta_entrada_a_zona',
-        cardInstanceId: other.cardInstanceId,
-        zona: `2${String.fromCharCode(66 + slotLibre)}` as '2B' | '2C' | '2D' | '2E' | '2F',
-        jugador: duenoOriginal,
-        bocaArriba: true,
-      })
-    } else {
-      // Campo rival lleno (o edge case): el control persiste en el campo del ladrón
-      delete other.stolenBy
-    }
-  }
-}
+export { retornarCampeonesRobados } from './eter'
 
 /** One-shot umbral: invoca el primer campeón de zonaOrigen (determinista) + equipa la fuente. */
 function ejecutarInvocarEquiparUmbral(
@@ -1017,7 +967,8 @@ function executeStealChampion(
     if (idx === -1) continue
 
     // §7.8: el Éter bloqueado del Campeón (pagado por su dueño) se reagrupa
-    // inmediato a la Reserva del DUEÑO ORIGINAL — el ladrón lo toma sin Éter.
+    // inmediato a su PAGADOR — el ladrón lo toma sin Éter (Fase 2 (f):
+    // liberarEterA agrupa por pagadoPor; fallback = dueño de la instancia).
     if (targetInst.eterBloqueado && targetInst.eterBloqueado.length > 0) {
       const eteres = [...targetInst.eterBloqueado]
       delete targetInst.eterBloqueado
@@ -1025,8 +976,10 @@ function executeStealChampion(
       delete targetInst.copyOneShotDisparado
       delete targetInst.tramosDisparados
       delete targetInst.fijadoExhaustTargetId
-      s.players[targetInst.owner].eterReserva.push(...eteres)
-      ctx.emit({ type: 'eter_reagrupado', jugador: targetInst.owner, eterIds: eteres })
+      const grupos = liberarEterA(s, eteres, '2A', targetInst.owner)
+      for (const [pagador, ids] of Object.entries(grupos) as [PlayerId, string[]][]) {
+        ctx.emit({ type: 'eter_reagrupado', jugador: pagador, eterIds: ids })
+      }
     }
 
     // Remove from rival's field

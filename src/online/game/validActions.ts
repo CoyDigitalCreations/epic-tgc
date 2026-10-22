@@ -1,11 +1,12 @@
-import { getCardMeta, esArcana, efectoActivableDe, esCostoBloqueo, cartaBloqueaPorAccion } from './cards'
+import { getCardMeta, esArcana, efectoActivableDe, esCostoBloqueo } from './cards'
+import { eterDeEfecto } from './eter'
 import { championNegado } from './efectos'
 import type { AnyCard } from '../../shared/types'
 import type { Action } from './actions'
 import { generarAccionesForja, validarActivarArcana } from './actions'
 import { atacantesElegibles, asignacionForzada, ataquesSinBloquear, bloqueadoresDisponibles, rivalDe, tieneKeyword } from './combat'
 import { respondiblesDe } from './chain'
-import { etersParaPagar, maxEterBloqueado, esBloqueoFijo } from './payments'
+import { etersParaPagar } from './payments'
 import { validarEquiparArtefacto } from './movimientos'
 import type { GameState, PlayerId, CardInstance } from './types'
 
@@ -48,32 +49,42 @@ function accionesBloqueoEter(state: GameState, playerId: PlayerId, enCadena = fa
   // - eter_bloqueado ("hasta X") → una acción por Éter hasta el máximo.
   const generarBloqueos = (targets: { id: string; inst: CardInstance; meta: AnyCard }[]) => {
     for (const t of targets) {
-      // Solo efectos NO-disparo con costo-bloqueo reciben vía bloquear_eter
-      // (aura derivada/umbral). Disparos bloqueados van por activar_habilidad.
-      if (!cartaBloqueaPorAccion(t.meta)) continue
-      const actuales = t.inst.eterBloqueado?.length ?? 0
-      const maxEter = maxEterBloqueado(t.meta)
-      const fijo = esBloqueoFijo(t.meta)
+      // Fase 2 (b): una tanda de acciones POR CADA efecto fuente (NO-disparo
+      // con costo-bloqueo). Carta de UN efecto → idéntico a antes; multi-efecto
+      // → cada efecto valida/cuenta SOLO su Éter (eterDeEfecto) y la acción
+      // lleva efectoIdx para que la ejecución etiquete la MISMA fuente.
+      if (!('efectos' in t.meta) || !t.meta.efectos) continue
+      const fuentes = t.meta.efectos
+        .map((efecto, i) => ({ efecto, i }))
+        .filter(({ efecto }) => esCostoBloqueo(efecto.costo) && efecto.tipo !== 'disparo')
+      if (fuentes.length === 0) continue
       const disponibles = p.eterReserva.filter((id) => {
         const meta = state.instances[id]?.cardId ? getCardMeta(state.instances[id]!.cardId!) : null
         return meta !== null
       })
-      if (fijo) {
-        // Pago exacto: arma la acción completa con los Éteres que faltan.
-        const falta = maxEter - actuales
-        if (falta > 0 && disponibles.length >= falta) {
-          acciones.push({
-            type: 'bloquear_eter',
-            eterIds: disponibles.slice(0, falta),
-            targetInstanceId: t.id,
-          })
-        }
-      } else {
-        let generados = actuales
-        for (const eterId of disponibles) {
-          if (generados >= maxEter) break
-          acciones.push({ type: 'bloquear_eter', eterIds: [eterId], targetInstanceId: t.id })
-          generados++
+      for (const { efecto, i } of fuentes) {
+        const actuales = eterDeEfecto(state, t.id, i).length
+        const maxEter = efecto.costo?.cantidad ?? 1
+        const fijo = efecto.costo?.tipo === 'bloqueo_fijo'
+        const multi = fuentes.length > 1 ? { efectoIdx: i } : {}
+        if (fijo) {
+          // Pago exacto: arma la acción completa con los Éteres que faltan.
+          const falta = maxEter - actuales
+          if (falta > 0 && disponibles.length >= falta) {
+            acciones.push({
+              type: 'bloquear_eter',
+              eterIds: disponibles.slice(0, falta),
+              targetInstanceId: t.id,
+              ...multi,
+            })
+          }
+        } else {
+          let generados = actuales
+          for (const eterId of disponibles) {
+            if (generados >= maxEter) break
+            acciones.push({ type: 'bloquear_eter', eterIds: [eterId], targetInstanceId: t.id, ...multi })
+            generados++
+          }
         }
       }
     }

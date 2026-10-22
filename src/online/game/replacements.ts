@@ -11,6 +11,7 @@
  */
 import { esCampeon, esVinculo, getCardMeta } from './cards'
 import { dispararTrigger, keywordsDe } from './efectos'
+import { liberarEterA, evaluarFinSteal } from './eter'
 import type { CausaDestruccion, Ctx, GameState, PlayerId } from './types'
 
 /**
@@ -21,8 +22,12 @@ import type { CausaDestruccion, Ctx, GameState, PlayerId } from './types'
  * C3c (D2): con control prestado (Aurora FB-010) la instancia puede estar en
  * el campo del RIVAL (owner ≠ campo). Se barren AMBOS campos; el destino 2G
  * sigue siendo del DUEÑO (inst.owner).
+ *
+ * ctx (Fase 2): solo para evaluarFinSteal — si la carta que sale es la FUENTE
+ * de un steal 'mientras_ester_bloqueado' sin Éter, los campeones robados
+ * retornan (antes era un bloque inline SIN eventos, hoy unificado).
  */
-export function moverAlCementerio(s: GameState, cardInstanceId: string): void {
+export function moverAlCementerio(s: GameState, ctx: Ctx, cardInstanceId: string): void {
   const inst = s.instances[cardInstanceId]
   if (!inst) return
   for (const j of ['A', 'B'] as PlayerId[]) {
@@ -41,7 +46,7 @@ export function moverAlCementerio(s: GameState, cardInstanceId: string): void {
   }
   // Fase 3a: choke point — toda carta que entra a 2G libera su Éter bloqueado
   // (manual §7.7 L912). Los sacrificios ya liberaron a '2A' antes — no-op acá.
-  liberarEterBloqueadoCore(s, cardInstanceId, '1A')
+  liberarEterBloqueadoCore(s, ctx, cardInstanceId, '1A')
   const p = s.players[inst.owner]
   if (!p.cementerio.includes(cardInstanceId)) p.cementerio.push(cardInstanceId)
 }
@@ -74,7 +79,7 @@ export function enviarAlCementerio(s: GameState, ctx: Ctx, cardInstanceId: strin
   }
   // ARTEFACTO: si esta carta es un Campeón, los artefactos equipados van con él (§10)
   liberarArtefactosEquipados(s, ctx, cardInstanceId)
-  moverAlCementerio(s, cardInstanceId)
+  moverAlCementerio(s, ctx, cardInstanceId)
   // Fase 3a: carta va a 2G → Éter bloqueado liberado a 1A (reagrupa próximo Alba).
   // No-op si no tiene eterBloqueado (liberarEterBloqueado lo chequea).
   // Los sacrificios ya liberaron a '2A' antes de llegar acá — segundo call es no-op.
@@ -99,7 +104,7 @@ export function liberarArtefactosEquipados(s: GameState, ctx: Ctx, campeonId: st
     const other = s.instances[otherId]
     if (other && other.equipadoA === campeonId) {
       other.equipadoA = undefined
-      moverAlCementerio(s, otherId)
+      moverAlCementerio(s, ctx, otherId)
       ctx.emit({ type: 'carta_salida_de_zona', cardInstanceId: otherId, zona: '3A', jugador: other.owner })
       ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: otherId, zona: '2G', jugador: other.owner, bocaArriba: true })
     }
@@ -109,8 +114,14 @@ export function liberarArtefactosEquipados(s: GameState, ctx: Ctx, campeonId: st
 /**
  * Core de liberación de Éter bloqueado (sin ctx — Fase 3a). Mueve el éter de
  * `inst.eterBloqueado` a la zona del dueño. No-op si no hay éter bloqueado.
+ *
+ * Fase 2 (f): la liberación va POR PAGADOR (liberarEterA) — cada Éter vuelve
+ * al jugador que lo pagó, sin heurísticas. `duenoDelEter` queda solo como
+ * FALLBACK para Éter sin tag (estado de test armado a mano).
+ * Fase 2 (d): evaluarFinSteal decide el fin del steal (la fuente sin Éter de
+ * CUALQUIER fuente lo termina) — antes era un bloque inline duplicado ×3.
  */
-function liberarEterBloqueadoCore(s: GameState, cardInstanceId: string, destino: '1A' | '2A'): void {
+function liberarEterBloqueadoCore(s: GameState, ctx: Ctx, cardInstanceId: string, destino: '1A' | '2A'): void {
   const inst = s.instances[cardInstanceId]
   if (!inst?.eterBloqueado || inst.eterBloqueado.length === 0) return
   const eteres = inst.eterBloqueado
@@ -122,57 +133,14 @@ function liberarEterBloqueadoCore(s: GameState, cardInstanceId: string, destino:
   // y el fijado de agotamiento se cae (estado derivado: sin Éter, sin fijado)
   delete inst.tramosDisparados
   delete inst.fijadoExhaustTargetId
-  // Aurora steal_champion "mientras_ester_bloqueado": al liberar el Éter
-  // (salida del campo de la fuente), los Campeones robados por esta fuente
-  // retornan al rival si hay slot libre; si no, se queda el control donde está.
-  if (inst.cardId) {
-    const meta = getCardMeta(inst.cardId)
-    const stealEfecto = meta && 'efectos' in meta
-      ? meta.efectos?.find((e) => e.efecto === 'steal_champion')
-      : undefined
-    if (stealEfecto?.duracion === 'mientras_ester_bloqueado') {
-      // Import local evitado: lógica compartida inline (sin ciclos)
-      for (const other of Object.values(s.instances)) {
-        if (other.stolenBy !== cardInstanceId) continue
-        const enCampoLadron = s.players[inst.owner].campo.campeones.includes(other.cardInstanceId)
-        if (!enCampoLadron) {
-          delete other.stolenBy
-          continue
-        }
-        // §7.8: el Éter bloqueado mientras fue robado es del LADRÓN (inst.owner)
-        // → vuelve a la Reserva del ladrón antes de devolver el Campeón.
-        if (other.eterBloqueado && other.eterBloqueado.length > 0) {
-          const eterRobado = other.eterBloqueado
-          delete other.eterBloqueado
-          delete other.efectoUmbralDisparado
-          delete other.copyOneShotDisparado
-          delete other.tramosDisparados
-          delete other.fijadoExhaustTargetId
-          s.players[inst.owner].eterReserva.push(...eterRobado)
-        }
-        const duenoOriginal = other.owner
-        const campoOriginal = s.players[duenoOriginal].campo.campeones
-        const slotLibre = campoOriginal.indexOf(null)
-        if (slotLibre !== -1 && duenoOriginal !== inst.owner) {
-          const idxLadron = s.players[inst.owner].campo.campeones.indexOf(other.cardInstanceId)
-          if (idxLadron !== -1) s.players[inst.owner].campo.campeones[idxLadron] = null
-          campoOriginal[slotLibre] = other.cardInstanceId
-        }
-        delete other.stolenBy
-      }
-    }
-  }
-  // §7.8: si el Campeón está ROBADO, el Éter bloqueado lo pagó el LADRÓN
-  // (quien controla) — no el dueño original. El LADRÓN = dueño de la fuente
-  // del steal (stolenBy → instancia fuente → su owner).
+  // §7.8 (fallback sin tag): si el Campeón está ROBADO, el Éter bloqueado lo
+  // pagó el LADRÓN — stolenBy → instancia fuente → su owner. Con tag,
+  // liberarEterA usa pagadoPor directamente.
   const fuenteSteal = inst.stolenBy ? s.instances[inst.stolenBy] : undefined
   const duenoDelEter = fuenteSteal ? fuenteSteal.owner : inst.owner
-  const p = s.players[duenoDelEter]
-  if (destino === '2A') {
-    p.eterReserva.push(...eteres)
-  } else {
-    p.eterPagado.push(...eteres)
-  }
+  liberarEterA(s, eteres, destino, duenoDelEter)
+  // Steal 'mientras_ester_bloqueado': solo termina si la fuente quedó SIN Éter
+  evaluarFinSteal(s, ctx, cardInstanceId)
 }
 
 /**
@@ -189,8 +157,8 @@ function liberarEterBloqueadoCore(s: GameState, cardInstanceId: string, destino:
  * Es silencioso: no emite eventos; el reagrupado del 1A lo cubre
  * `eter_reagrupado` en el Alba.
  */
-export function liberarEterBloqueado(s: GameState, _ctx: Ctx, cardInstanceId: string, destino: '1A' | '2A'): void {
-  liberarEterBloqueadoCore(s, cardInstanceId, destino)
+export function liberarEterBloqueado(s: GameState, ctx: Ctx, cardInstanceId: string, destino: '1A' | '2A'): void {
+  liberarEterBloqueadoCore(s, ctx, cardInstanceId, destino)
 }
 
 /**
@@ -359,7 +327,7 @@ export function destruirCarta(s: GameState, ctx: Ctx, cardInstanceId: string, ca
   }
 
   // Campeón: → 2G + Éter 1A + carta_muerta + destruccion (ADR-14)
-  moverAlCementerio(s, cardInstanceId)
+  moverAlCementerio(s, ctx, cardInstanceId)
   liberarEterBloqueado(s, ctx, cardInstanceId, '1A')
   // §10: los artefactos equipados van con el Campeón que sale (antes del trigger
   // del Campeón para que sus eventos queden en orden — cleanup sin trigger propio)

@@ -1,6 +1,7 @@
 import { abrirCadena } from './chain'
 import { dispararTrigger, keywordsDe, statsDe, tieneDoubleAttackActivo } from './efectos'
 import { destruirCarta } from './replacements'
+import { evaluarFinSteal } from './eter'
 import type { Ctx, GameState, PlayerId } from './types'
 
 /**
@@ -143,10 +144,19 @@ export function ejecutarDeclararAtaque(s: GameState, atacanteIds: string[], ctx:
     // Agotar AL DECLARAR (L1089); Vigor no agota (L1208)
     if (!tieneKeyword(s, id, 'Vigor')) inst.agotado = true
     // Recarga (L1211): 1 Éter bloqueado del atacante vuelve a la Reserva 2A
+    // del PAGADOR (Fase 2 (f)) — y si era el último de una fuente steal,
+    // evaluarFinSteal termina el robo.
     if (tieneKeyword(s, id, 'Recarga') && inst.eterBloqueado && inst.eterBloqueado.length > 0) {
       const eter = inst.eterBloqueado.shift()!
-      s.players[inst.owner].eterReserva.push(eter)
-      ctx.emit({ type: 'eter_reagrupado', jugador: inst.owner, eterIds: [eter] })
+      const pagador = s.instances[eter]?.pagadoPor ?? inst.owner
+      const e = s.instances[eter]
+      if (e) {
+        delete e.bloqueadoPorEfecto
+        delete e.pagadoPor
+      }
+      s.players[pagador].eterReserva.push(eter)
+      ctx.emit({ type: 'eter_reagrupado', jugador: pagador, eterIds: [eter] })
+      evaluarFinSteal(s, ctx, id)
     }
   }
   ctx.emit({ type: 'ataque_declarado', jugador: s.turno, atacanteIds })
