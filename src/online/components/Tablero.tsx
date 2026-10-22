@@ -347,6 +347,14 @@ interface GrillaProps {
   setSeleccion: (s: Seleccion) => void
   /** Animaciones de movimiento (glow en celda destino). */
   animaciones?: Array<{ tipo: string; zona?: string; jugador?: PlayerId; atacantes?: string[]; cardInstanceId?: string; key: number }>
+  /**
+   * A6 (subconjunto de atacantes): el estado vive en Tablero y se pasa por
+   * props — GrillaJugador es un scope distinto (fix: nombres inexistentes
+   * en campeonPropio → ReferenceError en runtime al declarar ataque).
+   */
+  selAtaque?: string[]
+  esPasoAtaquePropio?: boolean
+  onToggleSelAtaque?: (id: string) => void
 }
 
 /** Panel colapsable de log detallado para debugging, con botón de copiar. */
@@ -432,6 +440,9 @@ function GrillaJugador({
   seleccion,
   setSeleccion,
   animaciones,
+  selAtaque = [],
+  esPasoAtaquePropio = false,
+  onToggleSelAtaque,
 }: GrillaProps) {
   const p = vista.players[jugador]
   const soy = jugador === 'A'
@@ -505,7 +516,7 @@ function GrillaJugador({
             {ataque && <Boton accion={ataque} onClick={onAccion} />}
             {ataque && esPasoAtaquePropio && (
               <button
-                onClick={() => toggleSelAtaque(id)}
+                onClick={() => onToggleSelAtaque?.(id)}
                 title="Agregar a la selección de atacantes (A6: elige con cuántos atacar)"
                 className={`text-[10px] px-1.5 py-0.5 rounded transition-colors cursor-pointer whitespace-nowrap ${
                   selAtaque.includes(id)
@@ -1248,6 +1259,9 @@ export function Tablero({ vista, acciones, leTocaA, logDetallado = [], onAccion,
               seleccion={seleccion}
               setSeleccion={setSeleccion}
               animaciones={animaciones}
+              selAtaque={selAtaque}
+              esPasoAtaquePropio={esPasoAtaquePropio}
+              onToggleSelAtaque={toggleSelAtaque}
             />
           </section>
         </div>
