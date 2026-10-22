@@ -28,11 +28,17 @@ export function PriorityModal({ state, playerId, acciones, onAccion, onZoom }: P
   const cadena = state.combate?.cadena ?? state.cadena
   if (!cadena) return null
   if (cadena.prioridad !== playerId) return null
+  // Checkpoint prevent_destroy (Fase 2c): mientras hay prevenión pendiente la
+  // ÚNICA acción legal es responder_prevenicion — el modal no debe tapar ese
+  // checkpoint (se rinde en PreventionModal, que se monta antes).
+  if (state.preventivosPendientes?.[0]) return null
 
+  // Modal SIEMPRE visible con tu prioridad (decisión 2026-10-14): un solo lugar
+  // para responder/pasar — aunque no tengas respondibles, muestra el estado y
+  // el botón "Pasar prioridad" (antes el modal se ocultaba y el botón vivía
+  // suelto en Acciones generales).
   const respondibles = respondiblesDe(state, playerId)
-  // Sin cartas que puedan responder (p.ej. campeones agotados no activan disparo):
-  // NO mostrar el modal — el botón "Pasar prioridad" vive en Acciones generales.
-  if (respondibles.length === 0) return null
+  const pasar = acciones.find((a) => a.type === 'pasar_prioridad')
 
   const efectoActual = cadena.efectoActual
   const efectoInst = efectoActual ? state.instances[efectoActual.cardInstanceId] : null
@@ -49,7 +55,9 @@ export function PriorityModal({ state, playerId, acciones, onAccion, onZoom }: P
             {esCombate ? 'Cadena de Combate (9.6)' : 'Cadena Global'}
           </h2>
           <p className="text-xs text-gray-400">
-            Tenés {respondibles.length} carta(s) que puede(n) responder — elegí o pasá prioridad.
+            {respondibles.length > 0
+              ? `Tenés ${respondibles.length} carta(s) que puede(n) responder — elegí o pasá prioridad.`
+              : 'No tenés cartas que puedan responder este efecto — pasá la prioridad para continuar.'}
           </p>
         </div>
 
@@ -102,49 +110,50 @@ export function PriorityModal({ state, playerId, acciones, onAccion, onZoom }: P
         )}
 
         {/* ── Cartas respondibles ───────────────────────────────── */}
-        <div className="mb-4">
-          <p className="text-[9px] uppercase tracking-wider text-gray-500 mb-1.5">
-            Tus cartas respondibles ({respondibles.length})
-          </p>
-          <div className="flex gap-2 flex-wrap items-start">
-            {respondibles.map((id) => {
-              const inst = state.instances[id]
-              const accion = acciones.find(
-                (a) => a.type === 'responder_cadena' && a.cardInstanceId === id,
-              )
-              return (
-                <div key={id} className="flex flex-col items-center gap-1">
-                  <MiniCard
-                    inst={inst}
-                    tamano="sm"
-                    onZoom={() => onZoom(inst)}
-                  />
-                  {accion && (
-                    <button
-                      onClick={() => onAccion(accion)}
-                      className="text-[10px] bg-ether-600 hover:bg-ether-500 text-white px-2 py-0.5 rounded transition-colors cursor-pointer"
-                    >
-                      Responder
-                    </button>
-                  )}
-                </div>
-              )
-            })}
+        {respondibles.length > 0 && (
+          <div className="mb-4">
+            <p className="text-[9px] uppercase tracking-wider text-gray-500 mb-1.5">
+              Tus cartas respondibles ({respondibles.length})
+            </p>
+            <div className="flex gap-2 flex-wrap items-start">
+              {respondibles.map((id) => {
+                const inst = state.instances[id]
+                const accion = acciones.find(
+                  (a) => a.type === 'responder_cadena' && a.cardInstanceId === id,
+                )
+                return (
+                  <div key={id} className="flex flex-col items-center gap-1">
+                    <MiniCard
+                      inst={inst}
+                      tamano="sm"
+                      onZoom={() => onZoom(inst)}
+                    />
+                    {accion && (
+                      <button
+                        onClick={() => onAccion(accion)}
+                        className="text-[10px] bg-ether-600 hover:bg-ether-500 text-white px-2 py-0.5 rounded transition-colors cursor-pointer"
+                      >
+                        Responder
+                      </button>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* ── Botón Pasar ───────────────────────────────────────── */}
-        <div className="flex justify-end gap-3 mt-4 pt-3 border-t border-card-border">
-          <button
-            onClick={() => {
-              const pasar = acciones.find((a) => a.type === 'pasar_prioridad')
-              if (pasar) onAccion(pasar)
-            }}
-            className="text-xs bg-surface-2 hover:bg-card-border text-gray-300 px-4 py-2 rounded-lg transition-colors cursor-pointer"
-          >
-            Pasar prioridad
-          </button>
-        </div>
+        {pasar && (
+          <div className="flex justify-end gap-3 mt-4 pt-3 border-t border-card-border">
+            <button
+              onClick={() => onAccion(pasar)}
+              className="text-xs bg-surface-2 hover:bg-card-border text-gray-300 px-4 py-2 rounded-lg transition-colors cursor-pointer"
+            >
+              Pasar prioridad
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )
