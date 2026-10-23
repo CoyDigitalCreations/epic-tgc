@@ -48,6 +48,28 @@ function forjaDeA(): GameState {
   throw new Error('Ningún seed probado tiene forja con turno A')
 }
 
+const ETIQUETA_JUGAR: Record<string, string> = {
+  jugar_campeon: 'Invocar',
+  jugar_mistica: 'Jugar',
+  colocar_arcana: 'Colocar boca abajo',
+}
+
+/** Carta de la mano en el DOM (el abanico), por id de instancia. */
+function cartaDeMano(cardInstanceId: string): HTMLElement {
+  const el = document.querySelector<HTMLElement>(`[data-testid="mano"] [data-inst="${cardInstanceId}"]`)
+  expect(el).not.toBeNull()
+  return el!
+}
+
+/** Mano estilo Master Duel: clic en la carta (abre su menú) y luego en la opción de jugarla. */
+async function jugarDesdeMano(
+  user: ReturnType<typeof userEvent.setup>,
+  accion: Extract<Action, { cardInstanceId: string }>,
+) {
+  await user.click(cartaDeMano(accion.cardInstanceId))
+  await user.click(screen.getByRole('button', { name: ETIQUETA_JUGAR[accion.type] }))
+}
+
 describe('Selección de Éter en el tablero 4×7', () => {
   it('permite elegir los Éteres de la Reserva para pagar y confirma la acción con esos ids', { timeout: 15000 }, async () => {
     const user = userEvent.setup()
@@ -75,11 +97,12 @@ describe('Selección de Éter en el tablero 4×7', () => {
       />,
     )
 
-    // 1. Hay un botón "Pagar" (FB-019 en mano con coste 2)
-    expect(screen.getAllByRole('button', { name: 'Pagar' }).length).toBeGreaterThan(0)
+    // 1. FB-019 (Mística, coste 2) en la mano: su menú ofrece "Jugar"
+    const jugar = acciones.find((a) => a.type === 'jugar_mistica' && a.cardInstanceId === 'inst-mist')!
+    expect(jugar).toBeDefined()
 
-    // 2. Click en Pagar → abre el selector de Éteres de la Reserva
-    await user.click(screen.getAllByRole('button', { name: 'Pagar' })[0])
+    // 2. Clic en la carta + "Jugar" → abre el selector de Éteres de la Reserva
+    await jugarDesdeMano(user, jugar as Extract<Action, { cardInstanceId: string }>)
     expect(screen.getByText(/Elegí los Éteres de tu Reserva/)).toBeInTheDocument()
 
     // 3. Toggle Éteres hasta Σ aporte ≥ coste (2) — aporteDe = 1 por Éter
@@ -94,12 +117,9 @@ describe('Selección de Éter en el tablero 4×7', () => {
     expect((confirmar() as HTMLButtonElement).disabled).toBe(false)
     expect(titulosElegidos.length).toBeGreaterThanOrEqual(2)
 
-    // 4. Confirmar → selector de casilla (3A-3C vacío = 3 slots → elegir)
+    // 4. Confirmar → casillas 3A-3C iluminadas en el tablero (3 slots libres → elegir)
     await user.click(confirmar())
-    // Click en el BOTÓN de casilla (no en el span de texto)
-    const slotBtn = screen
-      .getAllByRole('button')
-      .find((b) => /^3[ABC]/.test((b.textContent ?? '').trim()))
+    const slotBtn = screen.queryAllByRole('button', { name: /^Colocar en 3[ABC]$/ })[0]
     if (slotBtn && onAccion.mock.calls.length === 0) {
       await user.click(slotBtn)
     }
@@ -319,12 +339,12 @@ describe('Reserva de Éter (2A) y aporte real (1 / ½)', () => {
       />,
     )
 
-    const conCoste = acciones.find(
-      (a) => a.type === 'jugar_campeon' || a.type === 'jugar_mistica' || a.type === 'colocar_arcana',
-    ) as Extract<Action, { cardInstanceId: string }> | undefined
+    const conCoste = acciones.find((a) => a.type === 'jugar_campeon' || a.type === 'jugar_mistica') as
+      | Extract<Action, { cardInstanceId: string }>
+      | undefined
     expect(conCoste).toBeDefined()
-    // Click en el botón Pagar de esa carta → abre el selector
-    await user.click(screen.getAllByRole('button', { name: 'Pagar' })[0])
+    // Clic en la carta + su opción de jugar → abre el selector
+    await jugarDesdeMano(user, conCoste!)
     expect(screen.getByText(/Elegí los Éteres de tu Reserva/)).toBeInTheDocument()
 
     // Aporte en unidades reales: 1 (fación compartida) o 0.5 (ajena), NUNCA 2
@@ -422,8 +442,8 @@ describe('Grilla rival invertida y Éteres pagados (1A)', () => {
   })
 })
 
-describe('Botones de acción en la mano y zoom', () => {
-  it('clic en una carta de la mano abre el zoom; el botón Pagar abre el selector', async () => {
+describe('Mano en abanico: menú de la carta y zoom', () => {
+  it('clic en una carta abre su menú; "Ver carta" abre el zoom; la opción de jugar abre el selector', async () => {
     const user = userEvent.setup()
     const estado = forjaDeAConCoste()
     const vista = visibleState(estado, 'A')
@@ -440,20 +460,149 @@ describe('Botones de acción en la mano y zoom', () => {
       />,
     )
 
-    const boton = screen.getAllByRole('button', { name: 'Pagar' })[0]
-    const carta = boton.previousElementSibling as HTMLElement
-    const nombre = carta.getAttribute('title')!
-    expect(nombre).toBeTruthy()
+    const jugar = acciones.find((a) => a.type === 'jugar_campeon' || a.type === 'jugar_mistica') as
+      | Extract<Action, { cardInstanceId: string }>
+      | undefined
+    expect(jugar).toBeDefined()
+    const nombre = getCardMeta(vista.instances[jugar!.cardInstanceId]!.cardId!)!.name
 
-    // Clic en la carta → zoom (sin ejecutar ninguna acción)
-    await user.click(carta)
+    // Clic en la carta → menú con SUS opciones; "Ver carta" → zoom (sin ejecutar ninguna acción)
+    await user.click(cartaDeMano(jugar!.cardInstanceId))
+    expect(screen.getByRole('button', { name: ETIQUETA_JUGAR[jugar!.type] })).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Ver carta' }))
     expect(screen.getByRole('dialog', { name: `Carta en grande: ${nombre}` })).toBeInTheDocument()
     expect(onAccion).not.toHaveBeenCalled()
     await user.keyboard('{Escape}')
 
-    // Clic en el botón Pagar → selector de pago
-    await user.click(boton)
+    // Clic en la carta + opción de jugar → selector de pago
+    await jugarDesdeMano(user, jugar!)
     expect(screen.getByText(/Elegí los Éteres de tu Reserva/)).toBeInTheDocument()
+  })
+})
+
+describe('Arcanas: la casilla de colocación se elige en el tablero', () => {
+  const arcanas = ESTASIS_CARDS.filter((c) => c.type === 'Arcana')
+
+  /** Forja de A con una Arcana en la mano y (opcional) casillas 3D-3F ya ocupadas. */
+  function estadoConArcana(ocupadas: number[] = []): GameState {
+    const estado = forjaDeA()
+    estado.instances['inst-arc'] = { cardInstanceId: 'inst-arc', cardId: arcanas[0].id, owner: 'A' }
+    estado.players.A.mano = ['inst-arc']
+    for (const i of ocupadas) {
+      const id = `inst-arc-ocupada-${i}`
+      estado.instances[id] = { cardInstanceId: id, cardId: (arcanas[1] ?? arcanas[0]).id, owner: 'A', bocaArriba: false }
+      estado.players.A.campo.arcanasCombate[i] = id
+    }
+    return estado
+  }
+
+  function montar(estado: GameState, onAccion = vi.fn()) {
+    const acciones = getValidActions(estado, 'A')
+    render(
+      <Tablero
+        vista={visibleState(estado, 'A')}
+        acciones={acciones}
+        leTocaA={true}
+        log={[]}
+        onAccion={onAccion}
+        onAbandonar={vi.fn()}
+      />,
+    )
+    const colocar = acciones.find((a) => a.type === 'colocar_arcana' && a.cardInstanceId === 'inst-arc')
+    expect(colocar).toBeDefined()
+    return { onAccion, colocar: colocar as Extract<Action, { cardInstanceId: string }> }
+  }
+
+  it('con varias casillas libres NO ejecuta directo: las ilumina y el clic en una elige el slot', async () => {
+    const user = userEvent.setup()
+    const { onAccion, colocar } = montar(estadoConArcana())
+
+    await jugarDesdeMano(user, colocar)
+    expect(onAccion).not.toHaveBeenCalled()
+    expect(screen.getByText(/Elegí en tu tablero la casilla iluminada/)).toBeInTheDocument()
+
+    // Las 3 casillas de Arcana (3D-3F) de la grilla propia están iluminadas y son clickeables
+    expect(screen.getAllByRole('button', { name: /^Colocar en 3[DEF]$/ })).toHaveLength(3)
+
+    await user.click(screen.getByRole('button', { name: 'Colocar en 3E' }))
+    expect(onAccion).toHaveBeenCalledTimes(1)
+    expect(onAccion).toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'colocar_arcana', cardInstanceId: 'inst-arc', slot: 1 }),
+    )
+    // Elegida la casilla se apaga el modo selección
+    expect(screen.queryByText(/Elegí en tu tablero la casilla iluminada/)).not.toBeInTheDocument()
+  })
+
+  it('solo se iluminan las casillas LIBRES', async () => {
+    const user = userEvent.setup()
+    const { onAccion, colocar } = montar(estadoConArcana([0]))
+
+    await jugarDesdeMano(user, colocar)
+    expect(screen.queryByRole('button', { name: 'Colocar en 3D' })).not.toBeInTheDocument()
+    expect(screen.getAllByRole('button', { name: /^Colocar en 3[EF]$/ })).toHaveLength(2)
+    expect(onAccion).not.toHaveBeenCalled()
+  })
+
+  it('con una sola casilla libre se coloca directo, en ese slot', async () => {
+    const user = userEvent.setup()
+    const { onAccion, colocar } = montar(estadoConArcana([0, 2]))
+
+    await jugarDesdeMano(user, colocar)
+    expect(onAccion).toHaveBeenCalledTimes(1)
+    expect(onAccion).toHaveBeenCalledWith(expect.objectContaining({ type: 'colocar_arcana', slot: 1 }))
+  })
+
+  it('Cancelar durante la elección de casilla no ejecuta nada', async () => {
+    const user = userEvent.setup()
+    const { onAccion, colocar } = montar(estadoConArcana())
+
+    await jugarDesdeMano(user, colocar)
+    await user.click(screen.getByRole('button', { name: 'Cancelar' }))
+    expect(onAccion).not.toHaveBeenCalled()
+    expect(screen.queryByRole('button', { name: /^Colocar en 3[DEF]$/ })).not.toBeInTheDocument()
+  })
+})
+
+describe('Mano en abanico: el menú solo ofrece lo que es válido', () => {
+  it('fuera de tu turno la carta solo ofrece "Ver carta"', async () => {
+    const user = userEvent.setup()
+    const estado = forjaDeA()
+    const id = estado.players.A.mano[0]!
+    render(
+      <Tablero
+        vista={visibleState(estado, 'A')}
+        acciones={[]}
+        leTocaA={false}
+        log={[]}
+        onAccion={vi.fn()}
+        onAbandonar={vi.fn()}
+      />,
+    )
+
+    await user.click(cartaDeMano(id))
+    const menu = screen.getByRole('group', { name: 'Opciones de la carta' })
+    expect(within(menu).getAllByRole('button').map((b) => b.textContent)).toEqual(['Ver carta'])
+  })
+
+  it('un segundo clic en la misma carta cierra el menú', async () => {
+    const user = userEvent.setup()
+    const estado = forjaDeA()
+    const id = estado.players.A.mano[0]!
+    render(
+      <Tablero
+        vista={visibleState(estado, 'A')}
+        acciones={[]}
+        leTocaA={false}
+        log={[]}
+        onAccion={vi.fn()}
+        onAbandonar={vi.fn()}
+      />,
+    )
+
+    await user.click(cartaDeMano(id))
+    expect(screen.getByRole('group', { name: 'Opciones de la carta' })).toBeInTheDocument()
+    await user.click(cartaDeMano(id))
+    expect(screen.queryByRole('group', { name: 'Opciones de la carta' })).not.toBeInTheDocument()
   })
 })
 
@@ -489,13 +638,8 @@ describe('Sacrificio de Campeones (rol Soberano/Emperador)', () => {
       />,
     )
 
-    // Abrir el selector: botón Pagar bajo la MiniCard de Aurora en la mano
-    const auroras = screen.getAllByTitle('Aurora, La Primogénita')
-    const botonAurora = auroras
-      .map((el) => el.nextElementSibling)
-      .find((el) => el?.textContent === 'Pagar')
-    expect(botonAurora).toBeDefined()
-    await user.click(botonAurora!)
+    // Abrir el selector: clic en Aurora en la mano + "Invocar"
+    await jugarDesdeMano(user, jugar as Extract<Action, { cardInstanceId: string }>)
     expect(screen.getByText(/Elegí 1 Campeón de tu campo para sacrificar/)).toBeInTheDocument()
 
     // Elegir Vaela como sacrificio (botón del selector con title=Vaela)
@@ -514,10 +658,8 @@ describe('Sacrificio de Campeones (rol Soberano/Emperador)', () => {
     expect((confirmar() as HTMLButtonElement).disabled).toBe(false)
 
     await user.click(confirmar())
-    // Slots 2B-2F: click en el BOTÓN de casilla (no en el span de texto)
-    const slotBtn = screen
-      .getAllByRole('button')
-      .find((b) => /^2[BCDEF]/.test((b.textContent ?? '').trim()))
+    // Casillas 2B-2F iluminadas en el tablero: click en una
+    const slotBtn = screen.queryAllByRole('button', { name: /^Colocar en 2[BCDEF]$/ })[0]
     if (slotBtn && onAccion.mock.calls.length === 0) {
       await user.click(slotBtn)
     }
@@ -722,8 +864,11 @@ describe('Búsqueda de mazo (tutores)', () => {
     expect(screen.getByText(/Búsqueda de mazo — elige una carta/)).toBeInTheDocument()
     const nombreDs = getCardMeta('DS-031')?.name!
     const nombreFb = getCardMeta('FB-031')?.name!
-    expect(screen.getByText(nombreDs)).toBeInTheDocument()
-    expect(screen.getByText(nombreFb)).toBeInTheDocument()
+    // La galería muestra la carta real: su arte también lleva el nombre (≥1 coincidencia)
+    expect(screen.getAllByText(nombreDs).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(nombreFb).length).toBeGreaterThan(0)
+    // Es un modal de decisión con su título accesible
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
     // No aparece el botón genérico sin nombre (bug reportado)
     expect(screen.queryByRole('button', { name: /elegir_objetivo/ })).not.toBeInTheDocument()
 
@@ -911,9 +1056,9 @@ describe('Panel de Cementerio y Exilio (lista completa)', () => {
   /** El <p> con el título del panel abierto (contiene la zona y el posesivo). */
   const tituloPanel = (posesivo: string): HTMLElement => {
     const span = screen.getByText(new RegExp(`— ${posesivo}`))
-    const p = span.closest('p')
-    if (!p) throw new Error('Panel abierto sin título')
-    return p
+    const titulo = span.closest('h2')
+    if (!titulo) throw new Error('Panel abierto sin título')
+    return titulo
   }
 
   /** Cada MiniCard del panel pinta el nombre dentro del arte Y tiene el label debajo → ≥1 match. */

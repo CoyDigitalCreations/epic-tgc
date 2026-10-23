@@ -3,6 +3,8 @@ import { Link } from 'react-router'
 import { MAZOS } from '../mazos'
 import { visibleState } from '../game'
 import { Tablero } from '../components/Tablero'
+import { Boton } from '../../shared/ui/Boton'
+import { Modal } from '../../shared/ui/Modal'
 import { supabaseConfigurado, supabaseUrl } from '../backend/supabase'
 import {
   asegurarSesion,
@@ -410,28 +412,32 @@ function PartidaOnline({
         animaciones={[]}
       />
       {partida.error && (
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 bg-red-950/90 border border-red-800 text-red-200 text-xs px-4 py-2 rounded-lg">
+        <div
+          role="alert"
+          className="anim-dock fixed bottom-4 left-1/2 z-[80] -translate-x-1/2 rounded-xl border border-rose-400/40 bg-gradient-to-b from-[#2a1018]/95 to-[#1a0a10]/95 px-4 py-2.5 text-xs text-rose-100 shadow-[0_10px_40px_-8px_rgba(0,0,0,0.7)] backdrop-blur"
+        >
           {partida.error}
         </div>
       )}
       {partida.status === 'finished' && (
-        <div className="fixed inset-0 bg-black/70 z-40 flex items-center justify-center">
-          <div className="bg-surface border border-card-border rounded-lg p-8 text-center max-w-sm">
-            <h2 className="font-display text-2xl text-ether-200 mb-2">Partida terminada</h2>
-            <p className="text-sm text-gray-400 mb-1">
-              {partida.winner === player ? '¡Ganaste!' : partida.winner ? 'Perdiste' : 'Empate'}
-            </p>
-            {partida.finishReason && (
-              <p className="text-xs text-gray-500 mb-4">({partida.finishReason})</p>
-            )}
-            <button
-              onClick={onSalir}
-              className="bg-ether-600 hover:bg-ether-500 text-white px-5 py-2 rounded-lg text-sm cursor-pointer"
-            >
+        <Modal
+          titulo="Partida terminada"
+          subtitulo={partida.winner === player ? '¡Ganaste!' : partida.winner ? 'Perdiste' : 'Empate'}
+          icono={partida.winner === player ? '🏆' : partida.winner ? '☠' : '⚖'}
+          tono={partida.winner === player ? 'exito' : partida.winner ? 'peligro' : 'ether'}
+          ancho="sm"
+          pie={
+            <Boton variante="primario" onClick={onSalir}>
               Volver al lobby
-            </button>
-          </div>
-        </div>
+            </Boton>
+          }
+        >
+          {partida.finishReason ? (
+            <p className="text-center text-xs text-gray-400">({partida.finishReason})</p>
+          ) : (
+            <p className="text-center text-xs text-gray-500">Gracias por jugar.</p>
+          )}
+        </Modal>
       )}
     </>
   )

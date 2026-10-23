@@ -4,6 +4,8 @@ import { useCardImage } from '../../forge/hooks/useCardImage'
 import type { AnyCard } from '../../shared/types'
 import { getCardMeta } from '../game'
 import type { CardInstance } from '../game'
+import { useEnVuelo } from '../animacion/contexto'
+import { useInspeccionar } from './tableroContext'
 
 const ANCHO_CARTA = 744
 const ALTO_CARTA = 1038
@@ -14,6 +16,15 @@ export type TamanoMini = keyof typeof TAMANOS
 interface MiniCardProps {
   inst: CardInstance
   tamano?: TamanoMini
+  /** Ancho en px que pisa a `tamano` (el fantasma de la animación de movimiento usa el de su destino). */
+  anchoPx?: number
+  /**
+   * Copia "decorativa" (inspector, fantasma de animación): sin ancla `data-inst`
+   * (no debe confundir la medición del FLIP) y sin alimentar al inspector por hover.
+   */
+  sinAncla?: boolean
+  /** Sin tooltip ni `title` con el nombre: para galerías que ya muestran el nombre como etiqueta (evita duplicarlo). */
+  sinTooltip?: boolean
   /**
    * Override del meta a renderizar (p. ej. stats modificadas por efectos:
    * poder/resistencia actuales de la instancia). Si no se pasa, se usa
@@ -58,6 +69,12 @@ interface MiniCardProps {
    * Default false: en modales, cadena, mano y paneles SIEMPRE vertical.
    */
   rotarSiAgotado?: boolean
+  /**
+   * Los `children` (botones de acción) se superponen sobre la parte baja de la
+   * carta en vez de ir debajo: no agrandan la casilla ni mueven el tablero
+   * cuando aparecen (p. ej. Atacar/Bloquear/Activar de un Campeón).
+   */
+  hijosSobreCarta?: boolean
   children?: ReactNode
 }
 
@@ -71,6 +88,9 @@ interface MiniCardProps {
 export function MiniCard({
   inst,
   tamano = 'md',
+  anchoPx,
+  sinAncla,
+  sinTooltip,
   carta,
   agotado,
   seleccionada,
@@ -84,13 +104,18 @@ export function MiniCard({
   marca,
   invertida,
   rotarSiAgotado = false,
+  hijosSobreCarta = false,
   children,
 }: MiniCardProps) {
   const cardId = inst.cardId ?? undefined
   const meta = cardId ? (carta ?? getCardMeta(cardId)) : null
   const imageUrl = useCardImage(cardId, meta?.hasImage, meta?.imageUrl)
-  const ancho = TAMANOS[tamano]
+  const ancho = anchoPx ?? TAMANOS[tamano]
   const escala = ancho / ANCHO_CARTA
+  // Su fantasma está en vuelo: la carta real espera invisible (conserva el hueco)
+  const visibility = useEnVuelo(inst.cardInstanceId) ? 'hidden' : undefined
+  const inspeccionar = useInspeccionar()
+  const ancla = sinAncla ? undefined : inst.cardInstanceId
   const tieneCarga = meta?.keywords?.includes('Carga') ?? false
   // Rotación SOLO en campo (rotarSiAgotado): modales/mano/cadena siempre vertical
   const agotada = rotarSiAgotado && (agotado ?? inst.agotado === true) && !tieneCarga
@@ -121,8 +146,9 @@ export function MiniCard({
     // Arcanas/Combate/Vínculos PROPIOS que el dueño prefiere ver como dorso).
     // Si hay onClick/onZoom (carta propia) el clic abre la carta en grande.
     return (
-      <div className="flex flex-col items-center gap-1" style={{ width: ancho }}>
+      <div className="flex flex-col items-center gap-1" style={{ width: ancho, visibility }}>
         <div
+          data-inst={ancla}
           style={{
             aspectRatio: '744/1038',
             width: ancho,
@@ -164,9 +190,9 @@ export function MiniCard({
     : meta
 
   return (
-    <div className="group relative flex flex-col items-center gap-1" style={{ width: ancho }}>
+    <div className="group relative flex flex-col items-center gap-1" style={{ width: ancho, visibility }}>
       {/* Tooltip hover: nombre de la carta + vínculo equipado */}
-      {meta && (
+      {meta && !sinTooltip && (
         <div
           className="pointer-events-none absolute left-1/2 -translate-x-1/2 z-30 opacity-0 group-hover:opacity-100 transition-opacity duration-150 whitespace-nowrap px-2 py-1 rounded bg-black/85 border border-gray-600 text-[10px] text-gray-200"
           style={{ bottom: '100%', marginBottom: 4 }}
@@ -175,6 +201,8 @@ export function MiniCard({
         </div>
       )}
       <div
+        data-inst={ancla}
+        onMouseEnter={sinAncla ? undefined : () => inspeccionar({ inst, carta: aRenderizar })}
         style={{
           width: agotada ? altoCarta : ancho,
           height: agotada ? ancho : altoCarta,
@@ -183,7 +211,7 @@ export function MiniCard({
           transition: 'transform 150ms ease, box-shadow 150ms ease',
         }}
         onClick={onClick ?? onZoom}
-        title={tooltipTexto}
+        title={sinTooltip ? undefined : tooltipTexto}
       >
         {agotada ? (
           <div
@@ -361,6 +389,16 @@ export function MiniCard({
 
         {marca}
 
+        {/* Botones de acción superpuestos sobre la parte baja de la carta (no agrandan la casilla) */}
+        {hijosSobreCarta && children && (
+          <div
+            className="absolute inset-x-0 bottom-0 z-10 flex justify-center px-0.5 pb-0.5 pt-3"
+            style={{ background: 'linear-gradient(to top, rgba(8,8,16,0.92) 40%, transparent)' }}
+          >
+            {children}
+          </div>
+        )}
+
         {/* Lupita de zoom: solo cuando el clic de la carta ya hace otra cosa
             (pagar éter, responder…). Sin onClick, el clic directo abre el zoom. */}
         {onClick && onZoom && (
@@ -396,7 +434,7 @@ export function MiniCard({
           </span>
         )}
       </div>
-      {children}
+      {!hijosSobreCarta && children}
     </div>
   )
 }

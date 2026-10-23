@@ -3,9 +3,13 @@
  * elegir qué campeón bloquea a cada uno.
  */
 import { useState } from 'react'
+import { Boton } from '../../shared/ui/Boton'
+import { Modal } from '../../shared/ui/Modal'
+import { Seccion } from '../../shared/ui/Seccion'
+import { TileCarta } from '../../shared/ui/TileCarta'
 import { getCardMeta } from '../game/cards'
-import { useCardImage } from '../../forge/hooks/useCardImage'
 import type { GameState, PlayerId } from '../game'
+import { MiniCard } from './MiniCard'
 
 interface BlockingInterfaceProps {
   s: GameState
@@ -18,102 +22,23 @@ interface BlockingInterfaceProps {
   onCancelar: () => void
 }
 
-/** Miniatura de carta para la interfaz de bloqueo */
-function CartaBloqueo({ id, s, orden }: { id: string; s: GameState; orden: number }) {
-  const inst = s.instances[id]
-  const cardId = inst?.cardId ?? undefined
+/** ATQ/RES de un Campeón (null si la carta no tiene stats de combate). */
+function statsDe(s: GameState, id: string): { atq: number; res: number } | null {
+  const cardId = s.instances[id]?.cardId
   const meta = cardId ? getCardMeta(cardId) : null
-  const imageUrl = useCardImage(cardId, meta?.hasImage, meta?.imageUrl)
-  const stats = meta?.type === 'Campeón' && 'poder' in meta.stats
-    ? { atq: meta.stats.poder, res: meta.stats.resistencia }
-    : null
-
-  return (
-    <div className="flex flex-col items-center gap-1">
-      <span className="text-[10px] font-bold text-red-400 bg-red-900/40 rounded-full w-5 h-5 flex items-center justify-center">
-        {orden}
-      </span>
-      <div
-        className="w-16 h-22 rounded border border-red-500/50 overflow-hidden bg-surface-2"
-        style={{ aspectRatio: '744/1038' }}
-      >
-        {imageUrl ? (
-          <img src={imageUrl} alt={meta?.name ?? ''} className="w-full h-full object-cover" />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-[8px] text-gray-400">
-            {meta?.name ?? '?'}
-          </div>
-        )}
-      </div>
-      <span className="text-[9px] text-red-300 font-medium truncate max-w-16">
-        {meta?.name ?? '???'}
-      </span>
-      {stats && (
-        <span className="text-[8px] text-gray-400">
-          ⚔{stats.atq} 🛡{stats.res}
-        </span>
-      )}
-    </div>
-  )
+  return meta?.type === 'Campeón' && 'poder' in meta.stats ? { atq: meta.stats.poder, res: meta.stats.resistencia } : null
 }
 
-/** Miniatura de campeón disponible para bloquear */
-function BloqueadorOption({
-  id,
-  s,
-  selected,
-  onSelect,
-  orden,
-}: {
-  id: string
-  s: GameState
-  selected: boolean
-  onSelect: () => void
-  orden?: number
-}) {
-  const inst = s.instances[id]
-  const cardId = inst?.cardId ?? undefined
-  const meta = cardId ? getCardMeta(cardId) : null
-  const imageUrl = useCardImage(cardId, meta?.hasImage, meta?.imageUrl)
-  const stats = meta?.type === 'Campeón' && 'poder' in meta.stats
-    ? { atq: meta.stats.poder, res: meta.stats.resistencia }
-    : null
-
+/** Número de orden (de atacante o de su bloqueador) como insignia redonda. */
+function Insignia({ n, tono }: { n: number; tono: 'rival' | 'propio' }) {
   return (
-    <button
-      onClick={onSelect}
-      className={`flex flex-col items-center gap-1 p-1 rounded border transition-all ${
-        selected
-          ? 'border-cyan-400 bg-cyan-900/30 ring-1 ring-cyan-400/50'
-          : 'border-gray-600 hover:border-gray-400 bg-surface-2'
+    <span
+      className={`grid size-5 place-items-center rounded-full font-mono text-[11px] font-bold ${
+        tono === 'rival' ? 'bg-rose-500/25 text-rose-200 ring-1 ring-rose-400/50' : 'bg-cyan-500/25 text-cyan-100 ring-1 ring-cyan-300/50'
       }`}
     >
-      {orden !== undefined && (
-        <span className="text-[10px] font-bold text-cyan-400 bg-cyan-900/40 rounded-full w-5 h-5 flex items-center justify-center">
-          {orden}
-        </span>
-      )}
-      <div
-        className="w-12 h-17 rounded overflow-hidden"
-        style={{ aspectRatio: '744/1038' }}
-      >
-        {imageUrl ? (
-          <img src={imageUrl} alt={meta?.name ?? ''} className="w-full h-full object-cover" />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-[7px] text-gray-400">
-            {meta?.name ?? '?'}
-          </div>
-        )}
-      </div>
-      <span className="text-[8px] text-gray-300 truncate max-w-12">
-        {meta?.name ?? '???'}
-      </span>
-      {stats && (
-        <span className="text-[7px] text-gray-400">
-          ⚔{stats.atq} 🛡{stats.res}
-        </span>
-      )}
-    </button>
+      {n}
+    </span>
   )
 }
 
@@ -148,78 +73,82 @@ export function BlockingInterface({ s, defensor, atacantes, onBloquear, onCancel
     }
   }
 
-  return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[100]">
-      <div className="bg-surface border border-card-border rounded-lg p-4 max-w-lg w-full mx-4">
-        <h3 className="text-sm font-bold text-ether-200 mb-3">
-          Elige tus bloqueadores
-        </h3>
+  const nombreDe = (id: string) => {
+    const cardId = s.instances[id]?.cardId
+    return (cardId ? getCardMeta(cardId)?.name : null) ?? '?'
+  }
 
+  return (
+    <Modal
+      titulo="Elige tus bloqueadores"
+      subtitulo={`Bloqueo forzoso (§9.3): tenés que bloquear con ${kMaximo} Campeón${kMaximo === 1 ? '' : 'es'}; elegís con cuál${kMaximo === 1 ? '' : 'es'}.`}
+      icono="⚔"
+      tono="rival"
+      ancho="lg"
+      pie={
+        <>
+          <Boton onClick={onCancelar}>No bloquear</Boton>
+          <Boton variante="primario" onClick={confirmar} disabled={Object.keys(asignaciones).length !== kMaximo}>
+            Confirmar bloqueo ({Object.keys(asignaciones).length}/{kMaximo})
+          </Boton>
+        </>
+      }
+    >
+      <div className="space-y-4">
         {/* Atacantes */}
-        <div className="mb-4">
-          <p className="text-[9px] uppercase tracking-wider text-gray-500 mb-2">
-            Orden de los atacantes ({atacantes.length})
-          </p>
-          <div className="flex gap-3 flex-wrap">
-            {atacantes.map((id, idx) => (
-              <div key={id} className="flex flex-col items-center gap-1">
-                <CartaBloqueo id={id} s={s} orden={idx + 1} />
-                {asignaciones[id] ? (
-                  <span className="text-[8px] text-cyan-400">
-                    ← {s.instances[asignaciones[id]]?.cardId ? getCardMeta(s.instances[asignaciones[id]].cardId!)?.name : '?'}
-                  </span>
-                ) : (
-                  <span className="text-[8px] text-yellow-500">sin bloquear</span>
-                )}
-              </div>
-            ))}
+        <section className="rounded-xl border border-rose-400/20 bg-rose-500/[0.05] p-3">
+          <Seccion cantidad={atacantes.length}>Orden de los atacantes</Seccion>
+          <div className="flex flex-wrap gap-4">
+            {atacantes.map((id, idx) => {
+              const stats = statsDe(s, id)
+              const bloqueador = asignaciones[id]
+              return (
+                <div key={id} className="flex w-24 flex-col items-center gap-1">
+                  <Insignia n={idx + 1} tono="rival" />
+                  <div className={`rounded-md ${bloqueador ? 'ring-2 ring-cyan-300/60' : 'ring-1 ring-rose-400/40'}`}>
+                    <MiniCard inst={s.instances[id]!} anchoPx={84} sinTooltip sinAncla />
+                  </div>
+                  <span className="line-clamp-2 w-full text-center text-[10px] font-medium leading-tight text-rose-200">{nombreDe(id)}</span>
+                  {stats && <span className="font-mono text-[10px] text-gray-400">ATQ {stats.atq} · RES {stats.res}</span>}
+                  {bloqueador ? (
+                    <span className="max-w-full truncate text-[10px] text-cyan-300">← {nombreDe(bloqueador)}</span>
+                  ) : (
+                    <span className="text-[10px] text-amber-400">sin bloquear</span>
+                  )}
+                </div>
+              )
+            })}
           </div>
-        </div>
+        </section>
 
         {/* Bloqueadores disponibles */}
-        <div className="mb-4">
-          <p className="text-[9px] uppercase tracking-wider text-gray-500 mb-2">
-            Orden de los defensores ({disponibles.length})
-          </p>
-          <div className="flex gap-2 flex-wrap">
+        <section>
+          <Seccion cantidad={disponibles.length}>Orden de los defensores</Seccion>
+          <div className="flex flex-wrap gap-2">
             {disponibles.map((id) => {
               const asignadoA = Object.entries(asignaciones).find(([, blk]) => blk === id)?.[0]
               const ordenAsignado = asignadoA ? atacantes.indexOf(asignadoA) + 1 : undefined
+              const stats = statsDe(s, id)
               return (
-                <BloqueadorOption
+                <TileCarta
                   key={id}
-                  id={id}
-                  s={s}
-                  selected={Object.values(asignaciones).includes(id)}
-                  orden={ordenAsignado}
-                  onSelect={() => {
+                  seleccionada={Object.values(asignaciones).includes(id)}
+                  onClick={() => {
                     // Asignar al primer atacante sin bloqueador
                     const sinBloquear = atacantes.find((a) => !asignaciones[a])
                     if (sinBloquear) seleccionarBloqueador(sinBloquear, id)
                   }}
-                />
+                  pie={stats ? `ATQ ${stats.atq} · RES ${stats.res}` : nombreDe(id)}
+                >
+                  <div className="flex h-5 items-center">{ordenAsignado !== undefined && <Insignia n={ordenAsignado} tono="propio" />}</div>
+                  <MiniCard inst={s.instances[id]!} anchoPx={72} sinTooltip sinAncla />
+                  <span className="line-clamp-2 w-[84px] text-center text-[10px] leading-tight text-gray-300">{nombreDe(id)}</span>
+                </TileCarta>
               )
             })}
           </div>
-        </div>
-
-        {/* Botones */}
-        <div className="flex gap-2 justify-end">
-          <button
-            onClick={onCancelar}
-            className="text-[10px] bg-gray-600/30 hover:bg-gray-600/50 text-gray-300 px-3 py-1.5 rounded transition-colors"
-          >
-            No bloquear
-          </button>
-          <button
-            onClick={confirmar}
-            disabled={Object.keys(asignaciones).length !== kMaximo}
-            className="text-[10px] bg-cyan-600/30 hover:bg-cyan-600/50 text-cyan-200 px-3 py-1.5 rounded transition-colors disabled:opacity-30"
-          >
-            Confirmar bloqueo ({Object.keys(asignaciones).length}/{kMaximo})
-          </button>
-        </div>
+        </section>
       </div>
-    </div>
+    </Modal>
   )
 }

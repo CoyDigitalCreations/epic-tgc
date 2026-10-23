@@ -19,10 +19,37 @@ export interface PartidaConfig {
   /** Dificultad del bot */
   dificultad?: Dificultad
   /**
-   * Pausar con modal antes de efectos del humano (default true).
-   * El bot nunca pausa: sus efectos se loguean.
+   * Fuerza el modo inicial de la vista previa de efectos: true = 'todas', false = 'apagada'.
+   * Si no se pasa, se usa la preferencia guardada del jugador (default 'todas').
    */
   pausarEfectos?: boolean
+}
+
+/**
+ * Vista previa de efectos (modal que pausa el juego antes de resolver una acción con efectos):
+ * - 'todas': pausa las jugadas del humano Y las del bot.
+ * - 'solo-mias': pausa solo las del humano (el bot corre sin interrumpir).
+ * - 'apagada': no pausa nunca.
+ */
+export type VistaPrevia = 'todas' | 'solo-mias' | 'apagada'
+
+const CLAVE_VISTA_PREVIA = 'eter.vistaPrevia'
+
+const SIGUIENTE_VISTA_PREVIA: Record<VistaPrevia, VistaPrevia> = {
+  todas: 'solo-mias',
+  'solo-mias': 'apagada',
+  apagada: 'todas',
+}
+
+function vistaPreviaInicial(config: PartidaConfig): VistaPrevia {
+  if (config.pausarEfectos !== undefined) return config.pausarEfectos ? 'todas' : 'apagada'
+  try {
+    const guardada = window.localStorage.getItem(CLAVE_VISTA_PREVIA)
+    if (guardada === 'todas' || guardada === 'solo-mias' || guardada === 'apagada') return guardada
+  } catch {
+    /* storage bloqueado: default */
+  }
+  return 'todas'
 }
 
 /** Tipo de animación */
@@ -115,7 +142,8 @@ export function usePartida(config: PartidaConfig) {
   const [preview, setPreview] = useState<PreviewEfectos | null>(null)
   const previewAccionRef = useRef<Action | null>(null)
   const previewEsBotRef = useRef(false)
-  const pausarRef = useRef(config.pausarEfectos ?? true)
+  const [vistaPrevia, setVistaPrevia] = useState<VistaPrevia>(() => vistaPreviaInicial(config))
+  const vistaPreviaRef = useRef(vistaPrevia)
   const delayRef = useRef(config.delayMs ?? 350)
   const jugadasBotRef = useRef(0)
 
@@ -211,7 +239,8 @@ export function usePartida(config: PartidaConfig) {
     (accion: Action, esBot: boolean) => {
       const s = estadoRef.current
       if (!s || s.fase === 'terminada') return false
-      if (!pausarRef.current) return false
+      const modo = vistaPreviaRef.current
+      if (modo === 'apagada' || (modo === 'solo-mias' && esBot)) return false
       if (!('cardInstanceId' in accion) || !accion.cardInstanceId) return false
       const inst = s.instances[accion.cardInstanceId]
       const meta = inst?.cardId ? getCardMeta(inst.cardId) : null
@@ -260,6 +289,23 @@ export function usePartida(config: PartidaConfig) {
     previewAccionRef.current = null
     setPreview(null)
   }, [])
+
+  /** Cambia el modo de la vista previa (todas → solo mías → apagada) y lo recuerda entre partidas. */
+  const ciclarVistaPrevia = useCallback(() => {
+    const siguiente = SIGUIENTE_VISTA_PREVIA[vistaPreviaRef.current]
+    vistaPreviaRef.current = siguiente
+    setVistaPrevia(siguiente)
+    try {
+      window.localStorage.setItem(CLAVE_VISTA_PREVIA, siguiente)
+    } catch {
+      /* storage bloqueado: la preferencia vale solo para esta sesión */
+    }
+    // Una pausa abierta que el nuevo modo no habría hecho se acepta sola (si no, el juego quedaría trabado)
+    const pendiente = previewAccionRef.current !== null
+    if (pendiente && (siguiente === 'apagada' || (siguiente === 'solo-mias' && previewEsBotRef.current))) {
+      aceptarPreview()
+    }
+  }, [aceptarPreview])
 
   // Limpiar animaciones expiradas
   useEffect(() => {
@@ -329,5 +375,7 @@ export function usePartida(config: PartidaConfig) {
     preview,
     aceptarPreview,
     cancelarPreview,
+    vistaPrevia,
+    ciclarVistaPrevia,
   }
 }

@@ -7,6 +7,9 @@
  * El overlay bloquea toda interacción con el tablero mientras el checkpoint
  * está abierto (el motor no acepta otras acciones — ADR-5 determinista).
  */
+import { Boton } from '../../shared/ui/Boton'
+import { Modal } from '../../shared/ui/Modal'
+import { Seccion } from '../../shared/ui/Seccion'
 import { MiniCard } from './MiniCard'
 import type { Action } from '../game/actions'
 import type { GameState, PlayerId, CardInstance } from '../game/types'
@@ -33,74 +36,56 @@ export function PreventionModal({ state, playerId, acciones, onAccion, onZoom }:
   const permitir = acciones.find((a) => a.type === 'responder_prevenicion' && !a.prevenir)
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center">
-      <div className="bg-surface border border-card-border rounded-xl p-6 max-w-md mx-4 w-full">
-        {/* ── Header ────────────────────────────────────────────── */}
-        <div className="mb-4">
-          <h2 className="font-display text-lg font-bold text-gray-100 mb-1">
-            🛡 Prevenir destrucción
-          </h2>
-          <p className="text-xs text-gray-400">
-            Una de tus cartas puede salvar este Vínculo exiliándose.
-          </p>
-        </div>
-
-        {/* ── Vínculo en peligro ───────────────────────────────── */}
-        <div className="bg-surface-2 rounded-lg p-3 mb-3">
-          <p className="text-[9px] uppercase tracking-wider text-gray-500 mb-1.5">
-            En peligro
-          </p>
-          <div className="flex items-center gap-3">
-            {victimaInst && (
-              <MiniCard inst={victimaInst} tamano="sm" onZoom={() => onZoom(victimaInst)} />
-            )}
-            <div>
-              <p className="text-sm font-medium text-gray-200">
-                {victimaMeta?.name ?? pendiente.victimId}
-              </p>
-              <p className="text-[10px] text-gray-400">Vínculo · destrucción {pendiente.causa}</p>
-            </div>
-          </div>
-        </div>
-
-        {/* ── Fuente que puede prevenir ────────────────────────── */}
-        <div className="bg-surface-2 rounded-lg p-3 mb-4">
-          <p className="text-[9px] uppercase tracking-wider text-gray-500 mb-1.5">
-            Puede prevenir (se exiliará)
-          </p>
-          <div className="flex items-center gap-3">
-            {fuenteInst && (
-              <MiniCard inst={fuenteInst} tamano="sm" onZoom={() => onZoom(fuenteInst)} />
-            )}
-            <div>
-              <p className="text-sm font-medium text-gray-200">
-                {fuenteMeta?.name ?? pendiente.fuenteId}
-              </p>
-              <p className="text-[10px] text-gray-400">prevent_destroy · costo: exiliarse</p>
-            </div>
-          </div>
-        </div>
-
-        {/* ── Decisiones ───────────────────────────────────────── */}
-        <div className="flex justify-end gap-3 pt-3 border-t border-card-border">
-          <button
+    <Modal
+      titulo="Prevenir destrucción"
+      subtitulo="Una de tus cartas puede salvar este Vínculo exiliándose."
+      icono="🛡"
+      tono="alerta"
+      pie={
+        <>
+          <Boton
             onClick={() => {
               if (permitir) onAccion(permitir)
             }}
-            className="text-xs bg-surface-2 hover:bg-card-border text-gray-300 px-4 py-2 rounded-lg transition-colors cursor-pointer"
           >
             Permitir destrucción
-          </button>
-          <button
+          </Boton>
+          <Boton
+            variante="primario"
             onClick={() => {
               if (prevenir) onAccion(prevenir)
             }}
-            className="text-xs bg-ether-600 hover:bg-ether-500 text-white px-4 py-2 rounded-lg transition-colors cursor-pointer"
           >
             Prevenir
-          </button>
+          </Boton>
+        </>
+      }
+    >
+      <div className="grid gap-3 sm:grid-cols-2">
+        {/* Vínculo en peligro */}
+        <div className="rounded-xl border border-rose-400/25 bg-rose-500/[0.06] p-3">
+          <Seccion>En peligro</Seccion>
+          <div className="flex items-center gap-3">
+            {victimaInst && <MiniCard inst={victimaInst} anchoPx={76} sinTooltip onZoom={() => onZoom(victimaInst)} />}
+            <div className="min-w-0">
+              <p className="font-display text-sm font-bold text-gray-100">{victimaMeta?.name ?? pendiente.victimId}</p>
+              <p className="mt-0.5 text-[11px] text-gray-400">Vínculo · destrucción {pendiente.causa}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Fuente que puede prevenir */}
+        <div className="rounded-xl border border-ether-400/25 bg-ether-500/[0.06] p-3">
+          <Seccion>Puede prevenir (se exiliará)</Seccion>
+          <div className="flex items-center gap-3">
+            {fuenteInst && <MiniCard inst={fuenteInst} anchoPx={76} sinTooltip onZoom={() => onZoom(fuenteInst)} />}
+            <div className="min-w-0">
+              <p className="font-display text-sm font-bold text-gray-100">{fuenteMeta?.name ?? pendiente.fuenteId}</p>
+              <p className="mt-0.5 text-[11px] text-gray-400">prevent_destroy · costo: exiliarse</p>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+    </Modal>
   )
 }

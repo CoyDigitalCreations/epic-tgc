@@ -10,6 +10,9 @@
  *
  * El overlay bloquea toda interacción con el tablero mientras la cadena está abierta.
  */
+import { Boton } from '../../shared/ui/Boton'
+import { Modal } from '../../shared/ui/Modal'
+import { Seccion } from '../../shared/ui/Seccion'
 import { MiniCard } from './MiniCard'
 import type { Action } from '../game/actions'
 import type { GameState, PlayerId, CardInstance } from '../game/types'
@@ -54,139 +57,106 @@ export function PriorityModal({ state, playerId, acciones, onAccion, onZoom }: P
   const esCombate = !!state.combate?.cadena
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center">
-      <div className="bg-surface border border-card-border rounded-xl p-6 max-w-lg mx-4 w-full max-h-[85vh] overflow-y-auto">
-        {/* ── Header ────────────────────────────────────────────── */}
-        <div className="mb-4">
-          <h2 className="font-display text-lg font-bold text-gray-100 mb-1">
-            {esCombate ? 'Cadena de Combate (9.6)' : 'Cadena Global'}
-          </h2>
-          <p className="text-xs text-gray-400">
-            {totalRespondibles > 0
-              ? `Tenés ${totalRespondibles} carta(s) que puede(n) responder — elegí o pasá prioridad.`
-              : 'No tenés cartas que puedan responder este efecto — pasá la prioridad para continuar.'}
-          </p>
-        </div>
-
+    <Modal
+      titulo={esCombate ? 'Cadena de Combate (9.6)' : 'Cadena Global'}
+      subtitulo={
+        totalRespondibles > 0
+          ? `Tenés ${totalRespondibles} carta(s) que puede(n) responder — elegí o pasá prioridad.`
+          : 'No tenés cartas que puedan responder este efecto — pasá la prioridad para continuar.'
+      }
+      icono="⛓"
+      tono="alerta"
+      ancho="lg"
+      pie={pasar && <Boton onClick={() => onAccion(pasar)}>Pasar prioridad</Boton>}
+    >
+      <div className="space-y-4">
         {/* ── Efecto que activó la cadena ────────────────────────── */}
         {efectoActual && (
-          <div className="bg-surface-2 rounded-lg p-3 mb-4">
-            <p className="text-[9px] uppercase tracking-wider text-gray-500 mb-1.5">
-              Efecto activado
-            </p>
-            <div className="flex items-center gap-3">
-              {efectoInst && (
-                <MiniCard
-                  inst={efectoInst}
-                  tamano="sm"
-                  onZoom={() => onZoom(efectoInst)}
-                />
-              )}
-              <div>
-                <p className="text-sm font-medium text-gray-200">
+          <section className="rounded-xl border border-amber-400/20 bg-amber-500/[0.05] p-3">
+            <Seccion>Efecto activado</Seccion>
+            <div className="flex items-center gap-4">
+              {efectoInst && <MiniCard inst={efectoInst} anchoPx={76} sinTooltip onZoom={() => onZoom(efectoInst)} />}
+              <div className="min-w-0">
+                <p className="font-display text-base font-bold text-gray-100">
                   {efectoMeta?.name ?? efectoActual.cardInstanceId}
                 </p>
-                <p className="text-[10px] text-gray-400">
-                  por {efectoActual.jugador === playerId ? 'Tú' : 'el rival'}
-                </p>
+                <p className="mt-0.5 text-[11px] text-gray-400">por {efectoActual.jugador === playerId ? 'Tú' : 'el rival'}</p>
               </div>
             </div>
-          </div>
+          </section>
         )}
 
         {/* ── Stack actual ──────────────────────────────────────── */}
         {cadena.pila.length > 0 && (
-          <div className="mb-4">
-            <p className="text-[9px] uppercase tracking-wider text-gray-500 mb-1.5">
-              Stack ({cadena.pila.length})
-            </p>
-            <div className="flex gap-2 flex-wrap">
+          <section>
+            <Seccion cantidad={cadena.pila.length}>Stack</Seccion>
+            <div className="flex flex-wrap items-end gap-2">
               {cadena.pila.map((id, idx) => {
                 const inst = state.instances[id]
+                const esUltima = idx === cadena.pila.length - 1
                 return (
-                  <MiniCard
-                    key={`${id}-${idx}`}
-                    inst={inst}
-                    tamano="sm"
-                    onZoom={() => onZoom(inst)}
-                  />
+                  <div key={`${id}-${idx}`} className="flex flex-col items-center gap-1">
+                    <MiniCard inst={inst} anchoPx={64} sinTooltip onZoom={() => onZoom(inst)} />
+                    <span
+                      className={`rounded-full px-1.5 py-px font-mono text-[9px] ${
+                        esUltima ? 'bg-amber-500/25 text-amber-200' : 'bg-white/10 text-gray-400'
+                      }`}
+                    >
+                      {esUltima ? 'resuelve 1°' : `#${idx + 1}`}
+                    </span>
+                  </div>
                 )
               })}
             </div>
-          </div>
+            <p className="mt-2 text-[10px] text-gray-500">La cadena se resuelve en orden inverso: la última carta apilada va primero.</p>
+          </section>
         )}
 
         {/* ── Cartas respondibles ───────────────────────────────── */}
         {respondibles.length > 0 && (
-          <div className="mb-4">
-            <p className="text-[9px] uppercase tracking-wider text-gray-500 mb-1.5">
-              Tus cartas respondibles ({respondibles.length})
-            </p>
-            <div className="flex gap-2 flex-wrap items-start">
+          <section>
+            <Seccion cantidad={respondibles.length}>Tus cartas respondibles</Seccion>
+            <div className="flex flex-wrap items-start gap-3">
               {respondibles.map((id) => {
                 const inst = state.instances[id]
-                const accion = acciones.find(
-                  (a) => a.type === 'responder_cadena' && a.cardInstanceId === id,
-                )
+                const accion = acciones.find((a) => a.type === 'responder_cadena' && a.cardInstanceId === id)
                 return (
-                  <div key={id} className="flex flex-col items-center gap-1">
-                    <MiniCard
-                      inst={inst}
-                      tamano="sm"
-                      onZoom={() => onZoom(inst)}
-                    />
+                  <div key={id} className="flex flex-col items-center gap-1.5">
+                    <MiniCard inst={inst} anchoPx={76} sinTooltip onZoom={() => onZoom(inst)} />
                     {accion && (
-                      <button
-                        onClick={() => onAccion(accion)}
-                        className="text-[10px] bg-ether-600 hover:bg-ether-500 text-white px-2 py-0.5 rounded transition-colors cursor-pointer"
-                      >
+                      <Boton variante="primario" tam="sm" onClick={() => onAccion(accion)}>
                         Responder
-                      </button>
+                      </Boton>
                     )}
                   </div>
                 )
               })}
             </div>
-          </div>
+          </section>
         )}
 
         {/* ── Presteza en mano (respuesta jugando — obs 1874) ────── */}
         {enMano.length > 0 && (
-          <div className="mb-4">
-            <p className="text-[9px] uppercase tracking-wider text-amber-400/80 mb-1.5">
-              Presteza en tu mano — jugable como respuesta ({enMano.length})
-            </p>
-            <div className="flex gap-2 flex-wrap items-start">
+          <section>
+            <Seccion tono="alerta" cantidad={enMano.length}>
+              Presteza en tu mano — jugable como respuesta
+            </Seccion>
+            <div className="flex flex-wrap items-start gap-3">
               {enMano.map(({ id, accion }) => {
                 const inst = state.instances[id]
                 return (
-                  <div key={id} className="flex flex-col items-center gap-1">
-                    <MiniCard inst={inst} tamano="sm" onZoom={() => onZoom(inst)} />
-                    <button
-                      onClick={() => onAccion(accion)}
-                      className="text-[10px] bg-amber-600 hover:bg-amber-500 text-white px-2 py-0.5 rounded transition-colors cursor-pointer"
-                    >
+                  <div key={id} className="flex flex-col items-center gap-1.5">
+                    <MiniCard inst={inst} anchoPx={76} sinTooltip onZoom={() => onZoom(inst)} />
+                    <Boton variante="alerta" tam="sm" onClick={() => onAccion(accion)}>
                       Jugar
-                    </button>
+                    </Boton>
                   </div>
                 )
               })}
             </div>
-          </div>
-        )}
-
-        {/* ── Botón Pasar ───────────────────────────────────────── */}
-        {pasar && (
-          <div className="flex justify-end gap-3 mt-4 pt-3 border-t border-card-border">
-            <button
-              onClick={() => onAccion(pasar)}
-              className="text-xs bg-surface-2 hover:bg-card-border text-gray-300 px-4 py-2 rounded-lg transition-colors cursor-pointer"
-            >
-              Pasar prioridad
-            </button>
-          </div>
+          </section>
         )}
       </div>
-    </div>
+    </Modal>
   )
 }

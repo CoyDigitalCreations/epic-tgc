@@ -66,22 +66,25 @@ export function CartaZoom({ inst, onClose }: CartaZoomProps) {
       role="dialog"
       aria-modal="true"
       aria-label={`Carta en grande: ${meta.name}`}
-      className="fixed inset-0 z-[70] bg-black/85 flex items-center justify-center p-4"
+      className="anim-modal-fondo fixed inset-0 z-60 flex items-center justify-center bg-[#04040a]/88 p-4 backdrop-blur-sm"
       onClick={onClose}
     >
-      <div className="flex flex-col items-center gap-3" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center gap-3 w-full">
-          <p className="text-sm text-gray-200 font-display tracking-wide">{meta.name}</p>
-          <span className="text-[10px] uppercase tracking-wider text-gray-500">{meta.type}</span>
+      <div className="anim-modal-panel flex flex-col items-center gap-3" onClick={(e) => e.stopPropagation()}>
+        <div className="flex w-full items-center gap-3">
+          <p className="font-display text-base font-bold tracking-wide text-gray-50">{meta.name}</p>
+          <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] uppercase tracking-wider text-gray-300">{meta.type}</span>
           <button
             onClick={onClose}
             aria-label="Cerrar"
-            className="ml-auto text-xs bg-surface-2 hover:bg-card-border text-gray-300 px-2.5 py-1 rounded transition-colors cursor-pointer"
+            className="ml-auto grid size-7 cursor-pointer place-items-center rounded-lg text-sm text-gray-400 transition-colors hover:bg-white/10 hover:text-gray-100"
           >
             ✕
           </button>
         </div>
-        <div style={{ width: ANCHO_CARTA * escala, height: ALTO_CARTA * escala, position: 'relative' }}>
+        <div
+          className="relative rounded-2xl shadow-[0_0_90px_rgba(112,112,255,0.28)]"
+          style={{ width: ANCHO_CARTA * escala, height: ALTO_CARTA * escala }}
+        >
           <div
             style={{
               transform: `scale(${escala})`,

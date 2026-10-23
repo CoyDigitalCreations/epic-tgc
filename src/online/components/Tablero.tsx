@@ -2,14 +2,36 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { aporteDe, atacantesElegibles, campeonesSacrificables, costeEterHabilidad, faccionesCompartidas, getCardMeta, sacrificiosRequeridos, esBloqueoFijo, maxEterBloqueado, efectoBloqueoAccion } from '../game'
 import type { Action, CardInstance, GameState, PlayerId } from '../game'
-import { useCardImage } from '../../forge/hooks/useCardImage'
-import { MiniCard, TAMANOS } from './MiniCard'
+import { Boton as BotonUI } from '../../shared/ui/Boton'
+import { Dock } from '../../shared/ui/Dock'
+import { Modal } from '../../shared/ui/Modal'
+import { Seccion } from '../../shared/ui/Seccion'
+import { TileCarta } from '../../shared/ui/TileCarta'
+import { ElegirObjetivoModal } from './ElegirObjetivoModal'
+import { MiniCard } from './MiniCard'
+import { InspectorCarta } from './InspectorCarta'
+import { AnchoTableroContext, InspeccionContext, useAnchoCarta } from './tableroContext'
+import type { Inspeccion } from './tableroContext'
+import {
+  ANCHO_FLANCO,
+  ESCALA_FILA_ETER,
+  ESCALA_VINCULO,
+  RELACION_CARTA,
+  useAlturaVentana,
+  useAnchoTablero,
+} from './useAnchoTablero'
 import { CartaZoom } from './CartaZoom'
 import { ChampionStatus, FocosChampion } from './ChampionStatus'
 import { BlockingInterface } from './BlockingInterface'
 import { ActiveAbilitiesPanel } from './ActiveAbilitiesPanel'
 import { PriorityModal } from './PriorityModal'
 import { PreventionModal } from './PreventionModal'
+import { EnVueloContext } from '../animacion/contexto'
+import { useAnimacionCartas } from '../animacion/useAnimacionCartas'
+import type { Velocidad } from '../animacion/useAnimacionCartas'
+import type { VistaPrevia } from '../usePartida'
+import { ManoAbanico } from './ManoAbanico'
+import type { OpcionMano } from './ManoAbanico'
 
 interface TableroProps {
   /** Proyección 6.2 del estado para el jugador A (cartas ocultas con cardId null). */
@@ -24,6 +46,9 @@ interface TableroProps {
   onAbandonar: () => void
   /** Animaciones de movimiento de cartas (glow en celda destino). */
   animaciones?: Array<{ tipo: string; zona?: string; jugador?: PlayerId; atacantes?: string[]; cardInstanceId?: string; key: number }>
+  /** Modo de la vista previa de efectos; con `onCiclarVistaPrevia` muestra el selector en la barra superior. */
+  vistaPrevia?: VistaPrevia
+  onCiclarVistaPrevia?: () => void
 }
 
 /* ─────────────────────────────────────────────
@@ -59,6 +84,106 @@ interface PanelAbierto {
   campeonSlot?: number
   /** Instance ID de un artefacto (Mística/Arcana) cuando zona='bloqueado'. */
   artefactoId?: string
+}
+
+const ETIQUETA_VELOCIDAD: Record<Velocidad, string> = {
+  rapida: 'rápida',
+  normal: 'normal',
+  off: 'apagada',
+}
+
+const ETIQUETA_VISTA_PREVIA: Record<VistaPrevia, string> = {
+  todas: 'todas',
+  'solo-mias': 'solo mías',
+  apagada: 'apagada',
+}
+
+/** Etiqueta de la opción "jugar" del menú de una carta de la mano, según su acción. */
+const ETIQUETA_JUGAR: Record<string, string> = {
+  jugar_campeon: 'Invocar',
+  jugar_mistica: 'Jugar',
+  colocar_arcana: 'Colocar boca abajo',
+}
+
+/** Fases jugables del turno, en orden (el Alba se auto-resuelve: manual §8.2). */
+const FASES = [
+  { id: 'forja', label: 'Forja' },
+  { id: 'choque', label: 'Choque' },
+  { id: 'ocaso', label: 'Ocaso' },
+] as const
+
+/**
+ * Panel lateral de un jugador, junto a su campo: nombre, de quién es el turno y las zonas con
+ * su NOMBRE y su CÓDIGO del manual (3G, 2G…). Las pilas con cartas se abren con un clic,
+ * igual que sus casillas. Aprovecha el ancho que sobra y libera el alto que limita el tamaño de las cartas.
+ */
+function FlancoJugador({
+  nombre,
+  color,
+  jugador,
+  activo,
+  ancho,
+  onAbrirPanel,
+  children,
+}: {
+  nombre: string
+  color: string
+  jugador: GameState['players'][PlayerId]
+  activo: boolean
+  /** Ancho (px) del panel; escala con la carta. */
+  ancho: number
+  onAbrirPanel: (zona: ZonaPanel) => void
+  children?: ReactNode
+}) {
+  const filas: Array<{ nombre: string; zona: string; cantidad: number; panel?: ZonaPanel }> = [
+    { nombre: 'Mazo', zona: '3G', cantidad: jugador.mazo.length },
+    { nombre: 'Cementerio', zona: '2G', cantidad: jugador.cementerio.length, panel: 'cementerio' },
+    { nombre: 'Exilio', zona: '1G', cantidad: jugador.exilio.length, panel: 'exilio' },
+    { nombre: 'Reserva', zona: '2A', cantidad: jugador.eterReserva.length, panel: 'reserva' },
+    { nombre: 'Éter pagado', zona: '1A', cantidad: jugador.eterPagado.length, panel: 'pagado' },
+    { nombre: 'Mano', zona: '', cantidad: jugador.mano.length },
+  ]
+  return (
+    <div
+      className="shrink-0 flex flex-col gap-1.5 rounded-lg border border-card-border/60 bg-surface/50 p-2"
+      style={{ width: ancho }}
+    >
+      <div className="flex items-center gap-1.5">
+        <span className={`w-2 h-2 rounded-full shrink-0 ${color} ${activo ? 'ring-2 ring-white/30' : 'opacity-60'}`} />
+        <p className={`text-xs truncate ${activo ? 'text-gray-100 font-semibold' : 'text-gray-400'}`}>{nombre}</p>
+      </div>
+      <ul className="flex flex-col gap-0.5">
+        {filas.map((f) => {
+          const clickeable = f.panel !== undefined && f.cantidad > 0
+          const contenido = (
+            <>
+              <span className="truncate">
+                {f.nombre}
+                {f.zona && <span className="ml-1 text-gray-600">{f.zona}</span>}
+              </span>
+              <span className="font-mono text-gray-300">{f.cantidad}</span>
+            </>
+          )
+          return (
+            <li key={f.nombre}>
+              {clickeable ? (
+                <button
+                  onClick={() => onAbrirPanel(f.panel as ZonaPanel)}
+                  title={`Ver ${f.nombre}${f.zona ? ` (${f.zona})` : ''}`}
+                  className="w-full flex items-center justify-between gap-2 text-[10px] text-gray-400 rounded px-1 py-0.5 hover:bg-white/5 hover:text-gray-200 transition-colors cursor-pointer"
+                >
+                  {contenido}
+                </button>
+              ) : (
+                <div className="flex items-center justify-between gap-2 text-[10px] text-gray-500 px-1 py-0.5">{contenido}</div>
+              )}
+            </li>
+          )
+        })}
+      </ul>
+      {children}
+    </div>
+  )
 }
 
 const FASE_LABEL: Record<string, string> = {
@@ -178,98 +303,126 @@ function labelOpcionesElegir(vista: GameState, opciones: string[]): string {
 }
 
 /**
- * Opción de elegir_objetivo (tutor, negar, retorno, etc.): una carta
- * seleccionable con arte, nombre, coste y ATQ/RES para que el jugador VEA
- * qué cartas puede elegir. Cartas boca abajo (Arcanas) se muestran como dorso.
+ * Tema de cada zona (nombre + color): los huecos vacíos lo muestran tenue para
+ * poder leer el campo de un vistazo (Campeón rojo, Mística violeta, Arcana ámbar…).
  */
-function OpcionTutor({
-  inst,
-  onAccion,
-}: {
-  inst: CardInstance
-  onAccion: (a: Action) => void
-}) {
-  const cardId = inst.cardId ?? undefined
-  const meta = cardId ? getCardMeta(cardId) : null
-  const imageUrl = useCardImage(cardId, meta?.hasImage, meta?.imageUrl)
-  const bocaAbajo = inst.bocaArriba === false
-  const combate =
-    !bocaAbajo && meta?.type === 'Campeón' && 'poder' in meta.stats
-      ? `ATQ ${meta.stats.poder} RES ${meta.stats.resistencia}`
-      : null
-  return (
-    <button
-      onClick={() => onAccion({ type: 'elegir_objetivo', objetivoId: inst.cardInstanceId })}
-      title={bocaAbajo ? 'Carta boca abajo' : meta?.flavorText}
-      className="flex items-center gap-2 bg-surface-2 hover:bg-card-border border border-card-border rounded-lg
-                 px-2 py-1.5 transition-colors cursor-pointer text-left max-w-50"
-    >
-      <div
-        className="shrink-0 rounded-sm border border-card-border overflow-hidden flex items-center justify-center"
-        style={{
-          width: 26,
-          aspectRatio: '744/1038',
-          background: bocaAbajo
-            ? 'linear-gradient(135deg, #14142b 0%, #1e1e3a 60%, #2a2a4e 100%)'
-            : 'linear-gradient(135deg, #14142b 0%, #1e1e3a 60%, #2a2a4e 100%)',
-        }}
-      >
-        {bocaAbajo ? (
-          <span style={{ color: '#4b4b7a', fontFamily: '"Cinzel", serif', fontSize: 8, fontWeight: 700 }}>
-            ✦
-          </span>
-        ) : imageUrl ? (
-          <img src={imageUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-        ) : (
-          <span style={{ color: '#4b4b7a', fontFamily: '"Cinzel", serif', fontSize: 8, fontWeight: 700 }}>
-            ✦
-          </span>
-        )}
-      </div>
-      <div className="min-w-0">
-        <p className="text-[11px] text-gray-100 truncate">{bocaAbajo ? 'Carta boca abajo' : (meta?.name ?? 'Carta')}</p>
-        <p className="text-[9px] text-gray-500">
-          {meta?.type}
-          {meta ? ` · Coste ${meta.stats.cost}` : ''}
-          {combate ? ` · ${combate}` : ''}
-        </p>
-      </div>
-    </button>
-  )
+function temaZona(zona: string): { nombre: string; color: string } {
+  const fila = zona[0]
+  const col = zona[1] ?? ''
+  if (fila === '1') {
+    if (col === 'A') return { nombre: 'Éter pagado', color: '#22d3ee' }
+    if (col === 'G') return { nombre: 'Exilio', color: '#94a3b8' }
+    return { nombre: 'Éter bloq.', color: '#22d3ee' }
+  }
+  if (fila === '2') {
+    if (col === 'A') return { nombre: 'Reserva', color: '#fbbf24' }
+    if (col === 'G') return { nombre: 'Cementerio', color: '#94a3b8' }
+    return { nombre: 'Campeón', color: '#ef4444' }
+  }
+  if (fila === '3') {
+    if ('ABC'.includes(col)) return { nombre: 'Mística', color: '#a855f7' }
+    if ('DEF'.includes(col)) return { nombre: 'Arcana', color: '#f59e0b' }
+    return { nombre: 'Mazo', color: '#7070ff' }
+  }
+  return { nombre: 'Vínculo', color: '#ec4899' }
 }
 
 /**
- * Ancho MÍNIMO de las casillas de la grilla: igual al ALTO de una carta
- * vertical (md) para que las cartas en HORIZONTAL (campeones cansados,
- * rotados 90°) se vean del MISMO tamaño que las verticales: una vertical
- * mide ancho×alto (92×128.35) y la misma carta girada 128.35×92.
+ * Celda de la grilla. Todas las columnas miden lo mismo: el ALTO de una carta
+ * vertical, para que un Campeón cansado (girado 90°) ocupe su casilla sin
+ * deformar la grilla. `escala` achica la carta de la fila (Éter, Vínculos) sin
+ * tocar el ancho de la columna, salvo `ocupaColumna={false}` (bloque de Vínculos).
+ * Los huecos vacíos muestran el tema de la zona (6.1).
  */
-const ANCHO_CELDA = TAMANOS.md * (1038 / 744)
-
-/** Celda de la grilla: rótulo de zona (1A…) + contenido. Los huecos vacíos muestran el límite (6.1). */
-function Celda({ zona, children, glow, glowColor, invertida }: { zona: string; children?: ReactNode; glow?: boolean; glowColor?: 'green' | 'red'; invertida?: boolean }) {
-  const glowStyles = glow ? {
-    boxShadow: `0 0 12px 4px ${glowColor === 'red' ? 'rgba(239, 68, 68, 0.6)' : 'rgba(74, 222, 128, 0.5)'}`,
-    borderRadius: 8,
-  } : undefined
+function Celda({
+  zona,
+  children,
+  glow,
+  glowColor,
+  elegible,
+  onElegir,
+  colorElegible = '#22d3ee',
+  etiquetaElegir,
+  escala = 1,
+  ocupaColumna = true,
+}: {
+  zona: string
+  children?: ReactNode
+  glow?: boolean
+  glowColor?: 'green' | 'red'
+  /** Casilla clickeable que el jugador debe elegir (colocar una carta, Vínculo a romper): se ilumina. */
+  elegible?: boolean
+  onElegir?: () => void
+  /** Color del halo de la casilla elegible (celeste para colocar, rojo para la Ruptura). */
+  colorElegible?: string
+  /** Nombre accesible de la casilla elegible (por defecto "Colocar en 3D"). */
+  etiquetaElegir?: string
+  escala?: number
+  ocupaColumna?: boolean
+}) {
+  const cw = useAnchoCarta()
+  const anchoCarta = Math.round(cw * escala)
+  const tema = temaZona(zona)
+  const glowStyles = elegible
+    ? { boxShadow: `0 0 14px 3px ${colorElegible}8c`, outline: `2px solid ${colorElegible}`, borderRadius: 8, cursor: 'pointer' }
+    : glow
+      ? {
+          boxShadow: `0 0 12px 4px ${glowColor === 'red' ? 'rgba(239, 68, 68, 0.6)' : 'rgba(74, 222, 128, 0.5)'}`,
+          borderRadius: 8,
+        }
+      : undefined
 
   return (
     <div
-      className={`flex flex-col items-center gap-0.5 relative ${glow ? 'animate-pulse-ring' : ''}`}
+      className={`flex flex-col items-center justify-start relative ${glow || elegible ? 'animate-pulse-ring' : ''}`}
       data-zona={zona}
-      style={{ minWidth: ANCHO_CELDA, overflow: 'visible', ...glowStyles }}
+      title={tema.nombre}
+      role={elegible ? 'button' : undefined}
+      aria-label={elegible ? (etiquetaElegir ?? `Colocar en ${zona}`) : undefined}
+      tabIndex={elegible ? 0 : undefined}
+      onClick={elegible ? onElegir : undefined}
+      onKeyDown={
+        elegible
+          ? (e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault()
+                onElegir?.()
+              }
+            }
+          : undefined
+      }
+      style={{
+        minWidth: ocupaColumna ? Math.round(cw * RELACION_CARTA) : anchoCarta,
+        minHeight: Math.round(anchoCarta * RELACION_CARTA),
+        overflow: 'visible',
+        ...glowStyles,
+      }}
     >
-      <span
-        className="text-[7px] font-mono text-gray-600 uppercase leading-none tracking-wider"
-        style={invertida ? { transform: 'rotate(180deg)' } : undefined}
-      >
-        {zona}
-      </span>
-      {children ?? (
-        <div
-          style={{ width: TAMANOS.md, aspectRatio: '744/1038', borderRadius: 6, border: '1px dashed #23233c' }}
-          aria-hidden="true"
-        />
+      {/* Elegible: el contenido no captura el clic (una carta ahí abriría su zoom en vez de elegir la casilla) */}
+      {elegible && children ? (
+        <div style={{ pointerEvents: 'none', display: 'contents' }}>{children}</div>
+      ) : (
+        (children ?? (
+          <div
+            aria-hidden="true"
+            className="flex items-end justify-center pb-1 select-none"
+            style={{
+              width: anchoCarta,
+              height: Math.round(anchoCarta * RELACION_CARTA),
+              borderRadius: 6,
+              border: `1px dashed ${tema.color}33`,
+              background: `${tema.color}0d`,
+            }}
+          >
+            <span
+              data-zona-label
+              className="font-mono uppercase tracking-wider leading-none text-center"
+              style={{ fontSize: Math.max(6, Math.round(anchoCarta * 0.1)), color: `${tema.color}66` }}
+            >
+              {zona}
+            </span>
+          </div>
+        ))
       )}
     </div>
   )
@@ -283,6 +436,7 @@ function Pila({
   onClick,
   onZoom,
   invertida,
+  ancho,
 }: {
   vista: GameState
   insts: string[]
@@ -290,6 +444,8 @@ function Pila({
   onClick?: () => void
   onZoom?: () => void
   invertida?: boolean
+  /** Ancho (px) de la carta tope. */
+  ancho: number
 }) {
   if (insts.length === 0) return null
   const tope = insts[insts.length - 1]
@@ -297,7 +453,7 @@ function Pila({
   return (
     <MiniCard
       inst={vista.instances[tope]}
-      tamano="md"
+      anchoPx={ancho}
       agotado={false}
       onClick={onClick}
       onZoom={onZoom}
@@ -355,6 +511,12 @@ interface GrillaProps {
   selAtaque?: string[]
   esPasoAtaquePropio?: boolean
   onToggleSelAtaque?: (id: string) => void
+  /** Casillas (p. ej. '3D') iluminadas para colocar la carta en curso (solo la grilla propia). */
+  casillasElegibles?: string[]
+  onElegirCasilla?: (zona: string) => void
+  /** Ruptura pendiente (§9.4): slots 0-5 de los Vínculos de ESTE campo que el atacante puede romper (a ciegas). */
+  vinculosElegibles?: number[]
+  onElegirVinculo?: (slot: number) => void
 }
 
 /** Panel colapsable de log detallado para debugging, con botón de copiar. */
@@ -443,9 +605,19 @@ function GrillaJugador({
   selAtaque = [],
   esPasoAtaquePropio = false,
   onToggleSelAtaque,
+  casillasElegibles,
+  onElegirCasilla,
+  vinculosElegibles,
+  onElegirVinculo,
 }: GrillaProps) {
   const p = vista.players[jugador]
   const soy = jugador === 'A'
+  /** Ancho de carta del tablero (responsivo) y de las cartas más chicas: fila de Éter y Vínculos. */
+  const cw = useAnchoCarta()
+  const cwEter = Math.round(cw * ESCALA_FILA_ETER)
+  const cwVinculo = Math.round(cw * ESCALA_VINCULO)
+  /** ¿Esta casilla propia está iluminada para colocar la carta en curso? */
+  const elegible = (zona: string) => soy && (casillasElegibles?.includes(zona) ?? false)
 
   /** Selector de pago/bloqueo abierto: los Éteres se eligen en el panel inferior. */
   const enSeleccion = seleccion !== null && soy && leTocaA
@@ -469,7 +641,7 @@ function GrillaJugador({
       <div className="flex flex-col gap-1 items-center">
         <MiniCard
           inst={vista.instances[topeId]}
-          tamano="md"
+          anchoPx={cw}
           onClick={enSeleccion ? undefined : () => abrirPanel(jugador, 'reserva')}
           onZoom={() => abrirZoom(vista.instances[topeId])}
           invertida={invertida}
@@ -510,7 +682,7 @@ function GrillaJugador({
     const activarHabilidad = acciones.find((a) => a.type === 'activar_habilidad' && a.cardInstanceId === id)
     const rotStyle = invertida ? { transform: 'rotate(180deg)' } : undefined
     return (
-      <MiniCard key={id} inst={inst} tamano="md" rotarSiAgotado onZoom={() => abrirZoom(inst)} invertida={invertida}>
+      <MiniCard key={id} inst={inst} anchoPx={cw} rotarSiAgotado hijosSobreCarta onZoom={() => abrirZoom(inst)} invertida={invertida}>
         {leTocaA && (ataque || bloquear || transmutar || activarHabilidad) && (
           <div className="flex gap-1 flex-wrap justify-center" style={rotStyle}>
             {ataque && <Boton accion={ataque} onClick={onAccion} />}
@@ -568,13 +740,14 @@ function GrillaJugador({
 
   /* ── Fila 1 ── */
   celdas.push(
-    <Celda key="1A" zona="1A" invertida={invertida}>
+    <Celda key="1A" zona="1A" escala={ESCALA_FILA_ETER}>
       <Pila
         vista={vista}
         insts={p.eterPagado}
         onClick={() => abrirPanel(jugador, 'pagado')}
         onZoom={() => abrirZoom(vista.instances[p.eterPagado[p.eterPagado.length - 1]])}
         invertida={invertida}
+        ancho={cwEter}
       />
     </Celda>,
   )
@@ -582,11 +755,11 @@ function GrillaJugador({
     const bloqueados = eterBloqueadoDe(slot)
     const zona = `1${String.fromCharCode(66 + slot)}` // 1B…1F
     celdas.push(
-      <Celda key={zona} zona={zona} invertida={invertida}>
+      <Celda key={zona} zona={zona} escala={ESCALA_FILA_ETER}>
         {bloqueados.length > 0 ? (
           <MiniCard
             inst={bloqueados[0]}
-            tamano="md"
+            anchoPx={cwEter}
             onZoom={() => abrirZoom(bloqueados[0])}
             onClick={() => abrirPanel(jugador, 'bloqueado', slot)}
             invertida={invertida}
@@ -617,19 +790,20 @@ function GrillaJugador({
     )
   }
   celdas.push(
-    <Celda key="1G" zona="1G" invertida={invertida}>
+    <Celda key="1G" zona="1G" escala={ESCALA_FILA_ETER}>
       <Pila
         vista={vista}
         insts={p.exilio}
         onClick={() => abrirPanel(jugador, 'exilio')}
         onZoom={() => abrirZoom(vista.instances[p.exilio[p.exilio.length - 1]])}
+        ancho={cwEter}
       />
     </Celda>,
   )
 
   /* ── Fila 2 ── */
   celdas.push(
-    <Celda key="2A" zona="2A" invertida={invertida}>
+    <Celda key="2A" zona="2A">
       {reservaCol()}
     </Celda>,
   )
@@ -639,10 +813,10 @@ function GrillaJugador({
     const hayGlow = animaciones?.some((a) => a.tipo === 'glow' && a.zona === zona && a.jugador === jugador) ?? false
     const hayAtaque = id !== null && (animaciones?.some((a) => a.tipo === 'attack' && a.atacantes?.includes(id)) ?? false)
     celdas.push(
-      <Celda key={zona} zona={zona} glow={hayGlow || hayAtaque} glowColor={hayAtaque ? 'red' : 'green'} invertida={invertida}>
+      <Celda key={zona} zona={zona} glow={hayGlow || hayAtaque} glowColor={hayAtaque ? 'red' : 'green'} elegible={elegible(zona)} onElegir={() => onElegirCasilla?.(zona)}>
         {id ? (
           <div className="relative">
-            {soy && leTocaA ? campeonPropio(id) : <MiniCard inst={vista.instances[id]} tamano="md" rotarSiAgotado onZoom={() => abrirZoom(vista.instances[id])} invertida={invertida} />}
+            {soy && leTocaA ? campeonPropio(id) : <MiniCard inst={vista.instances[id]} anchoPx={cw} rotarSiAgotado onZoom={() => abrirZoom(vista.instances[id])} invertida={invertida} />}
             <ChampionStatus s={vista} id={id} invertida={invertida} />
             <FocosChampion s={vista} id={id} invertida={invertida} />
           </div>
@@ -651,12 +825,13 @@ function GrillaJugador({
     )
   }
   celdas.push(
-    <Celda key="2G" zona="2G" invertida={invertida}>
+    <Celda key="2G" zona="2G">
       <Pila
         vista={vista}
         insts={p.cementerio}
         onClick={() => abrirPanel(jugador, 'cementerio')}
         onZoom={() => abrirZoom(vista.instances[p.cementerio[p.cementerio.length - 1]])}
+        ancho={cw}
       />
     </Celda>,
   )
@@ -682,13 +857,14 @@ function GrillaJugador({
       ? getCardMeta(vista.instances[instMist.equipadoA]?.cardId ?? '')?.name ?? undefined
       : undefined
     celdas.push(
-      <Celda key={zona} zona={zona} invertida={invertida}>
+      <Celda key={zona} zona={zona} elegible={elegible(zona)} onElegir={() => onElegirCasilla?.(zona)}>
         {id ? (
           <MiniCard
             inst={vista.instances[id]}
-            tamano="md"
+            anchoPx={cw}
             onZoom={() => abrirZoom(vista.instances[id])}
             invertida={invertida}
+            hijosSobreCarta
             equipadoANombre={equipadoAMist}
             eteresBloqueados={eteresMist.length > 0 ? eteresMist : undefined}
             onÉterClick={eteresMist.length > 0 ? () => abrirPanel(jugador, 'bloqueado', undefined, id) : undefined}
@@ -748,11 +924,11 @@ function GrillaJugador({
       ? getCardMeta(vista.instances[inst.equipadoA]?.cardId ?? '')?.name ?? undefined
       : undefined
     celdas.push(
-      <Celda key={zona} zona={zona} invertida={invertida}>
+      <Celda key={zona} zona={zona} elegible={elegible(zona)} onElegir={() => onElegirCasilla?.(zona)}>
         {inst ? (
           <MiniCard
             inst={inst}
-            tamano="md"
+            anchoPx={cw}
             bocaAbajo={!inst.bocaArriba}
             onClick={
               inst.cardId !== null && (soy || inst.bocaArriba === true)
@@ -760,6 +936,7 @@ function GrillaJugador({
                 : undefined
             }
             invertida={invertida}
+            hijosSobreCarta
             equipadoANombre={equipadoAArc}
             eteresBloqueados={eteresArc.length > 0 ? eteresArc : undefined}
             onÉterClick={eteresArc.length > 0 ? () => abrirPanel(jugador, 'bloqueado', undefined, id ?? undefined) : undefined}
@@ -801,56 +978,102 @@ function GrillaJugador({
     )
   }
   celdas.push(
-    <Celda key="3G" zona="3G" invertida={invertida}>
-      <MiniCard inst={{ cardInstanceId: 'mazo', cardId: null, owner: jugador }} tamano="md" invertida={invertida} />
-      <span
-        className="text-[8px] text-gray-500 font-mono -mt-0.5"
-        style={invertida ? { transform: 'rotate(180deg)' } : undefined}
-      >
-        {p.mazo.length}
-      </span>
+    <Celda key="3G" zona="3G">
+      <MiniCard
+        inst={{ cardInstanceId: 'mazo', cardId: null, owner: jugador }}
+        anchoPx={cw}
+        invertida={invertida}
+        marca={
+          <span
+            style={{
+              position: 'absolute',
+              bottom: 2,
+              right: 3,
+              background: 'rgba(0,0,0,0.75)',
+              color: '#e5e7eb',
+              fontSize: 9,
+              fontWeight: 700,
+              padding: '1px 4px',
+              borderRadius: 4,
+              pointerEvents: 'none',
+              ...(invertida ? { transform: 'rotate(180deg)' } : undefined),
+            }}
+          >
+            {p.mazo.length}
+          </span>
+        }
+      />
     </Celda>,
   )
 
-  /* ── Fila 4 ── */
-  for (let slot = 0; slot < 6; slot++) {
-    const zona = `4${String.fromCharCode(65 + slot)}` // 4A…4F (Vínculos)
-    const id = p.vinculos[slot]
-    const inst = id ? vista.instances[id] : null
-    celdas.push(
-      <Celda key={zona} zona={zona} invertida={invertida}>
-        {inst ? (
-          <MiniCard
-            inst={inst}
-            tamano="md"
-            bocaAbajo={!inst.bocaArriba}
-            onClick={
-              inst.cardId !== null && (soy || inst.bocaArriba === true)
-                ? () => abrirZoom(inst)
-                : undefined
-            }
-            invertida={invertida}
-          />
-        ) : undefined}
-      </Celda>,
-    )
-  }
-  celdas.push(<Celda key="4G" zona="4G" invertida={invertida} />)
-
-  return (
-    <div className="pb-1">
-      <div
-        data-testid={`grilla-${jugador}`}
-        className="grid grid-cols-7 gap-3 w-max overflow-hidden"
+  /* ── Vínculos 4A-4F: bloque lateral de 2×3 — la VIDA del jugador (manual §5.5) ── */
+  const vinculosRestantes = p.vinculos.filter((id) => id && !vista.instances[id]?.bocaArriba).length
+  const vinculos = (
+    <div className="flex flex-col items-center justify-center gap-1.5 self-center" aria-label="Vínculos">
+      <div className="grid grid-cols-2 gap-1">
+        {p.vinculos.map((id, slot) => {
+          const zona = `4${String.fromCharCode(65 + slot)}` // 4A…4F
+          const inst = id ? vista.instances[id] : null
+          return (
+            <Celda
+              key={zona}
+              zona={zona}
+              escala={ESCALA_VINCULO}
+              ocupaColumna={false}
+              elegible={vinculosElegibles?.includes(slot) ?? false}
+              onElegir={() => onElegirVinculo?.(slot)}
+              colorElegible="#f43f5e"
+              etiquetaElegir={`Romper Vínculo ${zona}`}
+            >
+              {inst ? (
+                <MiniCard
+                  inst={inst}
+                  anchoPx={cwVinculo}
+                  bocaAbajo={!inst.bocaArriba}
+                  onClick={
+                    inst.cardId !== null && (soy || inst.bocaArriba === true)
+                      ? () => abrirZoom(inst)
+                      : undefined
+                  }
+                  invertida={invertida}
+                />
+              ) : undefined}
+            </Celda>
+          )
+        })}
+      </div>
+      <span
+        className="text-[9px] font-semibold uppercase tracking-wider text-pink-300/80 whitespace-nowrap"
         style={invertida ? { transform: 'rotate(180deg)' } : undefined}
       >
-        {celdas}
-      </div>
+        Vínculos {vinculosRestantes}/{p.vinculos.length}
+      </span>
+    </div>
+  )
+
+  return (
+    <div
+      data-testid={`grilla-${jugador}`}
+      className="flex items-stretch gap-4 w-max"
+      style={invertida ? { transform: 'rotate(180deg)' } : undefined}
+    >
+      {vinculos}
+      <div className="grid grid-cols-7 gap-x-2 gap-y-1.5">{celdas}</div>
     </div>
   )
 }
 
-export function Tablero({ vista, acciones, leTocaA, logDetallado = [], onAccion, onAbandonar, animaciones }: TableroProps) {
+export function Tablero({
+  vista,
+  acciones,
+  leTocaA,
+  logDetallado = [],
+  onAccion,
+  onAbandonar,
+  animaciones,
+  vistaPrevia,
+  onCiclarVistaPrevia,
+}: TableroProps) {
   const yo = vista.players.A
   const rival = vista.players.B
   const fase = vista.fase
@@ -868,6 +1091,20 @@ export function Tablero({ vista, acciones, leTocaA, logDetallado = [], onAccion,
   /** A6 (2026-10-22): subconjunto de atacantes elegidos para declarar un único ataque múltiple */
   const [selAtaque, setSelAtaque] = useState<string[]>([])
   const abrirZoom = (inst: CardInstance) => setZoom(inst)
+  /** Contenedor donde se miden las cartas para animar su movimiento (los modales quedan fuera). */
+  const tableroRef = useRef<HTMLElement>(null)
+  const anim = useAnimacionCartas(vista, tableroRef)
+  /** La mesa se mide para que los dos campos entren en pantalla sin scroll (ancho de carta responsivo). */
+  const mesaRef = useRef<HTMLDivElement>(null)
+  const cw = useAnchoTablero(mesaRef)
+  /** La mano se dimensiona por el alto de la ventana (no por la mesa: evita una dependencia circular). */
+  const alturaVentana = useAlturaVentana()
+  const manoAncho = Math.min(132, Math.max(88, Math.round(alturaVentana * 0.115)))
+  const franjaMano = Math.round(manoAncho * RELACION_CARTA * 0.78)
+  /** El panel lateral de cada jugador escala con la carta (las zonas de la grilla no cambian). */
+  const anchoFlanco = Math.round(cw * ANCHO_FLANCO)
+  /** Carta bajo el mouse (inspector lateral): conserva la última vista. */
+  const [inspeccion, setInspeccion] = useState<Inspeccion | null>(null)
 
   /** Fase 2 (c): el bloqueo en curso ¿paga desde Éter Pagado (1A)? (costo.origen) */
   const metaSelBloqueo = seleccion?.tipo === 'bloquear' ? getCardMeta(seleccion.objetivoCardId) : null
@@ -915,6 +1152,15 @@ export function Tablero({ vista, acciones, leTocaA, logDetallado = [], onAccion,
   useEffect(() => {
     if (!(faseActual === 'choque' && !pasoCombate && turnoActual === 'A')) setSelAtaque([])
   }, [faseActual, pasoCombate, turnoActual])
+
+  // Si deja de tocarte (el rival actuó, cambió la fase), un pago o una casilla a medio elegir ya no tiene sentido
+  useEffect(() => {
+    if (!leTocaA && seleccion) {
+      setSeleccion(null)
+      setElegidos(new Set())
+      setSacrificiosElegidos([])
+    }
+  }, [leTocaA, seleccion])
 
   const abrirSelector = (accionBase: Action, objetivoCardId: string) => {
     const meta = getCardMeta(objetivoCardId)
@@ -970,17 +1216,87 @@ export function Tablero({ vista, acciones, leTocaA, logDetallado = [], onAccion,
     })
   }
 
-  /** Click en una carta de la mano: sin coste → ejecuta; con coste → selector. */
+  /**
+   * Casillas propias donde puede colocarse la carta de la acción (índice de slot + rótulo 2B…).
+   * Campeón: 2B-2F vacías o liberadas por el sacrificio. Mística: 3A-3C. Arcana: 3D-3F.
+   */
+  const casillasDe = (accion: Action): { slotsDisponibles: number[]; slotLabels: string[] } => {
+    const slotsDisponibles: number[] = []
+    const slotLabels: string[] = []
+    const recorrer = (ocupantes: (string | null)[], base: number, libre: (ocupante: string | null) => boolean) => {
+      ocupantes.forEach((ocupante, i) => {
+        if (!libre(ocupante)) return
+        slotsDisponibles.push(i)
+        slotLabels.push(`${base === 66 ? 2 : 3}${String.fromCharCode(base + i)}`)
+      })
+    }
+    if (accion.type === 'jugar_campeon') {
+      const sacrificios = accion.sacrificios ?? []
+      recorrer(yo.campo.campeones, 66, (o) => !o || sacrificios.includes(o))
+    } else if (accion.type === 'jugar_mistica') {
+      recorrer(yo.campo.misticasTacticas, 65, (o) => !o)
+    } else if (accion.type === 'colocar_arcana') {
+      recorrer(yo.campo.arcanasCombate, 68, (o) => !o)
+    }
+    return { slotsDisponibles, slotLabels }
+  }
+
+  /** Click en la opción de jugar de una carta de la mano: con coste → selector de Éter; Arcana (sin coste) → elegir casilla. */
   const onClickMano = (id: string) => {
     if (!leTocaA) return
     const acc = acciones.find((a) => esDeMano(a) && a.cardInstanceId === id)
     if (!acc) return
     if (acc.type === 'colocar_arcana') {
-      onAccion(acc)
+      const { slotsDisponibles, slotLabels } = casillasDe(acc)
+      if (slotsDisponibles.length > 1) {
+        setSeleccion({
+          tipo: 'elegir_slot',
+          accionBase: acc,
+          objetivoCardId: vista.instances[id]?.cardId ?? '',
+          slotsDisponibles,
+          slotLabels,
+        })
+        setElegidos(new Set())
+        setSacrificiosElegidos([])
+        setPanelAbierto(null)
+      } else if (slotsDisponibles.length === 1) {
+        onAccion({ ...acc, slot: slotsDisponibles[0] ?? acc.slot })
+      } else {
+        // Sin casillas: el validador del motor rechaza con su mensaje
+        onAccion(acc)
+      }
       return
     }
     const cardId = vista.instances[id]?.cardId
     if (cardId) abrirSelector(acc, cardId)
+  }
+
+  /** Menú contextual de una carta de la mano (estilo Master Duel): solo las opciones válidas ahora. */
+  const opcionesMano = (id: string): OpcionMano[] => {
+    const opciones: OpcionMano[] = []
+    const inst = vista.instances[id]
+    if (leTocaA) {
+      const jugar = acciones.find((a) => esDeMano(a) && a.cardInstanceId === id)
+      if (jugar) {
+        opciones.push({ etiqueta: ETIQUETA_JUGAR[jugar.type] ?? 'Jugar', tono: 'principal', onElegir: () => onClickMano(id) })
+      }
+      const descartar = acciones.find((a) => a.type === 'descartar_carta' && a.cardInstanceIds.includes(id))
+      if (descartar) opciones.push({ etiqueta: 'Descartar', tono: 'peligro', onElegir: () => onAccion(descartar) })
+    }
+    if (inst?.cardId) opciones.push({ etiqueta: 'Ver carta', tono: 'neutro', onElegir: () => abrirZoom(inst) })
+    return opciones
+  }
+
+  /** Clic en una casilla iluminada (elegir_slot): ejecuta la acción en ese slot. */
+  const elegirCasilla = (zona: string) => {
+    if (seleccion?.tipo !== 'elegir_slot') return
+    const i = seleccion.slotLabels.indexOf(zona)
+    const slot = seleccion.slotsDisponibles[i]
+    if (slot === undefined) return
+    onAccion({ ...seleccion.accionBase, slot } as Action)
+    setSeleccion(null)
+    setElegidos(new Set())
+    setSacrificiosElegidos([])
   }
 
   /** ¿Se puede confirmar la selección? Pago: Σ aporte ≥ coste (+ sacrificios del rol). Bloqueo: fijo=exacto, flexible=>0. Equipar: siempre. */
@@ -1047,35 +1363,7 @@ export function Tablero({ vista, acciones, leTocaA, logDetallado = [], onAccion,
       accionConPago.type === 'colocar_arcana'
 
     if (necesitaSlot) {
-      // Calcular slots disponibles
-      let slotsDisponibles: number[] = []
-      let slotLabels: string[] = []
-      if (accionConPago.type === 'jugar_campeon') {
-        // Slots 0-4 (2B-2F), vacíos o del sacrificio
-        for (let i = 0; i < 5; i++) {
-          const occupant = yo.campo.campeones[i]
-          if (!occupant || (accionConPago.sacrificios ?? []).includes(occupant)) {
-            slotsDisponibles.push(i)
-            slotLabels.push(`2${String.fromCharCode(66 + i)}`)
-          }
-        }
-      } else if (accionConPago.type === 'jugar_mistica') {
-        // Slots 0-2 (3A-3C), vacíos
-        for (let i = 0; i < 3; i++) {
-          if (!yo.campo.misticasTacticas[i]) {
-            slotsDisponibles.push(i)
-            slotLabels.push(`3${String.fromCharCode(65 + i)}`)
-          }
-        }
-      } else if (accionConPago.type === 'colocar_arcana') {
-        // Slots 0-2 (3D-3F), vacíos
-        for (let i = 0; i < 3; i++) {
-          if (!yo.campo.arcanasCombate[i]) {
-            slotsDisponibles.push(i)
-            slotLabels.push(`3${String.fromCharCode(68 + i)}`)
-          }
-        }
-      }
+      const { slotsDisponibles, slotLabels } = casillasDe(accionConPago)
 
       if (slotsDisponibles.length === 1) {
         // Solo 1 slot → ejecutar directo
@@ -1136,7 +1424,20 @@ export function Tablero({ vista, acciones, leTocaA, logDetallado = [], onAccion,
   const fuenteNombre = pendienteActual
     ? (getCardMeta(vista.instances[pendienteActual.instId]?.cardId ?? '')?.name ?? null)
     : null
-  const ruptura = acciones.find((a) => a.type === 'elegir_ruptura' && a.atacanteId !== null)
+  /**
+   * Ruptura pendiente (§9.4): el atacante ELIGE qué Vínculo rival romper, a ciegas.
+   * El motor ofrece una acción por (atacante sin bloquear × Vínculo vivo); el poder del
+   * atacante no importa, así que alcanza con la primera acción de cada slot.
+   */
+  const opcionesRuptura = acciones.filter(
+    (a): a is Extract<Action, { type: 'elegir_ruptura' }> =>
+      a.type === 'elegir_ruptura' && a.atacanteId !== null && a.vinculoSlot !== undefined,
+  )
+  const slotsRuptura = [...new Set(opcionesRuptura.map((a) => a.vinculoSlot as number))]
+  const elegirVinculoARomper = (slot: number) => {
+    const accion = opcionesRuptura.find((a) => a.vinculoSlot === slot)
+    if (accion) onAccion(accion)
+  }
   /** ¿Hay jugadas reales (no solo pasar/rendirse)? Para el hint de "sin jugadas". */
   const hayJugablesSignificativas = acciones.some((a) =>
     [
@@ -1173,244 +1474,327 @@ export function Tablero({ vista, acciones, leTocaA, logDetallado = [], onAccion,
     : null
 
   return (
-    <div className="min-h-screen bg-[#0d0d14] text-gray-100 font-body pb-10 relative">
-      {/* ── Header ─────────────────────────────────────────────── */}
-      <header className="border-b border-card-border bg-surface sticky top-0 z-20">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4 flex-wrap">
-          <div>
-            <h1 className="text-lg font-display font-bold tracking-wider leading-none">Éter Online</h1>
-            <p className="text-[10px] text-gray-500 mt-0.5">{faseTurno}</p>
-          </div>
-          <div className="flex gap-2 ml-auto">
-            {leTocaA && (
-              <button
-                onClick={() => {
-                  const r = acciones.find((a) => a.type === 'rendirse')
-                  if (r) onAccion(r)
-                }}
-                className="text-xs bg-red-600/30 hover:bg-red-600/50 text-red-300 px-3 py-1.5 rounded transition-colors cursor-pointer"
+    <EnVueloContext.Provider value={anim.ocultas}>
+    <AnchoTableroContext.Provider value={cw}>
+    <InspeccionContext.Provider value={setInspeccion}>
+    {/* overflow-clip (no hidden): hidden se puede scrollear por foco (clic en una carta de la mano) y correría toda la UI */}
+    <div className="h-screen flex flex-col overflow-clip bg-[#0a0a12] text-gray-100 font-body relative">
+      {anim.capa}
+
+      {/* ── Barra superior: fase del turno + controles ───────────── */}
+      <header className="shrink-0 h-12 flex items-center gap-4 px-4 border-b border-card-border/70 bg-surface/90 z-20">
+        <div>
+          <h1 className="text-base font-display font-bold tracking-wider leading-none">Éter Online</h1>
+          <p className="text-[10px] text-gray-500 mt-0.5 leading-none">{faseTurno}</p>
+        </div>
+        <nav aria-label="Fases del turno" className="flex items-center gap-1">
+          {fase === 'pre_partida' ? (
+            <span className="text-[10px] font-semibold uppercase tracking-wider px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 ring-1 ring-amber-400/40">
+              Mulligan
+            </span>
+          ) : (
+            FASES.map((f) => (
+              <span
+                key={f.id}
+                aria-current={fase === f.id ? 'step' : undefined}
+                className={`text-[10px] font-semibold uppercase tracking-wider px-2.5 py-1 rounded-full transition-colors ${
+                  fase === f.id
+                    ? vista.turno === 'A'
+                      ? 'bg-ether-600/40 text-ether-100 ring-1 ring-ether-400/60'
+                      : 'bg-red-600/30 text-red-200 ring-1 ring-red-400/50'
+                    : 'text-gray-600'
+                }`}
               >
-                Rendirse
-              </button>
-            )}
+                {f.label}
+              </span>
+            ))
+          )}
+        </nav>
+        <div className="flex gap-2 ml-auto">
+          <button
+            onClick={anim.ciclarVelocidad}
+            title="Velocidad de la animación de cartas (clic para cambiar)"
+            className="text-xs bg-surface-2 hover:bg-card-border text-gray-300 px-3 py-1.5 rounded transition-colors cursor-pointer"
+          >
+            Animación: {ETIQUETA_VELOCIDAD[anim.velocidad]}
+          </button>
+          {vistaPrevia && onCiclarVistaPrevia && (
             <button
-              onClick={onAbandonar}
+              onClick={onCiclarVistaPrevia}
+              title="Vista previa de efectos: pausa el juego para revisar qué se va a resolver. Todas = tus jugadas y las del rival · Solo mías = el rival corre sin interrumpir · Apagada = nunca (clic para cambiar)"
               className="text-xs bg-surface-2 hover:bg-card-border text-gray-300 px-3 py-1.5 rounded transition-colors cursor-pointer"
             >
-              Abandonar
+              Vista previa: {ETIQUETA_VISTA_PREVIA[vistaPrevia]}
             </button>
-          </div>
+          )}
+          {leTocaA && (
+            <button
+              onClick={() => {
+                const r = acciones.find((a) => a.type === 'rendirse')
+                if (r) onAccion(r)
+              }}
+              className="text-xs bg-red-600/30 hover:bg-red-600/50 text-red-300 px-3 py-1.5 rounded transition-colors cursor-pointer"
+            >
+              Rendirse
+            </button>
+          )}
+          <button
+            onClick={onAbandonar}
+            className="text-xs bg-surface-2 hover:bg-card-border text-gray-300 px-3 py-1.5 rounded transition-colors cursor-pointer"
+          >
+            Abandonar
+          </button>
         </div>
       </header>
 
-      <main className="max-w-350 mx-auto px-4 mt-2 flex flex-col xl:flex-row gap-4 items-start">
-        {/* ── Panel de Habilidades Activas (Columna Izquierda) ─────────── */}
-        <div className="w-40 shrink-0">
-          <ActiveAbilitiesPanel s={vista} />
-        </div>
-
-        {/* ── Tableros (Columna Principal) ────────────────────────────── */}
-        <div className="flex-1 flex flex-col gap-2 min-w-0">
-          <section className="bg-surface border border-card-border rounded-lg p-3 space-y-2">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-red-400" />
-              <p className="text-xs text-gray-400">Rival (B)</p>
-              <span className="text-[10px] text-gray-600 font-mono">
-                mazo {rival.mazo.length} · ce {rival.cementerio.length} · ex {rival.exilio.length}
-              </span>
-              <span className="ml-auto text-[10px] text-gray-600 font-mono">
-                mano {rival.mano.length}
-              </span>
+      <main ref={tableroRef} className="flex-1 min-h-0 flex gap-3 p-3">
+        {/* ── Mesa: los dos campos + la mano ──────────────────────── */}
+        <section className="flex-1 min-w-0 flex flex-col">
+          <div
+            ref={mesaRef}
+            className="flex-1 min-h-0 flex flex-col items-center justify-center rounded-2xl border border-card-border/60 px-3 py-2"
+            style={{
+              background:
+                'radial-gradient(ellipse at 50% 50%, rgba(64,64,255,0.07) 0%, rgba(64,64,255,0) 60%), linear-gradient(180deg, #11111b 0%, #0d0d16 50%, #11111b 100%)',
+            }}
+          >
+            <div className="w-full flex items-center justify-center gap-4">
+            <div
+              className="py-1 rounded-xl transition-shadow"
+              style={vista.turno === 'B' && !terminada ? { boxShadow: '0 0 0 1px rgba(248,113,113,0.30), 0 0 32px rgba(248,113,113,0.10)' } : undefined}
+            >
+              <GrillaJugador
+                vista={vista}
+                jugador="B"
+                leTocaA={false}
+                acciones={[]}
+                onAccion={onAccion}
+                abrirSelector={abrirSelector}
+                abrirZoom={abrirZoom}
+                abrirPanel={(j, z, slot, artefactoId) => setPanelAbierto({ jugador: j, zona: z, campeonSlot: slot, artefactoId })}
+                invertida
+                seleccion={null}
+                setSeleccion={setSeleccion}
+                animaciones={animaciones}
+                vinculosElegibles={leTocaA ? slotsRuptura : undefined}
+                onElegirVinculo={elegirVinculoARomper}
+              />
             </div>
-            {/* Mano rival: fuera de la grilla, boca abajo */}
-            <div className="flex gap-1">
-              {rival.mano.map((id) => (
-                <MiniCard key={id} inst={vista.instances[id]} tamano="xs" />
-              ))}
-            </div>
-            <GrillaJugador
-              vista={vista}
-              jugador="B"
-              leTocaA={false}
-              acciones={[]}
-              onAccion={onAccion}
-              abrirSelector={abrirSelector}
-              abrirZoom={abrirZoom}
-              abrirPanel={(j, z, slot, artefactoId) => setPanelAbierto({ jugador: j, zona: z, campeonSlot: slot, artefactoId })}
-              invertida
-              seleccion={null}
-              setSeleccion={setSeleccion}
-              animaciones={animaciones}
-            />
-          </section>
-
-          <section className="bg-surface border border-card-border rounded-lg p-3 space-y-2">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-ether-400" />
-              <p className="text-xs text-gray-400">Tú (A)</p>
-              <span className="text-[10px] text-gray-600 font-mono">
-                mazo {yo.mazo.length} · ce {yo.cementerio.length} · ex {yo.exilio.length}
-              </span>
-              <span className="ml-auto text-[10px] text-gray-600 font-mono">
-                reserva {yo.eterReserva.length} · pagado {yo.eterPagado.length}
-              </span>
-            </div>
-            <GrillaJugador
-              vista={vista}
-              jugador="A"
-              leTocaA={leTocaA}
-              acciones={acciones}
-              onAccion={onAccion}
-              abrirSelector={abrirSelector}
-              abrirZoom={abrirZoom}
-              abrirPanel={(j, z, slot, artefactoId) => setPanelAbierto({ jugador: j, zona: z, campeonSlot: slot, artefactoId })}
-              seleccion={seleccion}
-              setSeleccion={setSeleccion}
-              animaciones={animaciones}
-              selAtaque={selAtaque}
-              esPasoAtaquePropio={esPasoAtaquePropio}
-              onToggleSelAtaque={toggleSelAtaque}
-            />
-          </section>
-        </div>
-
-        {/* ── Panel Lateral (Columna Derecha) ────────────────────────────── */}
-        <div className="w-full xl:w-85 flex flex-col gap-3 shrink-0">
-          <section className="grid grid-cols-1 gap-3">
-            <div className="bg-surface border border-card-border rounded-lg p-2 min-h-18">
-              <p className="text-[9px] uppercase tracking-wider text-gray-500 mb-1.5">
-                {pilaGlobal.length > 0 ? 'Cadena Global' : 'Cadena 9.6'}{pila.length > 0 ? ` (${pila.length})` : ''}
-                {pila.length > 0 ? ` (${pila.length})` : ''}
-              </p>
-              {efectoActual && (
-                <p className="text-[10px] text-gray-400 mb-1 italic">
-                  {vista.instances[efectoActual.cardInstanceId]?.cardId
-                    ? `Activó: ${vista.instances[efectoActual.cardInstanceId]!.cardId}`
-                    : 'Efecto activado'}
-                </p>
-              )}
-              {pila.length === 0 ? (
-                <p className="text-[11px] text-gray-600 italic">Sin cadena abierta.</p>
-              ) : (
-                <div className="flex gap-1.5 flex-wrap items-start">
-                  {pila.map((id) => (
-                    <MiniCard
-                      key={id}
-                      inst={vista.instances[id]}
-                      tamano="sm"
-                      onZoom={() => abrirZoom(vista.instances[id])}
-                    />
+            <FlancoJugador
+              nombre="Rival (B)"
+              color="bg-red-400"
+              jugador={rival}
+              activo={vista.turno === 'B'}
+              ancho={anchoFlanco}
+              onAbrirPanel={(zona) => setPanelAbierto({ jugador: 'B', zona })}
+            >
+              {/* Mano del rival: dorsos (sus cartas son información oculta) */}
+              {rival.mano.length > 0 && (
+                <div className="flex items-center pt-1">
+                  {rival.mano.map((id) => (
+                    <div key={id} className="-ml-3 first:ml-0">
+                      <MiniCard inst={vista.instances[id]} anchoPx={22} />
+                    </div>
                   ))}
                 </div>
               )}
+            </FlancoJugador>
             </div>
-            {/* ── Log Detallado (debugging) ─────────────────────── */}
-            <LogDetallado lineas={logDetallado} />
-          </section>
 
-          <section className="bg-surface border border-card-border rounded-lg p-3 space-y-2">
-            {/* ── Tu mano (fuera de la grilla) ─────────────────────── */}
-            <div>
-              <p className="text-[9px] uppercase tracking-wider text-gray-500 mb-1.5">
-                Tu mano ({yo.mano.length}){leTocaA ? ' — click en una carta para verla, juega desde el botón' : ''}
-              </p>
-              <div className="flex gap-2 flex-wrap items-start">
-                {yo.mano.map((id) => {
-                  const acc = acciones.find((a) => esDeMano(a) && a.cardInstanceId === id)
-                  const accDescarte = acciones.find((a): a is Extract<Action, { type: 'descartar_carta' }> => a.type === 'descartar_carta' && a.cardInstanceIds.includes(id))
-                  const jugable = leTocaA && !!acc
-                  const descartable = leTocaA && !!accDescarte
-                  return (
-                    <MiniCard
-                      key={id}
-                      inst={vista.instances[id]}
-                      tamano="md"
-                      onClick={() => abrirZoom(vista.instances[id])}
+            {/* ── Franja central: acciones del turno (pasar fase, atacar, mulligan…) ── */}
+            <div className="w-full h-11 shrink-0 flex items-center justify-center gap-2 flex-wrap border-y border-ether-500/15 bg-ether-600/5">
+              {pila.length > 0 && (
+                <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 ring-1 ring-amber-400/40">
+                  Cadena ({pila.length})
+                </span>
+              )}
+              {leTocaA && (generales.length > 0 || opcionesRuptura.length > 0 || selAtaque.length > 0) ? (
+                <>
+                  {!hayJugablesSignificativas && (fase === 'forja' || fase === 'choque') && (
+                    <span className="text-[10px] text-amber-400/90">Sin jugadas — pasá el turno para continuar</span>
+                  )}
+                  {generales.map((a, i) => (
+                    <Boton key={i} accion={a} onClick={onAccion} fase={fase} />
+                  ))}
+                  {opcionesRuptura.length > 0 && (
+                    <span className="text-[11px] font-semibold text-rose-300">
+                      Ruptura: elegí qué Vínculo del rival romper (a ciegas)
+                    </span>
+                  )}
+                  {/* A6: confirmación del subconjunto de atacantes seleccionado con los (+) */}
+                  {selAtaque.length > 0 && esPasoAtaquePropio && (
+                    <button
+                      onClick={atacarSeleccionados}
+                      className="text-[10px] bg-ether-600 hover:bg-ether-500 text-white px-2 py-0.5 rounded transition-colors cursor-pointer whitespace-nowrap ring-1 ring-ether-400"
                     >
-                      {jugable && (
-                        <button
-                          onClick={() => onClickMano(id)}
-                          className="text-[10px] bg-ether-600/30 hover:bg-ether-600/50 text-ether-200 px-1.5 py-0.5 rounded transition-colors cursor-pointer whitespace-nowrap"
-                        >
-                          {acc!.type === 'colocar_arcana' ? 'Colocar' : 'Pagar'}
-                        </button>
-                      )}
-                      {descartable && (
-                        <button
-                          onClick={() => onAccion(accDescarte!)}
-                          className="text-[10px] bg-red-600/30 hover:bg-red-600/50 text-red-300 px-1.5 py-0.5 rounded transition-colors cursor-pointer whitespace-nowrap"
-                        >
-                          Descartar
-                        </button>
-                      )}
-                    </MiniCard>
-                  )
-                })}
-              </div>
+                      Atacar con {selAtaque.length} campeón{selAtaque.length > 1 ? 'es' : ''} (✓)
+                    </button>
+                  )}
+                </>
+              ) : (
+                <span className="text-[10px] uppercase tracking-[0.2em] text-gray-600">
+                  {terminada ? 'Fin de la partida' : vista.turno === 'A' ? 'Tu turno' : 'Turno del rival'}
+                </span>
+              )}
             </div>
 
-            {/* ── Acciones generales ───────────────────────────────── */}
-            {leTocaA && (generales.length > 0 || ruptura || selAtaque.length > 0) && (
-              <div className="flex gap-1.5 flex-wrap items-center pt-2 border-t border-card-border/50">
-                <p className="text-[9px] uppercase tracking-wider text-gray-500 mr-1">Acciones</p>
-                {!hayJugablesSignificativas && (fase === 'forja' || fase === 'choque') && (
-                  <span className="text-[10px] text-amber-400/90 mr-1">
-                    Sin jugadas — pasá el turno para continuar
-                  </span>
-                )}
-                {generales.map((a, i) => (
-                  <Boton key={i} accion={a} onClick={onAccion} fase={fase} />
-                ))}
-                {ruptura && <Boton accion={ruptura} onClick={onAccion} fase={fase} />}
-                {/* A6: confirmación del subconjunto de atacantes seleccionado con los (+) */}
-                {selAtaque.length > 0 && esPasoAtaquePropio && (
-                  <button
-                    onClick={atacarSeleccionados}
-                    className="text-[10px] bg-ether-600 hover:bg-ether-500 text-white px-2 py-0.5 rounded transition-colors cursor-pointer whitespace-nowrap ring-1 ring-ether-400"
-                  >
-                    Atacar con {selAtaque.length} campeón{selAtaque.length > 1 ? 'es' : ''} (✓)
-                  </button>
-                )}
-              </div>
-            )}
+            <div className="w-full flex items-center justify-center gap-4">
+            <div
+              className="py-1 rounded-xl transition-shadow"
+              style={vista.turno === 'A' && !terminada ? { boxShadow: '0 0 0 1px rgba(112,112,255,0.35), 0 0 32px rgba(64,64,255,0.12)' } : undefined}
+            >
+              <GrillaJugador
+                vista={vista}
+                jugador="A"
+                leTocaA={leTocaA}
+                acciones={acciones}
+                onAccion={onAccion}
+                abrirSelector={abrirSelector}
+                abrirZoom={abrirZoom}
+                abrirPanel={(j, z, slot, artefactoId) => setPanelAbierto({ jugador: j, zona: z, campeonSlot: slot, artefactoId })}
+                seleccion={seleccion}
+                setSeleccion={setSeleccion}
+                animaciones={animaciones}
+                selAtaque={selAtaque}
+                esPasoAtaquePropio={esPasoAtaquePropio}
+                onToggleSelAtaque={toggleSelAtaque}
+                casillasElegibles={seleccion?.tipo === 'elegir_slot' ? seleccion.slotLabels : undefined}
+                onElegirCasilla={elegirCasilla}
+              />
+            </div>
+            <FlancoJugador
+              nombre="Tú (A)"
+              color="bg-ether-400"
+              jugador={yo}
+              activo={vista.turno === 'A'}
+              ancho={anchoFlanco}
+              onAbrirPanel={(zona) => setPanelAbierto({ jugador: 'A', zona })}
+            />
+            </div>
+          </div>
 
-            {/* ── elegir_objetivo: opciones con nombre y arte ── */}
-            {leTocaA && tutores.length > 0 && (
-              <div className="mt-2 border border-ether-600/40 rounded-lg p-2 bg-ether-600/10">
-                {fuenteNombre && (
-                  <p className="text-[11px] font-display font-semibold text-ether-200 mb-0.5">
-                    {fuenteNombre}
-                  </p>
-                )}
-                <p className="text-[9px] uppercase tracking-wider text-ether-300 mb-1.5">
-                  {labelOpcionesElegir(vista, tutores.map((a) => a.objetivoId))}
-                </p>
-                <div className="flex gap-2 flex-wrap">
-                  {tutores.map((a) => {
-                    const inst = vista.instances[a.objetivoId]
-                    return inst ? <OpcionTutor key={a.objetivoId} inst={inst} onAccion={onAccion} /> : null
-                  })}
-                </div>
+          {/* ── Franja de la mano (abanico estilo Master Duel; dentro de <main> para que el FLIP la mida) ── */}
+          <div className="relative shrink-0" style={{ height: franjaMano }}>
+            <ManoAbanico vista={vista} ids={yo.mano} opcionesDe={opcionesMano} atenuada={seleccion !== null} ancho={manoAncho} />
+          </div>
+        </section>
+
+        {/* ── Lateral: elección de objetivo, inspector, cadena, efectos y log ── */}
+        <aside className="w-80 shrink-0 flex flex-col gap-2 overflow-y-auto pr-0.5">
+          <section className="bg-surface border border-card-border rounded-lg p-3">
+            <p className="text-[9px] uppercase tracking-wider text-gray-500 mb-2">Carta</p>
+            <InspectorCarta seleccion={inspeccion} />
+          </section>
+
+          <section className="bg-surface border border-card-border rounded-lg p-2 min-h-18">
+            <p className="text-[9px] uppercase tracking-wider text-gray-500 mb-1.5">
+              {pilaGlobal.length > 0 ? 'Cadena Global' : 'Cadena 9.6'}{pila.length > 0 ? ` (${pila.length})` : ''}
+            </p>
+            {efectoActual && (
+              <p className="text-[10px] text-gray-400 mb-1 italic">
+                {vista.instances[efectoActual.cardInstanceId]?.cardId
+                  ? `Activó: ${vista.instances[efectoActual.cardInstanceId]!.cardId}`
+                  : 'Efecto activado'}
+              </p>
+            )}
+            {pila.length === 0 ? (
+              <p className="text-[11px] text-gray-600 italic">Sin cadena abierta.</p>
+            ) : (
+              <div className="flex gap-1.5 flex-wrap items-start">
+                {pila.map((id) => (
+                  <MiniCard
+                    key={id}
+                    inst={vista.instances[id]}
+                    tamano="sm"
+                    onZoom={() => abrirZoom(vista.instances[id])}
+                  />
+                ))}
               </div>
             )}
           </section>
-        </div>
+
+          {/* ── Habilidades activas: auras, keywords y Éter con efecto que están afectando el juego ── */}
+          <ActiveAbilitiesPanel s={vista} />
+
+          {/* ── Log Detallado (debugging) ─────────────────────── */}
+          <LogDetallado lineas={logDetallado} />
+        </aside>
       </main>
 
-      {/* ── Selector de Éter ────────────────────────────────────── */}
-      {seleccion && (
-        <div className="fixed inset-x-0 bottom-0 z-40 bg-[#0d0d14]/95 border-t border-card-border p-4 shadow-2xl">
-          <div className="max-w-7xl mx-auto flex gap-6 items-start flex-wrap">
-            {/* Carta objetivo */}
-            <div className="flex flex-col items-center gap-1">
-              {objetivoSeleccion && (
-                <MiniCard
-                  inst={objetivoSeleccion}
-                  tamano="sm"
-                  onZoom={() => abrirZoom(objetivoSeleccion)}
-                />
+      {/* ── Elegir casilla (después del pago): se clickea la casilla iluminada del tablero ── */}
+      {seleccion?.tipo === 'elegir_slot' && (
+        <Dock
+          etiquetaAria="Elegir casilla"
+          titulo="Elegí la casilla"
+          subtitulo={
+            <>
+              Elegí en tu tablero la casilla iluminada para{' '}
+              <span className="font-semibold text-cyan-300">{getCardMeta(seleccion.objetivoCardId)?.name ?? 'tu carta'}</span>
+            </>
+          }
+          acciones={<BotonUI onClick={cancelar}>Cancelar</BotonUI>}
+        />
+      )}
+
+      {/* ── Selector de Éter: pagar, bloquear o equipar ──────────────── */}
+      {seleccion && seleccion.tipo !== 'elegir_slot' && (
+        <Dock
+          etiquetaAria={seleccion.tipo === 'pagar' ? 'Pagar con Éter' : seleccion.tipo === 'bloquear' ? 'Bloquear Éter' : 'Equipar Artefacto'}
+          titulo={seleccion.tipo === 'pagar' ? 'Pagar con Éter' : seleccion.tipo === 'bloquear' ? 'Bloquear Éter' : 'Equipar Artefacto'}
+          subtitulo={
+            seleccion.tipo === 'pagar'
+              ? 'Elegí los Éteres de tu Reserva (2A) para pagar:'
+              : seleccion.tipo === 'bloquear'
+                ? (() => {
+                    const meta = getCardMeta(seleccion.objetivoCardId)
+                    const zonaTxt = origenPagadoBloqueo ? ' de tu Éter Pagado (1A)' : ''
+                    if (meta && esBloqueoFijo(meta)) {
+                      const inst = vista.instances[seleccion.targetInstanceId]
+                      const actuales = inst?.eterBloqueado?.length ?? 0
+                      const requerido = maxEterBloqueado(meta) - actuales
+                      return `Bloquea exactamente ${requerido} Éter(es) sobre ${meta.name}${zonaTxt}:`
+                    }
+                    return `Elegí los Éteres a bloquear${zonaTxt} (hasta el máximo):`
+                  })()
+                : 'Elegí el Campeón al que quieres equipar este Artefacto:'
+          }
+          pie={
+            <>
+              {seleccion.tipo === 'pagar' && (
+                <div className="flex items-center gap-3">
+                  <p className="font-mono text-xs text-gray-300">
+                    Aportado:{' '}
+                    <span className={totalAportado >= seleccion.coste ? 'font-bold text-emerald-300' : 'text-rose-300'}>
+                      {totalAportado}
+                    </span>{' '}
+                    / {seleccion.coste}
+                  </p>
+                  <div aria-hidden="true" className="h-1.5 w-28 overflow-hidden rounded-full bg-white/10">
+                    <div
+                      className={`h-full rounded-full transition-all duration-200 ${
+                        totalAportado >= seleccion.coste ? 'bg-emerald-400' : 'bg-gradient-to-r from-ether-400 to-ether-200'
+                      }`}
+                      style={{ width: `${Math.min(100, (totalAportado / Math.max(1, seleccion.coste)) * 100)}%` }}
+                    />
+                  </div>
+                </div>
               )}
-              <p className="text-[10px] text-gray-400">
+              <div className="ml-auto flex gap-2">
+                <BotonUI onClick={cancelar}>Cancelar</BotonUI>
+                <BotonUI variante="primario" onClick={confirmar} disabled={!puedeConfirmar}>
+                  {seleccion.tipo === 'pagar' ? 'Pagar y jugar' : seleccion.tipo === 'equipar' ? 'Equipar' : 'Bloquear'}
+                </BotonUI>
+              </div>
+            </>
+          }
+        >
+          <div className="flex items-start gap-5">
+            {/* Carta objetivo */}
+            <div className="flex w-24 shrink-0 flex-col items-center gap-1.5">
+              {objetivoSeleccion && (
+                <MiniCard inst={objetivoSeleccion} anchoPx={84} sinTooltip onZoom={() => abrirZoom(objetivoSeleccion)} />
+              )}
+              <p className="text-center text-[11px] leading-tight text-gray-300">
                 {seleccion.tipo === 'pagar'
                   ? `Coste: ${seleccion.coste}`
                   : seleccion.tipo === 'equipar'
@@ -1419,183 +1803,104 @@ export function Tablero({ vista, acciones, leTocaA, logDetallado = [], onAccion,
               </p>
             </div>
 
-            <div className="flex-1 min-w-70">
+            <div className="min-w-0 flex-1 space-y-3">
               {/* Selector de éteres (pago/bloqueo) */}
               {seleccion.tipo !== 'equipar' && (
                 <>
-              <p className="text-sm text-gray-200 mb-2">
-                {seleccion.tipo === 'pagar'
-                  ? 'Elegí los Éteres de tu Reserva (2A) para pagar:'
-                  : seleccion.tipo === 'bloquear'
-                    ? (() => {
-                        const meta = getCardMeta(seleccion.objetivoCardId)
-                        const zonaTxt = origenPagadoBloqueo ? ' de tu Éter Pagado (1A)' : ''
-                        if (meta && esBloqueoFijo(meta)) {
-                          const inst = vista.instances[seleccion.targetInstanceId]
-                          const actuales = inst?.eterBloqueado?.length ?? 0
-                          const requerido = maxEterBloqueado(meta) - actuales
-                          return `Bloquea exactamente ${requerido} Éter(es) sobre ${meta.name}${zonaTxt}:`
-                        }
-                        return `Elegí los Éteres a bloquear${zonaTxt} (hasta el máximo):`
-                      })()
-                    : 'Elegí los Éteres:'}
-              </p>
-              {eteresSelector.length === 0 ? (
-                <p className="text-xs text-gray-500 italic">
-                  {origenPagadoBloqueo ? 'Tu Éter Pagado (1A) está vacío.' : 'Tu Reserva está vacía.'}
-                </p>
-              ) : (
-                <div className="flex gap-2 flex-wrap">
-                  {eteresSelector.map((id) => {
-                    const inst = vista.instances[id]
-                    const cardId = inst?.cardId ?? ''
-                    const meta = getCardMeta(cardId)
-                    const elegido = elegidos.has(id)
-                    const bloqueable =
-                      seleccion.tipo === 'bloquear' &&
-                      meta !== null &&
-                      faccionesCompartidas(meta.facciones, getCardMeta(seleccion.objetivoCardId)?.facciones)
-                    const aporte = seleccion.tipo === 'pagar' && meta ? aporteDe(meta.id, seleccion.objetivoCardId) : null
-                    const inhabil =
-                      seleccion.tipo === 'bloquear' && !bloqueable
-                    return (
-                      <button
-                        key={id}
-                        onClick={() => !inhabil && toggleEter(id)}
-                        disabled={inhabil}
-                        className="flex flex-col items-center gap-0.5 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40 bg-transparent border-none p-0"
-                        title={meta?.name}
-                      >
-                        <MiniCard inst={inst} tamano="sm" seleccionada={elegido} />
-                        <span className="text-[9px] font-mono text-gray-400">
-                          {aporte !== null ? `aporte ${aporte}` : bloqueable ? 'bloqueable' : 'no comparte'}
-                        </span>
-                      </button>
-                    )
-                  })}
-                </div>
-              )}
+                  {eteresSelector.length === 0 ? (
+                    <p className="text-xs italic text-gray-500">
+                      {origenPagadoBloqueo ? 'Tu Éter Pagado (1A) está vacío.' : 'Tu Reserva está vacía.'}
+                    </p>
+                  ) : (
+                    <div className="flex flex-wrap gap-1.5">
+                      {eteresSelector.map((id) => {
+                        const inst = vista.instances[id]
+                        const cardId = inst?.cardId ?? ''
+                        const meta = getCardMeta(cardId)
+                        const elegido = elegidos.has(id)
+                        const bloqueable =
+                          seleccion.tipo === 'bloquear' &&
+                          meta !== null &&
+                          faccionesCompartidas(meta.facciones, getCardMeta(seleccion.objetivoCardId)?.facciones)
+                        const aporte = seleccion.tipo === 'pagar' && meta ? aporteDe(meta.id, seleccion.objetivoCardId) : null
+                        const inhabil = seleccion.tipo === 'bloquear' && !bloqueable
+                        return (
+                          <TileCarta
+                            key={id}
+                            seleccionada={elegido}
+                            disabled={inhabil}
+                            onClick={() => !inhabil && toggleEter(id)}
+                            title={meta?.name}
+                            pie={aporte !== null ? `aporte ${aporte}` : bloqueable ? 'bloqueable' : 'no comparte'}
+                          >
+                            <MiniCard inst={inst} anchoPx={58} sinTooltip />
+                          </TileCarta>
+                        )
+                      })}
+                    </div>
+                  )}
 
-              {/* Sacrificio exigido por el rol (Soberano 1 / Emperador 2) */}
-              {seleccion.tipo === 'pagar' && requeridos > 0 && (
-                <div className="mt-3 border-t border-card-border/50 pt-3">
-                  <p className="text-sm text-gray-200 mb-2">
-                    Elegí {requeridos} Campeón{requeridos > 1 ? 'es' : ''} de tu campo para sacrificar:
-                  </p>
-                  <div className="flex gap-2 flex-wrap">
-                    {sacrificables.map((id) => {
-                      const inst = vista.instances[id]
-                      const meta = getCardMeta(inst?.cardId ?? '')
-                      const elegido = sacrificiosElegidos.includes(id)
-                      const lleno = sacrificiosElegidos.length >= requeridos
-                      return (
-                        <button
-                          key={id}
-                          onClick={() => toggleSacrificio(id)}
-                          disabled={!elegido && lleno}
-                          title={meta?.name}
-                          className="flex flex-col items-center gap-0.5 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40 bg-transparent border-none p-0"
-                        >
-                          <MiniCard inst={inst} tamano="sm" seleccionada={elegido} />
-                          <span className="text-[9px] font-mono text-gray-400">{meta?.name}</span>
-                        </button>
-                      )
-                    })}
-                  </div>
-                </div>
-              )}
+                  {/* Sacrificio exigido por el rol (Soberano 1 / Emperador 2) */}
+                  {seleccion.tipo === 'pagar' && requeridos > 0 && (
+                    <div className="border-t border-white/5 pt-3">
+                      <Seccion tono="alerta">
+                        Elegí {requeridos} Campeón{requeridos > 1 ? 'es' : ''} de tu campo para sacrificar:
+                      </Seccion>
+                      <div className="flex flex-wrap gap-1.5">
+                        {sacrificables.map((id) => {
+                          const inst = vista.instances[id]
+                          const meta = getCardMeta(inst?.cardId ?? '')
+                          const elegido = sacrificiosElegidos.includes(id)
+                          const lleno = sacrificiosElegidos.length >= requeridos
+                          return (
+                            <TileCarta
+                              key={id}
+                              seleccionada={elegido}
+                              disabled={!elegido && lleno}
+                              onClick={() => toggleSacrificio(id)}
+                              title={meta?.name}
+                              pie={meta?.name}
+                            >
+                              <MiniCard inst={inst} anchoPx={58} sinTooltip />
+                            </TileCarta>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </>
-              )}
-
-              {/* Selector de casilla (después del pago) */}
-              {seleccion.tipo === 'elegir_slot' && (
-                <div className="mt-3 border-t border-card-border/50 pt-3">
-                  <p className="text-sm text-gray-200 mb-2">
-                    Elegí la casilla donde quieres colocar tu carta:
-                  </p>
-                  <div className="flex gap-2 flex-wrap">
-                    {seleccion.slotsDisponibles.map((slotIdx, i) => (
-                      <button
-                        key={slotIdx}
-                        onClick={() => {
-                          onAccion({ ...seleccion.accionBase, slot: slotIdx } as Action)
-                          setSeleccion(null)
-                          setElegidos(new Set())
-                          setSacrificiosElegidos([])
-                        }}
-                        className="flex flex-col items-center gap-1 p-2 rounded border border-gray-600 hover:border-cyan-400 bg-surface-2 hover:bg-cyan-900/20 transition-colors cursor-pointer"
-                      >
-                        <span className="text-[11px] font-mono font-bold text-cyan-300">
-                          {seleccion.slotLabels[i]}
-                        </span>
-                        <span className="text-[8px] text-gray-500">Vacío</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
               )}
 
               {/* Selector de equipar: elegir campeón objetivo */}
               {seleccion.tipo === 'equipar' && (
-                <div className="mt-3 border-t border-card-border/50 pt-3">
-                  <p className="text-sm text-gray-200 mb-2">
-                    Elegí el Campeón al que quieres equipar este Artefacto:
-                  </p>
-                  <div className="flex gap-2 flex-wrap">
-                    {seleccion.opciones.map((a) => {
-                      const inst = vista.instances[a.campeonInstanceId]
-                      if (!inst) return null
-                      const meta = inst.cardId ? getCardMeta(inst.cardId) : null
-                      const elegido = elegidos.has(a.campeonInstanceId)
-                      return (
-                        <button
-                          key={a.campeonInstanceId}
-                          onClick={() => {
-                            setElegidos(new Set([a.campeonInstanceId]))
-                          }}
-                          className="flex flex-col items-center gap-0.5 cursor-pointer bg-transparent border-none p-0"
-                          title={meta?.name}
-                        >
-                          <MiniCard inst={inst} tamano="sm" seleccionada={elegido} />
-                          <span className="text-[9px] font-mono text-gray-400">{meta?.name}</span>
-                        </button>
-                      )
-                    })}
-                  </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {seleccion.opciones.map((a) => {
+                    const inst = vista.instances[a.campeonInstanceId]
+                    if (!inst) return null
+                    const meta = inst.cardId ? getCardMeta(inst.cardId) : null
+                    const elegido = elegidos.has(a.campeonInstanceId)
+                    return (
+                      <TileCarta
+                        key={a.campeonInstanceId}
+                        seleccionada={elegido}
+                        onClick={() => {
+                          setElegidos(new Set([a.campeonInstanceId]))
+                        }}
+                        title={meta?.name}
+                        pie={meta?.name}
+                      >
+                        <MiniCard inst={inst} anchoPx={58} sinTooltip />
+                      </TileCarta>
+                    )
+                  })}
                 </div>
               )}
-
-              <div className="mt-3 flex items-center gap-4 flex-wrap">
-                {seleccion.tipo === 'pagar' && (
-                  <p className="text-xs font-mono text-gray-300">
-                    Aportado: <span className={totalAportado >= seleccion.coste ? 'text-ether-300 font-bold' : 'text-red-400'}>
-                      {totalAportado}
-                    </span>{' '}
-                    / {seleccion.coste}
-                  </p>
-                )}
-                <div className="flex gap-2 ml-auto">
-                  <button
-                    onClick={cancelar}
-                    className="text-xs bg-surface-2 hover:bg-card-border text-gray-300 px-4 py-2 rounded transition-colors cursor-pointer"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    onClick={confirmar}
-                    disabled={!puedeConfirmar}
-                    className="text-xs bg-ether-600 hover:bg-ether-500 text-white px-4 py-2 rounded transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-                  >
-                    {seleccion.tipo === 'pagar' ? 'Pagar y jugar' : seleccion.tipo === 'equipar' ? 'Equipar' : 'Bloquear'}
-                  </button>
-                </div>
-              </div>
             </div>
           </div>
-        </div>
+        </Dock>
       )}
 
-      {/* ── Panel inferior: lista completa de una zona (2A Reserva / 1A Pagado / 2G Cementerio / 1G Exilio / 1B-1F Bloqueado) ── */}
+      {/* ── Panel de pila: lista completa de una zona (2A Reserva / 1A Pagado / 2G Cementerio / 1G Exilio / 1B-1F Bloqueado) ── */}
       {panelAbierto && (() => {
         const pj = vista.players[panelAbierto.jugador]
         const insts =
@@ -1640,41 +1945,49 @@ export function Tablero({ vista, acciones, leTocaA, logDetallado = [], onAccion,
               ? 'tu rival'
               : 'del rival'
         return (
-          <div className="fixed inset-x-0 bottom-0 z-40 bg-[#0d0d14]/95 border-t border-card-border p-4 shadow-2xl">
-            <div className="max-w-7xl mx-auto">
-              <div className="flex items-center gap-3 mb-3 flex-wrap">
-                <p className="text-sm text-gray-200">
-                  {titulo}
-                  <span className="text-gray-500"> — {posesivo}</span> ({insts.length})
-                </p>
-                <p className="text-[10px] text-gray-500">Clic en una carta para verla en grande.</p>
-                <button
-                  onClick={() => setPanelAbierto(null)}
-                  className="ml-auto text-xs bg-surface-2 hover:bg-card-border text-gray-300 px-3 py-1.5 rounded transition-colors cursor-pointer"
-                >
-                  Cerrar
-                </button>
+          <Dock
+            etiquetaAria={titulo}
+            tono={panelAbierto.jugador === 'A' ? 'ether' : 'rival'}
+            titulo={
+              <>
+                {titulo}
+                <span className="font-sans text-sm font-normal text-gray-500"> — {posesivo}</span>{' '}
+                <span className="font-mono text-sm font-normal text-gray-400">({insts.length})</span>
+              </>
+            }
+            subtitulo="Clic en una carta para verla en grande."
+            onCerrar={() => setPanelAbierto(null)}
+          >
+            {insts.length === 0 ? (
+              <p className="py-2 text-xs italic text-gray-500">Esta zona está vacía.</p>
+            ) : (
+              <div className="flex flex-wrap items-start gap-2.5 pt-1">
+                {insts.map((id: string) => {
+                  const inst = vista.instances[id]
+                  const nombre = inst.cardId ? (getCardMeta(inst.cardId)?.name ?? '') : ''
+                  return (
+                    <div key={id} className="flex flex-col items-center gap-1">
+                      <MiniCard inst={inst} anchoPx={68} agotado={false} onZoom={() => abrirZoom(inst)} />
+                      <span className="line-clamp-2 w-[72px] text-center text-[10px] leading-tight text-gray-500">{nombre}</span>
+                    </div>
+                  )
+                })}
               </div>
-              {insts.length === 0 ? (
-                <p className="text-xs text-gray-500 italic">Esta zona está vacía.</p>
-              ) : (
-                <div className="flex gap-2 flex-wrap items-start">
-                  {insts.map((id: string) => {
-                    const inst = vista.instances[id]
-                    const nombre = inst.cardId ? (getCardMeta(inst.cardId)?.name ?? '') : ''
-                    return (
-                      <div key={id} className="flex flex-col items-center gap-0.5">
-                        <MiniCard inst={inst} tamano="sm" agotado={false} onZoom={() => abrirZoom(inst)} />
-                        <span className="text-[9px] text-gray-500 max-w-16 truncate">{nombre}</span>
-                      </div>
-                    )
-                  })}
-                </div>
-              )}
-            </div>
-          </div>
+            )}
+          </Dock>
         )
       })()}
+
+      {/* ── Elegir objetivo (búsqueda de mazo, elegir un Campeón…): galería con inspector ── */}
+      {leTocaA && tutores.length > 0 && (
+        <ElegirObjetivoModal
+          vista={vista}
+          opciones={tutores.map((a) => a.objetivoId)}
+          titulo={fuenteNombre ?? 'Elegí una carta'}
+          subtitulo={labelOpcionesElegir(vista, tutores.map((a) => a.objetivoId))}
+          onElegir={(objetivoId) => onAccion({ type: 'elegir_objetivo', objetivoId })}
+        />
+      )}
 
       {/* ── Modal de prevenión (checkpoint prevent_destroy, Fase 2c) ── */}
       {leTocaA && (
@@ -1723,24 +2036,56 @@ export function Tablero({ vista, acciones, leTocaA, logDetallado = [], onAccion,
         )
       })()}
 
-      {/* ── Overlay de fin ──────────────────────────────────────── */}
-      {terminada && (
-        <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center">
-          <div className="bg-surface border border-card-border rounded-xl p-8 text-center max-w-md mx-4">
-            <p className="font-display text-2xl font-bold mb-2">
-              {vista.ganador === 'A' ? '¡Ganaste!' : 'Perdiste'}
-            </p>
-            <p className="text-sm text-gray-400 mb-1">Ganador: {vista.ganador}</p>
-            <p className="text-xs text-gray-500 mb-6">Motivo: {vista.motivo}</p>
-            <button
-              onClick={onAbandonar}
-              className="bg-ether-600 hover:bg-ether-500 text-white px-5 py-2 rounded-lg text-sm transition-colors cursor-pointer"
-            >
-              Volver al menú
-            </button>
-          </div>
-        </div>
-      )}
+      {/* ── Fin de la partida ───────────────────────────────────── */}
+      {terminada && (() => {
+        const gane = vista.ganador === 'A'
+        const motivoTexto =
+          vista.motivo === 'vinculos'
+            ? gane
+              ? 'Destruiste todos los Vínculos de tu rival.'
+              : 'Todos tus Vínculos fueron destruidos.'
+            : vista.motivo === 'mazo_vacio'
+              ? gane
+                ? 'Tu rival se quedó sin cartas en el Mazo Principal.'
+                : 'Te quedaste sin cartas en el Mazo Principal.'
+              : vista.motivo === 'rendicion'
+                ? gane
+                  ? 'Tu rival se rindió.'
+                  : 'Te rendiste.'
+                : 'La partida terminó.'
+        const vinculosVivos = (j: PlayerId) =>
+          vista.players[j].vinculos.filter((id) => id && !vista.instances[id]?.bocaArriba).length
+        return (
+          <Modal
+            titulo={gane ? '¡Ganaste!' : 'Perdiste'}
+            subtitulo={motivoTexto}
+            icono={gane ? '🏆' : '☠'}
+            tono={gane ? 'exito' : 'peligro'}
+            ancho="sm"
+            pie={
+              <BotonUI variante="primario" onClick={onAbandonar}>
+                Volver al menú
+              </BotonUI>
+            }
+          >
+            <div className="grid grid-cols-2 gap-3 text-center">
+              {(['A', 'B'] as PlayerId[]).map((j) => (
+                <div key={j} className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5">
+                  <p className="text-[10px] uppercase tracking-[0.18em] text-gray-500">{j === 'A' ? 'Tú' : 'Rival'}</p>
+                  <p className="mt-1 font-display text-2xl font-bold text-gray-100">
+                    {vinculosVivos(j)}
+                    <span className="text-base text-gray-500">/{vista.players[j].vinculos.length}</span>
+                  </p>
+                  <p className="text-[10px] text-gray-500">Vínculos</p>
+                </div>
+              ))}
+            </div>
+          </Modal>
+        )
+      })()}
     </div>
+    </InspeccionContext.Provider>
+    </AnchoTableroContext.Provider>
+    </EnVueloContext.Provider>
   )
 }

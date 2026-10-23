@@ -1,15 +1,20 @@
 /**
- * Modal de pre-efectos: pausa el juego ANTES de ejecutar una acción del humano
- * que dispara efectos, mostrando QUÉ efectos entrarán en juego.
+ * Modal de pre-efectos: pausa el juego ANTES de ejecutar una acción que dispara
+ * efectos, mostrando QUÉ efectos entrarán en juego.
  *
  * Flujo:
  *   1. Humano confirma jugar/activar una carta con efectos[]
  *   2. usePartida intercepta → abre este modal (el motor NO recibe la acción aún)
- *   3. Botón "Aceptar efectos" → se ejecuta la acción en el motor
- *   4. "Cancelar" → se cierra sin ejecutar (el selector de pago queda como estaba)
+ *   3. Botón "Aceptar efectos" (o Enter) → se ejecuta la acción en el motor
+ *   4. "Cancelar" (o Escape) → se cierra sin ejecutar (el selector de pago queda como estaba)
  *
- * El bot NO pasa por este modal: sus efectos se loguean en logDetallado.
+ * Según el modo de vista previa (usePartida.VistaPrevia) también pausa las jugadas del
+ * bot ('todas'): ahí solo hay "Aceptar y continuar". Sus efectos igual se loguean en logDetallado.
  */
+import { useEffect } from 'react'
+import { Boton } from '../../shared/ui/Boton'
+import { Modal } from '../../shared/ui/Modal'
+import { Seccion } from '../../shared/ui/Seccion'
 import { MiniCard } from './MiniCard'
 import type { CardInstance } from '../game/types'
 import { getCardMeta } from '../game/cards'
@@ -40,82 +45,73 @@ export function EffectPreviewModal({ preview, instancia, onAceptar, onCancelar }
     : describirEfectosDeCarta(meta)
   const esBot = preview.actor === 'B'
 
+  // Teclado: Enter acepta (preventDefault evita el doble disparo si el botón tiene el foco); Escape cancela solo lo propio
+  useEffect(() => {
+    const alTeclear = (e: KeyboardEvent) => {
+      if (e.key === 'Enter') {
+        e.preventDefault()
+        onAceptar()
+      } else if (e.key === 'Escape' && !esBot) {
+        onCancelar()
+      }
+    }
+    window.addEventListener('keydown', alTeclear)
+    return () => window.removeEventListener('keydown', alTeclear)
+  }, [esBot, onAceptar, onCancelar])
+
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center">
-      <div className="bg-surface border border-card-border rounded-xl p-6 max-w-lg mx-4 w-full">
-        {/* Header */}
-        <div className="mb-4">
-          <h2 className="font-display text-lg font-bold text-gray-100 mb-1">
-            {esBot ? '⏸ El rival va a ejecutar' : '⏸ Efectos por entrar en juego'}
-          </h2>
-          <p className="text-xs text-gray-400">
-            {esBot
-              ? 'El juego está en pausa. Revisá qué va a resolver el bot y aceptá para continuar.'
-              : 'El juego está en pausa. Revisá qué se va a resolver y aceptá para continuar.'}
+    <Modal
+      titulo={esBot ? 'El rival va a ejecutar' : 'Efectos por entrar en juego'}
+      subtitulo={
+        esBot
+          ? 'El juego está en pausa. Revisá qué va a resolver el bot y aceptá para continuar.'
+          : 'El juego está en pausa. Revisá qué se va a resolver y aceptá para continuar.'
+      }
+      icono="⏸"
+      tono={esBot ? 'rival' : 'ether'}
+      pie={
+        esBot ? (
+          <Boton variante="primario" atajo="↵" onClick={onAceptar}>
+            Aceptar y continuar
+          </Boton>
+        ) : (
+          <>
+            <Boton atajo="Esc" onClick={onCancelar}>
+              Cancelar
+            </Boton>
+            <Boton variante="primario" atajo="↵" onClick={onAceptar}>
+              Aceptar efectos
+            </Boton>
+          </>
+        )
+      }
+    >
+      {/* Carta fuente */}
+      <div className="mb-4 flex items-center gap-4 rounded-xl border border-white/10 bg-white/[0.03] p-3">
+        {instancia && <MiniCard inst={instancia} anchoPx={84} sinTooltip sinAncla />}
+        <div className="min-w-0">
+          <p className="truncate font-display text-base font-bold text-gray-100">{meta?.name ?? preview.cardInstanceId}</p>
+          <p className="mt-0.5 text-[11px] text-gray-400">
+            {meta?.type ?? 'Carta'} · {esBot ? 'B' : 'Tú'} ejecuta: {preview.accionLabel}
           </p>
-        </div>
-
-        {/* Carta fuente */}
-        <div className="bg-surface-2 rounded-lg p-3 mb-3 flex items-center gap-3">
-          {instancia && <MiniCard inst={instancia} tamano="sm" />}
-          <div>
-            <p className="text-sm font-medium text-gray-200">
-              {meta?.name ?? preview.cardInstanceId}
-            </p>
-            <p className="text-[10px] text-gray-400">
-              {meta?.type ?? 'Carta'} · {esBot ? 'B' : 'Tú'} ejecuta: {preview.accionLabel}
-            </p>
-          </div>
-        </div>
-
-        {/* Lista de efectos */}
-        <div className="bg-surface-2 rounded-lg p-3 mb-4 max-h-64 overflow-y-auto">
-          <p className="text-[9px] uppercase tracking-wider text-gray-500 mb-2">
-            Efectos que entrarán en juego
-          </p>
-          {lineas.length === 0 ? (
-            <p className="text-xs text-gray-400 italic">
-              Esta carta no tiene efectos[] — solo stats básicas.
-            </p>
-          ) : (
-            <ul className="space-y-1.5">
-              {lineas.map((l, i) => (
-                <li key={i} className="text-xs text-gray-200 flex gap-2">
-                  <span className="text-ether-400 shrink-0">•</span>
-                  <span>{l}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-
-        {/* Acciones */}
-        <div className="flex justify-end gap-3 pt-3 border-t border-card-border">
-          {esBot ? (
-            <button
-              onClick={onAceptar}
-              className="text-xs bg-ether-600 hover:bg-ether-500 text-white px-4 py-2 rounded-lg transition-colors cursor-pointer"
-            >
-              Aceptar y continuar
-            </button>
-          ) : (
-            <>
-              <button
-                onClick={onCancelar}
-                className="text-xs bg-surface-2 hover:bg-card-border text-gray-300 px-4 py-2 rounded-lg transition-colors cursor-pointer"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={onAceptar}
-                className="text-xs bg-ether-600 hover:bg-ether-500 text-white px-4 py-2 rounded-lg transition-colors cursor-pointer"
-              >
-                Aceptar efectos
-              </button>
-            </>
-          )}
         </div>
       </div>
-    </div>
+
+      {/* Lista de efectos */}
+      <Seccion>Efectos que entrarán en juego</Seccion>
+      <div className="max-h-64 overflow-y-auto rounded-xl border border-white/10 bg-white/[0.03] p-3">
+        {lineas.length === 0 ? (
+          <p className="text-xs italic text-gray-400">Esta carta no tiene efectos[] — solo stats básicas.</p>
+        ) : (
+          <ul className="space-y-2">
+            {lineas.map((l, i) => (
+              <li key={i} className="flex gap-2.5 border-l-2 border-ether-500/60 pl-2.5 text-[13px] leading-snug text-gray-200">
+                <span>{l}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </Modal>
   )
 }
