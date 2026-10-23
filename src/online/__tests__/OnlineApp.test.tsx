@@ -167,12 +167,16 @@ describe('OnlineApp — mazo personalizado', () => {
     const card = screen.getByRole('button', { name: /Vista Previa/ })
     // El arte se resuelve en el useEffect → esperar el re-render
     const imgs = await within(card).findAllByRole('img')
-    // Hasta 8 miniaturas de las cartas únicas del deck
+    // Hasta 8 miniaturas de cartas únicas del deck
     expect(imgs.length).toBeGreaterThan(0)
     expect(imgs.length).toBeLessThanOrEqual(8)
-    // El arte de la primera carta del deck (diseño con PNG oficial)
-    expect(imgs[0]).toHaveAttribute('src', cardArtPath(MAZOS[0].cardIds[0]))
-    // El alt anuncia el nombre de la carta (deck preview accesible)
-    expect(imgs[0]).toHaveAttribute('alt', getCardMeta(MAZOS[0].cardIds[0])?.name)
+    // La portada muestra las MEJORES cartas (Campeones y más raras), no las primeras de la lista:
+    // cada miniatura es el arte oficial de una carta del mazo, con su nombre en el alt (accesible)
+    const artes = new Set(MAZOS[0].cardIds.map((id) => cardArtPath(id)))
+    const nombres = new Set(MAZOS[0].cardIds.map((id) => getCardMeta(id)?.name))
+    for (const img of imgs) {
+      expect(artes.has(img.getAttribute('src') ?? undefined)).toBe(true)
+      expect(nombres.has(img.getAttribute('alt') ?? undefined)).toBe(true)
+    }
   })
 })

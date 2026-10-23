@@ -1,21 +1,16 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router'
 import { useCardStore } from '../forge/store/useCardStore'
-import { useCardImage } from '../forge/hooks/useCardImage'
 import { ALL_CARDS } from '../shared/data/paquetes'
-import { registrarCartas, visibleState, getCardMeta } from './game'
+import { registrarCartas, visibleState } from './game'
 import type { Dificultad } from './game/bot'
 import { MAZOS, mazoParaBot } from './mazos'
+import { MenuPartida } from './MenuPartida'
+import type { MazoSeleccionado } from './MenuPartida'
 import { useMazosStore, type MazoPersonalizado } from './useMazosStore'
 import { usePartida, type PartidaConfig } from './usePartida'
 import { Tablero } from './components/Tablero'
 import { MazoEditor } from './components/MazoEditor'
 import { EffectPreviewModal } from './components/EffectPreviewModal'
-
-/** Selección del humano: un set preestablecido o un mazo personalizado guardado. */
-type MazoSeleccionado =
-  | { tipo: 'set'; id: 'estasis' | 'disonancia' }
-  | { tipo: 'custom'; id: string }
 
 /**
  * Éter Online — modo vs bot (local).
@@ -79,7 +74,7 @@ export default function OnlineApp() {
 
   if (!enPartida) {
     return (
-      <Menu
+      <MenuPartida
         mazoHumano={mazoHumano}
         onMazo={setMazoHumano}
         mazosPersonalizados={mazosPersonalizados}
@@ -130,6 +125,8 @@ function Partida({ config, onAbandonar }: { config: PartidaConfig; onAbandonar: 
         onAccion={partida.ejecutar}
         onAbandonar={onAbandonar}
         animaciones={partida.animaciones}
+        vistaPrevia={partida.vistaPrevia}
+        onCiclarVistaPrevia={partida.ciclarVistaPrevia}
       />
       {partida.preview && (
         <EffectPreviewModal
@@ -140,221 +137,5 @@ function Partida({ config, onAbandonar }: { config: PartidaConfig; onAbandonar: 
         />
       )}
     </>
-  )
-}
-
-interface MenuProps {
-  mazoHumano: MazoSeleccionado
-  onMazo: (m: MazoSeleccionado) => void
-  mazosPersonalizados: MazoPersonalizado[]
-  onNuevoMazo: () => void
-  onEditarMazo: (m: MazoPersonalizado) => void
-  seed: number
-  onSeed: (n: number) => void
-  dificultad: Dificultad
-  onDificultad: (d: Dificultad) => void
-  onEmpezar: () => void
-}
-
-/** Miniatura de una carta del deck (arte real: diseño → /cartas, custom → IndexedDB). */
-function MiniArte({ cardId }: { cardId: string }) {
-  const meta = getCardMeta(cardId)
-  const imageUrl = useCardImage(cardId, meta?.hasImage, meta?.imageUrl)
-  return (
-    <div
-      className="shrink-0 rounded-sm border border-card-border overflow-hidden flex items-center justify-center"
-      style={{
-        width: 28,
-        aspectRatio: '744/1038',
-        background: 'linear-gradient(135deg, #14142b 0%, #1e1e3a 60%, #2a2a4e 100%)',
-      }}
-    >
-      {imageUrl ? (
-        <img
-          src={imageUrl}
-          alt={meta?.name ?? ''}
-          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-        />
-      ) : (
-        <span style={{ color: '#4b4b7a', fontFamily: '"Cinzel", serif', fontSize: 9, fontWeight: 700 }}>✦</span>
-      )}
-    </div>
-  )
-}
-
-/** Vista previa del deck: miniaturas de las primeras cartas únicas del mazo. */
-function MazoMiniaturas({ cardIds }: { cardIds: string[] }) {
-  const unicas = Array.from(new Set(cardIds)).slice(0, 8)
-  return (
-    <div className="flex gap-1 mt-2">
-      {unicas.map((id) => (
-        <MiniArte key={id} cardId={id} />
-      ))}
-    </div>
-  )
-}
-
-function Menu({
-  mazoHumano,
-  onMazo,
-  mazosPersonalizados,
-  onNuevoMazo,
-  onEditarMazo,
-  seed,
-  onSeed,
-  dificultad,
-  onDificultad,
-  onEmpezar,
-}: MenuProps) {
-  const seleccionado = (id: string) =>
-    mazoHumano.tipo === 'set' ? mazoHumano.id === id : false
-
-  return (
-    <div className="min-h-screen bg-[#0d0d14] text-gray-100 font-body">
-      <header className="border-b border-card-border bg-surface">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-display font-bold text-gray-100 tracking-wider">Éter Online</h1>
-            <p className="text-xs text-gray-500 font-body">Modo en línea · partida local vs bot</p>
-          </div>
-          <Link
-            to="/"
-            className="bg-ether-600/20 hover:bg-ether-600/40 text-ether-200 px-3 py-1.5 rounded transition-colors text-xs"
-          >
-            ← Inicio
-          </Link>
-        </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto px-6 py-10">
-        <h2 className="font-display text-xl text-ether-200 mb-6">Nueva partida</h2>
-
-        <div className="mb-8 max-w-2xl border border-ether-600/40 bg-ether-600/10 rounded-lg p-4 flex items-center justify-between gap-4">
-          <div>
-            <p className="font-display text-sm font-bold text-ether-200">Jugar con amigos</p>
-            <p className="text-[11px] text-gray-400 mt-0.5">
-              Salas en línea con código · servidor oficial · sin bot
-            </p>
-          </div>
-          <Link
-            to="/epiconline/amigos"
-            className="shrink-0 bg-ether-600 hover:bg-ether-500 text-white px-4 py-2 rounded-lg text-xs font-display tracking-wider transition-colors"
-          >
-            Abrir lobby
-          </Link>
-        </div>
-
-        <p className="text-sm text-gray-400 mb-3">O jugá contra el bot (partida local):</p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl mb-4">
-          {MAZOS.map((mazo) => {
-            const sel = seleccionado(mazo.id)
-            return (
-              <button
-                key={mazo.id}
-                onClick={() => onMazo({ tipo: 'set', id: mazo.id })}
-                className={`text-left bg-surface-2 border rounded-lg p-5 transition-all cursor-pointer
-                  ${sel ? 'border-ether-400 ring-1 ring-ether-400' : 'border-card-border hover:border-gray-500'}`}
-              >
-                <p className="font-display text-lg font-bold" style={{ color: mazo.color }}>
-                  {mazo.nombre}
-                </p>
-                <p className="text-[11px] text-gray-500 mt-1">
-                  {mazo.cardIds.length} cartas · facción {mazo.id === 'estasis' ? 'Orden' : 'Caos'}
-                </p>
-              </button>
-            )
-          })}
-        </div>
-
-        {/* Mazos personalizados guardados */}
-        {mazosPersonalizados.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl mb-4">
-            {mazosPersonalizados.map((mazo) => {
-              const sel = mazoHumano.tipo === 'custom' && mazoHumano.id === mazo.id
-              return (
-                <div
-                  key={mazo.id}
-                  className={`bg-surface-2 border rounded-lg p-5 transition-all
-                    ${sel ? 'border-ether-400 ring-1 ring-ether-400' : 'border-card-border'}`}
-                >
-                  <button
-                    onClick={() => onMazo({ tipo: 'custom', id: mazo.id })}
-                    className="text-left w-full cursor-pointer"
-                  >
-                    <p className="font-display text-lg font-bold text-ether-200">{mazo.nombre}</p>
-                    <p className="text-[11px] text-gray-500 mt-1">
-                      {mazo.cardIds.length} cartas · personalizado
-                    </p>
-                    <MazoMiniaturas cardIds={mazo.cardIds} />
-                  </button>
-                  <button
-                    onClick={() => onEditarMazo(mazo)}
-                    className="mt-2 text-xs bg-surface hover:bg-card-border text-gray-300 px-3 py-1.5 rounded transition-colors cursor-pointer"
-                  >
-                    Editar
-                  </button>
-                </div>
-              )
-            })}
-          </div>
-        )}
-
-        <button
-          onClick={onNuevoMazo}
-          className="mb-8 text-xs bg-ether-600/20 hover:bg-ether-600/40 text-ether-200 px-4 py-2 rounded transition-colors cursor-pointer"
-        >
-          + Nuevo mazo personalizado
-        </button>
-
-        <div className="flex items-center gap-3 mb-8 max-w-2xl">
-          <label htmlFor="seed" className="text-sm text-gray-400">
-            Seed:
-          </label>
-          <input
-            id="seed"
-            type="number"
-            value={seed}
-            onChange={(e) => onSeed(Number(e.target.value) || 0)}
-            className="bg-surface-2 border border-card-border rounded-lg px-3 py-2 text-sm text-gray-100 w-40
-                       focus:outline-none focus:border-ether-400 transition-colors"
-          />
-          <p className="text-[11px] text-gray-600">
-            Mismo seed + mismas decisiones → misma partida.
-            {mazoHumano.tipo === 'custom' && ' Con mazo personalizado el bot elige su set según el seed.'}
-          </p>
-        </div>
-
-        {/* Selector de dificultad del bot */}
-        <div className="mb-8 max-w-2xl">
-          <p className="text-sm text-gray-400 mb-2">Dificultad del bot:</p>
-          <div className="flex gap-3">
-            {([
-              { id: 'facil' as const, label: 'Fácil', desc: 'Prioridades básicas', color: 'text-green-400' },
-              { id: 'medio' as const, label: 'Medio', desc: 'Considera combate y habilidades', color: 'text-yellow-400' },
-              { id: 'dificil' as const, label: 'Difícil', desc: 'Evalúa el tablero completo', color: 'text-red-400' },
-            ]).map((d) => (
-              <button
-                key={d.id}
-                onClick={() => onDificultad(d.id)}
-                className={`flex-1 text-left border rounded-lg px-4 py-3 transition-all cursor-pointer
-                  ${dificultad === d.id
-                    ? 'border-ether-400 ring-1 ring-ether-400 bg-ether-600/10'
-                    : 'border-card-border hover:border-gray-500 bg-surface-2'}`}
-              >
-                <p className={`font-display text-sm font-bold ${d.color}`}>{d.label}</p>
-                <p className="text-[11px] text-gray-500 mt-0.5">{d.desc}</p>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <button
-          onClick={onEmpezar}
-          className="bg-ether-600 hover:bg-ether-500 text-white px-8 py-3 rounded-lg font-display tracking-wider transition-colors cursor-pointer"
-        >
-          Comenzar partida
-        </button>
-      </main>
-    </div>
   )
 }
