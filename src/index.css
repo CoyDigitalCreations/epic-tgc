@@ -26,6 +26,78 @@
   --color-surface-2: #1e1e2a;
 }
 
+/* Pulso de las casillas iluminadas (elegir casilla) y del brillo de entrada de una carta al campo. */
+@keyframes pulse-ring {
+  0%,
+  100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.35);
+  }
+}
+
+.animate-pulse-ring {
+  animation: pulse-ring 1.4s ease-in-out infinite;
+}
+
+/* Entradas de los modales y docks (solo CSS: sin opacidad inicial en JS que confunda a los tests). */
+@keyframes modal-fondo-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modal-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes dock-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.anim-modal-fondo {
+  animation: modal-fondo-in 0.16s ease-out both;
+}
+
+.anim-modal-panel {
+  animation: modal-panel-in 0.2s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.anim-dock {
+  animation: dock-in 0.22s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .anim-modal-fondo,
+  .anim-modal-panel,
+  .anim-dock {
+    animation: none;
+  }
+}
+
+/* El campo del rival se dibuja girado 180° (vista de mesa): sus rótulos de zona se contra-giran para leerse derechos. */
+[data-testid='grilla-B'] [data-zona-label] {
+  transform: rotate(180deg);
+}
+
 body {
   margin: 0;
   background: #0d0d14;
