@@ -7,26 +7,84 @@
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Inter:wght@300;400;500;600;700&display=swap');
 
+  /* Documento ESTÁTICO: sin animaciones, transiciones, hover ni degradados de texto (se imprime). */
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+  /* ── Tema de pantalla (oscuro) ── */
   :root {
     --bg: #0d0d14;
     --surface: #16161e;
     --surface-2: #1e1e2a;
     --border: #3b3b5c;
+    --border-soft: rgba(59,59,92,0.45);
     --ether-300: #7070ff;
     --ether-400: #4040ff;
     --ether-600: #1a1acc;
+    --accent: #7070ff;
+    --accent-strong: #a0a0ff;
     --text: #e2e2e8;
-    --text-dim: #8b8ba0;
-    --text-muted: #6b6b80;
+    --text-strong: #ffffff;
+    --text-dim: #9b9bb0;
+    --text-muted: #8080a0;
     --red: #ef4444;
     --green: #22c55e;
     --amber: #f59e0b;
     --cyan: #22d3ee;
     --pink: #ec4899;
     --purple: #a855f7;
+    --tag-bg: rgba(112,112,255,0.15);
+    --vinculo-bg: rgba(168,85,247,0.14);
+    --marca-fg: #0d0d14;
+    --w-carta: 210px;
+    --w-carta-chica: 148px;
+    --w-anatomia: 290px;
   }
+
+  /* ── Tema de impresión (claro, tinta ligera) ── */
+  @media print {
+    :root {
+      --bg: #ffffff;
+      --surface: #ffffff;
+      --surface-2: #f5f5f9;
+      --border: #c9c9d6;
+      --border-soft: #dedee8;
+      --accent: #1a1acc;
+      --accent-strong: #1a1acc;
+      --text: #222230;
+      --text-strong: #000000;
+      --text-dim: #4a4a5c;
+      --text-muted: #5c5c70;
+      --red: #b91c1c;
+      --green: #15803d;
+      --amber: #b45309;
+      --cyan: #0e7490;
+      --pink: #be185d;
+      --purple: #7e22ce;
+      --tag-bg: #e6e6f5;
+      --vinculo-bg: #f1e8fb;
+      --marca-fg: #000000;
+      --w-carta: 50mm;
+      --w-carta-chica: 36mm;
+      --w-anatomia: 62mm;
+    }
+  }
+
+  @page {
+    size: Letter;
+    margin: 16mm 15mm 18mm;
+    @bottom-center {
+      content: "ÉTER ENGINE TCG · Manual de Reglas v2.0 · " counter(page);
+      font-family: 'Inter', sans-serif;
+      font-size: 8pt;
+      color: #6b6b80;
+    }
+  }
+  @page :first {
+    margin: 0;
+    @bottom-center { content: none; }
+  }
+
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 
   body {
     font-family: 'Inter', sans-serif;
@@ -36,14 +94,16 @@
     padding: 0;
   }
 
-  /* ── Page ── */
+  a { color: inherit; text-decoration: none; }
+
+  /* ── Página ── */
   .page {
     max-width: 900px;
     margin: 0 auto;
     padding: 40px 24px 80px;
   }
 
-  /* ── Cover ── */
+  /* ── Portada ── */
   .cover {
     text-align: center;
     padding: 80px 24px 60px;
@@ -55,10 +115,7 @@
     font-size: 2.2rem;
     font-weight: 900;
     letter-spacing: 4px;
-    background: linear-gradient(135deg, var(--ether-300), var(--ether-400));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: var(--accent);
     margin-bottom: 8px;
   }
   .cover .subtitle {
@@ -69,24 +126,27 @@
     text-transform: uppercase;
     margin-bottom: 16px;
   }
-  .cover .version {
-    font-size: 0.85rem;
-    color: var(--text-muted);
-  }
-  .cover .version span {
-    color: var(--ether-300);
-  }
+  .cover .version { font-size: 0.85rem; color: var(--text-muted); }
+  .cover .version span { color: var(--accent); font-weight: 600; }
   .cover .divider {
     width: 80px;
     height: 2px;
-    background: linear-gradient(90deg, transparent, var(--ether-600), transparent);
+    background: var(--accent);
     margin: 20px auto;
   }
-
-  /* ── Section ── */
-  .section {
-    margin-bottom: 40px;
+  .cover .portada-cartas {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 14px;
+    margin: 34px auto 6px;
   }
+  .cover .portada-cartas img { display: block; width: var(--w-carta); height: auto; }
+  .cover .portada-cartas img.centro { width: calc(var(--w-carta) * 1.18); }
+  .cover .nota-portada { color: var(--text-muted); font-size: 0.85rem; margin-top: 18px; }
+
+  /* ── Secciones ── */
+  .section { margin-bottom: 40px; }
 
   .section-header {
     display: flex;
@@ -95,12 +155,13 @@
     margin-bottom: 20px;
     padding-bottom: 8px;
     border-bottom: 1px solid var(--border);
+    break-after: avoid;
   }
   .section-header .num {
     font-family: 'Cinzel', serif;
     font-size: 1.1rem;
     font-weight: 700;
-    color: var(--ether-300);
+    color: var(--accent);
     min-width: 28px;
   }
   .section-header h2 {
@@ -108,30 +169,22 @@
     font-size: 1.15rem;
     font-weight: 700;
     letter-spacing: 1px;
-    color: var(--text);
+    color: var(--text-strong);
   }
 
   .section-header.sub {
     margin-top: 24px;
-    border-bottom: 1px solid rgba(59,59,92,0.5);
+    border-bottom: 1px solid var(--border-soft);
   }
-  .section-header.sub .num {
-    font-size: 0.95rem;
-    color: var(--cyan);
-  }
+  .section-header.sub .num { font-size: 0.95rem; color: var(--cyan); }
   .section-header.sub h3 {
     font-family: 'Cinzel', serif;
     font-size: 1rem;
     font-weight: 600;
     letter-spacing: 0.5px;
-    color: var(--text);
+    color: var(--text-strong);
   }
-
-  .section-header.sub2 {
-    margin-top: 18px;
-    padding-bottom: 4px;
-    border-bottom: none;
-  }
+  .section-header.sub2 { margin-top: 18px; padding-bottom: 4px; border-bottom: none; }
   .section-header.sub2 h4 {
     font-family: 'Cinzel', serif;
     font-size: 0.9rem;
@@ -140,59 +193,25 @@
     letter-spacing: 0.5px;
   }
 
-  /* ── Content ── */
-  .content {
-    padding-left: 4px;
-  }
-  .content p {
-    margin-bottom: 12px;
-    font-size: 0.92rem;
-    color: var(--text);
-    line-height: 1.7;
-  }
+  /* ── Contenido ── */
+  .content { padding-left: 4px; }
+  .content p { margin-bottom: 12px; font-size: 0.92rem; color: var(--text); line-height: 1.7; }
+  .content ul, .content ol { margin: 8px 0 16px 20px; }
+  .content li { font-size: 0.92rem; margin-bottom: 6px; line-height: 1.6; }
+  .content li::marker { color: var(--accent); }
+  .content strong { color: var(--text-strong); font-weight: 600; }
+  .content p, .content li { orphans: 3; widows: 3; }
 
-  .content ul, .content ol {
-    margin: 8px 0 16px 20px;
-  }
-  .content li {
-    font-size: 0.92rem;
-    margin-bottom: 6px;
-    line-height: 1.6;
-  }
-  .content li::marker {
-    color: var(--ether-400);
-  }
-
-  .content strong {
-    color: #fff;
-    font-weight: 600;
-  }
-
-  .highlight {
-    color: var(--ether-300);
-    font-weight: 600;
-  }
-  .highlight-amber {
-    color: var(--amber);
-    font-weight: 600;
-  }
-  .highlight-red {
-    color: var(--red);
-    font-weight: 600;
-  }
-  .highlight-green {
-    color: var(--green);
-    font-weight: 600;
-  }
-  .highlight-cyan {
-    color: var(--cyan);
-    font-weight: 600;
-  }
+  .highlight { color: var(--accent-strong); font-weight: 600; }
+  .highlight-amber { color: var(--amber); font-weight: 600; }
+  .highlight-red { color: var(--red); font-weight: 600; }
+  .highlight-green { color: var(--green); font-weight: 600; }
+  .highlight-cyan { color: var(--cyan); font-weight: 600; }
 
   .tag {
     display: inline-block;
-    background: rgba(112,112,255,0.15);
-    color: var(--ether-300);
+    background: var(--tag-bg);
+    color: var(--accent-strong);
     font-size: 0.78rem;
     font-weight: 600;
     padding: 1px 8px;
@@ -200,32 +219,8 @@
     letter-spacing: 0.3px;
   }
 
-  /* ── Lore box ── */
-  .lore-box {
-    background: var(--surface-2);
-    border-left: 3px solid var(--ether-600);
-    border-radius: 0 8px 8px 0;
-    padding: 16px 20px;
-    margin: 12px 0 20px;
-    font-style: italic;
-    color: var(--text-dim);
-    font-size: 0.9rem;
-  }
-  .lore-box .attrib {
-    margin-top: 8px;
-    text-align: right;
-    font-style: normal;
-    font-size: 0.85rem;
-    color: var(--ether-300);
-  }
-
-  /* ── Steps / numbered list ── */
-  .steps {
-    counter-reset: step;
-    list-style: none;
-    padding: 0;
-    margin: 12px 0 20px;
-  }
+  /* ── Pasos numerados ── */
+  .steps { counter-reset: step; list-style: none; padding: 0; margin: 12px 0 20px; }
   .steps li {
     counter-increment: step;
     padding: 8px 12px 8px 44px;
@@ -235,6 +230,7 @@
     background: var(--surface-2);
     border-radius: 6px;
     border: 1px solid var(--border);
+    break-inside: avoid;
   }
   .steps li::before {
     content: counter(step);
@@ -244,7 +240,7 @@
     width: 24px;
     height: 24px;
     background: var(--ether-600);
-    color: white;
+    color: #ffffff;
     font-size: 0.78rem;
     font-weight: 700;
     display: flex;
@@ -253,21 +249,11 @@
     border-radius: 50%;
   }
 
-  /* ── Tables ── */
-  .table-wrap {
-    overflow-x: auto;
-    margin: 12px 0 20px;
-    border-radius: 8px;
-    border: 1px solid var(--border);
-  }
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.88rem;
-  }
+  /* ── Tablas ── */
+  table { width: 100%; border-collapse: collapse; font-size: 0.88rem; margin: 12px 0 20px; }
   th {
     background: var(--surface-2);
-    color: var(--text);
+    color: var(--text-strong);
     font-weight: 600;
     text-align: left;
     padding: 10px 14px;
@@ -276,29 +262,35 @@
     font-size: 0.82rem;
     letter-spacing: 0.5px;
   }
-  td {
-    padding: 9px 14px;
-    border-bottom: 1px solid rgba(59,59,92,0.4);
-    color: var(--text);
-  }
+  td { padding: 9px 14px; border-bottom: 1px solid var(--border-soft); color: var(--text); vertical-align: top; }
   tr:last-child td { border-bottom: none; }
-  tr:hover td { background: var(--surface-2); }
+  .content > table td:first-child { white-space: nowrap; }
+  tr { break-inside: avoid; }
+  thead, tr:first-child th { break-after: avoid; }
 
-  /* ── Map ── */
+  .destiny-table {
+    width: 100%;
+    font-size: 0.88rem;
+    margin: 12px 0 20px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .destiny-table table { margin: 0; }
+  .destiny-table th { background: var(--surface-2); padding: 10px 14px; font-size: 0.8rem; }
+
+  /* ── Mapa del campo ── */
   .map-container {
     margin: 16px 0 20px;
     border: 1px solid var(--border);
     border-radius: 8px;
     overflow: hidden;
+    break-inside: avoid;
   }
-  .map-grid {
-    display: grid;
-    grid-template-columns: 140px 1fr 120px;
-    font-size: 0.82rem;
-  }
+  .map-grid { display: grid; grid-template-columns: 140px 1fr 120px; font-size: 0.82rem; }
   .map-cell {
     padding: 10px 12px;
-    border: 1px solid rgba(59,59,92,0.5);
+    border: 1px solid var(--border-soft);
     min-height: 50px;
     display: flex;
     flex-direction: column;
@@ -307,86 +299,16 @@
   .map-cell .code {
     font-family: 'Cinzel', serif;
     font-weight: 700;
-    color: var(--ether-300);
+    color: var(--accent);
     font-size: 0.75rem;
     margin-bottom: 2px;
   }
-  .map-cell .label {
-    color: var(--text-dim);
-    font-size: 0.78rem;
-    line-height: 1.4;
-  }
-  .map-row-label {
-    background: var(--surface-2);
-    font-family: 'Cinzel', serif;
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--text-muted);
-    text-align: center;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    padding: 4px;
-    border-bottom: 1px solid var(--border);
-  }
+  .map-cell .label { color: var(--text-dim); font-size: 0.78rem; line-height: 1.4; }
   .map-cell.span-full { grid-column: 1 / 4; }
-  .map-cell.vinculo {
-    background: linear-gradient(135deg, rgba(168,85,247,0.18), rgba(236,72,153,0.08));
-  }
+  .map-cell.vinculo { background: var(--vinculo-bg); }
   .map-cell.vinculo .code { color: var(--purple); }
 
-  /* ── Destiny table ── */
-  .destiny-table {
-    width: 100%;
-    font-size: 0.88rem;
-    border-collapse: collapse;
-    margin: 12px 0 20px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    overflow: hidden;
-  }
-  .destiny-table th {
-    background: var(--surface-2);
-    padding: 10px 14px;
-    text-align: left;
-    font-family: 'Cinzel', serif;
-    font-size: 0.8rem;
-    border-bottom: 1px solid var(--border);
-  }
-  .destiny-table td {
-    padding: 9px 14px;
-    border-bottom: 1px solid rgba(59,59,92,0.4);
-  }
-  .destiny-table tr:last-child td { border-bottom: none; }
-
-  /* ── Keyword cards ── */
-  .kw-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 12px;
-    margin: 12px 0 20px;
-  }
-  .kw-card {
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 14px 16px;
-    transition: border-color 0.2s;
-  }
-  .kw-card:hover { border-color: var(--ether-600); }
-  .kw-card .kw-name {
-    font-family: 'Cinzel', serif;
-    font-weight: 700;
-    font-size: 0.85rem;
-    color: var(--ether-300);
-    margin-bottom: 4px;
-  }
-  .kw-card .kw-desc {
-    font-size: 0.85rem;
-    color: var(--text-dim);
-    line-height: 1.5;
-  }
-
-  /* ── Example boxes ── */
+  /* ── Ejemplos y escenarios ── */
   .example {
     background: var(--surface-2);
     border: 1px solid var(--border);
@@ -395,21 +317,18 @@
     padding: 14px 18px;
     margin: 8px 0 16px;
     font-size: 0.88rem;
+    break-inside: avoid;
   }
-  .example .ex-title {
-    font-weight: 600;
-    color: var(--amber);
-    margin-bottom: 4px;
-    font-size: 0.82rem;
-  }
+  .example .ex-title { font-weight: 600; color: var(--amber); margin-bottom: 4px; font-size: 0.82rem; }
+  .example.en-linea { display: inline-block; margin: 4px 0 0; padding: 6px 12px; }
 
-  /* ── Scene boxes ── */
   .scene-box {
     background: var(--surface-2);
     border: 1px solid var(--border);
     border-radius: 8px;
     padding: 14px 18px;
     margin: 10px 0 16px;
+    break-inside: avoid;
   }
   .scene-box .scene-title {
     font-family: 'Cinzel', serif;
@@ -420,75 +339,113 @@
   }
   .scene-box p, .scene-box li { font-size: 0.88rem; }
 
-  /* ── Card anatomy ── */
+  /* ── Cartas reales ── */
+  .cartas {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 14px 16px;
+    margin: 14px 0 20px;
+    break-inside: avoid;
+  }
+  .carta { width: var(--w-carta); text-align: center; break-inside: avoid; }
+  .cartas.chicas .carta { width: var(--w-carta-chica); }
+  .carta img { display: block; width: 100%; height: auto; }
+  .carta figcaption {
+    margin-top: 6px;
+    font-size: 0.74rem;
+    line-height: 1.35;
+    color: var(--text-dim);
+  }
+  .carta figcaption b { display: block; color: var(--text-strong); font-weight: 600; font-size: 0.78rem; }
+  .carta figcaption .rol { display: block; color: var(--accent-strong); font-weight: 600; letter-spacing: 0.3px; }
+
+  /* Ejemplo con carta(s) al costado del texto */
+  .example.con-cartas { display: flex; gap: 18px; align-items: flex-start; }
+  .example.con-cartas .ex-cuerpo { flex: 1; min-width: 0; }
+  .example.con-cartas .cartas { margin: 0; flex: 0 0 auto; justify-content: flex-start; flex-wrap: nowrap; gap: 12px; }
+  .example.con-cartas .carta { width: var(--w-carta-chica); }
+
+  /* Anatomía de una carta real, con marcas numeradas */
+  .anatomia {
+    display: flex;
+    gap: 26px;
+    align-items: flex-start;
+    margin: 14px 0 22px;
+    break-inside: avoid;
+  }
+  /* Las marcas van en el margen, fuera de la carta, para no tapar nada de lo que se explica */
+  .carta-marcada { position: relative; flex: 0 0 var(--w-anatomia); width: var(--w-anatomia); margin: 0 calc(var(--w-anatomia) / 11); font-size: calc(var(--w-anatomia) / 14); }
+  .carta-marcada img { display: block; width: 100%; height: auto; }
+  .marca {
+    position: absolute;
+    width: 1.35em;
+    height: 1.35em;
+    margin: -0.675em 0 0 -0.675em;
+    border-radius: 50%;
+    background: var(--amber);
+    color: var(--marca-fg);
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 0.78em;
+    line-height: 1.35em;
+    text-align: center;
+  }
+  .marca::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    height: 0;
+    border-top: 0.1em solid var(--amber);
+    width: 0.9em;
+  }
+  .marca.izq::after { left: 100%; }
+  .marca.der::after { right: 100%; }
+  .leyenda { list-style: none; margin: 0; padding: 0; flex: 1; min-width: 0; counter-reset: leyenda; }
+  .content .leyenda li {
+    counter-increment: leyenda;
+    position: relative;
+    padding-left: 34px;
+    margin-bottom: 7px;
+    font-size: 0.86rem;
+    line-height: 1.45;
+  }
+  .leyenda li::before {
+    content: counter(leyenda);
+    position: absolute;
+    left: 0;
+    top: 1px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--amber);
+    color: var(--marca-fg);
+    font-weight: 700;
+    font-size: 0.72rem;
+    line-height: 22px;
+    text-align: center;
+  }
+
+  /* ── Esquema de datos de una carta ── */
   .card-anatomy {
-    background: linear-gradient(135deg, #1a1a30, #222240);
+    background: var(--surface-2);
     border: 1px solid var(--border);
     border-radius: 10px;
     padding: 20px 24px;
     margin: 12px 0 20px;
     font-family: 'Cinzel', serif;
     max-width: 380px;
+    break-inside: avoid;
   }
-  .card-anatomy .ca-name {
-    font-weight: 900;
-    font-size: 1rem;
-    color: #f0f0f0;
-    letter-spacing: 1px;
-    margin-bottom: 2px;
-  }
-  .card-anatomy .ca-line {
-    border-top: 1px solid rgba(59,59,92,0.6);
-    margin: 4px 0;
-  }
-  .card-anatomy .ca-meta {
-    font-size: 0.72rem;
-    color: var(--text-dim);
-    font-family: 'Inter', sans-serif;
-  }
-  .card-anatomy .ca-stats {
-    font-size: 0.85rem;
-    color: var(--text);
-    font-family: 'Inter', sans-serif;
-    font-weight: 600;
-  }
-  .card-anatomy .ca-effect {
-    font-size: 0.78rem;
-    color: var(--text-dim);
-    font-family: 'Inter', sans-serif;
-    font-style: italic;
-  }
-  .card-anatomy .ca-copies {
-    font-size: 0.72rem;
-    color: var(--text-muted);
-    font-family: 'Inter', sans-serif;
-    text-align: right;
-    margin-top: 4px;
-  }
+  .card-anatomy.vinculo { border-color: var(--purple); background: var(--vinculo-bg); }
+  .card-anatomy .ca-name { font-weight: 900; font-size: 1rem; color: var(--text-strong); letter-spacing: 1px; margin-bottom: 2px; }
+  .card-anatomy .ca-line { border-top: 1px solid var(--border); margin: 4px 0; }
+  .card-anatomy .ca-meta { font-size: 0.72rem; color: var(--text-dim); font-family: 'Inter', sans-serif; }
+  .card-anatomy .ca-stats { font-size: 0.85rem; color: var(--text); font-family: 'Inter', sans-serif; font-weight: 600; }
+  .card-anatomy .ca-effect { font-size: 0.78rem; color: var(--text-dim); font-family: 'Inter', sans-serif; font-style: italic; }
+  .card-anatomy .ca-copies { font-size: 0.72rem; color: var(--text-muted); font-family: 'Inter', sans-serif; text-align: right; margin-top: 4px; }
 
-  /* ── Footer ── */
-  .footer {
-    text-align: center;
-    padding: 40px 24px 20px;
-    border-top: 1px solid var(--border);
-    margin-top: 48px;
-  }
-  .footer p {
-    font-size: 0.82rem;
-    color: var(--text-muted);
-    line-height: 1.6;
-  }
-  .footer .logo {
-    font-family: 'Cinzel', serif;
-    font-weight: 700;
-    font-size: 1rem;
-    background: linear-gradient(135deg, var(--ether-300), var(--ether-400));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-
-  /* ── TOG ── */
+  /* ── Índice ── */
   .toc {
     background: var(--surface-2);
     border: 1px solid var(--border);
@@ -500,74 +457,60 @@
     font-family: 'Cinzel', serif;
     font-size: 0.9rem;
     font-weight: 700;
-    color: var(--ether-300);
+    color: var(--accent);
     margin-bottom: 12px;
     letter-spacing: 1px;
   }
-  .toc-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 4px 24px;
-  }
+  .toc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 24px; }
   .toc-item {
+    display: block;
     font-size: 0.85rem;
     color: var(--text-dim);
     padding: 3px 0;
-    border-bottom: 1px dotted rgba(59,59,92,0.3);
+    border-bottom: 1px dotted var(--border);
   }
-  .toc-item .toc-num {
-    color: var(--ether-300);
-    font-weight: 600;
-    margin-right: 6px;
-  }
+  .toc-item .toc-num { color: var(--accent); font-weight: 600; margin-right: 6px; }
 
-  /* ── Rarity table ── */
+  /* ── Pie ── */
+  .footer { text-align: center; padding: 40px 24px 20px; border-top: 1px solid var(--border); margin-top: 48px; break-inside: avoid; }
+  .footer p { font-size: 0.82rem; color: var(--text-muted); line-height: 1.6; }
+  .footer .logo { font-family: 'Cinzel', serif; font-weight: 700; font-size: 1rem; color: var(--accent); }
+
+  .content p.intro-cartas { break-after: avoid; }
   .rarity-table td:first-child { font-weight: 600; }
 
-  /* ── Responsive ── */
-  @media (max-width: 640px) {
+  /* ── Pantallas chicas ── */
+  @media screen and (max-width: 640px) {
     .page { padding: 20px 14px 60px; }
     .cover h1 { font-size: 1.5rem; }
     .toc-grid { grid-template-columns: 1fr; }
     .map-grid { grid-template-columns: 90px 1fr 80px; font-size: 0.7rem; }
     .map-cell { padding: 6px 8px; }
-    .kw-grid { grid-template-columns: 1fr; }
     .card-anatomy { max-width: 100%; }
+    .anatomia, .example.con-cartas { flex-direction: column; align-items: center; }
+    .example.con-cartas .cartas { justify-content: center; }
+    .cover .portada-cartas { flex-wrap: wrap; }
   }
 
-  /* ── Print ── */
+  /* ── Impresión: geometría ── */
   @media print {
-    body { background: white; color: #222; }
-    .page { max-width: 100%; padding: 0.5in; }
-    .cover h1 { -webkit-text-fill-color: #1a1acc; }
-    .section-header .num { color: #1a1acc; }
-    .map-cell .code { color: #1a1acc; }
-    .kw-card .kw-name { color: #1a1acc; }
-    .highlight { color: #1a1acc; }
-    .lore-box { border-left-color: #1a1acc; }
-    .example { border-left-color: #f59e0b; }
-    .steps li { background: #f5f5f8; border-color: #ddd; }
-    .steps li::before { background: #1a1acc; }
-    .map-container { border-color: #ddd; }
-    .map-cell { border-color: #ddd; }
-    table, .destiny-table, .toc, .kw-card, .scene-box, .lore-box, .card-anatomy { border-color: #ddd; }
-    th { background: #f0f0f5; color: #222; }
-    .toc { background: #f5f5f8; }
-    .kw-card { background: #fafafc; }
-    .scene-box { background: #fafafc; }
-    .lore-box { background: #f5f5f8; }
-    .example { background: #fafafc; }
-    .card-anatomy { background: #f0f0f5; border-color: #ccc; }
-    .card-anatomy .ca-name { color: #111; }
-    .section-header h2, .section-header.sub h3 { color: #111; }
-    .content p, .content li { color: #333; }
-    .content strong { color: #000; }
-    .highlight-amber { color: #d97706; }
-    .highlight-red { color: #dc2626; }
-    .highlight-green { color: #16a34a; }
-    .highlight-cyan { color: #0891b2; }
-    .tag { background: #e0e0f0; color: #1a1acc; }
-    .map-row-label { background: #f0f0f5; }
+    html, body { background: #ffffff; }
+    .page { max-width: none; padding: 0; }
+    .cartas { gap: 5mm 4mm; }
+    .example.con-cartas { gap: 5mm; }
+    .cover {
+      margin: 0;
+      padding: 52mm 15mm 0;
+      border-bottom: none;
+      break-after: page;
+    }
+    .cover h1 { font-size: 30pt; }
+    .section { margin-bottom: 8mm; }
+    .section > .section-header { break-after: avoid; }
+    .content p, .content li { font-size: 9.6pt; }
+    .example, .scene-box { font-size: 9.2pt; }
+    .footer { margin-top: 10mm; }
+    a { color: inherit; }
   }
 </style>
 </head>
@@ -581,34 +524,39 @@
     <p class="subtitle">Manual de Reglas</p>
     <p class="version">Versión <span>2.0</span> — Set Básico "El Despertar del Éter" + Los Primogénitos</p>
     <div class="divider"></div>
-    <p style="color:var(--text-muted);font-size:0.85rem;margin-top:12px;">
-      Julio 2026 &middot; Creado con Éter Forge
-    </p>
+    <div class="portada-cartas">
+      <img src="/manual/cartas/FB-011.png" alt="Carta FB-011: Vaela, Sed de Alba" width="744" height="1038">
+      <img class="centro" src="/manual/cartas/FB-010.png" alt="Carta FB-010: Aurora, La Primogénita" width="744" height="1038">
+      <img src="/manual/cartas/DS-001.png" alt="Carta DS-001: Ragnar, Voz del Nudo" width="744" height="1038">
+    </div>
+    <p class="nota-portada">Julio 2026 &middot; Creado con Éter Forge</p>
   </div>
 
   <!-- ═══════ TOC ═══════ -->
-  <div class="toc">
-    <h3>ÍNDICE</h3>
-    <div class="toc-grid">
-      <div class="toc-item"><span class="toc-num">1</span> Componentes del Juego</div>
-      <div class="toc-item"><span class="toc-num">8</span> Fases del Turno</div>
-      <div class="toc-item"><span class="toc-num">2</span> Preparación de la Partida</div>
-      <div class="toc-item"><span class="toc-num">9</span> El Sistema de Combate</div>
-      <div class="toc-item"><span class="toc-num">3</span> Estructura del Mazo</div>
-      <div class="toc-item"><span class="toc-num">10</span> Palabras Clave (Keywords)</div>
-      <div class="toc-item"><span class="toc-num">4</span> Anatomía de una Carta</div>
-      <div class="toc-item"><span class="toc-num">11</span> Taxonomía</div>
-      <div class="toc-item"><span class="toc-num">5</span> Tipos de Carta Detallados</div>
-      <div class="toc-item"><span class="toc-num">12</span> Límite de Copias y Rarezas</div>
-      <div class="toc-item"><span class="toc-num">6</span> El Campo de Juego</div>
-      <div class="toc-item"><span class="toc-num">13</span> Condiciones de Derrota</div>
-      <div class="toc-item"><span class="toc-num">7</span> El Recurso: ÉTER</div>
-      <div class="toc-item"><span class="toc-num">14</span> Glosario</div>
+  <div class="toc-page">
+    <div class="toc">
+      <h3>ÍNDICE</h3>
+      <div class="toc-grid">
+        <a class="toc-item" href="#s1"><span class="toc-num">1</span> Componentes del Juego</a>
+        <a class="toc-item" href="#s8"><span class="toc-num">8</span> Fases del Turno</a>
+        <a class="toc-item" href="#s2"><span class="toc-num">2</span> Preparación de la Partida</a>
+        <a class="toc-item" href="#s9"><span class="toc-num">9</span> El Sistema de Combate</a>
+        <a class="toc-item" href="#s3"><span class="toc-num">3</span> Estructura del Mazo</a>
+        <a class="toc-item" href="#s10"><span class="toc-num">10</span> Palabras Clave (Keywords)</a>
+        <a class="toc-item" href="#s4"><span class="toc-num">4</span> Anatomía de una Carta</a>
+        <a class="toc-item" href="#s11"><span class="toc-num">11</span> Taxonomía</a>
+        <a class="toc-item" href="#s5"><span class="toc-num">5</span> Tipos de Carta Detallados</a>
+        <a class="toc-item" href="#s12"><span class="toc-num">12</span> Límite de Copias y Rarezas</a>
+        <a class="toc-item" href="#s6"><span class="toc-num">6</span> El Campo de Juego</a>
+        <a class="toc-item" href="#s13"><span class="toc-num">13</span> Condiciones de Derrota</a>
+        <a class="toc-item" href="#s7"><span class="toc-num">7</span> El Recurso: ÉTER</a>
+        <a class="toc-item" href="#s14"><span class="toc-num">14</span> Glosario</a>
+      </div>
     </div>
   </div>
 
   <!-- ═══════ 1 ═══════ -->
-  <div class="section">
+  <div class="section" id="s1">
     <div class="section-header"><span class="num">1</span><h2>COMPONENTES DEL JUEGO</h2></div>
     <div class="content">
       <p>Para jugar una partida de Éter Engine TCG cada jugador necesita:</p>
@@ -623,7 +571,7 @@
   </div>
 
   <!-- ═══════ 2 ═══════ -->
-  <div class="section">
+  <div class="section" id="s2">
     <div class="section-header"><span class="num">2</span><h2>PREPARACIÓN DE LA PARTIDA</h2></div>
     <div class="content">
       <ol class="steps">
@@ -638,11 +586,11 @@
   </div>
 
   <!-- ═══════ 3 ═══════ -->
-  <div class="section">
+  <div class="section" id="s3">
     <div class="section-header"><span class="num">3</span><h2>ESTRUCTURA DEL MAZO</h2></div>
     <div class="content">
 
-      <div class="section-header sub"><span class="num">3.1</span><h3>COMPOSICIÓN OBLIGATORIA</h3></div>
+      <div class="section-header sub" id="s3-1"><span class="num">3.1</span><h3>COMPOSICIÓN OBLIGATORIA</h3></div>
 
       <p><strong>ÉTER (15 cartas):</strong></p>
       <ul>
@@ -669,7 +617,7 @@
         <li>Los Vínculos NO cuestan Éter y NO van a la mano: se colocan boca abajo en 4A-4F al inicio de la partida.</li>
       </ul>
 
-      <div class="section-header sub"><span class="num">3.2</span><h3>LÍMITE DE COPIAS POR CARTA</h3></div>
+      <div class="section-header sub" id="s3-2"><span class="num">3.2</span><h3>LÍMITE DE COPIAS POR CARTA</h3></div>
       <ul>
         <li><strong>×3</strong> &mdash; Límite estándar (la mayoría de las cartas).</li>
         <li><strong>×2</strong> &mdash; Cartas con restricción moderada.</li>
@@ -677,15 +625,56 @@
       </ul>
       <p>El campo <strong>"limiteCopias"</strong> de cada carta indica visualmente este límite.</p>
 
-      <div class="section-header sub"><span class="num">3.3</span><h3>CATEGORÍA DE HABILIDAD "SINGULAR"</h3></div>
+      <div class="section-header sub" id="s3-3"><span class="num">3.3</span><h3>CATEGORÍA DE HABILIDAD "SINGULAR"</h3></div>
       <p>Las cartas con <strong>catHabilidad "Singular"</strong> tienen una restricción adicional: <strong class="highlight-red">SOLO 1 copia</strong> de esa carta puede estar en el tablero al mismo tiempo. Puedes tener copias extras en la mano, pero no puedes jugar otra mientras una ya esté en tu campo.</p>
+      <div class="example con-cartas">
+        <div class="cartas"><figure class="carta"><img src="/manual/cartas/FB-010.png" alt="Carta FB-010: Aurora, La Primogénita" width="744" height="1038" decoding="sync"><figcaption><b>Aurora, La Primogénita</b>FB-010</figcaption></figure><figure class="carta"><img src="/manual/cartas/DS-001.png" alt="Carta DS-001: Ragnar, Voz del Nudo" width="744" height="1038" decoding="sync"><figcaption><b>Ragnar, Voz del Nudo</b>DS-001</figcaption></figure></div>
+        <div class="ex-cuerpo">
+          <div class="ex-title">Cartas con categoría SINGULAR</div>
+          <strong>Aurora</strong> y <strong>Ragnar</strong> son Singulares (y de rareza Única): solo una copia de cada una puede estar en tu campo. La categoría de habilidad se imprime en la línea de tipo de la carta.
+        </div>
+      </div>
+
     </div>
   </div>
 
   <!-- ═══════ 4 ═══════ -->
-  <div class="section">
+  <div class="section" id="s4">
     <div class="section-header"><span class="num">4</span><h2>ANATOMÍA DE UNA CARTA</h2></div>
     <div class="content">
+
+      <p class="intro-cartas"><strong>Una carta, parte por parte:</strong> Vaela, Sed de Alba (FB-011).</p>
+      <div class="anatomia">
+        <div class="carta-marcada">
+          <img src="/manual/cartas/FB-011.png" alt="Carta FB-011: Vaela, Sed de Alba, con sus partes numeradas" width="744" height="1038">
+          <span class="marca izq" style="left:-6%;top:9%">1</span>
+          <span class="marca der" style="left:106%;top:5.8%">2</span>
+          <span class="marca der" style="left:106%;top:17%">3</span>
+          <span class="marca izq" style="left:-6%;top:30%">4</span>
+          <span class="marca izq" style="left:-6%;top:51%">5</span>
+          <span class="marca der" style="left:106%;top:56%">6</span>
+          <span class="marca izq" style="left:-6%;top:61%">7</span>
+          <span class="marca der" style="left:106%;top:72%">8</span>
+          <span class="marca izq" style="left:-6%;top:92%">9</span>
+          <span class="marca der" style="left:106%;top:91%">10</span>
+          <span class="marca der" style="left:106%;top:97%">11</span>
+        </div>
+        <ol class="leyenda">
+          <li><strong>Coste de Éter</strong> (<em>stats.cost</em>): cuántas cartas de Éter pagas para invocarla.</li>
+          <li><strong>Nombre</strong> de la carta.</li>
+          <li><strong>Facción</strong> (en los Campeones es obligatoria).</li>
+          <li><strong>Arte</strong> de la carta.</li>
+          <li><strong>Texto de sabor</strong> (<em>flavorText</em>): ambientación, sin efecto en el juego.</li>
+          <li><strong>Línea de tipo:</strong> Esencia / Rol / Categoría de habilidad (aquí: Céleste / Normal / Efecto).</li>
+          <li><strong>Keyword</strong> (aquí CARGA; ver sección 10).</li>
+          <li><strong>Efecto</strong> de la carta (aquí un efecto Pasivo).</li>
+          <li><strong>ATQ</strong>: el Poder del Campeón.</li>
+          <li><strong>RES</strong>: la Resistencia (Defensa) del Campeón.</li>
+          <li><strong>Identificador</strong> de la carta dentro de la colección.</li>
+        </ol>
+      </div>
+
+      <p><strong>Los datos que definen cada carta:</strong></p>
 
       <div class="card-anatomy">
         <div class="ca-name">NOMBRE DE LA CARTA</div>
@@ -715,7 +704,7 @@
       </table>
 
       <p style="margin-top:20px;"><strong>ANATOMÍA DE UN VÍNCULO:</strong></p>
-      <div class="card-anatomy" style="border-color:var(--purple);background:linear-gradient(135deg,#241a3a,#2e1f3d);">
+      <div class="card-anatomy vinculo">
         <div class="ca-name">NOMBRE DEL VÍNCULO</div>
         <div class="ca-meta">★ RAREZA &nbsp;&middot;&nbsp; <span style="color:var(--purple)">SIN COSTE de Éter</span></div>
         <div class="ca-line"></div>
@@ -726,16 +715,19 @@
         <div class="ca-effect" style="margin-top:4px;">Al ser destruido: "Efecto PERMANENTE a favor del jugador que recibió el daño"</div>
         <div class="ca-copies">×3 (límite de copias por mazo de Vínculos)</div>
       </div>
+
+      <p class="intro-cartas" style="margin-top:20px;"><strong>Un Vínculo:</strong> Primer Juramento (FB-025). No tiene coste, Poder ni Resistencia: solo su efecto permanente.</p>
+      <div class="cartas"><figure class="carta"><img src="/manual/cartas/FB-025.png" alt="Carta FB-025: Primer Juramento" width="744" height="1038" decoding="sync"><figcaption><b>Primer Juramento</b>FB-025</figcaption></figure></div>
     </div>
   </div>
 
   <!-- ═══════ 5 ═══════ -->
-  <div class="section">
+  <div class="section" id="s5">
     <div class="section-header"><span class="num">5</span><h2>TIPOS DE CARTA DETALLADOS</h2></div>
     <div class="content">
 
       <!-- 6.1 -->
-      <div class="section-header sub"><span class="num">5.1</span><h3>ÉTER <span style="font-weight:400;color:var(--text-muted);font-family:'Inter',sans-serif;">(Recurso)</span></h3></div>
+      <div class="section-header sub" id="s5-1"><span class="num">5.1</span><h3>ÉTER <span style="font-weight:400;color:var(--text-muted);font-family:'Inter',sans-serif;">(Recurso)</span></h3></div>
       <p>Las cartas de <span class="tag">ÉTER</span> son el <strong>RECURSO PRINCIPAL</strong> del juego.</p>
       <ul>
         <li><strong>VALOR:</strong> En la v2.0 TODAS las cartas de Éter valen <strong>1</strong> (ya no existen valores del 2 al 5).</li>
@@ -748,7 +740,7 @@
       <p><strong>SIN FACCIÓN:</strong> Los Éteres NO tienen facción. Pueden ser usados por cualquier Campeón sin restricción. Todos valen 1 punto de coste. Las Místicas y Arcanas pueden tener facción (opcional).</p>
 
       <!-- 6.2 -->
-      <div class="section-header sub"><span class="num">5.2</span><h3>CAMPEÓN <span style="font-weight:400;color:var(--text-muted);font-family:'Inter',sans-serif;">(Combatiente principal)</span></h3></div>
+      <div class="section-header sub" id="s5-2"><span class="num">5.2</span><h3>CAMPEÓN <span style="font-weight:400;color:var(--text-muted);font-family:'Inter',sans-serif;">(Combatiente principal)</span></h3></div>
       <p>Los Campeones son las cartas que <strong>COMBATEN</strong>. Van al <strong>CAMPO</strong> (zona 2B-2F).</p>
       <ul>
         <li><strong>cost</strong> &mdash; Coste de Éter para invocarlo</li>
@@ -771,6 +763,9 @@
         <li><strong>efectoDisparo:</strong> Efecto que se activa pagando Éter como coste. Puede ser de un solo uso o recurrente, según el texto del efecto.</li>
         <li><strong>efectoContinuo:</strong> Efecto permanente que se aplica mientras la carta esté en campo. No requiere activación.</li>
       </ul>
+
+      <p class="intro-cartas"><strong>Las tres habilidades en cartas:</strong></p>
+      <div class="cartas"><figure class="carta"><img src="/manual/cartas/FB-011.png" alt="Carta FB-011: Vaela, Sed de Alba" width="744" height="1038" decoding="sync"><figcaption><span class="rol">PASIVO</span><b>Vaela, Sed de Alba</b>FB-011</figcaption></figure><figure class="carta"><img src="/manual/cartas/FB-014.png" alt="Carta FB-014: Isolde, Última Casa" width="744" height="1038" decoding="sync"><figcaption><span class="rol">DISPARO</span><b>Isolde, Última Casa</b>FB-014</figcaption></figure><figure class="carta"><img src="/manual/cartas/FB-015.png" alt="Carta FB-015: Elena, Despertar del Éter" width="744" height="1038" decoding="sync"><figcaption><span class="rol">CONTINUO (Éter bloqueado)</span><b>Elena, Despertar del Éter</b>FB-015</figcaption></figure></div>
       <p><strong>Pago de habilidades Disparo:</strong> Cuando un efecto Disparo dice <strong>"Paga X Éter"</strong>, el Éter se mueve de la Reserva (2A) a su destino según el tipo de efecto:</p>
       <ul>
         <li><strong>Éter bloqueado:</strong> El Éter queda BLOQUEADO en la zona de Éter del Campeón (1B-1F) mientras el efecto esté activo. NO agota al Campeón. El efecto termina cuando su Éter bloqueado es removido o cuando el propio efecto indique otra duración.</li>
@@ -787,8 +782,16 @@
         <li>Si el Campeón sacrificado tenía un efecto <strong>CONTINUO</strong> activo (Éter bloqueado), ese efecto <strong>TERMINA INMEDIATAMENTE</strong> y su Éter bloqueado vuelve a tu Reserva <strong>EN EL MOMENTO</strong>, sin esperar a tu próximo Alba.</li>
       </ul>
 
+      <div class="example con-cartas">
+        <div class="cartas"><figure class="carta"><img src="/manual/cartas/FB-010.png" alt="Carta FB-010: Aurora, La Primogénita" width="744" height="1038" decoding="sync"><figcaption><span class="rol">SOBERANO</span><b>Aurora, La Primogénita</b>FB-010</figcaption></figure><figure class="carta"><img src="/manual/cartas/DS-001.png" alt="Carta DS-001: Ragnar, Voz del Nudo" width="744" height="1038" decoding="sync"><figcaption><span class="rol">SOBERANO</span><b>Ragnar, Voz del Nudo</b>DS-001</figcaption></figure></div>
+        <div class="ex-cuerpo">
+          <div class="ex-title">Cartas con rol SOBERANO</div>
+          Aurora (Orden) y Ragnar (Caos) tienen rol <strong>SOBERANO</strong>: exigen <strong>1 sacrificio</strong> de un Campeón propio de su <strong>misma facción</strong>. Ambas imprimen además un coste de Éter de 4, así que se pagan <strong>los dos costes</strong> (sacrificio + 4 Éter).
+        </div>
+      </div>
+
       <!-- 6.3 -->
-      <div class="section-header sub"><span class="num">5.3</span><h3>MÍSTICA <span style="font-weight:400;color:var(--text-muted);font-family:'Inter',sans-serif;">(Conjuro)</span></h3></div>
+      <div class="section-header sub" id="s5-3"><span class="num">5.3</span><h3>MÍSTICA <span style="font-weight:400;color:var(--text-muted);font-family:'Inter',sans-serif;">(Conjuro)</span></h3></div>
       <p>Las Místicas son conjuros que se juegan <strong>SOLO en tu Fase de Forja</strong>.</p>
       <ul>
         <li><strong>SECUENCIA DE ACTIVACIÓN:</strong> 1) Se juega desde la mano a un slot de soporte (3A-3C). <span class="highlight-amber">NO se coloca boca abajo.</span> 2) Se paga su coste de Éter. 3) Se resuelve su efecto.</li>
@@ -798,8 +801,11 @@
         <li>No tienen Poder ni Resistencia &mdash; son puramente conjuros.</li>
       </ul>
 
+      <p class="intro-cartas"><strong>Místicas:</strong></p>
+      <div class="cartas"><figure class="carta"><img src="/manual/cartas/FB-019.png" alt="Carta FB-019: Heredad del Alba" width="744" height="1038" decoding="sync"><figcaption><span class="rol">UN SOLO USO</span><b>Heredad del Alba</b>FB-019</figcaption></figure><figure class="carta"><img src="/manual/cartas/FB-020.png" alt="Carta FB-020: Lamento de las Casas" width="744" height="1038" decoding="sync"><figcaption><span class="rol">CON ÉTER BLOQUEADO</span><b>Lamento de las Casas</b>FB-020</figcaption></figure></div>
+
       <!-- 6.4 -->
-      <div class="section-header sub"><span class="num">5.4</span><h3>ARCANA <span style="font-weight:400;color:var(--text-muted);font-family:'Inter',sans-serif;">(Pacto / Condición)</span></h3></div>
+      <div class="section-header sub" id="s5-4"><span class="num">5.4</span><h3>ARCANA <span style="font-weight:400;color:var(--text-muted);font-family:'Inter',sans-serif;">(Pacto / Condición)</span></h3></div>
       <p>Las Arcanas son cartas de <strong>CONDICIÓN + RECOMPENSA</strong>.</p>
       <ul>
         <li>Se colocan <strong>BOCA ABAJO</strong> en un slot (3D-3F) <strong>sin pagar coste</strong>.</li>
@@ -811,8 +817,11 @@
         <li>No tienen Poder ni Resistencia.</li>
       </ul>
 
+      <p class="intro-cartas"><strong>Arcanas:</strong></p>
+      <div class="cartas"><figure class="carta"><img src="/manual/cartas/FB-023.png" alt="Carta FB-023: El Reino Perdido" width="744" height="1038" decoding="sync"><figcaption><b>El Reino Perdido</b>FB-023</figcaption></figure><figure class="carta"><img src="/manual/cartas/FB-024.png" alt="Carta FB-024: Filo del Éter Primigenio" width="744" height="1038" decoding="sync"><figcaption><b>Filo del Éter Primigenio</b>FB-024</figcaption></figure></div>
+
       <!-- 6.5 -->
-      <div class="section-header sub"><span class="num">5.5</span><h3>VÍNCULO <span style="font-weight:400;color:var(--text-muted);font-family:'Inter',sans-serif;">(Vida / Sistema de daño)</span></h3></div>
+      <div class="section-header sub" id="s5-5"><span class="num">5.5</span><h3>VÍNCULO <span style="font-weight:400;color:var(--text-muted);font-family:'Inter',sans-serif;">(Vida / Sistema de daño)</span></h3></div>
       <p>Los Vínculos son el <strong>SISTEMA DE VIDA</strong> del juego. Representan los lazos que mantienen a un jugador en la partida.</p>
       <ul>
         <li><strong>NO cuestan Éter.</strong> No tienen Poder ni Resistencia. No combaten.</li>
@@ -831,12 +840,23 @@
         <li>"Una vez por turno, puedes activar una habilidad de Campeón sin agotarlo."</li>
         <li>"Robas 1 carta adicional en tu Alba."</li>
       </ul>
+
+      <p class="intro-cartas"><strong>Vínculos de la colección:</strong></p>
+      <div class="cartas"><figure class="carta"><img src="/manual/cartas/FB-025.png" alt="Carta FB-025: Primer Juramento" width="744" height="1038" decoding="sync"><figcaption><b>Primer Juramento</b>FB-025</figcaption></figure><figure class="carta"><img src="/manual/cartas/DS-025.png" alt="Carta DS-025: Primer Nudo" width="744" height="1038" decoding="sync"><figcaption><b>Primer Nudo</b>DS-025</figcaption></figure><figure class="carta"><img src="/manual/cartas/FB-030.png" alt="Carta FB-030: Lamento de la Primogénita" width="744" height="1038" decoding="sync"><figcaption><b>Lamento de la Primogénita</b>FB-030</figcaption></figure></div>
+
+      <div class="example con-cartas">
+        <div class="cartas"><figure class="carta"><img src="/manual/cartas/FB-018.png" alt="Carta FB-018: Rowena, Vínculo Eterno" width="744" height="1038" decoding="sync"><figcaption><b>Rowena, Vínculo Eterno</b>FB-018</figcaption></figure></div>
+        <div class="ex-cuerpo">
+          <div class="ex-title">Un Campeón que protege tus Vínculos</div>
+          <strong>Rowena, Vínculo Eterno:</strong> cuando un Vínculo que controles fuera a ser destruido, puedes enviar a Rowena a tu exilio y ese Vínculo <strong>no se destruye</strong>.
+        </div>
+      </div>
       <p class="highlight-amber" style="font-weight:600;">NOTA: La derrota por Vínculos reemplaza por completo a los antiguos Puntos de Energía (PE).</p>
     </div>
   </div>
 
   <!-- ═══════ 6 ═══════ -->
-  <div class="section">
+  <div class="section" id="s6">
     <div class="section-header"><span class="num">6</span><h2>EL CAMPO DE JUEGO</h2></div>
     <div class="content">
 
@@ -873,7 +893,7 @@
         <tr><td><span class="highlight" style="color:var(--purple)">4A-4F</span></td><td>Vínculos</td><td style="color:var(--text-muted)">6 Vínculos boca abajo; se voltean al ser destruidos</td></tr>
       </table>
 
-      <div class="section-header sub"><span class="num">6.1</span><h3>DISTRIBUCIÓN DE SLOTS DE SOPORTE</h3></div>
+      <div class="section-header sub" id="s6-1"><span class="num">6.1</span><h3>DISTRIBUCIÓN DE SLOTS DE SOPORTE</h3></div>
       <ul>
         <li><strong>Slot 3A-3C:</strong> Místicas. Cada slot puede contener 1 Mística.</li>
         <li><strong>Slot 3D-3F:</strong> Arcanas. Cada slot puede contener 1 Arcana.</li>
@@ -881,7 +901,7 @@
         <li>Mientras una carta de soporte con efecto continuo está activa, ocupa su slot.</li>
       </ul>
 
-      <div class="section-header sub"><span class="num">6.2</span><h3>INFORMACIÓN ABIERTA — OBSERVABILIDAD</h3></div>
+      <div class="section-header sub" id="s6-2"><span class="num">6.2</span><h3>INFORMACIÓN ABIERTA — OBSERVABILIDAD</h3></div>
       <ul>
         <li>El oponente puede solicitar al jugador que le muestre la habilidad de <strong>cualquier carta boca arriba</strong>, en cualquier momento y sin importar la zona: Campeones, Místicas, Arcanas, Vínculos destruidos, Éteres (en la Reserva, pagados o bloqueados) y cartas del Cementerio.</li>
         <li>Esto incluye las cartas que quedan <strong>debajo o tapadas por otras cartas</strong> (por ejemplo, un Éter bloqueado colocado en horizontal sobre un Campeón): aunque físicamente no se alcance a leer el texto, la información es pública y debe mostrarse si se solicita.</li>
@@ -891,11 +911,11 @@
   </div>
 
   <!-- ═══════ 7 ═══════ -->
-  <div class="section">
+  <div class="section" id="s7">
     <div class="section-header"><span class="num">7</span><h2>EL RECURSO: ÉTER</h2></div>
     <div class="content">
 
-      <div class="section-header sub"><span class="num">7.1</span><h3>¿CÓMO SE OBTIENE?</h3></div>
+      <div class="section-header sub" id="s7-1"><span class="num">7.1</span><h3>¿CÓMO SE OBTIENE?</h3></div>
       <ul>
         <li><strong>INICIO:</strong> Las <strong>15 cartas de Éter</strong> inician <strong>BOCA ARRIBA</strong> en tu Reserva (2A). No se roban ni se barajan.</li>
         <li><strong>ALBA:</strong> En cada Fase de Alba, todo el Éter fuera de la Reserva <strong>SE REAGRUPA</strong>: vuelve a la Reserva (2A), <span class="highlight-amber">EXCEPTO el Éter de efectos continuos</span> (habilidades continuas de Campeones y Místicas/Arcanas continuas), que permanece bloqueado.</li>
@@ -903,7 +923,7 @@
       </ul>
       <p><strong>LÍMITE DE MANO:</strong> 6 cartas (solo del Mazo Principal, ya que el Éter nunca va a la mano). Si al final del turno tienes más, descartas hasta 6.</p>
 
-      <div class="section-header sub"><span class="num">7.2</span><h3>¿DÓNDE SE ALMACENA?</h3></div>
+      <div class="section-header sub" id="s7-2"><span class="num">7.2</span><h3>¿DÓNDE SE ALMACENA?</h3></div>
       <ol>
         <li><strong>RESERVA DE ÉTER (2A):</strong> Donde inician las 15 cartas y donde vuelven en cada Alba. No hay límite de cartas en la Reserva.</li>
         <li><strong>ÉTER PAGADO (1A):</strong> Cuando pagas <strong>CUALQUIER coste</strong>, mueves el Éter de la Reserva (2A) a la zona 1A. Vuelve a tu Reserva en tu próximo Alba.</li>
@@ -913,7 +933,7 @@
         <li><strong>LOS EFECTOS CONTINUOS NO SE CANCELAN A VOLUNTAD:</strong> permanecen activos mientras su Éter esté bloqueado (salvo que el propio efecto indique otra duración). Si el Éter bloqueado es removido por un efecto, la habilidad se <strong>DESACTIVA automáticamente</strong> y su Éter sigue la regla general: vuelve a tu Reserva en tu próximo Alba.</li>
       </ol>
 
-      <div class="section-header sub"><span class="num">7.3</span><h3>¿CÓMO SE USA?</h3></div>
+      <div class="section-header sub" id="s7-3"><span class="num">7.3</span><h3>¿CÓMO SE USA?</h3></div>
       <p><strong>REGLA FUNDAMENTAL:</strong> El Éter solo se puede usar desde la <span class="highlight">RESERVA (2A)</span>. No se puede usar desde la mano, el Cementerio ni el Exilio (salvo efectos que lo permitan).</p>
       <p><strong>SIN FACCIÓN:</strong> Todos los Éteres valen 1 punto de coste sin importar de quién sean. No hay medio costo ni restricciones de facción. Simplemente mueves la cantidad requerida de Éteres de tu Reserva (2A) a su destino.</p>
       <div class="example">
@@ -924,6 +944,14 @@
         <div class="ex-title">Ejemplo</div>
         Invocas un Campeón de coste 3: mueves <strong>3 Éteres</strong> de tu Reserva (2A) a Éter pagado (1A). Cada Éter vale 1, sin importar su facción.
       </div>
+
+      <div class="example con-cartas">
+        <div class="cartas"><figure class="carta"><img src="/manual/cartas/FB-013.png" alt="Carta FB-013: Seraphina, Voz de las Casas" width="744" height="1038" decoding="sync"><figcaption><b>Seraphina, Voz de las Casas</b>FB-013</figcaption></figure></div>
+        <div class="ex-cuerpo">
+          <div class="ex-title">EJEMPLO con carta — invocar a Seraphina</div>
+          Seraphina, Voz de las Casas imprime <strong>coste 3</strong>: mueves <strong>3 cartas de Éter</strong> de tu Reserva (2A) a Éter pagado (1A) y la invocas. Vuelven a la Reserva en tu próximo Alba.
+        </div>
+      </div>
       <p><strong>Pasos para pagar:</strong></p>
       <ol>
         <li>Tienes Éter en tu Reserva (2A).</li>
@@ -932,7 +960,7 @@
         <li>El efecto de la carta se resuelve.</li>
       </ol>
 
-      <div class="section-header sub"><span class="num">7.4</span><h3>DESTINO DEL ÉTER SEGÚN EL USO</h3></div>
+      <div class="section-header sub" id="s7-4"><span class="num">7.4</span><h3>DESTINO DEL ÉTER SEGÚN EL USO</h3></div>
       <div class="destiny-table">
         <table>
           <tr><th>USO</th><th>DESTINO DEL ÉTER</th></tr>
@@ -947,7 +975,7 @@
       </div>
       <p class="highlight-amber" style="font-weight:600;">EN TODOS los casos, el Éter vuelve a tu Reserva (2A) en tu próximo Alba, salvo el de efectos continuos, que permanece bloqueado mientras su efecto esté activo.</p>
 
-      <div class="section-header sub"><span class="num">7.5</span><h3>ÉTER UNIFICADO — SIN OVERPAY (v2.0)</h3></div>
+      <div class="section-header sub" id="s7-5"><span class="num">7.5</span><h3>ÉTER UNIFICADO — SIN OVERPAY (v2.0)</h3></div>
       <p>En la v2.0, <strong>TODAS las cartas de Éter valen 1</strong>. No existen valores del 2 al 5, por lo que <strong>NO hay fraccionamiento ni overpay</strong>:</p>
       <ul>
         <li>Un coste de 3 = mover <strong>3 cartas de Éter</strong> de la Reserva (2A) a su destino.</li>
@@ -959,7 +987,7 @@
       </div>
       <p class="highlight-amber" style="font-weight:600;">SIN SOBREPAGO: el Éter siempre vale 1. No hay fraccionamiento ni excedente.</p>
 
-      <div class="section-header sub"><span class="num">7.6</span><h3>HABILIDADES QUE DICEN "PAGA X ÉTER"</h3></div>
+      <div class="section-header sub" id="s7-6"><span class="num">7.6</span><h3>HABILIDADES QUE DICEN "PAGA X ÉTER"</h3></div>
       <p>Cuando una habilidad dice <strong>"Paga X Éter"</strong> (o "cuesta X Éter"), se refiere a la <span class="highlight">CANTIDAD de cartas</span> a mover, ya que todas valen 1.</p>
       <div class="example">
         <div class="ex-title">Ejemplo</div>
@@ -967,22 +995,33 @@
         Un efecto <strong>Disparo con éter pagado</strong> cuesta 2 Éter: mueves 2 cartas a la zona 1A y el Campeón se agota (el Éter vuelve a tu Reserva en tu próximo Alba).
       </div>
 
-      <div class="section-header sub"><span class="num">7.7</span><h3>EFECTOS DE LAS CARTAS DE ÉTER</h3></div>
+      <div class="example con-cartas">
+        <div class="cartas"><figure class="carta"><img src="/manual/cartas/FB-015.png" alt="Carta FB-015: Elena, Despertar del Éter" width="744" height="1038" decoding="sync"><figcaption><span class="rol">BLOQUEA 3 ÉTER</span><b>Elena, Despertar del Éter</b>FB-015</figcaption></figure><figure class="carta"><img src="/manual/cartas/FB-014.png" alt="Carta FB-014: Isolde, Última Casa" width="744" height="1038" decoding="sync"><figcaption><span class="rol">PAGA 2 ÉTER</span><b>Isolde, Última Casa</b>FB-014</figcaption></figure></div>
+        <div class="ex-cuerpo">
+          <div class="ex-title">EJEMPLO con cartas</div>
+          <strong>Elena</strong> dice "Bloquea 3 Éter": mueves <strong>3 cartas</strong> de la Reserva (2A) a su zona de Éter (1B-1F); quedan bloqueadas mientras el efecto esté activo.<br><br><strong>Isolde</strong> dice "Puedes pagar 2 Éter": mueves <strong>2 cartas</strong> de la Reserva a 1A (Éter pagado), y el efecto solo puede usarse una vez por turno.
+        </div>
+      </div>
+
+      <div class="section-header sub" id="s7-7"><span class="num">7.7</span><h3>EFECTOS DE LAS CARTAS DE ÉTER</h3></div>
       <p>Las cartas de Éter pueden tener habilidades propias, y <strong>solo se activan en la zona donde la carta está</strong> (Reserva, pagada o bloqueada). Según la zona que exijan, se dividen en:</p>
       <ul>
         <li><strong>EFECTO DE RESERVA (2A):</strong> Se activa mientras la carta está en tu Reserva, es decir, <strong>mientras NO esté pagada ni bloqueada</strong>.<br>
-          <span class="example" style="margin:4px 0 0;display:inline-block;padding:6px 12px;">"Mientras esta carta esté en tu Reserva, los Campeones que controles ganan +1 Ataque."</span></li>
+          <span class="example en-linea">"Mientras esta carta esté en tu Reserva, los Campeones que controles ganan +1 Ataque."</span></li>
         <li><strong>EFECTO DE PAGO (1A):</strong> Se activa al ser pagada. Dos variantes:<br>
           &bull; <strong>PASIVO:</strong> funciona mientras la carta esté en tu zona de Éter pagado (1A), hasta tu próximo Alba.<br>
-          <span class="example" style="margin:4px 0 0;display:inline-block;padding:6px 12px;">"Mientras esta carta esté en tu zona de Éter pagado, los Campeones que controles ganan +1 Ataque."</span><br>
+          <span class="example en-linea">"Mientras esta carta esté en tu zona de Éter pagado, los Campeones que controles ganan +1 Ataque."</span><br>
           &bull; <strong>GATILLO:</strong> se activa UNA VEZ en el momento de pagarla para un uso específico.<br>
-          <span class="example" style="margin:4px 0 0;display:inline-block;padding:6px 12px;">"Cuando pagues esta carta para invocar un Campeón, roba 1 carta."</span></li>
+          <span class="example en-linea">"Cuando pagues esta carta para invocar un Campeón, roba 1 carta."</span></li>
         <li><strong>EFECTO DE BLOQUEO (1B-1F):</strong> Se activa solo mientras la carta esté <strong>BLOQUEADA en la zona de Éter de un Campeón</strong> (habilidades continuas) o sobre una Mística/Arcana continua.<br>
-          <span class="example" style="margin:4px 0 0;display:inline-block;padding:6px 12px;">"Mientras esta carta esté bloqueada en un Campeón, ese Campeón gana +1 Resistencia."</span></li>
+          <span class="example en-linea">"Mientras esta carta esté bloqueada en un Campeón, ese Campeón gana +1 Resistencia."</span></li>
       </ul>
+
+      <p class="intro-cartas"><strong>Cartas de Éter, una por zona:</strong></p>
+      <div class="cartas"><figure class="carta"><img src="/manual/cartas/DS-002.png" alt="Carta DS-002: Éter del Nudo" width="744" height="1038" decoding="sync"><figcaption><span class="rol">EFECTO DE RESERVA (2A)</span><b>Éter del Nudo</b>DS-002</figcaption></figure><figure class="carta"><img src="/manual/cartas/FB-001.png" alt="Carta FB-001: Éter del Alba Primigenia" width="744" height="1038" decoding="sync"><figcaption><span class="rol">EFECTO DE PAGO · GATILLO (1A)</span><b>Éter del Alba Primigenia</b>FB-001</figcaption></figure><figure class="carta"><img src="/manual/cartas/FB-009.png" alt="Carta FB-009: Éter de la Última Casa" width="744" height="1038" decoding="sync"><figcaption><span class="rol">EFECTO DE BLOQUEO (1B-1F)</span><b>Éter de la Última Casa</b>FB-009</figcaption></figure></div>
       <p class="highlight-amber" style="font-weight:600;">NOTA v2.0: el Éter NO se exilia y NO va al Cementerio — los antiguos efectos de "Sacrificio" (exiliar) y "Al ir al Cementerio" quedan ELIMINADOS.</p>
 
-      <div class="section-header sub"><span class="num">7.8</span><h3>CAMPEÓN ROBADO — EL ÉTER BLOQUEADO</h3></div>
+      <div class="section-header sub" id="s7-8"><span class="num">7.8</span><h3>CAMPEÓN ROBADO — EL ÉTER BLOQUEADO</h3></div>
       <p>Cuando un efecto <strong>toma control de un Campeón rival</strong> (ej. "roba campeón"), el Éter que ese Campeón tuviera bloqueado <strong>pertenece al jugador que lo pagó</strong>, no al Campeón ni a quien lo controle:</p>
       <ul>
         <li><strong class="highlight-red">AL TOMAR EL CONTROL:</strong> el Éter bloqueado en el Campeón robado se <strong>reagrupa de inmediato a la Reserva de su dueño original</strong>. El ladrón toma el Campeón <strong>SIN ÉTER</strong> y puede bloquear el suyo propio en él después.</li>
@@ -994,15 +1033,23 @@
         <div class="ex-title">EJEMPLO — Robar un Campeón con Éter bloqueado</div>
         El rival tiene Ragnar con 2 Éter bloqueados (pagados por él). Robas a Ragnar con un efecto de robo → <strong>los 2 Éter vuelven de inmediato a la Reserva del rival</strong>; vos tomás a Ragnar sin Éter y podés bloquear tu propio Éter en él. Si más tarde perdés el control de Ragnar (termina el efecto), tu Éter bloqueado vuelve a tu Reserva.
       </div>
+
+      <div class="example con-cartas">
+        <div class="cartas"><figure class="carta"><img src="/manual/cartas/FB-010.png" alt="Carta FB-010: Aurora, La Primogénita" width="744" height="1038" decoding="sync"><figcaption><span class="rol">ROBA UN CAMPEÓN</span><b>Aurora, La Primogénita</b>FB-010</figcaption></figure><figure class="carta"><img src="/manual/cartas/DS-001.png" alt="Carta DS-001: Ragnar, Voz del Nudo" width="744" height="1038" decoding="sync"><figcaption><span class="rol">EL CAMPEÓN ROBADO</span><b>Ragnar, Voz del Nudo</b>DS-001</figcaption></figure></div>
+        <div class="ex-cuerpo">
+          <div class="ex-title">Cartas de este ejemplo</div>
+          <strong>Aurora</strong> dice "Bloquea 4 Éter, toma control de 1 Campeón que controla el rival, mientras ese Éter esté bloqueado". <strong>Ragnar</strong> es el Campeón del rival del ejemplo.
+        </div>
+      </div>
     </div>
   </div>
 
   <!-- ═══════ 8 ═══════ -->
-  <div class="section">
+  <div class="section" id="s8">
     <div class="section-header"><span class="num">8</span><h2>FASES DEL TURNO</h2></div>
     <div class="content">
 
-      <div class="section-header sub"><span class="num">8.1</span><h3>ESTRUCTURA GENERAL</h3></div>
+      <div class="section-header sub" id="s8-1"><span class="num">8.1</span><h3>ESTRUCTURA GENERAL</h3></div>
       <p>Cada turno se divide en 4 fases, en este orden:</p>
       <div class="destiny-table">
         <table>
@@ -1014,7 +1061,7 @@
         </table>
       </div>
 
-      <div class="section-header sub"><span class="num">8.2</span><h3>FASE DE ALBA (Robo y Reactivación)</h3></div>
+      <div class="section-header sub" id="s8-2"><span class="num">8.2</span><h3>FASE DE ALBA (Robo y Reactivación)</h3></div>
       <ol>
         <li><strong>Enderezas</strong> todos tus Campeones agotados (vuelven a estar disponibles).</li>
         <li><strong>Reagrupas el Éter:</strong> todo el Éter fuera de la Reserva (1A y bloqueado en Campeones o cartas de soporte) vuelve a la Reserva (2A). <span class="highlight-amber">EXCEPTO el Éter de efectos continuos</span> (habilidades continuas de Campeones y Místicas/Arcanas continuas), que permanece bloqueado.</li>
@@ -1023,7 +1070,7 @@
         <li>Si tu Mazo Principal está vacío al intentar robar, pierdes la partida (sección 13).</li>
       </ol>
 
-      <div class="section-header sub"><span class="num">8.3</span><h3>FASE DE FORJA (Juego)</h3></div>
+      <div class="section-header sub" id="s8-3"><span class="num">8.3</span><h3>FASE DE FORJA (Juego)</h3></div>
       <p>Puedes, en cualquier orden y <strong>sin límite por turno</strong>:</p>
       <ul>
         <li>Invocar <span class="tag">CAMPEONES</span> pagando su coste desde la Reserva.</li>
@@ -1031,7 +1078,7 @@
         <li>Colocar <span class="tag">ARCANAS</span> boca abajo en los slots 3D-3F.</li>
       </ul>
 
-      <div class="section-header sub"><span class="num">8.3a</span><h3>HABILIDADES ACTIVAS (Cualquier fase menos Alba)</h3></div>
+      <div class="section-header sub" id="s8-3a"><span class="num">8.3a</span><h3>HABILIDADES ACTIVAS (Cualquier fase menos Alba)</h3></div>
       <p>Los efectos <strong>Disparo</strong> y <strong>Continuo</strong> de tus Campeones se pueden activar en <strong>cualquier fase excepto Alba</strong> (Forja, Choque y Ocaso). También puedes activarlos en <strong>respuesta a una cadena</strong> del mismo velocidad en el turno del rival.</p>
       <ul>
         <li><strong>Patrón "Bloquea Éter":</strong> El éter se mueve de la Reserva al Campeón. NO agota. El efecto dura mientras el éter esté bloqueado.</li>
@@ -1039,17 +1086,17 @@
       </ul>
       <p><span class="highlight-amber">EXCEPCIÓN:</span> En la fase de <strong>Alba</strong> solo se resuelven efectos automáticos (robar, reagrupar éter). No se pueden activar habilidades.</p>
 
-      <div class="section-header sub"><span class="num">8.4</span><h3>FASE DE CHOQUE (Combate)</h3></div>
+      <div class="section-header sub" id="s8-4"><span class="num">8.4</span><h3>FASE DE CHOQUE (Combate)</h3></div>
       <p>Ver sección 9 — El Sistema de Combate.</p>
 
-      <div class="section-header sub"><span class="num">8.5</span><h3>FASE DE OCASO (Final)</h3></div>
+      <div class="section-header sub" id="s8-5"><span class="num">8.5</span><h3>FASE DE OCASO (Final)</h3></div>
       <ol>
         <li>Se resuelven efectos "hasta el final del turno".</li>
         <li>Si tienes más de <strong>6 cartas</strong> en la mano, descartas hasta 6. El Éter de tu Reserva <strong>NO</strong> cuenta para este límite.</li>
         <li>Pasa el turno al oponente.</li>
       </ol>
 
-      <div class="section-header sub"><span class="num">8.6</span><h3>PRIMER TURNO — REGLAS ESPECIALES</h3></div>
+      <div class="section-header sub" id="s8-6"><span class="num">8.6</span><h3>PRIMER TURNO — REGLAS ESPECIALES</h3></div>
       <p>Debido a la <strong>INVOCACIÓN CANSADA</strong> (los Campeones no atacan el turno en que son invocados, sección 9.2), <strong>NINGÚN jugador puede atacar en su primer turno</strong>: todos los Campeones que puedan jugar serán recién invocados.</p>
       <ul>
         <li>Ambos jugadores roban <strong>NORMAL</strong> en su primer Alba (1 carta del Principal; el Éter ya está en la Reserva).</li>
@@ -1060,11 +1107,11 @@
   </div>
 
   <!-- ═══════ 9 ═══════ -->
-  <div class="section">
+  <div class="section" id="s9">
     <div class="section-header"><span class="num">9</span><h2>EL SISTEMA DE COMBATE</h2></div>
     <div class="content">
 
-      <div class="section-header sub"><span class="num">9.1</span><h3>FASES DEL COMBATE</h3></div>
+      <div class="section-header sub" id="s9-1"><span class="num">9.1</span><h3>FASES DEL COMBATE</h3></div>
       <p>El combate se divide en <strong>3 pasos secuenciales</strong>:</p>
       <ol>
         <li><strong>DECLARACIÓN DE ATAQUE</strong></li>
@@ -1072,7 +1119,7 @@
         <li><strong>RESOLUCIÓN DE COMBATE</strong> (incluye el daño simultáneo y la Ruptura)</li>
       </ol>
 
-      <div class="section-header sub"><span class="num">9.2</span><h3>PASO 1: DECLARACIÓN DE ATAQUE</h3></div>
+      <div class="section-header sub" id="s9-2"><span class="num">9.2</span><h3>PASO 1: DECLARACIÓN DE ATAQUE</h3></div>
       <ul>
         <li>El jugador activo elige qué Campeones atacan. <strong>Todos los ataques van directo al jugador rival</strong>; el defensor decide con qué Campeones bloquear (Paso 2).</li>
         <li>Solo pueden atacar los Campeones <strong>DISPONIBLES</strong> (enderezados). Al declarar ataque, el Campeón se <strong>AGOTA</strong> (se gira) y permanece agotado hasta el inicio de su próximo Alba.</li>
@@ -1081,7 +1128,7 @@
         <li><strong class="highlight-red">INVOCACIÓN CANSADA:</strong> Los Campeones <strong>NO pueden atacar el turno en que fueron invocados</strong> (salvo que una habilidad diga lo contrario). Sí pueden defender.</li>
       </ul>
 
-      <div class="section-header sub"><span class="num">9.3</span><h3>PASO 2: DECLARACIÓN DE BLOQUEO</h3></div>
+      <div class="section-header sub" id="s9-3"><span class="num">9.3</span><h3>PASO 2: DECLARACIÓN DE BLOQUEO</h3></div>
       <ul>
         <li>El jugador defensor asigna Campeones <strong>DISPONIBLES</strong> (enderezados) para bloquear. Un Campeón agotado <strong>NO</strong> puede bloquear.</li>
         <li><strong class="highlight-red">BLOQUEO FORZOSO:</strong> Mientras el defensor tenga un Campeón disponible sin asignar, <strong>NO puede elegir recibir la Ruptura</strong>: está obligado a bloquear. Solo recibe la Ruptura si no le queda ningún Campeón disponible para bloquear.</li>
@@ -1090,7 +1137,7 @@
         <li>Cada Campeón solo puede bloquear <strong>UN ATAQUE</strong> por turno. Cada atacante puede recibir <strong>UN</strong> bloqueador.</li>
       </ul>
 
-      <div class="section-header sub"><span class="num">9.4</span><h3>PASO 3: RESOLUCIÓN DE COMBATE</h3></div>
+      <div class="section-header sub" id="s9-4"><span class="num">9.4</span><h3>PASO 3: RESOLUCIÓN DE COMBATE</h3></div>
 
       <div class="scene-box">
         <div class="scene-title">ESCENARIO A: ATAQUE DIRECTO (sin bloqueo) — LA RUPTURA</div>
@@ -1116,7 +1163,7 @@
         </ul>
       </div>
 
-      <div class="section-header sub"><span class="num">9.5</span><h3>EJEMPLOS DE COMBATE</h3></div>
+      <div class="section-header sub" id="s9-5"><span class="num">9.5</span><h3>EJEMPLOS DE COMBATE</h3></div>
 
       <div class="example">
         <div class="ex-title">EJEMPLO 1 — Ataque directo (Ruptura)</div>
@@ -1165,7 +1212,15 @@
         → <strong>NO puede</strong>. Los Campeones no atacan el turno en que fueron invocados (salvo que una habilidad diga lo contrario). Sí puede defender (y está obligado a hacerlo si es el único disponible).
       </div>
 
-      <div class="section-header sub"><span class="num">9.6</span><h3>CADENA DE EFECTOS EN COMBATE</h3></div>
+      <div class="example con-cartas">
+        <div class="cartas"><figure class="carta"><img src="/manual/cartas/FB-011.png" alt="Carta FB-011: Vaela, Sed de Alba" width="744" height="1038" decoding="sync"><figcaption><span class="rol">ATACA</span><b>Vaela, Sed de Alba</b>FB-011</figcaption></figure><figure class="carta"><img src="/manual/cartas/FB-014.png" alt="Carta FB-014: Isolde, Última Casa" width="744" height="1038" decoding="sync"><figcaption><span class="rol">BLOQUEA</span><b>Isolde, Última Casa</b>FB-014</figcaption></figure></div>
+        <div class="ex-cuerpo">
+          <div class="ex-title">EJEMPLO 8 — Combate con cartas</div>
+          <strong>Vaela</strong> (Poder 5 / Resistencia 3) ataca. <strong>Isolde</strong> (Poder 3 / Resistencia 7) bloquea.<br>→ Vaela inflige 5 &lt; 7: Isolde <strong>SOBREVIVE</strong>.<br>→ Isolde inflige 3 &ge; 3: Vaela <strong>MUERE</strong>.<br><em>Vaela no mató a nadie, así que su pasivo ("Al matar en combate…") no se activa. Y como quedó bloqueada, tampoco hace la Ruptura.</em>
+        </div>
+      </div>
+
+      <div class="section-header sub" id="s9-6"><span class="num">9.6</span><h3>CADENA DE EFECTOS EN COMBATE</h3></div>
       <p>Durante el combate, los jugadores pueden activar Místicas y Arcanas en respuesta a las acciones del oponente.</p>
       <p><strong>ORDEN DE ACTIVACIÓN:</strong></p>
       <ol>
@@ -1184,11 +1239,19 @@
         2. La Mística se resuelve: niega el ataque.<br><br>
         <em>Resultado: el ataque es negado, pero el Campeón mantiene +2 Ataque por el resto del turno y permanece AGOTADO (el agotamiento se pagó al declarar).</em>
       </div>
+
+      <div class="example con-cartas">
+        <div class="cartas"><figure class="carta"><img src="/manual/cartas/FB-021.png" alt="Carta FB-021: Marcha de las Primeras" width="744" height="1038" decoding="sync"><figcaption><span class="rol">PRESTEZA</span><b>Marcha de las Primeras</b>FB-021</figcaption></figure></div>
+        <div class="ex-cuerpo">
+          <div class="ex-title">NEGAR LA ACTIVACIÓN DE UN EFECTO</div>
+          Negar la <strong>activación</strong> de un efecto no es lo mismo que negar un efecto que <strong>ya está activo</strong>. Cuando un efecto tiene coste, primero se <strong>paga el coste</strong> y luego se <strong>activa</strong> el efecto: en ese momento se puede responder para negar la activación (por ejemplo con <strong>Marcha de las Primeras</strong>, que niega la activación del efecto de un Campeón del rival).<br><br>→ Si la activación es negada, el efecto no ocurre, pero <strong>el coste ya pagado NO se devuelve</strong>: se niega la activación, no el pago.
+        </div>
+      </div>
     </div>
   </div>
 
   <!-- ═══════ 10 ═══════ -->
-  <div class="section">
+  <div class="section" id="s10">
     <div class="section-header"><span class="num">10</span><h2>PALABRAS CLAVE (KEYWORDS)</h2></div>
     <div class="content">
       <p>Las palabras clave son reglas abreviadas que se imprimen en las cartas para simplificar su texto. Definiciones oficiales v3.0:</p>
@@ -1209,15 +1272,27 @@
         </table>
       </div>
       <p class="highlight-amber" style="font-weight:600;">Nota: INMORTAL e INDESTRUCTIBLE son complementarias: la primera protege de efectos, la segunda de la batalla.</p>
+
+      <p class="intro-cartas"><strong>Keywords en cartas:</strong></p>
+      <div class="cartas chicas">
+        <figure class="carta"><img src="/manual/cartas/FB-011.png" alt="Carta FB-011: Vaela, Sed de Alba" width="744" height="1038" decoding="sync"><figcaption><span class="rol">CARGA</span><b>Vaela, Sed de Alba</b>FB-011</figcaption></figure>
+        <figure class="carta"><img src="/manual/cartas/FB-014.png" alt="Carta FB-014: Isolde, Última Casa" width="744" height="1038" decoding="sync"><figcaption><span class="rol">PROTECTOR</span><b>Isolde, Última Casa</b>FB-014</figcaption></figure>
+        <figure class="carta"><img src="/manual/cartas/FB-015.png" alt="Carta FB-015: Elena, Despertar del Éter" width="744" height="1038" decoding="sync"><figcaption><span class="rol">RECARGA</span><b>Elena, Despertar del Éter</b>FB-015</figcaption></figure>
+        <figure class="carta"><img src="/manual/cartas/FB-010.png" alt="Carta FB-010: Aurora, La Primogénita" width="744" height="1038" decoding="sync"><figcaption><span class="rol">INMORTAL · COMANDANTE</span><b>Aurora, La Primogénita</b>FB-010</figcaption></figure>
+        <figure class="carta"><img src="/manual/cartas/DS-001.png" alt="Carta DS-001: Ragnar, Voz del Nudo" width="744" height="1038" decoding="sync"><figcaption><span class="rol">INDESTRUCTIBLE · COMANDANTE</span><b>Ragnar, Voz del Nudo</b>DS-001</figcaption></figure>
+        <figure class="carta"><img src="/manual/cartas/FB-020.png" alt="Carta FB-020: Lamento de las Casas" width="744" height="1038" decoding="sync"><figcaption><span class="rol">ARTEFACTO</span><b>Lamento de las Casas</b>FB-020</figcaption></figure>
+        <figure class="carta"><img src="/manual/cartas/FB-021.png" alt="Carta FB-021: Marcha de las Primeras" width="744" height="1038" decoding="sync"><figcaption><span class="rol">PRESTEZA</span><b>Marcha de las Primeras</b>FB-021</figcaption></figure>
+        <figure class="carta"><img src="/manual/cartas/FB-022.png" alt="Carta FB-022: Último Refugio" width="744" height="1038" decoding="sync"><figcaption><span class="rol">FUGAZ</span><b>Último Refugio</b>FB-022</figcaption></figure>
+      </div>
     </div>
   </div>
 
   <!-- ═══════ 11 ═══════ -->
-  <div class="section">
+  <div class="section" id="s11">
     <div class="section-header"><span class="num">11</span><h2>TAXONOMÍA</h2></div>
     <div class="content">
 
-      <div class="section-header sub"><span class="num">11.1</span><h3>ESENCIAS</h3></div>
+      <div class="section-header sub" id="s11-1"><span class="num">11.1</span><h3>ESENCIAS</h3></div>
       <div class="destiny-table">
         <table>
           <tr><th>ESENCIA</th><th>DESCRIPCIÓN</th></tr>
@@ -1234,7 +1309,7 @@
         </table>
       </div>
 
-      <div class="section-header sub"><span class="num">11.2</span><h3>ROLES</h3></div>
+      <div class="section-header sub" id="s11-2"><span class="num">11.2</span><h3>ROLES</h3></div>
       <div class="destiny-table">
         <table>
           <tr><th>ROL</th><th>DESCRIPCIÓN</th></tr>
@@ -1246,7 +1321,7 @@
         </table>
       </div>
 
-      <div class="section-header sub"><span class="num">11.3</span><h3>CATEGORÍAS DE HABILIDAD</h3></div>
+      <div class="section-header sub" id="s11-3"><span class="num">11.3</span><h3>CATEGORÍAS DE HABILIDAD</h3></div>
       <div class="destiny-table">
         <table>
           <tr><th>CATEGORÍA</th><th>DESCRIPCIÓN</th></tr>
@@ -1262,7 +1337,7 @@
   </div>
 
   <!-- ═══════ 12 ═══════ -->
-  <div class="section">
+  <div class="section" id="s12">
     <div class="section-header"><span class="num">12</span><h2>LÍMITE DE COPIAS Y RAREZAS</h2></div>
     <div class="content">
 
@@ -1285,6 +1360,14 @@
         <li>El campo <strong>"limiteCopias"</strong> de cada carta indica visualmente su límite.</li>
       </ul>
 
+      <p class="intro-cartas"><strong>La rareza y el límite en cartas:</strong></p>
+      <div class="cartas chicas">
+        <figure class="carta"><img src="/manual/cartas/FB-011.png" alt="Carta FB-011: Vaela, Sed de Alba" width="744" height="1038" decoding="sync"><figcaption><span class="rol">COMÚN · ×3</span><b>Vaela, Sed de Alba</b>FB-011</figcaption></figure>
+        <figure class="carta"><img src="/manual/cartas/FB-009.png" alt="Carta FB-009: Éter de la Última Casa" width="744" height="1038" decoding="sync"><figcaption><span class="rol">COMÚN · ×2</span><b>Éter de la Última Casa</b>FB-009</figcaption></figure>
+        <figure class="carta"><img src="/manual/cartas/FB-001.png" alt="Carta FB-001: Éter del Alba Primigenia" width="744" height="1038" decoding="sync"><figcaption><span class="rol">RARA · ×2</span><b>Éter del Alba Primigenia</b>FB-001</figcaption></figure>
+        <figure class="carta"><img src="/manual/cartas/FB-010.png" alt="Carta FB-010: Aurora, La Primogénita" width="744" height="1038" decoding="sync"><figcaption><span class="rol">ÚNICA · ×1</span><b>Aurora, La Primogénita</b>FB-010</figcaption></figure>
+      </div>
+
       <p><strong>Al construir el mazo:</strong></p>
       <ul>
         <li>15 cartas de ÉTER (sumando límites de copias según cada carta).</li>
@@ -1296,7 +1379,7 @@
   </div>
 
   <!-- ═══════ 13 ═══════ -->
-  <div class="section">
+  <div class="section" id="s13">
     <div class="section-header"><span class="num">13</span><h2>CONDICIONES DE DERROTA</h2></div>
     <div class="content">
       <p>Un jugador pierde la partida si ocurre <strong>CUALQUIERA</strong> de estas condiciones:</p>
@@ -1309,7 +1392,7 @@
   </div>
 
   <!-- ═══════ 14 ═══════ -->
-  <div class="section">
+  <div class="section" id="s14">
     <div class="section-header"><span class="num">14</span><h2>GLOSARIO</h2></div>
     <div class="content">
       <div class="destiny-table">
@@ -1332,6 +1415,7 @@
           <tr><td>INVOCACIÓN CANSADA</td><td>Los Campeones no atacan el turno en que fueron invocados (sí pueden defender)</td></tr>
           <tr><td>MANO</td><td>Cartas que tienes disponibles para jugar (límite 6)</td></tr>
           <tr><td>MULLIGAN</td><td>Acción opcional al inicio de la partida, 1 sola vez por jugador: barajar la mano inicial de vuelta al Mazo Principal y robar 5 cartas nuevas, sin penalización</td></tr>
+          <tr><td>NEGAR LA ACTIVACIÓN</td><td>Impedir que un efecto se active después de que su coste fue pagado. El coste NO se devuelve (ver 9.6)</td></tr>
           <tr><td>ÉTER (RECURSO)</td><td>15 cartas de valor 1 que inician boca arriba en la Reserva (2A). Nunca se roban, ni van a la mano, al Cementerio o al Exilio. Sus habilidades se activan según la zona donde estén (7.7)</td></tr>
           <tr><td>MAZO PRINCIPAL</td><td>Mazo de 45 cartas de juego</td></tr>
           <tr><td>MAZO DE VÍNCULOS</td><td>Mazo de 6 cartas de Vínculo (se colocan boca abajo en 4A-4F)</td></tr>
