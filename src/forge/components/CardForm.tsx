@@ -239,11 +239,11 @@ export function CardForm() {
     <div className="flex flex-col gap-4">
       <h2 className="flex items-center gap-2 text-xl font-display text-gray-100">
         {isEditing ? 'Editar Carta' : 'Nueva Carta'}
-        {isEditing && (
+        {isEditing ? (
           <span aria-hidden="true" className="rounded-full bg-amber-400/15 px-2 py-0.5 font-body text-[10px] font-semibold uppercase tracking-wider text-amber-300">
             editando
           </span>
-        )}
+        ) : null}
       </h2>
 
       {/* Card Type Selector */}
