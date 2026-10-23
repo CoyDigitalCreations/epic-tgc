@@ -13,6 +13,17 @@ import { generateEffectText } from './EffectList'
 import { EffectManualModal } from './EffectManualModal'
 import { ImageUpload } from './ImageUpload'
 import { PAQUETES } from '../../shared/data/paquetes'
+import { Boton } from '../../shared/ui/Boton'
+import { CLASE_CAMPO } from '../../shared/ui/Campo'
+
+/** Color de acento por tipo de carta (mismos tonos del tema). */
+const COLOR_TIPO: Record<string, string> = {
+  Éter: '#fbbf24',
+  Campeón: '#ef4444',
+  Mística: '#a855f7',
+  Arcana: '#22d3ee',
+  Vínculo: '#ec4899',
+}
 
 export function CardForm() {
   const draft = useCardStore((s) => s.draft)
@@ -156,13 +167,12 @@ export function CardForm() {
         // Select dedicado: value = paqueteId, label = nombre (estáticos + personalizados)
         const packs = [...PAQUETES, ...userPacks]
         return (
-          <label key={field.name} className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-gray-300">{field.label}</span>
+          <label key={field.name} className="flex flex-col gap-1.5">
+            <span className="text-[11px] font-medium uppercase tracking-wider text-gray-400">{field.label}</span>
             <select
               value={(value as string) ?? ''}
               onChange={(e) => onChange(e.target.value || undefined)}
-              className="bg-surface-2 border border-card-border rounded px-3 py-2 text-gray-100 
-                         focus:outline-none focus:border-ether-400 transition-colors"
+              className={`${CLASE_CAMPO} cursor-pointer`}
             >
               <option value="">Sin paquete</option>
               {packs.map((p) => (
@@ -194,8 +204,8 @@ export function CardForm() {
               cardType={(draft.type as CardType) || 'Campeón'}
             />
             {effectTexto && (
-              <div className="mt-1 p-2 bg-gray-900/50 rounded border border-gray-700/50">
-                <p className="text-[10px] uppercase tracking-wider text-gray-500 mb-0.5">Texto generado</p>
+              <div className="mt-1.5 rounded-lg border border-ether-400/20 bg-ether-600/[0.06] p-2.5">
+                <p className="text-[10px] uppercase tracking-wider text-ether-300/70 mb-0.5">Texto generado</p>
                 <p className="text-xs text-gray-300 italic">{effectTexto}</p>
               </div>
             )}
@@ -227,25 +237,34 @@ export function CardForm() {
 
   return (
     <div className="flex flex-col gap-4">
-      <h2 className="text-xl font-display text-gray-100">
+      <h2 className="flex items-center gap-2 text-xl font-display text-gray-100">
         {isEditing ? 'Editar Carta' : 'Nueva Carta'}
+        {isEditing && (
+          <span aria-hidden="true" className="rounded-full bg-amber-400/15 px-2 py-0.5 font-body text-[10px] font-semibold uppercase tracking-wider text-amber-300">
+            editando
+          </span>
+        )}
       </h2>
 
       {/* Card Type Selector */}
       <div className="flex gap-2 flex-wrap">
-        {CARD_TYPES.map((type) => (
-          <button
-            key={type}
-            onClick={() => handleTypeChange(type)}
-            className={`px-3 py-1 rounded text-sm font-medium transition-colors cursor-pointer
-              ${draft.type === type
-                ? 'bg-ether-600 text-white'
-                : 'bg-surface-2 text-gray-300 hover:bg-card-border'
+        {CARD_TYPES.map((type) => {
+          const activo = draft.type === type
+          const color = COLOR_TIPO[type] ?? '#7070ff'
+          return (
+            <button
+              key={type}
+              aria-pressed={activo}
+              onClick={() => handleTypeChange(type)}
+              className={`cursor-pointer rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
+                activo ? 'text-white' : 'border-white/10 bg-white/[0.03] text-gray-400 hover:bg-white/[0.07] hover:text-gray-200'
               }`}
-          >
-            {type}
-          </button>
-        ))}
+              style={activo ? { background: `${color}26`, borderColor: `${color}99`, boxShadow: `0 0 14px -4px ${color}80` } : undefined}
+            >
+              {type}
+            </button>
+          )
+        })}
       </div>
 
       {/* Rarity */}
@@ -270,35 +289,28 @@ export function CardForm() {
       {/* Dynamic fields from config */}
       {config?.fields?.map(renderField) ?? null}
 
-      {/* Buttons */}
-      <div className="flex gap-2 pt-2">
-        <button
-          onClick={handleSave}
-          className="flex-1 bg-ether-600 hover:bg-ether-700 text-white font-medium py-2 rounded 
-                     transition-colors cursor-pointer"
-        >
+      {/* Buttons: barra fija al pie para guardar sin tener que volver arriba */}
+      <div className="sticky bottom-0 z-10 -mx-5 -mb-5 flex gap-2 rounded-b-2xl border-t border-white/10 bg-[#13131f]/95 px-5 py-3 backdrop-blur">
+        <Boton variante="primario" tam="lg" className="flex-1" onClick={handleSave}>
           {isEditing ? 'Actualizar' : 'Guardar'}
-        </button>
-        <button
+        </Boton>
+        <Boton
+          tam="lg"
+          className="px-5"
           onClick={() => {
             useCardStore.getState().resetDraft()
             setSelectedCardId(null)
           }}
-          className="px-4 bg-surface-2 hover:bg-card-border text-gray-300 font-medium py-2 rounded 
-                     transition-colors cursor-pointer"
         >
           Cancelar
-        </button>
+        </Boton>
       </div>
 
       {/* Manual de Efectos button */}
-      <div className="mt-4">
-        <button
-          onClick={() => setShowManual(true)}
-          className="w-full text-xs text-gray-500 hover:text-ether-400 transition-colors cursor-pointer py-1"
-        >
+      <div className="-mt-1">
+        <Boton variante="fantasma" tam="sm" className="w-full" onClick={() => setShowManual(true)}>
           📖 Manual de Efectos
-        </button>
+        </Boton>
       </div>
 
       {/* Manual modal */}

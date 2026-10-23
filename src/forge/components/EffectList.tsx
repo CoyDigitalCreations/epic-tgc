@@ -579,7 +579,7 @@ export function EffectList({ cardType, effects, onChange, maxEffects = 3 }: Effe
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <p className="text-sm font-semibold text-gray-300">Efectos ({effects.length}/{maxEffects})</p>
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">Efectos ({effects.length}/{maxEffects})</p>
         {canAdd && (
           <button onClick={addEffect} className="text-xs bg-ether-600/30 hover:bg-ether-600/50 text-ether-200 px-2 py-1 rounded transition-colors cursor-pointer">
             + Agregar Efecto

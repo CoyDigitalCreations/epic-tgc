@@ -1,4 +1,4 @@
-import type { ButtonHTMLAttributes } from 'react'
+import type { ComponentProps } from 'react'
 
 type Variante = 'primario' | 'secundario' | 'alerta' | 'peligro' | 'fantasma'
 type Tamano = 'sm' | 'md' | 'lg'
@@ -20,7 +20,7 @@ const TAMANOS: Record<Tamano, string> = {
   lg: 'font-display text-sm tracking-wider px-8 py-3 rounded-xl',
 }
 
-interface BotonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+interface BotonProps extends ComponentProps<'button'> {
   variante?: Variante
   tam?: Tamano
   /** Atajo de teclado que se muestra como pista (p. ej. "↵"). Decorativo: no cambia el nombre accesible. */

@@ -23,17 +23,17 @@ export function MultiSelectField({ label, value, onChange, options, max }: Multi
 
   return (
     <div className="flex flex-col gap-1 relative">
-      <span className="text-sm font-medium text-gray-300">{label}</span>
+      <span className="text-[11px] font-medium uppercase tracking-wider text-gray-400">{label}</span>
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="bg-surface-2 border border-card-border rounded px-3 py-2 text-left text-gray-100 
+        className="bg-[#0a0a12] border border-white/10 rounded-lg px-3 py-2 text-left text-gray-100 
                    focus:outline-none focus:border-ether-400 transition-colors cursor-pointer"
       >
         {value.length ? value.join(', ') : 'Seleccionar...'}
       </button>
       {isOpen && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-surface-2 border border-card-border rounded z-10 shadow-lg">
+        <div className="absolute top-full left-0 right-0 mt-1 bg-[#13131f] border border-white/10 rounded-lg z-10 shadow-xl">
           {options.map((opt) => {
             const disabled = !value.includes(opt) && atLimit
             return (

@@ -31,10 +31,10 @@ function CardGridItem({ card, selected, onSelect, onEdit, onDelete }: CardGridIt
   return (
     <div
       onClick={onSelect}
-      className={`bg-surface-2 border rounded-lg p-3 cursor-pointer transition-all
+      className={`bg-white/[0.03] border rounded-xl p-3 cursor-pointer transition-all hover:-translate-y-0.5
         ${selected
-          ? 'border-ether-400 ring-1 ring-ether-400'
-          : 'border-card-border hover:border-gray-500'
+          ? 'border-ether-400 ring-1 ring-ether-400 shadow-[0_10px_30px_-10px_rgba(80,80,255,0.6)]'
+          : 'border-white/10 hover:border-white/25'
         }`}
     >
       {/* Mini preview */}
@@ -140,8 +140,8 @@ function CardGridItem({ card, selected, onSelect, onEdit, onDelete }: CardGridIt
             e.stopPropagation()
             onEdit()
           }}
-          className="flex-1 text-[10px] bg-ether-600/30 hover:bg-ether-600/50 text-ether-300 py-0.5 
-                     rounded transition-colors cursor-pointer"
+          className="flex-1 text-[10px] bg-ether-600/25 hover:bg-ether-600/45 text-ether-200 py-1 
+                     rounded-md transition-colors cursor-pointer"
         >
           Editar
         </button>
@@ -150,8 +150,8 @@ function CardGridItem({ card, selected, onSelect, onEdit, onDelete }: CardGridIt
             e.stopPropagation()
             onDelete()
           }}
-          className="flex-1 text-[10px] bg-red-600/30 hover:bg-red-600/50 text-red-300 py-0.5 
-                     rounded transition-colors cursor-pointer"
+          className="flex-1 text-[10px] bg-red-600/20 hover:bg-red-600/40 text-red-200 py-1 
+                     rounded-md transition-colors cursor-pointer"
         >
           Eliminar
         </button>
@@ -327,7 +327,7 @@ export function CardList() {
           value={coleccionActivaId}
           onChange={(e) => setColeccionActiva(e.target.value)}
           title="Colección activa (la ve el juego online)"
-          className="bg-surface-2 border border-card-border rounded-lg px-3 py-1.5 text-xs
+          className="bg-[#0a0a12] border border-white/10 rounded-lg px-3 py-1.5 text-xs
                      text-gray-100 focus:outline-none focus:border-ether-400
                      transition-colors cursor-pointer"
         >
@@ -340,7 +340,7 @@ export function CardList() {
         <button
           onClick={() => setModalModo('crear')}
           title="Crear colección nueva"
-          className="text-xs bg-ether-600/30 hover:bg-ether-600/50 text-ether-300 px-2.5 py-1.5 rounded
+          className="text-xs border border-ether-400/30 bg-ether-600/25 hover:bg-ether-600/45 text-ether-200 px-2.5 py-1.5 rounded-lg
                      transition-colors cursor-pointer"
         >
           + Nueva
@@ -348,7 +348,7 @@ export function CardList() {
         <button
           onClick={() => setModalModo('renombrar')}
           title="Renombrar colección activa"
-          className="text-xs bg-surface-2 hover:bg-card-border text-gray-300 px-2.5 py-1.5 rounded
+          className="text-xs border border-white/10 bg-white/5 hover:bg-white/10 text-gray-300 px-2.5 py-1.5 rounded-lg
                      transition-colors cursor-pointer"
         >
           Renombrar
@@ -357,7 +357,7 @@ export function CardList() {
           <button
             onClick={() => setShowEliminarModal(true)}
             title={`Eliminar "${coleccionActiva?.nombre ?? ''}" con todas sus cartas`}
-            className="text-xs bg-red-600/30 hover:bg-red-600/50 text-red-300 px-2.5 py-1.5 rounded
+            className="text-xs border border-red-400/20 bg-red-600/20 hover:bg-red-600/40 text-red-200 px-2.5 py-1.5 rounded-lg
                        transition-colors cursor-pointer"
           >
             Eliminar
@@ -366,14 +366,14 @@ export function CardList() {
       </div>
 
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
         <h2 className="text-xl font-display text-gray-100">
           Colección
           {filteredCards.length !== cards.length
             ? ` (${filteredCards.length}/${cards.length})`
             : ` (${cards.length})`}
         </h2>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {cards.length > 0 && (
             <>
               <button
@@ -383,7 +383,7 @@ export function CardList() {
                   })
                 }}
                 title="Descargar todas las cartas CON arte (archivos grandes)"
-                className="text-xs bg-surface-2 hover:bg-card-border text-gray-300 px-3 py-1.5 rounded 
+                className="text-xs border border-white/10 bg-white/5 hover:bg-white/10 text-gray-300 px-3 py-1.5 rounded-lg 
                            transition-colors cursor-pointer"
               >
                 📥 Exportar colección (con arte)
@@ -391,7 +391,7 @@ export function CardList() {
               <button
                 onClick={() => exportCollectionSinArte(cards, coleccionActiva?.nombre)}
                 title="Descargar cartas SIN arte (solo datos, archivo liviano)"
-                className="text-xs bg-surface-2 hover:bg-card-border text-gray-300 px-3 py-1.5 rounded 
+                className="text-xs border border-white/10 bg-white/5 hover:bg-white/10 text-gray-300 px-3 py-1.5 rounded-lg 
                            transition-colors cursor-pointer"
               >
                 📄 Exportar cartas (sin arte)
@@ -399,7 +399,7 @@ export function CardList() {
               <button
                 onClick={() => setShowClearModal(true)}
                 title="Eliminar TODAS las cartas de la colección"
-                className="text-xs bg-red-600/30 hover:bg-red-600/50 text-red-300 px-3 py-1.5 rounded 
+                className="text-xs border border-red-400/20 bg-red-600/20 hover:bg-red-600/40 text-red-200 px-3 py-1.5 rounded-lg 
                            transition-colors cursor-pointer"
               >
                 🗑️ Limpiar colección
@@ -409,7 +409,7 @@ export function CardList() {
           <button
             onClick={handleImport}
             title="Cargar cartas desde un archivo JSON exportado"
-            className="text-xs bg-surface-2 hover:bg-card-border text-gray-300 px-3 py-1.5 rounded 
+            className="text-xs border border-white/10 bg-white/5 hover:bg-white/10 text-gray-300 px-3 py-1.5 rounded-lg 
                        transition-colors cursor-pointer"
           >
             📤 Importar cartas (JSON)
@@ -436,8 +436,8 @@ export function CardList() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar por nombre..."
-            className="w-full bg-surface-2 border border-card-border rounded-lg pl-9 pr-3 py-2 
-                       text-sm text-gray-100 placeholder-gray-500
+            className="w-full bg-[#0a0a12] border border-white/10 rounded-lg pl-9 pr-3 py-2 
+                       text-sm text-gray-100 placeholder-gray-600
                        focus:outline-none focus:border-ether-400 transition-colors"
           />
           {search && (
@@ -452,14 +452,16 @@ export function CardList() {
         </div>
       </div>
 
+      {/* Panel de filtros */}
+      <div className="mb-5 rounded-xl border border-white/10 bg-white/[0.02] p-3 pb-0">
       {/* Type filter pills */}
       <div className="flex gap-1.5 flex-wrap mb-4">
         <button
           onClick={() => setTypeFilter('Todas')}
           className={`px-3 py-1 rounded-full text-xs font-medium transition-colors cursor-pointer
             ${typeFilter === 'Todas'
-              ? 'bg-ether-600 text-white'
-              : 'bg-surface-2 text-gray-400 hover:text-gray-200 hover:bg-card-border'
+              ? 'bg-ether-600 text-white shadow-[0_0_12px_-3px_rgba(80,80,255,0.8)]'
+              : 'bg-white/[0.04] text-gray-400 hover:text-gray-100 hover:bg-white/10'
             }`}
         >
           Todas
@@ -470,8 +472,8 @@ export function CardList() {
             onClick={() => setTypeFilter(type)}
             className={`px-3 py-1 rounded-full text-xs font-medium transition-colors cursor-pointer
               ${typeFilter === type
-                ? 'bg-ether-600 text-white'
-                : 'bg-surface-2 text-gray-400 hover:text-gray-200 hover:bg-card-border'
+                ? 'bg-ether-600 text-white shadow-[0_0_12px_-3px_rgba(80,80,255,0.8)]'
+                : 'bg-white/[0.04] text-gray-400 hover:text-gray-100 hover:bg-white/10'
               }`}
           >
             {type}
@@ -486,8 +488,8 @@ export function CardList() {
           onClick={() => setCosteFilter('Todos')}
           className={`px-2.5 py-0.5 rounded-full text-xs font-medium transition-colors cursor-pointer
             ${costeFilter === 'Todos'
-              ? 'bg-ether-600 text-white'
-              : 'bg-surface-2 text-gray-400 hover:text-gray-200 hover:bg-card-border'
+              ? 'bg-ether-600 text-white shadow-[0_0_12px_-3px_rgba(80,80,255,0.8)]'
+              : 'bg-white/[0.04] text-gray-400 hover:text-gray-100 hover:bg-white/10'
             }`}
         >
           Todos
@@ -498,8 +500,8 @@ export function CardList() {
             onClick={() => setCosteFilter(String(c))}
             className={`px-2.5 py-0.5 rounded-full text-xs font-medium transition-colors cursor-pointer
               ${costeFilter === String(c)
-                ? 'bg-ether-600 text-white'
-                : 'bg-surface-2 text-gray-400 hover:text-gray-200 hover:bg-card-border'
+                ? 'bg-ether-600 text-white shadow-[0_0_12px_-3px_rgba(80,80,255,0.8)]'
+                : 'bg-white/[0.04] text-gray-400 hover:text-gray-100 hover:bg-white/10'
               }`}
           >
             {c}
@@ -509,8 +511,8 @@ export function CardList() {
           onClick={() => setCosteFilter('7+')}
           className={`px-2.5 py-0.5 rounded-full text-xs font-medium transition-colors cursor-pointer
             ${costeFilter === '7+'
-              ? 'bg-ether-600 text-white'
-              : 'bg-surface-2 text-gray-400 hover:text-gray-200 hover:bg-card-border'
+              ? 'bg-ether-600 text-white shadow-[0_0_12px_-3px_rgba(80,80,255,0.8)]'
+              : 'bg-white/[0.04] text-gray-400 hover:text-gray-100 hover:bg-white/10'
           }`}
         >
           7+
@@ -520,14 +522,14 @@ export function CardList() {
       {/* Facción + Rareza + Keyword (row) */}
       <div className="flex gap-3 flex-wrap items-center mb-4">
         {/* Facción */}
-        <div className="flex gap-1.5 items-center">
+        <div className="flex gap-1.5 items-center flex-wrap">
           <span className="text-[10px] uppercase tracking-wider text-gray-500 mr-1">Facción:</span>
           <button
             onClick={() => setFaccionFilter('Todas')}
             className={`px-2.5 py-0.5 rounded-full text-xs font-medium transition-colors cursor-pointer
               ${faccionFilter === 'Todas'
-                ? 'bg-ether-600 text-white'
-                : 'bg-surface-2 text-gray-400 hover:text-gray-200 hover:bg-card-border'
+                ? 'bg-ether-600 text-white shadow-[0_0_12px_-3px_rgba(80,80,255,0.8)]'
+                : 'bg-white/[0.04] text-gray-400 hover:text-gray-100 hover:bg-white/10'
               }`}
           >
             Todas
@@ -538,8 +540,8 @@ export function CardList() {
               onClick={() => setFaccionFilter(f)}
               className={`px-2.5 py-0.5 rounded-full text-xs font-medium transition-colors cursor-pointer
                 ${faccionFilter === f
-                  ? 'bg-ether-600 text-white'
-                  : 'bg-surface-2 text-gray-400 hover:text-gray-200 hover:bg-card-border'
+                  ? 'bg-ether-600 text-white shadow-[0_0_12px_-3px_rgba(80,80,255,0.8)]'
+                  : 'bg-white/[0.04] text-gray-400 hover:text-gray-100 hover:bg-white/10'
                 }`}
             >
               {f}
@@ -588,8 +590,8 @@ export function CardList() {
             onClick={() => setPaqueteFilter('Todos')}
             className={`px-3 py-1 rounded-full text-xs font-medium transition-colors cursor-pointer
               ${paqueteFilter === 'Todos'
-                ? 'bg-ether-600 text-white'
-                : 'bg-surface-2 text-gray-400 hover:text-gray-200 hover:bg-card-border'
+                ? 'bg-ether-600 text-white shadow-[0_0_12px_-3px_rgba(80,80,255,0.8)]'
+                : 'bg-white/[0.04] text-gray-400 hover:text-gray-100 hover:bg-white/10'
               }`}
           >
             Todos
@@ -604,8 +606,8 @@ export function CardList() {
                   onClick={() => setPaqueteFilter(paquete.id)}
                   className={`px-3 py-1 rounded-full text-xs font-medium transition-colors cursor-pointer flex items-center gap-1
                     ${paqueteFilter === paquete.id
-                      ? 'bg-ether-600 text-white'
-                      : 'bg-surface-2 text-gray-400 hover:text-gray-200 hover:bg-card-border'
+                      ? 'bg-ether-600 text-white shadow-[0_0_12px_-3px_rgba(80,80,255,0.8)]'
+                      : 'bg-white/[0.04] text-gray-400 hover:text-gray-100 hover:bg-white/10'
                     }`}
                   title={paquete.lore}
                 >
@@ -714,15 +716,17 @@ export function CardList() {
         </div>
       )}
 
+      </div>
+
       {/* Empty states */}
       {cards.length === 0 ? (
-        <div className="text-center py-12 text-gray-500">
+        <div className="rounded-2xl border border-dashed border-white/10 bg-white/[0.015] text-center py-12 text-gray-500">
           <p className="text-4xl mb-2">📜</p>
           <p className="font-display text-lg">No hay cartas todavía</p>
           <p className="text-sm mt-1">Importa un archivo JSON o crea tu primera carta arriba</p>
         </div>
       ) : filteredCards.length === 0 ? (
-        <div className="text-center py-12 text-gray-500">
+        <div className="rounded-2xl border border-dashed border-white/10 bg-white/[0.015] text-center py-12 text-gray-500">
           <p className="text-4xl mb-2">🔍</p>
           <p className="font-display text-lg">No se encontraron cartas</p>
           <p className="text-sm mt-1">

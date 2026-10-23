@@ -1,3 +1,5 @@
+import { CLASE_CAMPO } from '../../../shared/ui/Campo'
+
 interface SelectFieldProps {
   label: string
   value: string
@@ -8,13 +10,12 @@ interface SelectFieldProps {
 
 export function SelectField({ label, value, onChange, options, error }: SelectFieldProps) {
   return (
-    <label className="flex flex-col gap-1">
-      <span className="text-sm font-medium text-gray-300">{label}</span>
+    <label className="flex flex-col gap-1.5">
+      <span className="text-[11px] font-medium uppercase tracking-wider text-gray-400">{label}</span>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="bg-surface-2 border border-card-border rounded px-3 py-2 text-gray-100 
-                   focus:outline-none focus:border-ether-400 transition-colors"
+        className={`${CLASE_CAMPO} cursor-pointer`}
       >
         <option value="">Seleccionar...</option>
         {options.map((opt) => (

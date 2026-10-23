@@ -3,6 +3,7 @@
  * Incluye TODAS las configuraciones y combinaciones de texto autogenerado.
  */
 import { useEffect } from 'react'
+import { Modal } from '../../shared/ui/Modal'
 
 interface EffectManualModalProps {
   isOpen: boolean
@@ -12,7 +13,10 @@ interface EffectManualModalProps {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="mb-6">
-      <h3 className="text-base font-bold text-ether-400 mb-2">{title}</h3>
+      <h3 className="mb-2.5 flex items-center gap-2 font-display text-base font-bold tracking-wide text-ether-200">
+        <span aria-hidden="true" className="h-4 w-1 rounded-full bg-ether-400" />
+        {title}
+      </h3>
       {children}
     </section>
   )
@@ -20,14 +24,14 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 function Table({ headers, rows }: { headers: string[]; rows: string[][] }) {
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-xs border border-gray-700 rounded-lg overflow-hidden">
-        <thead className="bg-gray-800">
-          <tr>{headers.map((h, i) => <th key={i} className="px-3 py-2 text-left text-gray-300">{h}</th>)}</tr>
+    <div className="overflow-x-auto rounded-xl border border-white/10">
+      <table className="w-full text-xs">
+        <thead className="bg-white/[0.04]">
+          <tr>{headers.map((h, i) => <th key={i} className="px-3 py-2 text-left text-[10px] font-semibold uppercase tracking-wider text-gray-400">{h}</th>)}</tr>
         </thead>
-        <tbody className="divide-y divide-gray-700">
+        <tbody className="divide-y divide-white/5">
           {rows.map((row, i) => (
-            <tr key={i}>{row.map((cell, j) => <td key={j} className="px-3 py-2 text-gray-400">{cell}</td>)}</tr>
+            <tr key={i} className="even:bg-white/[0.015]">{row.map((cell, j) => <td key={j} className="px-3 py-2 text-gray-400">{cell}</td>)}</tr>
           ))}
         </tbody>
       </table>
@@ -45,13 +49,14 @@ export function EffectManualModal({ isOpen, onClose }: EffectManualModalProps) {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70" onClick={onClose}>
-      <div className="bg-[#1a1a2e] border border-gray-600 rounded-xl w-[90vw] max-w-5xl max-h-[85vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700 bg-surface">
-          <h2 className="text-lg font-display font-bold text-gray-100">Manual de Efectos</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-white text-xl cursor-pointer">✕</button>
-        </div>
-        <div className="overflow-y-auto p-6 space-y-6 text-sm text-gray-300">
+    <Modal
+      titulo="Manual de Efectos"
+      subtitulo="Todas las configuraciones del sistema de efectos y el texto que generan"
+      icono="📖"
+      ancho="xl"
+      onCerrar={onClose}
+    >
+        <div className="space-y-6 pt-2 text-sm text-gray-300">
 
           {/* 1. INTRODUCCIÓN */}
           <Section title="1. Introducción">
@@ -644,11 +649,6 @@ export function EffectManualModal({ isOpen, onClose }: EffectManualModalProps) {
           </Section>
 
         </div>
-
-        <div className="px-6 py-3 border-t border-gray-700 bg-surface flex justify-end">
-          <button onClick={onClose} className="px-4 py-2 bg-ether-600 hover:bg-ether-500 text-white text-sm rounded transition-colors cursor-pointer">Cerrar</button>
-        </div>
-      </div>
-    </div>
+    </Modal>
   )
 }

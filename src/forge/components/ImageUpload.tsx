@@ -55,8 +55,8 @@ export function ImageUpload({ value, onChange }: ImageUploadProps) {
   }
 
   return (
-    <div className="flex flex-col gap-1">
-      <span className="text-sm font-medium text-gray-300">Arte de la carta</span>
+    <div className="flex flex-col gap-1.5">
+      <span className="text-[11px] font-medium uppercase tracking-wider text-gray-400">Arte de la carta</span>
 
       <div
         onDrop={handleDrop}
@@ -64,12 +64,12 @@ export function ImageUpload({ value, onChange }: ImageUploadProps) {
         onDragLeave={handleDragLeave}
         onClick={() => inputRef.current?.click()}
         className={`
-          relative border-2 border-dashed rounded-lg overflow-hidden cursor-pointer
+          relative border-2 border-dashed rounded-xl overflow-hidden cursor-pointer
           transition-all duration-200 min-h-[120px]
           flex items-center justify-center
           ${dragOver
             ? 'border-ether-400 bg-ether-400/10'
-            : 'border-card-border hover:border-ether-400/50 bg-surface-2'
+            : 'border-white/10 hover:border-ether-400/50 bg-[#0a0a12]'
           }
           ${value ? 'p-0' : 'p-4'}
         `}

@@ -11,9 +11,18 @@ function App() {
   const updateDraft = useCardStore((s) => s.updateDraft)
 
   return (
-    <div className="min-h-screen bg-[#0d0d14] text-gray-100 font-body">
+    <div className="relative min-h-screen overflow-x-clip bg-[#0a0a12] text-gray-100 font-body">
+      {/* Ambiente: mismo resplandor que el resto de la app */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            'radial-gradient(ellipse 70% 30% at 50% -5%, rgba(64,64,255,0.14), transparent 70%), radial-gradient(ellipse 40% 30% at 100% 100%, rgba(168,85,247,0.06), transparent 70%)',
+        }}
+      />
       {/* Header */}
-      <header className="border-b border-card-border bg-surface">
+      <header className="relative border-b border-card-border/70 bg-surface/90">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-display font-bold text-gray-100 tracking-wider">
@@ -37,17 +46,17 @@ function App() {
       </header>
 
       {/* Main Layout */}
-      <main className="max-w-[1600px] mx-auto px-6 py-6">
-        <div className="grid grid-cols-1 xl:grid-cols-[380px_320px_1fr] gap-6">
+      <main className="relative max-w-[1600px] mx-auto px-6 py-6">
+        <div className="grid grid-cols-1 xl:grid-cols-[380px_320px_minmax(0,1fr)] gap-6">
           {/* Left: Form */}
-          <section className="bg-surface border border-card-border rounded-xl p-5 h-fit">
+          <section className="rounded-2xl border border-card-border bg-surface/95 p-5 shadow-[0_20px_60px_-30px_rgba(0,0,0,0.8)] h-fit">
             <ErrorBoundary>
               <CardForm />
             </ErrorBoundary>
           </section>
 
           {/* Middle: Preview (sticky) */}
-          <section className="bg-surface border border-card-border rounded-xl p-5 h-fit xl:sticky xl:top-6">
+          <section className="rounded-2xl border border-card-border bg-surface/95 p-5 shadow-[0_20px_60px_-30px_rgba(0,0,0,0.8)] h-fit xl:sticky xl:top-6">
             <ErrorBoundary>
               <CardPreview
                 editable
@@ -57,7 +66,7 @@ function App() {
           </section>
 
           {/* Right: Collection */}
-          <section className="bg-surface border border-card-border rounded-xl p-5">
+          <section className="rounded-2xl border border-card-border bg-surface/95 p-5 shadow-[0_20px_60px_-30px_rgba(0,0,0,0.8)]">
             <ErrorBoundary>
               <CardList />
             </ErrorBoundary>
@@ -66,7 +75,7 @@ function App() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-card-border bg-surface mt-8">
+      <footer className="relative mt-8 border-t border-card-border/70 bg-surface/90">
         <div className="max-w-7xl mx-auto px-6 py-3 text-center text-xs text-gray-600">
           Éter Forge — Éter Engine TCG Card Creator
         </div>
