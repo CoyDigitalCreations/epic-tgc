@@ -6,6 +6,7 @@ import { useCardImage } from '../hooks/useCardImage'
 import type { AnyCard } from '../../shared/types'
 import { FACCION_COLORS, FACCION_IMAGES, KEYWORDS } from '../../shared/types'
 import { CardFrame, CostGem, EtherHexagon, NamePlate, RuneIcon, StatBadge, TextScroll } from './card-art'
+import { tamanoQueEntra } from './card-art/ajusteTexto'
 import { condicionArcanaTexto } from './fields/CondicionArcanaField'
 
 /** Wrap keywords in bold tags within a text string */
@@ -62,6 +63,57 @@ const RARITY_BORDERS: Record<string, string> = {
   'Única': '#ef4444',
 }
 
+/** Un párrafo del pergamino: etiqueta en negrita ("Pasivo") + texto del efecto. */
+interface Parrafo {
+  clave: string
+  etiqueta: string
+  texto: string
+}
+
+/** Textos del efecto de la carta según su tipo, leídos de efectos[] (sistema unificado). */
+function parrafosDeEfecto(c: AnyCard): Parrafo[] {
+  // Varios efectos del mismo tipo se unen (p. ej. Cassandra: dos continuos con umbrales distintos).
+  const getEffectText = (tipo: string): string | undefined => {
+    if (!('efectos' in c) || !c.efectos) return undefined
+    const texts = c.efectos.filter((e) => e.tipo === tipo && e.texto).map((e) => e.texto!)
+    return texts.length > 0 ? texts.join(' ') : undefined
+  }
+  const out: Parrafo[] = []
+  const agregar = (clave: string, etiqueta: string, texto: string | undefined) => {
+    if (texto) out.push({ clave, etiqueta, texto })
+  }
+  switch (c.type) {
+    case 'Campeón':
+      agregar('pasivo', 'Pasivo', getEffectText('pasivo'))
+      agregar('disparo', 'Disparo', getEffectText('disparo'))
+      agregar('continuo', 'Continuo', getEffectText('continuo'))
+      agregar('comandante', 'Comandante', 'efectoComandante' in c && c.efectoComandante?.texto ? c.efectoComandante.texto : undefined)
+      break
+    case 'Mística':
+      agregar('hechizo', 'Efecto', getEffectText('hechizo'))
+      break
+    case 'Arcana': {
+      // condicion: campo dedicado estructurado (Fase 3e: sin string legacy)
+      const rawCondicion = 'condicion' in c && c.condicion && typeof c.condicion === 'object' ? c.condicion : undefined
+      agregar('condicion', 'Condición', rawCondicion ? condicionArcanaTexto(rawCondicion) : getEffectText('pasivo'))
+      agregar('recompensa', 'Recompensa', getEffectText('hechizo'))
+      break
+    }
+    case 'Éter': {
+      const pagoEffect = 'efectos' in c && c.efectos ? c.efectos.find((e) => e.tipo === 'pago') : undefined
+      const variantLabel = pagoEffect?.trigger === 'al_pagar_eter' ? 'Gatillo' : 'Pasivo'
+      agregar('reserva', 'Reserva (2A)', getEffectText('reserva'))
+      agregar('pago', `Pago (1A, ${variantLabel})`, getEffectText('pago'))
+      agregar('bloqueo', 'Bloqueo (1B-1F)', getEffectText('bloqueo'))
+      break
+    }
+    case 'Vínculo':
+      agregar('vinculo', 'Efecto Permanente', getEffectText('vinculo'))
+      break
+  }
+  return out
+}
+
 /* ───────── RenderCarta: render puro 744×1038 ─────────
    Componente reutilizable sin estado: dibuja la carta exactamente como la
    exporta el creador. CardPreview lo envuelve con overlays de edición y el
@@ -87,19 +139,9 @@ export function RenderCarta({
   const showCombatStats = card.type === 'Campeón'
   const fullArt = card.variante === 'full-art'
   const stats = card.stats as Record<string, any>
-  const hasFlavorText = !!card.flavorText
   const sinGem =
     card.type === 'Éter' ||
     card.type === 'Vínculo'
-
-  /** Auto-escala el fontSize: texto corto → más grande (hasta 2x), texto largo → más chico (hasta minSize) */
-  const fluidSize = (text: string | undefined | null, minSize: number, maxLen = 220, overrideLen?: number): number => {
-    const len = overrideLen !== undefined ? overrideLen : (text ?? '').length
-    if (len <= 35) return +(minSize * 2).toFixed(1)
-    if (len >= maxLen) return +minSize.toFixed(1)
-    const t = (len - 35) / (maxLen - 35)
-    return +(minSize * (2 - t)).toFixed(1)
-  }
 
   return (
     <div
@@ -355,36 +397,6 @@ export function RenderCarta({
         )
       })()}
 
-      {/* ════════════ TEXTO DE SABOR ════════════ */}
-      {hasFlavorText && (
-        <div style={{
-          position: 'absolute',
-          top: 530,
-          left: 20,
-          right: 20,
-          textAlign: 'center',
-          zIndex: 16,
-        }}>
-          <p
-            style={{
-              fontFamily: '"Inter", serif',
-              fontSize: fluidSize(card.flavorText, 11),
-              fontStyle: 'italic',
-              fontWeight: 'bold',
-              lineHeight: 1.2,
-              color: '#ffffff',
-              margin: 0,
-              textShadow: '0 2px 4px rgba(0,0,0,1), 0 0 8px rgba(0,0,0,1)',
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-            }}
-          >
-            &ldquo;{card.flavorText as string}&rdquo;
-          </p>
-        </div>
-      )}
-
       {/* ════════════ BARRA DE CLASIFICACIÓN / SUBTIPOS ════════════ */}
       <div
         style={{
@@ -440,203 +452,83 @@ export function RenderCarta({
       </div>
 
       {/* ════════════ CAJA DE TEXTO Y HABILIDADES (PERGAMINO ENVEJECIDO) ════════════ */}
-      <TextScroll
-        style={{
-          top: 600,
-          left: 44,
-          right: 44,
-          height: 369,
-        }}
-      >
-        {/* Palabras clave (Keywords) */}
-        {card.keywords && card.keywords.length > 0 && (
-          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 4 }}>
-            {card.keywords.map((kw) => (
-              <span
-                key={kw}
-                style={{
-                  background: '#4a3722',
-                  border: '1px solid #8c6d47',
-                  borderRadius: 3,
-                  padding: '3px 12px',
-                  fontFamily: '"Cinzel", serif',
-                  fontSize: 15,
-                  fontWeight: 700,
-                  color: '#fef3c7',
-                  letterSpacing: '0.5px',
-                }}
+      {(() => {
+        const parrafos = parrafosDeEfecto(card)
+        const tieneKeywords = !!card.keywords && card.keywords.length > 0
+        // Caja útil del efecto: ancho del pergamino − márgenes; alto − márgenes − pie − fila de keywords
+        const altoEfecto = 369 - 28 - 92 - (tieneKeywords ? 36 : 0)
+        const fuente = tamanoQueEntra(
+          parrafos.map((p) => `${p.etiqueta}: ${p.texto}`),
+          604,
+          altoEfecto,
+          { min: 11, max: 28 },
+        )
+        // Sabor: máx. 3 líneas; en los Campeones queda entre los badges de ATQ/RES
+        const anchoSabor = showCombatStats ? 330 : 540
+        const sabor = card.flavorText ? `${card.flavorText as string}` : ''
+        const fuenteSabor = sabor ? tamanoQueEntra([sabor], anchoSabor, 62, { min: 12, max: 20, interlineado: 1.3, anchoChar: 0.5 }) : 0
+        return (
+          <TextScroll
+            style={{ top: 600, left: 44, right: 44, height: 369 }}
+            header={
+              tieneKeywords ? (
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
+                  {card.keywords!.map((kw) => (
+                    <span
+                      key={kw}
+                      style={{
+                        background: '#4a3722',
+                        border: '1px solid #8c6d47',
+                        borderRadius: 3,
+                        padding: '3px 12px',
+                        fontFamily: '"Cinzel", serif',
+                        fontSize: 15,
+                        fontWeight: 700,
+                        color: '#fef3c7',
+                        letterSpacing: '0.5px',
+                      }}
+                    >
+                      {kw}
+                    </span>
+                  ))}
+                </div>
+              ) : null
+            }
+            footer={
+              sabor ? (
+                <p
+                  style={{
+                    fontFamily: '"Inter", serif',
+                    fontSize: fuenteSabor,
+                    fontStyle: 'italic',
+                    fontWeight: 600,
+                    lineHeight: 1.3,
+                    color: '#46321d',
+                    textAlign: 'center',
+                    margin: 0,
+                    maxWidth: anchoSabor,
+                    display: '-webkit-box',
+                    WebkitLineClamp: 3,
+                    WebkitBoxOrient: 'vertical',
+                    overflow: 'hidden',
+                  }}
+                >
+                  &ldquo;{sabor}&rdquo;
+                </p>
+              ) : null
+            }
+          >
+            {parrafos.map((p) => (
+              <p
+                key={p.clave}
+                style={{ fontFamily: '"Inter", sans-serif', fontSize: fuente, lineHeight: 1.32, fontWeight: 500, color: '#231709', margin: 0 }}
               >
-                {kw}
-              </span>
+                <strong>{p.etiqueta}:</strong> {highlightKeywords(p.texto)}
+              </p>
             ))}
-          </div>
-        )}
-
-        {/* Habilidades según tipo — reads from efectos[].texto (unified system) */}
-        {(() => {
-          const c = card
-          // Helper: get effect text by tipo from efectos array.
-          // Múltiples efectos del mismo tipo se unen (p.ej. Cassandra: dos
-          // continuos con umbrales distintos) — .find() descartaba el resto.
-          const getEffectText = (tipo: string): string | undefined => {
-            if (!('efectos' in c) || !c.efectos) return undefined
-            const texts = c.efectos.filter((e) => e.tipo === tipo && e.texto).map((e) => e.texto!)
-            return texts.length > 0 ? texts.join(' ') : undefined
-          }
-
-          switch (c.type) {
-            case 'Campeón': {
-              const parts: React.ReactNode[] = []
-              // New system: read from efectos[]
-              const pasivo = getEffectText('pasivo')
-              const disparo = getEffectText('disparo')
-              const continuo = getEffectText('continuo')
-              const pasivoText = pasivo
-              const disparoText = disparo
-              const continuoText = continuo
-              
-              const comandanteText = ('efectoComandante' in c && c.efectoComandante?.texto) ? c.efectoComandante.texto : ''
-              const totalLen = (pasivoText?.length || 0) + (disparoText?.length || 0) + (continuoText?.length || 0) + (comandanteText.length || 0)
-
-              if (pasivoText) {
-                parts.push(
-                  <p key="pasivo" style={{ fontFamily: '"Inter", sans-serif', fontSize: fluidSize(pasivoText, 13.5, 450, totalLen), lineHeight: 1.35, fontWeight: 500, color: '#261a0e', margin: 0 }}>
-                    <strong>Pasivo:</strong> {highlightKeywords(pasivoText)}
-                  </p>
-                )
-              }
-              if (disparoText) {
-                parts.push(
-                  <p key="disparo" style={{ fontFamily: '"Inter", sans-serif', fontSize: fluidSize(disparoText, 13.5, 450, totalLen), lineHeight: 1.35, fontWeight: 500, color: '#261a0e', margin: 0, marginTop: parts.length > 0 ? 8 : 0 }}>
-                    <strong>Disparo:</strong> {highlightKeywords(disparoText)}
-                  </p>
-                )
-              }
-              if (continuoText) {
-                parts.push(
-                  <p key="continuo" style={{ fontFamily: '"Inter", sans-serif', fontSize: fluidSize(continuoText, 13.5, 450, totalLen), lineHeight: 1.35, fontWeight: 500, color: '#261a0e', margin: 0, marginTop: parts.length > 0 ? 8 : 0 }}>
-                    <strong>Continuo:</strong> {highlightKeywords(continuoText)}
-                  </p>
-                )
-              }
-              // Comandante effect
-              if (comandanteText) {
-                parts.push(
-                  <p key="comandante" style={{ fontFamily: '"Inter", sans-serif', fontSize: fluidSize(comandanteText, 13.5, 450, totalLen), lineHeight: 1.35, fontWeight: 500, color: '#261a0e', margin: 0, marginTop: parts.length > 0 ? 8 : 0 }}>
-                    <strong>Comandante:</strong> {highlightKeywords(comandanteText)}
-                  </p>
-                )
-              }
-              return parts.length > 0 ? <>{parts}</> : null
-            }
-
-            case 'Mística': {
-              // New system: read from efectos[]
-              const hechizo = getEffectText('hechizo')
-              const texto = hechizo
-              return texto ? (
-                <p
-                  style={{
-                    fontFamily: '"Inter", sans-serif',
-                    fontSize: fluidSize(texto, 14, 450),
-                    lineHeight: 1.4,
-                    color: '#1c130b',
-                    margin: 0,
-                  }}
-                >
-                  <strong>Efecto:</strong> {highlightKeywords(texto)}
-                </p>
-              ) : null
-            }
-
-            case 'Arcana': {
-              const parts: React.ReactNode[] = []
-              // condicion: campo dedicado estructurado CondicionEfecto (Fase 3e: sin string legacy)
-              const rawCondicion = ('condicion' in c && c.condicion && typeof c.condicion === 'object')
-                ? c.condicion
-                : undefined
-              const condicionText = rawCondicion
-                ? condicionArcanaTexto(rawCondicion)
-                : getEffectText('pasivo')
-              const recompensaText = getEffectText('hechizo')
-              const totalLen = (condicionText?.length || 0) + (recompensaText?.length || 0)
-
-              if (condicionText) {
-                parts.push(
-                  <p key="condicion" style={{ fontFamily: '"Inter", sans-serif', fontSize: fluidSize(condicionText, 13.5, 450, totalLen), lineHeight: 1.4, color: '#1c130b', margin: 0 }}>
-                    <strong>Condición:</strong> {highlightKeywords(condicionText)}
-                  </p>
-                )
-              }
-              if (recompensaText) {
-                parts.push(
-                  <p key="recompensa" style={{ fontFamily: '"Inter", sans-serif', fontSize: fluidSize(recompensaText, 13.5, 450, totalLen), lineHeight: 1.4, color: '#1c130b', margin: '4px 0 0' }}>
-                    <strong>Recompensa:</strong> {highlightKeywords(recompensaText)}
-                  </p>
-                )
-              }
-              return parts.length > 0 ? <>{parts}</> : null
-            }
-
-            case 'Éter': {
-              const parts: React.ReactNode[] = []
-              // New system: read from efectos[]
-              const reserva = getEffectText('reserva')
-              const pago = getEffectText('pago')
-              const bloqueo = getEffectText('bloqueo')
-              const reservaText = reserva
-              const pagoText = pago
-              const bloqueoText = bloqueo
-              const totalLen = (reservaText?.length || 0) + (pagoText?.length || 0) + (bloqueoText?.length || 0)
-
-              if (reservaText) {
-                parts.push(
-                  <p key="reserva" style={{ fontFamily: '"Inter", sans-serif', fontSize: fluidSize(reservaText, 14, 450, totalLen), lineHeight: 1.4, color: '#1c130b', margin: 0 }}>
-                    <strong>Reserva (2A):</strong> {highlightKeywords(reservaText)}
-                  </p>
-                )
-              }
-              if (pagoText) {
-                // Determine variant from effect trigger
-                const pagoEffect = ('efectos' in c && c.efectos) ? c.efectos.find((e) => e.tipo === 'pago') : undefined
-                const variantLabel = pagoEffect?.trigger === 'al_pagar_eter' ? 'Gatillo' : 'Pasivo'
-                parts.push(
-                  <p key="pago" style={{ fontFamily: '"Inter", sans-serif', fontSize: fluidSize(pagoText, 14, 450, totalLen), lineHeight: 1.4, color: '#1c130b', margin: 0, marginTop: parts.length > 0 ? 8 : 0 }}>
-                    <strong>Pago (1A, {variantLabel}):</strong> {highlightKeywords(pagoText)}
-                  </p>
-                )
-              }
-              if (bloqueoText) {
-                parts.push(
-                  <p key="bloqueo" style={{ fontFamily: '"Inter", sans-serif', fontSize: fluidSize(bloqueoText, 14, 450, totalLen), lineHeight: 1.4, color: '#1c130b', margin: 0, marginTop: parts.length > 0 ? 8 : 0 }}>
-                    <strong>Bloqueo (1B-1F):</strong> {highlightKeywords(bloqueoText)}
-                  </p>
-                )
-              }
-              return parts.length > 0 ? <>{parts}</> : null
-            }
-
-            case 'Vínculo': {
-              // New system: read from efectos[]
-              const vinculo = getEffectText('vinculo')
-              const texto = vinculo
-              return texto ? (
-                <p
-                  style={{
-                    fontFamily: '"Inter", sans-serif',
-                    fontSize: fluidSize(texto, 14, 450),
-                    lineHeight: 1.4,
-                    color: '#1c130b',
-                    margin: 0,
-                  }}
-                >
-                  <strong>Efecto Permanente:</strong> {highlightKeywords(texto)}
-                </p>
-              ) : null
-            }
-          }
-        })()}
-      </TextScroll>
+          </TextScroll>
+        )
+      })()}
 
       {/* ════════════ BADGES INFERIORES DE ATK Y DEF ════════════ */}
       {showCombatStats && (
@@ -660,6 +552,26 @@ export function RenderCarta({
           <StatBadge kind="res" value={(stats.resistencia as number) ?? 700} />
         </div>
       )}
+
+      {/* ════════════ RAREZA (rombo del color de la rareza) ════════════ */}
+      <div style={{ position: 'absolute', bottom: 24, left: 44, zIndex: 15, display: 'flex', alignItems: 'center', gap: 8 }}>
+        <span
+          aria-hidden="true"
+          style={{ width: 11, height: 11, margin: '0 2px', transform: 'rotate(45deg)', background: rarityBorder, border: '1.5px solid #e5e7eb', boxSizing: 'content-box' }}
+        />
+        <span
+          style={{
+            fontFamily: '"Cinzel", serif',
+            fontSize: 15,
+            fontWeight: 700,
+            color: '#cbd5e1',
+            letterSpacing: '1.5px',
+            textTransform: 'uppercase',
+          }}
+        >
+          {card.rarity}
+        </span>
+      </div>
 
       {/* ════════════ PIE DE CARTA / CÓDIGO DE SET ════════════ */}
       <div
