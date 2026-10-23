@@ -4782,7 +4782,7 @@ function validarDeclararBloqueo(state, asignaciones) {
   for (const [atacanteId, bloqueadorId] of pares) {
     if (!sinBloquear.includes(atacanteId)) return `no es un ataque sin bloquear: ${atacanteId}`;
     if (!disponibles.includes(bloqueadorId)) return `el bloqueador no est\xE1 disponible: ${bloqueadorId}`;
-    if (bloqueadoresUsados.has(bloqueadorId)) return "un bloqueador no puede cubrir 2 ataques (L1099)";
+    if (bloqueadoresUsados.has(bloqueadorId)) return "un bloqueador no puede cubrir 2 ataques (§9.3)";
     bloqueadoresUsados.add(bloqueadorId);
   }
   return null;
@@ -4852,7 +4852,7 @@ function validarElegirRuptura(state, atacanteId, vinculoSlot) {
   }
   if (!combate.rupturaDisponible) return "no hay ataques sin bloquear para romper";
   if (!combate.atacantes.includes(atacanteId)) return "no es un atacante declarado";
-  if (atacanteId in combate.bloqueos) return "el ataque fue bloqueado: no rompe (L1123)";
+  if (atacanteId in combate.bloqueos) return "el ataque fue bloqueado: no rompe (§9.4-B)";
   if (!state.players[state.turno].campo.campeones.includes(atacanteId)) return "el atacante muri\xF3";
   if (vinculoSlot === void 0 || vinculoSlot < 0 || vinculoSlot > 5) return "vinculoSlot 0-5";
   const vinculoId = state.players[rivalDe(state)].vinculos[vinculoSlot];

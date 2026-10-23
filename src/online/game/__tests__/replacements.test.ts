@@ -99,7 +99,7 @@ describe('destruirCarta por causa (ADR-15)', () => {
     expect(c.s.instances[c.id].eterBloqueado).toBeUndefined()
   })
 
-  it('Indestructible previene SOLO causa combate (L1209); causa efecto lo destruye (L1210)', () => {
+  it('Indestructible previene SOLO causa combate (§10); causa efecto lo destruye (§10)', () => {
     const ctx = crearCtx()
     const c = conCampeon(estadoMinimo(), VAELA, 0, 'A', { keywords: ['Indestructible'] })
 
@@ -114,7 +114,7 @@ describe('destruirCarta por causa (ADR-15)', () => {
     expect(ctx2.events).toContainEqual({ type: 'carta_muerta', cardInstanceId: c.id, jugador: 'A', causa: 'efecto' })
   })
 
-  it('Inmortal previene SOLO causa efecto (L1210); causa combate lo destruye', () => {
+  it('Inmortal previene SOLO causa efecto (§10); causa combate lo destruye', () => {
     const ctx = crearCtx()
     const c = conCampeon(estadoMinimo(), VAELA, 0, 'A', { keywords: ['Inmortal'] })
 
@@ -135,7 +135,7 @@ describe('destruirCarta por causa (ADR-15)', () => {
     destruirCarta(v.s, ctx, v.id, 'ruptura')
     expect(ctx.events).toContainEqual({ type: 'destruccion', cardInstanceId: v.id, jugador: 'B', causa: 'ruptura' })
     expect(ctx.events.some((e) => e.type === 'carta_muerta')).toBe(false)
-    expect(v.s.players.B.vinculos[2]).toBe(v.id) // permanece en su slot (L848)
+    expect(v.s.players.B.vinculos[2]).toBe(v.id) // permanece en su slot (§5.5)
     expect(v.s.instances[v.id].bocaArriba).toBe(true)
     expect(v.s.players.B.cementerio).toEqual([])
   })

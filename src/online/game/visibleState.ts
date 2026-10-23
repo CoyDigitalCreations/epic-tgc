@@ -11,7 +11,7 @@ import type { GameState, PlayerId } from './types'
  * El dueño SÍ ve sus propias Arcanas y Vínculos (necesita conocerlos para
  * activarlos; el rival no).
  * Excepciones C4 (6.2): la PILA de la cadena 9.6 es visible a ambos, y los
- * Vínculos rivales destruidos por Ruptura (bocaArriba, L911) también.
+ * Vínculos rivales destruidos por Ruptura (bocaArriba, §5.5) también.
  */
 export function visibleState(state: GameState, playerId: PlayerId): GameState {
   const v = structuredClone(state)
@@ -25,7 +25,7 @@ export function visibleState(state: GameState, playerId: PlayerId): GameState {
   // Mano rival
   for (const id of v.players[rival].mano) ocultar.add(id)
   // Arcanas rivales (boca abajo) y Vínculos rivales boca abajo — los Vínculos
-  // destruidos por Ruptura (bocaArriba) permanecen visibles (L911)
+  // destruidos por Ruptura (bocaArriba) permanecen visibles (§5.5)
   for (const id of v.players[rival].campo.arcanasCombate) if (id) ocultar.add(id)
   for (const id of v.players[rival].vinculos) if (id && !v.instances[id]?.bocaArriba) ocultar.add(id)
 

@@ -7,7 +7,7 @@
  *   Combate, Arcana colocada en turnos ANTERIORES; NO Místicas, NO Arcana
  *   recién colocada §5.5 → flag `entradaEsteTurno`).
  * - Pila + prioridad + pasesConsecutivos: con 2 pases seguidos la pila se
- *   resuelve en ORDEN INVERSO (L1183): la última activación primero.
+ *   resuelve en ORDEN INVERSO (§9.6): la última activación primero.
  * - Resolución: Combate/Arcana → 2G liberando el slot (se consumen); la
  *   Táctica PERMANECE en mesa (solo sus efectos se resolverían — change 3).
  *   Al cerrar, `continuarCombateTrasCadena` reanuda la sub-máquina de combate.
@@ -96,8 +96,8 @@ function puedeResponder(vel: 'normal' | 'presteza' | 'fugaz', requerida: 'normal
  * Apertura CONDICIONAL de la cadena (C4): se abre SOLO si el primer
  * respondedor tiene cartas respondibles; si no, devuelve false y la
  * sub-máquina de combate continúa su flujo normal. La prioridad inicial es
- * del primer respondedor (defensor tras declarar_ataque L1181, atacante tras
- * declarar_bloqueo L1182).
+ * del primer respondedor (defensor tras declarar_ataque §9.6, atacante tras
+ * declarar_bloqueo §9.6).
  */
 export function abrirCadena(s: GameState, primerRespondedor: PlayerId): boolean {
   const combate = s.combate
@@ -267,7 +267,7 @@ export function ejecutarResponderCadena(s: GameState, cardInstanceId: string, ct
 
 /**
  * Pasa la prioridad: pasesConsecutivos++. Con 2 pases seguidos la pila se
- * resuelve en orden inverso (L1183) y la cadena se cierra.
+ * resuelve en orden inverso (§9.6) y la cadena se cierra.
  */
 export function ejecutarPasarPrioridad(s: GameState, ctx: Ctx): void {
   const cadena = cadenaActiva(s)
@@ -287,7 +287,7 @@ export function ejecutarPasarPrioridad(s: GameState, ctx: Ctx): void {
 }
 
 /**
- * Resolución en ORDEN INVERSO (L1183): Combate/Arcana → 2G del dueño
+ * Resolución en ORDEN INVERSO (§9.6): Combate/Arcana → 2G del dueño
  * (liberando el slot 3D-3F); la Táctica PERMANECE en mesa. Cierra la cadena
  * y reanuda la sub-máquina de combate.
  */
@@ -319,7 +319,7 @@ function resolverCadenaCombate(s: GameState, ctx: Ctx): void {
 }
 
 /**
- * Resolución de cadena GLOBAL (fuera de combate): LIFO (L1183).
+ * Resolución de cadena GLOBAL (fuera de combate): LIFO (§9.6).
  * - Respuesta desde la MANO (jugar_respuesta): la mística nunca entró al
  *   campo → resuelve sus hechizos y se consume (§5.3 un solo uso).
  * - Arcana → 2G (se consume); Táctica/Mística en campo → permanece;

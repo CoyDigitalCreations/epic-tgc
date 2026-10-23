@@ -190,7 +190,7 @@ export function ejecutarActivarArcana(s: GameState, action: Extract<Action, { ty
   }
   // Abrir cadena global: el rival podría responder con cartas Disparo
   abrirCadenaGlobal(s, s.turno, { cardInstanceId: id, descripcion: meta?.name ?? id })
-  // §5.4 L809 (fix A4): recompensa de UN SOLO USO → la Arcana va al Cementerio
+  // §5.4 (fix A4): recompensa de UN SOLO USO → la Arcana va al Cementerio
   // y libera su slot. Efecto CONTINUO → permanece boca arriba. Si la Arcana
   // misma quedó en la PILA (se activó respondiendo en cadena), la consume el
   // resolutor de cadena — acá no se toca.

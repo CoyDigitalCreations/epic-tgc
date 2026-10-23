@@ -209,7 +209,7 @@ describe('jugar_campeon (R9)', () => {
     ])
   })
 
-  it('Soberano: el sacrificio libera el Éter bloqueado del sacrificado INMEDIATO → 2A (glosario L1351, 7.2 L937)', () => {
+  it('Soberano: el sacrificio libera el Éter bloqueado del sacrificado INMEDIATO → 2A (glosario, §7.2)', () => {
     const ctx = crearCtx()
     const conCampo = conCampeonEnCampo(estadoMinimo(), CAMPEON, 1) // sacrificio en slot 1 (2C)
     const s = conMano(conCampo.s, { aurora: AURORA })

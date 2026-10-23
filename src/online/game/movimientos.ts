@@ -159,7 +159,7 @@ export function ejecutarJugarCampeon(s: GameState, action: Extract<Action, { typ
     ctx.emit({ type: 'carta_salida_de_zona', cardInstanceId: sacId, zona, jugador: s.turno })
     p.campo.campeones[slotIdx] = null
     // ADR-17: el sacrificio NO es evitable — el Éter bloqueado del sacrificado
-    // vuelve a la Reserva 2A INMEDIATO (glosario L1351, manual 7.2 L937).
+    // vuelve a la Reserva 2A INMEDIATO (glosario, manual §7.2).
     // Fix del gap #1223: antes quedaba atascado en la instancia que iba a 2G.
     liberarEterBloqueado(s, ctx, sacId, '2A')
     // C5 (change 4): sacrificio → 2G con trigger al-ser-enviado-al-cementerio
@@ -217,7 +217,7 @@ export function ejecutarJugarMistica(s: GameState, action: Extract<Action, { typ
   // §9.6: abrir cadena global — el rival puede responder con efectos
   const metaM = getCardMeta(s.instances[id]!.cardId!)
   abrirCadenaGlobal(s, s.turno, { cardInstanceId: id, descripcion: metaM?.name ?? id })
-  // §5.3 L796 (fix A4): hechizo de UN SOLO USO → tras resolverse va al
+  // §5.3 (fix A4): hechizo de UN SOLO USO → tras resolverse va al
   // Cementerio y libera su slot. El EFECTO CONTINUO (Éter bloqueado en la
   // carta) y los ARTEFACTOS permanecen — ver esPermanenteEnMesa.
   if (meta && !esPermanenteEnMesa(meta)) {

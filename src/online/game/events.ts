@@ -168,14 +168,14 @@ export interface PartidaTerminadaEvent {
 export interface AtaqueDeclaradoEvent {
   type: 'ataque_declarado'
   jugador: PlayerId
-  /** Campeones atacantes (agotados AL DECLARAR, L1089). */
+  /** Campeones atacantes (agotados AL DECLARAR, §9.2). */
   atacanteIds: string[]
 }
 
 export interface BloqueoDeclaradoEvent {
   type: 'bloqueo_declarado'
   jugador: PlayerId
-  /** asignaciones: Record<atacanteId, bloqueadorId> (1 bloqueador/ataque y viceversa, L1099). */
+  /** asignaciones: Record<atacanteId, bloqueadorId> (1 bloqueador/ataque y viceversa, §9.3). */
   asignaciones: Record<string, string>
 }
 

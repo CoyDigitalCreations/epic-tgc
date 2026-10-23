@@ -38,11 +38,11 @@ function controladorDe(s: GameState, id: string): PlayerId | null {
 
 /**
  * Atacantes elegibles del jugador activo (9.2): Campeones enderezados (no
- * agotados) salvo keyword Carga (L1207) o doble ataque activo (Fase 2b,
+ * agotados) salvo keyword Carga (§10) o doble ataque activo (Fase 2b,
  * FB-015: "puede declarar 2 veces ataque mientras ese Éter esté bloqueado" —
  * la segunda declaración pese al agotamiento del primer ataque; la invocación
  * cansada del turno SÍ aplica, el doble ataque no anula summoning sickness).
- * primerTurno prohíbe atacar (§8.6, L1062).
+ * primerTurno prohíbe atacar (§8.6).
  */
 export function atacantesElegibles(state: GameState): string[] {
   if (state.primerTurno) return []
@@ -141,9 +141,9 @@ export function ejecutarDeclararAtaque(s: GameState, atacanteIds: string[], ctx:
     const inst = s.instances[id]
     // Ya atacó este turno (un ataque por turno; cierra re-ataque Carga/Vigor)
     inst.atacoEsteTurno = true
-    // Agotar AL DECLARAR (L1089); Vigor no agota (L1208)
+    // Agotar AL DECLARAR (§9.2); Vigor no agota (§10)
     if (!tieneKeyword(s, id, 'Vigor')) inst.agotado = true
-    // Recarga (L1211): 1 Éter bloqueado del atacante vuelve a la Reserva 2A
+    // Recarga (§10): 1 Éter bloqueado del atacante vuelve a la Reserva 2A
     // del PAGADOR (Fase 2 (f)) — y si era el último de una fuente steal,
     // evaluarFinSteal termina el robo.
     if (tieneKeyword(s, id, 'Recarga') && inst.eterBloqueado && inst.eterBloqueado.length > 0) {
@@ -162,7 +162,7 @@ export function ejecutarDeclararAtaque(s: GameState, atacanteIds: string[], ctx:
   ctx.emit({ type: 'ataque_declarado', jugador: s.turno, atacanteIds })
   // C3 (D5): al-atacar se dispara con los atacantes YA declarados (antes de la cadena)
   dispararTrigger(s, ctx, 'al-atacar', s.turno, atacanteIds)
-  // C4 (9.6): el DEFENSOR responde primero (L1181) — si tiene respondibles la
+  // C4 (9.6): el DEFENSOR responde primero (§9.6) — si tiene respondibles la
   // cadena se abre y el auto-avance 9.3 queda DIFERIDO hasta cerrarla.
   if (abrirCadena(s, rivalDe(s))) return
   // Auto-avance (9.3, ADR-11): defensor sin enderezados → resolución sin
@@ -193,7 +193,7 @@ export function validarDeclararBloqueo(state: GameState, asignaciones: Record<st
   for (const [atacanteId, bloqueadorId] of pares) {
     if (!sinBloquear.includes(atacanteId)) return `no es un ataque sin bloquear: ${atacanteId}`
     if (!disponibles.includes(bloqueadorId)) return `el bloqueador no está disponible: ${bloqueadorId}`
-    if (bloqueadoresUsados.has(bloqueadorId)) return 'un bloqueador no puede cubrir 2 ataques (L1099)'
+    if (bloqueadoresUsados.has(bloqueadorId)) return 'un bloqueador no puede cubrir 2 ataques (§9.3)'
     bloqueadoresUsados.add(bloqueadorId)
   }
   return null
@@ -207,7 +207,7 @@ export function ejecutarDeclararBloqueo(s: GameState, asignaciones: Record<strin
   ctx.emit({ type: 'bloqueo_declarado', jugador: rivalDe(s), asignaciones })
   // Resolución (9.4-B, ADR-11/14): daño simultáneo aplicado EN LA TRANSICIÓN
   resolverCombate(s, ctx)
-  // C4 (9.6): tras la resolución, el ATACANTE puede responder (L1182); la
+  // C4 (9.6): tras la resolución, el ATACANTE puede responder (§9.6); la
   // Ruptura queda pendiente hasta cerrar la cadena.
   abrirCadena(s, s.turno)
 }
@@ -215,9 +215,9 @@ export function ejecutarDeclararBloqueo(s: GameState, asignaciones: Record<strin
 /* ─────────────────── resolución: daño simultáneo (9.4-B, ADR-14) ─────────────────── */
 
 /**
- * Daño simultáneo (9.4-B, L1119-1124): con los pares atacante→bloqueador ya
+ * Daño simultáneo (9.4-B, §9.4-B): con los pares atacante→bloqueador ya
  * fijados, decide TODAS las muertes sobre el estado PRE-daño (sin cascadas,
- * ADR-14; el daño no persiste, L1122) y las aplica en orden determinista
+ * ADR-14; el daño no persiste, §9.4-B) y las aplica en orden determinista
  * (atacantes, luego bloqueadores) vía destruirCarta('combate') → 2G + Éter
  * 1A + carta_muerta + destruccion. Stats consultados vía statsDe (C1, ADR-20):
  * base meta + override de instancia + Σ modificadores + auras de campo (C3b).
@@ -301,7 +301,7 @@ export function validarElegirRuptura(state: GameState, atacanteId: string | null
   }
   if (!combate.rupturaDisponible) return 'no hay ataques sin bloquear para romper'
   if (!combate.atacantes.includes(atacanteId)) return 'no es un atacante declarado'
-  if (atacanteId in combate.bloqueos) return 'el ataque fue bloqueado: no rompe (L1123)'
+  if (atacanteId in combate.bloqueos) return 'el ataque fue bloqueado: no rompe (§9.4-B)'
   if (!state.players[state.turno].campo.campeones.includes(atacanteId)) return 'el atacante murió'
   if (vinculoSlot === undefined || vinculoSlot < 0 || vinculoSlot > 5) return 'vinculoSlot 0-5'
   const vinculoId = state.players[rivalDe(state)].vinculos[vinculoSlot]

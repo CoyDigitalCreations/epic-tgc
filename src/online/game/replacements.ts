@@ -3,7 +3,7 @@
  *
  * Centraliza la DESTRUCCIÓN (ADR-15): `destruirCarta(s, ctx, id, causa)`
  * consulta keywords según causa (Inmortal→'efecto', Indestructible→'combate',
- * L1209-1210), hooks de reemplazo anti-destrucción (registro vacío — feature
+ * §10), hooks de reemplazo anti-destrucción (registro vacío — feature
  * no implementada), y el sexto Vínculo (ADR-16, flag anti-bucle) ANTES de
  * `verificarDerrotaVinculos`.
  * El SACRIFICIO no pasa por destruirCarta (no es evitable): usa los helpers
@@ -45,7 +45,7 @@ export function moverAlCementerio(s: GameState, ctx: Ctx, cardInstanceId: string
     if (manoIdx !== -1) p.mano.splice(manoIdx, 1)
   }
   // Fase 3a: choke point — toda carta que entra a 2G libera su Éter bloqueado
-  // (manual §7.7 L912). Los sacrificios ya liberaron a '2A' antes — no-op acá.
+  // (manual §7.2). Los sacrificios ya liberaron a '2A' antes — no-op acá.
   liberarEterBloqueadoCore(s, ctx, cardInstanceId, '1A')
   const p = s.players[inst.owner]
   if (!p.cementerio.includes(cardInstanceId)) p.cementerio.push(cardInstanceId)
@@ -53,11 +53,10 @@ export function moverAlCementerio(s: GameState, ctx: Ctx, cardInstanceId: string
 
 /**
  * Primitiva C5 (change 4): envía una instancia a 2G (cementerio de su dueño)
- * y dispara `al-ser-enviado-al-cementerio` con la carta YA en 2G (glosario
- * L1351). Es la vía ÚNICA de descarte/sacrificio/coste/consumo → 2G con
+ * y dispara `al-ser-enviado-al-cementerio` con la carta YA en 2G (glosario). Es la vía ÚNICA de descarte/sacrificio/coste/consumo → 2G con
  * trigger. NO consulta overrides (Inmortal/Indestructible): eso es
  * responsabilidad del caller (destruirCarta lo hace ANTES; el sacrificio y el
- * coste no son evitables por diseño, campeones.test.ts L591).
+ * coste no son evitables por diseño, campeones.test.ts).
  */
 export function enviarAlCementerio(s: GameState, ctx: Ctx, cardInstanceId: string): void {
   const inst = s.instances[cardInstanceId]
@@ -148,11 +147,11 @@ function liberarEterBloqueadoCore(s: GameState, ctx: Ctx, cardInstanceId: string
  *
  * Destino:
  * - '2A' — sacrificio de Soberano/Emperador: el Éter vuelve a la Reserva
- *   INMEDIATO (glosario L1351-1352; manual 7.2 L937). Fix del gap #1223:
+ *   INMEDIATO (glosario; manual §7.2). Fix del gap #1223:
  *   antes el Éter quedaba atascado en la instancia que iba a 2G.
  * - '1A' — salida del campo (muerte, exilio, return_hand, chain, equipado
  *   destruido): el Éter vuelve a Éter Pagado y se reagrupa en el próximo
- *   Alba (ADR-14), silencioso. Manual §7.7 L912.
+ *   Alba (ADR-14), silencioso. Manual §7.2.
  *
  * Es silencioso: no emite eventos; el reagrupado del 1A lo cubre
  * `eter_reagrupado` en el Alba.
@@ -162,7 +161,7 @@ export function liberarEterBloqueado(s: GameState, ctx: Ctx, cardInstanceId: str
 }
 
 /**
- * Verifica derrota por Vínculos (5.7/13, reemplaza a PE, L859): si `owner`
+ * Verifica derrota por Vínculos (5.7/13, reemplaza a PE, §5.5): si `owner`
  * queda con 0 Vínculos VIVOS (boca abajo) → partida_terminada(ganador=rival,
  * motivo='vinculos'). No-op si la partida ya terminó.
  */
@@ -278,7 +277,7 @@ export function ejecutarResponderPrevenicion(s: GameState, ctx: Ctx, jugador: Pl
 
 /**
  * Destrucción centralizada (ADR-15): Campeón → 2G + Éter 1A + carta_muerta +
- * destruccion; Vínculo → bocaArriba=true (permanece en su slot, L848) + solo
+ * destruccion; Vínculo → bocaArriba=true (permanece en su slot, §5.5) + solo
  * destruccion. Prevenido (keywords según causa o reemplazo registrado) →
  * SOLO destruccion_prevenida, sin movimiento.
  * Fase 2c: prevent_destroy (FB-018) DIFIERE la muerte del Vínculo hasta
@@ -294,7 +293,7 @@ export function destruirCarta(s: GameState, ctx: Ctx, cardInstanceId: string, ca
   const esCampeonCard = meta !== null && esCampeon(meta)
   const esVinculoCard = meta !== null && esVinculo(meta)
 
-  // (a) Keywords según causa (L1209-1210)
+  // (a) Keywords según causa (§10)
   if (esCampeonCard) {
     const kw = keywordsDe(s, cardInstanceId)
     if ((causa === 'efecto' && kw.includes('Inmortal')) || (causa === 'combate' && kw.includes('Indestructible'))) {

@@ -112,7 +112,7 @@ describe('visibleState (6.2)', () => {
     expect(v.instances['A-d1'].cardId).toBeNull() // mazo propio opaco también
   })
 
-  it('Vínculos rivales destruidos por Ruptura (bocaArriba) son visibles (L911)', () => {
+  it('Vínculos rivales destruidos por Ruptura (bocaArriba) son visibles (§5.5)', () => {
     const s = estadoPoblado()
     s.instances['B-vin1'].bocaArriba = true // destruido: permanece en slot pero recordatorio visible
     const v = visibleState(s, 'A')

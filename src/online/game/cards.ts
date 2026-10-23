@@ -77,7 +77,7 @@ export function esArtefactoEquipable(card: AnyCard): boolean {
  *   bloqueo_fijo / eter_bloqueado) → la carta DEBE quedarse (su Éter vive ahí).
  * - ARTEFACTO (equipable): para servir de soporte equipado permanece en mesa.
  * - Cualquier otro caso = hechizo/recompensa de un solo uso (pago a 1A) →
- *   tras resolverse va al Cementerio (§5.3 L796, §5.4 L809).
+ *   tras resolverse va al Cementerio (§5.3, §5.4).
  */
 export function esPermanenteEnMesa(card: AnyCard): boolean {
   if ('efectos' in card && card.efectos) {

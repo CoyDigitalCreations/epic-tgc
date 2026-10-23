@@ -58,8 +58,8 @@ export type Zona =
  * Instancia de carta en partida (Modelo B, ADR-2).
  * cardId es `null` SOLO en la proyección visibleState (carta oculta al jugador).
  * agotado/eterBloqueado solo existen en Campeones (2B-2F).
- * bocaArriba SOLO en Vínculos destruidos por Ruptura (4A-4F, ADR-13/L848);
- * el resto de cartas conservan el modelo por zona (L911).
+ * bocaArriba SOLO en Vínculos destruidos por Ruptura (4A-4F, ADR-13/§5.5);
+ * el resto de cartas conservan el modelo por zona (§7.2).
  */
 export interface CardInstance {
   cardInstanceId: string
@@ -68,8 +68,8 @@ export interface CardInstance {
   agotado?: boolean
   /**
    * Ya atacó este turno (un Campeón ataca UNA vez por turno). Cierra el
-   * re-ataque infinito de Carga (sigue agotado tras atacar, L1207) y Vigor
-   * (no se agota al atacar, L1208); la Alba del dueño lo borra junto a agotado.
+   * re-ataque infinito de Carga (sigue agotado tras atacar, §10) y Vigor
+   * (no se agota al atacar, §10); la Alba del dueño lo borra junto a agotado.
    */
   atacoEsteTurno?: boolean
   /**
@@ -174,9 +174,9 @@ export interface PlayerState {
 export interface CadenaState {
   /** Cartas respondidas en orden de apilado (visibles a ambos, 6.2). */
   pila: string[]
-  /** A quién toca responder ahora (defensor primero, L1181-1182). */
+  /** A quién toca responder ahora (defensor primero, §9.6). */
   prioridad: PlayerId
-  /** Pases consecutivos: 2 → resolución en orden inverso (L1183). */
+  /** Pases consecutivos: 2 → resolución en orden inverso (§9.6). */
   pasesConsecutivos: number
   /** Fase en que se abrió la cadena (para resolución contextual). */
   faseAbierta: Fase
@@ -205,13 +205,13 @@ export interface CadenaState {
 /** Sub-máquina de combate en Choque (9.1, ADR-11). Se crea con la PRIMERA declarar_ataque. */
 export interface CombateState {
   paso: CombatePaso
-  /** Atacantes declarados (ids de Campeones, ya agotados al declarar — L1089). */
+  /** Atacantes declarados (ids de Campeones, ya agotados al declarar — §9.2). */
   atacantes: string[]
-  /** bloqueos: Record<atacanteId, bloqueadorId> (1 bloqueador/ataque y viceversa, L1099). */
+  /** bloqueos: Record<atacanteId, bloqueadorId> (1 bloqueador/ataque y viceversa, §9.3). */
   bloqueos: Record<string, string>
   /** true si hay ≥1 ataque sin bloqueador (Ruptura posible, 9.4-A). */
   rupturaDisponible: boolean
-  /** Máx 1 Ruptura por turno de ataque (L1111). */
+  /** Máx 1 Ruptura por turno de ataque (§9.4-A). */
   rupturaUsadaEsteTurno: boolean
   /** Cadena 9.6 abierta tras declarar_ataque o declarar_bloqueo. */
   cadena?: CadenaState

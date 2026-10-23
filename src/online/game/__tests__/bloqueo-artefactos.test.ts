@@ -4,7 +4,7 @@
  *
  * "BLOQUEADO EN MÍSTICA/ARCANA: El Éter pagado para una Mística o Arcana con
  * efecto CONTINUO queda bloqueado, colocado EN HORIZONTAL sobre la carta
- * (3A-3F), mientras el efecto esté activo." — manual §7.7 L911/943-944
+ * (3A-3F), mientras el efecto esté activo." — manual §7.2/§7.4
  *
  * Tests genéricos por TIPO (mecánica de bloqueo) + cartas reales del JSON:
  * FB-020 Lamento de las Casas — Mística Artefacto, hechizo buff, eter_bloqueado:3
