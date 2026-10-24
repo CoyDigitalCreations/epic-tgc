@@ -291,8 +291,9 @@ export function getValidActions(state: GameState, playerId: PlayerId): Action[] 
       }
     }
     // Activar Habilidades: Campeones con efectos[] tipo continuo o disparo
-    // Continuo (bloquea éter): NO puede activar si agotado; agota al activar.
-    // Disparo (paga éter): SÍ puede activar si agotado; NO agota.
+    // Continuo pagado: NO puede activar si agotado; 1/turno.
+    // Disparo con Éter pagado ("Paga y Agota"): solo enderezado; agota (salvo Tirador); sin 1/turno.
+    // Disparo con Éter bloqueado: puede activar agotado; no agota; conserva su 1/turno.
     // NOTE: Alba is auto-resolved (ADR-3) and never an observable state.
     for (const champId of p.campo.campeones) {
       if (!champId) continue
@@ -307,7 +308,7 @@ export function getValidActions(state: GameState, playerId: PlayerId): Action[] 
       // El efecto que activar_habilidad ejecuta lo decide SU costo:
       // - costo-bloqueo (disparo) → patrón "Bloqueado": bloquea N y ejecuta,
       //   1/turno (puede activar agotado);
-      // - pago 'eter' → patrón "Agota"/Continuo: paga a 1A, no agotado, 1/turno.
+      // - pago 'eter' → patrón "Paga y Agota"/Continuo: paga a 1A, solo enderezado.
       // Continuos con costo-bloqueo (steal Aurora, double_attack FB-015) NO
       // llegan aquí: su acción es bloquear_eter (aura/umbral), nunca activar.
       const efectoAct = efectoActivableDe(meta, false)
@@ -337,8 +338,8 @@ export function getValidActions(state: GameState, playerId: PlayerId): Action[] 
             acciones.push({ type: 'activar_habilidad', cardInstanceId: champId, eterIds: [eteresValidos[0]] })
           }
         } else {
-          // Patrón "Agota" (disparo pago): necesita no agotado + no usado
-          if (inst.agotado || inst.opcionUsadaEsteTurno) continue
+          // Patrón "Paga y Agota" (disparo pago): necesita enderezado; sin límite por turno
+          if (inst.agotado) continue
           const costoReal = costo > 0 ? costo : 1
           if (p.eterReserva.length >= costoReal) {
             acciones.push({ type: 'activar_habilidad', cardInstanceId: champId, eterIds: p.eterReserva.slice(0, costoReal) })

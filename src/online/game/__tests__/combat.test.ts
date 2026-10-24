@@ -216,18 +216,36 @@ describe('declarar_ataque (9.2)', () => {
     expect(applyAction(c0.s, { type: 'declarar_ataque', atacanteIds: [c0.id] }, ctx).ok).toBe(false)
   })
 
-  it('invocación cansada (agotado este turno) NO ataca; con keyword Carga SÍ (§9.2/§10)', () => {
+  it('invocación cansada (entró este turno, ENDEREZADO) NO ataca; con keyword Carga SÍ (§9.2/§10)', () => {
     const ctx = crearCtx()
     // Cassandra invocada este turno sin Carga: no hay ningún elegible → sin declarar_ataque
-    const cansada = conCampeon(estadoMinimo(), CASSANDRA, 0, { agotado: true, entradaEsteTurno: true })
+    const cansada = conCampeon(estadoMinimo(), CASSANDRA, 0, { entradaEsteTurno: true })
     expect(tiposDe(cansada.s, 'A')).not.toContain('declarar_ataque')
     expect(applyAction(cansada.s, { type: 'declarar_ataque', atacanteIds: [cansada.id] }, ctx).ok).toBe(false)
 
-    // Vaela (Carga) invocada este turno SÍ es elegible y puede atacar
-    const carga = conCampeon(estadoMinimo(), VAELA, 0, { agotado: true, entradaEsteTurno: true })
+    // Vaela (Carga) invocada este turno SÍ es elegible y puede atacar; al atacar se agota (§9.2)
+    const carga = conCampeon(estadoMinimo(), VAELA, 0, { entradaEsteTurno: true })
     expect(tiposDe(carga.s, 'A')).toContain('declarar_ataque')
     const s = aplicar(carga.s, { type: 'declarar_ataque', atacanteIds: [carga.id] }, ctx)
     expect(s.instances[carga.id].agotado).toBe(true)
+  })
+
+  it('cansado ≠ agotado: un Campeón AGOTADO no ataca ni con Carga (§9.2)', () => {
+    const ctx = crearCtx()
+    const agotado = conCampeon(estadoMinimo(), VAELA, 0, { agotado: true })
+    expect(tiposDe(agotado.s, 'A')).not.toContain('declarar_ataque')
+    expect(applyAction(agotado.s, { type: 'declarar_ataque', atacanteIds: [agotado.id] }, ctx).ok).toBe(false)
+  })
+
+  it('regla invocacionCansada: un efecto que la prohíbe permite atacar al recién invocado (override de §9.2)', () => {
+    const cansada = conCampeon(estadoMinimo(), CASSANDRA, 0, { entradaEsteTurno: true })
+    const s: GameState = {
+      ...cansada.s,
+      reglasTemporales: [
+        { regla: 'invocacionCansada', operacion: 'prohibir', orden: 1, sujeto: { tipo: 'carta', instId: cansada.id }, duenio: 'A', expira: 'permanente' },
+      ],
+    }
+    expect(tiposDe(s, 'A')).toContain('declarar_ataque')
   })
 
   it('Vigor: el atacante NO se agota al declarar (§10)', () => {
@@ -316,25 +334,47 @@ describe('declarar_bloqueo (9.3, forzoso)', () => {
     expect(Object.keys(r.combate?.bloqueos ?? {})).toContain(atacantes[0])
   })
 
-  it('agotados SÍ bloquean: asignación forzada incluye campeones agotados', () => {
-    // B con 2 campeones: agotado + enderezado. AMBOS pueden bloquear (agotados sí bloquean).
+  it('agotados NO bloquean (§9.3): la asignación forzada solo usa a los enderezados', () => {
+    // B con 2 campeones: agotado + enderezado. SOLO el enderezado puede bloquear.
     const { s, atacantes, ctx } = conAtaque([VAELA, CASSANDRA], (st) => {
       const agotado = conCampeon(st, ISOLDE, 0, { owner: 'B', agotado: true })
       return conCampeon(agotado.s, ROWENA, 1, { owner: 'B' }).s
     })
-    const listo1 = `c-${ISOLDE}-0`
-    const listo2 = `c-${ROWENA}-1`
+    const listo = `c-${ROWENA}-1`
 
     const bloqueos = getValidActions(s, 'B').filter((a) => a.type === 'declarar_bloqueo')
-    // A5: C(2,2) × P(2,2) = 2 — el defensor elige LOS PARES (cuál bloqueador
-    // va con cuál atacante); la primera es la greedy (compat bots)
+    // A5: C(2,1) × P(1,1) = 2 — el defensor elige SOBRE QUÉ atacante va su único bloqueador
     expect(bloqueos).toHaveLength(2)
-    if (bloqueos[0]?.type === 'declarar_bloqueo') {
-      // AMBOS campeones bloquean (agotados incluidos): k = mín(2, 2) = 2
-      expect(Object.values(bloqueos[0].asignaciones)).toEqual([listo1, listo2])
+    for (const b of bloqueos) {
+      if (b.type === 'declarar_bloqueo') expect(Object.values(b.asignaciones)).toEqual([listo])
     }
     const r = aplicar(s, bloqueos[0] as Action, ctx)
-    expect(Object.keys(r.combate?.bloqueos ?? {})).toHaveLength(2)
+    expect(Object.keys(r.combate?.bloqueos ?? {})).toHaveLength(1)
+    expect(atacantes).toHaveLength(2)
+  })
+
+  it('cansado SÍ bloquea (§9.2): el Campeón recién invocado puede defender', () => {
+    const { s, ctx } = conAtaque([VAELA], (st) => conCampeon(st, ISOLDE, 0, { owner: 'B', entradaEsteTurno: true }).s)
+    const bloqueos = getValidActions(s, 'B').filter((a) => a.type === 'declarar_bloqueo')
+    expect(bloqueos).toHaveLength(1)
+    const r = aplicar(s, bloqueos[0] as Action, ctx)
+    expect(Object.values(r.combate?.bloqueos ?? {})).toEqual([`c-${ISOLDE}-0`])
+  })
+
+  it('regla agotadoPuedeBloquear: un efecto que lo permite deja bloquear al agotado (override de §9.3)', () => {
+    const { s, ctx } = conAtaque([VAELA], (st) => {
+      const agotado = conCampeon(st, ISOLDE, 0, { owner: 'B', agotado: true }).s
+      return {
+        ...agotado,
+        reglasTemporales: [
+          { regla: 'agotadoPuedeBloquear', operacion: 'permitir', orden: 1, sujeto: { tipo: 'partida' }, duenio: 'B', expira: 'permanente' },
+        ],
+      } as GameState
+    })
+    const bloqueos = getValidActions(s, 'B').filter((a) => a.type === 'declarar_bloqueo')
+    expect(bloqueos).toHaveLength(1)
+    const r = aplicar(s, bloqueos[0] as Action, ctx)
+    expect(Object.values(r.combate?.bloqueos ?? {})).toEqual([`c-${ISOLDE}-0`])
   })
 
   it('0 bloqueadores disponibles → auto-avance a resolución SIN evento bloqueo_declarado', () => {
@@ -347,7 +387,7 @@ describe('declarar_bloqueo (9.3, forzoso)', () => {
   })
 
   it('rechaza atacante inexistente o bloqueador que no está en el campo', () => {
-    // 1 atacante + 2 bloqueadores (1 enderezado + 1 agotado) → k=1
+    // 1 atacante + 2 bloqueadores (1 enderezado + 1 agotado) → k=1; solo el enderezado bloquea
     const { s, atacantes } = conAtaque([VAELA], (st) => {
       const listo = conCampeon(st, ISOLDE, 0, { owner: 'B' })
       return conCampeon(listo.s, ROWENA, 1, { owner: 'B', agotado: true }).s
@@ -361,9 +401,13 @@ describe('declarar_bloqueo (9.3, forzoso)', () => {
     expect(
       applyAction(s, { type: 'declarar_bloqueo', asignaciones: { [atacantes[0]]: 'no-existe' } }, ctx).ok,
     ).toBe(false)
-    // Agotados SÍ bloquean (§9.3): k=1, asignar SOLO el agotado es válido
+    // Agotados NO bloquean (§9.3): asignar el agotado es inválido
     expect(
       applyAction(s, { type: 'declarar_bloqueo', asignaciones: { [atacantes[0]]: 'c-FB-018-1' } }, ctx).ok,
+    ).toBe(false)
+    // El enderezado sí es un bloqueador válido
+    expect(
+      applyAction(s, { type: 'declarar_bloqueo', asignaciones: { [atacantes[0]]: 'c-FB-014-0' } }, ctx).ok,
     ).toBe(true)
   })
 })

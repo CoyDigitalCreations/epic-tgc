@@ -21,12 +21,12 @@ Ver `design.md`. Marcar al terminar cada tarea.
 - [x] Tests
 
 ## F2 — Estado del Campeón
-- [ ] Separar *cansado* (`entradaEsteTurno`) de *agotado*
-- [ ] El agotado no bloquea
-- [ ] Paga y Agota agota
-- [ ] Tirador
-- [ ] Quitar "una vez por turno" de todo Disparo
-- [ ] Reescribir tests con cita correcta
+- [x] Separar *cansado* (`entradaEsteTurno`) de *agotado*
+- [x] El agotado no bloquea
+- [x] Paga y Agota agota
+- [x] Tirador
+- [x] Quitar "una vez por turno" de todo Disparo
+- [x] Reescribir tests con cita correcta
 
 ## F3 — Combate
 - [ ] Una Ruptura por turno; sin más ataques tras romper

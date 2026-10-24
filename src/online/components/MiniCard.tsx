@@ -119,9 +119,8 @@ export function MiniCard({
   const visibility = useEnVuelo(inst.cardInstanceId) ? 'hidden' : undefined
   const inspeccionar = useInspeccionar()
   const ancla = sinAncla ? undefined : inst.cardInstanceId
-  const tieneCarga = meta?.keywords?.includes('Carga') ?? false
   // Rotación SOLO en campo (rotarSiAgotado): modales/mano/cadena siempre vertical
-  const agotada = rotarSiAgotado && (agotado ?? inst.agotado === true) && !tieneCarga
+  const agotada = rotarSiAgotado && (agotado ?? inst.agotado === true)
   const eteres = inst.eterBloqueado?.length ?? 0
   // Éteres bloqueados como cartas encima (solo Místicas/Arcanas)
   const esArtefacto = meta?.type === 'Mística' || meta?.type === 'Arcana'
@@ -231,7 +230,7 @@ export function MiniCard({
         title={sinTooltip ? undefined : tooltipTexto}
       >
         <div className={revelando ? 'anim-revelar-frente' : undefined} style={{ position: 'absolute', inset: 0 }}>
-          {rotarSiAgotado && !tieneCarga ? (
+          {rotarSiAgotado ? (
             // Campo: el giro de agotar/enderezar se anima girando la carta sobre su centro
             <div
               style={{

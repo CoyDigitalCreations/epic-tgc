@@ -356,7 +356,7 @@ function executeInvocarEquipar(
   inst.vinculadoA = objetivoId
 }
 
-/** Invoca un campeón desde una zona del jugador al campo (cansado + entradaEsteTurno).
+/** Invoca un campeón desde una zona del jugador al campo (enderezado, con invocación cansada: entradaEsteTurno).
  * CHEQUEA slot libre ANTES de remover de la zona — sin eso, un slot lleno
  * orfana la carta (removida del cementerio/mano y nunca colocada). */
 function invocarAlCampo(s: GameState, ctx: Ctx, jugador: PlayerId, campeonId: string): boolean {
@@ -374,7 +374,6 @@ function invocarAlCampo(s: GameState, ctx: Ctx, jugador: PlayerId, campeonId: st
     if (idx !== -1) {
       arr.splice(idx, 1)
       p.campo.campeones[slotLibre] = campeonId
-      s.instances[campeonId].agotado = true
       s.instances[campeonId].entradaEsteTurno = true
       ctx.emit({ type: 'carta_invocada', cardInstanceId: campeonId, tipo: 'Campeón', slot: slotLibre })
       return true

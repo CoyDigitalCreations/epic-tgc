@@ -115,7 +115,7 @@ function aplicar(s: GameState, accion: Action, ctx: Ctx): GameState {
 }
 
 describe('jugar_campeon (R9)', () => {
-  it('invoca un Campeón pagando el coste: mano → 2B boca arriba, CANSADO (agotado), evento carta_invocada', () => {
+  it('invoca un Campeón pagando el coste: mano → 2B boca arriba, ENDEREZADO con invocación cansada (§5.2), evento carta_invocada', () => {
     let s = conMano(estadoMinimo(), { cam: CAMPEON })
     const { s: s2, ids } = conEteres(s, ETER_ORDEN, 2)
     s = s2
@@ -124,7 +124,8 @@ describe('jugar_campeon (R9)', () => {
 
     expect(s.players.A.campo.campeones[0]).toBe('cam')
     expect(s.players.A.mano).toEqual([])
-    expect(s.instances['cam'].agotado).toBe(true) // invocación CANSADA
+    expect(s.instances['cam'].agotado).toBeUndefined() // cansado ≠ agotado (§5.2): entra enderezado
+    expect(s.instances['cam'].entradaEsteTurno).toBe(true) // invocación CANSADA: no ataca este turno
     expect(s.players.A.eterPagado).toEqual(ids)
     expect(s.players.A.eterReserva).toHaveLength(0)
     expect(ctx.events).toEqual([
@@ -198,7 +199,8 @@ describe('jugar_campeon (R9)', () => {
     expect(s2.players.A.campo.campeones[0]).toBe('aurora')
     expect(s2.players.A.campo.campeones[1]).toBeNull() // slot liberado
     expect(s2.players.A.cementerio).toEqual([sac]) // sacrificio → 2G
-    expect(s2.instances['aurora'].agotado).toBe(true)
+    expect(s2.instances['aurora'].agotado).toBeUndefined() // entra enderezado (§5.2)
+    expect(s2.instances['aurora'].entradaEsteTurno).toBe(true)
     expect(ctx.events).toEqual([
       { type: 'eter_pagado', jugador: 'A', eterIds: ids, costo: 4, aportado: 4 },
       { type: 'carta_salida_de_zona', cardInstanceId: sac, zona: '2C', jugador: 'A' },

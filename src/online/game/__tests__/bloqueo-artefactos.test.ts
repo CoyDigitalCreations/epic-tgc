@@ -492,7 +492,8 @@ describe('FB-032 Rito del Alba — one-shot invocar_y_equipar (Fase 3a Phase D)'
     let { s, fb032Id, campeonExilioId, ids } = conFB032Setup(4)
     s = aplicar(s, { type: 'bloquear_eter', eterIds: ids.slice(0, 4), targetInstanceId: fb032Id }, ctx)
     expect(s.players.A.campo.campeones).toContain(campeonExilioId)
-    expect(s.instances[campeonExilioId].agotado).toBe(true)
+    expect(s.instances[campeonExilioId].agotado).toBeUndefined() // entra enderezado (§5.2)
+    expect(s.instances[campeonExilioId].entradaEsteTurno).toBe(true) // con invocación cansada
     expect(s.players.A.exilio).toHaveLength(0)
     expect(s.instances[fb032Id].equipadoA).toBe(campeonExilioId)
     expect(s.instances[fb032Id].eterBloqueado).toHaveLength(4)

@@ -11,6 +11,7 @@ import { dispararTrigger, condicionCumple, type TriggerEfecto, type PayloadEfect
 import { registrarEfectoPendiente, hastaAlba } from './effectRegistry'
 import { interpretEffect, ejecutarTramo } from './effectInterpreter'
 import { tieneKeyword } from './combat'
+import { reglaBool } from './reglas'
 import { liberarEterBloqueado, enviarAlCementerio } from './replacements'
 import { slotAZona } from './zones'
 import { validarBloqueo } from './payments'
@@ -104,9 +105,11 @@ export function validarActivarHabilidad(state: GameState, action: Extract<Action
       if (!eterMeta) return `Éter desconocido: ${eterId}`
     }
   } else {
-    // Patrón "Agota"/Continuo pago: eterIds de la Reserva → pagados (1A) + 1/turno
-    if (efectoSel.tipo === 'continuo' && inst.agotado) return 'la carta ya está agotada'
-    if (inst.opcionUsadaEsteTurno) return 'ya usaste esta habilidad este turno'
+    // Patrón "Paga y Agota"/Continuo pago: eterIds de la Reserva → pagados (1A).
+    // Solo con el Campeón enderezado (§5.2). El Disparo no tiene límite por turno: lo da el
+    // agotamiento (§8.3a); el Continuo pagado conserva su 1/turno.
+    if (inst.agotado) return 'la carta ya está agotada'
+    if (efectoSel.tipo !== 'disparo' && inst.opcionUsadaEsteTurno) return 'ya usaste esta habilidad este turno'
     const costoEsperado = efectoSel.costo?.cantidad ?? 0
     const costoReal = costoEsperado > 0 ? costoEsperado : 1 // fallback: 1 éter
     if (action.eterIds.length !== costoReal) {
@@ -320,7 +323,12 @@ export function ejecutarActivarHabilidad(s: GameState, action: Extract<Action, {
     if (action.eterIds.length > 0) {
       ctx.emit({ type: 'eter_pagado', jugador: s.turno, eterIds: action.eterIds, costo: action.eterIds.length, aportado: action.eterIds.length })
     }
-    inst.opcionUsadaEsteTurno = true
+    if (efectoSel.tipo !== 'disparo') inst.opcionUsadaEsteTurno = true
+    // Paga y Agota (§5.2, §8.3a): el Disparo con Éter pagado agota al Campeón, salvo que la regla
+    // `disparoAgota` esté prohibida (Tirador, §10). El agotamiento es parte del coste: se paga ya.
+    if (efectoSel.tipo === 'disparo' && reglaBool(s, 'disparoAgota', { instId: action.cardInstanceId })) {
+      inst.agotado = true
+    }
     // Ejecutar el efecto elegido directo desde JSON (targeting si es necesario)
     const payload: PayloadEfecto = {
       jugador: s.turno,

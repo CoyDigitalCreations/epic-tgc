@@ -122,7 +122,8 @@ describe('Routing por efecto — activar_habilidad vs bloquear_eter (§7.7)', ()
     expect(s2.instances['aurora-1'].eterBloqueado ?? []).toHaveLength(0)
     expect(s2.players.A.eterPagado).toHaveLength(2)
     expect(s2.objetivosPendientes).toBeUndefined()
-    expect(s2.instances['aurora-1'].opcionUsadaEsteTurno).toBe(true)
+    expect(s2.instances['aurora-1'].agotado).toBe(true) // Paga y Agota (§5.2, §8.3a)
+    expect(s2.instances['aurora-1'].opcionUsadaEsteTurno).toBeUndefined() // el Disparo no tiene 1/turno
   })
 
   it('validador rechaza activar_habilidad de Aurora con el costo del steal (4)', () => {

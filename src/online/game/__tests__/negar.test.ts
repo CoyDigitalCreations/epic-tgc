@@ -167,9 +167,9 @@ describe('ventana de negación en activar_habilidad (obs 1874)', () => {
 
     const s2 = aplicar(s, { type: 'activar_habilidad', cardInstanceId: victimaId, eterIds: eterB.slice(0, 1) }, ctx)
 
-    // Pago YA hecho (pago queda) — 1 Éter a 1A y 1/turno consumido
+    // Pago YA hecho (pago queda) — 1 Éter a 1A y el Campeón agotado (Paga y Agota, §5.2)
     expect(s2.players.B.eterPagado).toHaveLength(1)
-    expect(s2.instances[victimaId].opcionUsadaEsteTurno).toBe(true)
+    expect(s2.instances[victimaId].agotado).toBe(true)
     // Ventana abierta con la activación DIFERIDA — efecto AÚN sin resolver
     expect(s2.cadena).toBeTruthy()
     expect(s2.cadena!.prioridad).toBe('A')
@@ -225,7 +225,7 @@ describe('ventana de negación en activar_habilidad (obs 1874)', () => {
     expect(s2.cadena).toBeUndefined()
     expect(statsDe(s2, victimaId).poder).toBe(2)
     expect(s2.players.B.eterPagado).toHaveLength(1)
-    expect(s2.instances[victimaId].opcionUsadaEsteTurno).toBe(true)
+    expect(s2.instances[victimaId].agotado).toBe(true) // el agotamiento también es coste: no se devuelve
     // Marcha se consumió: al Cementerio de A (§5.3 un solo uso)
     expect(s2.players.A.cementerio).toContain('marcha-1')
     expect(s2.players.A.campo.misticasTacticas).not.toContain('marcha-1')
@@ -233,7 +233,7 @@ describe('ventana de negación en activar_habilidad (obs 1874)', () => {
     expect(ctx.events.some((e) => e.type === 'activacion_negada')).toBe(true)
   })
 
-  it('SIN candado: tras negar, el campeón PUEDE volver a activar (1/turno es lo único que lo frena)', () => {
+  it('SIN candado: tras negar, el coste no se devuelve (sigue agotado) pero al enderezarse PUEDE volver a activar', () => {
     const { s, victimaId, eterB } = setupVentana(true)
     const ctx = crearCtx()
     let s2 = aplicar(s, { type: 'activar_habilidad', cardInstanceId: victimaId, eterIds: eterB.slice(0, 1) }, ctx)
@@ -242,9 +242,12 @@ describe('ventana de negación en activar_habilidad (obs 1874)', () => {
     s2 = aplicar(s2, { type: 'pasar_prioridad' }, ctx)
     expect(statsDe(s2, victimaId).poder).toBe(2) // negada
 
-    // El mismo turno ya no puede (1/turno — el "pago quedó"), pero NO hay
-    // candado persistente: el bloqueo del viejo championNegado ya no existe.
-    s2 = { ...s2, instances: { ...s2.instances, [victimaId]: { ...s2.instances[victimaId], opcionUsadaEsteTurno: false } } }
+    // El mismo turno ya no puede: el agotamiento del coste NO se devuelve al negar la
+    // activación (§9.6). Pero NO hay candado persistente: el viejo championNegado ya no
+    // existe, así que al enderezarse (Alba) puede activar de nuevo.
+    const bloqueada = applyAction(s2, { type: 'activar_habilidad', cardInstanceId: victimaId, eterIds: eterB.slice(1, 2) }, ctx)
+    expect(bloqueada.ok).toBe(false)
+    s2 = { ...s2, instances: { ...s2.instances, [victimaId]: { ...s2.instances[victimaId], agotado: false } } }
     const r = applyAction(s2, { type: 'activar_habilidad', cardInstanceId: victimaId, eterIds: eterB.slice(1, 2) }, ctx)
     // Sin Marcha en mano de A ni respondibles en campo → resuelve directo
     expect(r.ok).toBe(true)

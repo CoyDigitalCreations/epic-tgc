@@ -166,14 +166,14 @@ export function ejecutarJugarCampeon(s: GameState, action: Extract<Action, { typ
     enviarAlCementerio(s, ctx, sacId)
     ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: sacId, zona: '2G', jugador: s.turno, bocaArriba: true })
   }
-  // 3. Invocar: mano → slot, CANSADO (agotado)
+  // 3. Invocar: mano → slot, ENDEREZADO con invocación cansada (§5.2): no ataca este turno
+  //    (entradaEsteTurno), pero SÍ bloquea y puede activar habilidades. Cansado ≠ agotado.
   const manoIdx = p.mano.indexOf(id)
   if (manoIdx !== -1) p.mano.splice(manoIdx, 1)
   const zona = slotAZona('campeones', action.slot) ?? '2B'
   ctx.emit({ type: 'carta_salida_de_zona', cardInstanceId: id, zona: 'mano', jugador: s.turno })
   p.campo.campeones[action.slot] = id
-  s.instances[id]!.agotado = true
-  s.instances[id]!.entradaEsteTurno = true  // §5.5: no puede responder en cadena el turno que entra
+  s.instances[id]!.entradaEsteTurno = true  // invocación cansada (§5.2) y §5.5: no responde en cadena el turno que entra
   ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: id, zona, jugador: s.turno, bocaArriba: true })
   ctx.emit({ type: 'carta_invocada', cardInstanceId: id, tipo: 'Campeón', slot: action.slot })
   // C3 (D5): al-invocar se dispara con la instancia YA en campo (post-invocación)

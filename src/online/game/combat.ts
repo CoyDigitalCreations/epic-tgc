@@ -2,6 +2,7 @@ import { abrirCadena } from './chain'
 import { dispararTrigger, keywordsDe, statsDe, tieneDoubleAttackActivo } from './efectos'
 import { destruirCarta } from './replacements'
 import { evaluarFinSteal } from './eter'
+import { reglaBool } from './reglas'
 import type { Ctx, GameState, PlayerId } from './types'
 
 /**
@@ -38,14 +39,15 @@ function controladorDe(s: GameState, id: string): PlayerId | null {
 
 /**
  * Atacantes elegibles del jugador activo (9.2): Campeones enderezados (no
- * agotados) salvo keyword Carga (§10) o doble ataque activo (Fase 2b,
- * FB-015: "puede declarar 2 veces ataque mientras ese Éter esté bloqueado" —
- * la segunda declaración pese al agotamiento del primer ataque; la invocación
- * cansada del turno SÍ aplica, el doble ataque no anula summoning sickness).
- * primerTurno prohíbe atacar (§8.6).
+ * agotados) y sin invocación cansada (entraron este turno), salvo que la regla
+ * `invocacionCansada` esté prohibida (keyword Carga, §10). Doble ataque activo
+ * (Fase 2b, FB-015: "puede declarar 2 veces ataque mientras ese Éter esté
+ * bloqueado"): la segunda declaración pese al agotamiento del primer ataque; la
+ * invocación cansada del turno SÍ aplica, el doble ataque no la anula.
+ * La regla `primerTurnoSinAtaques` prohíbe atacar en el primer turno del juego (§8.6).
  */
 export function atacantesElegibles(state: GameState): string[] {
-  if (state.primerTurno) return []
+  if (state.primerTurno && reglaBool(state, 'primerTurnoSinAtaques')) return []
   const p = state.players[state.turno]
   return p.campo.campeones.filter((id): id is string => {
     if (!id) return false
@@ -53,10 +55,12 @@ export function atacantesElegibles(state: GameState): string[] {
     if (!inst) return false
     const doubleActivo = tieneDoubleAttackActivo(state, id)
     if (inst.atacoEsteTurno && !doubleActivo) return false
-    if (inst.agotado && !tieneKeyword(state, id, 'Carga')) {
+    if (inst.agotado) {
       // Doble ataque activo + ya atacó al menos una vez → puede declarar otra
       if (!(doubleActivo && inst.atacoEsteTurno)) return false
     }
+    // Invocación cansada (§9.2): no ataca el turno en que entró (≠ agotado)
+    if (inst.entradaEsteTurno && reglaBool(state, 'invocacionCansada', { instId: id })) return false
     return true
   })
 }
@@ -78,14 +82,19 @@ export function cerrarCombateSiDoubleAttack(s: GameState): void {
   if (dobles) s.combate = undefined
 }
 
-/** Bloqueadores disponibles del DEFENSOR: campeones no-null y NO agotados (§9.3). */
+/**
+ * Bloqueadores disponibles del DEFENSOR: Campeones enderezados (§9.3). Uno cansado
+ * (recién invocado) SÍ bloquea; uno agotado NO, salvo que la regla `agotadoPuedeBloquear`
+ * lo permita.
+ */
 export function bloqueadoresDisponibles(state: GameState): string[] {
   const defensor = rivalDe(state)
   const p = state.players[defensor]
   return p.campo.campeones.filter((id): id is string => {
     if (id === null) return false
     const inst = state.instances[id]
-    return !!inst // agotados SÍ bloquean (solo no pueden atacar)
+    if (!inst) return false
+    return !inst.agotado || reglaBool(state, 'agotadoPuedeBloquear', { instId: id })
   })
 }
 
@@ -119,7 +128,7 @@ export function asignacionForzada(state: GameState): Record<string, string> | nu
 export function validarDeclararAtaque(state: GameState, atacanteIds: string[]): string | null {
   if (state.fase !== 'choque') return 'declarar_ataque solo en Choque'
   if (state.combate) return 'el combate ya fue declarado'
-  if (state.primerTurno) return 'nadie ataca en el primer turno (§8.6)'
+  if (state.primerTurno && reglaBool(state, 'primerTurnoSinAtaques')) return 'nadie ataca en el primer turno (§8.6)'
   if (atacanteIds.length === 0) return 'no declaraste atacantes'
   if (new Set(atacanteIds).size !== atacanteIds.length) return 'atacantes duplicados'
   const elegibles = atacantesElegibles(state)
@@ -141,8 +150,8 @@ export function ejecutarDeclararAtaque(s: GameState, atacanteIds: string[], ctx:
     const inst = s.instances[id]
     // Ya atacó este turno (un ataque por turno; cierra re-ataque Carga/Vigor)
     inst.atacoEsteTurno = true
-    // Agotar AL DECLARAR (§9.2); Vigor no agota (§10)
-    if (!tieneKeyword(s, id, 'Vigor')) inst.agotado = true
+    // Agotar AL DECLARAR (§9.2) salvo que la regla `atacarAgota` esté prohibida (Vigor, §10)
+    if (reglaBool(s, 'atacarAgota', { instId: id })) inst.agotado = true
     // Recarga (§10): 1 Éter bloqueado del atacante vuelve a la Reserva 2A
     // del PAGADOR (Fase 2 (f)) — y si era el último de una fuente steal,
     // evaluarFinSteal termina el robo.
