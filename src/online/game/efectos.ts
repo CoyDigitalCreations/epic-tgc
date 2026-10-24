@@ -490,10 +490,14 @@ export function condicionCumple(
   if (!condicion || typeof condicion !== 'object' || !('trigger' in condicion)) return null
 
   for (const cond of condicion.condiciones ?? []) {
+    // A QUIÉN se cuenta: los tipos rival_* siempre al rival; si no, manda `objetivo.controlador`
+    // (F5g: 'rival' cuenta al rival aunque el tipo sea controlar_*); sin él, controladorTrigger.
     const checkRival =
       cond.tipo === 'rival_controla_minimo' ||
       cond.tipo === 'rival_controla_maximo' ||
-      condicion.controladorTrigger === 'rival'
+      (cond.objetivo?.controlador !== undefined
+        ? cond.objetivo.controlador === 'rival'
+        : condicion.controladorTrigger === 'rival')
     const j: PlayerId = checkRival ? (jugador === 'A' ? 'B' : 'A') : jugador
     const min = cond.cantidad ?? cond.objetivo?.cantidad ?? 1
 
@@ -525,6 +529,38 @@ export function condicionCumple(
     }
   }
   return null
+}
+
+/** Triggers con los que la condición de una Arcana es un CANDADO latcheado (F5g); el resto se evalúa en vivo. */
+const TRIGGERS_CANDADO = ['inicio_alba', 'inicio_choque'] as const
+type TriggerCandado = (typeof TRIGGERS_CANDADO)[number]
+
+/** ¿La condición de esta carta se evalúa como candado (se habilita en su trigger) en vez de en vivo? */
+export function condicionEsCandado(condicion: CondicionEfecto | undefined): boolean {
+  return !!condicion && typeof condicion === 'object' && (TRIGGERS_CANDADO as readonly string[]).includes(condicion.trigger)
+}
+
+/**
+ * Candado y llave (F5g): al ocurrir `trigger` para el jugador `activo` (empieza su Alba / su Choque), cada Arcana
+ * boca abajo cuyo `condicion.trigger` coincide evalúa su condición y guarda el resultado en
+ * `condicionHabilitada`: cumplida → habilitada (puede activarse en CUALQUIER momento posterior aunque la
+ * condición deje de cumplirse); no cumplida → deshabilitada hasta una ocurrencia posterior que la cumpla.
+ * El trigger es del controlador de la Arcana (`controladorTrigger: 'rival'` = el del rival). Una Arcana colocada
+ * este turno (`entradaEsteTurno`, §5.4) no evalúa: su primer candado es el primer trigger posterior.
+ */
+export function evaluarCandadosArcanas(s: GameState, trigger: TriggerCandado, activo: PlayerId): void {
+  for (const dueno of ['A', 'B'] as PlayerId[]) {
+    for (const id of s.players[dueno].campo.arcanasCombate) {
+      const inst = id ? s.instances[id] : undefined
+      const meta = inst?.cardId ? getCardMeta(inst.cardId) : null
+      if (!id || !inst || !meta || meta.type !== 'Arcana' || inst.bocaArriba || inst.entradaEsteTurno) continue
+      const condicion = (meta as { condicion?: CondicionEfecto }).condicion
+      if (!condicion || typeof condicion !== 'object' || condicion.trigger !== trigger) continue
+      const duenoDelTrigger: PlayerId = condicion.controladorTrigger === 'rival' ? (dueno === 'A' ? 'B' : 'A') : dueno
+      if (duenoDelTrigger !== activo) continue
+      inst.condicionHabilitada = condicionCumple(s, condicion, dueno) === null
+    }
+  }
 }
 
 /**
@@ -721,7 +757,7 @@ export function dispararTrigger(
                   'return_ether', 'mover', 'copy', 'tutor', 'block_ether'].includes(efecto.efecto)
                 if (needsTargeting) {
                   const targetIds = efecto.objetivo
-                    ? resolveTargets(s, efecto.objetivo, payload.jugador)
+                    ? resolveTargets(s, efecto.objetivo, payload.jugador, id)
                     : []
                   if (targetIds.length > 0) {
                     handled = true

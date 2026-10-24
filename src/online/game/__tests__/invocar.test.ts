@@ -5,6 +5,7 @@ import type { Action } from '../actions'
 import { sacrificiosRequeridos } from '../campo'
 import { bloquearEter } from '../payments'
 import { getCardMeta } from '../cards'
+import { evaluarCandadosArcanas } from '../efectos'
 import type { Ctx, GameState, PlayerId } from '../types'
 
 // Cartas reales del catálogo (fuente de verdad: seed/FuenteEfectos.json):
@@ -382,6 +383,8 @@ describe('colocar_arcana (boca abajo 3D-3F, gratis) + activar_arcana (paga coste
 
     // Simular turno siguiente: limpiar entradaEsteTurno (como hace phases.ts en Alba)
     delete s.instances['arc']!.entradaEsteTurno
+    // F5g: FB-023 tiene trigger inicio_alba (candado): el Alba de A (aquí simulada) la habilita al cumplirse su condición
+    evaluarCandadosArcanas(s, 'inicio_alba', 'A')
 
     // Paso 2: activar (paga coste + resuelve recompensa hechizo del JSON)
     ctx.events.length = 0

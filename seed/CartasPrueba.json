@@ -1904,6 +1904,42 @@
     ]
   },
   {
+    "id": "PR-057",
+    "name": "Fugaz Demoledora",
+    "type": "Mística",
+    "rarity": "Común",
+    "keywords": [
+      "Fugaz"
+    ],
+    "flavorText": "Cae sobre un Campeón al instante y nadie puede responder.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-10-24T00:00:00.000Z",
+    "updatedAt": "2026-10-24T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "stats": {
+      "cost": 1
+    },
+    "efectos": [
+      {
+        "tipo": "hechizo",
+        "efecto": "destroy",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "texto": "Destruye 1 Campeón que controla el rival."
+      }
+    ]
+  },
+  {
     "id": "PR-060",
     "name": "Pacto de Prueba",
     "type": "Arcana",

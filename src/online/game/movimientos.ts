@@ -228,6 +228,7 @@ export function ejecutarColocarArcana(s: GameState, action: Extract<Action, { ty
   p.campo.arcanasCombate[action.slot] = id
   s.instances[id]!.bocaArriba = false
   s.instances[id]!.entradaEsteTurno = true  // §5.4: no se puede activar el turno en que fue colocada
+  delete s.instances[id]!.condicionHabilitada // F5g: candado cerrado; su primer trigger posterior lo evalúa
   ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: id, zona, jugador: s.turno, bocaArriba: false })
   ctx.emit({ type: 'carta_invocada', cardInstanceId: id, tipo: 'Arcana', slot: action.slot })
 }

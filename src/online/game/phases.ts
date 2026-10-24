@@ -1,6 +1,6 @@
 import { reagruparEter } from './payments'
 import { robarCarta } from './draw'
-import { purgarEfectosTemporales, purgarHastaFase, dispararTrigger } from './efectos'
+import { purgarEfectosTemporales, purgarHastaFase, dispararTrigger, evaluarCandadosArcanas } from './efectos'
 import { resolverFaseEfectos } from './effectRegistry'
 import { reagruparEfectosBloqueoAlba, exhaustFijado } from './effectInterpreter'
 import type { Ctx, GameState, PlayerId } from './types'
@@ -62,6 +62,9 @@ export function resolverAlba(s: GameState, ctx: Ctx, jugador: PlayerId): void {
   //    Campeón/Mística/Arcana con efectos[].trigger 'inicio_alba' NUNCA fireaba.
   //    Ahora entran TODAS las cartas en campo del jugador; dispararTrigger
   //    filtra internamente por los que realmente declaran ese trigger.
+  //    F5g: ANTES de los efectos de inicio se fijan los candados de las Arcanas con trigger
+  //    inicio_alba ("cuando empezó tu Alba controlas..."): el estado tras enderezar y reagrupar.
+  evaluarCandadosArcanas(s, 'inicio_alba', jugador)
   const vinculosSnapshot = p.vinculos.filter((id): id is string => {
     if (!id) return false
     return s.instances[id]?.bocaArriba === true

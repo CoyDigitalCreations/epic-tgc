@@ -55,7 +55,11 @@ export function visibleState(state: GameState, playerId: PlayerId): GameState {
 
   for (const id of ocultar) {
     const inst = v.instances[id]
-    if (inst) inst.cardId = null
+    if (inst) {
+      inst.cardId = null
+      // F5g: el candado de una Arcana boca abajo ajena es información oculta (revelaría si cumple su condición)
+      delete inst.condicionHabilitada
+    }
   }
   return v
 }

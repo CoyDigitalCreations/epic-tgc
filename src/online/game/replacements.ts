@@ -13,6 +13,7 @@ import { esCampeon, esVinculo, getCardMeta } from './cards'
 import { dispararTrigger, keywordsDe } from './efectos'
 import { liberarEterA, evaluarFinSteal } from './eter'
 import type { CausaDestruccion, Ctx, GameState, PlayerId } from './types'
+import { slotAZona } from './zones'
 
 /**
  * Mueve una instancia a 2G (cementerio de su dueño). Remueve del grupo de
@@ -43,6 +44,13 @@ export function moverAlCementerio(s: GameState, ctx: Ctx, cardInstanceId: string
     // otro efecto la enviaba al cementerio — quedaba en ambas zonas)
     const manoIdx = p.mano.indexOf(cardInstanceId)
     if (manoIdx !== -1) p.mano.splice(manoIdx, 1)
+  }
+  // F5g: sale del campo → el candado de la condición de Arcana se pierde
+  delete inst.condicionHabilitada
+  // Una respuesta que sale del campo mientras aún está en la pila (p. ej. un Artefacto cuyo Campeón
+  // desaparece) deja la pila: no se resuelve ni queda a la vez en la pila y en el Cementerio
+  if (s.cadena?.pila.includes(cardInstanceId)) {
+    s.cadena.pila = s.cadena.pila.filter((id) => id !== cardInstanceId)
   }
   // Fase 3a: choke point — toda carta que entra a 2G libera su Éter bloqueado
   // (manual §7.2). Los sacrificios ya liberaron a '2A' antes — no-op aquí.
@@ -103,8 +111,11 @@ export function liberarArtefactosEquipados(s: GameState, ctx: Ctx, campeonId: st
     const other = s.instances[otherId]
     if (other && other.equipadoA === campeonId) {
       other.equipadoA = undefined
+      // zona REAL de salida: una Arcana Artefacto vive en 3D-3F, no en 3A-3C
+      const arcIdx = s.players[other.owner].campo.arcanasCombate.indexOf(otherId)
+      const zonaSalida = arcIdx !== -1 ? (slotAZona('arcanasCombate', arcIdx) ?? '3D') : '3A'
       moverAlCementerio(s, ctx, otherId)
-      ctx.emit({ type: 'carta_salida_de_zona', cardInstanceId: otherId, zona: '3A', jugador: other.owner })
+      ctx.emit({ type: 'carta_salida_de_zona', cardInstanceId: otherId, zona: zonaSalida, jugador: other.owner })
       ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: otherId, zona: '2G', jugador: other.owner, bocaArriba: true })
     }
   }

@@ -395,8 +395,12 @@ describe('Arcana ARTEFACTO / permanente con Presteza en el campo responde (F5f)'
   })
 
   it('FB-024 (carta real, Arcana Artefacto + Presteza) participa como respuesta: la velocidad manda, no que sea permanente', () => {
-    // La condición de FB-024 (controlar_minimo 2) se evalúa hoy sobre los Campeones PROPIOS: B tiene dos
-    const { s } = conFilo('FB-024', PR.RAYO)
+    // F5g: la condición de FB-024 (controlar_minimo 2, controlador rival; trigger inicio_alba) cuenta los Campeones del RIVAL
+    // y es un candado: A (el rival de B) tiene dos Campeones y el Alba de B ya habilitó la Arcana
+    const { s } = conFilo('FB-024', PR.RAYO, (s0) => {
+      conCampeon(s0, 'A', 'a1', PR.PEON, 1)
+      s0.instances['filo'].condicionHabilitada = true
+    })
     expect(respondiblesDe(s, 'B')).toEqual(['filo'])
     const sinPago = structuredClone(s)
     sinPago.players.B.eterReserva = []

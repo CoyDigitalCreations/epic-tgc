@@ -3,7 +3,7 @@
  * Extraído de actions.ts para separación de dominios (change: refactor-engine).
  */
 import type { GameState, Ctx, PlayerId, FaseNombre } from './types'
-import { purgarEfectosTemporales, purgarKeywordsTemporales, purgarHastaFase, dispararTrigger } from './efectos'
+import { purgarEfectosTemporales, purgarKeywordsTemporales, purgarHastaFase, dispararTrigger, evaluarCandadosArcanas } from './efectos'
 import { getCardMeta } from './cards'
 import { resolverFaseEfectos } from './effectRegistry'
 import { limpiarCombate, resolverAlba } from './phases'
@@ -107,6 +107,8 @@ export function ejecutarPasarTurno(s: GameState, ctx: Ctx): void {
       // C2 (ADR-24): al inicio del Choque del jugador activo se disparan
       // efectos de inicio-choque: Éteres en Reserva (FB-002/DS-003), Campeones
       // (DS-018 — Fase 2a), Arcanas propias y vínculos periódicos.
+      // F5g: al empezar el Choque se fijan los candados de las Arcanas con trigger inicio_choque
+      evaluarCandadosArcanas(s, 'inicio_choque', s.turno)
       const p = s.players[s.turno]
       const campeones = p.campo.campeones.filter((x): x is string => x !== null)
       const misticas = p.campo.misticasTacticas.filter((x): x is string => x !== null)

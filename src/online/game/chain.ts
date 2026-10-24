@@ -20,7 +20,7 @@
  */
 import { esArcana, esArtefactoEquipable, esMistica, esPermanenteEnMesa, getCardMeta } from './cards'
 import { abrirVentanaAtaque, continuarCombateTrasCadena } from './combat'
-import { condicionCumple, dispararTrigger, velocidadDe } from './efectos'
+import { condicionCumple, condicionEsCandado, dispararTrigger, velocidadDe } from './efectos'
 import { interpretEffect } from './effectInterpreter'
 import { aplicarPago, etersParaPagar, validarPago, type ContextoUso } from './payments'
 import { enviarAlCementerio } from './replacements'
@@ -54,9 +54,9 @@ function puedeResponder(vel: Velocidad, requerida: Velocidad): boolean {
 /**
  * ¿La Arcana `id` de `jugador` puede activarse AHORA? (F5f) Condiciones comunes de activar_arcana y de
  * responder con ella, para que nunca diverjan: en su campo y boca abajo; NO el turno en que se colocó
- * (§5.4: sí desde el turno siguiente, el del rival o cualquiera posterior); su `condicion` JSON cumplida
- * (solo los requisitos de estado en `condiciones`; el `trigger` no se evalúa, igual que al activar);
- * un ARTEFACTO equipable exige un Campeón propio. Devuelve el motivo del rechazo o null.
+ * (§5.4: sí desde el turno siguiente, el del rival o cualquiera posterior); su `condicion` JSON: con trigger
+ * inicio_alba/inicio_choque es un CANDADO (F5g, `condicionHabilitada`, fijado al ocurrir ese momento), el
+ * resto de triggers se evalúa en vivo; un ARTEFACTO equipable exige un Campeón propio. Devuelve el motivo del rechazo o null.
  */
 export function motivoArcanaNoActivable(state: GameState, jugador: PlayerId, id: string): string | null {
   const inst = state.instances[id]
@@ -68,8 +68,13 @@ export function motivoArcanaNoActivable(state: GameState, jugador: PlayerId, id:
   if (inst.bocaArriba) return 'la Arcana ya está boca arriba'
   if (inst.entradaEsteTurno) return 'la Arcana no se puede activar el turno en que fue colocada (§5.4)'
   const condicion = 'condicion' in meta ? (meta as { condicion?: CondicionEfecto }).condicion : undefined
-  const condError = condicionCumple(state, condicion, jugador)
-  if (condError) return condError
+  if (condicionEsCandado(condicion)) {
+    // candado y llave (F5g): la condición se evaluó al ocurrir su trigger; habilitada = se puede activar ahora
+    if (!inst.condicionHabilitada) return 'la condición de la Arcana no se cumplió al inicio de su momento (Alba/Choque)'
+  } else {
+    const condError = condicionCumple(state, condicion, jugador)
+    if (condError) return condError
+  }
   if (esArtefactoEquipable(meta) && !p.campo.campeones.some((c) => c !== null)) {
     return 'no puedes activar un ARTEFACTO sin un Campeón en tu campo'
   }
@@ -419,6 +424,23 @@ function cerrarCadena(s: GameState, ctx: Ctx): void {
 }
 
 /**
+ * Fizzle de un Artefacto sin receptor (F5g): su efecto se pierde. Si la carta sigue en un slot de mesa
+ * (el Campeón se fue sin pasar por liberarArtefactosEquipados) va al Cementerio como cualquier carta que sale.
+ */
+function sinReceptor(s: GameState, ctx: Ctx, id: string): void {
+  const inst = s.instances[id]
+  if (!inst) return
+  for (const grupo of ['misticasTacticas', 'arcanasCombate'] as const) {
+    const idx = s.players[inst.owner].campo[grupo].indexOf(id)
+    if (idx === -1) continue
+    ctx.emit({ type: 'carta_salida_de_zona', cardInstanceId: id, zona: slotAZona(grupo, idx) ?? '3A', jugador: inst.owner })
+    enviarAlCementerio(s, ctx, id)
+    ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: id, zona: '2G', jugador: inst.owner, bocaArriba: true })
+    return
+  }
+}
+
+/**
  * Resuelve UNA respuesta de la pila (F5e, compartido por la cadena global y la de combate),
  * con los objetivos que eligió al responder:
  * - Mística desde la MANO: hechizos + trigger al-resolver-cadena + Cementerio (un solo uso, §5.3).
@@ -431,6 +453,12 @@ function resolverRespuesta(s: GameState, ctx: Ctx, id: string, datos: RespuestaA
   const meta = inst?.cardId ? getCardMeta(inst.cardId) : null
   if (!inst || !meta) return
   const p = s.players[inst.owner]
+  // F5g: un ARTEFACTO que ya no tiene Campeón al que equiparse (se fue antes de resolver) pierde su efecto;
+  // si seguía en mesa va al Cementerio. El Éter pagado se queda donde está (zona de pago).
+  if (esArtefactoEquipable(meta) && !inst.equipadoA) {
+    sinReceptor(s, ctx, id)
+    return
+  }
   const enCampo =
     p.campo.campeones.includes(id) || p.campo.misticasTacticas.includes(id) || p.campo.arcanasCombate.includes(id)
   // Sin datos (estado armado a mano) el origen se infiere de la zona de la carta
@@ -488,7 +516,11 @@ function resolverRespuesta(s: GameState, ctx: Ctx, id: string, datos: RespuestaA
 function resolverPila(s: GameState, ctx: Ctx): void {
   const cadena = s.cadena
   if (!cadena) return
-  for (const id of [...cadena.pila].reverse()) resolverRespuesta(s, ctx, id, cadena.respuestas?.[id])
+  for (const id of [...cadena.pila].reverse()) {
+    // una respuesta que salió de la pila a media resolución (p. ej. Artefacto al Cementerio) ya no resuelve
+    if (!cadena.pila.includes(id)) continue
+    resolverRespuesta(s, ctx, id, cadena.respuestas?.[id])
+  }
   if (cadena.opener) resolverOpener(s, ctx, cadena.opener)
   s.cadena = undefined
 }
@@ -641,6 +673,12 @@ function resolverOpener(s: GameState, ctx: Ctx, opener: OpenerCadena): void {
   const inst = s.instances[opener.cardInstanceId]
   const meta = inst?.cardId ? getCardMeta(inst.cardId) : null
   if (!inst || !meta) return
+  // F5g: el opener Artefacto cuyo Campeón desapareció antes de resolver pierde su efecto (la carta ya salió)
+  const sinReceptorOpener = opener.tipo !== 'habilidad' && esArtefactoEquipable(meta) && !inst.equipadoA
+  if (sinReceptorOpener) {
+    sinReceptor(s, ctx, opener.cardInstanceId)
+    return
+  }
   if (!opener.negada) {
     if (opener.tipo === 'habilidad') {
       const efecto = 'efectos' in meta ? meta.efectos?.[opener.efectoIdx ?? -1] : undefined

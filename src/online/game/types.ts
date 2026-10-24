@@ -101,6 +101,13 @@ export interface CardInstance {
    * (solo las de turnos anteriores); la Alba del dueño lo borra (phases.ts).
    */
   entradaEsteTurno?: boolean
+  /**
+   * Candado de la condición de una Arcana (F5g): se fija al ocurrir su `condicion.trigger`
+   * (inicio de Alba/Choque de su controlador): true = habilitada (puede activarse en cualquier momento
+   * hasta la siguiente ocurrencia), false = deshabilitada. Ausente = nunca evaluada. Se limpia al
+   * colocarse y al salir del campo. Oculta al rival mientras la Arcana está boca abajo (visibleState).
+   */
+  condicionHabilitada?: boolean
    /** Éter bloqueado (1B-1F campeones / 3A-3F artefactos Fase 3a): ids de Éter sobre esta carta. */
    eterBloqueado?: string[]
    /** Fase 3a Phase D: one-shot de umbral de costo-bloqueado ya disparado (FB-032).

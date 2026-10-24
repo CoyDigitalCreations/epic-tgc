@@ -44,7 +44,7 @@ export function interpretEffect(
     // F5e: una respuesta de la pila eligió su objetivo al responder; al resolver (LIFO) debe
     // seguir siéndolo (salió del campo, ganó Protector...). Si ya no, el efecto se pierde.
     if (payload.revalidarObjetivo && objetivo && objetivo.tipo !== 'self') {
-      if (!resolveTargets(s, objetivoCompleto(efectoData), jugador).includes(payload.objetivoId)) return
+      if (!resolveTargets(s, objetivoCompleto(efectoData), jugador, inst.cardInstanceId).includes(payload.objetivoId)) return
     }
     const targetIds = [payload.objetivoId]
     executeEffect(s, ctx, inst, efecto, targetIds, jugador, efectoData)
@@ -99,7 +99,7 @@ export function interpretEffect(
     if (objetivo.tipo === 'self') {
       targetIds = [inst.cardInstanceId]
     } else {
-      targetIds = resolveTargets(s, objetivoCompleto(efectoData), jugador)
+      targetIds = resolveTargets(s, objetivoCompleto(efectoData), jugador, inst.cardInstanceId)
     }
   }
 
@@ -167,7 +167,8 @@ function needsPlayerChoice(objetivo: EfectoData['objetivo'], efecto?: EfectoData
   if (!objetivo) return false
   // Self and auto-targets don't need choice
   if (objetivo.tipo === 'self' || objetivo.tipo === 'todos_campeones_propios' || 
-      objetivo.tipo === 'todos_campeones_rivales' || objetivo.tipo === 'rival_hand') {
+      objetivo.tipo === 'todos_campeones_rivales' || objetivo.tipo === 'rival_hand' ||
+      objetivo.tipo === 'equipped_champion') { // F5g: el Campeón equipado es implícito, no se elige
     return false
   }
   // Effects that don't need player choice despite having a target

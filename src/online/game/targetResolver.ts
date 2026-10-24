@@ -17,11 +17,12 @@ export function resolveTargets(
   s: GameState,
   objetivo: ObjetivoEfecto,
   jugador: PlayerId,
+  fuenteId?: string,
 ): string[] {
   const { tipo, controlador, zona, filtros } = objetivo
 
   // 1. Get base targets by zone and controller
-  const baseTargets = getTargetsByZone(s, tipo, zona, controlador, jugador)
+  const baseTargets = getTargetsByZone(s, tipo, zona, controlador, jugador, fuenteId)
 
   // Protector rule (D3): if rival has a Protector, only Protectors are valid targets
   // for enemy champion targeting effects
@@ -62,6 +63,7 @@ function getTargetsByZone(
   zona: ObjetivoEfecto['zona'],
   controlador: ObjetivoEfecto['controlador'],
   jugador: PlayerId,
+  fuenteId?: string,
 ): string[] {
   const rival: PlayerId = jugador === 'A' ? 'B' : 'A'
 
@@ -86,18 +88,13 @@ function getTargetsByZone(
     return s.players[rival].campo.campeones.filter((id): id is string => id !== null)
   }
 
-  // Special case: equipped_champion
+  // Special case: equipped_champion — el Campeón al que está equipado el Artefacto FUENTE
+  // (`equipadoA` vive en el Artefacto y apunta al Campeón); sin fuente o sin equipar no hay objetivo
   if (tipo === 'equipped_champion') {
-    // Find champions that have equipment
-    const allChampions = [
-      ...s.players.A.campo.campeones,
-      ...s.players.B.campo.campeones,
-    ].filter((id): id is string => id !== null)
-
-    return allChampions.filter((id) => {
-      const inst = s.instances[id]
-      return inst?.equipadoA !== undefined
-    })
+    const equipadoA = fuenteId ? s.instances[fuenteId]?.equipadoA : undefined
+    if (!equipadoA) return []
+    const enCampo = [...s.players.A.campo.campeones, ...s.players.B.campo.campeones].includes(equipadoA)
+    return enCampo ? [equipadoA] : []
   }
 
   // Special case: rival_hand
