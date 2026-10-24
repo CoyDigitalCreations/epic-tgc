@@ -111,6 +111,10 @@ function validarAccion(state: GameState, action: Action): string | null {
   if (preven && action.type !== 'responder_prevenicion') {
     return 'hay una prevenicion pendiente de resolver'
   }
+  // F5b: opener declarado esperando la elección de sus objetivos — solo elegir
+  if (state.openerEnEleccion && action.type !== 'elegir_objetivo' && action.type !== 'rendirse') {
+    return 'hay un objetivo por elegir antes de abrir la ventana'
+  }
   // Pila única (F5a): con la cadena abierta el turno queda congelado — solo se
   // responde o se pasa prioridad; cualquier otra acción espera a que cierre.
   if (cadenaActiva(state) && !ACCIONES_CON_CADENA_ABIERTA.has(action.type)) {

@@ -3,11 +3,11 @@
  * Extraído de actions.ts para separación de dominios (change: refactor-engine).
  */
 import type { GameState, Ctx, CardInstance, PlayerId } from './types'
-import { getCardMeta, efectoActivableDe, esCostoBloqueo, esArtefactoEquipable, esPermanenteEnMesa, campeonElegibleBloqueoEter, faccionesCompartidas } from './cards'
+import { getCardMeta, efectoActivableDe, esCostoBloqueo, esArtefactoEquipable, campeonElegibleBloqueoEter, faccionesCompartidas } from './cards'
 import type { CondicionEfecto, AnyCard, EfectoData } from '../../shared/types'
 import { validarPago, aplicarPago, type ContextoUso } from './payments'
 import { etiquetarEter } from './eter'
-import { dispararTrigger, condicionCumple, pasivosBloqueo1A, type TriggerEfecto, type PayloadEfecto } from './efectos'
+import { dispararTrigger, condicionCumple, pasivosBloqueo1A, type TriggerEfecto } from './efectos'
 import { registrarEfectoPendiente, hastaAlba } from './effectRegistry'
 import { interpretEffect, ejecutarTramo } from './effectInterpreter'
 import { tieneKeyword } from './combat'
@@ -15,7 +15,7 @@ import { reglaBool } from './reglas'
 import { liberarEterBloqueado, enviarAlCementerio } from './replacements'
 import { slotAZona } from './zones'
 import { validarBloqueo } from './payments'
-import { abrirCadenaGlobal, cadenaActiva } from './chain'
+import { declararOpener, registrarEleccionOpener } from './chain'
 import type { Action } from './core'
 
 /* ─────────────────────── Validadores ─────────────────────── */
@@ -233,31 +233,11 @@ export function ejecutarActivarArcana(s: GameState, action: Extract<Action, { ty
     s.equiparPendiente = { artefactoId: id, jugador: s.turno, contexto: 'activar_arcana' }
     return
   }
-  // Fase 2a — modelo de activación: la recompensa (efectos tipo hechizo) se
-  // resuelve al activar. El JSON de Card-Maker emite recompensas sin trigger.
-  if (meta && 'efectos' in meta && meta.efectos) {
-    for (const efecto of meta.efectos) {
-      if (efecto.tipo === 'hechizo' && !efecto.trigger && efecto.efecto) {
-        interpretEffect(s, ctx, inst, efecto, { jugador: s.turno, fromTrigger: true })
-      }
-    }
-  }
-  // Abrir cadena global: el rival podría responder con cartas Disparo
-  abrirCadenaGlobal(s, s.turno, { cardInstanceId: id, descripcion: meta?.name ?? id })
-  // §5.4 (fix A4): recompensa de UN SOLO USO → la Arcana va al Cementerio
-  // y libera su slot. Efecto CONTINUO → permanece boca arriba. Si la Arcana
-  // misma quedó en la PILA (se activó respondiendo en cadena), la consume el
-  // resolutor de cadena — aquí no se toca.
-  const enPila = (cadenaActiva(s)?.pila ?? []).includes(id)
-  if (!enPila && meta && !esPermanenteEnMesa(meta)) {
-    const slotIdx = s.players[s.turno].campo.arcanasCombate.indexOf(id)
-    if (slotIdx !== -1) {
-      const zonaSlot = slotAZona('arcanasCombate', slotIdx) ?? '3D'
-      ctx.emit({ type: 'carta_salida_de_zona', cardInstanceId: id, zona: zonaSlot, jugador: s.turno })
-      enviarAlCementerio(s, ctx, id)
-      ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: id, zona: '2G', jugador: s.turno, bocaArriba: true })
-    }
-  }
+  // F5b — modelo de activación: el costo y el volteo ya ocurrieron; la
+  // recompensa (efectos tipo hechizo sin trigger) es el opener de la pila y
+  // resuelve ÚLTIMO, tras las respuestas. El objetivo se elige antes de abrir
+  // la ventana y la Arcana de UN SOLO USO va al Cementerio al resolver (§5.4).
+  declararOpener(s, ctx, { tipo: 'arcana', jugador: s.turno, cardInstanceId: id })
 }
 
 /**
@@ -314,18 +294,11 @@ export function ejecutarActivarHabilidad(s: GameState, action: Extract<Action, {
     if (efectoSel.tipo === 'continuo') {
       inst.agotado = true
     }
-    // Ejecutar el efecto elegido directo desde JSON (targeting si es necesario)
-    const payloadBloqueo: PayloadEfecto = {
-      jugador: s.turno,
-      contextoUso: action.objetivoId ? 'objetivo-elegido' : undefined,
-      objetivoId: action.objetivoId,
-    }
     // Ventana de negación (obs 1874): la activación está DECLARADA (el pago
     // del bloqueo ya se aplicó y se MANTIENE). Si el rival puede responder,
     // la resolución se DIFIERE a la cadena — al cerrar se ejecuta salvo que
     // una negación (tipoNegacion 'activacion') la haya cancelado.
-    if (diferirActivacion(s, inst, meta, efectoSel, action.objetivoId)) return
-    interpretEffect(s, ctx, inst, efectoSel, payloadBloqueo)
+    declararHabilidad(s, ctx, inst, meta, efectoSel, action.objetivoId)
   } else {
     // Patrón "Agota"/Continuo pago: éteres → 1A (pagado) + 1/turno
     for (const eterId of action.eterIds) {
@@ -342,52 +315,43 @@ export function ejecutarActivarHabilidad(s: GameState, action: Extract<Action, {
     if (efectoSel.tipo === 'disparo' && reglaBool(s, 'disparoAgota', { instId: action.cardInstanceId })) {
       inst.agotado = true
     }
-    // Ejecutar el efecto elegido directo desde JSON (targeting si es necesario)
-    const payload: PayloadEfecto = {
-      jugador: s.turno,
-      contextoUso: action.objetivoId ? 'objetivo-elegido' : undefined,
-      objetivoId: action.objetivoId,
-    }
     // Ventana de negación (obs 1874): pago YA hecho (queda) — si hay
     // respuesta, el efecto se difiere a la cadena (fizzled si lo niegan).
-    if (diferirActivacion(s, inst, meta, efectoSel, action.objetivoId)) return
-    interpretEffect(s, ctx, inst, efectoSel, payload)
+    declararHabilidad(s, ctx, inst, meta, efectoSel, action.objetivoId)
   }
 }
 
 /**
- * Ventana de negación (obs 1874): abre la cadena GLOBAL con gate de mano
- * Presteza (incluirMano) y registra la activación DIFERIDA en la cadena.
- * true = quedó diferida (NO resolver aún); false = sin respondibles →
- * resolver directo (comportamiento previo intacto).
+ * Declara la activación como opener de la pila (F5b, obs 1874): el pago ya se
+ * aplicó. Si el rival puede responder (campo o Presteza pagable en mano) la
+ * resolución se DIFIERE al fondo de la pila; si no, resuelve ya. El objetivo
+ * ya viene elegido en la acción.
  */
-function diferirActivacion(
+function declararHabilidad(
   s: GameState,
+  ctx: Ctx,
   inst: CardInstance,
   meta: AnyCard,
   efectoSel: EfectoData,
   objetivoId?: string,
-): boolean {
-  const abierto = abrirCadenaGlobal(
-    s,
-    s.turno,
-    { cardInstanceId: inst.cardInstanceId, descripcion: meta.name ?? inst.cardInstanceId },
-    true, // incluirMano: Místicas Presteza del rival en mano pueden responder
-  )
-  if (!abierto || !s.cadena) return false
+): void {
   const efectoIdx = 'efectos' in meta && meta.efectos ? meta.efectos.indexOf(efectoSel) : -1
   if (efectoIdx === -1) {
-    // defensive: sin índice no hay resolución diferida posible → resolver ya
-    s.cadena = undefined
-    return false
+    // defensivo: sin índice no hay resolución diferida posible → resolver ya
+    interpretEffect(s, ctx, inst, efectoSel, {
+      jugador: s.turno,
+      contextoUso: objetivoId ? 'objetivo-elegido' : undefined,
+      objetivoId,
+    })
+    return
   }
-  s.cadena.activacionPendiente = {
+  declararOpener(s, ctx, {
+    tipo: 'habilidad',
     jugador: s.turno,
     cardInstanceId: inst.cardInstanceId,
     efectoIdx,
-    objetivoId,
-  }
-  return true
+    objetivos: objetivoId ? { [efectoIdx]: objetivoId } : undefined,
+  })
 }
 
 /**
@@ -476,6 +440,12 @@ export function ejecutarElegirObjetivo(s: GameState, action: Extract<Action, { t
   const pendiente = s.objetivosPendientes?.[0]
   if (!pendiente) return // defensivo: ya validado en validarAccion
   s.objetivosPendientes = s.objetivosPendientes!.slice(1)
+
+  // F5b: objetivo de un opener — se captura y, al elegir el último, se abre la ventana
+  if (pendiente.opener) {
+    registrarEleccionOpener(s, ctx, pendiente, action.objetivoId)
+    return
+  }
 
   // Capa 3b: pendiente de un TRAMO escalonado — el trigger re-dispatch no
   // aplica (el tramo vive dentro de efecto.tramos, no como efecto.raíz).

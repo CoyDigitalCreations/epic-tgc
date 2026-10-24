@@ -4,7 +4,7 @@
  * SOLO USO sobre la ACTIVACIÓN declarada en la ventana de activar_habilidad.
  *
  * - activar_habilidad (pago YA aplicado) abre VENTANA si el rival tiene
- *   respondibles en campo o PRESTEZA EN MANO → cadena.activacionPendiente.
+ *   respondibles en campo o PRESTEZA EN MANO → cadena.opener.
  * - El rival juega Marcha desde la mano (jugar_respuesta — paga su coste) →
  *   al cerrar la cadena su efecto 'negar' cancela ESA activación (el pago del
  *   activador NO se devuelve, el efecto NO se resuelve) → Marcha al
@@ -173,7 +173,7 @@ describe('ventana de negación en activar_habilidad (obs 1874)', () => {
     // Ventana abierta con la activación DIFERIDA — efecto AÚN sin resolver
     expect(s2.cadena).toBeTruthy()
     expect(s2.cadena!.prioridad).toBe('A')
-    expect(s2.cadena!.activacionPendiente).toMatchObject({ jugador: 'B', cardInstanceId: victimaId })
+    expect(s2.cadena!.opener).toMatchObject({ jugador: 'B', cardInstanceId: victimaId })
     expect(statsDe(s2, victimaId).poder).toBe(2) // buff aún pendiente
     // A (con Marcha en mano) puede responder con jugar_respuesta
     const accionesA = getValidActions(s2, 'A')

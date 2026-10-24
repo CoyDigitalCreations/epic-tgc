@@ -81,6 +81,7 @@ export function PriorityModal({ state, playerId, acciones, onAccion, onZoom }: P
                   {efectoMeta?.name ?? efectoActual.cardInstanceId}
                 </p>
                 <p className="mt-0.5 text-[11px] text-gray-400">por {efectoActual.jugador === playerId ? 'Tú' : 'el rival'}</p>
+                {cadena.opener && <p className="mt-0.5 text-[10px] text-amber-200/80">Fondo de la pila: resuelve al final, después de las respuestas.</p>}
               </div>
             </div>
           </section>

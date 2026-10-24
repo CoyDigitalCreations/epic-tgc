@@ -272,14 +272,21 @@ export function getValidActions(state: GameState, playerId: PlayerId): Action[] 
     const pendiente = state.objetivosPendientes?.[0]
     if (pendiente && pendiente.jugador === playerId) {
       const opcionesVivas = pendiente.opciones.filter((id) => state.instances[id])
-      if (opcionesVivas.length === 0) {
+      if (opcionesVivas.length === 0 && !pendiente.opener) {
         state.objetivosPendientes = state.objetivosPendientes!.slice(1)
+      } else if (opcionesVivas.length === 0) {
+        // F5b: pendiente de un opener sin opciones vivas — NO se descarta (la
+        // ventana espera esta elección); se ofrece la primera opción y el
+        // hechizo se pierde al resolver (registrarEleccionOpener la ignora).
+        acciones.push({ type: 'elegir_objetivo', objetivoId: pendiente.opciones[0] })
       } else {
         for (const objetivoId of opcionesVivas) {
           acciones.push({ type: 'elegir_objetivo', objetivoId })
         }
       }
     }
+    // F5b: opener declarado esperando objetivos — solo se puede elegir
+    if (state.openerEnEleccion) return acciones
     // C3d (D4): usar_transmutar — Campeón propio con keyword `Transmutar` en
     // campo (forja o choque): regresa hasta 2 Éteres pagados (1A) a la
     // Reserva. Solo se expone con 1A disponible y la variante de retorno

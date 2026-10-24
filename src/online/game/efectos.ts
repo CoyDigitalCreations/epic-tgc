@@ -58,6 +58,9 @@ export interface PayloadEfecto {
    * Solo lo pone dispararTrigger — los caminos de acción (activar_habilidad,
    * jugar_mistica, etc.) ya cobraron su pago aparte. */
   cobrarCosto?: boolean
+  /** F5b: declaración de un opener — interpretEffect solo ARMA la elección de
+   * objetivo (marcando el pendiente con `opener`) y NO ejecuta el efecto. */
+  declararOpener?: { efectoIdx: number }
   extra?: Record<string, unknown>
 }
 

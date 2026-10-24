@@ -19,9 +19,10 @@ import { esArcana, esMistica, esPermanenteEnMesa, getCardMeta } from './cards'
 import { continuarCombateTrasCadena } from './combat'
 import { dispararTrigger, velocidadDe } from './efectos'
 import { interpretEffect } from './effectInterpreter'
-import { aplicarPago, validarPago, type ContextoUso } from './payments'
+import { aplicarPago, etersParaPagar, validarPago, type ContextoUso } from './payments'
 import { enviarAlCementerio } from './replacements'
-import type { Ctx, CadenaState, GameState, PlayerId } from './types'
+import type { EfectoData } from '../../shared/types'
+import type { Ctx, CadenaState, GameState, OpenerCadena, PlayerId } from './types'
 import { slotAZona } from './zones'
 
 /**
@@ -38,6 +39,8 @@ export function respondiblesDe(state: GameState, playerId: PlayerId): string[] {
   // Cartas que ya están en la pila de la cadena (no pueden responder dos veces)
   const cadena = cadenaActiva(state)
   const enPila = new Set(cadena?.pila ?? [])
+  // F5b: el opener (fondo de la pila) no se responde a sí mismo
+  if (cadena?.opener) enPila.add(cadena.opener.cardInstanceId)
 
   // Determinar velocidad requerida basada en el último efecto de la pila
   let velocidadRequerida: 'normal' | 'presteza' | 'fugaz' = 'normal'
@@ -102,7 +105,8 @@ function puedeResponder(vel: 'normal' | 'presteza' | 'fugaz', requerida: 'normal
 export function abrirCadena(s: GameState, primerRespondedor: PlayerId): boolean {
   const combate = s.combate
   if (!combate) return false
-  if (respondiblesDe(s, primerRespondedor).length === 0) return false
+  // F5b: el gate cuenta también las Místicas Presteza de la mano que el rival PUEDA pagar
+  if (respondiblesDe(s, primerRespondedor).length === 0 && respuestasDeMano(s, primerRespondedor).length === 0) return false
   s.cadena = { origen: 'combate', pila: [], prioridad: primerRespondedor, pasesConsecutivos: 0, faseAbierta: s.fase }
   return true
 }
@@ -120,6 +124,10 @@ export function respuestasDeMano(state: GameState, playerId: PlayerId): string[]
     const inst = state.instances[id]
     const meta = inst?.cardId ? getCardMeta(inst.cardId) : null
     if (meta && esMistica(meta) && 'keywords' in meta && meta.keywords?.includes('Presteza')) {
+      // F5b: solo cuenta lo jugable de verdad — sin permanentes (validarJugarRespuesta
+      // las rechaza) y con Éter suficiente para pagarla (gate de apertura + UI).
+      if (esPermanenteEnMesa(meta)) continue
+      if (etersParaPagar(state, playerId, meta.id) === null) continue
       res.push(id)
     }
   }
@@ -374,20 +382,130 @@ function resolverCadenaGlobal(s: GameState, ctx: Ctx): void {
   // Activación diferida (obs 1874): LIFO — se resuelve AL CIERRE, después de
   // las respuestas. Si una negación la canceló → fizzled (pago ya pagado se
   // mantiene: declarar/activar consumió su Éter y su 1/turno igual).
-  const pend = cadena.activacionPendiente
-  if (pend) {
-    const champ = s.instances[pend.cardInstanceId]
-    const metaChamp = champ?.cardId ? getCardMeta(champ.cardId) : null
-    if (!pend.negada && champ && metaChamp && 'efectos' in metaChamp) {
-      const efecto = metaChamp.efectos?.[pend.efectoIdx]
+  // F5b: el opener (Mística, Arcana o habilidad) resuelve ÚLTIMO.
+  if (cadena.opener) resolverOpener(s, ctx, cadena.opener)
+  s.cadena = undefined
+}
+
+/* ──────────────── Opener de la pila (F5b) ──────────────── */
+
+/** Hechizos del opener sin trigger (se resuelven al jugar/activar), con su índice en efectos[]. */
+function hechizosDelOpener(s: GameState, cardInstanceId: string) {
+  const inst = s.instances[cardInstanceId]
+  const meta = inst?.cardId ? getCardMeta(inst.cardId) : null
+  const res: { efecto: EfectoData; efectoIdx: number }[] = []
+  if (!inst || !meta || !('efectos' in meta) || !meta.efectos) return { inst, meta, hechizos: res }
+  meta.efectos.forEach((efecto, efectoIdx) => {
+    if (efecto.tipo === 'hechizo' && !efecto.trigger && efecto.efecto) res.push({ efecto, efectoIdx })
+  })
+  return { inst, meta, hechizos: res }
+}
+
+/**
+ * Declara un opener (jugar Mística, activar Arcana, activar habilidad). El
+ * costo y el estado "ya aplicado" ya ocurrieron; aquí solo se prepara el EFECTO
+ * diferido: (1) los objetivos se eligen ANTES de abrir la ventana — si algún
+ * hechizo requiere elección se arma `objetivosPendientes` (marcados con
+ * `opener`) y la ventana se abre al elegir el último; (2) si no, se abre de
+ * inmediato (gate: solo si el rival puede responder; si no, resuelve ya).
+ * La habilidad ya trae su objetivo en la acción (`opener.objetivos`).
+ */
+export function declararOpener(s: GameState, ctx: Ctx, opener: OpenerCadena): void {
+  if (opener.tipo !== 'habilidad') {
+    const { inst, hechizos } = hechizosDelOpener(s, opener.cardInstanceId)
+    if (inst) {
+      for (const { efecto, efectoIdx } of hechizos) {
+        interpretEffect(s, ctx, inst, efecto, { jugador: opener.jugador, fromTrigger: true, declararOpener: { efectoIdx } })
+      }
+    }
+    // Las elecciones del opener pasan al FRENTE de la cola (consecuencia directa
+    // de la acción del jugador, mismo criterio que el steal de umbral): si no,
+    // quedarían detrás de pendientes ajenos y nunca se expondrían.
+    const propios = (s.objetivosPendientes ?? []).filter((pp) => pp.opener && pp.instId === opener.cardInstanceId)
+    if (propios.length > 0) {
+      s.objetivosPendientes = [...propios, ...s.objetivosPendientes!.filter((pp) => !propios.includes(pp))]
+      s.openerEnEleccion = opener
+      return
+    }
+  }
+  abrirOpener(s, ctx, opener)
+}
+
+/**
+ * Registra la elección de un objetivo del opener (elegir_objetivo sobre un
+ * pendiente con `opener`); al elegir el último, abre la ventana con el
+ * payload completo. Un objetivo que ya no existe se descarta (el hechizo se
+ * pierde al resolver).
+ */
+export function registrarEleccionOpener(
+  s: GameState,
+  ctx: Ctx,
+  pendiente: { instId: string; opener?: { efectoIdx: number } },
+  objetivoId: string,
+): void {
+  const op = s.openerEnEleccion
+  if (!op || !pendiente.opener) return
+  if (s.instances[objetivoId]) op.objetivos = { ...op.objetivos, [pendiente.opener.efectoIdx]: objetivoId }
+  if (s.objetivosPendientes?.some((pp) => pp.opener && pp.instId === op.cardInstanceId)) return
+  delete s.openerEnEleccion
+  abrirOpener(s, ctx, op)
+}
+
+/** Abre la ventana con el opener al fondo (gate con mano Presteza pagable) o, si nadie puede responder, resuelve ya. */
+function abrirOpener(s: GameState, ctx: Ctx, opener: OpenerCadena): void {
+  const meta = s.instances[opener.cardInstanceId]?.cardId ? getCardMeta(s.instances[opener.cardInstanceId]!.cardId!) : null
+  const abierto = abrirCadenaGlobal(
+    s,
+    opener.jugador,
+    { cardInstanceId: opener.cardInstanceId, descripcion: meta?.name ?? opener.cardInstanceId },
+    true, // incluirMano: Místicas Presteza pagables del rival en mano también cuentan
+  )
+  if (abierto && s.cadena) {
+    s.cadena.opener = opener
+    return
+  }
+  resolverOpener(s, ctx, opener)
+}
+
+/**
+ * Resuelve el opener (al cierre de la ventana o de inmediato si no se abrió).
+ * Si una negación lo canceló, no hay efecto (el pago se mantiene). Después, la
+ * Mística/Arcana de UN SOLO USO va al Cementerio y libera su slot (§5.3/§5.4);
+ * el EFECTO CONTINUO y los ARTEFACTOS permanecen (esPermanenteEnMesa).
+ */
+function resolverOpener(s: GameState, ctx: Ctx, opener: OpenerCadena): void {
+  const inst = s.instances[opener.cardInstanceId]
+  const meta = inst?.cardId ? getCardMeta(inst.cardId) : null
+  if (!inst || !meta) return
+  if (!opener.negada) {
+    if (opener.tipo === 'habilidad') {
+      const efecto = 'efectos' in meta ? meta.efectos?.[opener.efectoIdx ?? -1] : undefined
+      const objetivoId = opener.objetivos?.[opener.efectoIdx ?? -1]
       if (efecto) {
-        interpretEffect(s, ctx, champ, efecto, {
-          jugador: pend.jugador,
-          contextoUso: pend.objetivoId ? 'objetivo-elegido' : undefined,
-          objetivoId: pend.objetivoId,
+        interpretEffect(s, ctx, inst, efecto, {
+          jugador: opener.jugador,
+          contextoUso: objetivoId ? 'objetivo-elegido' : undefined,
+          objetivoId,
+        })
+      }
+    } else {
+      for (const { efecto, efectoIdx } of hechizosDelOpener(s, opener.cardInstanceId).hechizos) {
+        const objetivoId = opener.objetivos?.[efectoIdx]
+        interpretEffect(s, ctx, inst, efecto, {
+          jugador: opener.jugador,
+          fromTrigger: true,
+          contextoUso: objetivoId ? 'objetivo-elegido' : undefined,
+          objetivoId,
         })
       }
     }
   }
-  s.cadena = undefined
+  if (opener.tipo === 'habilidad' || esPermanenteEnMesa(meta)) return
+  const slots = opener.tipo === 'mistica' ? s.players[opener.jugador].campo.misticasTacticas : s.players[opener.jugador].campo.arcanasCombate
+  const slotIdx = slots.indexOf(opener.cardInstanceId)
+  if (slotIdx === -1) return
+  const zonaSlot = slotAZona(opener.tipo === 'mistica' ? 'misticasTacticas' : 'arcanasCombate', slotIdx) ?? (opener.tipo === 'mistica' ? '3A' : '3D')
+  ctx.emit({ type: 'carta_salida_de_zona', cardInstanceId: opener.cardInstanceId, zona: zonaSlot, jugador: opener.jugador })
+  enviarAlCementerio(s, ctx, opener.cardInstanceId)
+  ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: opener.cardInstanceId, zona: '2G', jugador: opener.jugador, bocaArriba: true })
 }

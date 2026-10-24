@@ -34,6 +34,9 @@ export function visibleState(state: GameState, playerId: PlayerId): GameState {
   // (cadena única F5a: de combate o global)
   const pila = cadenaActiva(v)?.pila ?? []
   for (const id of pila) ocultar.delete(id)
+  // F5b: el opener (fondo de la pila) también es público — p.ej. una Arcana rival recién activada
+  const opener = cadenaActiva(v)?.opener
+  if (opener) ocultar.delete(opener.cardInstanceId)
 
   // Búsqueda de mazo (C3/D1): mientras un pendiente de elegir_objetivo espera
   // respuesta del jugador, sus cartas opción se muestran — necesita VER qué

@@ -3,14 +3,13 @@
  * Extraído de actions.ts para separación de dominios (change: refactor-engine).
  */
 import type { GameState, PlayerId, CardInstance, Zona } from './types'
-import { esCampeon, esMistica, esArcana, esVinculo, esArtefactoEquipable, esPermanenteEnMesa, faccionesCompartidas, getCardMeta } from './cards'
+import { esCampeon, esMistica, esArcana, esVinculo, esArtefactoEquipable, faccionesCompartidas, getCardMeta } from './cards'
 import { esSingular, sacrificiosRequeridos, copiasEnCampo, campeonesSacrificables } from './campo'
 import { aplicarPago, validarPago, etersParaPagar, type ContextoUso } from './payments'
 import { SLOTS_CAMPEONES, SLOTS_MISTICAS_TACTICAS, SLOTS_ARCANAS_COMBATE, slotAZona } from './zones'
 import { dispararTrigger, condicionCumple } from './efectos'
-import { interpretEffect } from './effectInterpreter'
 import { liberarEterBloqueado, enviarAlCementerio } from './replacements'
-import { abrirCadenaGlobal } from './chain'
+import { abrirCadenaGlobal, declararOpener } from './chain'
 import type { Action } from './core'
 import type { Ctx } from './types'
 import type { CondicionEfecto } from '../../shared/types'
@@ -205,30 +204,13 @@ export function ejecutarJugarMistica(s: GameState, action: Extract<Action, { typ
     return // efectos diferidos hasta ejecutarEquiparArtefacto
   }
   // C5 (change 4): al-jugar-mística se dispara con la instancia YA en campo
+  // (F5b: al DECLARAR, no se apila — eso es F5d)
   dispararTrigger(s, ctx, 'al-jugar-mistica', s.turno, [id])
-  // Fase 2a: hechizos SIN trigger se resuelven al jugar la mística (data-driven)
-  if (meta && 'efectos' in meta && meta.efectos) {
-    for (const efecto of meta.efectos) {
-      if (efecto.tipo === 'hechizo' && !efecto.trigger && efecto.efecto) {
-        interpretEffect(s, ctx, inst, efecto, { jugador: s.turno, fromTrigger: true })
-      }
-    }
-  }
-  // §9.6: abrir cadena global — el rival puede responder con efectos
-  const metaM = getCardMeta(s.instances[id]!.cardId!)
-  abrirCadenaGlobal(s, s.turno, { cardInstanceId: id, descripcion: metaM?.name ?? id })
-  // §5.3 (fix A4): hechizo de UN SOLO USO → tras resolverse va al
-  // Cementerio y libera su slot. El EFECTO CONTINUO (Éter bloqueado en la
-  // carta) y los ARTEFACTOS permanecen — ver esPermanenteEnMesa.
-  if (meta && !esPermanenteEnMesa(meta)) {
-    const slotIdx = p.campo.misticasTacticas.indexOf(id)
-    if (slotIdx !== -1) {
-      const zonaSlot = slotAZona('misticasTacticas', slotIdx) ?? '3A'
-      ctx.emit({ type: 'carta_salida_de_zona', cardInstanceId: id, zona: zonaSlot, jugador: s.turno })
-      enviarAlCementerio(s, ctx, id)
-      ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: id, zona: '2G', jugador: s.turno, bocaArriba: true })
-    }
-  }
+  // F5b: los hechizos SIN trigger NO se resuelven aquí — el opener (la Mística)
+  // resuelve ÚLTIMO, tras las respuestas (chain.ts declararOpener). El objetivo
+  // se elige antes de abrir la ventana; el cementerio de un solo uso (§5.3,
+  // fix A4) ocurre al resolver.
+  declararOpener(s, ctx, { tipo: 'mistica', jugador: s.turno, cardInstanceId: id })
 }
 
 /** Coloca la Arcana BOCA ABAJO en 3D-3F SIN pagar (pago al activar). */
@@ -282,20 +264,11 @@ export function ejecutarEquiparArtefacto(s: GameState, action: Extract<Action, {
 function resolverEfectosArtefacto(s: GameState, ctx: Ctx, id: string, contexto: 'jugar_mistica' | 'activar_arcana'): void {
   const inst = s.instances[id]
   if (!inst) return
-  const meta = inst.cardId ? getCardMeta(inst.cardId) : null
   if (contexto === 'jugar_mistica') {
     dispararTrigger(s, ctx, 'al-jugar-mistica', s.turno, [id])
   }
-  // Fase 2a: hechizos SIN trigger se resuelven (data-driven)
-  if (meta && 'efectos' in meta && meta.efectos) {
-    for (const efecto of meta.efectos) {
-      if (efecto.tipo === 'hechizo' && !efecto.trigger && efecto.efecto) {
-        interpretEffect(s, ctx, inst, efecto, { jugador: s.turno, fromTrigger: true })
-      }
-    }
-  }
-  // §9.6: abrir cadena global
-  abrirCadenaGlobal(s, s.turno, { cardInstanceId: id, descripcion: meta?.name ?? id })
+  // F5b: hechizos SIN trigger → opener de la pila (resuelve último, tras las respuestas)
+  declararOpener(s, ctx, { tipo: contexto === 'jugar_mistica' ? 'mistica' : 'arcana', jugador: s.turno, cardInstanceId: id })
 }
 
 /* ─────────────────── Generador de acciones de Forja ─────────────────── */

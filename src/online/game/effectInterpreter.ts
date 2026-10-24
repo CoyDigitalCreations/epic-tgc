@@ -132,9 +132,13 @@ export function interpretEffect(
       instId: inst.cardInstanceId,
       trigger: toHyphenTrigger(efectoData.trigger) ?? umbralTrigger(efectoData) ?? 'ninguno',
       opciones: targetIds,
+      ...(payload.declararOpener ? { opener: payload.declararOpener } : {}),
     }]
     return
   }
+
+  // F5b: declarar un opener solo arma la elección; el efecto resuelve al cierre
+  if (payload.declararOpener) return
 
   // Single target or no choice needed → execute directly
   executeEffect(s, ctx, inst, efecto, targetIds, jugador, efectoData)
@@ -316,7 +320,7 @@ function executeEffect(
       // PUEDE volver a activar. Los otros 7 tipoNegacion siguen sin
       // implementar (B3).
       const cadenaNeg = cadenaActiva(s)
-      const pend = cadenaNeg?.activacionPendiente
+      const pend = cadenaNeg?.opener
       if (pend && !pend.negada && pend.jugador !== jugador) {
         pend.negada = true
         ctx.emit({ type: 'activacion_negada', jugador, cardInstanceId: pend.cardInstanceId, fuente: inst.cardInstanceId })

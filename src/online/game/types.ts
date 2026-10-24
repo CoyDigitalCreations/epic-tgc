@@ -116,7 +116,7 @@ export interface CardInstance {
    fijadoExhaustTargetId?: string
   /** REDISEÑO obs 1874: el candado championNegado se ELIMINÓ — la negación es
    * un CONTADOR de un solo uso sobre la activación pendiente
-   * (cadena.activacionPendiente), no un estado persistente en la mística. */
+   * (cadena.opener), no un estado persistente en la mística. */
    /** Fase 3c: ID de la Mística/Arcana rival copiada por efecto copy (FB-022).
     * Estado derivado copyActivo: copyTargetId + ≥1 Éter bloqueado + target en campo. */
    copyTargetId?: string
@@ -214,21 +214,33 @@ export interface CadenaState {
   /** Velocidad del último efecto activado en la cadena (PRESTEZA/FUGAZ). */
   velocidadActual?: 'normal' | 'presteza' | 'fugaz'
   /**
-   * Ventana de negación (obs 1874 — Marcha): activación de activar_habilidad
-   * DECLARADA y ya PAGADA, pendiente de resolverse al cerrar la cadena.
-   * Si una negación (tipoNegacion 'activacion') la cancela → no se resuelve
-   * (el pago NO se devuelve). Vive en la cadena GLOBAL (activar_habilidad
-   * nunca corre con combate en curso).
+   * Fondo de la pila (F5b, ventana de negación obs 1874 — Marcha): la jugada
+   * que abrió la ventana, DECLARADA y ya PAGADA, pendiente de resolverse al
+   * cerrar la cadena (después de las respuestas). Si una negación
+   * (tipoNegacion 'activacion') la cancela → no se resuelve (el pago NO se
+   * devuelve). Vive en la cadena GLOBAL (nunca hay opener en combate).
+   * `efectoActual` sigue siendo la descripción informativa de este opener.
    */
-  activacionPendiente?: {
-    jugador: PlayerId
-    cardInstanceId: string
-    /** Índice en efectos[] del efecto activado (resolución diferida). */
-    efectoIdx: number
-    objetivoId?: string
-    /** true si una negación la canceló (se resuelve: fizzled). */
-    negada?: boolean
-  }
+  opener?: OpenerCadena
+}
+
+/**
+ * Opener de la pila (F5b): la jugada que abre la ventana — jugar Mística,
+ * activar Arcana o activar habilidad. Su costo y su estado "ya aplicado" (pago,
+ * slot, volteo, 1/turno, entradaEsteTurno) ocurren al DECLARAR; su EFECTO se
+ * difiere al fondo de la pila y resuelve ÚLTIMO (LIFO), después de las
+ * respuestas. Los objetivos se eligen antes de abrir la ventana y quedan aquí.
+ */
+export interface OpenerCadena {
+  tipo: 'mistica' | 'arcana' | 'habilidad'
+  jugador: PlayerId
+  cardInstanceId: string
+  /** habilidad: índice en efectos[] del efecto activado. */
+  efectoIdx?: number
+  /** Objetivos ya elegidos, por índice en efectos[] (habilidad: el de la acción). */
+  objetivos?: Record<number, string>
+  /** true si una negación (tipoNegacion 'activacion') la canceló: no resuelve; el pago NO se devuelve. */
+  negada?: boolean
 }
 
 /** Sub-máquina de combate en Choque (9.1, ADR-11). Se crea con la PRIMERA declarar_ataque. */
@@ -282,7 +294,13 @@ export interface GameState {
    * `tramoUmbral`: pendiente de un tramo escalonado (Capa 3b) — la resolución
    * ejecuta ese tramo directamente en vez de re-despachar por trigger.
    */
-  objetivosPendientes?: { jugador: PlayerId; instId: string; trigger: string; opciones: string[]; tramoUmbral?: number }[]
+  objetivosPendientes?: { jugador: PlayerId; instId: string; trigger: string; opciones: string[]; tramoUmbral?: number; opener?: { efectoIdx: number } }[]
+  /**
+   * Opener (F5b) declarado que espera la elección de sus objetivos ANTES de
+   * abrir la ventana (los pendientes con `opener` en objetivosPendientes son
+   * suyos). Mientras exista, solo se acepta elegir_objetivo (o rendirse).
+   */
+  openerEnEleccion?: OpenerCadena
   ganador?: PlayerId
   motivo?: MotivoFin
   /** Efectos pendientes centralizados (Effect Registry, Fase 1). */
