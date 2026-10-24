@@ -306,7 +306,7 @@
     "paqueteId": "estasis",
     "limiteCopias": "1",
     "createdAt": "2026-08-03T00:00:00.000Z",
-    "updatedAt": "2026-09-29T05:06:58.179Z",
+    "updatedAt": "2026-10-24T18:15:01.960Z",
     "facciones": [
       "Orden"
     ],
@@ -338,8 +338,7 @@
           "ATQ": 0,
           "RES": 0
         },
-        "texto": "Puedes pagar 2 Éter, destruye 1 Mística o Arcana que controla el rival, una vez por turno.",
-        "duracion": "1_por_turno",
+        "texto": "Puedes pagar 2 Éter, destruye 1 Mística o Arcana que controla el rival.",
         "costo": {
           "tipo": "eter",
           "cantidad": 2
@@ -477,7 +476,7 @@
           "ATQ": 0,
           "RES": 0
         },
-        "texto": "Al ser enviada al Cementerio desde cualquier zona, puedes buscar 1 Campeón de facción Orden de esencia Céleste de tu Cementerio y agrégalo a tu mano.",
+        "texto": "Al ser enviada al Cementerio desde cualquier zona, puedes buscar 1 Campeón de facción Orden de esencia Céleste de tu Cementerio y agregalo a tu mano.",
         "trigger": "al_ser_enviado_al_cementerio",
         "triggerZona": "cualquier_zona"
       }
@@ -493,7 +492,7 @@
     "paqueteId": "estasis",
     "limiteCopias": "3",
     "createdAt": "2026-08-03T00:00:00.000Z",
-    "updatedAt": "2026-09-20T04:17:50.942Z",
+    "updatedAt": "2026-10-24T18:15:14.752Z",
     "facciones": [
       "Orden"
     ],
@@ -524,12 +523,11 @@
           "ATQ": 0,
           "RES": 0
         },
-        "texto": "Puedes pagar 3 Éter, cambia el agotamiento de un Campeón que controles, una vez por turno.",
+        "texto": "Puedes pagar 3 Éter, cambia el agotamiento de un Campeón que controles.",
         "costo": {
           "tipo": "eter",
           "cantidad": 3
-        },
-        "duracion": "1_por_turno"
+        }
       }
     ]
   },
@@ -545,7 +543,7 @@
     "paqueteId": "estasis",
     "limiteCopias": "2",
     "createdAt": "2026-08-03T00:00:00.000Z",
-    "updatedAt": "2026-09-29T05:08:34.741Z",
+    "updatedAt": "2026-10-24T18:04:16.306Z",
     "facciones": [
       "Orden"
     ],
@@ -576,12 +574,11 @@
           "ATQ": 0,
           "RES": 0
         },
-        "texto": "Puedes pagar 2 Éter, destruye 1 Mística o Arcana que controla el rival, una vez por turno.",
+        "texto": "Puedes pagar 2 Éter, destruye 1 Mística o Arcana que controla el rival.",
         "costo": {
           "tipo": "eter",
           "cantidad": 2
-        },
-        "duracion": "1_por_turno"
+        }
       }
     ]
   },
@@ -1311,7 +1308,7 @@
           "ATQ": 0,
           "RES": 0
         },
-        "texto": "Al ser enviada al Cementerio desde el campo, puedes buscar 1 Campeón de facción Orden coste 4 o menos de esencia Céleste de tu mazo y agrégalo a tu mano.",
+        "texto": "Al ser enviada al Cementerio desde el campo, puedes buscar 1 Campeón de facción Orden coste 4 o menos de esencia Céleste de tu mazo y agregalo a tu mano.",
         "trigger": "al_ser_enviado_al_cementerio",
         "triggerZona": "campo",
         "zonaOrigen": "mazo"
@@ -1369,7 +1366,7 @@
     "paqueteId": "disonancia",
     "limiteCopias": "1",
     "createdAt": "2026-08-03T00:00:00.000Z",
-    "updatedAt": "2026-09-24T05:29:37.077Z",
+    "updatedAt": "2026-10-24T18:15:35.033Z",
     "facciones": [
       "Caos"
     ],
@@ -1399,12 +1396,11 @@
           "ATQ": 0,
           "RES": 0
         },
-        "texto": "Puedes pagar 4 Éter, destruye 1 Campeón que controla el rival, una vez por turno.",
+        "texto": "Puedes pagar 4 Éter, destruye 1 Campeón que controla el rival.",
         "costo": {
           "tipo": "eter",
           "cantidad": 4
         },
-        "duracion": "1_por_turno",
         "cantidad": 1
       },
       {
@@ -1788,7 +1784,7 @@
     "paqueteId": "disonancia",
     "limiteCopias": "3",
     "createdAt": "2026-08-03T00:00:00.000Z",
-    "updatedAt": "2026-10-08T05:22:20.065Z",
+    "updatedAt": "2026-10-24T18:16:00.977Z",
     "facciones": [
       "Caos"
     ],
@@ -1833,8 +1829,7 @@
           "controlador": "rival",
           "zona": "campo"
         },
-        "texto": "Al activar esta habilidad, puedes pagar 2 Éter, destruye 1 Mística que controla el rival, una vez por turno.",
-        "duracion": "1_por_turno"
+        "texto": "Al activar esta habilidad, puedes pagar 2 Éter, destruye 1 Mística que controla el rival."
       }
     ]
   },
@@ -1848,7 +1843,7 @@
     "paqueteId": "disonancia",
     "limiteCopias": "3",
     "createdAt": "2026-08-03T00:00:00.000Z",
-    "updatedAt": "2026-10-03T05:03:49.072Z",
+    "updatedAt": "2026-10-24T18:16:38.370Z",
     "facciones": [
       "Caos"
     ],
@@ -1867,7 +1862,6 @@
     "efectos": [
       {
         "tipo": "disparo",
-        "trigger": "al_activar_habilidad",
         "costo": {
           "tipo": "eter",
           "cantidad": 4
@@ -1881,8 +1875,7 @@
             "resMax": 3
           }
         },
-        "texto": "Al activar esta habilidad, puedes pagar 4 Éter, destruye 1 Campeón RES 3 o menos que controla el rival, una vez por turno.",
-        "duracion": "1_por_turno"
+        "texto": "Puedes pagar 4 Éter, destruye 1 Campeón RES 3 o menos que controla el rival."
       }
     ]
   },
@@ -2046,7 +2039,7 @@
     "paqueteId": "disonancia",
     "limiteCopias": "2",
     "createdAt": "2026-08-03T00:00:00.000Z",
-    "updatedAt": "2026-10-10T01:27:47.542Z",
+    "updatedAt": "2026-10-24T18:14:00.175Z",
     "facciones": [
       "Caos"
     ],
@@ -2076,12 +2069,11 @@
           "ATQ": 0,
           "RES": 0
         },
-        "texto": "Bloquea 2 Éter, mueve 1 Éter que controla el rival de la zona de pago a tu Reserva, mientras ese Éter esté bloqueado.",
+        "texto": "Puedes pagar 2 Éter, mueve 1 Éter que controla el rival de la zona de pago a la Reserva de su dueño.",
         "costo": {
-          "tipo": "bloqueo_fijo",
+          "tipo": "eter",
           "cantidad": 2
-        },
-        "duracion": "mientras_ester_bloqueado"
+        }
       }
     ]
   },
@@ -2095,7 +2087,7 @@
     "paqueteId": "disonancia",
     "limiteCopias": "3",
     "createdAt": "2026-08-03T00:00:00.000Z",
-    "updatedAt": "2026-10-08T05:34:53.056Z",
+    "updatedAt": "2026-10-24T18:17:02.675Z",
     "facciones": [
       "Caos"
     ],
@@ -2120,8 +2112,7 @@
           "controlador": "rival",
           "zona": "campo"
         },
-        "texto": "Puedes pagar 3 Éter, devuelve a la mano de su dueño 1 Campeón que controla el rival, una vez por turno.",
-        "duracion": "1_por_turno",
+        "texto": "Puedes pagar 3 Éter, devuelve a la mano de su dueño 1 Campeón que controla el rival.",
         "costo": {
           "tipo": "eter",
           "cantidad": 3
@@ -2623,7 +2614,7 @@
           "zonaDestino": "mano"
         },
         "zonaDestino": "mano",
-        "texto": "Al ser enviada al Cementerio desde cualquier zona, puedes buscar 1 Campeón coste 2 o menos de tu mazo y agrégalo a tu mano."
+        "texto": "Al ser enviada al Cementerio desde cualquier zona, puedes buscar 1 Campeón coste 2 o menos de tu mazo y agregalo a tu mano."
       }
     ]
   },
@@ -2673,7 +2664,7 @@
           "zonaDestino": "mano"
         },
         "zonaDestino": "mano",
-        "texto": "Busca 1 carta coste 3 o menos de tu Cementerio y agrégalo a tu mano."
+        "texto": "Busca 1 carta coste 3 o menos de tu Cementerio y agregalo a tu mano."
       }
     ]
   },
@@ -2709,7 +2700,7 @@
           "zonaDestino": "mano"
         },
         "zonaDestino": "mano",
-        "texto": "Busca 1 Campeón coste 3 o menos de tu mazo y agrégalo a tu mano."
+        "texto": "Busca 1 Campeón coste 3 o menos de tu mazo y agregalo a tu mano."
       }
     ]
   }
