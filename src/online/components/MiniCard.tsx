@@ -1,14 +1,17 @@
+import { useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { RenderCarta } from '../../forge/components/CardPreview'
 import { useCardImage } from '../../forge/hooks/useCardImage'
 import type { AnyCard } from '../../shared/types'
 import { getCardMeta } from '../game'
 import type { CardInstance } from '../game'
-import { useEnVuelo } from '../animacion/contexto'
+import { useAnimacionActiva, useEnVuelo } from '../animacion/contexto'
 import { useInspeccionar } from './tableroContext'
 
 const ANCHO_CARTA = 744
 const ALTO_CARTA = 1038
+/** Duración de la revelación de una carta (debe coincidir con `.anim-revelar-*` en index.css). */
+const DURACION_REVELAR_MS = 900
 
 export const TAMANOS = { xs: 44, sm: 64, md: 74, lg: 128 } as const
 export type TamanoMini = keyof typeof TAMANOS
@@ -141,7 +144,21 @@ export function MiniCard({
    */
   const altoCarta = ALTO_CARTA * escala
 
-  if (!cardId || !meta || bocaAbajo) {
+  // Revelación en el lugar (Ruptura de un Vínculo, Arcana que se activa): el dorso gira y aparece la cara.
+  const esDorso = !cardId || !meta || !!bocaAbajo
+  const animar = useAnimacionActiva()
+  const eraDorso = useRef(esDorso)
+  const [revelando, setRevelando] = useState(false)
+  useEffect(() => {
+    const antes = eraDorso.current
+    eraDorso.current = esDorso
+    if (!antes || esDorso || !animar) return
+    setRevelando(true)
+    const id = window.setTimeout(() => setRevelando(false), DURACION_REVELAR_MS)
+    return () => window.clearTimeout(id)
+  }, [esDorso, animar])
+
+  if (esDorso) {
     // Dorso: boca abajo (mano rival, mazos, Arcanas/Vínculos rivales o
     // Arcanas/Combate/Vínculos PROPIOS que el dueño prefiere ver como dorso).
     // Si hay onClick/onZoom (carta propia) el clic abre la carta en grande.
@@ -213,38 +230,66 @@ export function MiniCard({
         onClick={onClick ?? onZoom}
         title={sinTooltip ? undefined : tooltipTexto}
       >
-        {agotada ? (
-          <div
-            style={{
-              position: 'absolute',
-              inset: 0,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              pointerEvents: 'none',
-            }}
-          >
+        <div className={revelando ? 'anim-revelar-frente' : undefined} style={{ position: 'absolute', inset: 0 }}>
+          {rotarSiAgotado && !tieneCarga ? (
+            // Campo: el giro de agotar/enderezar se anima girando la carta sobre su centro
             <div
               style={{
-                transform: `scale(${escala}) rotate(-90deg)`,
-                transformOrigin: 'center',
+                position: 'absolute',
+                inset: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                pointerEvents: agotada ? 'none' : undefined,
+              }}
+            >
+              <div
+                className={animar ? 'anim-giro' : undefined}
+                style={{
+                  transform: `scale(${escala}) rotate(${agotada ? -90 : 0}deg)`,
+                  transformOrigin: 'center',
+                  width: ANCHO_CARTA,
+                  height: ALTO_CARTA,
+                }}
+              >
+                <RenderCarta card={aRenderizar} imageUrl={imageUrl} />
+              </div>
+            </div>
+          ) : (
+            <div
+              style={{
+                transform: `scale(${escala})`,
+                transformOrigin: 'top left',
                 width: ANCHO_CARTA,
                 height: ALTO_CARTA,
               }}
             >
               <RenderCarta card={aRenderizar} imageUrl={imageUrl} />
             </div>
-          </div>
-        ) : (
+          )}
+        </div>
+        {revelando && (
           <div
+            aria-hidden="true"
+            className="anim-revelar-dorso"
             style={{
-              transform: `scale(${escala})`,
-              transformOrigin: 'top left',
-              width: ANCHO_CARTA,
-              height: ALTO_CARTA,
+              position: 'absolute',
+              inset: 0,
+              borderRadius: 6,
+              border: '1px solid #3b3b5c',
+              background: 'linear-gradient(135deg, #14142b 0%, #1e1e3a 60%, #2a2a4e 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#4b4b7a',
+              fontFamily: '"Cinzel", serif',
+              fontSize: tamano === 'sm' ? 10 : 14,
+              fontWeight: 700,
+              pointerEvents: 'none',
+              zIndex: 5,
             }}
           >
-            <RenderCarta card={aRenderizar} imageUrl={imageUrl} />
+            ✦
           </div>
         )}
 

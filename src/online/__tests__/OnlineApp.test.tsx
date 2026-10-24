@@ -88,6 +88,17 @@ describe('OnlineApp', () => {
     expect(screen.getByText('Nueva partida')).toBeInTheDocument()
   })
 
+  it('al perder aparece el velo de derrota (y el de victoria no)', async () => {
+    const user = userEvent.setup()
+    renderApp()
+    await user.click(screen.getByRole('button', { name: 'Comenzar partida' }))
+    await user.click(screen.getByRole('button', { name: 'Rendirse' }))
+    await screen.findByText('Perdiste')
+    const efecto = screen.getByTestId('fin-efecto')
+    expect(efecto).toHaveClass('anim-fin-derrota')
+    expect(efecto).not.toHaveClass('anim-fin-victoria')
+  })
+
   it('abandonar vuelve al menú desde el tablero', async () => {
     const user = userEvent.setup()
     renderApp()

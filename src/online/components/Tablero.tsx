@@ -2239,11 +2239,25 @@ export function Tablero({
                 : 'La partida terminó.'
         const vinculosVivos = (j: PlayerId) =>
           vista.players[j].vinculos.filter((id) => id && !vista.instances[id]?.bocaArriba).length
+        const conAnimacion = anim.velocidad !== 'off'
         return (
+          <>
+          {conAnimacion && (
+            <div
+              aria-hidden="true"
+              data-testid="fin-efecto"
+              className={`pointer-events-none fixed inset-0 z-[49] ${gane ? 'anim-fin-victoria' : 'anim-fin-derrota'}`}
+              style={{
+                background: gane
+                  ? 'radial-gradient(circle at 50% 45%, rgba(251,191,36,0.55) 0%, rgba(251,191,36,0.15) 35%, transparent 65%)'
+                  : 'radial-gradient(circle at 50% 50%, transparent 30%, rgba(127,29,29,0.55) 100%)',
+              }}
+            />
+          )}
           <Modal
             titulo={gane ? '¡Ganaste!' : 'Perdiste'}
             subtitulo={motivoTexto}
-            icono={gane ? '🏆' : '☠'}
+            icono={<span className={conAnimacion ? 'anim-fin-icono inline-block' : undefined}>{gane ? '🏆' : '☠'}</span>}
             tono={gane ? 'exito' : 'peligro'}
             ancho="sm"
             pie={
@@ -2265,6 +2279,7 @@ export function Tablero({
               ))}
             </div>
           </Modal>
+          </>
         )
       })()}
     </div>
