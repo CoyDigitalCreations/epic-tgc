@@ -60,7 +60,7 @@ export function PaqueteModal({ isOpen, onConfirm, onCancel }: PaqueteModalProps)
   return (
     <Modal
       titulo="Nuevo paquete"
-      subtitulo="Un set de cartas con identidad propia (tipo Estásis o Disonancia). Lo creás sin escribir código: las cartas que le asignes en el formulario forman parte de él."
+      subtitulo="Un set de cartas con identidad propia (tipo Estásis o Disonancia). Lo creas sin escribir código: las cartas que le asignes en el formulario forman parte de él."
       icono="📦"
       ancho="md"
       pie={

@@ -81,7 +81,7 @@ export function BlockingInterface({ s, defensor, atacantes, onBloquear, onCancel
   return (
     <Modal
       titulo="Elige tus bloqueadores"
-      subtitulo={`Bloqueo forzoso (§9.3): tenés que bloquear con ${kMaximo} Campeón${kMaximo === 1 ? '' : 'es'}; elegís con cuál${kMaximo === 1 ? '' : 'es'}.`}
+      subtitulo={`Bloqueo forzoso (§9.3): tienes que bloquear con ${kMaximo} Campeón${kMaximo === 1 ? '' : 'es'}; eliges con cuál${kMaximo === 1 ? '' : 'es'}.`}
       icono="⚔"
       tono="rival"
       ancho="lg"

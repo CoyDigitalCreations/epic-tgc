@@ -450,12 +450,12 @@ export function generateEffectText(data: EfectoData): string {
           }
           if (data.objetivo?.zonaDestino) {
             const destinoTexts: Record<string, string> = {
-              'mano': 'y agregalo a tu mano',
-              'campo': 'e invocalo al campo',
-              'cementerio': 'y envialo a tu Cementerio',
-              'exilio': 'y envialo a tu Exilio',
+              'mano': 'y agrégalo a tu mano',
+              'campo': 'e invócalo al campo',
+              'cementerio': 'y envíalo a tu Cementerio',
+              'exilio': 'y envíalo a tu Exilio',
             }
-            targetText += ` ${destinoTexts[data.objetivo.zonaDestino] ?? `y envialo a ${data.objetivo.zonaDestino}`}`
+            targetText += ` ${destinoTexts[data.objetivo.zonaDestino] ?? `y envíalo a ${data.objetivo.zonaDestino}`}`
           }
         }
       } else if (data.efecto === 'block_ether' && data.objetivo) {

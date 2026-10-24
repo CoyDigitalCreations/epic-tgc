@@ -53,11 +53,12 @@ function vistaPreviaInicial(config: PartidaConfig): VistaPrevia {
 }
 
 /** Tipo de animación */
-export type TipoAnimacion = 'glow' | 'attack' | 'choque' | 'ruptura'
+export type TipoAnimacion = 'glow' | 'attack' | 'choque' | 'ruptura' | 'banner' | 'activacion'
 
 /**
- * Entrada de animación: glow, ataque, choque (atacante vs bloqueador) o ruptura de Vínculo.
- * Las muertes y exilios NO pasan por acá: los dibuja el sistema de vuelos (animacion/).
+ * Entrada de animación: glow, ataque, choque (atacante vs bloqueador), ruptura de Vínculo,
+ * banner de turno/fase o activación de una carta (propia: destello; del rival: carta ampliada).
+ * Las muertes y exilios NO pasan por aquí: los dibuja el sistema de vuelos (animacion/).
  */
 export interface AnimacionEntrada {
   tipo: TipoAnimacion
@@ -65,8 +66,10 @@ export interface AnimacionEntrada {
   jugador?: PlayerId
   /** IDs de atacantes ('attack'); el atacante de un 'choque' o una 'ruptura' va en [0] */
   atacantes?: string[]
-  /** 'choque': el bloqueador. 'ruptura': el Vínculo roto. */
+  /** 'choque': el bloqueador. 'ruptura': el Vínculo roto. 'activacion': la carta que se activa. */
   cardInstanceId?: string
+  /** 'banner': el texto del anuncio ("Tu turno", "Fase de Choque"). */
+  texto?: string
   key: number
 }
 
@@ -81,6 +84,15 @@ const ATTACK_DURATION_MS = 600
 
 /** Duración de choque / ruptura (ms): trazos + destello. */
 const COMBATE_DURATION_MS = 1000
+
+/** Duración del banner de turno/fase y de la activación de una carta (ms). */
+const ANUNCIO_DURATION_MS = 1500
+
+const NOMBRE_FASE_ANUNCIO: Partial<Record<string, string>> = {
+  forja: 'Fase de Forja',
+  choque: 'Fase de Choque',
+  ocaso: 'Fase de Ocaso',
+}
 
 /**
  * El modal de pre-efectos SOLO cuando el EFECTO entra en acción — no cuando
@@ -145,6 +157,8 @@ export function usePartida(config: PartidaConfig) {
   const [preview, setPreview] = useState<PreviewEfectos | null>(null)
   const previewAccionRef = useRef<Action | null>(null)
   const previewEsBotRef = useRef(false)
+  /** true mientras se aplica una acción que el jugador ya vio en el modal de vista previa. */
+  const vinoDePreviewRef = useRef(false)
   const [vistaPrevia, setVistaPrevia] = useState<VistaPrevia>(() => vistaPreviaInicial(config))
   const vistaPreviaRef = useRef(vistaPrevia)
   const delayRef = useRef(config.delayMs ?? 350)
@@ -237,6 +251,26 @@ export function usePartida(config: PartidaConfig) {
         if (e.type === 'ruptura_realizada') {
           nuevasAnimaciones.push({ tipo: 'ruptura', atacantes: [e.atacanteId], cardInstanceId: e.vinculoId, key: now + Math.random() })
         }
+        // Activación / respuesta en cadena. Si el modal de vista previa ya mostró la carta, no se repite.
+        const activada =
+          e.type === 'carta_activada' && e.slot >= 0
+            ? e
+            : e.type === 'respuesta_encadenada'
+              ? e
+              : null
+        if (activada && !vinoDePreviewRef.current) {
+          nuevasAnimaciones.push({ tipo: 'activacion', cardInstanceId: activada.cardInstanceId, jugador: activada.jugador, key: now + Math.random() })
+        }
+      }
+      // Banner: un turno nuevo, o una fase que el jugador debe notar (el Alba y la Forja del arranque van con el turno)
+      const turnoNuevo = r.events.find((e) => e.type === 'turno_iniciado')
+      if (turnoNuevo) {
+        nuevasAnimaciones.push({ tipo: 'banner', texto: turnoNuevo.jugador === 'A' ? 'Tu turno' : 'Turno del rival', jugador: turnoNuevo.jugador, key: now + Math.random() })
+      } else {
+        const fase = r.events.find((e) => e.type === 'fase_iniciada' && NOMBRE_FASE_ANUNCIO[e.fase])
+        if (fase && fase.type === 'fase_iniciada') {
+          nuevasAnimaciones.push({ tipo: 'banner', texto: NOMBRE_FASE_ANUNCIO[fase.fase], jugador: fase.jugador, key: now + Math.random() })
+        }
       }
       if (nuevasAnimaciones.length > 0) {
         setAnimaciones((prev) => [...prev, ...nuevasAnimaciones])
@@ -294,7 +328,14 @@ export function usePartida(config: PartidaConfig) {
     previewAccionRef.current = null
     previewEsBotRef.current = false
     setPreview(null)
-    if (accion) aplicarInterna(accion, esBot)
+    if (accion) {
+      vinoDePreviewRef.current = true
+      try {
+        aplicarInterna(accion, esBot)
+      } finally {
+        vinoDePreviewRef.current = false
+      }
+    }
   }, [aplicarInterna])
 
   const cancelarPreview = useCallback(() => {
@@ -327,6 +368,7 @@ export function usePartida(config: PartidaConfig) {
         const age = Date.now() - a.key
         if (a.tipo === 'attack') return age < ATTACK_DURATION_MS
         if (a.tipo === 'choque' || a.tipo === 'ruptura') return age < COMBATE_DURATION_MS
+        if (a.tipo === 'banner' || a.tipo === 'activacion') return age < ANUNCIO_DURATION_MS
         return age < GLOW_DURATION_MS
       }))
     }, GLOW_DURATION_MS + 50)

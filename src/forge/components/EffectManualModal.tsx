@@ -353,8 +353,8 @@ export function EffectManualModal({ isOpen, onClose }: EffectManualModalProps) {
             />
 
             <h4 className="font-semibold text-gray-200 mt-3 mb-1">Texto completo</h4>
-            <p className="text-xs">Ejemplo: "busca 1 Campeón de coste 4 o menos de tu mazo y agregalo a tu mano"</p>
-            <p className="text-xs mt-1">Ejemplo: "busca 1 Mística de tu Cementerio y agregalo a la mano del rival"</p>
+            <p className="text-xs">Ejemplo: "busca 1 Campeón de coste 4 o menos de tu mazo y agrégalo a tu mano"</p>
+            <p className="text-xs mt-1">Ejemplo: "busca 1 Mística de tu Cementerio y agrégalo a la mano del rival"</p>
           </Section>
 
           {/* 12. EFECTO VÍNCULO */}
@@ -570,7 +570,7 @@ export function EffectManualModal({ isOpen, onClose }: EffectManualModalProps) {
                 <div><span className="text-gray-500">Controlador Destino:</span> Tuya</div>
                 <div><span className="text-gray-500">Filtros:</span> Campeón → coste max 4</div>
               </div>
-              <p className="text-xs text-ether-400 mt-2 italic">→ "Al inicio de tu Alba, busca 1 Campeón de coste 4 o menos de tu mazo y agregalo a tu mano."</p>
+              <p className="text-xs text-ether-400 mt-2 italic">→ "Al inicio de tu Alba, busca 1 Campeón de coste 4 o menos de tu mazo y agrégalo a tu mano."</p>
             </div>
 
             {/* Ejemplo 4: Arcana con Condición */}

@@ -45,7 +45,7 @@ export function moverAlCementerio(s: GameState, ctx: Ctx, cardInstanceId: string
     if (manoIdx !== -1) p.mano.splice(manoIdx, 1)
   }
   // Fase 3a: choke point — toda carta que entra a 2G libera su Éter bloqueado
-  // (manual §7.2). Los sacrificios ya liberaron a '2A' antes — no-op acá.
+  // (manual §7.2). Los sacrificios ya liberaron a '2A' antes — no-op aquí.
   liberarEterBloqueadoCore(s, ctx, cardInstanceId, '1A')
   const p = s.players[inst.owner]
   if (!p.cementerio.includes(cardInstanceId)) p.cementerio.push(cardInstanceId)
@@ -81,7 +81,7 @@ export function enviarAlCementerio(s: GameState, ctx: Ctx, cardInstanceId: strin
   moverAlCementerio(s, ctx, cardInstanceId)
   // Fase 3a: carta va a 2G → Éter bloqueado liberado a 1A (reagrupa próximo Alba).
   // No-op si no tiene eterBloqueado (liberarEterBloqueado lo chequea).
-  // Los sacrificios ya liberaron a '2A' antes de llegar acá — segundo call es no-op.
+  // Los sacrificios ya liberaron a '2A' antes de llegar aquí — segundo call es no-op.
   liberarEterBloqueado(s, ctx, cardInstanceId, '1A')
   dispararTrigger(s, ctx, 'al-ser-enviado-al-cementerio', inst.owner, [cardInstanceId])
 }

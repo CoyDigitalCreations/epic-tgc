@@ -18,7 +18,7 @@ export function InspectorCarta({ seleccion, vacioAncho = ANCHO_INSPECTOR * 0.5 }
           className="flex shrink-0 items-center justify-center rounded-lg border border-dashed border-card-border/70 px-2 text-center text-[10px] text-gray-600"
           style={{ width: vacioAncho, aspectRatio: '744/1038' }}
         >
-          Pasá el mouse sobre una carta
+          Pasa el mouse sobre una carta
         </div>
       </div>
     )

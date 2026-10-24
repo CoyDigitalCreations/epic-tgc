@@ -14,7 +14,7 @@ export function ImageUpload({ value, onChange }: ImageUploadProps) {
   const handleFile = async (file: File) => {
     setError(null)
     if (!isValidImageFile(file)) {
-      setError('Formato no soportado. Usá PNG, JPG, WebP o AVIF.')
+      setError('Formato no soportado. Usa PNG, JPG, WebP o AVIF.')
       return
     }
     if (file.size > 5 * 1024 * 1024) {

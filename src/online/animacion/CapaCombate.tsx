@@ -12,7 +12,7 @@ export interface EntradaCombate {
   key: number
 }
 
-interface Punto {
+export interface Punto {
   x: number
   y: number
 }
@@ -25,7 +25,7 @@ const TRAZO_S = 0.32
 const DESTELLO_S = 0.28
 
 /** Centro en pantalla de una carta (la copia del campo, no la del panel de cadena); null si no está visible. */
-function centroDe(id: string): Punto | null {
+export function centroDe(id: string): Punto | null {
   const copias = Array.from(document.querySelectorAll<HTMLElement>(`[data-inst="${id}"]`))
   const el = copias.find((c) => c.closest('[data-zona]') !== null) ?? copias[0]
   if (!el) return null

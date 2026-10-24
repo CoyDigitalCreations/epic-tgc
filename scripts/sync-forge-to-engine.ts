@@ -277,7 +277,7 @@ function main(): void {
     for (const [id, n] of duplicados) {
       console.log(`  ID duplicado en el export: ${id} (×${n})`)
     }
-    console.error('\nCorregí el export antes de sincronizar. Abortando.')
+    console.error('\nCorrige el export antes de sincronizar. Abortando.')
     process.exit(1)
   }
 
@@ -344,7 +344,7 @@ function main(): void {
 
   if (dryRun) {
     console.log('\n🔎 DRY-RUN: no se escribió nada.')
-    console.log('   Si el reporte se ve bien, corrí sin --dry-run.')
+    console.log('   Si el reporte se ve bien, corre sin --dry-run.')
     return
   }
 

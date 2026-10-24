@@ -184,7 +184,7 @@ function ejecutarAccionEfecto(s: GameState, ctx: Ctx, ep: EfectoPendiente): void
       }
       // Steal 'mientras_ester_bloqueado' (Aurora): Fase 2 (d) — el fin del robo
       // lo decide evaluarFinSteal (fuente SIN Éter de cualquier fuente). Antes
-      // había acá una copia inline que devolvía el control SIN liberar el Éter
+      // había aquí una copia inline que devolvía el control SIN liberar el Éter
       // del ladrón (bug de auditoría) — retornarCampeonesRobados unificado lo hace.
       evaluarFinSteal(s, ctx, ep.fuente)
       break

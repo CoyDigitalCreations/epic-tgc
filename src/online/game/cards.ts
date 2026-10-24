@@ -109,7 +109,7 @@ export function esCostoBloqueo(costo?: { tipo?: string } | null): boolean {
  * - sin → el disparo (pago → patrón Agota; costo-bloqueo → patrón Bloqueado:
  *   bloquea N y ejecuta, 1/turno), o en su ausencia el continuo de pago.
  * Continuos con costo-bloqueo (steal_champion Aurora, double_attack FB-015,
- * grant_keyword DS-001) NO son seleccionables acá: se activan exclusivamente
+ * grant_keyword DS-001) NO son seleccionables aquí: se activan exclusivamente
  * vía bloquear_eter → aura derivada / dispararUmbralBloqueo (manual §7.7).
  */
 export function efectoActivableDe(card: AnyCard, conObjetivo: boolean): EfectoData | null {

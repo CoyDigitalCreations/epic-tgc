@@ -8,7 +8,7 @@ export const ANCHO_CARTA_DEFECTO = 74
 /**
  * Ancho (px) de una carta de casilla del tablero. Lo calcula el Tablero según el
  * espacio disponible para que los dos campos entren en pantalla sin scroll;
- * las casillas, la grilla y las cartas lo leen de acá en vez de un tamaño fijo.
+ * las casillas, la grilla y las cartas lo leen de aquí en vez de un tamaño fijo.
  */
 export const AnchoTableroContext = createContext<number>(ANCHO_CARTA_DEFECTO)
 

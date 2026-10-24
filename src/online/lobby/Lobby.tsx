@@ -111,7 +111,7 @@ export default function Lobby() {
 
   const unirse = useCallback(async () => {
     if (!codigoInput.trim()) {
-      setErrorSala('Ingresá el código de la sala')
+      setErrorSala('Ingresa el código de la sala')
       return
     }
     setOcupado(true)
@@ -149,7 +149,7 @@ export default function Lobby() {
       <Shell titulo="Jugar con amigos" sub="Falta un paso de configuración" ancho="md">
         <Panel>
           <p className="mb-3 text-sm text-gray-300">
-            Falta configurar Supabase en el frontend. Creá un archivo <code className="text-ether-300">.env.local</code>:
+            Falta configurar Supabase en el frontend. Crea un archivo <code className="text-ether-300">.env.local</code>:
           </p>
           <pre className="overflow-x-auto rounded-lg border border-white/10 bg-[#0a0a12] p-3 text-[11px] text-gray-400">
             {`VITE_SUPABASE_URL=https://<project-ref>.supabase.co
@@ -166,7 +166,7 @@ VITE_SUPABASE_ANON_KEY=sb_publishable_...`}
   // ── Auth gate ────────────────────────────────────────────────────────────
   if (vista === 'auth') {
     return (
-      <Shell titulo="Jugar con amigos" sub="Conectá para crear o unirte a una sala" ancho="md">
+      <Shell titulo="Jugar con amigos" sub="Conéctate para crear o unirte a una sala" ancho="md">
         <Panel className="text-center">
           <span
             aria-hidden="true"
@@ -217,7 +217,7 @@ VITE_SUPABASE_ANON_KEY=sb_publishable_...`}
               </span>
             ))}
           </p>
-          <p className="mb-3 text-sm text-gray-400">Compartí este código con tu amigo para que se una.</p>
+          <p className="mb-3 text-sm text-gray-400">Comparte este código con tu amigo para que se una.</p>
           <Boton
             tam="sm"
             className="mb-6"
@@ -239,7 +239,7 @@ VITE_SUPABASE_ANON_KEY=sb_publishable_...`}
               {ambosListos ? '¡Rival listo! Iniciando…' : 'Esperando al rival…'}
             </p>
             <p className="mt-1.5 text-[11px] text-gray-500">
-              Mazo: {nombreMazo} · sos el jugador {sala.player}
+              Mazo: {nombreMazo} · eres el jugador {sala.player}
             </p>
           </div>
           {errorSala && (
@@ -257,10 +257,10 @@ VITE_SUPABASE_ANON_KEY=sb_publishable_...`}
 
   // ── Menú crear / unirse ──────────────────────────────────────────────────
   return (
-    <Shell titulo="Jugar con amigos" sub="Creá una sala o unite con un código" ancho="xl">
+    <Shell titulo="Jugar con amigos" sub="Crea una sala o únete con un código" ancho="xl">
       <div className="mb-7">
         <h2 className="font-display text-3xl font-bold tracking-wide text-gray-50">Partida con amigos</h2>
-        <p className="mt-1 text-sm text-gray-400">Elegí tu mazo y creá una sala, o entrá a la de tu amigo con su código.</p>
+        <p className="mt-1 text-sm text-gray-400">Elige tu mazo y crea una sala, o entra a la de tu amigo con su código.</p>
       </div>
 
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_340px]">
@@ -293,7 +293,7 @@ VITE_SUPABASE_ANON_KEY=sb_publishable_...`}
           </div>
           {mazosPersonalizados.length === 0 && (
             <p className="mt-4 text-[11px] text-gray-600">
-              No tenés mazos custom. Creá uno en Éter Forge para usarlo acá.
+              No tienes mazos custom. Crea uno en Éter Forge para usarlo aquí.
             </p>
           )}
         </section>
@@ -308,7 +308,7 @@ VITE_SUPABASE_ANON_KEY=sb_publishable_...`}
             />
 
             <Seccion>Crear sala</Seccion>
-            <p className="mb-3 text-xs text-gray-500">Generás un código de 6 caracteres y se lo pasás a tu amigo.</p>
+            <p className="mb-3 text-xs text-gray-500">Generas un código de 6 caracteres y se lo pasas a tu amigo.</p>
             <Boton variante="primario" tam="lg" className="w-full" onClick={crear} disabled={ocupado}>
               {ocupado ? 'Creando…' : 'Crear sala'}
             </Boton>

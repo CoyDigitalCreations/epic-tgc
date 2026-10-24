@@ -6,7 +6,7 @@ import { AppFallback, AppRoutes } from './AppRoutes'
 /**
  * AppRoutes testea el CONTRATO de ruteo + lazy boundaries.
  * Los apps pesados (forge/online) se mockean: sus internals tienen sus
- * propios tests. Cargar chunks reales acá introduce flakiness (IndexedDB/
+ * propios tests. Cargar chunks reales aquí introduce flakiness (IndexedDB/
  * zustand persist bajo paralelismo de vitest) sin validar nada extra del
  * módulo bajo test.
  */

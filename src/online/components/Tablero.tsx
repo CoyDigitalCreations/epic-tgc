@@ -31,6 +31,7 @@ import { PriorityModal } from './PriorityModal'
 import { PreventionModal } from './PreventionModal'
 import { AnimacionActivaContext, EnVueloContext } from '../animacion/contexto'
 import { CapaCombate } from '../animacion/CapaCombate'
+import { CapaAnuncios } from '../animacion/CapaAnuncios'
 import { useAnimacionCartas } from '../animacion/useAnimacionCartas'
 import type { Velocidad } from '../animacion/useAnimacionCartas'
 import type { VistaPrevia } from '../usePartida'
@@ -1532,6 +1533,7 @@ export function Tablero({
     <div className={`${compacto ? 'h-dvh touch-manipulation' : 'h-screen'} flex flex-col overflow-clip bg-[#0a0a12] text-gray-100 font-body relative`}>
       {anim.capa}
       <CapaCombate entradas={animaciones} activa={anim.velocidad !== 'off'} />
+      <CapaAnuncios entradas={animaciones} instancias={vista.instances} activa={anim.velocidad !== 'off'} />
 
       {esRetrato && (
         <div role="alert" className="absolute inset-0 z-[70] flex flex-col items-center justify-center gap-3 bg-[#0a0a12] p-6 text-center">
@@ -1539,7 +1541,7 @@ export function Tablero({
             <rect x="7" y="2" width="10" height="20" rx="2" />
             <path d="M3 9a8 8 0 0 1 4-5M21 15a8 8 0 0 1-4 5" strokeLinecap="round" />
           </svg>
-          <p className="font-display text-base font-bold">Girá tu dispositivo</p>
+          <p className="font-display text-base font-bold">Gira tu dispositivo</p>
           <p className="max-w-60 text-xs text-gray-400">Éter Online se juega en horizontal: así entran los dos campos y tu mano.</p>
           <button onClick={onAbandonar} className="mt-2 cursor-pointer rounded bg-surface-2 px-3 py-1.5 text-xs text-gray-300 hover:bg-card-border">
             Abandonar partida
@@ -1569,7 +1571,7 @@ export function Tablero({
               ? 'Partida terminada'
               : fase === 'pre_partida'
                 ? vista.turno === 'A'
-                  ? 'Decidís el mulligan'
+                  ? 'Decides el mulligan'
                   : 'El rival decide el mulligan'
                 : vista.turno === 'A'
                   ? 'Tu turno'
@@ -1760,7 +1762,7 @@ export function Tablero({
               {leTocaA && (generales.length > 0 || parejasOpcion.length > 0 || opcionesRuptura.length > 0 || selAtaque.length > 0) ? (
                 <>
                   {!hayJugablesSignificativas && (fase === 'forja' || fase === 'choque') && (
-                    <span className="text-[10px] text-amber-400/90">Sin jugadas — pasá el turno para continuar</span>
+                    <span className="text-[10px] text-amber-400/90">Sin jugadas — pasa el turno para continuar</span>
                   )}
                   {generales.map((a, i) => (
                     <Boton key={i} accion={a} onClick={onAccion} fase={fase} destacado />
@@ -1775,7 +1777,7 @@ export function Tablero({
                   )}
                   {opcionesRuptura.length > 0 && (
                     <span className="text-[11px] font-semibold text-rose-300">
-                      Ruptura: elegí qué Vínculo del rival romper (a ciegas)
+                      Ruptura: elige qué Vínculo del rival romper (a ciegas)
                     </span>
                   )}
                   {/* A6: confirmación del subconjunto de atacantes seleccionado con los (+) */}
@@ -1896,10 +1898,10 @@ export function Tablero({
       {seleccion?.tipo === 'elegir_slot' && (
         <Dock
           etiquetaAria="Elegir casilla"
-          titulo="Elegí la casilla"
+          titulo="Elige la casilla"
           subtitulo={
             <>
-              Elegí en tu tablero la casilla iluminada para{' '}
+              Elige en tu tablero la casilla iluminada para{' '}
               <span className="font-semibold text-cyan-300">{getCardMeta(seleccion.objetivoCardId)?.name ?? 'tu carta'}</span>
             </>
           }
@@ -1914,7 +1916,7 @@ export function Tablero({
           titulo={seleccion.tipo === 'pagar' ? 'Pagar con Éter' : seleccion.tipo === 'bloquear' ? 'Bloquear Éter' : 'Equipar Artefacto'}
           subtitulo={
             seleccion.tipo === 'pagar'
-              ? 'Elegí los Éteres de tu Reserva (2A) para pagar:'
+              ? 'Elige los Éteres de tu Reserva (2A) para pagar:'
               : seleccion.tipo === 'bloquear'
                 ? (() => {
                     const meta = getCardMeta(seleccion.objetivoCardId)
@@ -1925,9 +1927,9 @@ export function Tablero({
                       const requerido = maxEterBloqueado(meta) - actuales
                       return `Bloquea exactamente ${requerido} Éter(es) sobre ${meta.name}${zonaTxt}:`
                     }
-                    return `Elegí los Éteres a bloquear${zonaTxt} (hasta el máximo):`
+                    return `Elige los Éteres a bloquear${zonaTxt} (hasta el máximo):`
                   })()
-                : 'Elegí el Campeón al que quieres equipar este Artefacto:'
+                : 'Elige el Campeón al que quieres equipar este Artefacto:'
           }
           pie={
             <>
@@ -2015,7 +2017,7 @@ export function Tablero({
                   {seleccion.tipo === 'pagar' && requeridos > 0 && (
                     <div className="border-t border-white/5 pt-3">
                       <Seccion tono="alerta">
-                        Elegí {requeridos} Campeón{requeridos > 1 ? 'es' : ''} de tu campo para sacrificar:
+                        Elige {requeridos} Campeón{requeridos > 1 ? 'es' : ''} de tu campo para sacrificar:
                       </Seccion>
                       <div className="flex flex-wrap gap-1.5">
                         {sacrificables.map((id) => {
@@ -2154,7 +2156,7 @@ export function Tablero({
         <ElegirObjetivoModal
           vista={vista}
           opciones={tutores.map((a) => a.objetivoId)}
-          titulo={fuenteNombre ?? 'Elegí una carta'}
+          titulo={fuenteNombre ?? 'Elige una carta'}
           subtitulo={labelOpcionesElegir(vista, tutores.map((a) => a.objetivoId))}
           onElegir={(objetivoId) => onAccion({ type: 'elegir_objetivo', objetivoId })}
         />

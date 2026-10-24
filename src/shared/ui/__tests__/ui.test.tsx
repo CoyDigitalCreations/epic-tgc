@@ -10,13 +10,13 @@ import { TileCarta } from '../TileCarta'
 describe('Modal', () => {
   it('es un diálogo modal cuyo nombre accesible es su título', () => {
     render(
-      <Modal titulo="Cadena Global" subtitulo="Elegí o pasá prioridad.">
+      <Modal titulo="Cadena Global" subtitulo="Elige o pasa prioridad.">
         <p>contenido</p>
       </Modal>,
     )
     const dialogo = screen.getByRole('dialog', { name: 'Cadena Global' })
     expect(dialogo).toHaveAttribute('aria-modal', 'true')
-    expect(within(dialogo).getByText('Elegí o pasá prioridad.')).toBeInTheDocument()
+    expect(within(dialogo).getByText('Elige o pasa prioridad.')).toBeInTheDocument()
     expect(within(dialogo).getByText('contenido')).toBeInTheDocument()
   })
 

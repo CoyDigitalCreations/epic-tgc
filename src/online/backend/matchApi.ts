@@ -93,7 +93,7 @@ export async function asegurarSesion(): Promise<string> {
   if (error || !anon.user) {
     throw new Error(
       error?.message ??
-        'No se pudo iniciar sesión. Habilitá anonymous sign-ins en Supabase → Authentication → Providers.',
+        'No se pudo iniciar sesión. Habilita anonymous sign-ins en Supabase → Authentication → Providers.',
     )
   }
   return anon.user.id

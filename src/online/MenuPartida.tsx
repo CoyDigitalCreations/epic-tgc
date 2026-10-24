@@ -42,7 +42,7 @@ function Nivel({ nivel, color }: { nivel: number; color: string }) {
 }
 
 /**
- * Antesala de la partida contra el bot: elegís mazo (set o personalizado), dificultad y semilla.
+ * Antesala de la partida contra el bot: eliges mazo (set o personalizado), dificultad y semilla.
  * Izquierda: los mazos como tarjetas. Derecha: el panel de la partida con el botón de comenzar
  * siempre a la vista.
  */
@@ -90,13 +90,13 @@ export function MenuPartida({
       <main className="relative mx-auto max-w-6xl px-6 py-8">
         <div className="mb-7">
           <h2 className="font-display text-3xl font-bold tracking-wide text-gray-50">Nueva partida</h2>
-          <p className="mt-1 text-sm text-gray-400">Elegí tu mazo, definí a tu rival y entrá a la mesa.</p>
+          <p className="mt-1 text-sm text-gray-400">Elige tu mazo, define a tu rival y entra a la mesa.</p>
         </div>
 
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_340px]">
           {/* ── Mazos ─────────────────────────────────────────── */}
           <section aria-label="Tu mazo">
-            <Seccion>Elegí tu mazo</Seccion>
+            <Seccion>Elige tu mazo</Seccion>
             <div className="grid gap-5 sm:grid-cols-2">
               {MAZOS.map((mazo) => (
                 <TarjetaMazo
@@ -133,7 +133,7 @@ export function MenuPartida({
                   +
                 </span>
                 <span className="font-display text-sm tracking-wide">Nuevo mazo personalizado</span>
-                <span className="text-[11px] text-gray-500">Armá el tuyo con las cartas del juego</span>
+                <span className="text-[11px] text-gray-500">Arma el tuyo con las cartas del juego</span>
               </button>
             </div>
           </section>

@@ -103,7 +103,7 @@ describe('Selección de Éter en el tablero 4×7', () => {
 
     // 2. Clic en la carta + "Jugar" → abre el selector de Éteres de la Reserva
     await jugarDesdeMano(user, jugar as Extract<Action, { cardInstanceId: string }>)
-    expect(screen.getByText(/Elegí los Éteres de tu Reserva/)).toBeInTheDocument()
+    expect(screen.getByText(/Elige los Éteres de tu Reserva/)).toBeInTheDocument()
 
     // 3. Toggle Éteres hasta Σ aporte ≥ coste (2) — aporteDe = 1 por Éter
     const confirmar = () => screen.getByRole('button', { name: 'Pagar y jugar' })
@@ -345,7 +345,7 @@ describe('Reserva de Éter (2A) y aporte real (1 / ½)', () => {
     expect(conCoste).toBeDefined()
     // Clic en la carta + su opción de jugar → abre el selector
     await jugarDesdeMano(user, conCoste!)
-    expect(screen.getByText(/Elegí los Éteres de tu Reserva/)).toBeInTheDocument()
+    expect(screen.getByText(/Elige los Éteres de tu Reserva/)).toBeInTheDocument()
 
     // Aporte en unidades reales: 1 (fación compartida) o 0.5 (ajena), NUNCA 2
     const aportes = screen.getAllByText(/^aporte (1|0\.5)$/)
@@ -476,7 +476,7 @@ describe('Mano en abanico: menú de la carta y zoom', () => {
 
     // Clic en la carta + opción de jugar → selector de pago
     await jugarDesdeMano(user, jugar!)
-    expect(screen.getByText(/Elegí los Éteres de tu Reserva/)).toBeInTheDocument()
+    expect(screen.getByText(/Elige los Éteres de tu Reserva/)).toBeInTheDocument()
   })
 })
 
@@ -519,7 +519,7 @@ describe('Arcanas: la casilla de colocación se elige en el tablero', () => {
 
     await jugarDesdeMano(user, colocar)
     expect(onAccion).not.toHaveBeenCalled()
-    expect(screen.getByText(/Elegí en tu tablero la casilla iluminada/)).toBeInTheDocument()
+    expect(screen.getByText(/Elige en tu tablero la casilla iluminada/)).toBeInTheDocument()
 
     // Las 3 casillas de Arcana (3D-3F) de la grilla propia están iluminadas y son clickeables
     expect(screen.getAllByRole('button', { name: /^Colocar en 3[DEF]$/ })).toHaveLength(3)
@@ -530,7 +530,7 @@ describe('Arcanas: la casilla de colocación se elige en el tablero', () => {
       expect.objectContaining({ type: 'colocar_arcana', cardInstanceId: 'inst-arc', slot: 1 }),
     )
     // Elegida la casilla se apaga el modo selección
-    expect(screen.queryByText(/Elegí en tu tablero la casilla iluminada/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Elige en tu tablero la casilla iluminada/)).not.toBeInTheDocument()
   })
 
   it('solo se iluminan las casillas LIBRES', async () => {
@@ -640,7 +640,7 @@ describe('Sacrificio de Campeones (rol Soberano/Emperador)', () => {
 
     // Abrir el selector: clic en Aurora en la mano + "Invocar"
     await jugarDesdeMano(user, jugar as Extract<Action, { cardInstanceId: string }>)
-    expect(screen.getByText(/Elegí 1 Campeón de tu campo para sacrificar/)).toBeInTheDocument()
+    expect(screen.getByText(/Elige 1 Campeón de tu campo para sacrificar/)).toBeInTheDocument()
 
     // Elegir Vaela como sacrificio (botón del selector con title=Vaela)
     const vaelaSelector = screen
@@ -1189,7 +1189,7 @@ describe('PriorityModal — unificación de respuesta a cadenas (2026-10-14)', (
     expect(screen.getByText('Cadena Global')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Pasar prioridad' })).toBeInTheDocument()
     // Y el mensaje para el caso 0 respondibles
-    expect(screen.getByText(/No tenés cartas que puedan responder/)).toBeInTheDocument()
+    expect(screen.getByText(/No tienes cartas que puedan responder/)).toBeInTheDocument()
   })
 
   it('NO se muestra cuando la prioridad es del rival', () => {

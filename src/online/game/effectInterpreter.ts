@@ -49,7 +49,7 @@ export function interpretEffect(
   // - Continuo effects have cost already paid (blocking Éter) by ejecutarActivarHabilidad.
   // - Fase 3a/3c: costos eter_bloqueado/bloqueo_fijo se pagan vía bloquear_eter
   //   (acción SEPARADA posterior al jugar) — skip validación al interpret time
-  //   (patrón continuo: el costo se paga después, no acá).
+  //   (patrón continuo: el costo se paga después, no aquí).
   // Only validate cost for DISPARO-style effects (no trigger, paid at activation).
   if (!efectoData.trigger && efectoData.tipo !== 'continuo' && costo && costo.tipo !== 'ninguno') {
     if (costo.tipo !== 'eter_bloqueado' && costo.tipo !== 'bloqueo_fijo') {

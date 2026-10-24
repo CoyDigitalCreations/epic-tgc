@@ -239,7 +239,7 @@ export function MazoEditor({ inicial, onGuardar, onCancelar }: MazoEditorProps) 
           ) : (
             <div className="m-auto text-center text-gray-500">
               <div className="mb-2 text-4xl">✦</div>
-              <p className="text-sm">Hacé clic en una carta para verla</p>
+              <p className="text-sm">Haz clic en una carta para verla</p>
             </div>
           )}
         </section>

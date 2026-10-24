@@ -309,7 +309,7 @@ export function getValidActions(state: GameState, playerId: PlayerId): Action[] 
       //   1/turno (puede activar agotado);
       // - pago 'eter' → patrón "Agota"/Continuo: paga a 1A, no agotado, 1/turno.
       // Continuos con costo-bloqueo (steal Aurora, double_attack FB-015) NO
-      // llegan acá: su acción es bloquear_eter (aura/umbral), nunca activar.
+      // llegan aquí: su acción es bloquear_eter (aura/umbral), nunca activar.
       const efectoAct = efectoActivableDe(meta, false)
       if (efectoAct && inst) {
         const costoBloqueo = esCostoBloqueo(efectoAct.costo)

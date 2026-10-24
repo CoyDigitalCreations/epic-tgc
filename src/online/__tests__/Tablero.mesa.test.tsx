@@ -35,11 +35,11 @@ describe('Mesa: selección a medias y cambio de turno', () => {
     >
     await user.click(document.querySelector(`[data-testid="mano"] [data-inst="${jugar.cardInstanceId}"]`) as HTMLElement)
     await user.click(screen.getByRole('button', { name: jugar.type === 'jugar_campeon' ? 'Invocar' : 'Jugar' }))
-    expect(screen.getByText(/Elegí los Éteres de tu Reserva/)).toBeInTheDocument()
+    expect(screen.getByText(/Elige los Éteres de tu Reserva/)).toBeInTheDocument()
 
     // El turno pasa al rival con el pago a medio elegir
     rerender(<Tablero {...props} acciones={[]} leTocaA={false} />)
-    expect(screen.queryByText(/Elegí los Éteres de tu Reserva/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Elige los Éteres de tu Reserva/)).not.toBeInTheDocument()
   })
 
   it('el campo propio y el del rival comparten el mismo ancho de carta (la mesa es simétrica)', () => {
@@ -78,7 +78,7 @@ describe('Mesa: selección a medias y cambio de turno', () => {
       />,
     )
 
-    expect(screen.getByText(/Ruptura: elegí qué Vínculo del rival romper/)).toBeInTheDocument()
+    expect(screen.getByText(/Ruptura: elige qué Vínculo del rival romper/)).toBeInTheDocument()
     // Solo los slots que el motor ofrece (4C y 4E) son clickeables, y solo en el campo del RIVAL
     expect(screen.getAllByRole('button', { name: /^Romper Vínculo 4[A-F]$/ })).toHaveLength(2)
 
@@ -126,10 +126,10 @@ describe('Mesa: selección a medias y cambio de turno', () => {
 
     const dialogo = screen.getByRole('dialog')
     // Al abrir no arrastra la última carta mirada en el tablero
-    expect(within(dialogo).getByText('Pasá el mouse sobre una carta')).toBeInTheDocument()
+    expect(within(dialogo).getByText('Pasa el mouse sobre una carta')).toBeInTheDocument()
 
     await user.hover(dialogo.querySelector('[data-inst]') as HTMLElement)
-    expect(within(dialogo).queryByText('Pasá el mouse sobre una carta')).not.toBeInTheDocument()
+    expect(within(dialogo).queryByText('Pasa el mouse sobre una carta')).not.toBeInTheDocument()
   })
 
   it('cada campo tiene su bloque de 6 Vínculos con data-zona 4A-4F', () => {

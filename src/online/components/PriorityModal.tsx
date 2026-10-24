@@ -61,8 +61,8 @@ export function PriorityModal({ state, playerId, acciones, onAccion, onZoom }: P
       titulo={esCombate ? 'Cadena de Combate (9.6)' : 'Cadena Global'}
       subtitulo={
         totalRespondibles > 0
-          ? `Tenés ${totalRespondibles} carta(s) que puede(n) responder — elegí o pasá prioridad.`
-          : 'No tenés cartas que puedan responder este efecto — pasá la prioridad para continuar.'
+          ? `Tienes ${totalRespondibles} carta(s) que puede(n) responder — elige o pasa prioridad.`
+          : 'No tienes cartas que puedan responder este efecto — pasa la prioridad para continuar.'
       }
       icono="⛓"
       tono="alerta"

@@ -53,7 +53,7 @@ describe('Tablero en escritorio: no cambia', () => {
   it('el lateral con el inspector sigue fijo', () => {
     viewport(1440, 900)
     montar()
-    expect(screen.getByText('Pasá el mouse sobre una carta')).toBeInTheDocument()
+    expect(screen.getByText('Pasa el mouse sobre una carta')).toBeInTheDocument()
   })
 })
 
@@ -94,7 +94,7 @@ describe('Tablero en celular/tablet horizontal (modo compacto)', () => {
     await user.click(screen.getByRole('button', { name: 'Menú' }))
     await user.click(screen.getByRole('menuitem', { name: 'Cadena, efectos y log' }))
     expect(screen.getByText(/Sin cadena abierta/)).toBeInTheDocument()
-    expect(screen.queryByText('Pasá el mouse sobre una carta')).not.toBeInTheDocument()
+    expect(screen.queryByText('Pasa el mouse sobre una carta')).not.toBeInTheDocument()
   })
 })
 
@@ -104,7 +104,7 @@ describe('Tablero en celular vertical', () => {
     viewport(375, 667)
     const { onAbandonar } = montar()
 
-    expect(screen.getByRole('alert')).toHaveTextContent('Girá tu dispositivo')
+    expect(screen.getByRole('alert')).toHaveTextContent('Gira tu dispositivo')
     await user.click(screen.getByRole('button', { name: 'Abandonar partida' }))
     expect(onAbandonar).toHaveBeenCalledTimes(1)
   })

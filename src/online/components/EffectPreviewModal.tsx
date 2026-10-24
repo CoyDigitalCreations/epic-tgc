@@ -64,8 +64,8 @@ export function EffectPreviewModal({ preview, instancia, onAceptar, onCancelar }
       titulo={esBot ? 'El rival va a ejecutar' : 'Efectos por entrar en juego'}
       subtitulo={
         esBot
-          ? 'El juego está en pausa. Revisá qué va a resolver el bot y aceptá para continuar.'
-          : 'El juego está en pausa. Revisá qué se va a resolver y aceptá para continuar.'
+          ? 'El juego está en pausa. Revisa qué va a resolver el bot y acepta para continuar.'
+          : 'El juego está en pausa. Revisa qué se va a resolver y acepta para continuar.'
       }
       icono="⏸"
       tono={esBot ? 'rival' : 'ether'}

@@ -231,7 +231,7 @@ export function ejecutarActivarArcana(s: GameState, action: Extract<Action, { ty
   // §5.4 (fix A4): recompensa de UN SOLO USO → la Arcana va al Cementerio
   // y libera su slot. Efecto CONTINUO → permanece boca arriba. Si la Arcana
   // misma quedó en la PILA (se activó respondiendo en cadena), la consume el
-  // resolutor de cadena — acá no se toca.
+  // resolutor de cadena — aquí no se toca.
   const enPila = (s.cadena?.pila ?? []).includes(id) || (s.combate?.cadena?.pila ?? []).includes(id)
   if (!enPila && meta && !esPermanenteEnMesa(meta)) {
     const slotIdx = s.players[s.turno].campo.arcanasCombate.indexOf(id)

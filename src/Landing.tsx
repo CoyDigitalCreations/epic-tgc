@@ -94,12 +94,12 @@ export default function Landing() {
               Set Básico · El Despertar del Éter
             </p>
             <h2 className="mt-4 font-display text-4xl font-black leading-tight tracking-wide text-gray-50 sm:text-5xl">
-              Forjá tus cartas.
-              <span className="block text-ether-200">Jugá con el Éter.</span>
+              Forja tus cartas.
+              <span className="block text-ether-200">Juega con el Éter.</span>
             </h2>
             <p className="mt-5 max-w-xl text-base leading-relaxed text-gray-400">
               Un juego de cartas donde el recurso es una carta más, los Vínculos son tu vida y cada
-              Ruptura cuenta. Creá tus cartas, armá tu mazo y enfrentate en línea.
+              Ruptura cuenta. Crea tus cartas, arma tu mazo y enfréntate en línea.
             </p>
           </div>
 

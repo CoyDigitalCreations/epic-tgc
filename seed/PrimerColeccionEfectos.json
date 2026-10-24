@@ -477,7 +477,7 @@
           "ATQ": 0,
           "RES": 0
         },
-        "texto": "Al ser enviada al Cementerio desde cualquier zona, puedes buscar 1 Campeón de facción Orden de esencia Céleste de tu Cementerio y agregalo a tu mano.",
+        "texto": "Al ser enviada al Cementerio desde cualquier zona, puedes buscar 1 Campeón de facción Orden de esencia Céleste de tu Cementerio y agrégalo a tu mano.",
         "trigger": "al_ser_enviado_al_cementerio",
         "triggerZona": "cualquier_zona"
       }
@@ -1311,7 +1311,7 @@
           "ATQ": 0,
           "RES": 0
         },
-        "texto": "Al ser enviada al Cementerio desde el campo, puedes buscar 1 Campeón de facción Orden coste 4 o menos de esencia Céleste de tu mazo y agregalo a tu mano.",
+        "texto": "Al ser enviada al Cementerio desde el campo, puedes buscar 1 Campeón de facción Orden coste 4 o menos de esencia Céleste de tu mazo y agrégalo a tu mano.",
         "trigger": "al_ser_enviado_al_cementerio",
         "triggerZona": "campo",
         "zonaOrigen": "mazo"
@@ -2623,7 +2623,7 @@
           "zonaDestino": "mano"
         },
         "zonaDestino": "mano",
-        "texto": "Al ser enviada al Cementerio desde cualquier zona, puedes buscar 1 Campeón coste 2 o menos de tu mazo y agregalo a tu mano."
+        "texto": "Al ser enviada al Cementerio desde cualquier zona, puedes buscar 1 Campeón coste 2 o menos de tu mazo y agrégalo a tu mano."
       }
     ]
   },
@@ -2673,7 +2673,7 @@
           "zonaDestino": "mano"
         },
         "zonaDestino": "mano",
-        "texto": "Busca 1 carta coste 3 o menos de tu Cementerio y agregalo a tu mano."
+        "texto": "Busca 1 carta coste 3 o menos de tu Cementerio y agrégalo a tu mano."
       }
     ]
   },
@@ -2709,7 +2709,7 @@
           "zonaDestino": "mano"
         },
         "zonaDestino": "mano",
-        "texto": "Busca 1 Campeón coste 3 o menos de tu mazo y agregalo a tu mano."
+        "texto": "Busca 1 Campeón coste 3 o menos de tu mazo y agrégalo a tu mano."
       }
     ]
   }

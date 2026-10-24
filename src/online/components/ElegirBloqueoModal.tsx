@@ -58,7 +58,7 @@ export function ElegirBloqueoModal({ vista, parejas, fuenteNombre, onElegir, onC
     <InspeccionContext.Provider value={setMirada}>
       <Modal
         titulo={fuenteNombre}
-        subtitulo={campeonId ? `Elegí el Éter de tu Reserva que se bloquea sobre ${nombreCampeon}` : 'Elegí el Campeón que recibe el Éter bloqueado'}
+        subtitulo={campeonId ? `Elige el Éter de tu Reserva que se bloquea sobre ${nombreCampeon}` : 'Elige el Campeón que recibe el Éter bloqueado'}
         icono="✦"
         ancho="xl"
         onCerrar={onCerrar}
