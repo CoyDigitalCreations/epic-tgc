@@ -1,24 +1,30 @@
 import { describe, expect, it } from 'vitest'
-import { calcularAnchoCarta, esViewportCompacto } from '../useAnchoTablero'
+import {
+  ESCALA_FILA_ETER,
+  RELACION_CARTA,
+  RESERVA_ETIQUETA_CAMPEON,
+  calcularAnchoCarta,
+  esViewportCompacto,
+} from '../useAnchoTablero'
 
 describe('calcularAnchoCarta', () => {
-  it('portátil 1440×900: la mesa mide ~1085×715 y la carta queda en 75 px (limita el ancho)', () => {
-    // alto permitiría 83 px; el ancho (7 columnas + Vínculos + panel lateral) permite (1085-104)/12.95 ≈ 75
-    expect(calcularAnchoCarta(1085, 715)).toBe(75)
+  it('portátil 1440×900: la mesa mide ~1085×715 y la carta queda en 74 px (limita el ancho)', () => {
+    // alto permitiría ((715-56)/2-54)/3.655 ≈ 75; el ancho (7 columnas + Vínculos + panel lateral + aire) permite (1085-116)/12.95 ≈ 74
+    expect(calcularAnchoCarta(1085, 715)).toBe(74)
   })
 
-  it('pantalla 1920×1080: la mesa mide ~1565×874 y la carta crece a 105 px (limita el alto)', () => {
-    expect(calcularAnchoCarta(1565, 874)).toBe(105)
+  it('pantalla 1920×1080: la mesa mide ~1565×874 y la carta crece a 97 px (limita el alto)', () => {
+    expect(calcularAnchoCarta(1565, 874)).toBe(97)
   })
 
   it('con una mesa angosta limita el ANCHO', () => {
-    // (700 - 104) / 12.946 ≈ 46: el alto sobraría
-    expect(calcularAnchoCarta(700, 2000)).toBe(46)
+    // (700 - 116) / 12.946 ≈ 45.1: el alto sobraría
+    expect(calcularAnchoCarta(700, 2000)).toBe(45)
   })
 
   it('con una mesa baja limita el ALTO', () => {
-    // ((600 - 66) / 2 - 20) / 3.655 ≈ 67.6: el ancho sobraría
-    expect(calcularAnchoCarta(3000, 600)).toBe(67)
+    // ((600 - 56) / 2 - 54) / 3.655 ≈ 59.6: el ancho sobraría
+    expect(calcularAnchoCarta(3000, 600)).toBe(59)
   })
 
   it('más espacio nunca achica la carta', () => {
@@ -27,6 +33,22 @@ describe('calcularAnchoCarta', () => {
       const ancho = calcularAnchoCarta(1600, alto)
       expect(ancho).toBeGreaterThanOrEqual(anterior)
       anterior = ancho
+    }
+  })
+
+  it('los dos campos caben dentro del recuadro de la mesa y lo dejan casi sin holgura', () => {
+    // Alto real de un tablero: 3 filas + 2 separaciones (12) + padding del recuadro (8) + la etiqueta reservada
+    const fijoTablero = 12 + 8 + RESERVA_ETIQUETA_CAMPEON
+    // Franja central (44) + padding de la mesa (8) + borde (2)
+    const fijoMesa = 44 + 8 + 2
+    // Hasta 1000 px de alto la carta no topa con el máximo (130 px), que dejaría holgura de sobra a propósito
+    for (let alto = 640; alto <= 1000; alto += 20) {
+      const cw = calcularAnchoCarta(1900, alto)
+      const tablero = cw * (ESCALA_FILA_ETER + 2) * RELACION_CARTA + fijoTablero
+      const holgura = alto - (2 * tablero + fijoMesa)
+      expect(holgura, `alto ${alto}`).toBeGreaterThanOrEqual(0)
+      // Sobra a lo sumo lo que se pierde al redondear la carta hacia abajo (2 tableros) + la holgura reservada
+      expect(holgura, `alto ${alto}`).toBeLessThan(2 * (ESCALA_FILA_ETER + 2) * RELACION_CARTA + 8)
     }
   })
 

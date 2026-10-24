@@ -11,7 +11,7 @@ import { ElegirBloqueoModal } from './ElegirBloqueoModal'
 import { ElegirObjetivoModal } from './ElegirObjetivoModal'
 import { MiniCard } from './MiniCard'
 import { InspectorCarta } from './InspectorCarta'
-import { AnchoTableroContext, CompactoContext, InspeccionContext, useAnchoCarta } from './tableroContext'
+import { AnchoTableroContext, CompactoContext, InspeccionContext, useAnchoCarta, useCompacto } from './tableroContext'
 import type { Inspeccion } from './tableroContext'
 import {
   ANCHO_FLANCO,
@@ -19,6 +19,7 @@ import {
   ESCALA_FILA_ETER,
   ESCALA_VINCULO,
   RELACION_CARTA,
+  RESERVA_ETIQUETA_CAMPEON,
   esViewportCompacto,
   useAnchoTablero,
   useViewport,
@@ -377,6 +378,7 @@ function Celda({
   etiquetaElegir,
   escala = 1,
   ocupaColumna = true,
+  reservaAlto = 0,
 }: {
   zona: string
   children?: ReactNode
@@ -391,6 +393,8 @@ function Celda({
   etiquetaElegir?: string
   escala?: number
   ocupaColumna?: boolean
+  /** Alto extra que la casilla reserva siempre (px): el tablero no cambia de alto cuando entra o sale una etiqueta. */
+  reservaAlto?: number
 }) {
   const cw = useAnchoCarta()
   const anchoCarta = Math.round(cw * escala)
@@ -425,7 +429,7 @@ function Celda({
       }
       style={{
         minWidth: ocupaColumna ? Math.round(cw * RELACION_CARTA) : anchoCarta,
-        minHeight: Math.round(anchoCarta * RELACION_CARTA),
+        minHeight: Math.round(anchoCarta * RELACION_CARTA) + reservaAlto,
         overflow: 'visible',
         ...glowStyles,
       }}
@@ -646,6 +650,8 @@ function GrillaJugador({
   const soy = jugador === 'A'
   /** Ancho de carta del tablero (responsivo) y de las cartas más chicas: fila de Éter y Vínculos. */
   const cw = useAnchoCarta()
+  /** La etiqueta ATQ/RES + keywords que cuelga de cada Campeón: su espacio se reserva siempre (en compacto va en una línea chica). */
+  const reservaEtiqueta = useCompacto() ? 0 : RESERVA_ETIQUETA_CAMPEON
   const cwEter = Math.round(cw * ESCALA_FILA_ETER)
   const cwVinculo = Math.round(cw * ESCALA_VINCULO)
   /** ¿Esta casilla propia está iluminada para colocar la carta en curso? */
@@ -845,7 +851,7 @@ function GrillaJugador({
     const hayGlow = animaciones?.some((a) => a.tipo === 'glow' && a.zona === zona && a.jugador === jugador) ?? false
     const hayAtaque = id !== null && (animaciones?.some((a) => a.tipo === 'attack' && a.atacantes?.includes(id)) ?? false)
     celdas.push(
-      <Celda key={zona} zona={zona} glow={hayGlow || hayAtaque} glowColor={hayAtaque ? 'red' : 'green'} elegible={elegible(zona)} onElegir={() => onElegirCasilla?.(zona)}>
+      <Celda key={zona} zona={zona} glow={hayGlow || hayAtaque} glowColor={hayAtaque ? 'red' : 'green'} elegible={elegible(zona)} onElegir={() => onElegirCasilla?.(zona)} reservaAlto={reservaEtiqueta}>
         {id ? (
           <div className="relative">
             {soy && leTocaA ? campeonPropio(id) : <MiniCard inst={vista.instances[id]} anchoPx={cw} rotarSiAgotado onZoom={() => abrirZoom(vista.instances[id])} invertida={invertida} />}
@@ -1702,7 +1708,7 @@ export function Tablero({
         <section className="flex-1 min-w-0 flex flex-col">
           <div
             ref={mesaRef}
-            className={`flex-1 min-h-0 flex flex-col items-center justify-center rounded-2xl border border-card-border/60 ${compacto ? 'px-1 py-0.5' : 'px-3 py-2'}`}
+            className={`flex-1 min-h-0 flex flex-col items-center justify-center rounded-2xl border border-card-border/60 ${compacto ? 'px-1 py-0.5' : 'px-3 py-1'}`}
             style={{
               background:
                 'radial-gradient(ellipse at 50% 50%, rgba(64,64,255,0.07) 0%, rgba(64,64,255,0) 60%), linear-gradient(180deg, #11111b 0%, #0d0d16 50%, #11111b 100%)',
@@ -1710,7 +1716,7 @@ export function Tablero({
           >
             <div className={`w-full flex items-center justify-center ${compacto ? 'gap-1' : 'gap-4'}`}>
             <div
-              className={`${compacto ? 'py-0' : 'py-1'} rounded-xl transition-shadow`}
+              className={`${compacto ? 'py-0' : 'px-1.5 py-1'} rounded-xl transition-shadow`}
               style={vista.turno === 'B' && !terminada ? { boxShadow: '0 0 0 1px rgba(248,113,113,0.30), 0 0 32px rgba(248,113,113,0.10)' } : undefined}
             >
               <GrillaJugador
@@ -1799,7 +1805,7 @@ export function Tablero({
 
             <div className={`w-full flex items-center justify-center ${compacto ? 'gap-1' : 'gap-4'}`}>
             <div
-              className={`${compacto ? 'py-0' : 'py-1'} rounded-xl transition-shadow`}
+              className={`${compacto ? 'py-0' : 'px-1.5 py-1'} rounded-xl transition-shadow`}
               style={vista.turno === 'A' && !terminada ? { boxShadow: '0 0 0 1px rgba(112,112,255,0.35), 0 0 32px rgba(64,64,255,0.12)' } : undefined}
             >
               <GrillaJugador

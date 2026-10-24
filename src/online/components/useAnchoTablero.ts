@@ -13,14 +13,20 @@ export const ANCHO_FLANCO = 1.9
 
 const MIN_ANCHO = 40
 const MAX_ANCHO = 130
-/** Alto fijo de la mesa que NO escala con la carta: franja central (44) + padding de la mesa (16) + margen. */
-const ALTO_FIJO = 66
-/** Alto por tablero que no escala: separación entre las 3 filas + padding. */
-const ALTO_FIJO_TABLERO = 20
+/** Alto fijo de la mesa que NO escala con la carta: franja central (44) + padding de la mesa (8) + borde (2) + 2 de holgura. */
+const ALTO_FIJO = 56
+/**
+ * Alto que se reserva SIEMPRE bajo la casilla de un Campeón para su etiqueta ATQ/RES y los chips de
+ * keywords (medido: ~30 px). Al reservarlo, el tablero mide lo mismo con o sin Campeones y el recuadro
+ * de la mesa puede ajustarse al contenido sin que nada se salga.
+ */
+export const RESERVA_ETIQUETA_CAMPEON = 32
+/** Alto por tablero que no escala: 2 separaciones entre filas (12) + padding del recuadro (8) + etiqueta reservada + 2 de holgura. */
+const ALTO_FIJO_TABLERO = 12 + 8 + RESERVA_ETIQUETA_CAMPEON + 2
 /** Alto de las 3 filas de un tablero en unidades de ancho de carta (fila 1 chica + filas 2 y 3). */
 const FILAS_EN_CARTAS = (ESCALA_FILA_ETER + 2) * RELACION_CARTA
-/** Ancho fijo: padding (24) + 6 huecos entre columnas (48) + hueco a los Vínculos (16) + hueco al panel lateral (16). */
-const ANCHO_FIJO = 24 + 48 + 16 + 16
+/** Ancho fijo: padding (24) + 6 huecos entre columnas (48) + hueco a los Vínculos (16) + hueco al panel lateral (16) + aire del recuadro del campo (12). */
+const ANCHO_FIJO = 24 + 48 + 16 + 16 + 12
 /** Ancho en unidades de carta: 7 columnas (cada una del alto de una carta, por la carta girada) + Vínculos + panel lateral. */
 const COLUMNAS_EN_CARTAS = 7 * RELACION_CARTA + 2 * ESCALA_VINCULO + ANCHO_FLANCO
 
