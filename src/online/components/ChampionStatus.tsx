@@ -4,7 +4,10 @@
  * - Foco continuo (gris/verde/rojo)
  * - Foco temporal (gris/verde)
  */
+import { useEffect, useRef, useState } from 'react'
+import type { ReactNode } from 'react'
 import { statsComparativos, focosState } from '../game/stats'
+import { useAnimacionActiva } from '../animacion/contexto'
 import { keywordsDe } from '../game/efectos'
 import { esCampeon, getCardMeta } from '../game/cards'
 import type { GameState } from '../game'
@@ -22,6 +25,55 @@ const FOCO_CLASSES: Record<string, string> = {
   rojo: 'bg-red-500',
 }
 
+/** Cuánto cambiaron ATQ y RES en la última actualización (`k` reinicia la animación aunque el delta se repita). */
+interface CambioStats {
+  atq: number
+  res: number
+  k: number
+}
+
+/**
+ * Detecta que ATQ/RES cambiaron (buff, debuff, expiración) para mostrar el "+2" flotante.
+ * Al montarse no hay "antes": una carta que entra al campo no anuncia sus stats base.
+ */
+function useCambiosDeStats(atq: number | undefined, res: number | undefined): CambioStats | null {
+  const activa = useAnimacionActiva()
+  const previo = useRef({ atq, res })
+  const [cambio, setCambio] = useState<CambioStats | null>(null)
+  useEffect(() => {
+    const antes = previo.current
+    previo.current = { atq, res }
+    if (!activa || atq === undefined || res === undefined) return
+    if (antes.atq === undefined || antes.res === undefined) return
+    const dAtq = atq - antes.atq
+    const dRes = res - antes.res
+    if (dAtq === 0 && dRes === 0) return
+    setCambio((c) => ({ atq: dAtq, res: dRes, k: (c?.k ?? 0) + 1 }))
+    const id = window.setTimeout(() => setCambio(null), 1100)
+    return () => window.clearTimeout(id)
+  }, [atq, res, activa])
+  return cambio
+}
+
+/** Una cifra (ATQ o RES): si cambió, hace "pop" y suelta el delta flotando. Se remonta por `key` para reiniciar. */
+function Cifra({ clase, delta, children }: { clase: string; delta: number; children: ReactNode }) {
+  return (
+    <span className={`relative inline-block ${clase} ${delta !== 0 ? 'anim-stat-pop' : ''}`}>
+      {children}
+      {delta !== 0 && (
+        <span
+          aria-hidden="true"
+          data-testid="delta-stat"
+          className={`anim-delta pointer-events-none absolute -top-3 left-1/2 text-[11px] font-black ${delta > 0 ? 'text-green-300' : 'text-red-400'}`}
+          style={{ textShadow: '0 0 6px currentColor' }}
+        >
+          {delta > 0 ? `+${delta}` : delta}
+        </span>
+      )}
+    </span>
+  )
+}
+
 interface ChampionStatusProps {
   s: GameState
   id: string
@@ -32,7 +84,9 @@ interface ChampionStatusProps {
 export function ChampionStatus({ s, id, invertida }: ChampionStatusProps) {
   const compacto = useCompacto()
   const stats = statsComparativos(s, id)
+  const cambio = useCambiosDeStats(stats?.atq.actual, stats?.res.actual)
   if (!stats) return null
+  const k = cambio?.k ?? 0
 
   const inst = s.instances[id]
   const cardId = inst?.cardId ?? null
@@ -53,9 +107,9 @@ export function ChampionStatus({ s, id, invertida }: ChampionStatusProps) {
         style={rotStyle}
         title={`${stats.atq.actual} ATQ / ${stats.res.actual} RES${kws.length > 0 ? ` · ${kws.join(', ')}` : ''}`}
       >
-        <span className={COLOR_CLASSES[stats.atq.color]}>{stats.atq.actual}</span>
+        <Cifra key={`atq-${k}`} clase={COLOR_CLASSES[stats.atq.color]} delta={cambio?.atq ?? 0}>{stats.atq.actual}</Cifra>
         <span className="text-gray-500">/</span>
-        <span className={COLOR_CLASSES[stats.res.color]}>{stats.res.actual}</span>
+        <Cifra key={`res-${k}`} clase={COLOR_CLASSES[stats.res.color]} delta={cambio?.res ?? 0}>{stats.res.actual}</Cifra>
       </div>
     )
   }
@@ -63,12 +117,12 @@ export function ChampionStatus({ s, id, invertida }: ChampionStatusProps) {
   return (
     <div className="flex flex-col items-center gap-0.5 mt-0.5 px-1" data-testid={`status-${id}`} style={rotStyle}>
       <div className="flex items-center gap-1.5">
-        <span className={`text-[10px] font-mono font-bold ${COLOR_CLASSES[stats.atq.color]}`}>
+        <Cifra key={`atq-${k}`} clase={`text-[10px] font-mono font-bold ${COLOR_CLASSES[stats.atq.color]}`} delta={cambio?.atq ?? 0}>
           {stats.atq.actual}-ATQ
-        </span>
-        <span className={`text-[10px] font-mono font-bold ${COLOR_CLASSES[stats.res.color]}`}>
+        </Cifra>
+        <Cifra key={`res-${k}`} clase={`text-[10px] font-mono font-bold ${COLOR_CLASSES[stats.res.color]}`} delta={cambio?.res ?? 0}>
           {stats.res.actual}-RES
-        </span>
+        </Cifra>
       </div>
       {kws.length > 0 && (
         <div className="flex flex-wrap gap-0.5 justify-center">

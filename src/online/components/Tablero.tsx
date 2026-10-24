@@ -29,7 +29,8 @@ import { BlockingInterface } from './BlockingInterface'
 import { ActiveAbilitiesPanel } from './ActiveAbilitiesPanel'
 import { PriorityModal } from './PriorityModal'
 import { PreventionModal } from './PreventionModal'
-import { EnVueloContext } from '../animacion/contexto'
+import { AnimacionActivaContext, EnVueloContext } from '../animacion/contexto'
+import { CapaCombate } from '../animacion/CapaCombate'
 import { useAnimacionCartas } from '../animacion/useAnimacionCartas'
 import type { Velocidad } from '../animacion/useAnimacionCartas'
 import type { VistaPrevia } from '../usePartida'
@@ -833,7 +834,7 @@ function GrillaJugador({
 
   /* ── Fila 2 ── */
   celdas.push(
-    <Celda key="2A" zona="2A">
+    <Celda key="2A" zona="2A" glow={animaciones?.some((a) => a.tipo === 'glow' && a.zona === '2A' && a.jugador === jugador) ?? false}>
       {reservaCol()}
     </Celda>,
   )
@@ -1523,12 +1524,14 @@ export function Tablero({
 
   return (
     <EnVueloContext.Provider value={anim.ocultas}>
+    <AnimacionActivaContext.Provider value={anim.velocidad !== 'off'}>
     <AnchoTableroContext.Provider value={cw}>
     <CompactoContext.Provider value={compacto}>
     <InspeccionContext.Provider value={setInspeccion}>
     {/* overflow-clip (no hidden): hidden se puede scrollear por foco (clic en una carta de la mano) y correría toda la UI */}
     <div className={`${compacto ? 'h-dvh touch-manipulation' : 'h-screen'} flex flex-col overflow-clip bg-[#0a0a12] text-gray-100 font-body relative`}>
       {anim.capa}
+      <CapaCombate entradas={animaciones} activa={anim.velocidad !== 'off'} />
 
       {esRetrato && (
         <div role="alert" className="absolute inset-0 z-[70] flex flex-col items-center justify-center gap-3 bg-[#0a0a12] p-6 text-center">
@@ -2266,6 +2269,7 @@ export function Tablero({
     </InspeccionContext.Provider>
     </CompactoContext.Provider>
     </AnchoTableroContext.Provider>
+    </AnimacionActivaContext.Provider>
     </EnVueloContext.Provider>
   )
 }

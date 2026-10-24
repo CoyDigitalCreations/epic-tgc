@@ -18,6 +18,8 @@ export type ZonaMov = Zona | 'bloqueado'
 export interface Ubicacion {
   jugador: PlayerId
   zona: ZonaMov
+  /** Solo 'bloqueado': la carta (Campeón, Artefacto) que sostiene el Éter. */
+  sobre?: string
 }
 
 export interface Movimiento {
@@ -30,8 +32,31 @@ export interface Movimiento {
 /** Si un diff trae más movimientos que esto es un reseteo (mulligan…), no se anima. */
 export const MAX_MOVIMIENTOS = 8
 
-/** Éter (Reserva, pagado, bloqueado): 15 cartas por jugador, se animará aparte. */
-const ZONAS_SIN_ANIMAR: ReadonlySet<ZonaMov> = new Set<ZonaMov>(['2A', '1A', 'bloqueado'])
+/**
+ * Con destino en la Reserva (2A) NO hay vuelo: reagrupar en el Alba mueve hasta 15 Éteres y
+ * devolver/liberar vuelve uno a uno. Eso se resuelve con un pulso en la Reserva (usePartida),
+ * no con cartas volando. Pagar (→ 1A) y bloquear (→ carta) sí vuelan.
+ */
+const DESTINOS_SIN_VUELO: ReadonlySet<ZonaMov> = new Set<ZonaMov>(['2A'])
+
+/** Cómo se dibuja el viaje de una carta (cada estilo es una variante del mismo fantasma). */
+export type EstiloVuelo = 'normal' | 'eter' | 'destruccion' | 'exilio'
+
+const ZONA_DE_CAMPO = /^(2[B-F]|3[A-F]|4[A-F])$/
+
+/**
+ * - exilio: cualquier carta que termina en 1G (se desvanece en el vacío).
+ * - destruccion: del campo al cementerio (sacudón, destello y caída). Descartar de la mano o
+ *   moler el mazo NO son destrucciones: vuelan normal.
+ * - eter: Reserva, pago y bloqueo (vuelo corto, sin giro).
+ */
+export function estiloDe(mov: Movimiento): EstiloVuelo {
+  if (mov.a.zona === '1G') return 'exilio'
+  if (mov.a.zona === '2G' && mov.de && ZONA_DE_CAMPO.test(mov.de.zona)) return 'destruccion'
+  const zonas = [mov.de?.zona, mov.a.zona]
+  if (zonas.some((z) => z === '2A' || z === '1A' || z === 'bloqueado')) return 'eter'
+  return 'normal'
+}
 
 /** Mapa instancia → ubicación actual para TODAS las cartas con zona conocida. */
 export function ubicaciones(s: GameState): Map<string, Ubicacion> {
@@ -58,21 +83,21 @@ export function ubicaciones(s: GameState): Map<string, Ubicacion> {
   // Éter bloqueado: vive en la instancia que lo sostiene
   for (const inst of Object.values(s.instances)) {
     for (const id of inst.eterBloqueado ?? []) {
-      mapa.set(id, { jugador: s.instances[id]?.owner ?? inst.owner, zona: 'bloqueado' })
+      mapa.set(id, { jugador: s.instances[id]?.owner ?? inst.owner, zona: 'bloqueado', sobre: inst.cardInstanceId })
     }
   }
   return mapa
 }
 
-/** Cartas que cambiaron de zona entre `prev` y `next` (Éter excluido). */
+/** Cartas que cambiaron de zona entre `prev` y `next` (sin los Éteres que vuelven a la Reserva). */
 export function diffMovimientos(prev: GameState, next: GameState): Movimiento[] {
   const antes = ubicaciones(prev)
   const despues = ubicaciones(next)
   const movimientos: Movimiento[] = []
   for (const [cardInstanceId, a] of despues) {
     const de = antes.get(cardInstanceId) ?? null
-    if (de && de.jugador === a.jugador && de.zona === a.zona) continue
-    if (ZONAS_SIN_ANIMAR.has(a.zona) || (de && ZONAS_SIN_ANIMAR.has(de.zona))) continue
+    if (de && de.jugador === a.jugador && de.zona === a.zona && de.sobre === a.sobre) continue
+    if (DESTINOS_SIN_VUELO.has(a.zona)) continue
     movimientos.push({ cardInstanceId, de, a })
   }
   return movimientos

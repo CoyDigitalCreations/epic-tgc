@@ -2,11 +2,12 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import type { ReactNode, RefObject } from 'react'
 import { createPortal } from 'react-dom'
 import { motion } from 'framer-motion'
+import type { Easing } from 'framer-motion'
 import type { CardInstance, GameState, PlayerId } from '../game'
 import { MiniCard } from '../components/MiniCard'
 import { EnVueloContext } from './contexto'
-import { MAX_MOVIMIENTOS, diffMovimientos, mostrandoFrente } from './movimientos'
-import type { Movimiento } from './movimientos'
+import { MAX_MOVIMIENTOS, diffMovimientos, estiloDe, mostrandoFrente } from './movimientos'
+import type { EstiloVuelo, Movimiento } from './movimientos'
 
 /**
  * Animación de movimiento de cartas (estilo Yu-Gi-Oh / Master Duel) con capa
@@ -25,6 +26,11 @@ const PERFIL: Record<Exclude<Velocidad, 'off'>, { duracion: number; escalon: num
   rapida: { duracion: 0.38, escalon: 0.07 },
   normal: { duracion: 0.7, escalon: 0.14 },
 }
+
+/** Cuánto dura cada estilo respecto del perfil: el Éter es un trámite rápido; destruir y exiliar se tienen que VER. */
+const FACTOR_DURACION: Record<EstiloVuelo, number> = { normal: 1, eter: 0.6, destruccion: 1.7, exilio: 1.5 }
+/** Zonas con celda propia en la grilla: si la carta destino no está en el DOM (pila, solo se ve el tope) se apunta a la celda. */
+const ZONAS_CON_CELDA: ReadonlySet<string> = new Set(['1A', '2G', '1G'])
 
 const CLAVE_VELOCIDAD = 'eter.animacion.velocidad'
 const ALTO_SOBRE_ANCHO = 1038 / 744
@@ -52,7 +58,7 @@ function guardarVelocidad(v: Velocidad): void {
 }
 
 /** Posición/tamaño/orientación de una carta en pantalla (coordenadas de viewport). */
-interface Medida {
+export interface Medida {
   cx: number
   cy: number
   /** Lado corto de la carta (su ancho en vertical, aunque esté girada). */
@@ -101,7 +107,7 @@ function medirCelda(root: Element, jugador: PlayerId, zona: string): Medida | nu
   return celda ? medir(celda.querySelector('[data-inst]') ?? celda) : null
 }
 
-interface Vuelo {
+export interface Vuelo {
   key: number
   cardInstanceId: string
   origen: Medida
@@ -112,6 +118,13 @@ interface Vuelo {
   haciaFrente: boolean
   duracion: number
   delay: number
+  estilo: EstiloVuelo
+}
+
+/** Destino cuando la carta no tiene ancla propia: la carta que sostiene el Éter bloqueado o la celda de la pila. */
+function destinoAlterno(mov: Movimiento, despues: Map<string, Medida[]>, root: Element): Medida | null {
+  if (mov.a.zona === 'bloqueado') return mov.a.sobre ? elegir(despues.get(mov.a.sobre), false) : null
+  return ZONAS_CON_CELDA.has(mov.a.zona) ? medirCelda(root, mov.a.jugador, mov.a.zona) : null
 }
 
 function armarVuelo(
@@ -127,13 +140,14 @@ function armarVuelo(
 ): Vuelo | null {
   if (!mov.de) return null
   const id = mov.cardInstanceId
-  const destino = elegir(despues.get(id), mov.a.zona === 'mano')
+  const destino = elegir(despues.get(id), mov.a.zona === 'mano') ?? destinoAlterno(mov, despues, root)
   const origen =
     elegir(antes.get(id), mov.de.zona === 'mano') ?? medirCelda(root, mov.de.jugador, mov.de.zona)
   if (!origen || !destino) return null
   // Misma casilla (p. ej. reordenamiento): nada que animar
   if (Math.hypot(origen.cx - destino.cx, origen.cy - destino.cy) < 4 && origen.rot === destino.rot) return null
 
+  const estilo = estiloDe(mov)
   const instPrev = prev.instances[id]
   const instNext = vista.instances[id]
   const frente = (instNext?.cardId ? instNext : instPrev) ?? instNext
@@ -146,8 +160,10 @@ function armarVuelo(
     frente,
     desdeFrente: mostrandoFrente(instPrev, mov.de.zona),
     haciaFrente: mostrandoFrente(instNext, mov.a.zona),
-    duracion: perfil.duracion,
-    delay: indice * perfil.escalon,
+    duracion: perfil.duracion * FACTOR_DURACION[estilo],
+    // Los Éteres salen en ráfaga corta: una tanda de 4 no puede tardar más que la carta que pagan
+    delay: indice * perfil.escalon * (estilo === 'eter' ? 0.5 : 1),
+    estilo,
   }
 }
 
@@ -234,20 +250,98 @@ export function useAnimacionCartas(vista: GameState, rootRef: RefObject<HTMLElem
   return { ocultas, capa, velocidad, ciclarVelocidad }
 }
 
+/** Destrucción: sacudón en el lugar (destello blanco → rojo) y caída al cementerio apagándose. */
+const TIEMPOS_DESTRUCCION = [0, 0.08, 0.16, 0.24, 0.32, 0.42, 1]
+const filtroDestruccion = (brillo: number, gris: number, rojo: number, radio: number) =>
+  `brightness(${brillo}) grayscale(${gris}) drop-shadow(0 0 ${radio}px rgba(239,68,68,${rojo}))`
+/** Exilio: la carta gira y se disuelve en violeta hacia el vacío. `k` va de 0 (intacta) a 1 (disuelta). */
+const filtroExilio = (k: number) =>
+  `brightness(${1 + k * 1.2}) hue-rotate(${k * 270}deg) blur(${k * k * 3}px) drop-shadow(0 0 ${k * 22}px rgba(168,85,247,${k}))`
+
+/** Keyframes (`animate`) y su temporización (`transition`) de un vuelo. */
+export interface Trayectoria {
+  animate: Record<string, (number | string)[]>
+  transition: { duration: number; delay: number; times: number[]; ease: Easing | Easing[] }
+}
+
+/**
+ * Trayectoria del fantasma según el estilo (posición relativa al DESTINO):
+ * - normal / éter: arco corto (el Éter eleva menos).
+ * - destrucción: sacudón y destello en el lugar, después cae al cementerio apagándose.
+ * - exilio: gira y se disuelve en violeta mientras se encoge hacia el vacío.
+ * framer-motion exige que cada array de keyframes tenga tantos valores como `times`.
+ */
+export function trayectoriaDe(vuelo: Pick<Vuelo, 'origen' | 'destino' | 'duracion' | 'delay' | 'estilo'>): Trayectoria {
+  const { origen, destino, duracion, delay, estilo } = vuelo
+  const ox = origen.cx - destino.cx
+  const oy = origen.cy - destino.cy
+  const e = origen.ancho / destino.ancho
+  const elevacion = Math.min(estilo === 'eter' ? 24 : 60, Math.hypot(ox, oy) * 0.15)
+  const rotMedia = (origen.rot + destino.rot) / 2
+  const arco: Trayectoria['transition'] = { duration: duracion, delay, times: [0, 0.55, 1], ease: 'easeInOut' }
+
+  if (estilo === 'destruccion') {
+    return {
+      animate: {
+        x: [ox, ox, ox, ox, ox, ox, 0],
+        y: [oy, oy, oy, oy, oy, oy, 0],
+        rotate: [origen.rot, origen.rot - 5, origen.rot + 5, origen.rot - 4, origen.rot + 3, origen.rot, destino.rot],
+        scale: [e, e * 1.12, e * 1.12, e * 1.1, e * 1.08, e * 1.05, 1],
+        filter: [
+          filtroDestruccion(1, 0, 0, 0),
+          filtroDestruccion(2.6, 0, 0.9, 14),
+          filtroDestruccion(1.6, 0, 0.9, 10),
+          filtroDestruccion(1.9, 0.3, 0.9, 12),
+          filtroDestruccion(0.9, 0.6, 0.5, 6),
+          filtroDestruccion(0.6, 0.8, 0.3, 3),
+          filtroDestruccion(1, 0, 0, 0),
+        ],
+      },
+      transition: {
+        duration: duracion,
+        delay,
+        times: TIEMPOS_DESTRUCCION,
+        ease: ['easeOut', 'easeInOut', 'easeInOut', 'easeInOut', 'easeInOut', 'easeIn'],
+      },
+    }
+  }
+  if (estilo === 'exilio') {
+    return {
+      animate: {
+        x: [ox, ox / 2, 0],
+        y: [oy, oy / 2 - elevacion, 0],
+        scale: [e, Math.max(e, 1) * 1.15, 0.18],
+        rotate: [origen.rot, rotMedia + 180, destino.rot + 360],
+        opacity: [1, 1, 0],
+        filter: [filtroExilio(0), filtroExilio(0.8), filtroExilio(1)],
+      },
+      transition: arco,
+    }
+  }
+  return {
+    animate: {
+      x: [ox, ox / 2, 0],
+      y: [oy, oy / 2 - elevacion, 0],
+      scale: [e, Math.max(e, 1) * 1.12, 1],
+      rotate: [origen.rot, rotMedia, destino.rot],
+    },
+    transition: arco,
+  }
+}
+
 function Fantasma({ vuelo, onFin }: { vuelo: Vuelo; onFin: () => void }) {
-  const { origen, destino, frente, duracion, delay } = vuelo
+  const { origen, destino, frente, duracion, delay, estilo } = vuelo
   const ancho = destino.ancho
   const alto = ancho * ALTO_SOBRE_ANCHO
   // Se posiciona en el DESTINO y se "invierte" con transform hacia el origen
   const ox = origen.cx - destino.cx
   const oy = origen.cy - destino.cy
   const escalaInicial = origen.ancho / ancho
-  const elevacion = Math.min(60, Math.hypot(ox, oy) * 0.15)
-  const rotMedia = (origen.rot + destino.rot) / 2
 
   const giraY0 = vuelo.desdeFrente ? 0 : 180
   const giraY1 = vuelo.haciaFrente ? 0 : 180
   const transicion = { duration: duracion, delay, times: [0, 0.55, 1], ease: 'easeInOut' as const }
+  const { animate: trayectoria, transition: transicionPos } = trayectoriaDe(vuelo)
 
   // Failsafe: si la pestaña está en segundo plano framer pausa y onAnimationComplete no llega
   const finRef = useRef(onFin)
@@ -262,6 +356,7 @@ function Fantasma({ vuelo, onFin }: { vuelo: Vuelo; onFin: () => void }) {
   return (
     <motion.div
       aria-hidden="true"
+      data-estilo={estilo}
       style={{
         position: 'fixed',
         left: destino.cx - ancho / 2,
@@ -273,13 +368,8 @@ function Fantasma({ vuelo, onFin }: { vuelo: Vuelo; onFin: () => void }) {
         perspective: 900,
       }}
       initial={{ x: ox, y: oy, scale: escalaInicial, rotate: origen.rot }}
-      animate={{
-        x: [ox, ox / 2, 0],
-        y: [oy, oy / 2 - elevacion, 0],
-        scale: [escalaInicial, Math.max(escalaInicial, 1) * 1.12, 1],
-        rotate: [origen.rot, rotMedia, destino.rot],
-      }}
-      transition={transicion}
+      animate={trayectoria}
+      transition={transicionPos}
       onAnimationComplete={() => onFin()}
     >
       <motion.div

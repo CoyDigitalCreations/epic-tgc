@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { applyAction, createInitialState, visibleState } from '../../game'
 import type { GameState } from '../../game'
 import { MAZOS } from '../../mazos'
-import { diffMovimientos, mostrandoFrente, ubicaciones } from '../movimientos'
+import { diffMovimientos, estiloDe, mostrandoFrente, ubicaciones } from '../movimientos'
+import type { Movimiento } from '../movimientos'
 
 /** Crea la partida y pasa los dos mulligans: llega a Forja. */
 function partidaEnForja(seed = 42): GameState {
@@ -64,11 +65,38 @@ describe('diffMovimientos', () => {
     expect(mov?.a).toEqual({ jugador: 'A', zona: '3D' })
   })
 
-  it('el Éter (Reserva, pagado, bloqueado) no se anima todavía', () => {
+  it('pagar Éter (Reserva → pago) es un movimiento', () => {
     const prev = partidaEnForja()
     const next = structuredClone(prev)
     const eter = next.players.A.eterReserva.shift()!
     next.players.A.eterPagado.push(eter)
+
+    expect(diffMovimientos(prev, next)).toEqual([
+      { cardInstanceId: eter, de: { jugador: 'A', zona: '2A' }, a: { jugador: 'A', zona: '1A' } },
+    ])
+  })
+
+  it('bloquear Éter: el destino lleva la carta que lo sostiene', () => {
+    const prev = partidaEnForja()
+    const campeon = prev.players.A.mano[0]!
+    prev.players.A.mano.shift()
+    prev.players.A.campo.campeones[0] = campeon
+    const next = structuredClone(prev)
+    const eter = next.players.A.eterReserva.shift()!
+    next.instances[campeon] = { ...next.instances[campeon], eterBloqueado: [eter] }
+
+    expect(diffMovimientos(prev, next)).toEqual([
+      { cardInstanceId: eter, de: { jugador: 'A', zona: '2A' }, a: { jugador: 'A', zona: 'bloqueado', sobre: campeon } },
+    ])
+  })
+
+  it('el Éter que vuelve a la Reserva (reagrupar, devolver) NO vuela: es un pulso aparte', () => {
+    const prev = partidaEnForja()
+    const eter = prev.players.A.eterReserva.shift()!
+    prev.players.A.eterPagado.push(eter)
+    const next = structuredClone(prev)
+    next.players.A.eterPagado.pop()
+    next.players.A.eterReserva.push(eter)
 
     expect(diffMovimientos(prev, next)).toEqual([])
   })
@@ -122,5 +150,42 @@ describe('mostrandoFrente', () => {
     expect(mostrandoFrente(inst(), '3D')).toBe(false)
     expect(mostrandoFrente(inst(), '4A')).toBe(false)
     expect(mostrandoFrente(inst({ bocaArriba: true }), '4A')).toBe(true)
+  })
+})
+
+describe('estiloDe', () => {
+  const mov = (de: string | null, a: string): Movimiento => ({
+    cardInstanceId: 'x',
+    de: de ? { jugador: 'A', zona: de as never } : null,
+    a: { jugador: 'A', zona: a as never },
+  })
+
+  it('campo → cementerio es destrucción (campeón, mística, arcana y vínculo)', () => {
+    for (const de of ['2B', '2F', '3A', '3C', '3D', '3F', '4A', '4F']) {
+      expect(estiloDe(mov(de, '2G'))).toBe('destruccion')
+    }
+  })
+
+  it('descartar de la mano o moler el mazo NO es destrucción', () => {
+    expect(estiloDe(mov('mano', '2G'))).toBe('normal')
+    expect(estiloDe(mov('3G', '2G'))).toBe('normal')
+  })
+
+  it('cualquier carta que termina en 1G es exilio (desde campo, mano o cementerio)', () => {
+    for (const de of ['2B', 'mano', '2G', '3G']) {
+      expect(estiloDe(mov(de, '1G'))).toBe('exilio')
+    }
+  })
+
+  it('Éter: pagar y bloquear usan el estilo corto del Éter', () => {
+    expect(estiloDe(mov('2A', '1A'))).toBe('eter')
+    expect(estiloDe(mov('2A', 'bloqueado'))).toBe('eter')
+    expect(estiloDe(mov('1A', 'bloqueado'))).toBe('eter')
+  })
+
+  it('el resto (robar, invocar, colocar) vuela normal', () => {
+    expect(estiloDe(mov('3G', 'mano'))).toBe('normal')
+    expect(estiloDe(mov('mano', '2C'))).toBe('normal')
+    expect(estiloDe(mov('2B', 'mano'))).toBe('normal')
   })
 })

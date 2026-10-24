@@ -53,16 +53,19 @@ function vistaPreviaInicial(config: PartidaConfig): VistaPrevia {
 }
 
 /** Tipo de animación */
-export type TipoAnimacion = 'glow' | 'attack' | 'death'
+export type TipoAnimacion = 'glow' | 'attack' | 'choque' | 'ruptura'
 
-/** Entrada de animación: glow, ataque o destrucción. */
+/**
+ * Entrada de animación: glow, ataque, choque (atacante vs bloqueador) o ruptura de Vínculo.
+ * Las muertes y exilios NO pasan por acá: los dibuja el sistema de vuelos (animacion/).
+ */
 export interface AnimacionEntrada {
   tipo: TipoAnimacion
   zona?: string
   jugador?: PlayerId
-  /** IDs de atacantes (para tipo 'attack') */
+  /** IDs de atacantes ('attack'); el atacante de un 'choque' o una 'ruptura' va en [0] */
   atacantes?: string[]
-  /** ID de la carta destruida (para tipo 'death') */
+  /** 'choque': el bloqueador. 'ruptura': el Vínculo roto. */
   cardInstanceId?: string
   key: number
 }
@@ -76,8 +79,8 @@ const GLOW_DURATION_MS = 500
 /** Duración de animación de ataque (ms). */
 const ATTACK_DURATION_MS = 600
 
-/** Duración de animación de destrucción (ms). */
-const DEATH_DURATION_MS = 500
+/** Duración de choque / ruptura (ms): trazos + destello. */
+const COMBATE_DURATION_MS = 1000
 
 /**
  * El modal de pre-efectos SOLO cuando el EFECTO entra en acción — no cuando
@@ -219,11 +222,20 @@ export function usePartida(config: PartidaConfig) {
         if (e.type === 'carta_entrada_a_zona') {
           nuevasAnimaciones.push({ tipo: 'glow', zona: e.zona, jugador: e.jugador, key: now + Math.random() })
         }
+        // Éter que vuelve a la Reserva (reagrupar en el Alba, devolver, liberar): no vuela, pulsa la Reserva
+        if (e.type === 'eter_reagrupado' || (e.type === 'eter_movido' && e.destino === 'reserva')) {
+          nuevasAnimaciones.push({ tipo: 'glow', zona: '2A', jugador: e.jugador, key: now + Math.random() })
+        }
         if (e.type === 'ataque_declarado') {
           nuevasAnimaciones.push({ tipo: 'attack', atacantes: e.atacanteIds, jugador: e.jugador, key: now + Math.random() })
         }
-        if (e.type === 'destruccion') {
-          nuevasAnimaciones.push({ tipo: 'death', cardInstanceId: e.cardInstanceId, jugador: e.jugador, key: now + Math.random() })
+        if (e.type === 'bloqueo_declarado') {
+          for (const [atacanteId, bloqueadorId] of Object.entries(e.asignaciones)) {
+            nuevasAnimaciones.push({ tipo: 'choque', atacantes: [atacanteId], cardInstanceId: bloqueadorId, jugador: e.jugador, key: now + Math.random() })
+          }
+        }
+        if (e.type === 'ruptura_realizada') {
+          nuevasAnimaciones.push({ tipo: 'ruptura', atacantes: [e.atacanteId], cardInstanceId: e.vinculoId, key: now + Math.random() })
         }
       }
       if (nuevasAnimaciones.length > 0) {
@@ -314,7 +326,7 @@ export function usePartida(config: PartidaConfig) {
       setAnimaciones((prev) => prev.filter((a) => {
         const age = Date.now() - a.key
         if (a.tipo === 'attack') return age < ATTACK_DURATION_MS
-        if (a.tipo === 'death') return age < DEATH_DURATION_MS
+        if (a.tipo === 'choque' || a.tipo === 'ruptura') return age < COMBATE_DURATION_MS
         return age < GLOW_DURATION_MS
       }))
     }, GLOW_DURATION_MS + 50)

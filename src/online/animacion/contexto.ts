@@ -10,3 +10,10 @@ export const EnVueloContext = createContext<ReadonlySet<string>>(new Set())
 export function useEnVuelo(cardInstanceId: string): boolean {
   return useContext(EnVueloContext).has(cardInstanceId)
 }
+
+/** Ajuste "Animación" del tablero (rápida/normal = true, off = false): los efectos sueltos lo consultan. */
+export const AnimacionActivaContext = createContext(true)
+
+export function useAnimacionActiva(): boolean {
+  return useContext(AnimacionActivaContext)
+}
