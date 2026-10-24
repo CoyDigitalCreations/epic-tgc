@@ -24,7 +24,7 @@ describe('Diagnóstico seed 66099 v2', () => {
     const maxIteraciones = 200
 
     while (estado.fase !== 'terminada' && iteraciones < maxIteraciones) {
-      const cadena = estado.combate?.cadena ?? estado.cadena
+      const cadena = estado.cadena
       const actor: 'A' | 'B' =
         cadena
           ? cadena.prioridad

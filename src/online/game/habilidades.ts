@@ -15,7 +15,7 @@ import { reglaBool } from './reglas'
 import { liberarEterBloqueado, enviarAlCementerio } from './replacements'
 import { slotAZona } from './zones'
 import { validarBloqueo } from './payments'
-import { abrirCadenaGlobal } from './chain'
+import { abrirCadenaGlobal, cadenaActiva } from './chain'
 import type { Action } from './core'
 
 /* ─────────────────────── Validadores ─────────────────────── */
@@ -248,7 +248,7 @@ export function ejecutarActivarArcana(s: GameState, action: Extract<Action, { ty
   // y libera su slot. Efecto CONTINUO → permanece boca arriba. Si la Arcana
   // misma quedó en la PILA (se activó respondiendo en cadena), la consume el
   // resolutor de cadena — aquí no se toca.
-  const enPila = (s.cadena?.pila ?? []).includes(id) || (s.combate?.cadena?.pila ?? []).includes(id)
+  const enPila = (cadenaActiva(s)?.pila ?? []).includes(id)
   if (!enPila && meta && !esPermanenteEnMesa(meta)) {
     const slotIdx = s.players[s.turno].campo.arcanasCombate.indexOf(id)
     if (slotIdx !== -1) {

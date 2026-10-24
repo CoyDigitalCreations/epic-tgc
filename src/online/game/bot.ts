@@ -1,6 +1,7 @@
 import { applyAction } from './actions'
 import type { Action } from './actions'
 import { getValidActions } from './validActions'
+import { cadenaActiva } from './chain'
 import { createInitialState } from './initialState'
 import type { GameEvent } from './events'
 import type { GameState, PlayerId } from './types'
@@ -25,7 +26,7 @@ export function botTonto(state: GameState, playerId: PlayerId, dificultad: Dific
     return { type: 'responder_prevenicion', prevenir: elegirPrevenicion(state, playerId) }
   }
   // Cadena (combate 9.6 O global): el bot nunca encadena cartas
-  const cadena = state.combate?.cadena ?? state.cadena
+  const cadena = cadenaActiva(state)
   if (cadena) {
     return cadena.prioridad === playerId ? { type: 'pasar_prioridad' } : null
   }
@@ -86,7 +87,7 @@ export function simularPartida(
   while (estado.fase !== 'terminada' && iteraciones < maxTurnos) {
     // Checkpoint prevent_destroy: el actor es el jugador que debe elegir (Fase 2c)
     const preven = estado.preventivosPendientes?.[0]
-    const cadena = estado.combate?.cadena ?? estado.cadena
+    const cadena = cadenaActiva(estado)
     const actor: PlayerId = preven
       ? preven.jugador
       : cadena

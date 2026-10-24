@@ -244,6 +244,8 @@ describe('regresión: combat usa statsDe (C1.3)', () => {
     // Con +3 RES (5/6): 3 < 6 → Vaela sobrevive; y 5 < 7 → Isolde sobrevive.
     aplicarMod(s, vaela, 'resistencia', 3, 'permanente')
     s = aplicar(s, { type: 'declarar_ataque', atacanteIds: [vaela] }, ctx)
+    // F5a: con la cadena 9.6 abierta solo se responde o se pasa; se cierra antes de bloquear
+    while (s.cadena) s = aplicar(s, { type: 'pasar_prioridad' }, ctx)
     s = aplicar(s, { type: 'declarar_bloqueo', asignaciones: { [vaela]: isolde } }, ctx)
     expect(s.players.A.campo.campeones).toContain(vaela)
     expect(s.players.B.campo.campeones).toContain(isolde)

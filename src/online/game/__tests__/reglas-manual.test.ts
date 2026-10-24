@@ -320,7 +320,7 @@ describe('§8.3a — Bloqueo de Éter en cualquier fase menos Alba, incluso en c
 
   it('se EXPONE como respuesta con prioridad en una cadena abierta', () => {
     const s = conElena('forja')
-    s.cadena = { pila: [], prioridad: 'A', pasesConsecutivos: 0, faseAbierta: 'forja' }
+    s.cadena = { origen: 'global', pila: [], prioridad: 'A', pasesConsecutivos: 0, faseAbierta: 'forja' }
     const tipos = getValidActions(s, 'A').map((a) => a.type)
     expect(tipos).toContain('bloquear_eter') // disponible como respuesta (§8.3a)
     expect(tipos).toContain('pasar_prioridad')

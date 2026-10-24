@@ -16,6 +16,7 @@ import { esCampeon, getCardMeta } from './cards'
 import type { EfectoData } from '../../shared/types'
 import type { CardInstance, Ctx, ExpiraModificador, GameState, PlayerId } from './types'
 import type { PayloadEfecto } from './efectos'
+import { cadenaActiva } from './chain'
 
 /**
  * Interpret and execute an effect from EfectoData structure.
@@ -314,7 +315,7 @@ function executeEffect(
       // El candado championNegado (negadoTargetId) se eliminó — el rival
       // PUEDE volver a activar. Los otros 7 tipoNegacion siguen sin
       // implementar (B3).
-      const cadenaNeg = s.cadena ?? s.combate?.cadena
+      const cadenaNeg = cadenaActiva(s)
       const pend = cadenaNeg?.activacionPendiente
       if (pend && !pend.negada && pend.jugador !== jugador) {
         pend.negada = true

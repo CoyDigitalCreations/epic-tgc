@@ -195,6 +195,12 @@ export interface PlayerState {
 
 /** Pila de la cadena 9.6 (ADR-12): pasesConsecutivos es adición interna al shape de la spec. */
 export interface CadenaState {
+  /**
+   * Pila ÚNICA (F5a): una sola ranura `GameState.cadena` para ambos casos.
+   * 'combate' = abierta por declarar_ataque/declarar_bloqueo (al cerrar se reanuda
+   * la sub-máquina de combate); 'global' = abierta por una activación fuera de combate.
+   */
+  origen: 'combate' | 'global'
   /** Cartas respondidas en orden de apilado (visibles a ambos, 6.2). */
   pila: string[]
   /** A quién toca responder ahora (defensor primero, §9.6). */
@@ -236,8 +242,6 @@ export interface CombateState {
   rupturaDisponible: boolean
   /** true si ya se hicieron las Rupturas que permite la regla `rupturasPorTurno` este turno (§9.4-A). */
   rupturaUsadaEsteTurno: boolean
-  /** Cadena 9.6 abierta tras declarar_ataque o declarar_bloqueo. */
-  cadena?: CadenaState
 }
 
 /** Estado completo de partida — JSON-serializable (sin referencias circulares). */
@@ -257,9 +261,10 @@ export interface GameState {
   /** Rupturas (Vínculos rotos por Ataque directo) que el jugador activo ya hizo este turno (§9.4). Se borra al terminar el turno. */
   rupturasEsteTurno?: number
   /**
-   * Cadena de efectos GLOBAL (fuera de combate): prioridad entre jugadores
-   * cuando un efecto se activa y el rival puede responder. Se cierra cuando
-   * ambos pasan y se resuelve LIFO.
+   * Pila ÚNICA de la cadena 9.6 (F5a), de combate o global: prioridad entre
+   * jugadores cuando un efecto se activa y el rival puede responder. Se cierra
+   * cuando ambos pasan y se resuelve LIFO. `cadena.origen` dice de cuál es.
+   * Léela siempre con `cadenaActiva(s)` (chain.ts).
    */
   cadena?: CadenaState
   /** Reglas del manual modificadas con duración (Capa 2). Ver reglasTemporales.ts. */

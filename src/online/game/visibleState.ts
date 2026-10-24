@@ -1,4 +1,5 @@
 import type { GameState, PlayerId } from './types'
+import { cadenaActiva } from './chain'
 
 /**
  * Proyección de visibilidad 6.2: devuelve una COPIA del estado donde cada
@@ -30,7 +31,8 @@ export function visibleState(state: GameState, playerId: PlayerId): GameState {
   for (const id of v.players[rival].vinculos) if (id && !v.instances[id]?.bocaArriba) ocultar.add(id)
 
   // Pila de la cadena (6.2): las cartas respondidas son visibles a ambos
-  const pila = v.combate?.cadena?.pila ?? []
+  // (cadena única F5a: de combate o global)
+  const pila = cadenaActiva(v)?.pila ?? []
   for (const id of pila) ocultar.delete(id)
 
   // Búsqueda de mazo (C3/D1): mientras un pendiente de elegir_objetivo espera

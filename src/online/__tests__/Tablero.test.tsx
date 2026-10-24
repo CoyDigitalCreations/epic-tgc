@@ -1160,6 +1160,7 @@ describe('PriorityModal — unificación de respuesta a cadenas (2026-10-14)', (
   function estadoConCadena(prevPendiente?: GameState['preventivosPendientes']): GameState {
     const s = forjaDeA()
     s.cadena = {
+      origen: 'global',
       pila: [],
       prioridad: 'A',
       pasesConsecutivos: 0,

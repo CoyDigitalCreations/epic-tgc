@@ -30,7 +30,7 @@ import {
   validarElegirRuptura, ejecutarElegirRuptura,
 } from './combat'
 import {
-  validarResponderCadena, validarPasarPrioridad, validarJugarRespuesta,
+  cadenaActiva, validarResponderCadena, validarPasarPrioridad, validarJugarRespuesta,
   ejecutarResponderCadena, ejecutarPasarPrioridad, ejecutarJugarRespuesta,
 } from './chain'
 import {
@@ -95,12 +95,26 @@ export function applyAction(state: GameState, action: Action, ctx: Ctx): ApplyAc
   return { ok: true, state: s, events: [...ctx.events] }
 }
 
+/**
+ * Acciones aceptadas con una cadena abierta (F5a, validación central): responder,
+ * pasar prioridad, jugar una respuesta desde la mano, bloquear Éter (A9, §8.3a),
+ * rendirse y el checkpoint de prevención (que se atiende antes).
+ */
+const ACCIONES_CON_CADENA_ABIERTA: ReadonlySet<Action['type']> = new Set<Action['type']>([
+  'responder_cadena', 'jugar_respuesta', 'pasar_prioridad', 'bloquear_eter', 'rendirse', 'responder_prevenicion',
+])
+
 function validarAccion(state: GameState, action: Action): string | null {
   // Checkpoint prevent_destroy (Fase 2c): mientras haya pendiente de prevenión,
   // SOLO se acepta responder_prevenicion (del jugador que debe elegir).
   const preven = state.preventivosPendientes?.[0]
   if (preven && action.type !== 'responder_prevenicion') {
     return 'hay una prevenicion pendiente de resolver'
+  }
+  // Pila única (F5a): con la cadena abierta el turno queda congelado — solo se
+  // responde o se pasa prioridad; cualquier otra acción espera a que cierre.
+  if (cadenaActiva(state) && !ACCIONES_CON_CADENA_ABIERTA.has(action.type)) {
+    return 'hay una cadena abierta: solo se puede responder o pasar prioridad'
   }
   switch (action.type) {
     case 'rendirse':

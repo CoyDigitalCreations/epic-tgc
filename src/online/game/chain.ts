@@ -36,7 +36,7 @@ import { slotAZona } from './zones'
 export function respondiblesDe(state: GameState, playerId: PlayerId): string[] {
   const p = state.players[playerId]
   // Cartas que ya están en la pila de la cadena (no pueden responder dos veces)
-  const cadena = state.combate?.cadena ?? state.cadena
+  const cadena = cadenaActiva(state)
   const enPila = new Set(cadena?.pila ?? [])
 
   // Determinar velocidad requerida basada en el último efecto de la pila
@@ -103,7 +103,7 @@ export function abrirCadena(s: GameState, primerRespondedor: PlayerId): boolean 
   const combate = s.combate
   if (!combate) return false
   if (respondiblesDe(s, primerRespondedor).length === 0) return false
-  combate.cadena = { pila: [], prioridad: primerRespondedor, pasesConsecutivos: 0, faseAbierta: s.fase }
+  s.cadena = { origen: 'combate', pila: [], prioridad: primerRespondedor, pasesConsecutivos: 0, faseAbierta: s.fase }
   return true
 }
 
@@ -128,7 +128,7 @@ export function respuestasDeMano(state: GameState, playerId: PlayerId): string[]
 
 /**
  * Apertura de cadena GLOBAL (fuera de combate): cuando un efecto se activa
- * y el rival podría responder. Se abre en s.cadena (no en combate.cadena).
+ * y el rival podría responder. Se abre en s.cadena con origen 'global'.
  * FUGAZ no abre cadena — se resuelve inmediatamente.
  * `incluirMano` (obs 1874): también cuenta Místicas Presteza EN MANO del
  * rival (ventana de negación de activar_habilidad — jugables como respuesta).
@@ -149,6 +149,7 @@ export function abrirCadenaGlobal(
   const conMano = incluirMano && respuestasDeMano(s, rival).length > 0
   if (!conCampo && !conMano) return false
   s.cadena = {
+    origen: 'global',
     pila: [],
     prioridad: rival, // el rival responde primero
     pasesConsecutivos: 0,
@@ -160,16 +161,16 @@ export function abrirCadenaGlobal(
 }
 
 /**
- * Obtiene la cadena activa (combate o global).
- * Prioriza combate.cadena si existe, luego s.cadena.
+ * Cadena activa (F5a: pila única en `s.cadena`, de combate o global).
+ * Punto único de lectura para motor, bot, validActions y UI.
  */
-function cadenaActiva(s: GameState): CadenaState | undefined {
-  return s.combate?.cadena ?? s.cadena
+export function cadenaActiva(s: GameState): CadenaState | undefined {
+  return s.cadena
 }
 
 /** Determina si la cadena activa es la de combate o la global. */
 function esCadenaDeCombate(s: GameState): boolean {
-  return !!s.combate?.cadena
+  return s.cadena?.origen === 'combate'
 }
 
 export function validarResponderCadena(state: GameState, cardInstanceId: string): string | null {
@@ -293,7 +294,7 @@ export function ejecutarPasarPrioridad(s: GameState, ctx: Ctx): void {
  */
 function resolverCadenaCombate(s: GameState, ctx: Ctx): void {
   const combate = s.combate
-  const cadena = combate?.cadena
+  const cadena = s.cadena
   if (!combate || !cadena) return
   for (const id of [...cadena.pila].reverse()) {
     const inst = s.instances[id]
@@ -314,7 +315,7 @@ function resolverCadenaCombate(s: GameState, ctx: Ctx): void {
     }
     // Táctica: permanece (sus efectos se resuelven en change 3)
   }
-  combate.cadena = undefined
+  s.cadena = undefined
   continuarCombateTrasCadena(s, ctx)
 }
 

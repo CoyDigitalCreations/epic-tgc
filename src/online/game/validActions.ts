@@ -5,7 +5,7 @@ import type { AnyCard } from '../../shared/types'
 import type { Action } from './actions'
 import { generarAccionesForja, validarActivarArcana } from './actions'
 import { atacantesElegibles, asignacionForzada, ataquesSinBloquear, bloqueadoresDisponibles, rivalDe, tieneKeyword } from './combat'
-import { respondiblesDe, respuestasDeMano } from './chain'
+import { cadenaActiva, respondiblesDe, respuestasDeMano } from './chain'
 import { etersParaPagar } from './payments'
 import { validarEquiparArtefacto } from './movimientos'
 import type { GameState, PlayerId, CardInstance } from './types'
@@ -25,7 +25,7 @@ export function actorActual(estado: GameState): PlayerId | null {
   // Cadena GLOBAL (state.cadena) o de combate: el actor es SIEMPRE prioridad —
   // aunque la fase sea Forja. Sin esto, cadena global en Forja congela al
   // humano (solo rendirse) y el bot nunca pasa prioridad → FREEZE (seed 66676).
-  const cadena = estado.combate?.cadena ?? estado.cadena
+  const cadena = cadenaActiva(estado)
   if (cadena) return cadena.prioridad
   if (estado.fase === 'choque' && estado.combate?.paso === 'bloqueo') {
     return estado.turno === 'A' ? 'B' : 'A'
@@ -235,7 +235,7 @@ export function getValidActions(state: GameState, playerId: PlayerId): Action[] 
   // Cadena abierta (combate 9.6 O global): SOLO responder/pasar del jugador con prioridad —
   // el resto del turno queda CONGELADO (ni declarar_bloqueo del defensor, ni
   // Ruptura, ni pasar_turno del activo) hasta cerrar la cadena.
-  const cadena = state.combate?.cadena ?? state.cadena
+  const cadena = cadenaActiva(state)
   if (cadena) {
     if (cadena.prioridad === playerId) {
       for (const id of respondiblesDe(state, playerId)) {

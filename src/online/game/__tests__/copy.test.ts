@@ -216,6 +216,8 @@ describe('flujo integral jugar FB-022 (Fase 3c)', () => {
     expect(s.objetivosPendientes?.length).toBe(1)
     expect(s.objetivosPendientes![0].opciones).toContain(conTarget.id)
 
+    // F5a: la cadena global abierta por la jugada se cierra antes de elegir el objetivo
+    while (s.cadena) s = aplicar(s, { type: 'pasar_prioridad' }, ctx)
     s = aplicar(s, { type: 'elegir_objetivo', objetivoId: conTarget.id }, ctx)
 
     const fb022Inst = Object.values(s.instances).find((i) => i?.cardId === FB022)

@@ -7,6 +7,7 @@ import type { GameState, Ctx } from './types'
 import { validarBloqueo, bloquearEter } from './payments'
 import { dispararUmbralBloqueo } from './effectInterpreter'
 import type { Action } from './core'
+import { cadenaActiva } from './chain'
 
 /* ─────────────────────── Validador ─────────────────────── */
 
@@ -16,7 +17,7 @@ import type { Action } from './core'
  * COMO RESPUESTA, §8.3a); fuera de cadena, el jugador activo.
  */
 function actorDeBloqueo(state: GameState): GameState['turno'] {
-  const cadena = state.combate?.cadena ?? state.cadena
+  const cadena = cadenaActiva(state)
   return cadena ? cadena.prioridad : state.turno
 }
 

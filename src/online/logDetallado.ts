@@ -1,4 +1,4 @@
-import { getCardMeta } from './game'
+import { cadenaActiva, getCardMeta } from './game'
 import type { GameEvent, GameState } from './game'
 
 /**
@@ -167,9 +167,9 @@ export function resumenJugador(estado: GameState, j: 'A' | 'B'): string {
 export function diagnosticarActor(estado: GameState, actor: 'A' | 'B', accionesTipos: string[]): string | null {
   if (estado.fase === 'terminada') return null
 
-  const cadena = estado.combate?.cadena ?? estado.cadena
+  const cadena = cadenaActiva(estado)
   if (cadena) {
-    const src = estado.combate?.cadena ? 'combate' : 'global'
+    const src = cadena.origen
     const efecto = cadena.efectoActual?.descripcion ?? cadena.efectoActual?.cardInstanceId ?? '—'
     return `⛓ CADENA ${src.toUpperCase()} abierta — prioridad: ${cadena.prioridad} (fase ${estado.fase}) | efecto: ${efecto} | pases: ${cadena.pasesConsecutivos} | acciones(${actor}): ${accionesTipos.join(',')}`
   }

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
-import { aporteDe, atacantesElegibles, campeonesSacrificables, costeEterHabilidad, faccionesCompartidas, getCardMeta, sacrificiosRequeridos, esBloqueoFijo, maxEterBloqueado, efectoBloqueoAccion, parejasBloqueoOpcion } from '../game'
+import { aporteDe, atacantesElegibles, campeonesSacrificables, costeEterHabilidad, faccionesCompartidas, getCardMeta, sacrificiosRequeridos, esBloqueoFijo, maxEterBloqueado, efectoBloqueoAccion, parejasBloqueoOpcion, cadenaActiva } from '../game'
 import type { Action, CardInstance, GameState, PlayerId } from '../game'
 import { Boton as BotonUI } from '../../shared/ui/Boton'
 import { Dock } from '../../shared/ui/Dock'
@@ -1503,11 +1503,9 @@ export function Tablero({
       'elegir_objetivo', 'elegir_opcion', 'elegir_ruptura', 'usar_transmutar',
     ].includes(a.type),
   )
-  const pilaCombate = vista.combate?.cadena?.pila ?? []
-  const pilaGlobal = vista.cadena?.pila ?? []
-  const pila = pilaCombate.length > 0 ? pilaCombate : pilaGlobal
-  const cadenaActiva = vista.combate?.cadena ?? vista.cadena
-  const efectoActual = cadenaActiva?.efectoActual
+  const cadenaVista = cadenaActiva(vista)
+  const pila = cadenaVista?.pila ?? []
+  const efectoActual = cadenaVista?.efectoActual
 
   const faseTurno = terminada
     ? 'Partida terminada'
@@ -1867,7 +1865,7 @@ export function Tablero({
 
           <section className="bg-surface border border-card-border rounded-lg p-2 min-h-18">
             <p className="text-[9px] uppercase tracking-wider text-gray-500 mb-1.5">
-              {pilaGlobal.length > 0 ? 'Cadena Global' : 'Cadena 9.6'}{pila.length > 0 ? ` (${pila.length})` : ''}
+              {cadenaVista?.origen === 'global' && pila.length > 0 ? 'Cadena Global' : 'Cadena 9.6'}{pila.length > 0 ? ` (${pila.length})` : ''}
             </p>
             {efectoActual && (
               <p className="text-[10px] text-gray-400 mb-1 italic">
@@ -2192,8 +2190,7 @@ export function Tablero({
 
       {/* ── Modal de prioridad (cadena abierta) ───────────────────── */}
       {leTocaA && (() => {
-        const cadena = vista.combate?.cadena ?? vista.cadena
-        if (!cadena) return null
+        if (!cadenaActiva(vista)) return null
         return (
           <PriorityModal
             state={vista}

@@ -42,7 +42,7 @@ export { sacrificiosRequeridos, esSingular, copiasEnCampo, campeonesSacrificable
 export { atacantesElegibles, bloqueadoresDisponibles } from './combat'
 
 // Cadena de efectos en combate (9.6)
-export { respondiblesDe, validarResponderCadena, validarPasarPrioridad } from './chain'
+export { cadenaActiva, respondiblesDe, validarResponderCadena, validarPasarPrioridad } from './chain'
 
 // Invariantes de partida (mazo estándar de 61)
 export { verificarInvariantes } from './invariants'

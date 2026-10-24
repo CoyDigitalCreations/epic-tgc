@@ -128,9 +128,21 @@ describe('visibleState (6.2)', () => {
       bloqueos: {},
       rupturaDisponible: false,
       rupturaUsadaEsteTurno: true,
-      cadena: { pila: ['B-arc1'], prioridad: 'B', pasesConsecutivos: 0 },
     }
+    s.cadena = { origen: 'combate', pila: ['B-arc1'], prioridad: 'B', pasesConsecutivos: 0, faseAbierta: 'choque' }
     const v = visibleState(s, 'A')
     expect(v.instances['B-arc1'].cardId).toBe(ARCANA) // Arcana rival en la pila → visible
+  })
+
+  it('F5a: la pila de una cadena GLOBAL también es visible a ambos (Arcana respondida)', () => {
+    const s = estadoPoblado()
+    s.cadena = { origen: 'global', pila: ['B-arc1'], prioridad: 'A', pasesConsecutivos: 0, faseAbierta: 'forja' }
+    const v = visibleState(s, 'A')
+    expect(v.instances['B-arc1'].cardId).toBe(ARCANA) // Arcana rival respondida en cadena global → visible
+  })
+
+  it('F5a: sin cadena, la Arcana rival sigue oculta', () => {
+    const v = visibleState(estadoPoblado(), 'A')
+    expect(v.instances['B-arc1'].cardId).toBeNull()
   })
 })

@@ -275,8 +275,8 @@ describe('soporte C5 (dependencia mazo 45): dispatch al-ser-enviado-al-cementeri
       bloqueos: {},
       rupturaDisponible: false,
       rupturaUsadaEsteTurno: false,
-      cadena: { pila: [combateId], prioridad: 'A', pasesConsecutivos: 0 },
     }
+    s.cadena = { origen: 'combate', pila: [combateId], prioridad: 'A', pasesConsecutivos: 0, faseAbierta: 'choque' }
 
     const disparos: Array<{ jugador: string; inst: string }> = []
     registrarEfecto('al-ser-enviado-al-cementerio', COMBATE, (_st, _ctx, inst, payload) => {

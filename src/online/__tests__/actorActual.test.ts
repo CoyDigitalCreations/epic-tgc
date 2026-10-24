@@ -29,7 +29,7 @@ describe('actorActual — cadena global (fix freeze 66676)', () => {
     const s = estadoBase({
       fase: 'forja',
       turno: 'A',
-      cadena: { pila: [], prioridad: 'B', pasesConsecutivos: 0, faseAbierta: 'forja' },
+      cadena: { origen: 'global', pila: [], prioridad: 'B', pasesConsecutivos: 0, faseAbierta: 'forja' },
     })
     expect(actorActual(s)).toBe('B')
   })
@@ -37,7 +37,7 @@ describe('actorActual — cadena global (fix freeze 66676)', () => {
   it('cadena global prioridad A en forja → actor A', () => {
     const s = estadoBase({
       turno: 'B',
-      cadena: { pila: [], prioridad: 'A', pasesConsecutivos: 1, faseAbierta: 'forja' },
+      cadena: { origen: 'global', pila: [], prioridad: 'A', pasesConsecutivos: 1, faseAbierta: 'forja' },
     })
     expect(actorActual(s)).toBe('A')
   })
@@ -50,7 +50,7 @@ describe('actorActual — cadena global (fix freeze 66676)', () => {
   it('prevenición pendiente manda sobre cadena', () => {
     const s = estadoBase({
       preventivosPendientes: [{ victimId: 'v1', fuenteId: 'f1', jugador: 'B', causa: 'efecto' }],
-      cadena: { pila: [], prioridad: 'A', pasesConsecutivos: 0, faseAbierta: 'forja' },
+      cadena: { origen: 'global', pila: [], prioridad: 'A', pasesConsecutivos: 0, faseAbierta: 'forja' },
     })
     expect(actorActual(s)).toBe('B')
   })

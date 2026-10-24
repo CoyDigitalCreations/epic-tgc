@@ -4,6 +4,7 @@ import { applyAction } from '../actions'
 import type { Action } from '../actions'
 import { getValidActions } from '../validActions'
 import { atacantesElegibles, bloqueadoresDisponibles } from '../combat'
+import { cadenaActiva } from '../chain'
 import { registrarCartas } from '../cards'
 import type { AnyCard } from '../../../shared/types/cards'
 import type { Ctx, GameState, PlayerId } from '../types'
@@ -127,7 +128,7 @@ function aplicar(s: GameState, accion: Action, ctx: Ctx): GameState {
 function cerrarCadena(s: GameState, ctx: Ctx): GameState {
   let estado = s
   for (let i = 0; i < 8; i++) {
-    if (!(estado.combate?.cadena ?? estado.cadena)) return estado
+    if (!cadenaActiva(estado)) return estado
     estado = aplicar(estado, { type: 'pasar_prioridad' }, ctx)
   }
   throw new Error('la cadena 9.6 no se cerró con 8 pases')
@@ -428,7 +429,9 @@ describe('resolución: daño simultáneo (9.4-B, ADR-14)', () => {
     const b = conCampeon(a.s, bloqueador.cardId, 0, { owner: 'B', ...bloqueador.opts })
     const r = applyAction(b.s, { type: 'declarar_ataque', atacanteIds: [a.id] }, ctx)
     if (!r.ok) throw new Error(`declarar_ataque falló: ${r.error}`)
-    const r2 = applyAction(r.state, { type: 'declarar_bloqueo', asignaciones: { [a.id]: b.id } }, ctx)
+    // F5a: con la cadena 9.6 abierta solo se responde o se pasa; se cierra antes de bloquear
+    const sAtaque = cerrarCadena(r.state, ctx)
+    const r2 = applyAction(sAtaque, { type: 'declarar_bloqueo', asignaciones: { [a.id]: b.id } }, ctx)
     if (!r2.ok) throw new Error(`declarar_bloqueo falló: ${r2.error}`)
     return { s: r2.state, atacanteId: a.id, bloqueadorId: b.id, ctx }
   }
@@ -806,7 +809,7 @@ describe('bloqueos por turno y prioridad del defensor (§9.3, §9.6)', () => {
 
   it('tras declarar_bloqueo la prioridad de la cadena es del DEFENSOR, no del atacante (§9.6)', () => {
     const { s } = conBloqueoDeclarado()
-    expect(s.combate?.cadena?.prioridad).toBe('B')
+    expect(s.cadena?.prioridad).toBe('B')
   })
 })
 

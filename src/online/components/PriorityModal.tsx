@@ -17,7 +17,7 @@ import { MiniCard } from './MiniCard'
 import type { Action } from '../game/actions'
 import type { GameState, PlayerId, CardInstance } from '../game/types'
 import { getCardMeta } from '../game/cards'
-import { respondiblesDe, respuestasDeMano } from '../game/chain'
+import { cadenaActiva, respondiblesDe, respuestasDeMano } from '../game/chain'
 
 interface PriorityModalProps {
   state: GameState
@@ -28,7 +28,7 @@ interface PriorityModalProps {
 }
 
 export function PriorityModal({ state, playerId, acciones, onAccion, onZoom }: PriorityModalProps) {
-  const cadena = state.combate?.cadena ?? state.cadena
+  const cadena = cadenaActiva(state)
   if (!cadena) return null
   if (cadena.prioridad !== playerId) return null
   // Checkpoint prevent_destroy (Fase 2c): mientras hay prevenión pendiente la
@@ -54,7 +54,7 @@ export function PriorityModal({ state, playerId, acciones, onAccion, onZoom }: P
   const efectoInst = efectoActual ? state.instances[efectoActual.cardInstanceId] : null
   const efectoMeta = efectoInst?.cardId ? getCardMeta(efectoInst.cardId) : null
 
-  const esCombate = !!state.combate?.cadena
+  const esCombate = cadena.origen === 'combate'
 
   return (
     <Modal
