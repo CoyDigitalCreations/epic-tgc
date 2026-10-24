@@ -3,13 +3,13 @@
 Ver `design.md`. Marcar al terminar cada tarea.
 
 ## F0 — Manual
-- [ ] Regla de oro (la carta manda sobre el manual; el manual es el fallback)
-- [ ] §10: keywords `Tirador` e `Inexiliable`
-- [ ] §8.6: primer turno **del juego**
-- [ ] §5.2/§7.4/§8.3a/§7.6: el Disparo agota; sin "una vez por turno"
-- [ ] §9.4: una sola Ruptura por turno y no se ataca después de romper
-- [ ] §5.5/§13: el sexto Vínculo puede evitar la derrota o forzar empate
-- [ ] §9.6: cadena general (no solo en combate)
+- [x] Regla de oro (la carta manda sobre el manual; el manual es el fallback)
+- [x] §10: keywords `Tirador` e `Inexiliable`
+- [x] §8.6: primer turno **del juego**
+- [x] §5.2/§7.4/§8.3a/§7.6: el Disparo agota; sin "una vez por turno"
+- [x] §9.4: una sola Ruptura por turno y no se ataca después de romper
+- [x] §5.5/§13: el sexto Vínculo puede evitar la derrota o forzar empate
+- [x] §9.6: cadena general (no solo en combate)
 
 ## F1 — Fundamentos
 - [x] Catálogo de reglas + resolución pura (`src/shared/rules/reglas.ts`)
