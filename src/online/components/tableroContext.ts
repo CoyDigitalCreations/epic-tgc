@@ -16,6 +16,13 @@ export function useAnchoCarta(): number {
   return useContext(AnchoTableroContext)
 }
 
+/** ¿El tablero está en modo compacto (celular/tablet en horizontal)? Lo decide el Tablero según el viewport. */
+export const CompactoContext = createContext<boolean>(false)
+
+export function useCompacto(): boolean {
+  return useContext(CompactoContext)
+}
+
 /** Carta que el jugador está mirando (hover): la instancia y la carta con sus stats VIVAS. */
 export interface Inspeccion {
   inst: CardInstance

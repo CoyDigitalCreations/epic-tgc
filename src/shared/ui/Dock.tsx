@@ -29,7 +29,7 @@ export function Dock({ etiquetaAria, titulo, subtitulo, tono = 'ether', onCerrar
   return (
     <section
       aria-label={etiquetaAria}
-      className="anim-dock fixed inset-x-3 bottom-3 z-40 mx-auto max-w-6xl rounded-2xl border bg-gradient-to-b from-[#161626]/97 to-[#0d0d17]/97 shadow-[0_-12px_60px_-12px_rgba(0,0,0,0.75)] backdrop-blur"
+      className="anim-dock fixed inset-x-3 bottom-3 z-40 mx-auto max-w-6xl rounded-2xl border [@media(max-height:599px)]:inset-x-1 [@media(max-height:599px)]:bottom-1 [@media(max-height:599px)]:rounded-xl bg-gradient-to-b from-[#161626]/97 to-[#0d0d17]/97 shadow-[0_-12px_60px_-12px_rgba(0,0,0,0.75)] backdrop-blur"
       style={{ borderColor: `${color}40` }}
     >
       <span
@@ -38,10 +38,10 @@ export function Dock({ etiquetaAria, titulo, subtitulo, tono = 'ether', onCerrar
         style={{ background: `linear-gradient(90deg, transparent, ${color}, transparent)` }}
       />
       {hayCabecera && (
-        <header className="flex items-center gap-3 px-4 pt-3 pb-2">
+        <header className="flex items-center gap-3 px-4 pt-3 pb-2 [@media(max-height:599px)]:px-3 [@media(max-height:599px)]:pt-1.5 [@media(max-height:599px)]:pb-1">
           <div className="min-w-0 flex-1">
             {titulo !== undefined && (
-              <h2 className="font-display text-base font-bold leading-tight tracking-wide text-gray-50">{titulo}</h2>
+              <h2 className="font-display text-base font-bold leading-tight tracking-wide text-gray-50 [@media(max-height:599px)]:text-sm">{titulo}</h2>
             )}
             {subtitulo && <p className="mt-0.5 text-xs text-gray-400">{subtitulo}</p>}
           </div>
@@ -58,9 +58,9 @@ export function Dock({ etiquetaAria, titulo, subtitulo, tono = 'ether', onCerrar
         </header>
       )}
       {/* pt-2: deja lugar al ✓ y a la elevación de los tiles seleccionados (el scroll vertical también recorta lo que sobresale) */}
-      {children !== undefined && <div className="max-h-[46vh] overflow-y-auto px-4 pb-3 pt-2">{children}</div>}
+      {children !== undefined && <div className="max-h-[46vh] overflow-y-auto px-4 pb-3 pt-2 [@media(max-height:599px)]:px-3 [@media(max-height:599px)]:pb-1.5 [@media(max-height:599px)]:pt-1">{children}</div>}
       {pie && (
-        <footer className="flex flex-wrap items-center gap-3 rounded-b-2xl border-t border-white/5 bg-black/20 px-4 py-2.5">
+        <footer className="flex flex-wrap items-center gap-3 rounded-b-2xl border-t border-white/5 bg-black/20 px-4 py-2.5 [@media(max-height:599px)]:px-3 [@media(max-height:599px)]:py-1">
           {pie}
         </footer>
       )}

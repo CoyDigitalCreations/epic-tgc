@@ -10,15 +10,17 @@ import { TileCarta } from '../../shared/ui/TileCarta'
 import { ElegirObjetivoModal } from './ElegirObjetivoModal'
 import { MiniCard } from './MiniCard'
 import { InspectorCarta } from './InspectorCarta'
-import { AnchoTableroContext, InspeccionContext, useAnchoCarta } from './tableroContext'
+import { AnchoTableroContext, CompactoContext, InspeccionContext, useAnchoCarta } from './tableroContext'
 import type { Inspeccion } from './tableroContext'
 import {
   ANCHO_FLANCO,
+  ANCHO_FLANCO_COMPACTO,
   ESCALA_FILA_ETER,
   ESCALA_VINCULO,
   RELACION_CARTA,
-  useAlturaVentana,
+  esViewportCompacto,
   useAnchoTablero,
+  useViewport,
 } from './useAnchoTablero'
 import { CartaZoom } from './CartaZoom'
 import { ChampionStatus, FocosChampion } from './ChampionStatus'
@@ -125,6 +127,7 @@ function FlancoJugador({
   ancho,
   onAbrirPanel,
   children,
+  compacto = false,
 }: {
   nombre: string
   color: string
@@ -134,6 +137,8 @@ function FlancoJugador({
   ancho: number
   onAbrirPanel: (zona: ZonaPanel) => void
   children?: ReactNode
+  /** Celular/tablet: cuadrícula de 2 columnas con el código de zona y la cantidad (el nombre va en el title). */
+  compacto?: boolean
 }) {
   const filas: Array<{ nombre: string; zona: string; cantidad: number; panel?: ZonaPanel }> = [
     { nombre: 'Mazo', zona: '3G', cantidad: jugador.mazo.length },
@@ -145,21 +150,21 @@ function FlancoJugador({
   ]
   return (
     <div
-      className="shrink-0 flex flex-col gap-1.5 rounded-lg border border-card-border/60 bg-surface/50 p-2"
+      className={`shrink-0 flex flex-col rounded-lg border border-card-border/60 bg-surface/50 ${compacto ? 'gap-0.5 p-1' : 'gap-1.5 p-2'}`}
       style={{ width: ancho }}
     >
       <div className="flex items-center gap-1.5">
         <span className={`w-2 h-2 rounded-full shrink-0 ${color} ${activo ? 'ring-2 ring-white/30' : 'opacity-60'}`} />
-        <p className={`text-xs truncate ${activo ? 'text-gray-100 font-semibold' : 'text-gray-400'}`}>{nombre}</p>
+        <p className={`${compacto ? 'text-[10px]' : 'text-xs'} truncate ${activo ? 'text-gray-100 font-semibold' : 'text-gray-400'}`}>{nombre}</p>
       </div>
-      <ul className="flex flex-col gap-0.5">
+      <ul className={compacto ? 'grid grid-cols-2 gap-x-1 gap-y-0.5' : 'flex flex-col gap-0.5'}>
         {filas.map((f) => {
           const clickeable = f.panel !== undefined && f.cantidad > 0
           const contenido = (
             <>
               <span className="truncate">
-                {f.nombre}
-                {f.zona && <span className="ml-1 text-gray-600">{f.zona}</span>}
+                {compacto ? f.zona || f.nombre : f.nombre}
+                {!compacto && f.zona && <span className="ml-1 text-gray-600">{f.zona}</span>}
               </span>
               <span className="font-mono text-gray-300">{f.cantidad}</span>
             </>
@@ -170,12 +175,17 @@ function FlancoJugador({
                 <button
                   onClick={() => onAbrirPanel(f.panel as ZonaPanel)}
                   title={`Ver ${f.nombre}${f.zona ? ` (${f.zona})` : ''}`}
-                  className="w-full flex items-center justify-between gap-2 text-[10px] text-gray-400 rounded px-1 py-0.5 hover:bg-white/5 hover:text-gray-200 transition-colors cursor-pointer"
+                  className={`w-full flex items-center justify-between text-gray-400 rounded hover:bg-white/5 hover:text-gray-200 transition-colors cursor-pointer ${compacto ? 'gap-1 text-[9px] px-0.5' : 'gap-2 text-[10px] px-1 py-0.5'}`}
                 >
                   {contenido}
                 </button>
               ) : (
-                <div className="flex items-center justify-between gap-2 text-[10px] text-gray-500 px-1 py-0.5">{contenido}</div>
+                <div
+                  title={compacto ? f.nombre : undefined}
+                  className={`flex items-center justify-between text-gray-500 ${compacto ? 'gap-1 text-[9px] px-0.5' : 'gap-2 text-[10px] px-1 py-0.5'}`}
+                >
+                  {contenido}
+                </div>
               )}
             </li>
           )
@@ -237,12 +247,31 @@ function conCarta(a: Action): a is Extract<Action, { cardInstanceId: string }> {
   return 'cardInstanceId' in a && !esDeMano(a)
 }
 
-function Boton({ accion, onClick, fase }: { accion: Action; onClick: (a: Action) => void; fase?: string }) {
+/** Opción del menú ☰ del modo compacto: alto táctil (≥40px) y mismas etiquetas que los botones del escritorio. */
+function ItemMenu({ onClick, children, peligro = false }: { onClick: () => void; children: ReactNode; peligro?: boolean }) {
+  return (
+    <button
+      role="menuitem"
+      onClick={onClick}
+      className={`w-full cursor-pointer rounded-lg px-3 py-2.5 text-left text-xs transition-colors ${
+        peligro ? 'text-red-300 hover:bg-red-600/20' : 'text-gray-200 hover:bg-white/5'
+      }`}
+    >
+      {children}
+    </button>
+  )
+}
+
+/** `destacado`: botón de la franja central (fases, mulligan) en ámbar sólido y más grande, para que no se pierda sobre el azul. */
+function Boton({ accion, onClick, fase, destacado = false }: { accion: Action; onClick: (a: Action) => void; fase?: string; destacado?: boolean }) {
   return (
     <button
       onClick={() => onClick(accion)}
-      className="text-[10px] bg-ether-600/30 hover:bg-ether-600/50 text-ether-200 px-1.5 py-0.5 rounded 
-                 transition-colors cursor-pointer whitespace-nowrap"
+      className={`${
+        destacado
+          ? 'text-xs font-bold bg-amber-400 hover:bg-amber-300 text-gray-950 px-3 py-1 rounded-md shadow-[0_0_0_1px_rgba(253,230,138,0.6)]'
+          : 'text-[10px] bg-ether-600/30 hover:bg-ether-600/50 text-ether-200 px-1.5 py-0.5 rounded'
+      } transition-colors cursor-pointer whitespace-nowrap`}
     >
       {labelAccion(accion, fase)}
     </button>
@@ -1096,13 +1125,21 @@ export function Tablero({
   const anim = useAnimacionCartas(vista, tableroRef)
   /** La mesa se mide para que los dos campos entren en pantalla sin scroll (ancho de carta responsivo). */
   const mesaRef = useRef<HTMLDivElement>(null)
-  const cw = useAnchoTablero(mesaRef)
+  /** Celular/tablet en horizontal: el lateral pasa a panel desplegable y el chrome se afina (el escritorio no cambia). */
+  const { ancho: anchoVentana, alto: alturaVentana } = useViewport()
+  const compacto = esViewportCompacto(anchoVentana, alturaVentana)
+  const [panelLateralAbierto, setPanelLateralAbierto] = useState(false)
+  const [menuAbierto, setMenuAbierto] = useState(false)
+  /** Celular en vertical: la mesa no entra (necesita ~640px de ancho). Se pide girar el dispositivo. */
+  const esRetrato = compacto && anchoVentana < 600 && anchoVentana < alturaVentana
+  const cw = useAnchoTablero(mesaRef, compacto)
   /** La mano se dimensiona por el alto de la ventana (no por la mesa: evita una dependencia circular). */
-  const alturaVentana = useAlturaVentana()
-  const manoAncho = Math.min(132, Math.max(88, Math.round(alturaVentana * 0.115)))
+  const manoAncho = compacto
+    ? Math.min(132, Math.max(46, Math.round(alturaVentana * (alturaVentana < 600 ? 0.13 : 0.115))))
+    : Math.min(132, Math.max(88, Math.round(alturaVentana * 0.115)))
   const franjaMano = Math.round(manoAncho * RELACION_CARTA * 0.78)
   /** El panel lateral de cada jugador escala con la carta (las zonas de la grilla no cambian). */
-  const anchoFlanco = Math.round(cw * ANCHO_FLANCO)
+  const anchoFlanco = compacto ? ANCHO_FLANCO_COMPACTO : Math.round(cw * ANCHO_FLANCO)
   /** Carta bajo el mouse (inspector lateral): conserva la última vista. */
   const [inspeccion, setInspeccion] = useState<Inspeccion | null>(null)
 
@@ -1476,12 +1513,68 @@ export function Tablero({
   return (
     <EnVueloContext.Provider value={anim.ocultas}>
     <AnchoTableroContext.Provider value={cw}>
+    <CompactoContext.Provider value={compacto}>
     <InspeccionContext.Provider value={setInspeccion}>
     {/* overflow-clip (no hidden): hidden se puede scrollear por foco (clic en una carta de la mano) y correría toda la UI */}
-    <div className="h-screen flex flex-col overflow-clip bg-[#0a0a12] text-gray-100 font-body relative">
+    <div className={`${compacto ? 'h-dvh touch-manipulation' : 'h-screen'} flex flex-col overflow-clip bg-[#0a0a12] text-gray-100 font-body relative`}>
       {anim.capa}
 
+      {esRetrato && (
+        <div role="alert" className="absolute inset-0 z-[70] flex flex-col items-center justify-center gap-3 bg-[#0a0a12] p-6 text-center">
+          <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-ether-300" aria-hidden="true">
+            <rect x="7" y="2" width="10" height="20" rx="2" />
+            <path d="M3 9a8 8 0 0 1 4-5M21 15a8 8 0 0 1-4 5" strokeLinecap="round" />
+          </svg>
+          <p className="font-display text-base font-bold">Girá tu dispositivo</p>
+          <p className="max-w-60 text-xs text-gray-400">Éter Online se juega en horizontal: así entran los dos campos y tu mano.</p>
+          <button onClick={onAbandonar} className="mt-2 cursor-pointer rounded bg-surface-2 px-3 py-1.5 text-xs text-gray-300 hover:bg-card-border">
+            Abandonar partida
+          </button>
+        </div>
+      )}
+
       {/* ── Barra superior: fase del turno + controles ───────────── */}
+      {compacto ? (
+        <header className="shrink-0 h-7 flex items-center gap-2 px-2 border-b border-card-border/70 bg-surface/90 z-30">
+          <nav aria-label="Fases del turno" className="flex items-center">
+            <span
+              aria-current="step"
+              className={`text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full ${
+                fase === 'pre_partida'
+                  ? 'bg-amber-500/20 text-amber-300 ring-1 ring-amber-400/40'
+                  : vista.turno === 'A'
+                    ? 'bg-ether-600/40 text-ether-100 ring-1 ring-ether-400/60'
+                    : 'bg-red-600/30 text-red-200 ring-1 ring-red-400/50'
+              }`}
+            >
+              {fase === 'pre_partida' ? 'Mulligan' : (FASE_LABEL[fase] ?? fase)}
+            </span>
+          </nav>
+          <span className="min-w-0 truncate text-[9px] text-gray-500">
+            {terminada
+              ? 'Partida terminada'
+              : fase === 'pre_partida'
+                ? vista.turno === 'A'
+                  ? 'Decidís el mulligan'
+                  : 'El rival decide el mulligan'
+                : vista.turno === 'A'
+                  ? 'Tu turno'
+                  : 'Turno del rival'}
+          </span>
+          <h1 className="sr-only">Éter Online</h1>
+          <button
+            onClick={() => setMenuAbierto((abierto) => !abierto)}
+            aria-label="Menú"
+            aria-haspopup="menu"
+            aria-expanded={menuAbierto}
+            className="ml-auto grid size-6 shrink-0 cursor-pointer place-items-center rounded bg-surface-2 text-gray-300 transition-colors hover:bg-card-border"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
+              <path d="M4 7h16M4 12h16M4 17h16" />
+            </svg>
+          </button>
+        </header>
+      ) : (
       <header className="shrink-0 h-12 flex items-center gap-4 px-4 border-b border-card-border/70 bg-surface/90 z-20">
         <div>
           <h1 className="text-base font-display font-bold tracking-wider leading-none">Éter Online</h1>
@@ -1546,21 +1639,62 @@ export function Tablero({
           </button>
         </div>
       </header>
+      )}
 
-      <main ref={tableroRef} className="flex-1 min-h-0 flex gap-3 p-3">
+      {compacto && menuAbierto && (
+        <>
+          <button type="button" aria-label="Cerrar menú" tabIndex={-1} onClick={() => setMenuAbierto(false)} className="fixed inset-0 z-[35] cursor-default" />
+          <div role="menu" aria-label="Menú de la partida" className="absolute right-1 top-8 z-40 flex w-56 flex-col gap-0.5 rounded-xl border border-card-border bg-[#12121c]/98 p-1 shadow-2xl">
+            <ItemMenu
+              onClick={() => {
+                setPanelLateralAbierto((abierto) => !abierto)
+                setMenuAbierto(false)
+              }}
+            >
+              {panelLateralAbierto ? 'Cerrar panel' : 'Cadena, efectos y log'}
+            </ItemMenu>
+            <ItemMenu onClick={anim.ciclarVelocidad}>Animación: {ETIQUETA_VELOCIDAD[anim.velocidad]}</ItemMenu>
+            {vistaPrevia && onCiclarVistaPrevia && (
+              <ItemMenu onClick={onCiclarVistaPrevia}>Vista previa: {ETIQUETA_VISTA_PREVIA[vistaPrevia]}</ItemMenu>
+            )}
+            {leTocaA && (
+              <ItemMenu
+                peligro
+                onClick={() => {
+                  const r = acciones.find((x) => x.type === 'rendirse')
+                  setMenuAbierto(false)
+                  if (r) onAccion(r)
+                }}
+              >
+                Rendirse
+              </ItemMenu>
+            )}
+            <ItemMenu
+              onClick={() => {
+                setMenuAbierto(false)
+                onAbandonar()
+              }}
+            >
+              Abandonar
+            </ItemMenu>
+          </div>
+        </>
+      )}
+
+      <main ref={tableroRef} className={`flex-1 min-h-0 flex ${compacto ? 'gap-1 p-1' : 'gap-3 p-3'}`}>
         {/* ── Mesa: los dos campos + la mano ──────────────────────── */}
         <section className="flex-1 min-w-0 flex flex-col">
           <div
             ref={mesaRef}
-            className="flex-1 min-h-0 flex flex-col items-center justify-center rounded-2xl border border-card-border/60 px-3 py-2"
+            className={`flex-1 min-h-0 flex flex-col items-center justify-center rounded-2xl border border-card-border/60 ${compacto ? 'px-1 py-0.5' : 'px-3 py-2'}`}
             style={{
               background:
                 'radial-gradient(ellipse at 50% 50%, rgba(64,64,255,0.07) 0%, rgba(64,64,255,0) 60%), linear-gradient(180deg, #11111b 0%, #0d0d16 50%, #11111b 100%)',
             }}
           >
-            <div className="w-full flex items-center justify-center gap-4">
+            <div className={`w-full flex items-center justify-center ${compacto ? 'gap-1' : 'gap-4'}`}>
             <div
-              className="py-1 rounded-xl transition-shadow"
+              className={`${compacto ? 'py-0' : 'py-1'} rounded-xl transition-shadow`}
               style={vista.turno === 'B' && !terminada ? { boxShadow: '0 0 0 1px rgba(248,113,113,0.30), 0 0 32px rgba(248,113,113,0.10)' } : undefined}
             >
               <GrillaJugador
@@ -1586,14 +1720,15 @@ export function Tablero({
               jugador={rival}
               activo={vista.turno === 'B'}
               ancho={anchoFlanco}
+              compacto={compacto}
               onAbrirPanel={(zona) => setPanelAbierto({ jugador: 'B', zona })}
             >
               {/* Mano del rival: dorsos (sus cartas son información oculta) */}
               {rival.mano.length > 0 && (
                 <div className="flex items-center pt-1">
                   {rival.mano.map((id) => (
-                    <div key={id} className="-ml-3 first:ml-0">
-                      <MiniCard inst={vista.instances[id]} anchoPx={22} />
+                    <div key={id} className={`${compacto ? '-ml-2' : '-ml-3'} first:ml-0`}>
+                      <MiniCard inst={vista.instances[id]} anchoPx={compacto ? 16 : 22} />
                     </div>
                   ))}
                 </div>
@@ -1602,7 +1737,7 @@ export function Tablero({
             </div>
 
             {/* ── Franja central: acciones del turno (pasar fase, atacar, mulligan…) ── */}
-            <div className="w-full h-11 shrink-0 flex items-center justify-center gap-2 flex-wrap border-y border-ether-500/15 bg-ether-600/5">
+            <div className={`w-full ${compacto ? 'h-7' : 'h-11'} shrink-0 flex items-center justify-center gap-2 flex-wrap border-y border-ether-500/15 bg-ether-600/5`}>
               {pila.length > 0 && (
                 <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 ring-1 ring-amber-400/40">
                   Cadena ({pila.length})
@@ -1614,7 +1749,7 @@ export function Tablero({
                     <span className="text-[10px] text-amber-400/90">Sin jugadas — pasá el turno para continuar</span>
                   )}
                   {generales.map((a, i) => (
-                    <Boton key={i} accion={a} onClick={onAccion} fase={fase} />
+                    <Boton key={i} accion={a} onClick={onAccion} fase={fase} destacado />
                   ))}
                   {opcionesRuptura.length > 0 && (
                     <span className="text-[11px] font-semibold text-rose-300">
@@ -1625,7 +1760,7 @@ export function Tablero({
                   {selAtaque.length > 0 && esPasoAtaquePropio && (
                     <button
                       onClick={atacarSeleccionados}
-                      className="text-[10px] bg-ether-600 hover:bg-ether-500 text-white px-2 py-0.5 rounded transition-colors cursor-pointer whitespace-nowrap ring-1 ring-ether-400"
+                      className="text-xs font-bold bg-amber-400 hover:bg-amber-300 text-gray-950 px-3 py-1 rounded-md shadow-[0_0_0_1px_rgba(253,230,138,0.6)] transition-colors cursor-pointer whitespace-nowrap"
                     >
                       Atacar con {selAtaque.length} campeón{selAtaque.length > 1 ? 'es' : ''} (✓)
                     </button>
@@ -1638,9 +1773,9 @@ export function Tablero({
               )}
             </div>
 
-            <div className="w-full flex items-center justify-center gap-4">
+            <div className={`w-full flex items-center justify-center ${compacto ? 'gap-1' : 'gap-4'}`}>
             <div
-              className="py-1 rounded-xl transition-shadow"
+              className={`${compacto ? 'py-0' : 'py-1'} rounded-xl transition-shadow`}
               style={vista.turno === 'A' && !terminada ? { boxShadow: '0 0 0 1px rgba(112,112,255,0.35), 0 0 32px rgba(64,64,255,0.12)' } : undefined}
             >
               <GrillaJugador
@@ -1668,6 +1803,7 @@ export function Tablero({
               jugador={yo}
               activo={vista.turno === 'A'}
               ancho={anchoFlanco}
+              compacto={compacto}
               onAbrirPanel={(zona) => setPanelAbierto({ jugador: 'A', zona })}
             />
             </div>
@@ -1680,11 +1816,24 @@ export function Tablero({
         </section>
 
         {/* ── Lateral: elección de objetivo, inspector, cadena, efectos y log ── */}
-        <aside className="w-80 shrink-0 flex flex-col gap-2 overflow-y-auto pr-0.5">
-          <section className="bg-surface border border-card-border rounded-lg p-3">
-            <p className="text-[9px] uppercase tracking-wider text-gray-500 mb-2">Carta</p>
-            <InspectorCarta seleccion={inspeccion} />
-          </section>
+        {compacto && panelLateralAbierto && (
+          <button type="button" aria-label="Cerrar panel" tabIndex={-1} onClick={() => setPanelLateralAbierto(false)} className="fixed inset-0 z-20 cursor-default" />
+        )}
+        <aside
+          id="panel-lateral"
+          className={
+            compacto
+              ? `${panelLateralAbierto ? 'flex' : 'hidden'} absolute right-1 top-8 bottom-1 z-30 w-64 max-w-[55vw] flex-col gap-2 overflow-y-auto rounded-xl border border-card-border bg-[#0a0a12]/97 p-2 shadow-2xl`
+              : 'w-80 shrink-0 flex flex-col gap-2 overflow-y-auto pr-0.5'
+          }
+        >
+          {/* Compacto: sin inspector — en táctil no hay hover y un toque sobre la carta ya abre CartaZoom */}
+          {!compacto && (
+            <section className="bg-surface border border-card-border rounded-lg p-3">
+              <p className="text-[9px] uppercase tracking-wider text-gray-500 mb-2">Carta</p>
+              <InspectorCarta seleccion={inspeccion} />
+            </section>
+          )}
 
           <section className="bg-surface border border-card-border rounded-lg p-2 min-h-18">
             <p className="text-[9px] uppercase tracking-wider text-gray-500 mb-1.5">
@@ -2085,6 +2234,7 @@ export function Tablero({
       })()}
     </div>
     </InspeccionContext.Provider>
+    </CompactoContext.Provider>
     </AnchoTableroContext.Provider>
     </EnVueloContext.Provider>
   )

@@ -8,6 +8,7 @@ import { statsComparativos, focosState } from '../game/stats'
 import { keywordsDe } from '../game/efectos'
 import { esCampeon, getCardMeta } from '../game/cards'
 import type { GameState } from '../game'
+import { useCompacto } from './tableroContext'
 
 const COLOR_CLASSES: Record<string, string> = {
   rojo: 'text-red-400',
@@ -29,6 +30,7 @@ interface ChampionStatusProps {
 
 /** Stats debajo de la carta: X-ATQ Y-RES con colores + keywords. */
 export function ChampionStatus({ s, id, invertida }: ChampionStatusProps) {
+  const compacto = useCompacto()
   const stats = statsComparativos(s, id)
   if (!stats) return null
 
@@ -40,6 +42,23 @@ export function ChampionStatus({ s, id, invertida }: ChampionStatusProps) {
   const tempKws = inst?.keywordsTemporales ?? []
 
   const rotStyle = invertida ? { transform: 'rotate(180deg)' } : undefined
+
+  // Compacto: "3/6" con los mismos colores. El "3-ATQ 6-RES" mide ~70px y, como las columnas de la grilla son 1fr,
+  // una sola etiqueta ensanchaba las 7 columnas y el tablero se salía de la pantalla. Las keywords van en el title.
+  if (compacto) {
+    return (
+      <div
+        className="flex items-center justify-center gap-px mt-0.5 font-mono text-[9px] font-bold leading-none"
+        data-testid={`status-${id}`}
+        style={rotStyle}
+        title={`${stats.atq.actual} ATQ / ${stats.res.actual} RES${kws.length > 0 ? ` · ${kws.join(', ')}` : ''}`}
+      >
+        <span className={COLOR_CLASSES[stats.atq.color]}>{stats.atq.actual}</span>
+        <span className="text-gray-500">/</span>
+        <span className={COLOR_CLASSES[stats.res.color]}>{stats.res.actual}</span>
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col items-center gap-0.5 mt-0.5 px-1" data-testid={`status-${id}`} style={rotStyle}>
