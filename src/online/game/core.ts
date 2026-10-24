@@ -43,7 +43,7 @@ import {
 export type Action =
   | { type: 'mulligan' }
   | { type: 'pasar_mulligan' }
-  | { type: 'rendirse' }
+  | { type: 'rendirse'; jugador?: PlayerId }
   | { type: 'pasar_turno' }
   | { type: 'colocar_vinculo'; cardInstanceId: string; slot: number }
   | {
@@ -176,8 +176,11 @@ function validarAccion(state: GameState, action: Action): string | null {
 function ejecutarAccion(s: GameState, action: Action, ctx: Ctx): void {
   switch (action.type) {
     case 'rendirse': {
-      ctx.emit({ type: 'rendicion', jugador: s.turno })
-      const ganador: PlayerId = s.turno === 'A' ? 'B' : 'A'
+      // Quien se rinde es el que lo declara (puede no ser el activo: elector rival,
+      // prioridad en cadena); sin `jugador` se asume el del turno.
+      const quien: PlayerId = action.jugador ?? s.turno
+      ctx.emit({ type: 'rendicion', jugador: quien })
+      const ganador: PlayerId = quien === 'A' ? 'B' : 'A'
       s.fase = 'terminada'
       s.ganador = ganador
       s.motivo = 'rendicion'

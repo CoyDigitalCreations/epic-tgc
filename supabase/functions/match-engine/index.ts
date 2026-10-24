@@ -362,8 +362,15 @@ Deno.serve(async (req) => {
       return err('playerAction required')
     }
 
+    // `rendirse` trae `jugador` desde el cliente: nunca se confía, se fija al autenticado
+    // (si no, en su turno podría rendir al rival).
+    const accion =
+      (playerAction as { type: string }).type === 'rendirse'
+        ? { ...(playerAction as object), jugador: playerId }
+        : playerAction
+
     const ctx = engine.createCtxFromDraws(Number(game.seed), persistObj.rngDraws)
-    const result = engine.applyAction(state, playerAction, ctx as never)
+    const result = engine.applyAction(state, accion, ctx as never)
 
     if (!result.ok) {
       return json({ ok: false, error: result.error, state: engine.visibleState(result.state, playerId) })

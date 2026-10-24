@@ -322,6 +322,19 @@ describe('el elector es el dueño del pendiente (puede ser el rival)', () => {
     expect(s.cadena?.opener).toMatchObject({ tipo: 'mistica', cardInstanceId: 'mist' })
   })
 
+  it('si el rival elector se rinde pierde ÉL, no el jugador activo', () => {
+    const ctx = crearCtx()
+    let s = aplicar(escenario(), jugar, ctx)
+    s = aplicar(s, { type: 'elegir_objetivo', objetivoId: 'bT' }, ctx)
+    expect(actorActual(s)).toBe('B')
+    const rendirseB = getValidActions(s, 'B').find((a) => a.type === 'rendirse')
+    expect(rendirseB).toEqual({ type: 'rendirse', jugador: 'B' })
+    s = aplicar(s, rendirseB!, ctx)
+    expect(s.fase).toBe('terminada')
+    expect(s.ganador).toBe('A')
+    expect(s.motivo).toBe('rendicion')
+  })
+
   it('visibleState muestra al rival elector las opciones de su pendiente', async () => {
     const { visibleState } = await import('../visibleState')
     const ctx = crearCtx()

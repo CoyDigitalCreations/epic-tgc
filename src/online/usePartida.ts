@@ -391,7 +391,7 @@ export function usePartida(config: PartidaConfig) {
       const accion = botTonto(s, act, config.dificultad)
       if (!accion || jugadasBotRef.current > MAX_JUGADAS_BOT) {
         // Sin progreso posible: el bot se rinde para no colgar la partida.
-        aplicarInterna({ type: 'rendirse' }, true)
+        aplicarInterna({ type: 'rendirse', jugador: act }, true)
         return
       }
       // Pausa también jugadas del bot con efectos[] (modo debugging)

@@ -213,8 +213,8 @@ export function getValidActions(state: GameState, playerId: PlayerId): Action[] 
     if (instPend?.equipadoA) {
       delete state.equiparPendiente
     } else {
-      if (playerId !== equipPend.jugador) return [{ type: 'rendirse' }]
-      const accionesEquip: Action[] = [{ type: 'rendirse' }]
+      if (playerId !== equipPend.jugador) return [{ type: 'rendirse', jugador: playerId }]
+      const accionesEquip: Action[] = [{ type: 'rendirse', jugador: playerId }]
       if (instPend) {
         const p = state.players[playerId]
         for (const campeonId of p.campo.campeones) {
@@ -228,7 +228,7 @@ export function getValidActions(state: GameState, playerId: PlayerId): Action[] 
     }
   }
   if (state.fase === 'terminada') return []
-  const acciones: Action[] = [{ type: 'rendirse' }]
+  const acciones: Action[] = [{ type: 'rendirse', jugador: playerId }]
 
   // F5d-1: declaración esperando objetivos — SOLO el dueño del pendiente elige (rival
   // incluido); el resto queda congelado hasta abrir la ventana. Si ninguna opción
