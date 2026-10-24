@@ -247,11 +247,16 @@ export function ejecutarDeclararBloqueo(s: GameState, asignaciones: Record<strin
   combate.paso = 'resolucion'
   combate.rupturaDisponible = ataquesSinBloquear(s).length > 0
   ctx.emit({ type: 'bloqueo_declarado', jugador: rivalDe(s), asignaciones })
-  // Resolución (9.4-B, ADR-11/14): daño simultáneo aplicado EN LA TRANSICIÓN
+  // F5c (9.6): el bloqueo abre ventana ANTES del daño. La prioridad inicial es del
+  // DEFENSOR (F3, §9.6: responde primero para activar efectos antes de la resolución)
+  // y luego alterna. El daño queda pendiente hasta cerrar la cadena
+  // (continuarCombateTrasCadena) y se resuelve con el estado vigente al cierre.
+  if (abrirCadena(s, rivalDe(s))) {
+    combate.danoPendiente = true
+    return
+  }
+  // Gate cerrado: sin ventana. Resolución (9.4-B, ADR-11/14): daño simultáneo EN LA TRANSICIÓN
   resolverCombate(s, ctx)
-  // C4 (9.6): tras la resolución la prioridad es del DEFENSOR, como en toda la cadena
-  // (§9.6); la Ruptura queda pendiente hasta cerrar la cadena.
-  abrirCadena(s, rivalDe(s))
 }
 
 /* ─────────────────── resolución: daño simultáneo (9.4-B, ADR-14) ─────────────────── */
@@ -275,6 +280,10 @@ function resolverCombate(s: GameState, ctx: Ctx): void {
   for (const atacante of combate.atacantes) {
     const bloqueador = combate.bloqueos[atacante]
     if (!bloqueador) continue // sin bloquear: no hay daño (Ruptura, no muerte)
+    // F5c: durante la ventana de respuesta pudo salir de la zona alguno de los dos
+    // (muerte, rebote, exilio, robo de control): ese par ya no intercambia daño.
+    if (!s.players[s.turno].campo.campeones.includes(atacante)) continue
+    if (!s.players[rivalDe(s)].campo.campeones.includes(bloqueador)) continue
     // Ambos deciden con el estado PRE-daño (los stats no cambian: sin marcas)
     const statsAtacante = statsDe(s, atacante)
     const statsBloqueador = statsDe(s, bloqueador)
@@ -317,7 +326,25 @@ function resolverCombate(s: GameState, ctx: Ctx): void {
  */
 export function continuarCombateTrasCadena(s: GameState, ctx: Ctx): void {
   const combate = s.combate
-  if (!combate) return
+  if (!combate || s.fase !== 'choque') return
+  // F5c: tras la ventana del bloqueo se resuelve el daño con el estado vigente;
+  // la Ruptura pendiente queda como en el flujo normal (una por turno, F3).
+  if (combate.paso === 'resolucion') {
+    if (combate.danoPendiente) {
+      delete combate.danoPendiente
+      resolverCombate(s, ctx)
+    }
+    return
+  }
+  // F5c: el ataque sigue vigente solo con los atacantes que siguen en el campo;
+  // si una respuesta los sacó a todos, el ataque se anula y el combate se cierra.
+  if (combate.paso === 'bloqueo') {
+    combate.atacantes = combate.atacantes.filter((id) => s.players[s.turno].campo.campeones.includes(id))
+    if (combate.atacantes.length === 0) {
+      s.combate = undefined
+      return
+    }
+  }
   if (combate.paso === 'bloqueo' && bloqueadoresDisponibles(s).length === 0) {
     combate.paso = 'resolucion'
     resolverCombate(s, ctx) // sin pares: sin muertes

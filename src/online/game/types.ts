@@ -254,6 +254,8 @@ export interface CombateState {
   rupturaDisponible: boolean
   /** true si ya se hicieron las Rupturas que permite la regla `rupturasPorTurno` este turno (§9.4-A). */
   rupturaUsadaEsteTurno: boolean
+  /** F5c: true mientras la ventana abierta tras declarar_bloqueo está pendiente; el daño se resuelve al cerrarla. */
+  danoPendiente?: boolean
 }
 
 /** Estado completo de partida — JSON-serializable (sin referencias circulares). */

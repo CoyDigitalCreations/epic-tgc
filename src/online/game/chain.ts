@@ -99,8 +99,8 @@ function puedeResponder(vel: 'normal' | 'presteza' | 'fugaz', requerida: 'normal
  * Apertura CONDICIONAL de la cadena (C4): se abre SOLO si el primer
  * respondedor tiene cartas respondibles; si no, devuelve false y la
  * sub-máquina de combate continúa su flujo normal. La prioridad inicial es
- * del primer respondedor (defensor tras declarar_ataque §9.6, atacante tras
- * declarar_bloqueo §9.6).
+ * del primer respondedor (defensor tras declarar_ataque y tras declarar_bloqueo, §9.6/F3;
+ * en el bloqueo la ventana abre ANTES del daño, F5c).
  */
 export function abrirCadena(s: GameState, primerRespondedor: PlayerId): boolean {
   const combate = s.combate
