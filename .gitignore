@@ -17,6 +17,7 @@ dist-ssr
 # (66KB, sin arte base64) — DEBE viajar al repo para que Vercel/fresh clone buildee.
 seed/*
 !seed/FuenteEfectos.json
+!seed/CartasPrueba.json
 
 # Artefactos de debugging locales
 simulacion-partida.txt

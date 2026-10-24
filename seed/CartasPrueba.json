@@ -1,0 +1,2171 @@
+[
+  {
+    "id": "PR-001",
+    "name": "Éter de Prueba",
+    "type": "Éter",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "Sin gatillo ni aura: paga las cartas de prueba sin ruido.",
+    "paqueteId": "prueba",
+    "limiteCopias": "2",
+    "createdAt": "2026-10-24T00:00:00.000Z",
+    "updatedAt": "2026-10-24T00:00:00.000Z",
+    "stats": {
+      "cost": 1
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-002",
+    "name": "Éter Gatillo de Ímpetu",
+    "type": "Éter",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "Un chispazo de ímpetu cuando se gasta.",
+    "paqueteId": "prueba",
+    "limiteCopias": "2",
+    "createdAt": "2026-10-24T00:00:00.000Z",
+    "updatedAt": "2026-10-24T00:00:00.000Z",
+    "stats": {
+      "cost": 1
+    },
+    "efectos": [
+      {
+        "tipo": "pago",
+        "efecto": "buff",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 1,
+          "RES": 0
+        },
+        "texto": "Cuando pagues esta carta, un Campeón que controles gana 1 de ATQ, hasta el final del turno.",
+        "trigger": "al_pagar_eter",
+        "duracion": "turno"
+      }
+    ]
+  },
+  {
+    "id": "PR-003",
+    "name": "Éter Gatillo de Savia",
+    "type": "Éter",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "Al gastarse, devuelve una carta.",
+    "paqueteId": "prueba",
+    "limiteCopias": "2",
+    "createdAt": "2026-10-24T00:00:00.000Z",
+    "updatedAt": "2026-10-24T00:00:00.000Z",
+    "stats": {
+      "cost": 1
+    },
+    "efectos": [
+      {
+        "tipo": "pago",
+        "efecto": "draw",
+        "objetivo": {
+          "tipo": "carta",
+          "controlador": "propio",
+          "zona": "mazo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "texto": "Cuando pagues esta carta, roba 1 carta de tu mazo.",
+        "trigger": "al_pagar_eter",
+        "cantidad": 1
+      }
+    ]
+  },
+  {
+    "id": "PR-004",
+    "name": "Éter Pasivo de Enlace",
+    "type": "Éter",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "Mientras descansa, ata a otro Éter.",
+    "paqueteId": "prueba",
+    "limiteCopias": "2",
+    "createdAt": "2026-10-24T00:00:00.000Z",
+    "updatedAt": "2026-10-24T00:00:00.000Z",
+    "stats": {
+      "cost": 1
+    },
+    "efectos": [
+      {
+        "tipo": "pago",
+        "efecto": "block_ether",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "campo",
+          "filtros": {
+            "puedeBloquearEter": true
+          }
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "texto": "Bloquea 1 Éter de tu Reserva sobre un Campeón que pueda recibir éter bloqueado que controles, una vez por turno.",
+        "duracion": "1_por_turno"
+      }
+    ]
+  },
+  {
+    "id": "PR-005",
+    "name": "Éter de Reserva Corrosivo",
+    "type": "Éter",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "Su sola presencia debilita al enemigo.",
+    "paqueteId": "prueba",
+    "limiteCopias": "2",
+    "createdAt": "2026-10-24T00:00:00.000Z",
+    "updatedAt": "2026-10-24T00:00:00.000Z",
+    "stats": {
+      "cost": 1
+    },
+    "efectos": [
+      {
+        "tipo": "reserva",
+        "efecto": "debuff",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 1,
+          "RES": 0
+        },
+        "texto": "Mientras esté en tu Reserva, los Campeones que controla el rival pierden 1 de ATQ.",
+        "trigger": "ninguno"
+      }
+    ]
+  },
+  {
+    "id": "PR-006",
+    "name": "Éter de Reserva Veloz",
+    "type": "Éter",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "Se enciende al comenzar el Choque.",
+    "paqueteId": "prueba",
+    "limiteCopias": "2",
+    "createdAt": "2026-10-24T00:00:00.000Z",
+    "updatedAt": "2026-10-24T00:00:00.000Z",
+    "stats": {
+      "cost": 1
+    },
+    "efectos": [
+      {
+        "tipo": "reserva",
+        "efecto": "grant_keyword",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "texto": "Al inicio de tu Choque, si está en tu Reserva, un Campeón que controles gana Carga hasta el final del turno.",
+        "trigger": "inicio_choque",
+        "keyword": "Carga",
+        "duracion": "turno"
+      }
+    ]
+  },
+  {
+    "id": "PR-007",
+    "name": "Éter de Bloqueo Firme",
+    "type": "Éter",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "Fortalece a quien lo sostiene.",
+    "paqueteId": "prueba",
+    "limiteCopias": "2",
+    "createdAt": "2026-10-24T00:00:00.000Z",
+    "updatedAt": "2026-10-24T00:00:00.000Z",
+    "stats": {
+      "cost": 1
+    },
+    "efectos": [
+      {
+        "tipo": "bloqueo",
+        "efecto": "buff",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 1,
+          "RES": 0
+        },
+        "texto": "Mientras esté bloqueado, el Campeón que tenga este Éter gana 1 de ATQ."
+      }
+    ]
+  },
+  {
+    "id": "PR-008",
+    "name": "Éter Gatillo Cruel",
+    "type": "Éter",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "Al gastarse, el rival pierde una carta al azar.",
+    "paqueteId": "prueba",
+    "limiteCopias": "2",
+    "createdAt": "2026-10-24T00:00:00.000Z",
+    "updatedAt": "2026-10-24T00:00:00.000Z",
+    "stats": {
+      "cost": 1
+    },
+    "efectos": [
+      {
+        "tipo": "pago",
+        "efecto": "rival_discard",
+        "objetivo": {
+          "tipo": "mano",
+          "controlador": "rival",
+          "zona": "mano"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "texto": "Cuando pagues esta carta, el rival pierde 1 carta de su mano al azar.",
+        "trigger": "al_pagar_eter",
+        "cantidad": 1
+      }
+    ]
+  },
+  {
+    "id": "PR-009",
+    "name": "Éter Gatillo de Retorno",
+    "type": "Éter",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "Al gastarse, devuelve un Éter pagado a la Reserva.",
+    "paqueteId": "prueba",
+    "limiteCopias": "2",
+    "createdAt": "2026-10-24T00:00:00.000Z",
+    "updatedAt": "2026-10-24T00:00:00.000Z",
+    "stats": {
+      "cost": 1
+    },
+    "efectos": [
+      {
+        "tipo": "pago",
+        "efecto": "return_ether",
+        "objetivo": {
+          "tipo": "eter",
+          "controlador": "propio",
+          "zona": "pagado",
+          "zonaDestino": "reserva"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "texto": "Cuando pagues esta carta, devuelve 1 Éter de la zona de pago a tu Reserva.",
+        "trigger": "al_pagar_eter",
+        "cantidad": 1
+      }
+    ]
+  },
+  {
+    "id": "PR-010",
+    "name": "Peón de Prueba",
+    "type": "Campeón",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "Sin efecto: sirve de blanco y de bloqueador.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-10-24T00:00:00.000Z",
+    "updatedAt": "2026-10-24T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 1,
+      "poder": 2,
+      "resistencia": 2
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-011",
+    "name": "Tiradora de Prueba",
+    "type": "Campeón",
+    "rarity": "Común",
+    "keywords": [
+      "Tirador"
+    ],
+    "flavorText": "Dispara sin cansarse.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-10-24T00:00:00.000Z",
+    "updatedAt": "2026-10-24T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Constructo",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Efecto"
+    ],
+    "stats": {
+      "cost": 2,
+      "poder": 3,
+      "resistencia": 3
+    },
+    "efectos": [
+      {
+        "tipo": "disparo",
+        "efecto": "draw",
+        "objetivo": {
+          "tipo": "carta",
+          "controlador": "propio",
+          "zona": "mazo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "texto": "Puedes pagar 1 Éter, roba 1 carta de tu mazo.",
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 1
+        },
+        "cantidad": 1
+      }
+    ]
+  },
+  {
+    "id": "PR-012",
+    "name": "Intocable de Prueba",
+    "type": "Campeón",
+    "rarity": "Común",
+    "keywords": [
+      "Inexiliable"
+    ],
+    "flavorText": "Nada lo envía al exilio.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-10-24T00:00:00.000Z",
+    "updatedAt": "2026-10-24T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Constructo",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 1,
+      "poder": 2,
+      "resistencia": 2
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-013",
+    "name": "Heraldo Hostil",
+    "type": "Campeón",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "Su llegada pesa sobre el rival.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-10-24T00:00:00.000Z",
+    "updatedAt": "2026-10-24T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Constructo",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Efecto"
+    ],
+    "stats": {
+      "cost": 2,
+      "poder": 3,
+      "resistencia": 3
+    },
+    "efectos": [
+      {
+        "tipo": "pasivo",
+        "efecto": "debuff",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 2,
+          "RES": 0
+        },
+        "texto": "Al ser invocada, un Campeón que controla el rival pierde 2 de ATQ, hasta el final del turno.",
+        "trigger": "al_invocar",
+        "duracion": "turno"
+      }
+    ]
+  },
+  {
+    "id": "PR-014",
+    "name": "Heraldo Aliado",
+    "type": "Campeón",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "Su llegada inspira a los suyos.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-10-24T00:00:00.000Z",
+    "updatedAt": "2026-10-24T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Constructo",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Efecto"
+    ],
+    "stats": {
+      "cost": 2,
+      "poder": 3,
+      "resistencia": 3
+    },
+    "efectos": [
+      {
+        "tipo": "pasivo",
+        "efecto": "buff",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 2,
+          "RES": 0
+        },
+        "texto": "Al ser invocada, un Campeón que controles gana 2 de ATQ, hasta el final del turno.",
+        "trigger": "al_invocar",
+        "duracion": "turno"
+      }
+    ]
+  },
+  {
+    "id": "PR-015",
+    "name": "Hostigador de Prueba",
+    "type": "Campeón",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "Cada ataque suyo desgasta al enemigo.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-10-24T00:00:00.000Z",
+    "updatedAt": "2026-10-24T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Constructo",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Efecto"
+    ],
+    "stats": {
+      "cost": 2,
+      "poder": 3,
+      "resistencia": 3
+    },
+    "efectos": [
+      {
+        "tipo": "pasivo",
+        "efecto": "debuff",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 1,
+          "RES": 0
+        },
+        "texto": "Al atacar, un Campeón que controla el rival pierde 1 de ATQ, hasta el final del turno.",
+        "trigger": "al_atacar",
+        "duracion": "turno"
+      }
+    ]
+  },
+  {
+    "id": "PR-016",
+    "name": "Cosechadora de Combate",
+    "type": "Campeón",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "Lo que mata, lo cobra en Éter.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-10-24T00:00:00.000Z",
+    "updatedAt": "2026-10-24T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Constructo",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Efecto"
+    ],
+    "stats": {
+      "cost": 2,
+      "poder": 4,
+      "resistencia": 3
+    },
+    "efectos": [
+      {
+        "tipo": "pasivo",
+        "efecto": "mover",
+        "objetivo": {
+          "tipo": "eter",
+          "controlador": "rival",
+          "zona": "reserva",
+          "zonaDestino": "pagado",
+          "controladorDestino": "rival"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "texto": "Al matar en combate, puedes mover 1 Éter que controla el rival de la Reserva a la zona de pago del rival.",
+        "trigger": "al_matar_en_combate",
+        "cantidad": 1
+      }
+    ]
+  },
+  {
+    "id": "PR-017",
+    "name": "Última Voluntad",
+    "type": "Campeón",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "Al caer, deja su recuerdo a los suyos.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-10-24T00:00:00.000Z",
+    "updatedAt": "2026-10-24T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Constructo",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Efecto"
+    ],
+    "stats": {
+      "cost": 2,
+      "poder": 2,
+      "resistencia": 2
+    },
+    "efectos": [
+      {
+        "tipo": "pasivo",
+        "efecto": "tutor",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "cementerio",
+          "zonaDestino": "mano",
+          "filtros": {
+            "faccion": "Mutación"
+          }
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "texto": "Al ser enviada al Cementerio desde cualquier zona, puedes buscar 1 Campeón de facción Mutación de tu Cementerio y agrégalo a tu mano.",
+        "trigger": "al_ser_enviado_al_cementerio",
+        "triggerZona": "cualquier_zona",
+        "cantidad": 1
+      }
+    ]
+  },
+  {
+    "id": "PR-018",
+    "name": "Rompecadenas de Prueba",
+    "type": "Campeón",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "Al activarse, quiebra un conjuro enemigo.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-10-24T00:00:00.000Z",
+    "updatedAt": "2026-10-24T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Constructo",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Efecto"
+    ],
+    "stats": {
+      "cost": 2,
+      "poder": 3,
+      "resistencia": 3
+    },
+    "efectos": [
+      {
+        "tipo": "disparo",
+        "efecto": "destroy",
+        "objetivo": {
+          "tipo": "mistica",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "texto": "Al activar esta habilidad, puedes pagar 2 Éter, destruye 1 Mística que controla el rival.",
+        "trigger": "al_activar_habilidad",
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 2
+        }
+      }
+    ]
+  },
+  {
+    "id": "PR-019",
+    "name": "Vigía del Alba",
+    "type": "Campeón",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "Despierta con el primer rayo.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-10-24T00:00:00.000Z",
+    "updatedAt": "2026-10-24T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Constructo",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Efecto"
+    ],
+    "stats": {
+      "cost": 2,
+      "poder": 2,
+      "resistencia": 3
+    },
+    "efectos": [
+      {
+        "tipo": "pasivo",
+        "efecto": "buff",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 1,
+          "RES": 0
+        },
+        "texto": "Al inicio de tu Alba, un Campeón que controles gana 1 de ATQ, hasta el final del turno.",
+        "trigger": "inicio_alba",
+        "duracion": "turno"
+      }
+    ]
+  },
+  {
+    "id": "PR-020",
+    "name": "Vigía del Choque",
+    "type": "Campeón",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "Hostiga al enemigo antes de la batalla.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-10-24T00:00:00.000Z",
+    "updatedAt": "2026-10-24T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Constructo",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Efecto"
+    ],
+    "stats": {
+      "cost": 2,
+      "poder": 2,
+      "resistencia": 3
+    },
+    "efectos": [
+      {
+        "tipo": "pasivo",
+        "efecto": "debuff",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 1,
+          "RES": 0
+        },
+        "texto": "Al inicio de tu Choque, un Campeón que controla el rival pierde 1 de ATQ, hasta el final del turno.",
+        "trigger": "inicio_choque",
+        "duracion": "turno"
+      }
+    ]
+  },
+  {
+    "id": "PR-021",
+    "name": "Escudo de Prueba",
+    "type": "Campeón",
+    "rarity": "Común",
+    "keywords": [
+      "Protector"
+    ],
+    "flavorText": "Protege a los suyos y silencia a un rival.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-10-24T00:00:00.000Z",
+    "updatedAt": "2026-10-24T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Constructo",
+    "roles": [
+      "Soporte"
+    ],
+    "catHabilidad": [
+      "Efecto"
+    ],
+    "stats": {
+      "cost": 3,
+      "poder": 3,
+      "resistencia": 4
+    },
+    "efectos": [
+      {
+        "tipo": "disparo",
+        "efecto": "negar",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "texto": "Puedes pagar 3 Éter, niega el efecto activo de un Campeón que controla el rival, hasta el final del turno.",
+        "trigger": "ninguno",
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 3
+        },
+        "tipoNegacion": "efecto_activo",
+        "duracion": "turno"
+      }
+    ]
+  },
+  {
+    "id": "PR-022",
+    "name": "Imitador de Prueba",
+    "type": "Campeón",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "Toma prestada la fuerza ajena.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-10-24T00:00:00.000Z",
+    "updatedAt": "2026-10-24T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Constructo",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Efecto"
+    ],
+    "stats": {
+      "cost": 3,
+      "poder": 3,
+      "resistencia": 3
+    },
+    "efectos": [
+      {
+        "tipo": "pasivo",
+        "efecto": "copy",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "texto": "Al ser invocada, puedes copiar el ATQ de un Campeón que controla el rival, hasta el final del turno.",
+        "trigger": "al_invocar",
+        "duracion": "turno",
+        "copyAttributes": [
+          "atq"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "PR-023",
+    "name": "Doble Filo",
+    "type": "Campeón",
+    "rarity": "Común",
+    "keywords": [
+      "Recarga"
+    ],
+    "flavorText": "Con Éter bloqueado, ataca dos veces.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-10-24T00:00:00.000Z",
+    "updatedAt": "2026-10-24T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Constructo",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Efecto"
+    ],
+    "stats": {
+      "cost": 3,
+      "poder": 3,
+      "resistencia": 1
+    },
+    "efectos": [
+      {
+        "tipo": "continuo",
+        "efecto": "double_attack",
+        "objetivo": {
+          "tipo": "self"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "texto": "Bloquea 3 Éter, esta carta puede declarar 2 veces ataque, mientras ese Éter esté bloqueado.",
+        "costo": {
+          "tipo": "bloqueo_fijo",
+          "cantidad": 3
+        },
+        "duracion": "mientras_ester_bloqueado"
+      }
+    ]
+  },
+  {
+    "id": "PR-024",
+    "name": "Vigilante Escalonado",
+    "type": "Campeón",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "Cuanto más Éter sostiene, más controla.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-10-24T00:00:00.000Z",
+    "updatedAt": "2026-10-24T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Constructo",
+    "roles": [
+      "Soporte"
+    ],
+    "catHabilidad": [
+      "Efecto"
+    ],
+    "stats": {
+      "cost": 4,
+      "poder": 3,
+      "resistencia": 5
+    },
+    "efectos": [
+      {
+        "tipo": "continuo",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "texto": "Puedes bloquear hasta un máximo de 4 Éter (Max. 4), con 2 Éteres bloqueados, cambia el agotamiento de un Campeón que controla el rival, con 4 Éteres bloqueados, fija el agotamiento de un Campeón que esté agotado que controla el rival, mientras ese Éter esté bloqueado.",
+        "costo": {
+          "tipo": "eter_bloqueado",
+          "cantidad": 4,
+          "umbral": 2
+        },
+        "tramos": [
+          {
+            "umbral": 2,
+            "efecto": "toggle_exhaust"
+          },
+          {
+            "umbral": 4,
+            "efecto": "fix_exhaust",
+            "filtros": {
+              "agotado": true
+            },
+            "duracion": "mientras_ester_bloqueado"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "PR-025",
+    "name": "Ladrona de Prueba",
+    "type": "Campeón",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "Mientras sostenga su Éter, el Campeón robado es suyo.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-10-24T00:00:00.000Z",
+    "updatedAt": "2026-10-24T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Constructo",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Efecto"
+    ],
+    "stats": {
+      "cost": 3,
+      "poder": 4,
+      "resistencia": 4
+    },
+    "efectos": [
+      {
+        "tipo": "continuo",
+        "efecto": "steal_champion",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "texto": "Bloquea 2 Éter, toma control de 1 Campeón que controla el rival, mientras ese Éter esté bloqueado. Al inicio de tu Alba, reagrupa el Éter usado por este efecto.",
+        "costo": {
+          "tipo": "bloqueo_fijo",
+          "cantidad": 2
+        },
+        "duracion": "mientras_ester_bloqueado",
+        "reagrupar": {
+          "fase": "alba",
+          "turno": "propio"
+        }
+      }
+    ]
+  },
+  {
+    "id": "PR-026",
+    "name": "Guardián del Vínculo",
+    "type": "Campeón",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "Se sacrifica para que un Vínculo no caiga.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-10-24T00:00:00.000Z",
+    "updatedAt": "2026-10-24T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Constructo",
+    "roles": [
+      "Soporte"
+    ],
+    "catHabilidad": [
+      "Efecto"
+    ],
+    "stats": {
+      "cost": 3,
+      "poder": 2,
+      "resistencia": 5
+    },
+    "efectos": [
+      {
+        "tipo": "pasivo",
+        "efecto": "prevent_destroy",
+        "objetivo": {
+          "tipo": "vinculo",
+          "controlador": "propio",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "texto": "Cuando un Vínculo que controles fuera a ser destruido, puedes enviar esta carta a tu exilio, previniendo la destrucción de ese vínculo.",
+        "trigger": "cuando_vinculo_seria_destruido",
+        "costo": {
+          "tipo": "exile_self"
+        }
+      }
+    ]
+  },
+  {
+    "id": "PR-027",
+    "name": "Verdugo de Prueba",
+    "type": "Campeón",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "Paga y ejecuta.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-10-24T00:00:00.000Z",
+    "updatedAt": "2026-10-24T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Constructo",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Efecto"
+    ],
+    "stats": {
+      "cost": 3,
+      "poder": 3,
+      "resistencia": 3
+    },
+    "efectos": [
+      {
+        "tipo": "disparo",
+        "efecto": "destroy",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "texto": "Puedes pagar 2 Éter, destruye 1 Campeón que controla el rival.",
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 2
+        },
+        "cantidad": 1
+      }
+    ]
+  },
+  {
+    "id": "PR-028",
+    "name": "Reactivo de Cadena",
+    "type": "Campeón",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "Responde a cualquier cadena abierta.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-10-24T00:00:00.000Z",
+    "updatedAt": "2026-10-24T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Constructo",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Efecto"
+    ],
+    "stats": {
+      "cost": 2,
+      "poder": 2,
+      "resistencia": 3
+    },
+    "efectos": [
+      {
+        "tipo": "disparo",
+        "efecto": "debuff",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 2,
+          "RES": 0
+        },
+        "texto": "Al resolver la cadena, un Campeón que controla el rival pierde 2 de ATQ, hasta el final del turno.",
+        "trigger": "al_resolver_cadena",
+        "duracion": "turno"
+      }
+    ]
+  },
+  {
+    "id": "PR-029",
+    "name": "Comandante de Prueba",
+    "type": "Campeón",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "Su sola presencia fortalece a toda la hueste.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-10-24T00:00:00.000Z",
+    "updatedAt": "2026-10-24T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Constructo",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Comandante"
+    ],
+    "stats": {
+      "cost": 4,
+      "poder": 4,
+      "resistencia": 4
+    },
+    "efectos": [],
+    "efectoComandante": {
+      "tipo": "pasivo",
+      "efecto": "buff",
+      "objetivo": {
+        "tipo": "todos_campeones_propios",
+        "controlador": "propio",
+        "zona": "campo"
+      },
+      "stats": {
+        "ATQ": 1,
+        "RES": 1
+      },
+      "texto": "Todos tus Campeones ganan 1 de ATQ y 1 de RES."
+    }
+  },
+  {
+    "id": "PR-030",
+    "name": "Muro Doble",
+    "type": "Campeón",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "Sus aliados pueden bloquear dos veces por turno.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-10-24T00:00:00.000Z",
+    "updatedAt": "2026-10-24T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Constructo",
+    "roles": [
+      "Soporte"
+    ],
+    "catHabilidad": [
+      "Efecto"
+    ],
+    "stats": {
+      "cost": 2,
+      "poder": 1,
+      "resistencia": 4
+    },
+    "efectos": [
+      {
+        "tipo": "pasivo",
+        "efecto": "modificar_regla",
+        "objetivo": {
+          "tipo": "todos_campeones_propios",
+          "controlador": "propio",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "texto": "Tus Campeones pueden bloquear 1 vez más por turno.",
+        "regla": {
+          "id": "bloqueosPorTurno",
+          "operacion": "sumar",
+          "valor": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "PR-040",
+    "name": "Rayo de Prueba",
+    "type": "Mística",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "Fulmina a un Campeón endeble.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-10-24T00:00:00.000Z",
+    "updatedAt": "2026-10-24T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "stats": {
+      "cost": 2
+    },
+    "efectos": [
+      {
+        "tipo": "hechizo",
+        "efecto": "destroy",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo",
+          "filtros": {
+            "resMax": 3
+          }
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "texto": "Destruye 1 Campeón RES 3 o menos que controla el rival."
+      }
+    ]
+  },
+  {
+    "id": "PR-041",
+    "name": "Presteza de Savia",
+    "type": "Mística",
+    "rarity": "Común",
+    "keywords": [
+      "Presteza"
+    ],
+    "flavorText": "Una respuesta que repone la mano.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-10-24T00:00:00.000Z",
+    "updatedAt": "2026-10-24T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "stats": {
+      "cost": 1
+    },
+    "efectos": [
+      {
+        "tipo": "hechizo",
+        "efecto": "draw",
+        "objetivo": {
+          "tipo": "carta",
+          "controlador": "propio",
+          "zona": "mazo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "texto": "Roba 1 carta de tu mazo.",
+        "cantidad": 1
+      }
+    ]
+  },
+  {
+    "id": "PR-042",
+    "name": "Presteza Debilitadora",
+    "type": "Mística",
+    "rarity": "Común",
+    "keywords": [
+      "Presteza"
+    ],
+    "flavorText": "Una respuesta que marca a un enemigo.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-10-24T00:00:00.000Z",
+    "updatedAt": "2026-10-24T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "stats": {
+      "cost": 1
+    },
+    "efectos": [
+      {
+        "tipo": "hechizo",
+        "efecto": "debuff",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 2,
+          "RES": 0
+        },
+        "texto": "Un Campeón que controla el rival pierde 2 de ATQ, hasta el final del turno.",
+        "duracion": "turno"
+      }
+    ]
+  },
+  {
+    "id": "PR-043",
+    "name": "Fugaz de Ímpetu",
+    "type": "Mística",
+    "rarity": "Común",
+    "keywords": [
+      "Fugaz"
+    ],
+    "flavorText": "Se resuelve al instante: nadie responde.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-10-24T00:00:00.000Z",
+    "updatedAt": "2026-10-24T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "stats": {
+      "cost": 1
+    },
+    "efectos": [
+      {
+        "tipo": "hechizo",
+        "efecto": "buff",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 2,
+          "RES": 0
+        },
+        "texto": "Un Campeón que controles gana 2 de ATQ, hasta el final del turno.",
+        "duracion": "turno"
+      }
+    ]
+  },
+  {
+    "id": "PR-044",
+    "name": "Marcha de Prueba",
+    "type": "Mística",
+    "rarity": "Común",
+    "keywords": [
+      "Presteza"
+    ],
+    "flavorText": "Niega la activación de un rival.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-10-24T00:00:00.000Z",
+    "updatedAt": "2026-10-24T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "stats": {
+      "cost": 2
+    },
+    "efectos": [
+      {
+        "tipo": "hechizo",
+        "efecto": "negar",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "texto": "Niega la activación del efecto de un Campeón que controla el rival.",
+        "tipoNegacion": "activacion"
+      }
+    ]
+  },
+  {
+    "id": "PR-045",
+    "name": "Aviso de Prueba",
+    "type": "Mística",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "Marca al enemigo en cuanto se juega.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-10-24T00:00:00.000Z",
+    "updatedAt": "2026-10-24T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "stats": {
+      "cost": 1
+    },
+    "efectos": [
+      {
+        "tipo": "hechizo",
+        "efecto": "debuff",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 1,
+          "RES": 0
+        },
+        "texto": "Al jugar esta Mística, un Campeón que controla el rival pierde 1 de ATQ, hasta el final del turno.",
+        "trigger": "al_jugar_mistica",
+        "duracion": "turno"
+      }
+    ]
+  },
+  {
+    "id": "PR-046",
+    "name": "Eco de Cadena",
+    "type": "Mística",
+    "rarity": "Común",
+    "keywords": [
+      "Presteza"
+    ],
+    "flavorText": "Su efecto llega al resolverse la cadena.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-10-24T00:00:00.000Z",
+    "updatedAt": "2026-10-24T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "stats": {
+      "cost": 1
+    },
+    "efectos": [
+      {
+        "tipo": "hechizo",
+        "efecto": "draw",
+        "objetivo": {
+          "tipo": "carta",
+          "controlador": "propio",
+          "zona": "mazo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "texto": "Al resolver la cadena, puedes robar 1 carta de tu mazo.",
+        "trigger": "al_resolver_cadena",
+        "cantidad": 1
+      }
+    ]
+  },
+  {
+    "id": "PR-047",
+    "name": "Reclamo del Exilio",
+    "type": "Mística",
+    "rarity": "Común",
+    "keywords": [
+      "Artefacto"
+    ],
+    "flavorText": "Rescata del Exilio a un Campeón y se le une.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-10-24T00:00:00.000Z",
+    "updatedAt": "2026-10-24T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "stats": {
+      "cost": 3
+    },
+    "efectos": [
+      {
+        "tipo": "hechizo",
+        "efecto": "invocar_y_equipar",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "exilio",
+          "filtros": {
+            "faccion": "Mutación",
+            "costeMax": 3
+          }
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "texto": "Puedes pagar 3 Éter, invoca un Campeón de facción Mutación de coste 3 éter o menos del Exilio de su dueño y equipa esta carta a ese Campeón.",
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 3
+        },
+        "zonaOrigen": "exilio"
+      }
+    ]
+  },
+  {
+    "id": "PR-048",
+    "name": "Rito de Prueba",
+    "type": "Mística",
+    "rarity": "Común",
+    "keywords": [
+      "Artefacto"
+    ],
+    "flavorText": "Invoca del Exilio mientras sostenga su Éter.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-10-24T00:00:00.000Z",
+    "updatedAt": "2026-10-24T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "stats": {
+      "cost": 2
+    },
+    "efectos": [
+      {
+        "tipo": "hechizo",
+        "efecto": "invocar_y_equipar",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "texto": "Bloquea 2 Éter, invoca un Campeón del Exilio de su dueño y equipa esta carta a ese Campeón, mientras ese Éter esté bloqueado.",
+        "costo": {
+          "tipo": "bloqueo_fijo",
+          "cantidad": 2
+        },
+        "zonaOrigen": "exilio",
+        "duracion": "mientras_ester_bloqueado"
+      }
+    ]
+  },
+  {
+    "id": "PR-049",
+    "name": "Espejo de Prueba",
+    "type": "Mística",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "Copia el conjuro de un rival mientras sostenga su Éter.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-10-24T00:00:00.000Z",
+    "updatedAt": "2026-10-24T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "stats": {
+      "cost": 2
+    },
+    "efectos": [
+      {
+        "tipo": "hechizo",
+        "efecto": "copy",
+        "objetivo": {
+          "tipo": "mistica_arcana",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "texto": "Bloquea 2 Éter, copia el efecto de hechizo, el efecto continuo y la recompensa de una Mística o Arcana que controla el rival, mientras ese Éter esté bloqueado.",
+        "costo": {
+          "tipo": "bloqueo_fijo",
+          "cantidad": 2
+        },
+        "duracion": "mientras_ester_bloqueado",
+        "copyAttributes": [
+          "mistica_hechizo",
+          "mistica_continuo",
+          "arcana_recompensa"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "PR-050",
+    "name": "Devolución de Prueba",
+    "type": "Mística",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "Devuelve a la mano a un Campeón enemigo.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-10-24T00:00:00.000Z",
+    "updatedAt": "2026-10-24T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "stats": {
+      "cost": 2
+    },
+    "efectos": [
+      {
+        "tipo": "hechizo",
+        "efecto": "return_hand",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo",
+          "filtros": {
+            "atqMax": 5
+          }
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "texto": "Devuelve a la mano de su dueño 1 Campeón ATQ 5 o menos que controla el rival."
+      }
+    ]
+  },
+  {
+    "id": "PR-051",
+    "name": "Destierro de Prueba",
+    "type": "Mística",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "Exilia a un Campeón enemigo.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-10-24T00:00:00.000Z",
+    "updatedAt": "2026-10-24T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "stats": {
+      "cost": 2
+    },
+    "efectos": [
+      {
+        "tipo": "hechizo",
+        "efecto": "exile",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "texto": "Exilia 1 Campeón que controla el rival."
+      }
+    ]
+  },
+  {
+    "id": "PR-052",
+    "name": "Lamento de Prueba",
+    "type": "Mística",
+    "rarity": "Común",
+    "keywords": [
+      "Artefacto"
+    ],
+    "flavorText": "Crece con cada Éter que sostiene.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-10-24T00:00:00.000Z",
+    "updatedAt": "2026-10-24T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "stats": {
+      "cost": 1
+    },
+    "efectos": [
+      {
+        "tipo": "hechizo",
+        "efecto": "buff",
+        "objetivo": {
+          "tipo": "equipped_champion",
+          "controlador": "propio",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 2,
+          "RES": 0
+        },
+        "texto": "Puedes bloquear hasta un máximo de 3 Éter (Max. 3), el Campeón equipado con esta carta gana 2 de ATQ por cada Éter bloqueado.",
+        "costo": {
+          "tipo": "eter_bloqueado",
+          "cantidad": 3
+        },
+        "buffPerBlockedEther": true
+      }
+    ]
+  },
+  {
+    "id": "PR-053",
+    "name": "Decreto de Prueba",
+    "type": "Mística",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "Amplía la mano durante el turno.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-10-24T00:00:00.000Z",
+    "updatedAt": "2026-10-24T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "stats": {
+      "cost": 1
+    },
+    "efectos": [
+      {
+        "tipo": "hechizo",
+        "efecto": "modificar_regla",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "texto": "Tu límite de mano aumenta en 2, hasta el final del turno.",
+        "duracion": "turno",
+        "regla": {
+          "id": "limiteMano",
+          "operacion": "sumar",
+          "valor": 2
+        }
+      }
+    ]
+  },
+  {
+    "id": "PR-054",
+    "name": "Niebla Debilitadora",
+    "type": "Mística",
+    "rarity": "Común",
+    "keywords": [
+      "Presteza"
+    ],
+    "flavorText": "Una respuesta que debilita a toda la hueste enemiga.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-10-24T00:00:00.000Z",
+    "updatedAt": "2026-10-24T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "stats": {
+      "cost": 1
+    },
+    "efectos": [
+      {
+        "tipo": "hechizo",
+        "efecto": "debuff",
+        "objetivo": {
+          "tipo": "todos_campeones_rivales",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 2,
+          "RES": 0
+        },
+        "texto": "Todos los Campeones que controla el rival pierden 2 de ATQ, hasta el final del turno.",
+        "duracion": "turno"
+      }
+    ]
+  },
+  {
+    "id": "PR-060",
+    "name": "Pacto de Prueba",
+    "type": "Arcana",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "Con cartas en mano, repone el flujo.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-10-24T00:00:00.000Z",
+    "updatedAt": "2026-10-24T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "stats": {
+      "cost": 2
+    },
+    "condicion": {
+      "trigger": "activacion",
+      "condiciones": [
+        {
+          "tipo": "tener_mano_minimo",
+          "cantidad": 1
+        }
+      ]
+    },
+    "efectos": [
+      {
+        "tipo": "hechizo",
+        "efecto": "draw",
+        "objetivo": {
+          "tipo": "carta",
+          "controlador": "propio",
+          "zona": "mazo",
+          "filtros": {}
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "texto": "Roba 2 cartas de tu mazo.",
+        "cantidad": 2
+      }
+    ]
+  },
+  {
+    "id": "PR-061",
+    "name": "Sentencia de Prueba",
+    "type": "Arcana",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "Marca de forma permanente a un Campeón enemigo.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-10-24T00:00:00.000Z",
+    "updatedAt": "2026-10-24T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "stats": {
+      "cost": 2
+    },
+    "condicion": {
+      "trigger": "activacion",
+      "condiciones": [
+        {
+          "tipo": "rival_controla_minimo",
+          "cantidad": 1,
+          "objetivo": {
+            "tipo": "campeon",
+            "controlador": "rival"
+          }
+        }
+      ]
+    },
+    "efectos": [
+      {
+        "tipo": "hechizo",
+        "efecto": "debuff",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 3
+        },
+        "texto": "Un Campeón que controla el rival pierde 3 de RES, de forma permanente.",
+        "duracion": "permanente"
+      }
+    ]
+  },
+  {
+    "id": "PR-062",
+    "name": "Trampa de Combate",
+    "type": "Arcana",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "Responde en plena cadena y debilita a toda la hueste enemiga.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-10-24T00:00:00.000Z",
+    "updatedAt": "2026-10-24T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "stats": {
+      "cost": 2
+    },
+    "condicion": {
+      "trigger": "al_atacar",
+      "condiciones": [
+        {
+          "tipo": "rival_controla_minimo",
+          "cantidad": 1,
+          "objetivo": {
+            "tipo": "campeon",
+            "controlador": "rival"
+          }
+        }
+      ]
+    },
+    "efectos": [
+      {
+        "tipo": "hechizo",
+        "efecto": "debuff",
+        "objetivo": {
+          "tipo": "todos_campeones_rivales",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 3,
+          "RES": 0
+        },
+        "texto": "Al resolver la cadena, todos los Campeones que controla el rival pierden 3 de ATQ, hasta el final del turno.",
+        "trigger": "al_resolver_cadena",
+        "duracion": "turno"
+      }
+    ]
+  },
+  {
+    "id": "PR-070",
+    "name": "Juramento de Retorno",
+    "type": "Vínculo",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "Al amanecer, rescata a un caído.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-10-24T00:00:00.000Z",
+    "updatedAt": "2026-10-24T00:00:00.000Z",
+    "stats": {
+      "cost": 0
+    },
+    "efectos": [
+      {
+        "tipo": "vinculo",
+        "efecto": "return_hand",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "cementerio",
+          "filtros": {
+            "costeMax": 3
+          }
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "texto": "Al inicio de tu Alba, puedes devolver a la mano de su dueño 1 Campeón coste 3 o menos de tu Cementerio, una vez por turno.",
+        "trigger": "inicio_alba",
+        "duracion": "1_por_turno"
+      }
+    ]
+  },
+  {
+    "id": "PR-071",
+    "name": "Peso de Prueba",
+    "type": "Vínculo",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "Aplasta al más firme de los enemigos.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-10-24T00:00:00.000Z",
+    "updatedAt": "2026-10-24T00:00:00.000Z",
+    "stats": {
+      "cost": 0
+    },
+    "efectos": [
+      {
+        "tipo": "vinculo",
+        "efecto": "debuff",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo",
+          "filtros": {
+            "seleccionar": {
+              "stat": "resistencia",
+              "orden": "mayor"
+            }
+          }
+        },
+        "stats": {
+          "ATQ": 3,
+          "RES": 3
+        },
+        "texto": "El Campeón con mayor RES que controla el rival pierde 3 de ATQ y 3 de RES, mientras esta carta esté en el campo.",
+        "duracion": "mientras_en_campo"
+      }
+    ]
+  },
+  {
+    "id": "PR-072",
+    "name": "Heredad de Choque",
+    "type": "Vínculo",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "Agota a un enemigo antes de que ataque.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-10-24T00:00:00.000Z",
+    "updatedAt": "2026-10-24T00:00:00.000Z",
+    "stats": {
+      "cost": 0
+    },
+    "efectos": [
+      {
+        "tipo": "vinculo",
+        "efecto": "toggle_exhaust",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "texto": "Al inicio del Choque del rival, puedes cambiar el agotamiento de un Campeón que controla el rival.",
+        "trigger": "inicio_choque",
+        "controladorTrigger": "rival"
+      }
+    ]
+  },
+  {
+    "id": "PR-073",
+    "name": "Vínculo de Prueba",
+    "type": "Vínculo",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "Sin efecto: solo suma vida.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-10-24T00:00:00.000Z",
+    "updatedAt": "2026-10-24T00:00:00.000Z",
+    "stats": {
+      "cost": 0
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-074",
+    "name": "Juramento de Prueba",
+    "type": "Vínculo",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "Al amanecer, ofrece bloquear un Éter.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-10-24T00:00:00.000Z",
+    "updatedAt": "2026-10-24T00:00:00.000Z",
+    "stats": {
+      "cost": 0
+    },
+    "efectos": [
+      {
+        "tipo": "vinculo",
+        "efecto": "block_ether",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "campo",
+          "filtros": {
+            "puedeBloquearEter": true
+          }
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "texto": "Al inicio de tu Alba, puedes bloquear hasta un máximo de 1 Éter (Max. 1), sobre un Campeón que pueda recibir éter bloqueado que controles, una vez por turno.",
+        "trigger": "inicio_alba",
+        "costo": {
+          "tipo": "eter_bloqueado",
+          "cantidad": 1
+        },
+        "duracion": "1_por_turno"
+      }
+    ]
+  },
+  {
+    "id": "PR-075",
+    "name": "Cristal de Prueba",
+    "type": "Vínculo",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "Protege a los suyos al amanecer del rival.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-10-24T00:00:00.000Z",
+    "updatedAt": "2026-10-24T00:00:00.000Z",
+    "stats": {
+      "cost": 0
+    },
+    "efectos": [
+      {
+        "tipo": "vinculo",
+        "efecto": "grant_keyword",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "texto": "Al inicio de la Alba del rival, un Campeón que controles gana Inmortal, una vez por turno.",
+        "trigger": "inicio_alba",
+        "controladorTrigger": "rival",
+        "keyword": "Inmortal",
+        "duracion": "1_por_turno"
+      }
+    ]
+  }
+]
