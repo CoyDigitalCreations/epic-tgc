@@ -392,6 +392,12 @@ describe('colocar_arcana (boca abajo 3D-3F, gratis) + activar_arcana (paga coste
     expect(s.instances['arc']!.bocaArriba).toBe(true)
     expect(ctx.events[0]).toMatchObject({ type: 'eter_pagado', jugador: 'A', eterIds: ids })
     expect(ctx.events[1]).toMatchObject({ type: 'carta_activada', cardInstanceId: 'arc', jugador: 'A', slot: 0 })
+    // F5d-1: los Éteres pagados (al-pagar-eter) armaron elecciones DE LA ACCIÓN: se eligen
+    // ANTES de abrir la ventana y de resolver la recompensa (antes quedaban sin elegir)
+    expect(s.players.A.mano).toEqual([])
+    while (s.declaracionEnEleccion) {
+      s = aplicar(s, { type: 'elegir_objetivo', objetivoId: s.objetivosPendientes![0].opciones[0] }, ctx)
+    }
     // Recompensa FB-023 (hechizo/draw cantidad 2): roba 2 del mazo
     expect(s.players.A.mano).toEqual(['m1', 'm2'])
   })

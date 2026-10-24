@@ -1,6 +1,6 @@
 import { applyAction } from './actions'
 import type { Action } from './actions'
-import { getValidActions } from './validActions'
+import { actorActual, getValidActions } from './validActions'
 import { cadenaActiva } from './chain'
 import { createInitialState } from './initialState'
 import type { GameEvent } from './events'
@@ -24,6 +24,11 @@ export function botTonto(state: GameState, playerId: PlayerId, dificultad: Dific
   if (preven) {
     if (preven.jugador !== playerId) return null
     return { type: 'responder_prevenicion', prevenir: elegirPrevenicion(state, playerId) }
+  }
+  // F5d-1: declaración en elección — elige el DUEÑO del pendiente (puede no ser el activo)
+  if (state.declaracionEnEleccion) {
+    if (actorActual(state) !== playerId) return null
+    return getValidActions(state, playerId).find((a) => a.type === 'elegir_objetivo') ?? null
   }
   // Cadena (combate 9.6 O global): el bot nunca encadena cartas
   const cadena = cadenaActiva(state)
@@ -85,16 +90,9 @@ export function simularPartida(
   let iteraciones = 0
   let estado = state
   while (estado.fase !== 'terminada' && iteraciones < maxTurnos) {
-    // Checkpoint prevent_destroy: el actor es el jugador que debe elegir (Fase 2c)
-    const preven = estado.preventivosPendientes?.[0]
-    const cadena = cadenaActiva(estado)
-    const actor: PlayerId = preven
-      ? preven.jugador
-      : cadena
-        ? cadena.prioridad
-        : estado.fase === 'choque' && estado.combate?.paso === 'bloqueo'
-          ? (estado.turno === 'A' ? 'B' : 'A')
-          : estado.turno
+    // El actor vive en el motor (validActions.actorActual): prevención, declaración
+    // en elección, cadena, bloqueo o jugador activo (F5d-1: antes se duplicaba aquí)
+    const actor: PlayerId = actorActual(estado) ?? estado.turno
     const dif = actor === 'A' ? dificultadA : dificultadB
     const accion = botTonto(estado, actor, dif)
     if (!accion) throw new Error('el bot no encontró acción válida (sin progreso)')

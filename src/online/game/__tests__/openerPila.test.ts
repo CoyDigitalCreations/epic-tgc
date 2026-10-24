@@ -222,6 +222,9 @@ describe('Mística con objetivo: se elige ANTES de abrir la ventana', () => {
     const s = estadoMinimo()
     conMano(s, 'A', 'buff-1', BUFF_OBJ)
     conEteres(s, 'A', 1)
+    // F5d-1: el Éter de pago es INERTE (DS-002): FB-001 arma una elección al-pagar-eter que ahora
+    // también es de la acción y ensuciaría el conteo de pendientes de este escenario
+    s.instances['eter-A-0']!.cardId = 'DS-002'
     conCampeon(s, 'A', 'cA0', CAMP, 0)
     conCampeon(s, 'A', 'cA1', CAMP, 1)
     conMano(s, 'B', 'prest-1', PRESTEZA)
@@ -237,7 +240,7 @@ describe('Mística con objetivo: se elige ANTES de abrir la ventana', () => {
     let s = aplicar(escenarioObjetivo(), jugarBuff, ctx)
 
     expect(s.cadena).toBeUndefined()
-    expect(s.openerEnEleccion).toMatchObject({ tipo: 'mistica', cardInstanceId: 'buff-1' })
+    expect(s.declaracionEnEleccion).toMatchObject({ tipo: 'opener', opener: { tipo: 'mistica', cardInstanceId: 'buff-1' } })
     expect(s.objetivosPendientes?.[0]).toMatchObject({ jugador: 'A', instId: 'buff-1', opener: { efectoIdx: 0 } })
     // mientras tanto solo se puede elegir (y rendirse)
     const tipos = new Set(getValidActions(s, 'A').map((a) => a.type))
@@ -246,7 +249,7 @@ describe('Mística con objetivo: se elige ANTES de abrir la ventana', () => {
     expect(bloqueada.ok).toBe(false)
 
     s = aplicar(s, { type: 'elegir_objetivo', objetivoId: 'cA1' }, ctx)
-    expect(s.openerEnEleccion).toBeUndefined()
+    expect(s.declaracionEnEleccion).toBeUndefined()
     expect(s.cadena?.opener).toMatchObject({ tipo: 'mistica', objetivos: { 0: 'cA1' } })
     expect(statsDe(s, 'cA1').poder).toBe(2) // el efecto todavía no resolvió
 

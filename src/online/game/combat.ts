@@ -1,4 +1,4 @@
-import { abrirCadena } from './chain'
+import { abrirCadena, declararVentana, marcarInicioAccion } from './chain'
 import { dispararTrigger, keywordsDe, statsDe, tieneDoubleAttackActivo } from './efectos'
 import { destruirCarta } from './replacements'
 import { evaluarFinSteal } from './eter'
@@ -168,6 +168,7 @@ export function validarDeclararAtaque(state: GameState, atacanteIds: string[]): 
 }
 
 export function ejecutarDeclararAtaque(s: GameState, atacanteIds: string[], ctx: Ctx): void {
+  const previos = marcarInicioAccion(s)
   s.combate = {
     paso: 'bloqueo',
     atacantes: atacanteIds,
@@ -200,13 +201,24 @@ export function ejecutarDeclararAtaque(s: GameState, atacanteIds: string[], ctx:
   ctx.emit({ type: 'ataque_declarado', jugador: s.turno, atacanteIds })
   // C3 (D5): al-atacar se dispara con los atacantes YA declarados (antes de la cadena)
   dispararTrigger(s, ctx, 'al-atacar', s.turno, atacanteIds)
-  // C4 (9.6): el DEFENSOR responde primero (§9.6) — si tiene respondibles la
-  // cadena se abre y el auto-avance 9.3 queda DIFERIDO hasta cerrarla.
+  // F5d-1: si el ataque (Recarga, al-atacar) armó elecciones de objetivo, se
+  // eligen ANTES de la ventana del defensor; la ventana se abre al elegir la última.
+  declararVentana(s, ctx, { tipo: 'ataque', jugador: s.turno }, previos)
+}
+
+/**
+ * Ventana del ataque ya declarado y con sus objetivos elegidos (F5d-1).
+ * C4 (9.6): el DEFENSOR responde primero (§9.6) — si tiene respondibles la
+ * cadena se abre y el auto-avance 9.3 queda DIFERIDO hasta cerrarla.
+ */
+export function abrirVentanaAtaque(s: GameState, ctx: Ctx): void {
+  const combate = s.combate
+  if (!combate) return
   if (abrirCadena(s, rivalDe(s))) return
   // Auto-avance (9.3, ADR-11): defensor sin enderezados → resolución sin
   // evento bloqueo_declarado (los ataques quedan sin bloquear)
   if (bloqueadoresDisponibles(s).length === 0) {
-    s.combate.paso = 'resolucion'
+    combate.paso = 'resolucion'
     resolverCombate(s, ctx) // sin pares: sin muertes
     // Fase 2b: doble ataque activo → cerrar combate para permitir 2da ola
     cerrarCombateSiDoubleAttack(s)

@@ -16,13 +16,13 @@
  * combat.ts: ambos módulos se usan mutuamente SOLO en runtime (ESM, seguro).
  */
 import { esArcana, esMistica, esPermanenteEnMesa, getCardMeta } from './cards'
-import { continuarCombateTrasCadena } from './combat'
+import { abrirVentanaAtaque, continuarCombateTrasCadena } from './combat'
 import { dispararTrigger, velocidadDe } from './efectos'
 import { interpretEffect } from './effectInterpreter'
 import { aplicarPago, etersParaPagar, validarPago, type ContextoUso } from './payments'
 import { enviarAlCementerio } from './replacements'
 import type { EfectoData } from '../../shared/types'
-import type { Ctx, CadenaState, GameState, OpenerCadena, PlayerId } from './types'
+import type { Ctx, CadenaState, DeclaracionCadena, GameState, OpenerCadena, PlayerId } from './types'
 import { slotAZona } from './zones'
 
 /**
@@ -401,16 +401,84 @@ function hechizosDelOpener(s: GameState, cardInstanceId: string) {
   return { inst, meta, hechizos: res }
 }
 
+/* ──────────── Declaración en elección (F5d-1, estilo Yugioh) ────────────
+ * Toda acción de jugador con objetivo específico elige SUS objetivos al
+ * declararse, ANTES de abrir la ventana de respuesta. Cada ejecutor toma un
+ * marcador al INICIO de la acción (`marcarInicioAccion`); al terminar de
+ * disparar triggers/pagos/sacrificios, los pendientes que no estaban en el
+ * marcador nacieron de ella: pasan al FRENTE y se cuentan (la cola acumula
+ * pendientes obsoletos que nadie elige; esos NO se esperan). Si hay
+ * alguno, la ventana espera (`s.declaracionEnEleccion`) y se abre al elegir el
+ * último; si no, se abre de inmediato (flujo idéntico al de siempre). */
+
+/** Pendientes de la cola al inicio de una acción: lo que aparezca después nació de ella. */
+export type MarcadorAccion = ReadonlySet<object>
+
+export function marcarInicioAccion(s: GameState): MarcadorAccion {
+  return new Set<object>(s.objetivosPendientes ?? [])
+}
+
+/** Mueve al frente (en orden de creación) los pendientes posteriores al marcador y devuelve cuántos son. */
+function reclamarPendientes(s: GameState, previos: MarcadorAccion): number {
+  const cola = s.objetivosPendientes ?? []
+  const nuevos = cola.filter((pp) => !previos.has(pp))
+  if (nuevos.length === 0) return 0
+  s.objetivosPendientes = [...nuevos, ...cola.filter((pp) => previos.has(pp))]
+  return nuevos.length
+}
+
+/**
+ * Declara la ventana de una acción: si la acción armó elecciones (`previos`)
+ * la apertura queda diferida a la última; si no, abre ya (gate incluido).
+ */
+export function declararVentana(s: GameState, ctx: Ctx, declaracion: Omit<DeclaracionCadena, 'pendientes'>, previos: MarcadorAccion): void {
+  const pendientes = reclamarPendientes(s, previos)
+  if (pendientes > 0) {
+    s.declaracionEnEleccion = { ...declaracion, pendientes }
+    return
+  }
+  abrirVentana(s, ctx, declaracion)
+}
+
+/**
+ * Tras una elegir_objetivo con declaración en elección: las consecuencias de la
+ * elección (triggers que arman más pendientes) también son de la declaración;
+ * al elegir el último se abre la ventana.
+ */
+export function continuarDeclaracion(s: GameState, ctx: Ctx, previos: MarcadorAccion): void {
+  const declaracion = s.declaracionEnEleccion
+  if (!declaracion) return
+  // la elección consumió el frente (-1) y pudo armar más (+n)
+  declaracion.pendientes += reclamarPendientes(s, previos) - 1
+  if (declaracion.pendientes > 0) return
+  delete s.declaracionEnEleccion
+  if (s.fase === 'terminada') return // la partida acabó durante la elección: no hay ventana
+  abrirVentana(s, ctx, declaracion)
+}
+
+/** Abre la ventana que corresponde al tipo de declaración (gate: solo si el rival puede responder). */
+function abrirVentana(s: GameState, ctx: Ctx, declaracion: Omit<DeclaracionCadena, 'pendientes'>): void {
+  if (declaracion.tipo === 'opener') {
+    abrirOpener(s, ctx, declaracion.opener!)
+  } else if (declaracion.tipo === 'ataque') {
+    abrirVentanaAtaque(s, ctx)
+  } else {
+    const id = declaracion.cardInstanceId!
+    const cardId = s.instances[id]?.cardId
+    // incluirMano: la invocación cuenta Presteza de mano pagable, igual que el opener (F5b)
+    abrirCadenaGlobal(s, declaracion.jugador, { cardInstanceId: id, descripcion: (cardId ? getCardMeta(cardId)?.name : null) ?? id }, true)
+  }
+}
+
 /**
  * Declara un opener (jugar Mística, activar Arcana, activar habilidad). El
  * costo y el estado "ya aplicado" ya ocurrieron; aquí solo se prepara el EFECTO
- * diferido: (1) los objetivos se eligen ANTES de abrir la ventana — si algún
- * hechizo requiere elección se arma `objetivosPendientes` (marcados con
- * `opener`) y la ventana se abre al elegir el último; (2) si no, se abre de
- * inmediato (gate: solo si el rival puede responder; si no, resuelve ya).
- * La habilidad ya trae su objetivo en la acción (`opener.objetivos`).
+ * diferido: los hechizos que requieren elección arman `objetivosPendientes`
+ * (marcados con `opener`) y, junto con los pendientes de la acción (`previos`),
+ * se eligen ANTES de abrir la ventana (declararVentana). La habilidad ya trae su
+ * objetivo en la acción (`opener.objetivos`).
  */
-export function declararOpener(s: GameState, ctx: Ctx, opener: OpenerCadena): void {
+export function declararOpener(s: GameState, ctx: Ctx, opener: OpenerCadena, previos: MarcadorAccion = marcarInicioAccion(s)): void {
   if (opener.tipo !== 'habilidad') {
     const { inst, hechizos } = hechizosDelOpener(s, opener.cardInstanceId)
     if (inst) {
@@ -418,37 +486,23 @@ export function declararOpener(s: GameState, ctx: Ctx, opener: OpenerCadena): vo
         interpretEffect(s, ctx, inst, efecto, { jugador: opener.jugador, fromTrigger: true, declararOpener: { efectoIdx } })
       }
     }
-    // Las elecciones del opener pasan al FRENTE de la cola (consecuencia directa
-    // de la acción del jugador, mismo criterio que el steal de umbral): si no,
-    // quedarían detrás de pendientes ajenos y nunca se expondrían.
-    const propios = (s.objetivosPendientes ?? []).filter((pp) => pp.opener && pp.instId === opener.cardInstanceId)
-    if (propios.length > 0) {
-      s.objetivosPendientes = [...propios, ...s.objetivosPendientes!.filter((pp) => !propios.includes(pp))]
-      s.openerEnEleccion = opener
-      return
-    }
   }
-  abrirOpener(s, ctx, opener)
+  declararVentana(s, ctx, { tipo: 'opener', jugador: opener.jugador, opener }, previos)
 }
 
 /**
- * Registra la elección de un objetivo del opener (elegir_objetivo sobre un
- * pendiente con `opener`); al elegir el último, abre la ventana con el
- * payload completo. Un objetivo que ya no existe se descarta (el hechizo se
- * pierde al resolver).
+ * Captura el objetivo elegido de un hechizo del opener (elegir_objetivo sobre un
+ * pendiente con `opener`). Un objetivo que ya no existe se descarta (el hechizo
+ * se pierde al resolver). La ventana la abre continuarDeclaracion.
  */
-export function registrarEleccionOpener(
+export function registrarObjetivoOpener(
   s: GameState,
-  ctx: Ctx,
-  pendiente: { instId: string; opener?: { efectoIdx: number } },
+  pendiente: { opener?: { efectoIdx: number } },
   objetivoId: string,
 ): void {
-  const op = s.openerEnEleccion
+  const op = s.declaracionEnEleccion?.opener
   if (!op || !pendiente.opener) return
   if (s.instances[objetivoId]) op.objetivos = { ...op.objetivos, [pendiente.opener.efectoIdx]: objetivoId }
-  if (s.objetivosPendientes?.some((pp) => pp.opener && pp.instId === op.cardInstanceId)) return
-  delete s.openerEnEleccion
-  abrirOpener(s, ctx, op)
 }
 
 /** Abre la ventana con el opener al fondo (gate con mano Presteza pagable) o, si nadie puede responder, resuelve ya. */

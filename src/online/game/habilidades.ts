@@ -15,7 +15,7 @@ import { reglaBool } from './reglas'
 import { liberarEterBloqueado, enviarAlCementerio } from './replacements'
 import { slotAZona } from './zones'
 import { validarBloqueo } from './payments'
-import { declararOpener, registrarEleccionOpener } from './chain'
+import { continuarDeclaracion, declararOpener, marcarInicioAccion, registrarObjetivoOpener, type MarcadorAccion } from './chain'
 import type { Action } from './core'
 
 /* ─────────────────────── Validadores ─────────────────────── */
@@ -211,7 +211,8 @@ export function validarElegirOpcion(state: GameState, action: Extract<Action, { 
 export function validarElegirObjetivo(state: GameState, action: Extract<Action, { type: 'elegir_objetivo' }>): string | null {
   const pendiente = state.objetivosPendientes?.[0]
   if (!pendiente) return 'no hay objetivo pendiente'
-  if (pendiente.jugador !== state.turno) return 'no es tu turno para elegir objetivo'
+  // F5d-1: en una declaración en elección el elector es el DUEÑO del pendiente (puede ser el rival)
+  if (!state.declaracionEnEleccion && pendiente.jugador !== state.turno) return 'no es tu turno para elegir objetivo'
   if (!pendiente.opciones.includes(action.objetivoId)) return 'el objetivo no está entre las opciones válidas'
   return null
 }
@@ -223,6 +224,7 @@ export function ejecutarActivarArcana(s: GameState, action: Extract<Action, { ty
   const id = action.cardInstanceId
   const inst = s.instances[id]
   if (!inst) return
+  const previos = marcarInicioAccion(s) // F5d-1: las elecciones de la acción van antes de la ventana
   const contextoUso: ContextoUso = { tipo: 'habilidad', cardInstanceId: id }
   aplicarPago(s, ctx, s.turno, action.eterIds, inst.cardId!, contextoUso)
   inst.bocaArriba = true
@@ -237,7 +239,7 @@ export function ejecutarActivarArcana(s: GameState, action: Extract<Action, { ty
   // recompensa (efectos tipo hechizo sin trigger) es el opener de la pila y
   // resuelve ÚLTIMO, tras las respuestas. El objetivo se elige antes de abrir
   // la ventana y la Arcana de UN SOLO USO va al Cementerio al resolver (§5.4).
-  declararOpener(s, ctx, { tipo: 'arcana', jugador: s.turno, cardInstanceId: id })
+  declararOpener(s, ctx, { tipo: 'arcana', jugador: s.turno, cardInstanceId: id }, previos)
 }
 
 /**
@@ -261,6 +263,7 @@ export function ejecutarActivarHabilidad(s: GameState, action: Extract<Action, {
   // elegido decide el patrón (defensa en profundidad: sin selector = no-op).
   const efectoSel = efectoActivableDe(meta, !!action.objetivoId)
   if (!efectoSel) return
+  const previos = marcarInicioAccion(s) // F5d-1: las elecciones de la acción van antes de la ventana
 
   if (esCostoBloqueo(efectoSel.costo)) {
     // Patrón "Bloqueado": mueve éteres de la zona de ORIGEN (Fase 2 (c):
@@ -298,7 +301,7 @@ export function ejecutarActivarHabilidad(s: GameState, action: Extract<Action, {
     // del bloqueo ya se aplicó y se MANTIENE). Si el rival puede responder,
     // la resolución se DIFIERE a la cadena — al cerrar se ejecuta salvo que
     // una negación (tipoNegacion 'activacion') la haya cancelado.
-    declararHabilidad(s, ctx, inst, meta, efectoSel, action.objetivoId)
+    declararHabilidad(s, ctx, inst, meta, efectoSel, previos, action.objetivoId)
   } else {
     // Patrón "Agota"/Continuo pago: éteres → 1A (pagado) + 1/turno
     for (const eterId of action.eterIds) {
@@ -317,7 +320,7 @@ export function ejecutarActivarHabilidad(s: GameState, action: Extract<Action, {
     }
     // Ventana de negación (obs 1874): pago YA hecho (queda) — si hay
     // respuesta, el efecto se difiere a la cadena (fizzled si lo niegan).
-    declararHabilidad(s, ctx, inst, meta, efectoSel, action.objetivoId)
+    declararHabilidad(s, ctx, inst, meta, efectoSel, previos, action.objetivoId)
   }
 }
 
@@ -333,6 +336,7 @@ function declararHabilidad(
   inst: CardInstance,
   meta: AnyCard,
   efectoSel: EfectoData,
+  previos: MarcadorAccion,
   objetivoId?: string,
 ): void {
   const efectoIdx = 'efectos' in meta && meta.efectos ? meta.efectos.indexOf(efectoSel) : -1
@@ -351,7 +355,7 @@ function declararHabilidad(
     cardInstanceId: inst.cardInstanceId,
     efectoIdx,
     objetivos: objetivoId ? { [efectoIdx]: objetivoId } : undefined,
-  })
+  }, previos)
 }
 
 /**
@@ -440,23 +444,24 @@ export function ejecutarElegirObjetivo(s: GameState, action: Extract<Action, { t
   const pendiente = s.objetivosPendientes?.[0]
   if (!pendiente) return // defensivo: ya validado en validarAccion
   s.objetivosPendientes = s.objetivosPendientes!.slice(1)
+  // F5d-1: con una declaración en elección, lo que la elección arme también es de la
+  // declaración; al elegir el último pendiente suyo se abre la ventana (continuarDeclaracion)
+  const enDeclaracion = !!s.declaracionEnEleccion
+  const previos = marcarInicioAccion(s)
 
-  // F5b: objetivo de un opener — se captura y, al elegir el último, se abre la ventana
   if (pendiente.opener) {
-    registrarEleccionOpener(s, ctx, pendiente, action.objetivoId)
-    return
-  }
-
-  // Capa 3b: pendiente de un TRAMO escalonado — el trigger re-dispatch no
-  // aplica (el tramo vive dentro de efecto.tramos, no como efecto.raíz).
-  // Se resuelve aquí directamente con el objetivo elegido.
-  if (pendiente.tramoUmbral !== undefined) {
+    // F5b: objetivo de un hechizo del opener — solo se captura (resuelve al cierre de la ventana)
+    registrarObjetivoOpener(s, pendiente, action.objetivoId)
+  } else if (pendiente.tramoUmbral !== undefined) {
+    // Capa 3b: pendiente de un TRAMO escalonado — el trigger re-dispatch no
+    // aplica (el tramo vive dentro de efecto.tramos, no como efecto.raíz).
+    // Se resuelve aquí directamente con el objetivo elegido.
     ejecutarTramo(s, ctx, pendiente.instId, pendiente.tramoUmbral, action.objetivoId)
-    return
+  } else {
+    dispararTrigger(s, ctx, pendiente.trigger as TriggerEfecto, pendiente.jugador, [pendiente.instId], {
+      contextoUso: 'objetivo-elegido',
+      objetivoId: action.objetivoId,
+    })
   }
-
-  dispararTrigger(s, ctx, pendiente.trigger as TriggerEfecto, pendiente.jugador, [pendiente.instId], {
-    contextoUso: 'objetivo-elegido',
-    objetivoId: action.objetivoId,
-  })
+  if (enDeclaracion) continuarDeclaracion(s, ctx, previos)
 }

@@ -13,6 +13,7 @@ import type { GameState, PlayerId, CardInstance } from './types'
 /**
  * El actor de la jugada actual NO es siempre `estado.turno`:
  * - Checkpoint prevent_destroy (Fase 2c) → el jugador que debe elegir.
+ * - Declaración en elección (F5d-1) → el dueño del pendiente de objetivo.
  * - Cadena 9.6 abierta → el actor es `cadena.prioridad` (el turno queda congelado).
  * - Paso bloqueo (9.3, ADR-11) → el actor es el DEFENSOR (rival del activo).
  * - Resto → el jugador activo.
@@ -22,6 +23,11 @@ export function actorActual(estado: GameState): PlayerId | null {
   if (estado.fase === 'terminada') return null
   const preven = estado.preventivosPendientes?.[0]
   if (preven) return preven.jugador
+  // F5d-1: declaración en elección → el actor es el DUEÑO del pendiente (puede ser el rival)
+  if (estado.declaracionEnEleccion) {
+    const pendiente = estado.objetivosPendientes?.[0]
+    if (pendiente) return pendiente.jugador
+  }
   // Cadena GLOBAL (state.cadena) o de combate: el actor es SIEMPRE prioridad —
   // aunque la fase sea Forja. Sin esto, cadena global en Forja congela al
   // humano (solo rendirse) y el bot nunca pasa prioridad → FREEZE (seed 66676).
@@ -224,6 +230,21 @@ export function getValidActions(state: GameState, playerId: PlayerId): Action[] 
   if (state.fase === 'terminada') return []
   const acciones: Action[] = [{ type: 'rendirse' }]
 
+  // F5d-1: declaración esperando objetivos — SOLO el dueño del pendiente elige (rival
+  // incluido); el resto queda congelado hasta abrir la ventana. Si ninguna opción
+  // sigue viva se ofrece la primera igual (la ventana espera esta elección; el
+  // efecto se pierde al resolver), para no atascar la partida.
+  if (state.declaracionEnEleccion) {
+    const pendiente = state.objetivosPendientes?.[0]
+    if (pendiente && pendiente.jugador === playerId) {
+      const vivas = pendiente.opciones.filter((id) => state.instances[id])
+      for (const objetivoId of vivas.length > 0 ? vivas : pendiente.opciones.slice(0, 1)) {
+        acciones.push({ type: 'elegir_objetivo', objetivoId })
+      }
+    }
+    return acciones
+  }
+
   if (state.turno === playerId && state.fase === 'pre_partida') {
     const p = state.players[playerId]
     // Mulligan opcional, 1 vez POR JUGADOR (manual §2) — el rival no afecta
@@ -272,21 +293,14 @@ export function getValidActions(state: GameState, playerId: PlayerId): Action[] 
     const pendiente = state.objetivosPendientes?.[0]
     if (pendiente && pendiente.jugador === playerId) {
       const opcionesVivas = pendiente.opciones.filter((id) => state.instances[id])
-      if (opcionesVivas.length === 0 && !pendiente.opener) {
+      if (opcionesVivas.length === 0) {
         state.objetivosPendientes = state.objetivosPendientes!.slice(1)
-      } else if (opcionesVivas.length === 0) {
-        // F5b: pendiente de un opener sin opciones vivas — NO se descarta (la
-        // ventana espera esta elección); se ofrece la primera opción y el
-        // hechizo se pierde al resolver (registrarEleccionOpener la ignora).
-        acciones.push({ type: 'elegir_objetivo', objetivoId: pendiente.opciones[0] })
       } else {
         for (const objetivoId of opcionesVivas) {
           acciones.push({ type: 'elegir_objetivo', objetivoId })
         }
       }
     }
-    // F5b: opener declarado esperando objetivos — solo se puede elegir
-    if (state.openerEnEleccion) return acciones
     // C3d (D4): usar_transmutar — Campeón propio con keyword `Transmutar` en
     // campo (forja o choque): regresa hasta 2 Éteres pagados (1A) a la
     // Reserva. Solo se expone con 1A disponible y la variante de retorno

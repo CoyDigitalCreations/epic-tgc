@@ -243,6 +243,26 @@ export interface OpenerCadena {
   negada?: boolean
 }
 
+/**
+ * Declaración de una acción de jugador cuya ventana de respuesta está
+ * DIFERIDA hasta elegir los objetivos que la propia acción armó (F5d-1). El
+ * tipo dice qué ventana abrir al elegir el último:
+ * - 'opener': ventana global con el opener al fondo (Mística/Arcana/habilidad, F5b).
+ * - 'invocacion': ventana global de la invocación `cardInstanceId` (sin opener).
+ * - 'ataque': ventana de combate del defensor (abrirCadena) y auto-avance 9.3.
+ */
+export interface DeclaracionCadena {
+  tipo: 'opener' | 'invocacion' | 'ataque'
+  /** Quien declaró (el jugador activo). El ELECTOR de cada objetivo es `pendiente.jugador`. */
+  jugador: PlayerId
+  /** invocacion: la carta invocada (descripción de la ventana). */
+  cardInstanceId?: string
+  /** opener: la jugada que abrirá la ventana; acumula los objetivos elegidos. */
+  opener?: OpenerCadena
+  /** Pendientes de la acción por elegir: las primeras N entradas de objetivosPendientes. La ventana se abre al llegar a 0. */
+  pendientes: number
+}
+
 /** Sub-máquina de combate en Choque (9.1, ADR-11). Se crea con la PRIMERA declarar_ataque. */
 export interface CombateState {
   paso: CombatePaso
@@ -298,11 +318,13 @@ export interface GameState {
    */
   objetivosPendientes?: { jugador: PlayerId; instId: string; trigger: string; opciones: string[]; tramoUmbral?: number; opener?: { efectoIdx: number } }[]
   /**
-   * Opener (F5b) declarado que espera la elección de sus objetivos ANTES de
-   * abrir la ventana (los pendientes con `opener` en objetivosPendientes son
-   * suyos). Mientras exista, solo se acepta elegir_objetivo (o rendirse).
+   * Declaración (F5d-1) que espera la elección de sus objetivos ANTES de abrir
+   * la ventana (Yugioh: se elige al declarar, luego empiezan las respuestas). Sus
+   * `pendientes` son las primeras entradas de objetivosPendientes (van al FRENTE;
+   * el resto de la cola son obsoletos que no se esperan). Mientras exista, el elector es `pendiente.jugador` (cualquier
+   * jugador) y solo se acepta elegir_objetivo, responder_prevenicion o rendirse.
    */
-  openerEnEleccion?: OpenerCadena
+  declaracionEnEleccion?: DeclaracionCadena
   ganador?: PlayerId
   motivo?: MotivoFin
   /** Efectos pendientes centralizados (Effect Registry, Fase 1). */

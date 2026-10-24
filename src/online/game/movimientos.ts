@@ -9,7 +9,7 @@ import { aplicarPago, validarPago, etersParaPagar, type ContextoUso } from './pa
 import { SLOTS_CAMPEONES, SLOTS_MISTICAS_TACTICAS, SLOTS_ARCANAS_COMBATE, slotAZona } from './zones'
 import { dispararTrigger, condicionCumple } from './efectos'
 import { liberarEterBloqueado, enviarAlCementerio } from './replacements'
-import { abrirCadenaGlobal, declararOpener } from './chain'
+import { declararOpener, declararVentana, marcarInicioAccion } from './chain'
 import type { Action } from './core'
 import type { Ctx } from './types'
 import type { CondicionEfecto } from '../../shared/types'
@@ -148,6 +148,9 @@ export function ejecutarJugarCampeon(s: GameState, action: Extract<Action, { typ
   const p = s.players[s.turno]
   const id = action.cardInstanceId
   const cardId = s.instances[id]!.cardId!
+  // F5d-1: marcador de la acción — las elecciones que arme (al-pagar-eter, sacrificios
+  // con tutor, al-invocar) se resuelven ANTES de abrir la ventana de la invocación
+  const previos = marcarInicioAccion(s)
   // 1. Pago (con contextoUso para gatillos FB-004/DS-005)
   const contextoUso: ContextoUso = { tipo: 'invocar', cardInstanceId: id }
   aplicarPago(s, ctx, s.turno, action.eterIds, cardId, contextoUso)
@@ -177,15 +180,16 @@ export function ejecutarJugarCampeon(s: GameState, action: Extract<Action, { typ
   ctx.emit({ type: 'carta_invocada', cardInstanceId: id, tipo: 'Campeón', slot: action.slot })
   // C3 (D5): al-invocar se dispara con la instancia YA en campo (post-invocación)
   dispararTrigger(s, ctx, 'al-invocar', s.turno, [id])
-  // §9.6: abrir cadena global — el rival puede responder con efectos
-  const metaC = getCardMeta(s.instances[id]!.cardId!)
-  abrirCadenaGlobal(s, s.turno, { cardInstanceId: id, descripcion: metaC?.name ?? id })
+  // §9.6: abrir cadena global — el rival puede responder con efectos (F5d-1: tras
+  // elegir los objetivos pendientes; la invocación cuenta Presteza de mano pagable)
+  declararVentana(s, ctx, { tipo: 'invocacion', jugador: s.turno, cardInstanceId: id }, previos)
 }
 
 /** Paga y coloca la Mística boca arriba en 3A-3C. */
 export function ejecutarJugarMistica(s: GameState, action: Extract<Action, { type: 'jugar_mistica' }>, ctx: Ctx): void {
   const p = s.players[s.turno]
   const id = action.cardInstanceId
+  const previos = marcarInicioAccion(s) // F5d-1: las elecciones de la acción van antes de la ventana
   const contextoUso: ContextoUso = { tipo: 'jugar', cardInstanceId: id }
   aplicarPago(s, ctx, s.turno, action.eterIds, s.instances[id]!.cardId!, contextoUso)
   const manoIdxM = p.mano.indexOf(id)
@@ -210,7 +214,7 @@ export function ejecutarJugarMistica(s: GameState, action: Extract<Action, { typ
   // resuelve ÚLTIMO, tras las respuestas (chain.ts declararOpener). El objetivo
   // se elige antes de abrir la ventana; el cementerio de un solo uso (§5.3,
   // fix A4) ocurre al resolver.
-  declararOpener(s, ctx, { tipo: 'mistica', jugador: s.turno, cardInstanceId: id })
+  declararOpener(s, ctx, { tipo: 'mistica', jugador: s.turno, cardInstanceId: id }, previos)
 }
 
 /** Coloca la Arcana BOCA ABAJO en 3D-3F SIN pagar (pago al activar). */
@@ -264,11 +268,12 @@ export function ejecutarEquiparArtefacto(s: GameState, action: Extract<Action, {
 function resolverEfectosArtefacto(s: GameState, ctx: Ctx, id: string, contexto: 'jugar_mistica' | 'activar_arcana'): void {
   const inst = s.instances[id]
   if (!inst) return
+  const previos = marcarInicioAccion(s)
   if (contexto === 'jugar_mistica') {
     dispararTrigger(s, ctx, 'al-jugar-mistica', s.turno, [id])
   }
   // F5b: hechizos SIN trigger → opener de la pila (resuelve último, tras las respuestas)
-  declararOpener(s, ctx, { tipo: contexto === 'jugar_mistica' ? 'mistica' : 'arcana', jugador: s.turno, cardInstanceId: id })
+  declararOpener(s, ctx, { tipo: contexto === 'jugar_mistica' ? 'mistica' : 'arcana', jugador: s.turno, cardInstanceId: id }, previos)
 }
 
 /* ─────────────────── Generador de acciones de Forja ─────────────────── */
