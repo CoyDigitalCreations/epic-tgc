@@ -30,8 +30,33 @@ const FB010 = 'FB-010' // Aurora: disparo destroy(eter:2) + continuo steal bloqu
 const FB011 = 'FB-011' // Vaela 5/3 — campeón "genérico" (víctima de steal)
 const FB015 = 'FB-015' // Elena: continuo double_attack, bloqueo_fijo 3 (efecto[0])
 const FB016 = 'FB-016' // Cassandra: continuo eter_bloqueado:4 con tramos [2 toggle, 4 fix]
-const DS017 = 'DS-017' // Vorlag: DISPARO bloqueo_fijo:2 (patrón "Bloqueado" vía activar_habilidad)
+// Ninguna carta real usa ya un DISPARO que bloquea Éter (todo lo que bloquea Éter es continuo; DS-017 Vorlag
+// paga Éter). El motor conserva el patrón "Bloqueado" vía activar_habilidad: se cubre con una carta sintética.
+const DISPARO_BLOQUEADO = 'TEST-DISPARO-BLOQUEADO'
 const ETER_ORDEN = 'FB-001'
+
+registrarCartas([{
+  id: DISPARO_BLOQUEADO,
+  name: 'Disparo Bloqueado Test',
+  type: 'Campeón',
+  rarity: 'Común',
+  keywords: [],
+  flavorText: '',
+  createdAt: '2026-01-01T00:00:00.000Z',
+  updatedAt: '2026-01-01T00:00:00.000Z',
+  paqueteId: 'test',
+  limiteCopias: '1',
+  stats: { cost: 2, poder: 2, resistencia: 2 },
+  efectos: [{
+    tipo: 'disparo',
+    efecto: 'mover',
+    objetivo: { tipo: 'eter', controlador: 'rival', zona: 'pagado', zonaDestino: 'reserva' },
+    stats: { ATQ: 0, RES: 0 },
+    costo: { tipo: 'bloqueo_fijo', cantidad: 2 },
+    duracion: 'mientras_ester_bloqueado',
+    texto: 'Bloquea 2 Éter, mueve 1 Éter del rival de la zona de pago a la Reserva de su dueño, mientras ese Éter esté bloqueado.',
+  }],
+} as unknown as AnyCard])
 
 function estadoMinimo(): GameState {
   const jugador = (id: PlayerId) => ({
@@ -166,9 +191,9 @@ describe('Fase 2 — etiquetado: toda fuente de bloqueo filia el Éter', () => {
     expect(s.instances[camp.id].eterBloqueado).toEqual(e.ids)
   })
 
-  it('activar_habilidad (patrón Bloqueado, DS-017 disparo) también etiqueta', () => {
+  it('activar_habilidad (patrón Bloqueado, disparo sintético) también etiqueta', () => {
     let s = estadoMinimo()
-    const camp = conCampeonEnCampo(s, DS017, 0)
+    const camp = conCampeonEnCampo(s, DISPARO_BLOQUEADO, 0)
     s = camp.s
     const e = conEteres(s, 2)
     s = e.s
@@ -186,7 +211,7 @@ describe('Fase 2 — etiquetado: toda fuente de bloqueo filia el Éter', () => {
       ctx,
     )
 
-    const clave = claveEfecto(camp.id, 0) // DS-017: disparo en índice 0
+    const clave = claveEfecto(camp.id, 0) // disparo en índice 0
     for (const id of e.ids) {
       expect(s.instances[id].bloqueadoPorEfecto).toBe(clave)
       expect(s.instances[id].pagadoPor).toBe('A')

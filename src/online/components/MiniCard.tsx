@@ -121,14 +121,17 @@ export function MiniCard({
   const ancla = sinAncla ? undefined : inst.cardInstanceId
   // Rotación SOLO en campo (rotarSiAgotado): modales/mano/cadena siempre vertical
   const agotada = rotarSiAgotado && (agotado ?? inst.agotado === true)
+  // Invocación cansada (§5.2): el Campeón recién invocado está ENDEREZADO pero no ataca este turno → atenuado
+  const cansada = rotarSiAgotado && meta?.type === 'Campeón' && inst.entradaEsteTurno === true
   const eteres = inst.eterBloqueado?.length ?? 0
   // Éteres bloqueados como cartas encima (solo Místicas/Arcanas)
   const esArtefacto = meta?.type === 'Mística' || meta?.type === 'Arcana'
   const eteresVisibles = esArtefacto && eteresBloqueados && eteresBloqueados.length > 0
   // Tooltip hover: nombre + vínculo de equipamiento
-  const tooltipTexto = equipadoANombre
+  const tooltipBase = equipadoANombre
     ? `${meta?.name ?? ''} → equipado a ${equipadoANombre}`
     : (title ?? meta?.name ?? '')
+  const tooltipTexto = cansada ? `${tooltipBase} (invocación cansada: no ataca este turno)` : tooltipBase
   // Último Éter bloqueado para el overlay rotado (hooks arriba del return)
   const ultimoEter = eteresVisibles ? eteresBloqueados![eteresBloqueados!.length - 1] : null
   const metaEter = ultimoEter?.cardId ? getCardMeta(ultimoEter.cardId) : null
@@ -233,6 +236,7 @@ export function MiniCard({
           {rotarSiAgotado ? (
             // Campo: el giro de agotar/enderezar se anima girando la carta sobre su centro
             <div
+              data-cansada={cansada ? 'true' : undefined}
               style={{
                 position: 'absolute',
                 inset: 0,
@@ -240,6 +244,8 @@ export function MiniCard({
                 alignItems: 'center',
                 justifyContent: 'center',
                 pointerEvents: agotada ? 'none' : undefined,
+                opacity: cansada ? 0.55 : 1,
+                transition: 'opacity 150ms ease',
               }}
             >
               <div

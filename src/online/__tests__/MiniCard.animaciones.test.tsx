@@ -76,6 +76,16 @@ describe('MiniCard: agotar y enderezar en el campo', () => {
     expect(container.querySelector('[style*="rotate(-90deg)"]')).not.toBeNull()
   })
 
+  it('el Campeón recién invocado (cansado) se ve atenuado pero NO girado; al terminar el turno vuelve a la normalidad', () => {
+    const atenuada = (c: HTMLElement) => c.querySelector<HTMLElement>('[data-cansada="true"]')
+    const { container, rerender } = render(<MiniCard inst={inst({ entradaEsteTurno: true })} rotarSiAgotado />)
+    expect(atenuada(container)?.style.opacity).toBe('0.55')
+    expect(container.querySelector('[style*="rotate(-90deg)"]')).toBeNull()
+
+    rerender(<MiniCard inst={inst()} rotarSiAgotado />)
+    expect(atenuada(container)).toBeNull()
+  })
+
   it('fuera del campo (sin rotarSiAgotado) la carta nunca gira', () => {
     const { container } = render(<MiniCard inst={inst({ agotado: true })} />)
     expect(container.querySelector('[style*="rotate(-90deg)"]')).toBeNull()

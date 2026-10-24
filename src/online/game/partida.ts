@@ -155,7 +155,9 @@ export function ejecutarPasarTurno(s: GameState, ctx: Ctx): void {
   // muda durante TODO el turno rival siguiente (gap vs manual §9.6).
   for (const inst of Object.values(s.instances)) {
     if (inst.entradaEsteTurno) delete inst.entradaEsteTurno
+    if (inst.bloqueosEsteTurno) delete inst.bloqueosEsteTurno
   }
+  delete s.rupturasEsteTurno
   s.turno = rival
   ctx.emit({ type: 'turno_iniciado', jugador: rival })
   ctx.emit({ type: 'fase_iniciada', fase: 'alba', jugador: rival })

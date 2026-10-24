@@ -29,9 +29,9 @@ Ver `design.md`. Marcar al terminar cada tarea.
 - [x] Reescribir tests con cita correcta
 
 ## F3 — Combate
-- [ ] Una Ruptura por turno; sin más ataques tras romper
-- [ ] Bloqueos por turno (no por combate)
-- [ ] Prioridad del defensor en la cadena
+- [x] Una Ruptura por turno; sin más ataques tras romper
+- [x] Bloqueos por turno (no por combate)
+- [x] Prioridad del defensor en la cadena
 
 ## F4 — Alba
 - [ ] Orden: enderezar → reagrupar → efectos de inicio → robar

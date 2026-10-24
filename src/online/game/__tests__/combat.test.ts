@@ -3,6 +3,7 @@ import { describe, it, expect } from 'vitest'
 import { applyAction } from '../actions'
 import type { Action } from '../actions'
 import { getValidActions } from '../validActions'
+import { atacantesElegibles, bloqueadoresDisponibles } from '../combat'
 import { registrarCartas } from '../cards'
 import type { AnyCard } from '../../../shared/types/cards'
 import type { Ctx, GameState, PlayerId } from '../types'
@@ -559,22 +560,48 @@ describe('resolución: Ruptura (9.4-A, ADR-13)', () => {
     expect(acciones.some((a) => a.type === 'elegir_ruptura' && a.atacanteId === atacanteId)).toBe(true)
   })
 
-  it('máx 1 Ruptura por turno de ataque (rupturaUsadaEsteTurno): la segunda elegir_ruptura es rechazada', () => {
+  it('una sola Ruptura por turno (§9.4): el turno cuenta las Rupturas y la segunda elegir_ruptura es rechazada', () => {
+    const { s, atacanteId, ctx } = conRupturaPendiente([2, 4])
+    const r = aplicar(s, { type: 'elegir_ruptura', atacanteId, vinculoSlot: 2 }, ctx)
+    expect(r.rupturasEsteTurno).toBe(1)
+    expect(applyAction(r, { type: 'elegir_ruptura', atacanteId, vinculoSlot: 4 }, ctx).ok).toBe(false)
+  })
+
+  it('tras romper un Vínculo no se ataca más ese turno (§9.4), ni con otro Campeón enderezado', () => {
     const ctx = crearCtx()
     const a = conCampeon(estadoMinimo(), CASSANDRA, 0)
-    const conV = conVinculos(a.s, [2, 4])
+    const b = conCampeon(a.s, ROWENA, 1)
+    const conV = conVinculos(b.s, [2, 4])
+    const r1 = aplicar(conV.s, { type: 'declarar_ataque', atacanteIds: [a.id] }, ctx)
+    const r2 = aplicar(r1, { type: 'elegir_ruptura', atacanteId: a.id, vinculoSlot: 2 }, ctx)
+    expect(atacantesElegibles(r2)).toEqual([])
+    expect(tiposDe(r2, 'A')).not.toContain('declarar_ataque')
+    // La regla vale por sí sola: aun con el combate cerrado (doble ataque) no se puede declarar otro ataque
+    const rr = applyAction({ ...r2, combate: undefined }, { type: 'declarar_ataque', atacanteIds: [b.id] }, ctx)
+    expect(rr.ok).toBe(false)
+    if (!rr.ok) expect(rr.error).toMatch(/Ruptura/)
+  })
+
+  it('reglas rupturasPorTurno y atacarTrasRuptura: un efecto que las cambia permite una 2ª Ruptura y seguir atacando (override de §9.4)', () => {
+    const ctx = crearCtx()
+    const a = conCampeon(estadoMinimo(), CASSANDRA, 0)
+    const b = conCampeon(a.s, ROWENA, 1)
+    const conV = conVinculos(b.s, [1, 2, 4])
+    const sujeto = { tipo: 'jugador', jugador: 'A' } as const
     const s: GameState = {
       ...conV.s,
-      combate: {
-        paso: 'resolucion',
-        atacantes: [a.id],
-        bloqueos: {},
-        rupturaDisponible: true,
-        rupturaUsadaEsteTurno: true, // ya se rompió este turno de ataque
-      },
+      reglasTemporales: [
+        { regla: 'rupturasPorTurno', operacion: 'fijar', valor: 2, orden: 1, sujeto, duenio: 'A', expira: 'permanente' },
+        { regla: 'atacarTrasRuptura', operacion: 'permitir', orden: 2, sujeto, duenio: 'A', expira: 'permanente' },
+      ],
     }
-    const r = applyAction(s, { type: 'elegir_ruptura', atacanteId: a.id, vinculoSlot: 4 }, ctx)
-    expect(r.ok).toBe(false)
+    const r1 = aplicar(s, { type: 'declarar_ataque', atacanteIds: [a.id] }, ctx)
+    const r2 = aplicar(r1, { type: 'elegir_ruptura', atacanteId: a.id, vinculoSlot: 1 }, ctx)
+    expect(r2.combate?.rupturaUsadaEsteTurno).toBe(false) // todavía le queda 1
+    expect(atacantesElegibles(r2)).toContain(b.id) // y puede seguir atacando
+    const r3 = aplicar(r2, { type: 'elegir_ruptura', atacanteId: a.id, vinculoSlot: 2 }, ctx)
+    expect(r3.rupturasEsteTurno).toBe(2)
+    expect(applyAction(r3, { type: 'elegir_ruptura', atacanteId: a.id, vinculoSlot: 4 }, ctx).ok).toBe(false)
   })
 
   it('bloqueado no rompe (§9.4-B): el atacante cuyo bloqueador murió NO puede elegir_ruptura', () => {
@@ -705,4 +732,81 @@ describe('double_attack (Fase 2b) — segunda ola data-driven', () => {
     const r2 = applyAction(r1, { type: 'declarar_ataque', atacanteIds: [elena] }, ctx)
     expect(r2.ok).toBe(true)
   })
+
+  it('la Ruptura pendiente se resuelve ANTES de la 2ª ola: sin defensores el ataque rompe y ya no hay segundo ataque (§9.4)', () => {
+    let s = estadoMinimo()
+    const { s: s1, id: champ } = conCampeon(s, DOUBLE, 0, { eterBloqueado: ['e1'] })
+    s = conVinculos(s1, [2, 4]).s
+    s.instances['e1'] = { cardInstanceId: 'e1', cardId: ETER_ORDEN, owner: 'A' }
+
+    const ctx = crearCtx()
+    const r1 = aplicar(s, { type: 'declarar_ataque', atacanteIds: [champ] }, ctx)
+    expect(r1.combate?.paso).toBe('resolucion') // NO se cierra: hay una Ruptura forzosa pendiente
+    expect(getValidActions(r1, 'A').some((a) => a.type === 'elegir_ruptura')).toBe(true)
+
+    const r2 = aplicar(r1, { type: 'elegir_ruptura', atacanteId: champ, vinculoSlot: 2 }, ctx)
+    expect(r2.rupturasEsteTurno).toBe(1)
+    const r3 = applyAction(r2, { type: 'declarar_ataque', atacanteIds: [champ] }, ctx)
+    expect(r3.ok).toBe(false) // el doble ataque no da una 2ª Ruptura
+  })
 })
+
+describe('bloqueos por turno y prioridad del defensor (§9.3, §9.6)', () => {
+  function conBloqueoDeclarado(): { s: GameState; defensor: string } {
+    const ctx = crearCtx()
+    const a = conCampeon(estadoMinimo(), CASSANDRA, 0)
+    const d = conCampeon(a.s, ISOLDE, 0, { owner: 'B' })
+    let s = aplicar(d.s, { type: 'declarar_ataque', atacanteIds: [a.id] }, ctx)
+    s = cerrarCadena(s, ctx)
+    const bloqueo = getValidActions(s, 'B').find((x) => x.type === 'declarar_bloqueo')
+    if (!bloqueo) throw new Error('no hay declarar_bloqueo')
+    return { s: aplicar(s, bloqueo, ctx), defensor: d.id }
+  }
+
+  it('bloquear cuenta: el bloqueador suma 1 bloqueo en el turno', () => {
+    const { s, defensor } = conBloqueoDeclarado()
+    expect(s.instances[defensor].bloqueosEsteTurno).toBe(1)
+  })
+
+  it('un Campeón que ya bloqueó en el turno no vuelve a bloquear (bloqueosPorTurno = 1, §9.3)', () => {
+    const a = conCampeon(estadoMinimo(), CASSANDRA, 0)
+    const d = conCampeon(a.s, ISOLDE, 0, { owner: 'B' })
+    const s: GameState = { ...d.s, instances: { ...d.s.instances, [d.id]: { ...d.s.instances[d.id], bloqueosEsteTurno: 1 } } }
+    expect(bloqueadoresDisponibles(s)).toEqual([])
+  })
+
+  it('regla bloqueosPorTurno: un efecto que la sube deja bloquear otra vez (override de §9.3)', () => {
+    const a = conCampeon(estadoMinimo(), CASSANDRA, 0)
+    const d = conCampeon(a.s, ISOLDE, 0, { owner: 'B' })
+    const s: GameState = {
+      ...d.s,
+      instances: { ...d.s.instances, [d.id]: { ...d.s.instances[d.id], bloqueosEsteTurno: 1 } },
+      reglasTemporales: [
+        { regla: 'bloqueosPorTurno', operacion: 'fijar', valor: 2, orden: 1, sujeto: { tipo: 'carta', instId: d.id }, duenio: 'B', expira: 'permanente' },
+      ],
+    }
+    expect(bloqueadoresDisponibles(s)).toEqual([d.id])
+  })
+
+  it('los contadores del turno (Rupturas y bloqueos) se reinician al terminar el turno', () => {
+    const ctx = crearCtx()
+    const a = conCampeon({ ...estadoMinimo(), fase: 'ocaso' }, CASSANDRA, 0)
+    const d = conCampeon(a.s, ISOLDE, 0, { owner: 'B' })
+    const s: GameState = {
+      ...d.s,
+      rupturasEsteTurno: 1,
+      instances: { ...d.s.instances, [d.id]: { ...d.s.instances[d.id], bloqueosEsteTurno: 1 } },
+    }
+    const r = applyAction(s, { type: 'pasar_turno' }, ctx)
+    expect(r.ok).toBe(true)
+    if (!r.ok) return
+    expect(r.state.rupturasEsteTurno).toBeUndefined()
+    expect(r.state.instances[d.id].bloqueosEsteTurno).toBeUndefined()
+  })
+
+  it('tras declarar_bloqueo la prioridad de la cadena es del DEFENSOR, no del atacante (§9.6)', () => {
+    const { s } = conBloqueoDeclarado()
+    expect(s.combate?.cadena?.prioridad).toBe('B')
+  })
+})
+

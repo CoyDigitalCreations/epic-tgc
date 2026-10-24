@@ -93,6 +93,8 @@ export interface CardInstance {
    * (no se agota al atacar, §10); la Alba del dueño lo borra junto a agotado.
    */
   atacoEsteTurno?: boolean
+  /** Bloqueos que este Campeón ya hizo en el turno en curso (regla `bloqueosPorTurno`, §9.3). Se borra al terminar el turno. */
+  bloqueosEsteTurno?: number
   /**
    * Activación diferida (§5.5, C4): la carta entró al campo ESTE turno.
    * Tácticas/Arcanas recién colocadas NO pueden responder en la cadena 9.6
@@ -232,7 +234,7 @@ export interface CombateState {
   bloqueos: Record<string, string>
   /** true si hay ≥1 ataque sin bloqueador (Ruptura posible, 9.4-A). */
   rupturaDisponible: boolean
-  /** Máx 1 Ruptura por turno de ataque (§9.4-A). */
+  /** true si ya se hicieron las Rupturas que permite la regla `rupturasPorTurno` este turno (§9.4-A). */
   rupturaUsadaEsteTurno: boolean
   /** Cadena 9.6 abierta tras declarar_ataque o declarar_bloqueo. */
   cadena?: CadenaState
@@ -252,6 +254,8 @@ export interface GameState {
   players: Record<PlayerId, PlayerState>
   /** Sub-máquina de combate en Choque (change 2, ADR-11); undefined fuera de Choque. */
   combate?: CombateState
+  /** Rupturas (Vínculos rotos por Ataque directo) que el jugador activo ya hizo este turno (§9.4). Se borra al terminar el turno. */
+  rupturasEsteTurno?: number
   /**
    * Cadena de efectos GLOBAL (fuera de combate): prioridad entre jugadores
    * cuando un efecto se activa y el rival puede responder. Se cierra cuando

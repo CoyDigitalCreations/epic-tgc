@@ -2,7 +2,7 @@ import { abrirCadena } from './chain'
 import { dispararTrigger, keywordsDe, statsDe, tieneDoubleAttackActivo } from './efectos'
 import { destruirCarta } from './replacements'
 import { evaluarFinSteal } from './eter'
-import { reglaBool } from './reglas'
+import { reglaBool, reglaNumero } from './reglas'
 import type { Ctx, GameState, PlayerId } from './types'
 
 /**
@@ -20,6 +20,17 @@ import type { Ctx, GameState, PlayerId } from './types'
 /** Consulta de keyword genérica (data paquetes.ts + overrides, sin hardcode por cardId). */
 export const tieneKeyword = (state: GameState, id: string, kw: string): boolean =>
   keywordsDe(state, id).includes(kw)
+
+/** Rupturas que el jugador activo ya hizo este turno (§9.4). */
+const rupturasHechas = (state: GameState): number => state.rupturasEsteTurno ?? 0
+
+/** true si el jugador activo ya agotó las Rupturas que le permite la regla `rupturasPorTurno` (§9.4). */
+const rupturasAgotadas = (state: GameState): boolean =>
+  rupturasHechas(state) >= reglaNumero(state, 'rupturasPorTurno', { jugador: state.turno })
+
+/** Tras romper un Vínculo no se ataca más ese turno, salvo que la regla `atacarTrasRuptura` lo permita (§9.4). */
+const atacarBloqueadoPorRuptura = (state: GameState): boolean =>
+  rupturasHechas(state) > 0 && !reglaBool(state, 'atacarTrasRuptura', { jugador: state.turno })
 
 /** Rival del jugador activo: el DEFENSOR en el Choque del turno en curso. */
 export const rivalDe = (state: GameState): PlayerId => (state.turno === 'A' ? 'B' : 'A')
@@ -48,6 +59,7 @@ function controladorDe(s: GameState, id: string): PlayerId | null {
  */
 export function atacantesElegibles(state: GameState): string[] {
   if (state.primerTurno && reglaBool(state, 'primerTurnoSinAtaques')) return []
+  if (atacarBloqueadoPorRuptura(state)) return []
   const p = state.players[state.turno]
   return p.campo.campeones.filter((id): id is string => {
     if (!id) return false
@@ -66,14 +78,29 @@ export function atacantesElegibles(state: GameState): string[] {
 }
 
 /**
+ * La Ruptura es FORZOSA (§9.4): hay una pendiente si ya se resolvió el combate, quedan
+ * Rupturas por turno, algún atacante vivo quedó sin bloquear y el defensor tiene un Vínculo vivo.
+ */
+function rupturaPendiente(s: GameState): boolean {
+  const combate = s.combate
+  if (!combate || combate.paso !== 'resolucion' || rupturasAgotadas(s)) return false
+  const hayVinculoVivo = s.players[rivalDe(s)].vinculos.some((id) => !!id && !s.instances[id]?.bocaArriba)
+  if (!hayVinculoVivo) return false
+  return ataquesSinBloquear(s).some((id) => s.players[s.turno].campo.campeones.includes(id))
+}
+
+/**
  * Cierra la sub-máquina de combate si algún atacante SOBREVIVIENTE tiene
  * doble ataque activo (Fase 2b): permite declarar una segunda ola de ataque
  * en el mismo turno de Choque. Si nadie tiene doble ataque, el combate
  * persiste hasta salir de Choque (Ruptura/pasar_turno) — comportamiento previo.
+ * Con una Ruptura pendiente NO se cierra: primero se rompe el Vínculo (§9.4) y
+ * después ya no se puede atacar (regla `atacarTrasRuptura`).
  */
 export function cerrarCombateSiDoubleAttack(s: GameState): void {
   const combate = s.combate
   if (!combate) return
+  if (rupturaPendiente(s)) return
   const dobles = combate.atacantes.some(
     (id) =>
       s.players[s.turno].campo.campeones.includes(id) &&
@@ -85,7 +112,7 @@ export function cerrarCombateSiDoubleAttack(s: GameState): void {
 /**
  * Bloqueadores disponibles del DEFENSOR: Campeones enderezados (§9.3). Uno cansado
  * (recién invocado) SÍ bloquea; uno agotado NO, salvo que la regla `agotadoPuedeBloquear`
- * lo permita.
+ * lo permita. Cada Campeón bloquea `bloqueosPorTurno` veces por turno (no por combate).
  */
 export function bloqueadoresDisponibles(state: GameState): string[] {
   const defensor = rivalDe(state)
@@ -94,6 +121,7 @@ export function bloqueadoresDisponibles(state: GameState): string[] {
     if (id === null) return false
     const inst = state.instances[id]
     if (!inst) return false
+    if ((inst.bloqueosEsteTurno ?? 0) >= reglaNumero(state, 'bloqueosPorTurno', { instId: id })) return false
     return !inst.agotado || reglaBool(state, 'agotadoPuedeBloquear', { instId: id })
   })
 }
@@ -129,6 +157,7 @@ export function validarDeclararAtaque(state: GameState, atacanteIds: string[]): 
   if (state.fase !== 'choque') return 'declarar_ataque solo en Choque'
   if (state.combate) return 'el combate ya fue declarado'
   if (state.primerTurno && reglaBool(state, 'primerTurnoSinAtaques')) return 'nadie ataca en el primer turno (§8.6)'
+  if (atacarBloqueadoPorRuptura(state)) return 'no se puede atacar después de una Ruptura (§9.4)'
   if (atacanteIds.length === 0) return 'no declaraste atacantes'
   if (new Set(atacanteIds).size !== atacanteIds.length) return 'atacantes duplicados'
   const elegibles = atacantesElegibles(state)
@@ -144,7 +173,7 @@ export function ejecutarDeclararAtaque(s: GameState, atacanteIds: string[], ctx:
     atacantes: atacanteIds,
     bloqueos: {},
     rupturaDisponible: true,
-    rupturaUsadaEsteTurno: false,
+    rupturaUsadaEsteTurno: rupturasAgotadas(s),
   }
   for (const id of atacanteIds) {
     const inst = s.instances[id]
@@ -211,14 +240,18 @@ export function validarDeclararBloqueo(state: GameState, asignaciones: Record<st
 export function ejecutarDeclararBloqueo(s: GameState, asignaciones: Record<string, string>, ctx: Ctx): void {
   const combate = s.combate!
   combate.bloqueos = { ...combate.bloqueos, ...asignaciones }
+  for (const bloqueadorId of Object.values(asignaciones)) {
+    const b = s.instances[bloqueadorId]
+    if (b) b.bloqueosEsteTurno = (b.bloqueosEsteTurno ?? 0) + 1
+  }
   combate.paso = 'resolucion'
   combate.rupturaDisponible = ataquesSinBloquear(s).length > 0
   ctx.emit({ type: 'bloqueo_declarado', jugador: rivalDe(s), asignaciones })
   // Resolución (9.4-B, ADR-11/14): daño simultáneo aplicado EN LA TRANSICIÓN
   resolverCombate(s, ctx)
-  // C4 (9.6): tras la resolución, el ATACANTE puede responder (§9.6); la
-  // Ruptura queda pendiente hasta cerrar la cadena.
-  abrirCadena(s, s.turno)
+  // C4 (9.6): tras la resolución la prioridad es del DEFENSOR, como en toda la cadena
+  // (§9.6); la Ruptura queda pendiente hasta cerrar la cadena.
+  abrirCadena(s, rivalDe(s))
 }
 
 /* ─────────────────── resolución: daño simultáneo (9.4-B, ADR-14) ─────────────────── */
@@ -303,7 +336,7 @@ export function validarElegirRuptura(state: GameState, atacanteId: string | null
   if (state.fase !== 'choque') return 'elegir_ruptura solo en Choque'
   const combate = state.combate
   if (!combate || combate.paso !== 'resolucion') return 'no hay resolución pendiente'
-  if (combate.rupturaUsadaEsteTurno) return 'ya usaste la Ruptura este turno de ataque'
+  if (rupturasAgotadas(state)) return 'ya hiciste la Ruptura de este turno (§9.4)'
   if (atacanteId === null) {
     // Ruptura forzosa (§9.4): no existe "no romper" — la elección se hace al atacar
     return 'la Ruptura es obligatoria si hay un ataque sin bloquear (§9.4)'
@@ -325,7 +358,8 @@ export function ejecutarElegirRuptura(s: GameState, atacanteId: string | null, v
   const vinculoId = s.players[rivalDe(s)].vinculos[vinculoSlot]!
   ctx.emit({ type: 'ruptura_realizada', atacanteId, vinculoSlot, vinculoId })
   destruirCarta(s, ctx, vinculoId, 'ruptura')
-  if (s.combate) s.combate.rupturaUsadaEsteTurno = true
+  s.rupturasEsteTurno = rupturasHechas(s) + 1
+  if (s.combate) s.combate.rupturaUsadaEsteTurno = rupturasAgotadas(s)
   // Fase 2b: si algún atacante sobreviviente tiene doble ataque activo,
   // cerrar el combate para permitir la segunda ola en el mismo turno.
   cerrarCombateSiDoubleAttack(s)
