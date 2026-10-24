@@ -3,6 +3,13 @@ import { getCardImage } from './image-store'
 import { cardArtPath } from '../../shared/data/paquetes'
 
 /**
+ * Nombres de los archivos que se cargan como FUENTE DE VERDAD en seed/ (el nombre se escribe tal
+ * cual, sin el de la colección activa): FuenteEfectos.json (datos, sin arte) y FuenteArte.json (con arte).
+ */
+export const FUENTE_EFECTOS = 'FuenteEfectos'
+export const FUENTE_ARTE = 'FuenteArte'
+
+/**
  * Re-embebe el arte (IndexedDB + PNGs estáticos) en las cartas para el export.
  * IndexedDB tiene prioridad (usuario subió arte custom); si no hay,
  * intenta fetchear el PNG estático de public/cartas/ y convertirlo a data URL.

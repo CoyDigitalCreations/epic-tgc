@@ -2,6 +2,13 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { CardList } from '../CardList'
 import { useCardStore } from '../../store/useCardStore'
+import { exportCollectionSinArte, exportCollectionToJson } from '../../utils/export-json'
+
+vi.mock('../../utils/export-json', async (importarOriginal) => ({
+  ...(await importarOriginal<typeof import('../../utils/export-json')>()),
+  exportCollectionToJson: vi.fn().mockResolvedValue(undefined),
+  exportCollectionSinArte: vi.fn(),
+}))
 
 beforeEach(() => {
   useCardStore.setState({
@@ -72,6 +79,28 @@ describe('CardList', () => {
     expect(screen.getByText(/Exportar colección/)).toBeInTheDocument()
     expect(screen.getByText(/Exportar cartas/)).toBeInTheDocument()
     expect(screen.getByText(/Importar cartas/)).toBeInTheDocument()
+  })
+
+  it('los botones de la fuente de verdad exportan con los nombres FuenteEfectos y FuenteArte', () => {
+    const carta = {
+      id: 'card-1',
+      name: 'Test',
+      type: 'Campeón',
+      rarity: 'Común',
+      keywords: [],
+      flavorText: '',
+      createdAt: '2024-01-01',
+      updatedAt: '2024-01-01',
+      stats: { cost: 0, poder: 0, resistencia: 0 },
+    } as import('../../../shared/types').CampeonCard
+    useCardStore.setState({ cards: [carta] })
+    render(<CardList />)
+
+    fireEvent.click(screen.getByText(/Exportar FuenteEfectos\.json/))
+    expect(exportCollectionSinArte).toHaveBeenCalledWith([carta], 'FuenteEfectos')
+
+    fireEvent.click(screen.getByText(/Exportar FuenteArte\.json/))
+    expect(exportCollectionToJson).toHaveBeenCalledWith([carta], 'FuenteArte')
   })
 
   it('importa el paquete Disonancia (DS-031, DS-032, DS-033) a la colección', () => {

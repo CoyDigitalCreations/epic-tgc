@@ -1,12 +1,12 @@
 /**
- * extract-art — Extrae el arte base64 de seed/PrimerColeccion.json
+ * extract-art — Extrae el arte base64 de seed/FuenteArte.json
  * y lo escribe como PNG en public/cartas/{cardId}.png.
  *
  * Uso:
  *   npx tsx scripts/extract-art.ts [--dry-run]
  *
  * Flujo:
- *   1. Card-Maker: 📥 Exportar colección (con arte) → PrimerColeccion.json
+ *   1. Card-Maker: 📥 Exportar colección (con arte) → FuenteArte.json
  *   2. npx tsx scripts/extract-art.ts --dry-run
  *   3. npx tsx scripts/extract-art.ts
  */
@@ -15,13 +15,13 @@ import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
-const INPUT_PATH = resolve(__dirname, '../seed/PrimerColeccion.json')
+const INPUT_PATH = resolve(__dirname, '../seed/FuenteArte.json')
 const OUTPUT_DIR = resolve(__dirname, '../public/cartas')
 
 const dryRun = process.argv.includes('--dry-run')
 
 console.log('─'.repeat(72))
-console.log('EXTRACT ART — PrimerColeccion.json → public/cartas/')
+console.log('EXTRACT ART — FuenteArte.json → public/cartas/')
 console.log(`Input:  ${INPUT_PATH}`)
 console.log(`Output: ${OUTPUT_DIR}`)
 console.log(`Modo:   ${dryRun ? 'DRY-RUN (no escribe)' : 'ESCRIBIR'}`)

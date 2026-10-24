@@ -344,7 +344,7 @@ describe('C3a-JS: JSON interpreter path', () => {
 // ═══════════════════════════════════════════════════════════════════
 // C3b: Modificadores continuos desde el JSON (Fase 1) + Protector (D3)
 // Tests genéricos por TIPO de aura — tarjetas sintéticas vía registrarCartas.
-// La fuente de verdad (PrimerColeccionEfectos.json) puede rediseñar cartas;
+// La fuente de verdad (FuenteEfectos.json) puede rediseñar cartas;
 // estos tests validan la MECÁNICA del motor, no cartas puntuales.
 // ═══════════════════════════════════════════════════════════════════
 

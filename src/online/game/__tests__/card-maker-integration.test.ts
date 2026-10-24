@@ -15,9 +15,9 @@ import type { GameState, PlayerId } from './types'
 import type { AnyCard } from '../../shared/types'
 import type { EfectoData } from '../../shared/types/cards'
 
-// ─── Load JSON from Card-Maker (Fase 3e: fuente de verdad = PrimerColeccionEfectos.json) ───
+// ─── Load JSON from Card-Maker (Fase 3e: fuente de verdad = FuenteEfectos.json) ───
 
-const JSON_PATH = resolve(process.cwd(), 'seed/PrimerColeccionEfectos.json')
+const JSON_PATH = resolve(process.cwd(), 'seed/FuenteEfectos.json')
 const jsonCards: AnyCard[] = JSON.parse(readFileSync(JSON_PATH, 'utf-8'))
 
 // ─── Test helpers ──────────────────────────────────────────────────

@@ -12,7 +12,7 @@ import type { Action } from '../actions'
 import type { AnyCard } from '../../../shared/types/cards'
 import type { Ctx, GameState, PlayerId } from '../types'
 
-// Cartas reales del catálogo (fuente de verdad: seed/PrimerColeccionEfectos.json):
+// Cartas reales del catálogo (fuente de verdad: seed/FuenteEfectos.json):
 // FB-011 Vaela 5/3 (sin keywords anti-destrucción) · FB-025 Primer Juramento (Vínculo Orden)
 // FB-018 Rowena, Vínculo Eterno — prevent_destroy + cuando_vinculo_seria_destruido + exile_self
 const VAELA = 'FB-011'

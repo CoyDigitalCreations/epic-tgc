@@ -9,7 +9,7 @@ import { registrarCartas } from '../cards'
 import type { AnyCard } from '../../../shared/types'
 import type { Ctx, GameState, PlayerId } from '../types'
 
-// Cartas reales del catálogo (fuente de verdad: seed/PrimerColeccionEfectos.json):
+// Cartas reales del catálogo (fuente de verdad: seed/FuenteEfectos.json):
 // FB-031 Campeón Orden/Céleste cost 2 — tutor al morir: Campeones Orden+Céleste coste ≤ 4 del mazo
 // DS-031 Campeón Caos cost 2 — tutor al morir: Campeones coste ≤ 2 del mazo
 // FB-032 Mística Rito del Alba — hoy: hechizo/invocar_y_equipar SIN trigger (hueco de Fase 2)

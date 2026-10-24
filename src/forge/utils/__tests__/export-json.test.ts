@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest'
-import { importCardDataFromJson } from '../export-json'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { exportCollectionSinArte, exportCollectionToJson, FUENTE_ARTE, FUENTE_EFECTOS, importCardDataFromJson } from '../export-json'
 import type { AnyCard } from '../../../shared/types'
 
 function archivoJson(contenido: unknown): File {
@@ -74,5 +74,48 @@ describe('importCardDataFromJson (cartas terminadas: datos sin arte)', () => {
   it('rechaza un JSON inválido', async () => {
     const malo = new File(['esto no es json {'], 'malo.json', { type: 'application/json' })
     await expect(importCardDataFromJson(malo)).rejects.toThrow('Archivo JSON inválido')
+  })
+})
+
+describe('exportar la fuente de verdad (FuenteEfectos.json / FuenteArte.json)', () => {
+  /** Captura las descargas: nombre del archivo y contenido del Blob. */
+  function capturarDescargas(): { nombres: string[]; blobs: Blob[] } {
+    const nombres: string[] = []
+    const blobs: Blob[] = []
+    vi.spyOn(URL, 'createObjectURL').mockImplementation((b) => {
+      blobs.push(b as Blob)
+      return 'blob:prueba'
+    })
+    vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {})
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) {
+      nombres.push(this.download)
+    })
+    return { nombres, blobs }
+  }
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('FuenteEfectos.json: las cartas SIN arte, con el nombre fijo', async () => {
+    const { nombres, blobs } = capturarDescargas()
+    exportCollectionSinArte([cartaConArte, cartaSinArte], FUENTE_EFECTOS)
+
+    expect(nombres).toEqual(['FuenteEfectos.json'])
+    const exportadas = JSON.parse(await blobs[0].text()) as AnyCard[]
+    expect(exportadas.map((c) => c.id)).toEqual(['carta-1', 'carta-2'])
+    for (const c of exportadas) {
+      expect(c.imageUrl).toBeUndefined()
+      expect(c.hasImage).toBeUndefined()
+    }
+  })
+
+  it('FuenteArte.json: la misma exportación CON arte, con el nombre fijo', async () => {
+    const { nombres, blobs } = capturarDescargas()
+    await exportCollectionToJson([cartaSinArte], FUENTE_ARTE)
+
+    expect(nombres).toEqual(['FuenteArte.json'])
+    const exportadas = JSON.parse(await blobs[0].text()) as AnyCard[]
+    expect(exportadas.map((c) => c.id)).toEqual(['carta-2'])
   })
 })

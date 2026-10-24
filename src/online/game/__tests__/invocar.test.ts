@@ -7,7 +7,7 @@ import { bloquearEter } from '../payments'
 import { getCardMeta } from '../cards'
 import type { Ctx, GameState, PlayerId } from '../types'
 
-// Cartas reales del catálogo (fuente de verdad: seed/PrimerColeccionEfectos.json):
+// Cartas reales del catálogo (fuente de verdad: seed/FuenteEfectos.json):
 // FB-011 Campeón Normal · FB-010 Aurora Soberano Singular cost 4 ·
 // FB-019 Mística · FB-021 Táctica · FB-023 Arcana (coste se lee del JSON) ·
 // FB-024 Combate · FB-001 Éter Orden · DS-002 Éter Caos ·

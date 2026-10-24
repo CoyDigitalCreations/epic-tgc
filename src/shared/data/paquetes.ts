@@ -1,10 +1,10 @@
 import type { AnyCard, Paquete } from '../types'
 import { FACCION_COLORS } from '../types'
-import primerosEfectos from '../../../seed/PrimerColeccionEfectos.json'
+import primerosEfectos from '../../../seed/FuenteEfectos.json'
 
 /* ─────────────────────────────────────────────
    FUENTE DE VERDAD de diseños y efectos
-   seed/PrimerColeccionEfectos.json (export de Card-Maker).
+   seed/FuenteEfectos.json (export de Card-Maker).
 
    paquetes.ts ya NO embebe cartas: solo metadata de paquetes
    (PAQUETES) y helpers. Los efectos que el motor interpreta

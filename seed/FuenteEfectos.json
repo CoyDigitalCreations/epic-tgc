@@ -144,7 +144,7 @@
     "paqueteId": "estasis",
     "limiteCopias": "2",
     "createdAt": "2026-08-03T00:00:00.000Z",
-    "updatedAt": "2026-09-29T05:04:33.760Z",
+    "updatedAt": "2026-10-24T18:27:28.209Z",
     "stats": {
       "cost": 1
     },
@@ -165,7 +165,8 @@
           "ATQ": 0,
           "RES": 0
         },
-        "texto": "Bloquea 1 Éter de tu Reserva sobre un Campeón que pueda recibir éter bloqueado que controles."
+        "texto": "Bloquea 1 Éter de tu Reserva sobre un Campeón que pueda recibir éter bloqueado que controles, una vez por turno.",
+        "duracion": "1_por_turno"
       }
     ]
   },

@@ -1,6 +1,6 @@
 /**
  * Fase 0 — CLI del mapa de cobertura.
- * Fuente de verdad: seed/PrimerColeccionEfectos.json (NO paquetes.ts).
+ * Fuente de verdad: seed/FuenteEfectos.json (NO paquetes.ts).
  * Uso: npx tsx scripts/coverage-map.ts
  * Escribe: docs/coverage-map.md e imprime el resumen por consola.
  */
@@ -11,7 +11,7 @@ import type { AnyCard } from '../src/shared/types'
 import { buildReporte, formatReporte, pctOK } from '../src/online/game/coverageMap'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
-const sourcePath = resolve(__dirname, '../seed/PrimerColeccionEfectos.json')
+const sourcePath = resolve(__dirname, '../seed/FuenteEfectos.json')
 const outPath = resolve(__dirname, '../docs/coverage-map.md')
 
 const cards = JSON.parse(readFileSync(sourcePath, 'utf8')) as AnyCard[]
@@ -25,7 +25,7 @@ writeFileSync(outPath, markdown, 'utf8')
 const ok = pctOK(reporte)
 console.log('─'.repeat(72))
 console.log('MAPA DE COBERTURA — Motor vs JSON')
-console.log(`Fuente de verdad: seed/PrimerColeccionEfectos.json`)
+console.log(`Fuente de verdad: seed/FuenteEfectos.json`)
 console.log('─'.repeat(72))
 console.log(`Cartas: ${reporte.totalCartas} | Efectos: ${reporte.totalEfectos} | Combos únicos: ${reporte.combos.length}`)
 console.log(`Cobertura data-driven: ${ok}%`)

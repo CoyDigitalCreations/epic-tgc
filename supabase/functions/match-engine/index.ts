@@ -135,7 +135,7 @@ function esMazoValido(deck: unknown): deck is string[] {
 /**
  * Carga cartas custom de eter.custom_cards y las registra en el motor.
  * Necesario para que createInitialState resuelva cardIds que no están en
- * PrimerColeccionEfectos (cartas creadas en Éter Forge por colaboradores).
+ * FuenteEfectos (cartas creadas en Éter Forge por colaboradores).
  */
 async function registrarCartasCustom(): Promise<void> {
   try {
@@ -147,7 +147,7 @@ async function registrarCartasCustom(): Promise<void> {
       engine.registrarCartas(defs)
     }
   } catch {
-    // si falla, el motor solo tendrá las cartas de PrimerColeccion
+    // si falla, el motor solo tendrá las cartas de FuenteEfectos
   }
 }
 

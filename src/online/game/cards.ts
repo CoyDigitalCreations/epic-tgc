@@ -6,7 +6,7 @@ export type { AnyCard }
 /**
  * Índice cardId → AnyCard sobre ALL_CARDS.
  * Construido UNA vez al cargar el módulo: getCardMeta no re-indexa por llamada.
- * Fuente única de metadatos: seed/PrimerColeccionEfectos.json vía
+ * Fuente única de metadatos: seed/FuenteEfectos.json vía
  * shared/data/paquetes.ts (ADR-2: el meta vive en shared, no en el estado).
  */
 

@@ -203,7 +203,7 @@ export interface TramoEfecto {
   filtros?: FiltroObjetivo
 }
 
-/** All available effect actions — sección viva (JSON PrimerColeccionEfectos.json).
+/** All available effect actions — sección viva (JSON FuenteEfectos.json).
  * 13 strings legacy eliminados en Fase 3e (cero hits en JSON de 65 cartas). */
 export type EfectoAccion =
   | 'buff' | 'debuff' | 'destroy' | 'exile' | 'return_hand'

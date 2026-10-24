@@ -1,7 +1,7 @@
 /**
  * Registro de handlers por cardId — FASE 2: SIN handlers.
  *
- * Todos los efectos se resuelven desde el JSON (PrimerColeccionEfectos.json):
+ * Todos los efectos se resuelven desde el JSON (FuenteEfectos.json):
  * - Auras → modificadoresJSONDe (Fase 1)
  * - Hechizos sin trigger → al jugar mística / activar Arcana (Fase 2a)
  * - block_ether → crearOpcionBloqueo (Fase 2a, data-driven)

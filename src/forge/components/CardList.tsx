@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef } from 'react'
 import { useCardStore } from '../store/useCardStore'
-import { exportCollectionToJson, importCollectionFromJson, exportCollectionSinArte } from '../utils/export-json'
+import { exportCollectionToJson, importCollectionFromJson, exportCollectionSinArte, FUENTE_ARTE, FUENTE_EFECTOS } from '../utils/export-json'
 import { exportPaqueteToJson, importPaqueteFromJson } from '../utils/export-paquete'
 import { CARD_TYPES, RARITIES, KEYWORDS, FACCIONES, type CardType, type Faccion, type Keyword, type Rarity } from '../../shared/types'
 import { PAQUETES, ESTASIS_CARDS, DISONANCIA_CARDS, progresoPaquete } from '../../shared/data/paquetes'
@@ -395,6 +395,26 @@ export function CardList() {
                            transition-colors cursor-pointer"
               >
                 📄 Exportar cartas (sin arte)
+              </button>
+              <button
+                onClick={() => exportCollectionSinArte(cards, FUENTE_EFECTOS)}
+                title="Descargar las cartas SIN arte con el nombre FuenteEfectos.json (fuente de verdad del motor, va en seed/)"
+                className="text-xs border border-amber-400/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-200 px-3 py-1.5 rounded-lg
+                           transition-colors cursor-pointer"
+              >
+                ⭐ Exportar FuenteEfectos.json
+              </button>
+              <button
+                onClick={() => {
+                  void exportCollectionToJson(cards, FUENTE_ARTE).catch((err) => {
+                    console.error('Error al exportar FuenteArte.json:', err)
+                  })
+                }}
+                title="Descargar las cartas CON arte con el nombre FuenteArte.json (fuente de verdad del arte, va en seed/; archivo grande)"
+                className="text-xs border border-amber-400/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-200 px-3 py-1.5 rounded-lg
+                           transition-colors cursor-pointer"
+              >
+                ⭐ Exportar FuenteArte.json
               </button>
               <button
                 onClick={() => setShowClearModal(true)}

@@ -17,7 +17,7 @@ import {
   purgarEfectosTemporales,
 } from '../efectos'
 
-// Cartas reales del catálogo (fuente de verdad: seed/PrimerColeccionEfectos.json):
+// Cartas reales del catálogo (fuente de verdad: seed/FuenteEfectos.json):
 // FB-010 Aurora · FB-011 Vaela (hoy: al_matar_en_combate/mover) · DS-011 Kael (pasivo/al_atacar/debuff)
 const AURORA = 'FB-010'
 const VAELA = 'FB-011'

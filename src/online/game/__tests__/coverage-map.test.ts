@@ -1,6 +1,6 @@
 /**
  * Brújula de la Fase 0-2: TODO combo tipo×trigger×efecto que exista en la
- * FUENTE DE VERDAD (seed/PrimerColeccionEfectos.json) debe estar clasificado
+ * FUENTE DE VERDAD (seed/FuenteEfectos.json) debe estar clasificado
  * en el mapa de cobertura.
  *
  * Si aparece un combo nuevo sin clasificar, este test falla — es la métrica
@@ -13,7 +13,7 @@ import { resolve } from 'node:path'
 import type { AnyCard } from '../../../shared/types'
 import { buildReporte, pctOK, HANDLERS, GUARDS } from '../coverageMap'
 
-const sourcePath = resolve(__dirname, '../../../../seed/PrimerColeccionEfectos.json')
+const sourcePath = resolve(__dirname, '../../../../seed/FuenteEfectos.json')
 const CARDS = JSON.parse(readFileSync(sourcePath, 'utf8')) as AnyCard[]
 
 describe('coverageMap — mapa de cobertura motor vs fuente de verdad', () => {
@@ -57,11 +57,11 @@ describe('coverageMap — mapa de cobertura motor vs fuente de verdad', () => {
   })
 
   it('snapshot de la métrica de cobertura (baseline contra fuente de verdad)', () => {
-    // Baseline contra seed/PrimerColeccionEfectos.json. A medida que avancen
+    // Baseline contra seed/FuenteEfectos.json. A medida que avancen
     // Fases 1-2, ACTUALIZAR este snapshot al subir la cobertura — es la métrica
     // de avance del plan. No bajar nunca: si este número cae, algo se rompió.
     const ok = pctOK(reporte)
-    console.log(`[coverageMap] fuente=PrimerColeccionEfectos.json cobertura actual: ${ok}% (${reporte.totalEfectos} efectos)`)
+    console.log(`[coverageMap] fuente=FuenteEfectos.json cobertura actual: ${ok}% (${reporte.totalEfectos} efectos)`)
     expect(ok).toBeGreaterThanOrEqual(0)
   })
 

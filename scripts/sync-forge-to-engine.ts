@@ -1,6 +1,6 @@
 /**
  * sync-forge-to-engine — Sincroniza un export de Éter Forge hacia la fuente
- * de verdad del motor: seed/PrimerColeccionEfectos.json
+ * de verdad del motor: seed/FuenteEfectos.json
  *
  * Uso:
  *   npx tsx scripts/sync-forge-to-engine.ts <export.json> [opciones]
@@ -15,7 +15,7 @@
  *   2. npx tsx scripts/sync-forge-to-engine.ts mi-export.json --dry-run
  *   3. Revisar el reporte; si está bien, quitar --dry-run
  *   4. npx vitest run src/shared/data/paquetes.test.ts
- *   5. git add seed/PrimerColeccionEfectos.json && git commit
+ *   5. git add seed/FuenteEfectos.json && git commit
  *
  * Notas:
  * - Acepta exports CON arte (base64) o SIN arte: el base64 se descarta.
@@ -29,7 +29,7 @@ import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
-const ENGINE_PATH = resolve(__dirname, '../seed/PrimerColeccionEfectos.json')
+const ENGINE_PATH = resolve(__dirname, '../seed/FuenteEfectos.json')
 
 const CARD_TYPES = new Set(['Campeón', 'Mística', 'Arcana', 'Éter', 'Vínculo'])
 const EFECTO_TIPOS = new Set([
@@ -74,7 +74,7 @@ function usage(): never {
 Uso: npx tsx scripts/sync-forge-to-engine.ts <export.json> [--dry-run] [--prune]
 
   <export.json>   JSON exportado desde Éter Forge (con o sin arte)
-  --dry-run       Solo muestra el reporte; no escribe PrimerColeccionEfectos.json
+  --dry-run       Solo muestra el reporte; no escribe FuenteEfectos.json
   --prune         Elimina cartas del motor que no estén en el export
 
 Ejemplo:
@@ -361,7 +361,7 @@ function main(): void {
   console.log('  npx vitest run src/online/game/__tests__/coverage-map.test.ts')
   console.log('  npx tsx scripts/coverage-map.ts   # regenera docs/coverage-map.md')
   console.log('')
-  console.log('  Si los tests pasan: git add seed/PrimerColeccionEfectos.json && git commit')
+  console.log('  Si los tests pasan: git add seed/FuenteEfectos.json && git commit')
 }
 
 main()
