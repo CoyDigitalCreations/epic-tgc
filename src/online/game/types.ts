@@ -1,5 +1,6 @@
 import type { GameEvent } from './events'
 import type { EfectoPendiente } from './effectRegistry'
+import type { OperacionRegla, ReglaId } from '../../shared/rules/reglas'
 
 export type PlayerId = 'A' | 'B'
 
@@ -35,6 +36,26 @@ export interface Modificador {
   /** B6 (hasta_fase): fase que dispara la purga — solo si expira='hasta-fase'. */
   expiraFase?: 'alba' | 'forja' | 'choque' | 'ocaso'
   /** B6: de QUIÉN es esa fase (se compara con s.turno al entrar la fase). */
+  expiraFaseJugador?: PlayerId
+}
+
+/**
+ * Modificación TEMPORAL de una regla del manual (Capa 2), creada por un efecto de resolución
+ * ("este turno puedes…"). Mismo ciclo de vida que `Modificador`. Las permanentes mientras la carta
+ * está en juego NO se guardan: se derivan del estado (ver reglas.ts).
+ */
+export interface ReglaTemporal {
+  regla: ReglaId
+  operacion: OperacionRegla
+  valor?: number
+  /** Monotónico: desempata los `fijar` (gana el más reciente). */
+  orden: number
+  sujeto: { tipo: 'partida' } | { tipo: 'jugador'; jugador: PlayerId } | { tipo: 'carta'; instId: string }
+  /** Quién la creó: cuenta su Alba/Ocaso para `alba-dueño` y `turnosRestantes`. */
+  duenio: PlayerId
+  expira: ExpiraModificador
+  turnosRestantes?: number
+  expiraFase?: 'alba' | 'forja' | 'choque' | 'ocaso'
   expiraFaseJugador?: PlayerId
 }
 
@@ -237,6 +258,10 @@ export interface GameState {
    * ambos pasan y se resuelve LIFO.
    */
   cadena?: CadenaState
+  /** Reglas del manual modificadas con duración (Capa 2). Ver reglasTemporales.ts. */
+  reglasTemporales?: ReglaTemporal[]
+  /** Contador monotónico para ordenar las reglasTemporales. */
+  ordenReglas?: number
   /** Flag anti-bucle del sexto Vínculo (5.7/13, ADR-16): el hook NO-OP se resuelve UNA vez. */
   sextoVinculoResuelto?: boolean
   /** C2: opciones pendientes de elegir_opcion (Pasivo 1A FB-005/DS-006). */

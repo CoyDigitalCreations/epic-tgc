@@ -32,8 +32,8 @@ describe('RARITIES', () => {
 })
 
 describe('KEYWORDS', () => {
-  it('contiene las 11 keywords oficiales v2.0', () => {
-    expect(KEYWORDS).toHaveLength(10)
+  it('contiene las 12 keywords oficiales (v2.0 + Tirador e Inexiliable)', () => {
+    expect(KEYWORDS).toHaveLength(12)
     expect(KEYWORDS).toContain('Carga')
     expect(KEYWORDS).toContain('Vigor')
     expect(KEYWORDS).toContain('Inmortal')
@@ -43,6 +43,8 @@ describe('KEYWORDS', () => {
     expect(KEYWORDS).toContain('Artefacto')
     expect(KEYWORDS).toContain('Presteza')
     expect(KEYWORDS).toContain('Fugaz')
+    expect(KEYWORDS).toContain('Tirador')
+    expect(KEYWORDS).toContain('Inexiliable')
   })
 
   it('no contiene keywords eliminadas', () => {

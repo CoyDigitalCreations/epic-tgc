@@ -3,6 +3,7 @@ import type { CardInstance, Ctx, ExpiraModificador, GameState, PlayerId } from '
 import { interpretEffect } from './effectInterpreter'
 import { parejasBloqueoOpcion } from './habilidades'
 import { resolveTargets } from './targetResolver'
+import { purgarReglasHastaFase, purgarReglasTemporales } from './reglasTemporales'
 import type { CondicionEfecto, EfectoData } from '../../shared/types'
 
 /**
@@ -847,6 +848,7 @@ export function otorgarKeyword(s: GameState, id: string, kw: string, temporal = 
  * `ctx`: opcional; se usa para emitir eventos y enviar Tácticas al cementerio.
  */
 export function purgarEfectosTemporales(s: GameState, expira: ExpiraModificador, jugador?: PlayerId, _ctx?: Ctx): void {
+  purgarReglasTemporales(s, expira, jugador)
   const jugadores: PlayerId[] = jugador ? [jugador] : ['A', 'B']
   for (const j of jugadores) {
     for (const id of instanciasEnCampo(s, j)) {
@@ -884,6 +886,7 @@ export function purgarEfectosTemporales(s: GameState, expira: ExpiraModificador,
  * Se llama en cada transición de fase (partida.ts) y en el Alba (phases.ts).
  */
 export function purgarHastaFase(s: GameState, fase: 'alba' | 'forja' | 'choque' | 'ocaso', turno: PlayerId): void {
+  purgarReglasHastaFase(s, fase, turno)
   for (const inst of Object.values(s.instances)) {
     if (inst.modificadores?.length) {
       const quedan = inst.modificadores.filter(

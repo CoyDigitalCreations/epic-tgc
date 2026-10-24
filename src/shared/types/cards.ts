@@ -1,4 +1,5 @@
 import type { CardType, Rarity, Keyword, Faccion, Esencia, Rol, CatHabilidad } from './enums'
+import type { ModificacionRegla } from '../rules/reglas'
 export type { CardType }
 
 /** Base stats shared by all cards */
@@ -121,6 +122,10 @@ export interface EfectoData {
   /** Qué atributos se copian del objetivo. Solo aplica cuando efecto = 'copy'. */
   copyAttributes?: CopyAttribute[]
 
+  // ── Capa 5d: REGLA MODIFICADA (solo cuando efecto = 'modificar_regla') ──
+  /** Qué regla del manual cambia este efecto y cómo (Capa 2: el efecto gana al manual). */
+  regla?: ModificacionRegla
+
   // ── Modificador: SIN ACTIVAR EFECTO ──
   /** When true, the moved/returned ether does NOT trigger its effects (until opponent's Alba) */
   sinActivarEfecto?: boolean
@@ -211,7 +216,7 @@ export type EfectoAccion =
   | 'recuperar_mazo_barajar' | 'recuperar_mazo_top' | 'recuperar_mazo_bottom'
   | 'recuperar_exilio'
   | 'invocar' | 'invocar_y_equipar'
-  | 'mover' | 'negar' | 'rival_discard'
+  | 'mover' | 'negar' | 'rival_discard' | 'modificar_regla'
 
 /** Structured target — 4-layer system: type + controller + zone + filters + destination */
 export interface ObjetivoEfecto {

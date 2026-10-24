@@ -7,12 +7,14 @@
 import { resolveTargets } from './targetResolver'
 import { robarCarta } from './draw'
 import { aplicarMod, otorgarKeyword, crearOpcionBloqueo } from './efectos'
+import { aplicarReglaTemporal } from './reglasTemporales'
+import { REGLAS } from '../../shared/rules/reglas'
 import { aplicarPago } from './payments'
 import { enviarAlCementerio, destruirCarta, liberarEterBloqueado, liberarArtefactosEquipados } from './replacements'
 import { eterDeEfecto, quitarEteres, liberarEterA, limpiarFlagsUmbralSiVacia, evaluarFinSteal } from './eter'
 import { esCampeon, getCardMeta } from './cards'
 import type { EfectoData } from '../../shared/types'
-import type { CardInstance, Ctx, GameState, PlayerId } from './types'
+import type { CardInstance, Ctx, ExpiraModificador, GameState, PlayerId } from './types'
 import type { PayloadEfecto } from './efectos'
 
 /**
@@ -297,6 +299,10 @@ function executeEffect(
 
     case 'double_attack':
       // Double attack is handled by combat system
+      break
+
+    case 'modificar_regla':
+      executeModificarRegla(s, targetIds, jugador, efectoData)
       break
 
     case 'negar': {
@@ -777,6 +783,47 @@ function validateCost(
 
     default:
       return true
+  }
+}
+
+/**
+ * Execute modificar_regla: registra una modificación TEMPORAL de una regla del manual (Capa 2).
+ * Los efectos permanentes mientras la carta está en juego (pasivo/continuo/Éter/Vínculo) NO pasan por
+ * aquí: se derivan del estado en reglas.ts. Esto cubre los de resolución (hechizo, disparo, trigger).
+ * Duración: misma traducción que buff — turno/n_turnos/hasta_fase expiran; permanente/mientras_* no.
+ */
+function executeModificarRegla(s: GameState, targetIds: string[], jugador: PlayerId, efectoData: EfectoData): void {
+  const m = efectoData.regla
+  if (!m) return
+  const def = REGLAS[m.id]
+  const { duracion, duracionTurnos, duracionFase, duracionControlador } = efectoData
+  const expira: ExpiraModificador =
+    duracion === undefined || duracion === 'permanente' || duracion === 'mientras_en_campo' || duracion === 'mientras_ester_bloqueado' || duracion === 'mientras_equipped'
+      ? 'permanente'
+      : duracion === 'hasta_fase'
+        ? 'hasta-fase'
+        : 'ocaso'
+  const comunes = {
+    regla: m.id,
+    operacion: m.operacion,
+    valor: m.valor,
+    duenio: jugador,
+    expira,
+    ...(duracion === 'n_turnos' ? { turnosRestantes: duracionTurnos } : {}),
+    ...(expira === 'hasta-fase' && duracionFase
+      ? { expiraFase: duracionFase, expiraFaseJugador: duracionControlador === 'rival' ? (jugador === 'A' ? 'B' : 'A') : jugador }
+      : {}),
+  } as const
+  const rival: PlayerId = jugador === 'A' ? 'B' : 'A'
+
+  if (def.ambito === 'partida') {
+    aplicarReglaTemporal(s, { ...comunes, sujeto: { tipo: 'partida' } })
+  } else if (def.ambito === 'jugador') {
+    const c = efectoData.objetivo?.controlador ?? 'propio'
+    const afectados: PlayerId[] = c === 'ambos' ? ['A', 'B'] : c === 'rival' ? [rival] : [jugador]
+    for (const j of afectados) aplicarReglaTemporal(s, { ...comunes, sujeto: { tipo: 'jugador', jugador: j } })
+  } else {
+    for (const instId of targetIds) aplicarReglaTemporal(s, { ...comunes, sujeto: { tipo: 'carta', instId } })
   }
 }
 

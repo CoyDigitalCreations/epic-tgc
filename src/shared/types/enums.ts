@@ -30,6 +30,8 @@ export const KEYWORDS = [
   'Presteza',
   'Fugaz',
   'Inegable',
+  'Tirador',
+  'Inexiliable',
 ] as const
 
 export type Keyword = (typeof KEYWORDS)[number]
