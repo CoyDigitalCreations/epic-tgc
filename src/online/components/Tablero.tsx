@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
-import { aporteDe, atacantesElegibles, campeonesSacrificables, costeEterHabilidad, faccionesCompartidas, getCardMeta, sacrificiosRequeridos, esBloqueoFijo, maxEterBloqueado, efectoBloqueoAccion } from '../game'
+import { aporteDe, atacantesElegibles, campeonesSacrificables, costeEterHabilidad, faccionesCompartidas, getCardMeta, sacrificiosRequeridos, esBloqueoFijo, maxEterBloqueado, efectoBloqueoAccion, parejasBloqueoOpcion } from '../game'
 import type { Action, CardInstance, GameState, PlayerId } from '../game'
 import { Boton as BotonUI } from '../../shared/ui/Boton'
 import { Dock } from '../../shared/ui/Dock'
 import { Modal } from '../../shared/ui/Modal'
 import { Seccion } from '../../shared/ui/Seccion'
 import { TileCarta } from '../../shared/ui/TileCarta'
+import { ElegirBloqueoModal } from './ElegirBloqueoModal'
 import { ElegirObjetivoModal } from './ElegirObjetivoModal'
 import { MiniCard } from './MiniCard'
 import { InspectorCarta } from './InspectorCarta'
@@ -1119,6 +1120,13 @@ export function Tablero({
   const [bloqueoAbierto, setBloqueoAbierto] = useState(false)
   /** A6 (2026-10-22): subconjunto de atacantes elegidos para declarar un único ataque múltiple */
   const [selAtaque, setSelAtaque] = useState<string[]>([])
+  /** Pasivo 1A (FB-005/DS-006): opción de bloqueo pendiente y la que el jugador dejó "para después" (el botón de Acciones la reabre). */
+  const opcionBloqueo = acciones.find((a): a is Extract<Action, { type: 'elegir_opcion' }> => a.type === 'elegir_opcion')
+  const opcionBloqueoId = opcionBloqueo?.opcionId ?? null
+  const [opcionCerrada, setOpcionCerrada] = useState<string | null>(null)
+  useEffect(() => {
+    if (opcionBloqueoId === null) setOpcionCerrada(null)
+  }, [opcionBloqueoId])
   const abrirZoom = (inst: CardInstance) => setZoom(inst)
   /** Contenedor donde se miden las cartas para animar su movimiento (los modales quedan fuera). */
   const tableroRef = useRef<HTMLElement>(null)
@@ -1433,9 +1441,12 @@ export function Tablero({
     setSacrificiosElegidos([])
   }
 
+  /** Parejas Campeón + Éter que el motor acepta para el Pasivo 1A (vacío = la opción no tiene qué elegir). */
+  const parejasOpcion = opcionBloqueo && leTocaA ? parejasBloqueoOpcion(vista, 'A') : []
   // Acciones generales (no van sobre una carta ni son de la mano)
   const generales = acciones.filter((a) => {
     if (a.type === 'rendirse') return false // va en el header
+    if (a.type === 'elegir_opcion' && parejasOpcion.length > 0) return false // se resuelve en ElegirBloqueoModal
     if (a.type === 'elegir_objetivo') return false // se lista como opciones con label de zona (OpcionTutor)
     if (a.type === 'descartar_carta') return false // va debajo de la carta de la mano
     if (a.type === 'pasar_prioridad') return false // vive SOLO en el PriorityModal (2026-10-14)
@@ -1743,7 +1754,7 @@ export function Tablero({
                   Cadena ({pila.length})
                 </span>
               )}
-              {leTocaA && (generales.length > 0 || opcionesRuptura.length > 0 || selAtaque.length > 0) ? (
+              {leTocaA && (generales.length > 0 || parejasOpcion.length > 0 || opcionesRuptura.length > 0 || selAtaque.length > 0) ? (
                 <>
                   {!hayJugablesSignificativas && (fase === 'forja' || fase === 'choque') && (
                     <span className="text-[10px] text-amber-400/90">Sin jugadas — pasá el turno para continuar</span>
@@ -1751,6 +1762,14 @@ export function Tablero({
                   {generales.map((a, i) => (
                     <Boton key={i} accion={a} onClick={onAccion} fase={fase} destacado />
                   ))}
+                  {parejasOpcion.length > 0 && (
+                    <button
+                      onClick={() => setOpcionCerrada(null)}
+                      className="text-xs font-bold bg-amber-400 hover:bg-amber-300 text-gray-950 px-3 py-1 rounded-md shadow-[0_0_0_1px_rgba(253,230,138,0.6)] transition-colors cursor-pointer whitespace-nowrap"
+                    >
+                      Bloquear Éter (Pasivo)
+                    </button>
+                  )}
                   {opcionesRuptura.length > 0 && (
                     <span className="text-[11px] font-semibold text-rose-300">
                       Ruptura: elegí qué Vínculo del rival romper (a ciegas)
@@ -2135,6 +2154,17 @@ export function Tablero({
           titulo={fuenteNombre ?? 'Elegí una carta'}
           subtitulo={labelOpcionesElegir(vista, tutores.map((a) => a.objetivoId))}
           onElegir={(objetivoId) => onAccion({ type: 'elegir_objetivo', objetivoId })}
+        />
+      )}
+
+      {/* ── Pasivo 1A (FB-005/DS-006): elegir Campeón + Éter a bloquear. Voluntario: "Ahora no" lo deja para después ── */}
+      {leTocaA && tutores.length === 0 && opcionBloqueo && parejasOpcion.length > 0 && opcionCerrada !== opcionBloqueo.opcionId && (
+        <ElegirBloqueoModal
+          vista={vista}
+          parejas={parejasOpcion}
+          fuenteNombre={getCardMeta(vista.instances[opcionBloqueo.opcionId]?.cardId ?? '')?.name ?? 'Bloquear Éter'}
+          onElegir={(pareja) => onAccion({ type: 'elegir_opcion', opcionId: opcionBloqueo.opcionId, ...pareja })}
+          onCerrar={() => setOpcionCerrada(opcionBloqueo.opcionId)}
         />
       )}
 

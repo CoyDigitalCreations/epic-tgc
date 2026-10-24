@@ -60,7 +60,12 @@ export type Action =
   | { type: 'equipar_artefacto'; cardInstanceId: string; campeonInstanceId: string }
   | { type: 'bloquear_eter'; eterIds: string[]; targetInstanceId: string; efectoIdx?: number }
   | { type: 'descartar_carta'; cardInstanceIds: string[] }
-  | { type: 'elegir_opcion'; opcionId: string }
+  /**
+   * Pasivo 1A (FB-005/DS-006): bloquea 1 Éter de la Reserva sobre un Campeón. `campeonId` y
+   * `eterId` van JUNTOS (la pareja elegida por el jugador); sin ellos el motor elige la primera
+   * pareja legal (bot y compatibilidad).
+   */
+  | { type: 'elegir_opcion'; opcionId: string; campeonId?: string; eterId?: string }
   | { type: 'elegir_objetivo'; objetivoId: string }
   | { type: 'usar_transmutar'; cardInstanceId: string; eterIds: string[] }
   | { type: 'activar_habilidad'; cardInstanceId: string; eterIds: string[]; objetivoId?: string }

@@ -2,7 +2,7 @@
  * Habilidades y efectos — activar arcana, activar habilidad, transmutar, elegir.
  * Extraído de actions.ts para separación de dominios (change: refactor-engine).
  */
-import type { GameState, Ctx, CardInstance } from './types'
+import type { GameState, Ctx, CardInstance, PlayerId } from './types'
 import { getCardMeta, efectoActivableDe, esCostoBloqueo, esArtefactoEquipable, esPermanenteEnMesa, campeonElegibleBloqueoEter, faccionesCompartidas } from './cards'
 import type { CondicionEfecto, AnyCard, EfectoData } from '../../shared/types'
 import { validarPago, aplicarPago, type ContextoUso } from './payments'
@@ -138,6 +138,35 @@ export function validarUsarTransmutar(state: GameState, action: Extract<Action, 
   return null
 }
 
+/** Pareja Campeón + Éter de la Reserva sobre la que el Pasivo 1A puede bloquear. */
+export interface ParejaBloqueo {
+  campeonId: string
+  eterId: string
+}
+
+/**
+ * Todas las parejas legales para el bloqueo de un Pasivo 1A (FB-005/DS-006): Campeón propio con
+ * efecto continuo que usa Éter bloqueado + Éter de la Reserva de facción compartida, y que
+ * `validarBloqueo` acepta. Orden determinista (campo → reserva): la primera es la del greedy.
+ * Fuente ÚNICA para el motor (validar/ejecutar) y la UI (modal de elección).
+ */
+export function parejasBloqueoOpcion(s: GameState, jugador: PlayerId): ParejaBloqueo[] {
+  const p = s.players[jugador]
+  const parejas: ParejaBloqueo[] = []
+  for (const campeonId of p.campo.campeones) {
+    if (!campeonId) continue
+    const metaC = s.instances[campeonId]?.cardId ? getCardMeta(s.instances[campeonId]!.cardId!) : null
+    if (!metaC || !campeonElegibleBloqueoEter(metaC)) continue
+    for (const eterId of p.eterReserva) {
+      const metaE = s.instances[eterId]?.cardId ? getCardMeta(s.instances[eterId]!.cardId!) : null
+      if (!metaE || !faccionesCompartidas(metaE.facciones, metaC.facciones)) continue
+      if (validarBloqueo(s, jugador, [eterId], campeonId) !== null) continue
+      parejas.push({ campeonId, eterId })
+    }
+  }
+  return parejas
+}
+
 /** C2: validar elegir_opcion — solo en forja del jugador con opción pendiente. */
 export function validarElegirOpcion(state: GameState, action: Extract<Action, { type: 'elegir_opcion' }>): string | null {
   if (state.fase !== 'forja') return 'elegir_opcion solo en Forja'
@@ -145,6 +174,15 @@ export function validarElegirOpcion(state: GameState, action: Extract<Action, { 
     (o) => o.jugador === state.turno && o.eterId === action.opcionId
   )
   if (!pendiente) return 'no hay opción pendiente para este jugador'
+  // Pareja elegida: ambos ids o ninguno, y debe ser una de las legales (anti-cheat 6.2)
+  if ((action.campeonId === undefined) !== (action.eterId === undefined)) {
+    return 'elegir_opcion: indica Campeón y Éter juntos'
+  }
+  if (action.campeonId !== undefined && action.eterId !== undefined) {
+    const { campeonId, eterId } = action
+    const legal = parejasBloqueoOpcion(state, state.turno).some((q) => q.campeonId === campeonId && q.eterId === eterId)
+    if (!legal) return 'la pareja Campeón/Éter no es válida para esta opción'
+  }
   return null
 }
 
@@ -362,41 +400,25 @@ export function ejecutarUsarTransmutar(s: GameState, action: Extract<Action, { t
   ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: id, zona: '2G', jugador: inst.owner, bocaArriba: true })
 }
 
-/** C2: ejecutar elegir_opcion — greedy determinista (anti-cheat 6.2). */
+/** C2: ejecutar elegir_opcion — la pareja del jugador (ya validada) o, sin ella, la primera legal (greedy determinista). */
 export function ejecutarElegirOpcion(s: GameState, action: Extract<Action, { type: 'elegir_opcion' }>, ctx: Ctx): void {
   const j = s.turno
   const p = s.players[j]
   const pendiente = s.opcionesPendientes!.find((o) => o.jugador === j && o.eterId === action.opcionId)
   if (!pendiente) return // ya validado
 
-  // Greedy determinista: PRIMER Campeón elegible (continuo con costo-bloqueado)
-  // + primer Éter Reserva con facción compartida. Solo califican campeones
-  // con efecto continuo que usa eter_bloqueado/bloqueo_fijo (ej: Aurora,
-  // Elena, Cassandra). Campeones con solo pasivo/disparo NO califican.
-  let elegido: { targetInstanceId: string; eterId: string } | null = null
-  outer: for (const campeonId of p.campo.campeones) {
-    if (!campeonId) continue
-    const metaC = s.instances[campeonId]?.cardId ? getCardMeta(s.instances[campeonId]!.cardId!) : null
-    if (!metaC) continue
-    if (!campeonElegibleBloqueoEter(metaC)) continue
-    for (const eterId of p.eterReserva) {
-      const metaE = s.instances[eterId]?.cardId ? getCardMeta(s.instances[eterId]!.cardId!) : null
-      if (metaE && faccionesCompartidas(metaE.facciones, metaC.facciones)) {
-        elegido = { targetInstanceId: campeonId, eterId }
-        break outer
-      }
-    }
-  }
-  if (!elegido) {
+  // Sin pareja elegida: greedy determinista = PRIMERA pareja legal. Solo califican campeones
+  // con efecto continuo que usa eter_bloqueado/bloqueo_fijo (ej: Aurora, Elena, Cassandra).
+  // Campeones con solo pasivo/disparo NO califican.
+  const pareja = action.campeonId !== undefined && action.eterId !== undefined
+    ? { campeonId: action.campeonId, eterId: action.eterId }
+    : parejasBloqueoOpcion(s, j)[0]
+  if (!pareja) {
     // No hay pareja válida (no debería pasar si validación correcta)
     s.opcionesPendientes = s.opcionesPendientes!.filter((o) => !(o.jugador === j && o.eterId === action.opcionId))
     return
   }
-  const error = validarBloqueo(s, j, [elegido.eterId], elegido.targetInstanceId)
-  if (error) {
-    s.opcionesPendientes = s.opcionesPendientes!.filter((o) => !(o.jugador === j && o.eterId === action.opcionId))
-    return
-  }
+  const elegido = { targetInstanceId: pareja.campeonId, eterId: pareja.eterId }
   // Ejecutar bloqueo (reutiliza lógica de ejecutarBloquearEter)
   const instCampeon = s.instances[elegido.targetInstanceId]
   instCampeon.eterBloqueado = [...(instCampeon.eterBloqueado ?? []), elegido.eterId]

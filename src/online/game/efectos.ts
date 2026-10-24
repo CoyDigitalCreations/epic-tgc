@@ -1,6 +1,7 @@
 import { esCampeon, faccionesCompartidas, getCardMeta, type AnyCard } from './cards'
 import type { CardInstance, Ctx, ExpiraModificador, GameState, PlayerId } from './types'
 import { interpretEffect } from './effectInterpreter'
+import { parejasBloqueoOpcion } from './habilidades'
 import { resolveTargets } from './targetResolver'
 import type { CondicionEfecto, EfectoData } from '../../shared/types'
 
@@ -510,22 +511,13 @@ export function condicionCumple(
 }
 
 /**
- * ¿Hay al menos un par Campeón-propio + Éter-en-Reserva de facción compartida?
- * Requisito para ofrecer una opción de bloqueo Pasivo/1A.
+ * ¿Hay al menos una pareja Campeón-propio + Éter-en-Reserva que el bloqueo acepte de verdad?
+ * Requisito para ofrecer una opción de bloqueo Pasivo/1A: misma fuente que la elección
+ * (`parejasBloqueoOpcion`), así nunca se ofrece una opción que no se puede ejecutar
+ * (p.ej. solo Campeones de bloqueo fijo, que no aceptan 1 Éter suelto).
  */
 export function hayParejaBloqueo(s: GameState, jugador: PlayerId): boolean {
-  const p = s.players[jugador]
-  if (!p.campo.campeones.some(Boolean)) return false
-  for (const eterId of p.eterReserva) {
-    const metaE = s.instances[eterId]?.cardId ? getCardMeta(s.instances[eterId]!.cardId!) : null
-    if (!metaE) continue
-    for (const campeonId of p.campo.campeones) {
-      if (!campeonId) continue
-      const metaC = s.instances[campeonId]?.cardId ? getCardMeta(s.instances[campeonId]!.cardId!) : null
-      if (metaC && faccionesCompartidas(metaE.facciones, metaC.facciones)) return true
-    }
-  }
-  return false
+  return parejasBloqueoOpcion(s, jugador).length > 0
 }
 
 /**
