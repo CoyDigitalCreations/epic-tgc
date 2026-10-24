@@ -1829,6 +1829,81 @@
     ]
   },
   {
+    "id": "PR-055",
+    "name": "Filo Veloz",
+    "type": "Mística",
+    "rarity": "Común",
+    "keywords": [
+      "Artefacto",
+      "Presteza"
+    ],
+    "flavorText": "Un Artefacto que se juega como respuesta y se queda en mesa.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-10-24T00:00:00.000Z",
+    "updatedAt": "2026-10-24T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "stats": {
+      "cost": 1
+    },
+    "efectos": [
+      {
+        "tipo": "hechizo",
+        "efecto": "draw",
+        "objetivo": {
+          "tipo": "carta",
+          "controlador": "propio",
+          "zona": "mazo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "texto": "Roba 1 carta de tu mazo.",
+        "cantidad": 1
+      }
+    ]
+  },
+  {
+    "id": "PR-056",
+    "name": "Veto Fugaz",
+    "type": "Mística",
+    "rarity": "Común",
+    "keywords": [
+      "Fugaz"
+    ],
+    "flavorText": "Niega al instante y nadie puede responder.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-10-24T00:00:00.000Z",
+    "updatedAt": "2026-10-24T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "stats": {
+      "cost": 2
+    },
+    "efectos": [
+      {
+        "tipo": "hechizo",
+        "efecto": "negar",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "texto": "Niega la activación del efecto de un Campeón que controla el rival.",
+        "tipoNegacion": "activacion"
+      }
+    ]
+  },
+  {
     "id": "PR-060",
     "name": "Pacto de Prueba",
     "type": "Arcana",
@@ -1967,6 +2042,57 @@
         "texto": "Al resolver la cadena, todos los Campeones que controla el rival pierden 3 de ATQ, hasta el final del turno.",
         "trigger": "al_resolver_cadena",
         "duracion": "turno"
+      }
+    ]
+  },
+  {
+    "id": "PR-063",
+    "name": "Filo de Reserva",
+    "type": "Arcana",
+    "rarity": "Común",
+    "keywords": [
+      "Artefacto",
+      "Presteza"
+    ],
+    "flavorText": "Arcana Artefacto con Presteza: responde desde el campo y permanece equipada.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-10-24T00:00:00.000Z",
+    "updatedAt": "2026-10-24T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "stats": {
+      "cost": 2
+    },
+    "condicion": {
+      "trigger": "activacion",
+      "condiciones": [
+        {
+          "tipo": "controlar_minimo",
+          "cantidad": 1,
+          "objetivo": {
+            "tipo": "campeon",
+            "controlador": "propio"
+          }
+        }
+      ]
+    },
+    "efectos": [
+      {
+        "tipo": "hechizo",
+        "efecto": "draw",
+        "objetivo": {
+          "tipo": "carta",
+          "controlador": "propio",
+          "zona": "mazo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "texto": "Roba 1 carta de tu mazo.",
+        "cantidad": 1
       }
     ]
   },

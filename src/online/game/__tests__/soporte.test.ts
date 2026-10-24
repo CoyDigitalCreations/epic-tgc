@@ -27,7 +27,7 @@ const VAELA = 'FB-011'
 const KAEL = 'DS-011'
 const RAGNAR = 'DS-001'
 const MIRA = 'FB-012' // Transmutar
-const COMBATE = 'FB-024'
+const ARCANA_DE_UN_USO = 'FB-023' // Arcana sin ARTEFACTO: se consume a 2G al resolverse en la pila
 const ETER_ORDEN = 'FB-001'
 const ETER_CAOS = 'DS-002'
 const FB002 = 'FB-002' // Éter (inicio-choque)
@@ -267,7 +267,9 @@ describe('soporte C5 (dependencia mazo 45): dispatch al-ser-enviado-al-cementeri
   it('2. resolución de cadena 9.6: Combate consumido → 2G → dispara con el dueño', () => {
     let s = estadoMinimo() // choque, turno A
     const combateId = 'combate-1'
-    s.instances[combateId] = { cardInstanceId: combateId, cardId: COMBATE, owner: 'B' }
+    // F5f: FB-024 es ARTEFACTO (permanece en mesa al resolverse, como en activar_arcana); la Arcana de un solo uso
+    // que se consume a 2G es una sin la keyword (FB-023)
+    s.instances[combateId] = { cardInstanceId: combateId, cardId: ARCANA_DE_UN_USO, owner: 'B' }
     s.players.B.campo.arcanasCombate[0] = combateId
     s.combate = {
       paso: 'bloqueo',
@@ -279,7 +281,7 @@ describe('soporte C5 (dependencia mazo 45): dispatch al-ser-enviado-al-cementeri
     s.cadena = { origen: 'combate', pila: [combateId], prioridad: 'A', pasesConsecutivos: 0, faseAbierta: 'choque' }
 
     const disparos: Array<{ jugador: string; inst: string }> = []
-    registrarEfecto('al-ser-enviado-al-cementerio', COMBATE, (_st, _ctx, inst, payload) => {
+    registrarEfecto('al-ser-enviado-al-cementerio', ARCANA_DE_UN_USO, (_st, _ctx, inst, payload) => {
       disparos.push({ jugador: payload.jugador, inst: inst.cardInstanceId })
     })
 

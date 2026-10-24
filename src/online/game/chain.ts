@@ -3,9 +3,10 @@
  *
  * Mecanismo (sin efectos de cartas — esos son game-handlers, change 3):
  * - `abrirCadena(s, primerRespondedor)`: apertura CONDICIONAL — solo si el
- *   jugador tiene cartas respondibles (Táctica colocada en turnos ANTERIORES,
- *   Combate, Arcana colocada en turnos ANTERIORES; NO Místicas, NO Arcana
- *   recién colocada §5.5 → flag `entradaEsteTurno`).
+ *   jugador tiene cartas respondibles (F5f: UNA regla, `motivoNoResponde`, manda la
+ *   VELOCIDAD normal < Presteza < Fugaz; Arcana con su condición cumplida y colocada
+ *   en turnos ANTERIORES §5.4/§5.5 → flag `entradaEsteTurno`; Presteza/Fugaz de la mano).
+ *   Una FUGAZ apilada cierra la pila al instante (nadie puede responderla).
  * - Pila + prioridad + pasesConsecutivos: con 2 pases seguidos la pila se
  *   resuelve en ORDEN INVERSO (§9.6): la última activación primero.
  * - Resolución (F5e, `resolverPila`, ÚNICA para global y combate): Mística jugada
@@ -17,13 +18,13 @@
  * 0 extracciones RNG (contrato 89 intacto). CICLO de import deliberado con
  * combat.ts: ambos módulos se usan mutuamente SOLO en runtime (ESM, seguro).
  */
-import { esArcana, esMistica, esPermanenteEnMesa, getCardMeta } from './cards'
+import { esArcana, esArtefactoEquipable, esMistica, esPermanenteEnMesa, getCardMeta } from './cards'
 import { abrirVentanaAtaque, continuarCombateTrasCadena } from './combat'
-import { dispararTrigger, velocidadDe } from './efectos'
+import { condicionCumple, dispararTrigger, velocidadDe } from './efectos'
 import { interpretEffect } from './effectInterpreter'
 import { aplicarPago, etersParaPagar, validarPago, type ContextoUso } from './payments'
 import { enviarAlCementerio } from './replacements'
-import type { AnyCard, EfectoData } from '../../shared/types'
+import type { CondicionEfecto, EfectoData } from '../../shared/types'
 import type {
   Ctx, CadenaState, DeclaracionCadena, GameState, OpenerCadena, PlayerId, RespuestaApilada, RespuestaCadena,
 } from './types'
@@ -43,80 +44,102 @@ function velocidadRequeridaDe(state: GameState): Velocidad {
   return tope ? velocidadDe(state, tope) : 'normal'
 }
 
-/**
- * ¿La Arcana de `playerId` puede activarse AHORA como respuesta? Su coste se puede pagar con la
- * Reserva (como activar_arcana, F5e). NO revisa `condicion` (§5.4): su trigger describe cuándo
- * se activa (inicio_alba...) y responder nunca la exigió; queda como duda de diseño. Las Arcanas
- * que permanecen en mesa (Artefacto, Éter bloqueado) no son respuestas de un solo uso.
- */
-function arcanaActivableComoRespuesta(state: GameState, playerId: PlayerId, meta: AnyCard): boolean {
-  if (esPermanenteEnMesa(meta)) return false
-  return etersParaPagar(state, playerId, meta.id) !== null
-}
-
-/**
- * Cartas del jugador que pueden responder en la cadena (9.6 + global):
- * - Místicas que NO estén en activación diferida (§5.5)
- * - Arcanas boca abajo que NO estén en activación diferida (§5.5) y cuyo coste
- *   se pueda pagar (F5e: responder las activa, igual que activar_arcana)
- * - Campeones con efectos[] tipo disparo que no estén agotados
- *
- * Filtro de velocidad: si el último efecto en la pila es PRESTEZA,
- * solo responden PRESTEZA o FUGAZ. Si es FUGAZ, nadie responde.
- */
-export function respondiblesDe(state: GameState, playerId: PlayerId): string[] {
-  const p = state.players[playerId]
-  // Cartas que ya están en la pila de la cadena (no pueden responder dos veces)
-  const cadena = cadenaActiva(state)
-  const enPila = new Set(cadena?.pila ?? [])
-  // F5b: el opener (fondo de la pila) no se responde a sí mismo
-  if (cadena?.opener) enPila.add(cadena.opener.cardInstanceId)
-
-  const velocidadRequerida = velocidadRequeridaDe(state)
-  if (velocidadRequerida === 'fugaz') return [] // FUGAZ: nadie responde
-
-  const res: string[] = []
-  for (const id of p.campo.misticasTacticas) {
-    if (!id) continue
-    if (enPila.has(id)) continue
-    const inst = state.instances[id]
-    const meta = inst?.cardId ? getCardMeta(inst.cardId) : null
-    if (meta && esMistica(meta) && !inst.entradaEsteTurno) {
-      const vel = velocidadDe(state, id)
-      if (puedeResponder(vel, velocidadRequerida)) res.push(id)
-    }
-  }
-  for (const id of p.campo.arcanasCombate) {
-    if (!id) continue
-    if (enPila.has(id)) continue
-    const inst = state.instances[id]
-    const meta = inst?.cardId ? getCardMeta(inst.cardId) : null
-    if (!meta) continue
-    if (esArcana(meta) && !inst.entradaEsteTurno && !inst.bocaArriba && arcanaActivableComoRespuesta(state, playerId, meta)) {
-      const vel = velocidadDe(state, id)
-      if (puedeResponder(vel, velocidadRequerida)) res.push(id)
-    }
-  }
-  // Campeones con efecto Disparo (no agotados)
-  for (const id of p.campo.campeones) {
-    if (!id) continue
-    if (enPila.has(id)) continue
-    const inst = state.instances[id]
-    if (inst?.agotado) continue
-    const meta = inst?.cardId ? getCardMeta(inst.cardId) : null
-    if (meta && meta.type === 'Campeón' && 'efectos' in meta && meta.efectos?.some((e) => e.tipo === 'disparo')) {
-      const vel = velocidadDe(state, id)
-      if (puedeResponder(vel, velocidadRequerida)) res.push(id)
-    }
-  }
-  return res
-}
-
 /** Determina si una carta con velocidad `vel` puede responder a una cadena con velocidad `requerida`. */
 function puedeResponder(vel: Velocidad, requerida: Velocidad): boolean {
   if (requerida === 'fugaz') return false // FUGAZ: nadie responde
   if (requerida === 'presteza') return vel === 'presteza' || vel === 'fugaz' // Solo PRESTEZA/FUGAZ
   return true // normal: cualquier velocidad responde
+}
+
+/**
+ * ¿La Arcana `id` de `jugador` puede activarse AHORA? (F5f) Condiciones comunes de activar_arcana y de
+ * responder con ella, para que nunca diverjan: en su campo y boca abajo; NO el turno en que se colocó
+ * (§5.4: sí desde el turno siguiente, el del rival o cualquiera posterior); su `condicion` JSON cumplida
+ * (solo los requisitos de estado en `condiciones`; el `trigger` no se evalúa, igual que al activar);
+ * un ARTEFACTO equipable exige un Campeón propio. Devuelve el motivo del rechazo o null.
+ */
+export function motivoArcanaNoActivable(state: GameState, jugador: PlayerId, id: string): string | null {
+  const inst = state.instances[id]
+  const meta = inst?.cardId ? getCardMeta(inst.cardId) : null
+  if (!inst || !meta) return 'instancia no encontrada'
+  if (!esArcana(meta)) return 'no es una Arcana'
+  const p = state.players[jugador]
+  if (!p.campo.arcanasCombate.includes(id)) return 'la Arcana no está en el campo'
+  if (inst.bocaArriba) return 'la Arcana ya está boca arriba'
+  if (inst.entradaEsteTurno) return 'la Arcana no se puede activar el turno en que fue colocada (§5.4)'
+  const condicion = 'condicion' in meta ? (meta as { condicion?: CondicionEfecto }).condicion : undefined
+  const condError = condicionCumple(state, condicion, jugador)
+  if (condError) return condError
+  if (esArtefactoEquipable(meta) && !p.campo.campeones.some((c) => c !== null)) {
+    return 'no puedes activar un ARTEFACTO sin un Campeón en tu campo'
+  }
+  return null
+}
+
+/**
+ * REGLA ÚNICA de elegibilidad de una respuesta (F5f): ¿la carta `id` de `jugador` puede responder AHORA
+ * a la cadena abierta (o a la jugada que abre la ventana)? Es lo que consultan respondiblesDe,
+ * respuestasDeMano, validarResponderCadena, validarJugarRespuesta, getValidActions y el gate de apertura,
+ * así que nunca divergen. Manda la VELOCIDAD (normal < Presteza < Fugaz), no el tipo de carta ni si
+ * permanece en mesa. `origen`: 'campo' (carta ya en mesa) o 'mano' (Mística que se juega pagando; exige
+ * PRESTEZA o FUGAZ). Devuelve el motivo del rechazo o null.
+ */
+export function motivoNoResponde(state: GameState, jugador: PlayerId, id: string, origen: 'campo' | 'mano'): string | null {
+  const cadena = cadenaActiva(state)
+  const inst = state.instances[id]
+  const meta = inst?.cardId ? getCardMeta(inst.cardId) : null
+  if (!inst || !meta) return 'carta desconocida'
+  // ya está en la pila (no responde dos veces) o es el opener (fondo de la pila, F5b)
+  if (cadena && (cadena.pila.includes(id) || cadena.opener?.cardInstanceId === id)) return 'la carta ya está en la pila'
+  const p = state.players[jugador]
+  const vel = velocidadDe(state, id)
+  const requerida = velocidadRequeridaDe(state)
+  if (!puedeResponder(vel, requerida)) {
+    return requerida === 'fugaz' ? 'una jugada FUGAZ no se puede responder' : 'una jugada PRESTEZA solo se responde con PRESTEZA o FUGAZ'
+  }
+  if (origen === 'mano') {
+    if (!p.mano.includes(id)) return 'la carta no está en tu mano'
+    if (!esMistica(meta)) return 'no es una Mística'
+    if (vel === 'normal') return 'solo cartas con PRESTEZA o FUGAZ juegan desde la mano como respuesta'
+    // una permanente (Artefacto, efecto continuo) se queda en mesa: necesita slot libre (y Campeón si se equipa)
+    if (esPermanenteEnMesa(meta)) {
+      if (!p.campo.misticasTacticas.includes(null)) return 'no tienes un slot libre para una carta que permanece en mesa'
+      if (esArtefactoEquipable(meta) && !p.campo.campeones.some((c) => c !== null)) {
+        return 'no puedes jugar un ARTEFACTO sin un Campeón en tu campo'
+      }
+    }
+    if (etersParaPagar(state, jugador, meta.id) === null) return 'no puedes pagar su coste'
+    return null
+  }
+  if (esMistica(meta)) {
+    if (inst.entradaEsteTurno) return 'la carta entró este turno (§5.5)'
+    return null
+  }
+  if (esArcana(meta)) {
+    // responder la activa: mismas condiciones que activar_arcana y su coste se debe poder pagar (F5e)
+    const motivo = motivoArcanaNoActivable(state, jugador, id)
+    if (motivo) return motivo
+    return etersParaPagar(state, jugador, meta.id) === null ? 'no puedes pagar su coste' : null
+  }
+  if (meta.type === 'Campeón' && 'efectos' in meta && meta.efectos?.some((e) => e.tipo === 'disparo')) {
+    return inst.agotado ? 'el Campeón está agotado' : null
+  }
+  return 'esta carta no puede responder'
+}
+
+/**
+ * Cartas del jugador que pueden responder en la cadena (9.6 + global), todas por motivoNoResponde:
+ * - Místicas del campo que NO estén en activación diferida (§5.5)
+ * - Arcanas boca abajo que cumplan su condición, no estén en activación diferida (§5.4) y cuyo
+ *   coste se pueda pagar (F5e: responder las activa, igual que activar_arcana)
+ * - Campeones con efectos[] tipo disparo que no estén agotados
+ * Sin distinguir permanentes (Artefacto): la velocidad manda (F5f). Con la pila en Presteza solo
+ * responden PRESTEZA o FUGAZ; si el tope es FUGAZ, nadie responde.
+ */
+export function respondiblesDe(state: GameState, playerId: PlayerId): string[] {
+  const p = state.players[playerId]
+  const enCampo = [...p.campo.misticasTacticas, ...p.campo.arcanasCombate, ...p.campo.campeones]
+  return enCampo.filter((id): id is string => !!id && motivoNoResponde(state, playerId, id, 'campo') === null)
 }
 
 /**
@@ -136,28 +159,15 @@ export function abrirCadena(s: GameState, primerRespondedor: PlayerId): boolean 
 }
 
 /**
- * Místicas con keyword PRESTEZA en la MANO de `playerId` — jugables como
+ * Místicas con velocidad PRESTEZA o FUGAZ en la MANO de `playerId` — jugables como
  * RESPUESTA (ventana de activación, obs 1874: "Genérico: Presteza desde la
  * mano"). No confundir con respondiblesDe (cartas YA en campo que entran a
  * la pila sin pagar); éstas se juegan PAGANDO y entran directo a la pila.
+ * F5f: la velocidad manda — también las FUGAZ y las permanentes (Artefacto) con slot libre;
+ * solo cuenta lo jugable de verdad (motivoNoResponde: velocidad vs. tope, Éter para pagar).
  */
 export function respuestasDeMano(state: GameState, playerId: PlayerId): string[] {
-  const p = state.players[playerId]
-  const res: string[] = []
-  // F5e: la Presteza de la mano también respeta la velocidad: no responde a una FUGAZ
-  if (!puedeResponder('presteza', velocidadRequeridaDe(state))) return res
-  for (const id of p.mano) {
-    const inst = state.instances[id]
-    const meta = inst?.cardId ? getCardMeta(inst.cardId) : null
-    if (meta && esMistica(meta) && 'keywords' in meta && meta.keywords?.includes('Presteza')) {
-      // F5b: solo cuenta lo jugable de verdad — sin permanentes (validarJugarRespuesta
-      // las rechaza) y con Éter suficiente para pagarla (gate de apertura + UI).
-      if (esPermanenteEnMesa(meta)) continue
-      if (etersParaPagar(state, playerId, meta.id) === null) continue
-      res.push(id)
-    }
-  }
-  return res
+  return state.players[playerId].mano.filter((id) => motivoNoResponde(state, playerId, id, 'mano') === null)
 }
 
 /**
@@ -210,7 +220,7 @@ export function cadenaActiva(s: GameState): CadenaState | undefined {
 export function validarResponderCadena(state: GameState, cardInstanceId: string, eterIds?: string[]): string | null {
   const cadena = cadenaActiva(state)
   if (!cadena) return 'no hay cadena abierta'
-  // El payload solo es válido para una carta del jugador con prioridad
+  // El payload solo es válido para una carta del jugador con prioridad (regla única motivoNoResponde)
   if (!respondiblesDe(state, cadena.prioridad).includes(cardInstanceId)) {
     return 'esa carta no puede responder ahora'
   }
@@ -231,26 +241,17 @@ export function validarPasarPrioridad(state: GameState): string | null {
 
 /**
  * Validar jugar_respuesta (obs 1874 — "Genérico: Presteza desde la mano"):
- * Mística con PRESTEZA en la mano del jugador con PRIORIDAD, en una cadena
- * abierta. Paga su coste; NO necesita slot (mano → pila → resolución →
- * Cementerio si es de un solo uso). Rechaza permanentes (sin flujo de slot).
+ * Mística con PRESTEZA o FUGAZ en la mano del jugador con PRIORIDAD, en una cadena
+ * abierta (F5f: regla única motivoNoResponde). Paga su coste; una carta de un solo uso va
+ * mano → pila → Cementerio; una permanente (Artefacto) toma un slot libre al jugarse y se queda.
  */
 export function validarJugarRespuesta(state: GameState, cardInstanceId: string, eterIds: string[]): string | null {
   const cadena = cadenaActiva(state)
   if (!cadena) return 'no hay cadena abierta'
   const jugador = cadena.prioridad
-  const p = state.players[jugador]
-  if (!p.mano.includes(cardInstanceId)) return 'la carta no está en tu mano'
-  const inst = state.instances[cardInstanceId]
-  const meta = inst?.cardId ? getCardMeta(inst.cardId) : null
-  if (!meta || !esMistica(meta)) return 'no es una Mística'
-  if (!('keywords' in meta) || !meta.keywords?.includes('Presteza')) {
-    return 'solo cartas con PRESTEZA juegan desde la mano como respuesta'
-  }
-  if (esPermanenteEnMesa(meta)) {
-    return 'esta carta permanece en mesa: no puede jugarse como respuesta'
-  }
-  if (!puedeResponder('presteza', velocidadRequeridaDe(state))) return 'una jugada FUGAZ no se puede responder'
+  const motivo = motivoNoResponde(state, jugador, cardInstanceId, 'mano')
+  if (motivo) return motivo
+  const meta = getCardMeta(state.instances[cardInstanceId]!.cardId!)!
   if ((meta.stats.cost ?? 0) > 0) {
     const pago = validarPago(state, jugador, eterIds, meta.id)
     if (!pago.ok) return pago.error ?? 'pago inválido'
@@ -284,6 +285,16 @@ export function ejecutarJugarRespuesta(
   const manoIdx = p.mano.indexOf(cardInstanceId)
   if (manoIdx !== -1) p.mano.splice(manoIdx, 1)
   ctx.emit({ type: 'carta_salida_de_zona', cardInstanceId, zona: 'mano', jugador })
+  // F5f: una carta que PERMANECE en mesa (Artefacto, efecto continuo) toma un slot al jugarse, como
+  // jugar_mistica (§5.5: no responde el turno que entra); su efecto sigue resolviendo en la pila
+  const meta = getCardMeta(inst.cardId)
+  if (meta && esPermanenteEnMesa(meta)) {
+    const slot = p.campo.misticasTacticas.indexOf(null)
+    p.campo.misticasTacticas[slot] = cardInstanceId
+    inst.entradaEsteTurno = true
+    ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId, zona: slotAZona('misticasTacticas', slot) ?? '3A', jugador, bocaArriba: true })
+    ctx.emit({ type: 'carta_invocada', cardInstanceId, tipo: 'Mística', slot })
+  }
   declararRespuesta(s, ctx, { jugador, cardInstanceId, origen: 'mano' }, previos)
 }
 
@@ -327,9 +338,8 @@ export function ejecutarPasarPrioridad(s: GameState, ctx: Ctx): void {
   cadena.pasesConsecutivos++
   ctx.emit({ type: 'prioridad_pasada', jugador })
   if (cadena.pasesConsecutivos >= 2) {
-    resolverPila(s, ctx)
     // Al cerrar la de combate se reanuda la sub-máquina (ataque → bloqueo → daño)
-    if (cadena.origen === 'combate' && s.combate) continuarCombateTrasCadena(s, ctx)
+    cerrarCadena(s, ctx)
   } else {
     cadena.prioridad = jugador === 'A' ? 'B' : 'A'
   }
@@ -359,6 +369,15 @@ function declararRespuesta(s: GameState, ctx: Ctx, respuesta: Omit<RespuestaCade
   const { jugador, cardInstanceId, origen } = respuesta
   const inst = s.instances[cardInstanceId]
   if (inst) {
+    // F5f: un ARTEFACTO equipable elige AL RESPONDER a qué Campeón propio se equipa (como toda elección, antes
+    // de entrar a la pila; el equipo se asienta al elegir, igual que equipar_artefacto antes de abrir la ventana)
+    const meta = inst.cardId ? getCardMeta(inst.cardId) : null
+    if (meta && esArtefactoEquipable(meta) && !inst.equipadoA) {
+      const opciones = s.players[jugador].campo.campeones.filter((c): c is string => c !== null)
+      if (opciones.length > 0) {
+        s.objetivosPendientes = [...(s.objetivosPendientes ?? []), { jugador, instId: cardInstanceId, trigger: 'equipar', opciones, equipar: true }]
+      }
+    }
     for (const { efecto, efectoIdx } of hechizosDeRespuesta(s, cardInstanceId, origen)) {
       interpretEffect(s, ctx, inst, efecto, { jugador, fromTrigger: true, declararOpener: { efectoIdx } })
     }
@@ -379,6 +398,24 @@ function asentarRespuesta(s: GameState, ctx: Ctx, respuesta: RespuestaCadena): v
   cadena.velocidadActual = velocidadDe(s, cardInstanceId)
   ctx.emit({ type: 'respuesta_encadenada', jugador, cardInstanceId })
   cadena.prioridad = jugador === 'A' ? 'B' : 'A'
+  // FUGAZ (manual §10): se resuelve inmediatamente, sin respuesta del rival. Nadie puede responder a una
+  // Fugaz (regla única de velocidad), así que la pila se cierra ya en vez de pedir pases forzados.
+  if (cadena.velocidadActual === 'fugaz') cerrarCadena(s, ctx)
+}
+
+/** Equipa el ARTEFACTO de una respuesta al Campeón elegido (elegir_objetivo sobre el pendiente `equipar`). */
+export function equiparComoRespuesta(s: GameState, ctx: Ctx, pendiente: { instId: string; jugador: PlayerId }, campeonId: string): void {
+  const inst = s.instances[pendiente.instId]
+  if (!inst || !s.instances[campeonId]) return
+  inst.equipadoA = campeonId
+  ctx.emit({ type: 'carta_activada', cardInstanceId: pendiente.instId, jugador: pendiente.jugador, slot: -1 })
+}
+
+/** Resuelve la pila y cierra la cadena; la de combate reanuda la sub-máquina (ataque → bloqueo → daño). */
+function cerrarCadena(s: GameState, ctx: Ctx): void {
+  const origen = s.cadena?.origen
+  resolverPila(s, ctx)
+  if (origen === 'combate' && s.combate) continuarCombateTrasCadena(s, ctx)
 }
 
 /**
@@ -412,12 +449,18 @@ function resolverRespuesta(s: GameState, ctx: Ctx, id: string, datos: RespuestaA
   if (esMistica(meta) && origen === 'mano') {
     hechizos()
     trigger()
+    if (esPermanenteEnMesa(meta)) return // F5f: Artefacto / efecto continuo: ya tomó su slot al jugarse y permanece
     enviarAlCementerio(s, ctx, id)
     ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: id, zona: '2G', jugador: inst.owner, bocaArriba: true })
     return
   }
   if (esArcana(meta)) {
     hechizos()
+    if (esPermanenteEnMesa(meta)) {
+      // F5f: Arcana Artefacto / de efecto continuo (p. ej. con Presteza): permanece equipada en su slot
+      trigger()
+      return
+    }
     // Arcana se consume: → 2G (guard: si ya salió del campo — fix A4 — no
     // se duplica el envío ni el trigger al-ser-enviado-al-cementerio)
     const idx = p.campo.arcanasCombate.indexOf(id)

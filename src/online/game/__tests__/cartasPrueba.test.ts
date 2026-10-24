@@ -626,6 +626,7 @@ describe('(c) humo — respuestas con objetivo, Arcanas y velocidad (F5e; antes 
     const pago = conEteres(s0, 'A', 2)
     conCampeon(s0, 'B', 'b0', PR.PEON, 0)
     conArcana(s0, 'B', 'pacto', PR.PACTO, 0)
+    conMano(s0, 'B', 'relleno', PR.PEON) // F5f: PR-060 exige ≥1 carta en mano para activarse (también al responder)
     conEteres(s0, 'B', 2)
     conMazo(s0, 'B', 4)
     const ctx = crearCtx()
@@ -676,6 +677,7 @@ describe('(c) humo — respuestas con objetivo, Arcanas y velocidad (F5e; antes 
   it('H10c Presteza: tras una respuesta Presteza solo pueden responder Presteza/Fugaz (una Arcana normal no)', () => {
     const { s: s1, ctx } = rayoVs(PR.PRESTEZA_ROBA, 1)
     conArcana(s1, 'A', 'arc', PR.PACTO, 0) // Arcana normal de A, colocada en un turno anterior
+    conMano(s1, 'A', 'relleno', PR.PEON) // cumple la condición de PR-060 (≥1 carta en mano): solo la velocidad la deja fuera
     conEteres(s1, 'A', 2)
     const s = aplicar(s1, { type: 'jugar_respuesta', cardInstanceId: 'resp', eterIds: etersParaPagar(s1, 'B', PR.PRESTEZA_ROBA)! }, ctx)
     expect(s.cadena).toMatchObject({ pila: ['resp'], prioridad: 'A' })

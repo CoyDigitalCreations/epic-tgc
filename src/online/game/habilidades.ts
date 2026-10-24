@@ -4,10 +4,10 @@
  */
 import type { GameState, Ctx, CardInstance, PlayerId } from './types'
 import { getCardMeta, efectoActivableDe, esCostoBloqueo, esArtefactoEquipable, campeonElegibleBloqueoEter, faccionesCompartidas } from './cards'
-import type { CondicionEfecto, AnyCard, EfectoData } from '../../shared/types'
+import type { AnyCard, EfectoData } from '../../shared/types'
 import { validarPago, aplicarPago, type ContextoUso } from './payments'
 import { etiquetarEter } from './eter'
-import { dispararTrigger, condicionCumple, pasivosBloqueo1A, type TriggerEfecto } from './efectos'
+import { dispararTrigger, pasivosBloqueo1A, type TriggerEfecto } from './efectos'
 import { registrarEfectoPendiente, hastaAlba } from './effectRegistry'
 import { interpretEffect, ejecutarTramo } from './effectInterpreter'
 import { tieneKeyword } from './combat'
@@ -15,7 +15,7 @@ import { reglaBool } from './reglas'
 import { liberarEterBloqueado, enviarAlCementerio } from './replacements'
 import { slotAZona } from './zones'
 import { validarBloqueo } from './payments'
-import { continuarDeclaracion, declararOpener, marcarInicioAccion, registrarObjetivoOpener, type MarcadorAccion } from './chain'
+import { continuarDeclaracion, declararOpener, equiparComoRespuesta, marcarInicioAccion, motivoArcanaNoActivable, registrarObjetivoOpener, type MarcadorAccion } from './chain'
 import type { Action } from './core'
 
 /* ─────────────────────── Validadores ─────────────────────── */
@@ -33,27 +33,16 @@ export function validarActivarArcana(state: GameState, action: Extract<Action, {
   const meta = inst.cardId ? getCardMeta(inst.cardId) : null
   if (!meta) return 'carta desconocida'
   const p = state.players[state.turno]
-  // La Arcana debe estar en el campo (3D-3F) boca abajo
-  const idx = p.campo.arcanasCombate.indexOf(action.cardInstanceId)
-  if (idx === -1) return 'la Arcana no está en el campo'
-  if (inst.bocaArriba) return 'la Arcana ya está boca arriba'
-  // §5.4: NO se pueden activar el turno en que fueron colocadas
-  if (inst.entradaEsteTurno) return 'la Arcana no se puede activar el turno en que fue colocada (§5.4)'
-  // §5.4: la condicion JSON de la Arcana debe cumplirse para activar (Fase 2a — data-driven)
-  const condicion = 'condicion' in meta ? (meta as { condicion?: CondicionEfecto }).condicion : undefined
-  const condError = condicionCumple(state, condicion, state.turno)
-  if (condError) return condError
+  // F5f: en el campo (3D-3F) y boca abajo, NO el turno en que se colocó (§5.4), `condicion` JSON cumplida
+  // (Fase 2a — data-driven) y Campeón propio si es un ARTEFACTO: la MISMA regla que usa responder con ella
+  const motivo = motivoArcanaNoActivable(state, state.turno, action.cardInstanceId)
+  if (motivo) return motivo
   // Slot coincidence check
+  const idx = p.campo.arcanasCombate.indexOf(action.cardInstanceId)
   if (action.slot !== idx) return 'el slot no coincide con la posición de la Arcana'
   // Pago de éter
   const pago = validarPago(state, state.turno, action.eterIds, meta.id)
   if (!pago.ok) return pago.error ?? 'pago inválido'
-  // ARTEFACTO equipable: requiere al menos un Campeón en el campo propio
-  if (esArtefactoEquipable(meta)) {
-    if (!p.campo.campeones.some((id) => id !== null)) {
-      return 'no puedes activar un ARTEFACTO sin un Campeón en tu campo'
-    }
-  }
   return null
 }
 
@@ -449,7 +438,10 @@ export function ejecutarElegirObjetivo(s: GameState, action: Extract<Action, { t
   const enDeclaracion = !!s.declaracionEnEleccion
   const previos = marcarInicioAccion(s)
 
-  if (pendiente.opener) {
+  if (pendiente.equipar) {
+    // F5f: Campeón al que se equipa el ARTEFACTO de una respuesta (se asienta al elegir)
+    equiparComoRespuesta(s, ctx, pendiente, action.objetivoId)
+  } else if (pendiente.opener) {
     // F5b: objetivo de un hechizo del opener — solo se captura (resuelve al cierre de la ventana)
     registrarObjetivoOpener(s, pendiente, action.objetivoId)
   } else if (pendiente.tramoUmbral !== undefined) {

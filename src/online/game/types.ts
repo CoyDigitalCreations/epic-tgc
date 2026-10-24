@@ -345,8 +345,9 @@ export interface GameState {
    * pendiente; la resolución re-despacha con contextoUso 'objetivo-elegido'.
    * `tramoUmbral`: pendiente de un tramo escalonado (Capa 3b) — la resolución
    * ejecuta ese tramo directamente en vez de re-despachar por trigger.
+   * `equipar` (F5f): elección del Campeón al que se equipa un ARTEFACTO jugado/activado como respuesta.
    */
-  objetivosPendientes?: { jugador: PlayerId; instId: string; trigger: string; opciones: string[]; tramoUmbral?: number; opener?: { efectoIdx: number } }[]
+  objetivosPendientes?: { jugador: PlayerId; instId: string; trigger: string; opciones: string[]; tramoUmbral?: number; opener?: { efectoIdx: number }; equipar?: boolean }[]
   /**
    * Declaración (F5d-1) que espera la elección de sus objetivos ANTES de abrir
    * la ventana (Yugioh: se elige al declarar, luego empiezan las respuestas). Sus

@@ -3,6 +3,7 @@ import { describe, it, expect } from 'vitest'
 import { applyAction } from '../actions'
 import type { Action } from '../actions'
 import { cadenaActiva } from '../chain'
+import { getCardMeta, registrarCartas, type AnyCard } from '../cards'
 import { visibleState } from '../visibleState'
 import { getValidActions, actorActual } from '../validActions'
 import type { Ctx, GameState, PlayerId } from '../types'
@@ -10,7 +11,10 @@ import type { Ctx, GameState, PlayerId } from '../types'
 // F5a — pila única: una sola ranura `GameState.cadena` (origen 'combate' | 'global').
 // Cartas reales: FB-011 Vaela (Campeón) · FB-023 El Reino Perdido (Arcana).
 const VAELA = 'FB-011'
-const ARCANA = 'FB-023'
+// F5f: responder con una Arcana exige cumplir su `condicion` (FB-023: 2 Campeones propios con Éter bloqueado). Estos
+// tests son de mecánica de la pila, no de esa condición: usan un clon de FB-023 sin condicion.
+const ARCANA = 'TEST-ARCANA-LIBRE'
+registrarCartas([{ ...getCardMeta('FB-023')!, id: ARCANA, condicion: undefined } as AnyCard])
 const MSG_CADENA = 'cadena abierta'
 
 function estadoMinimo(fase: GameState['fase'] = 'forja'): GameState {

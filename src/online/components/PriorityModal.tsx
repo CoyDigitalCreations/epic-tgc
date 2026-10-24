@@ -143,7 +143,7 @@ export function PriorityModal({ state, playerId, acciones, onAccion, onZoom }: P
         {enMano.length > 0 && (
           <section>
             <Seccion tono="alerta" cantidad={enMano.length}>
-              Presteza en tu mano — jugable como respuesta
+              Presteza o Fugaz en tu mano — jugable como respuesta
             </Seccion>
             <div className="flex flex-wrap items-start gap-3">
               {enMano.map(({ id, accion }) => {

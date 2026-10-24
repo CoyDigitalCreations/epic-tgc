@@ -3,6 +3,7 @@ import { describe, it, expect } from 'vitest'
 import { applyAction } from '../actions'
 import type { Action } from '../actions'
 import { cadenaActiva } from '../chain'
+import { getCardMeta, registrarCartas, type AnyCard } from '../cards'
 import { actorActual, getValidActions } from '../validActions'
 import { simularPartida } from '../bot'
 import { verificarInvariantes } from '../invariants'
@@ -16,7 +17,10 @@ import type { Ctx, GameState, PlayerId } from '../types'
 const VAELA = 'FB-011'
 const ELENA = 'FB-015'
 const CASSANDRA = 'FB-016'
-const ARCANA = 'FB-023'
+// F5f: responder con una Arcana exige cumplir su `condicion` (FB-023: 2 Campeones propios con Éter bloqueado). Estos
+// tests son de mecánica de la ventana de combate, no de esa condición: usan un clon de FB-023 sin condicion.
+const ARCANA = 'TEST-ARCANA-LIBRE'
+registrarCartas([{ ...getCardMeta('FB-023')!, id: ARCANA, condicion: undefined } as AnyCard])
 const VINCULO = 'FB-025'
 
 function estadoMinimo(): GameState {

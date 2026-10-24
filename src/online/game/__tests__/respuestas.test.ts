@@ -198,6 +198,7 @@ describe('respuesta con Arcana: paga su coste y resuelve en la pila (F5e)', () =
     const pago = conEteres(s0, 'A', 2)
     conCampeon(s0, 'B', 'b0', PR.PEON, 0)
     conArcana(s0, 'B', 'pacto', PR.PACTO, 0)
+    conMano(s0, 'B', 'relleno', PR.PEON) // F5f: PR-060 exige ≥1 carta en mano para activarse (también al responder)
     if (eteres > 0) conEteres(s0, 'B', eteres)
     conMazo(s0, 'B', mazo)
     const ctx = crearCtx()
@@ -352,6 +353,7 @@ describe('velocidad: normal < Presteza < Fugaz (F5e, manual: PRESTEZA solo se re
     conMistica(s, 'B', 'eco', PR.ECO, 1) // Presteza (Eco)
     conMistica(s, 'B', 'fug', PR.FUGAZ, 2) // Fugaz
     conArcana(s, 'B', 'arc', PR.PACTO, 0) // normal
+    conMano(s, 'B', 'relleno', PR.PEON) // F5f: PR-060 exige ≥1 carta en mano para activarse
     conEteres(s, 'B', 2)
     return s
   }
@@ -398,9 +400,12 @@ describe('velocidad: normal < Presteza < Fugaz (F5e, manual: PRESTEZA solo se re
     expect(s.cadena?.velocidadActual).toBe('presteza')
     expect([...respondiblesDe(s, 'A')].sort()).toEqual(['fugA', 'preA'])
     expect(respuestasDeMano(s, 'A')).toEqual(['manoPre']) // la Presteza de la mano sí responde a una Presteza
-    // A responde con su Fugaz: ahora NADIE responde (tampoco la Presteza de la mano)
-    s = aplicar(s, { type: 'responder_cadena', cardInstanceId: 'fugA' }, ctx)
-    expect(s.cadena?.velocidadActual).toBe('fugaz')
+    // Con una Fugaz en el tope NADIE responde (tampoco la Presteza de la mano). F5f: responder con una Fugaz cierra la
+    // pila al instante, así que el estado "Fugaz en el tope" se arma a mano para comprobar la regla de velocidad.
+    s = structuredClone(s)
+    s.cadena!.pila.push('fugA')
+    s.cadena!.velocidadActual = 'fugaz'
+    s.cadena!.prioridad = 'B'
     expect(respondiblesDe(s, 'B')).toEqual([])
     expect(respuestasDeMano(s, 'B')).toEqual([]) // B tiene una Presteza pagable en la mano, pero no puede responder a una Fugaz
     expect(tipos(s, 'B')).toEqual(['rendirse', 'pasar_prioridad'])
@@ -419,7 +424,10 @@ describe('velocidad: normal < Presteza < Fugaz (F5e, manual: PRESTEZA solo se re
     const ctx = crearCtx()
     let s = aplicar(s0, { type: 'jugar_mistica', cardInstanceId: 'rayo', slot: 0, eterIds: pago }, ctx)
     s = aplicar(s, { type: 'elegir_objetivo', objetivoId: 'b0' }, ctx)
-    s = aplicar(s, { type: 'responder_cadena', cardInstanceId: 'fug' }, ctx)
+    // F5f: responder con la Fugaz cierra la pila al instante; el estado "Fugaz en el tope" se arma a mano
+    s = structuredClone(s)
+    s.cadena!.pila.push('fug')
+    s.cadena!.prioridad = 'A'
     expect(s.cadena).toMatchObject({ pila: ['fug'], prioridad: 'A' })
     const r = applyAction(s, { type: 'jugar_respuesta', cardInstanceId: 'manoPre', eterIds: pagoDe(s, 'A', PR.PRESTEZA_ROBA) }, ctx)
     expect(r.ok).toBe(false)

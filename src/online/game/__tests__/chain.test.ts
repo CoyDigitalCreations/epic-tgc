@@ -4,6 +4,7 @@ import { applyAction } from '../actions'
 import type { Action } from '../actions'
 import { getValidActions } from '../validActions'
 import { respondiblesDe } from '../chain'
+import { getCardMeta, registrarCartas, type AnyCard } from '../cards'
 import { visibleState } from '../visibleState'
 import type { GameEvent } from '../events'
 import type { Ctx, GameState, PlayerId } from '../types'
@@ -16,7 +17,10 @@ const VAELA = 'FB-011'
 const ISOLDE = 'FB-014'
 const MISTICA = 'FB-019'
 const TACTICA = 'FB-021'
-const ARCANA = 'FB-023'
+// F5f: responder con una Arcana exige cumplir su `condicion` (FB-023: 2 Campeones propios con Éter bloqueado). Estos
+// tests son de mecánica de cadena, no de esa condición: usan un clon de FB-023 sin condicion.
+const ARCANA = 'TEST-ARCANA-LIBRE'
+registrarCartas([{ ...getCardMeta('FB-023')!, id: ARCANA, condicion: undefined } as AnyCard])
 const COMBATE = 'FB-024'
 
 function estadoMinimo(): GameState {
