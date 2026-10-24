@@ -222,6 +222,31 @@ export interface CadenaState {
    * `efectoActual` sigue siendo la descripción informativa de este opener.
    */
   opener?: OpenerCadena
+  /**
+   * Datos de cada respuesta apilada (F5e), por cardInstanceId (una carta no
+   * apila dos veces): de dónde salió (la Mística jugada desde la mano nunca
+   * entró al campo y se consume al resolver) y los objetivos que su jugador eligió
+   * al responder, por índice en efectos[]. Sin entrada (estados construidos a mano)
+   * el resolvedor infiere el origen por la zona de la carta.
+   */
+  respuestas?: Record<string, RespuestaApilada>
+}
+
+/** Datos con los que una respuesta entra a la pila (F5e). */
+export interface RespuestaApilada {
+  /** Quien responde (el controlador; ES el elector de sus objetivos y a quien se le cobran sus efectos al resolver). */
+  jugador: PlayerId
+  origen: 'mano' | 'campo'
+  /** Objetivos ya elegidos al responder, por índice en efectos[]. */
+  objetivos?: Record<number, string>
+}
+
+/**
+ * Respuesta en declaración (F5e): la carta ya pagó (y salió de la mano o se reveló)
+ * pero todavía NO está en la pila; espera que su jugador elija sus objetivos.
+ */
+export interface RespuestaCadena extends RespuestaApilada {
+  cardInstanceId: string
 }
 
 /**
@@ -250,15 +275,20 @@ export interface OpenerCadena {
  * - 'opener': ventana global con el opener al fondo (Mística/Arcana/habilidad, F5b).
  * - 'invocacion': ventana global de la invocación `cardInstanceId` (sin opener).
  * - 'ataque': ventana de combate del defensor (abrirCadena) y auto-avance 9.3.
+ * - 'respuesta' (F5e): una respuesta (jugar_respuesta / responder_cadena) con objetivos;
+ *   al elegir el último la respuesta ENTRA a la pila y la prioridad alterna. Aquí la
+ *   cadena YA está abierta: mientras se elige no se puede responder ni pasar.
  */
 export interface DeclaracionCadena {
-  tipo: 'opener' | 'invocacion' | 'ataque'
+  tipo: 'opener' | 'invocacion' | 'ataque' | 'respuesta'
   /** Quien declaró (el jugador activo). El ELECTOR de cada objetivo es `pendiente.jugador`. */
   jugador: PlayerId
   /** invocacion: la carta invocada (descripción de la ventana). */
   cardInstanceId?: string
   /** opener: la jugada que abrirá la ventana; acumula los objetivos elegidos. */
   opener?: OpenerCadena
+  /** respuesta: la carta que responde; acumula los objetivos elegidos. */
+  respuesta?: RespuestaCadena
   /** Pendientes de la acción por elegir: las primeras N entradas de objetivosPendientes. La ventana se abre al llegar a 0. */
   pendientes: number
 }

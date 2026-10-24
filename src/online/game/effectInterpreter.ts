@@ -41,6 +41,11 @@ export function interpretEffect(
     if (!canExecuteEffect(s, efecto, jugador)) {
       return // can't execute (e.g., steal_champion with no free slot)
     }
+    // F5e: una respuesta de la pila eligió su objetivo al responder; al resolver (LIFO) debe
+    // seguir siéndolo (salió del campo, ganó Protector...). Si ya no, el efecto se pierde.
+    if (payload.revalidarObjetivo && objetivo && objetivo.tipo !== 'self') {
+      if (!resolveTargets(s, objetivoCompleto(efectoData), jugador).includes(payload.objetivoId)) return
+    }
     const targetIds = [payload.objetivoId]
     executeEffect(s, ctx, inst, efecto, targetIds, jugador, efectoData)
     return
@@ -94,18 +99,7 @@ export function interpretEffect(
     if (objetivo.tipo === 'self') {
       targetIds = [inst.cardInstanceId]
     } else {
-      // Merge top-level filtros with objetivo.filtros (top-level takes precedence)
-      // EfectoData has filtros at root level AND ObjetivoEfecto has its own filtros
-      let mergedObjetivo = efectoData.filtros
-        ? { ...objetivo, filtros: { ...objetivo.filtros, ...efectoData.filtros } }
-        : objetivo
-      // Fase 3d: defaultear objetivo.zona desde zonaOrigen cuando el JSON no
-      // incluye zona (tutor FB-031: re-export Card-Maker lo dropeó). resolveTargets
-      // necesita zona para buscar; zonaOrigen es la fuente canónica del tutor.
-      if (!mergedObjetivo.zona && efectoData.zonaOrigen) {
-        mergedObjetivo = { ...mergedObjetivo, zona: efectoData.zonaOrigen }
-      }
-      targetIds = resolveTargets(s, mergedObjetivo, jugador)
+      targetIds = resolveTargets(s, objetivoCompleto(efectoData), jugador)
     }
   }
 
@@ -127,6 +121,8 @@ export function interpretEffect(
     if (!canExecuteEffect(s, efecto, jugador)) {
       return // can't execute (e.g., steal_champion with no free slot)
     }
+    // F5e: respuesta ya en la pila — la elección era al responder; sin objetivo elegido, se pierde
+    if (payload.sinEleccion) return
     s.objetivosPendientes = [...(s.objetivosPendientes ?? []), {
       jugador,
       instId: inst.cardInstanceId,
@@ -142,6 +138,26 @@ export function interpretEffect(
 
   // Single target or no choice needed → execute directly
   executeEffect(s, ctx, inst, efecto, targetIds, jugador, efectoData)
+}
+
+/**
+ * Objetivo del efecto con los filtros de la raíz mezclados y la zona por defecto de
+ * `zonaOrigen`: lo que resolveTargets necesita (armar la elección y revalidarla al resolver).
+ */
+function objetivoCompleto(efectoData: EfectoData): NonNullable<EfectoData['objetivo']> {
+  const objetivo = efectoData.objetivo!
+  // Merge top-level filtros with objetivo.filtros (top-level takes precedence)
+  // EfectoData has filtros at root level AND ObjetivoEfecto has its own filtros
+  let mergedObjetivo = efectoData.filtros
+    ? { ...objetivo, filtros: { ...objetivo.filtros, ...efectoData.filtros } }
+    : objetivo
+  // Fase 3d: defaultear objetivo.zona desde zonaOrigen cuando el JSON no
+  // incluye zona (tutor FB-031: re-export Card-Maker lo dropeó). resolveTargets
+  // necesita zona para buscar; zonaOrigen es la fuente canónica del tutor.
+  if (!mergedObjetivo.zona && efectoData.zonaOrigen) {
+    mergedObjetivo = { ...mergedObjetivo, zona: efectoData.zonaOrigen }
+  }
+  return mergedObjetivo
 }
 
 /**

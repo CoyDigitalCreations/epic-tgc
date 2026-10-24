@@ -30,7 +30,7 @@ import type { AnyCard, EfectoData } from '../../../shared/types'
 import { buildReporte, pctOK, INTERPRETER_EXEC, SISTEMAS_EXTERNOS_JSON } from '../coverageMap'
 import { getCardMeta } from '../cards'
 import { getValidActions } from '../validActions'
-import { statsDe, keywordsDe } from '../efectos'
+import { statsDe, keywordsDe, velocidadDe } from '../efectos'
 import { etersParaPagar } from '../payments'
 import { respondiblesDe } from '../chain'
 import { reglaNumero } from '../reglas'
@@ -337,6 +337,7 @@ describe('(c) humo — triggers con objetivo elegido ANTES de la ventana (F5d-1)
     conCampeon(s0, 'B', 'b0', PR.PEON, 0)
     conCampeon(s0, 'B', 'b1', PR.PEON, 1)
     conArcana(s0, 'B', 'tr', PR.TRAMPA, 0) // da al defensor una respuesta en campo → la ventana se abriría
+    conEteres(s0, 'B', 2) // F5e: responder con la Arcana la paga (coste 2)
     const ctx = crearCtx()
     let s = aplicar(s0, { type: 'declarar_ataque', atacanteIds: ['hos'] }, ctx)
     expect(s.cadena).toBeUndefined()
@@ -505,7 +506,10 @@ describe('(c) humo — Místicas, respuestas Presteza y pila LIFO (F5b)', () => 
       const s = base('choque')
       conCampeon(s, 'A', 'a0', PR.PEON, 0)
       conCampeon(s, 'B', 'b0', PR.PEON, 0)
-      if (conTrampa) conArcana(s, 'B', 'tr', PR.TRAMPA, 0)
+      if (conTrampa) {
+        conArcana(s, 'B', 'tr', PR.TRAMPA, 0)
+        conEteres(s, 'B', 2) // F5e: responder con la Arcana la paga (coste 2)
+      }
       return s
     }
     // Control: sin respuesta, 2/2 contra 2/2 → mueren los dos
@@ -553,48 +557,46 @@ describe('(c) humo — Místicas, respuestas Presteza y pila LIFO (F5b)', () => 
   })
 })
 
-describe('(c) humo — HALLAZGOS (el motor actual no cumple el texto o la decisión de diseño; it.fails = pasa mientras siga fallando)', () => {
-  function rayoVs(respuesta: string, eteresB: number): { s: GameState; ctx: Ctx } {
-    const s0 = base()
-    conMano(s0, 'A', 'rayo', PR.RAYO)
-    const pago = conEteres(s0, 'A', 2)
-    conCampeon(s0, 'A', 'a0', PR.PEON, 0)
-    conCampeon(s0, 'B', 'b0', PR.PEON, 0)
-    conMano(s0, 'B', 'resp', respuesta)
-    conEteres(s0, 'B', eteresB)
-    const ctx = crearCtx()
-    let s = aplicar(s0, { type: 'jugar_mistica', cardInstanceId: 'rayo', slot: 0, eterIds: pago }, ctx)
-    s = aplicar(s, { type: 'elegir_objetivo', objetivoId: 'b0' }, ctx)
-    return { s, ctx }
-  }
-  const cerrar = (s: GameState, ctx: Ctx) => aplicar(aplicar(s, { type: 'pasar_prioridad' }, ctx), { type: 'pasar_prioridad' }, ctx)
+/** A juega Rayo (PR-040) contra b0; B tiene `respuesta` en mano con el Éter justo. */
+function rayoVs(respuesta: string, eteresB: number): { s: GameState; ctx: Ctx } {
+  const s0 = base()
+  conMano(s0, 'A', 'rayo', PR.RAYO)
+  const pago = conEteres(s0, 'A', 2)
+  conCampeon(s0, 'A', 'a0', PR.PEON, 0)
+  conCampeon(s0, 'B', 'b0', PR.PEON, 0)
+  conMano(s0, 'B', 'resp', respuesta)
+  conEteres(s0, 'B', eteresB)
+  const ctx = crearCtx()
+  let s = aplicar(s0, { type: 'jugar_mistica', cardInstanceId: 'rayo', slot: 0, eterIds: pago }, ctx)
+  s = aplicar(s, { type: 'elegir_objetivo', objetivoId: 'b0' }, ctx)
+  return { s, ctx }
+}
+const cerrarCadena = (s: GameState, ctx: Ctx) => aplicar(aplicar(s, { type: 'pasar_prioridad' }, ctx), { type: 'pasar_prioridad' }, ctx)
 
+describe('(c) humo — respuestas con objetivo, Arcanas y velocidad (F5e; antes hallazgos H1, H2, H3, H10 y H11)', () => {
   // H1 ────────────────────────────────────────────────────────────────────────────────────────
-  it.fails('H1 PR-042 Presteza CON objetivo: debería elegir el objetivo AL RESPONDER (decisión 8, estilo Yugioh) y debilitar al elegido', () => {
+  it('H1 PR-042 Presteza CON objetivo: elige el objetivo AL RESPONDER (decisión 8, estilo Yugioh), antes de entrar a la pila, y debilita al elegido', () => {
     const { s: s1, ctx } = rayoVs(PR.PRESTEZA_DEBIL, 1)
     let s = aplicar(s1, { type: 'jugar_respuesta', cardInstanceId: 'resp', eterIds: etersParaPagar(s1, 'B', PR.PRESTEZA_DEBIL)! }, ctx)
-    // Esperado: la respuesta arma su elección de objetivo en este momento
-    expect(s.objetivosPendientes?.length ?? 0).toBeGreaterThan(0)
-    s = cerrar(s, ctx)
-    expect(statsDe(s, 'a0').poder).toBe(0)
-  })
-
-  it('H1b PR-042 (evidencia): hoy la respuesta NO elige objetivo al responder; al resolver crea un pendiente del rival que nadie puede elegir', () => {
-    const { s: s1, ctx } = rayoVs(PR.PRESTEZA_DEBIL, 1)
-    let s = aplicar(s1, { type: 'jugar_respuesta', cardInstanceId: 'resp', eterIds: etersParaPagar(s1, 'B', PR.PRESTEZA_DEBIL)! }, ctx)
+    // la respuesta ya pagó y salió de la mano, pero NO entró a la pila: espera su objetivo
+    expect(s.players.B.eterPagado).toHaveLength(1)
+    expect(s.players.B.mano).not.toContain('resp')
+    expect(s.cadena?.pila).toEqual([])
+    expect(s.declaracionEnEleccion).toMatchObject({ tipo: 'respuesta', jugador: 'B', pendientes: 1, respuesta: { jugador: 'B', cardInstanceId: 'resp', origen: 'mano' } })
+    expect(s.objetivosPendientes?.[0]).toMatchObject({ jugador: 'B', instId: 'resp', opciones: ['a0'], opener: { efectoIdx: 0 } })
+    s = aplicar(s, { type: 'elegir_objetivo', objetivoId: 'a0' }, ctx)
+    // recién ahora entra a la pila con el objetivo fijado y la prioridad alterna
+    expect(s.declaracionEnEleccion).toBeUndefined()
+    expect(s.cadena).toMatchObject({ pila: ['resp'], prioridad: 'A', pasesConsecutivos: 0, respuestas: { resp: { jugador: 'B', origen: 'mano', objetivos: { 0: 'a0' } } } })
     expect(s.objetivosPendientes ?? []).toHaveLength(0)
-    s = cerrar(s, ctx)
-    expect(s.objetivosPendientes?.[0]).toMatchObject({ jugador: 'B', instId: 'resp', opciones: ['a0'] })
-    expect(statsDe(s, 'a0').poder).toBe(2) // sin efecto: el debuff nunca se aplica
-    // El pendiente es de B pero el turno es de A: nadie puede elegirlo (validarElegirObjetivo / getValidActions)
-    expect(s.turno).toBe('A')
-    expect(getValidActions(s, 'B').some((a) => a.type === 'elegir_objetivo')).toBe(false)
-    expect(getValidActions(s, 'A').some((a) => a.type === 'elegir_objetivo')).toBe(false)
-    expect(applyAction(s, { type: 'elegir_objetivo', objetivoId: 'a0' }, ctx).ok).toBe(false)
+    s = cerrarCadena(s, ctx)
+    expect(statsDe(s, 'a0').poder).toBe(0)
+    expect(s.players.B.cementerio).toEqual(expect.arrayContaining(['resp', 'b0']))
+    expect(s.objetivosPendientes ?? []).toHaveLength(0)
   })
 
   // H2 ────────────────────────────────────────────────────────────────────────────────────────
-  it.fails('H2 PR-028 Campeón con Disparo respondible (trigger al_resolver_cadena): su efecto debería aplicarse al resolver la cadena', () => {
+  it('H2 PR-028 Campeón con Disparo respondible (trigger al_resolver_cadena): elige su objetivo al responder y lo aplica al resolver', () => {
     const s0 = base()
     conMano(s0, 'A', 'rayo', PR.RAYO)
     const pago = conEteres(s0, 'A', 2)
@@ -606,27 +608,104 @@ describe('(c) humo — HALLAZGOS (el motor actual no cumple el texto o la decisi
     s = aplicar(s, { type: 'elegir_objetivo', objetivoId: 'b0' }, ctx)
     expect(respondiblesDe(s, 'B')).toEqual(['rea'])
     s = aplicar(s, { type: 'responder_cadena', cardInstanceId: 'rea' }, ctx)
-    s = cerrar(s, ctx)
+    expect(s.declaracionEnEleccion).toMatchObject({ tipo: 'respuesta', respuesta: { cardInstanceId: 'rea', origen: 'campo' } })
+    expect(s.objetivosPendientes?.[0]).toMatchObject({ jugador: 'B', instId: 'rea', trigger: 'al-resolver-cadena', opciones: ['a0'] })
+    s = aplicar(s, { type: 'elegir_objetivo', objetivoId: 'a0' }, ctx)
+    expect(s.cadena?.pila).toEqual(['rea'])
+    expect(statsDe(s, 'a0').poder).toBe(2) // aún no resolvió
+    s = cerrarCadena(s, ctx)
     expect(statsDe(s, 'a0').poder).toBe(0) // 2 - 2
+    expect(s.players.B.campo.campeones[1]).toBe('rea') // el Campeón permanece en el campo
+    expect(s.objetivosPendientes ?? []).toHaveLength(0)
   })
 
   // H3 ────────────────────────────────────────────────────────────────────────────────────────
-  it('H3 PR-060 Arcana respondida en cadena global: se consume sin pagar y su recompensa (hechizo sin trigger) NO se ejecuta', () => {
+  it('H3 PR-060 Arcana respondida en cadena global: PAGA su coste al responder, ejecuta su recompensa al resolver y va a 2G', () => {
     const s0 = base()
     conMano(s0, 'A', 'rayo', PR.RAYO)
     const pago = conEteres(s0, 'A', 2)
     conCampeon(s0, 'B', 'b0', PR.PEON, 0)
     conArcana(s0, 'B', 'pacto', PR.PACTO, 0)
+    conEteres(s0, 'B', 2)
+    conMazo(s0, 'B', 4)
     const ctx = crearCtx()
     let s = aplicar(s0, { type: 'jugar_mistica', cardInstanceId: 'rayo', slot: 0, eterIds: pago }, ctx)
     s = aplicar(s, { type: 'elegir_objetivo', objetivoId: 'b0' }, ctx)
     const manoAntes = s.players.B.mano.length
     s = aplicar(s, { type: 'responder_cadena', cardInstanceId: 'pacto' }, ctx)
-    s = cerrar(s, ctx)
-    expect(s.players.B.cementerio).toContain('pacto') // se consumió...
-    expect(s.players.B.eterPagado).toHaveLength(0) // ...sin pagar su coste (2)
-    expect(s.players.B.mano.length).toBe(manoAntes) // ...y sin robar las 2 cartas de su recompensa
+    // pagó (sin elección de objetivo: entra de inmediato) y se reveló
+    expect(s.players.B.eterPagado).toHaveLength(2)
+    expect(s.players.B.eterReserva).toHaveLength(0)
+    expect(s.instances['pacto'].bocaArriba).toBe(true)
+    expect(evs(ctx, 'carta_activada')).toHaveLength(1)
+    expect(s.cadena?.pila).toEqual(['pacto'])
+    expect(s.players.B.mano.length).toBe(manoAntes) // la recompensa aún no resuelve
+    s = cerrarCadena(s, ctx)
+    expect(s.players.B.cementerio).toContain('pacto')
+    expect(s.players.B.campo.arcanasCombate[0]).toBeNull()
+    expect(s.players.B.mano.length).toBe(manoAntes + 2) // roba 2
   })
+
+  // H10 ───────────────────────────────────────────────────────────────────────────────────────
+  it('H10 velocidad: keywordsDe/velocidadDe leen las keywords del meta de CUALQUIER tipo de carta (Místicas y Arcanas incluidas)', () => {
+    const s = base()
+    conMistica(s, 'A', 'fug', PR.FUGAZ, 0)
+    conMistica(s, 'A', 'pre', PR.PRESTEZA_ROBA, 1)
+    conMistica(s, 'A', 'nor', PR.RAYO, 2)
+    conArcana(s, 'A', 'arc', PR.PACTO, 0)
+    expect(keywordsDe(s, 'fug')).toContain('Fugaz')
+    expect(keywordsDe(s, 'pre')).toContain('Presteza')
+    expect([velocidadDe(s, 'fug'), velocidadDe(s, 'pre'), velocidadDe(s, 'nor'), velocidadDe(s, 'arc')]).toEqual(['fugaz', 'presteza', 'normal', 'normal'])
+  })
+
+  it('H10b PR-043 Fugaz: no abre ventana aunque el rival tenga una Presteza pagable (el efecto es inmediato)', () => {
+    const s0 = base()
+    conMano(s0, 'A', 'fug', PR.FUGAZ)
+    const pago = conEteres(s0, 'A', 1)
+    conCampeon(s0, 'A', 'a0', PR.PEON, 0)
+    conMano(s0, 'B', 'pre', PR.PRESTEZA_ROBA)
+    conEteres(s0, 'B', 1)
+    const ctx = crearCtx()
+    let s = aplicar(s0, { type: 'jugar_mistica', cardInstanceId: 'fug', slot: 0, eterIds: pago }, ctx)
+    s = aplicar(s, { type: 'elegir_objetivo', objetivoId: 'a0' }, ctx)
+    expect(s.cadena).toBeUndefined()
+    expect(statsDe(s, 'a0').poder).toBe(4)
+    expect(s.players.A.cementerio).toContain('fug')
+  })
+
+  it('H10c Presteza: tras una respuesta Presteza solo pueden responder Presteza/Fugaz (una Arcana normal no)', () => {
+    const { s: s1, ctx } = rayoVs(PR.PRESTEZA_ROBA, 1)
+    conArcana(s1, 'A', 'arc', PR.PACTO, 0) // Arcana normal de A, colocada en un turno anterior
+    conEteres(s1, 'A', 2)
+    const s = aplicar(s1, { type: 'jugar_respuesta', cardInstanceId: 'resp', eterIds: etersParaPagar(s1, 'B', PR.PRESTEZA_ROBA)! }, ctx)
+    expect(s.cadena).toMatchObject({ pila: ['resp'], prioridad: 'A' })
+    expect(respondiblesDe(s, 'A')).toEqual([])
+    expect(applyAction(s, { type: 'responder_cadena', cardInstanceId: 'arc' }, ctx).ok).toBe(false)
+  })
+
+  // H11 ───────────────────────────────────────────────────────────────────────────────────────
+  it('H11 PR-041 Presteza jugada como respuesta DENTRO DE UN COMBATE: se paga, resuelve su efecto y termina en el Cementerio', () => {
+    const s0 = base('choque')
+    conCampeon(s0, 'A', 'a0', PR.PEON, 0)
+    conCampeon(s0, 'B', 'b0', PR.PEON, 0)
+    conMano(s0, 'B', 'resp', PR.PRESTEZA_ROBA)
+    conEteres(s0, 'B', 1)
+    conMazo(s0, 'B', 3)
+    const ctx = crearCtx()
+    let s = aplicar(s0, { type: 'declarar_ataque', atacanteIds: ['a0'] }, ctx)
+    expect(s.cadena).toMatchObject({ origen: 'combate', prioridad: 'B' }) // el gate cuenta la Presteza de la mano
+    s = aplicar(s, { type: 'jugar_respuesta', cardInstanceId: 'resp', eterIds: etersParaPagar(s, 'B', PR.PRESTEZA_ROBA)! }, ctx)
+    s = cerrarCadena(s, ctx)
+    expect(s.cadena).toBeUndefined()
+    expect(s.players.B.eterPagado).toHaveLength(1) // pagó
+    expect(s.players.B.mano).not.toContain('resp') // salió de la mano...
+    expect(s.players.B.cementerio).toContain('resp') // ...y está en el Cementerio
+    expect(evs(ctx, 'carta_robada')).toHaveLength(1) // ...tras resolver su efecto
+    expect(s.combate?.paso).toBe('bloqueo') // el combate se reanuda
+  })
+})
+
+describe('(c) humo — HALLAZGOS (el motor actual no cumple el texto o la decisión de diseño; it.fails = pasa mientras siga fallando)', () => {
 
   // H4 ────────────────────────────────────────────────────────────────────────────────────────
   it('H4 pendiente del jugador NO activo: PR-017 muere por el Rayo del rival → el tutor de B queda sin poder elegirse', () => {
@@ -747,67 +826,6 @@ describe('(c) humo — HALLAZGOS (el motor actual no cumple el texto o la decisi
     const ctx = crearCtx()
     const s = aplicar(s0, { type: 'activar_habilidad', cardInstanceId: 'ver', eterIds: eteres }, ctx)
     expect(s.players.B.cementerio).toContain('b0')
-  })
-
-  // H10 ───────────────────────────────────────────────────────────────────────────────────────
-  it('H10 velocidad: keywordsDe/velocidadDe solo leen las keywords del meta de CAMPEONES → Fugaz y Presteza de Místicas/Arcanas valen "normal"', () => {
-    const s = base()
-    conMistica(s, 'A', 'fug', PR.FUGAZ, 0)
-    conMistica(s, 'A', 'pre', PR.PRESTEZA_ROBA, 1)
-    expect(keywordsDe(s, 'fug')).not.toContain('Fugaz')
-    expect(keywordsDe(s, 'pre')).not.toContain('Presteza')
-  })
-
-  it.fails('H10b PR-043 Fugaz: no debería abrir ventana aunque el rival tenga una Presteza pagable (el efecto es inmediato)', () => {
-    const s0 = base()
-    conMano(s0, 'A', 'fug', PR.FUGAZ)
-    const pago = conEteres(s0, 'A', 1)
-    conCampeon(s0, 'A', 'a0', PR.PEON, 0)
-    conMano(s0, 'B', 'pre', PR.PRESTEZA_ROBA)
-    conEteres(s0, 'B', 1)
-    const ctx = crearCtx()
-    let s = aplicar(s0, { type: 'jugar_mistica', cardInstanceId: 'fug', slot: 0, eterIds: pago }, ctx)
-    s = aplicar(s, { type: 'elegir_objetivo', objetivoId: 'a0' }, ctx)
-    expect(s.cadena).toBeUndefined()
-  })
-
-  it.fails('H10c Presteza: tras una respuesta Presteza solo deberían poder responder Presteza/Fugaz (una Arcana normal no)', () => {
-    const { s: s1, ctx } = rayoVs(PR.PRESTEZA_ROBA, 1)
-    conArcana(s1, 'A', 'arc', PR.PACTO, 0) // Arcana normal de A, colocada en un turno anterior
-    const s = aplicar(s1, { type: 'jugar_respuesta', cardInstanceId: 'resp', eterIds: etersParaPagar(s1, 'B', PR.PRESTEZA_ROBA)! }, ctx)
-    expect(respondiblesDe(s, 'A')).toEqual([])
-  })
-
-  // H11 ───────────────────────────────────────────────────────────────────────────────────────
-  it('H11 PR-041 Presteza jugada como respuesta DENTRO DE UN COMBATE: se paga y sale de la mano, pero nada la resuelve ni la manda al Cementerio', () => {
-    const s0 = base('choque')
-    conCampeon(s0, 'A', 'a0', PR.PEON, 0)
-    conCampeon(s0, 'B', 'b0', PR.PEON, 0)
-    conMano(s0, 'B', 'resp', PR.PRESTEZA_ROBA)
-    conEteres(s0, 'B', 1)
-    const ctx = crearCtx()
-    let s = aplicar(s0, { type: 'declarar_ataque', atacanteIds: ['a0'] }, ctx)
-    expect(s.cadena).toMatchObject({ origen: 'combate', prioridad: 'B' }) // el gate cuenta la Presteza de la mano
-    s = aplicar(s, { type: 'jugar_respuesta', cardInstanceId: 'resp', eterIds: etersParaPagar(s, 'B', PR.PRESTEZA_ROBA)! }, ctx)
-    s = aplicar(aplicar(s, { type: 'pasar_prioridad' }, ctx), { type: 'pasar_prioridad' }, ctx)
-    expect(s.cadena).toBeUndefined()
-    expect(s.players.B.eterPagado).toHaveLength(1) // pagó
-    expect(s.players.B.mano).not.toContain('resp') // salió de la mano
-    expect(s.players.B.cementerio).not.toContain('resp') // ...y no está en el Cementerio
-    expect(evs(ctx, 'carta_robada')).toHaveLength(0) // ...ni resolvió su efecto
-  })
-
-  it.fails('H11b (esperado) esa misma Presteza debería resolver su efecto y terminar en el Cementerio', () => {
-    const s0 = base('choque')
-    conCampeon(s0, 'A', 'a0', PR.PEON, 0)
-    conCampeon(s0, 'B', 'b0', PR.PEON, 0)
-    conMano(s0, 'B', 'resp', PR.PRESTEZA_ROBA)
-    conEteres(s0, 'B', 1)
-    const ctx = crearCtx()
-    let s = aplicar(s0, { type: 'declarar_ataque', atacanteIds: ['a0'] }, ctx)
-    s = aplicar(s, { type: 'jugar_respuesta', cardInstanceId: 'resp', eterIds: etersParaPagar(s, 'B', PR.PRESTEZA_ROBA)! }, ctx)
-    s = aplicar(aplicar(s, { type: 'pasar_prioridad' }, ctx), { type: 'pasar_prioridad' }, ctx)
-    expect(s.players.B.cementerio).toContain('resp')
   })
 })
 

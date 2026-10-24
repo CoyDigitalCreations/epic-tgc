@@ -72,7 +72,8 @@ export type Action =
   | { type: 'declarar_ataque'; atacanteIds: string[] }
   | { type: 'declarar_bloqueo'; asignaciones: Record<string, string> }
   | { type: 'elegir_ruptura'; atacanteId: string | null; vinculoSlot?: number }
-  | { type: 'responder_cadena'; cardInstanceId: string }
+  /** Arcana respondida: `eterIds` paga su coste (sin ellos el motor elige los de la Reserva, F5e). */
+  | { type: 'responder_cadena'; cardInstanceId: string; eterIds?: string[] }
   | { type: 'pasar_prioridad' }
   | { type: 'responder_prevenicion'; prevenir: boolean }
 
@@ -118,7 +119,9 @@ function validarAccion(state: GameState, action: Action): string | null {
   }
   // Pila única (F5a): con la cadena abierta el turno queda congelado — solo se
   // responde o se pasa prioridad; cualquier otra acción espera a que cierre.
-  if (cadenaActiva(state) && !ACCIONES_CON_CADENA_ABIERTA.has(action.type)) {
+  // F5e: una respuesta eligiendo objetivos convive con la cadena abierta; la declaración ya
+  // restringió las acciones (arriba), así que elegir_objetivo pasa.
+  if (cadenaActiva(state) && !state.declaracionEnEleccion && !ACCIONES_CON_CADENA_ABIERTA.has(action.type)) {
     return 'hay una cadena abierta: solo se puede responder o pasar prioridad'
   }
   switch (action.type) {
@@ -165,7 +168,7 @@ function validarAccion(state: GameState, action: Action): string | null {
     case 'elegir_ruptura':
       return validarElegirRuptura(state, action.atacanteId, action.vinculoSlot)
     case 'responder_cadena':
-      return validarResponderCadena(state, action.cardInstanceId)
+      return validarResponderCadena(state, action.cardInstanceId, action.eterIds)
     case 'pasar_prioridad':
       return validarPasarPrioridad(state)
     default:
@@ -271,7 +274,7 @@ function ejecutarAccion(s: GameState, action: Action, ctx: Ctx): void {
       return
     }
     case 'responder_cadena': {
-      ejecutarResponderCadena(s, action.cardInstanceId, ctx)
+      ejecutarResponderCadena(s, action.cardInstanceId, ctx, action.eterIds)
       return
     }
     case 'pasar_prioridad': {

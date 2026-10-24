@@ -40,6 +40,9 @@ export function visibleState(state: GameState, playerId: PlayerId): GameState {
   // F5d-1: el opener ya declarado (aún sin ventana, esperando objetivos) tampoco se oculta
   const enEleccion = v.declaracionEnEleccion?.opener
   if (enEleccion) ocultar.delete(enEleccion.cardInstanceId)
+  // F5e: la respuesta declarada (ya pagada, aún eligiendo objetivos) tampoco: el rival la ve antes de que entre a la pila
+  const respondiendo = v.declaracionEnEleccion?.respuesta
+  if (respondiendo) ocultar.delete(respondiendo.cardInstanceId)
 
   // Búsqueda de mazo (C3/D1): mientras un pendiente de elegir_objetivo espera
   // respuesta del jugador, sus cartas opción se muestran — necesita VER qué

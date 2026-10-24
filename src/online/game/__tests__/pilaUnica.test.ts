@@ -51,6 +51,15 @@ function conCarta(
   return id
 }
 
+/** F5e: responder con una Arcana la PAGA — `n` Éteres inertes (FB-007) en la Reserva de `owner`. */
+function conEteres(s: GameState, owner: PlayerId, n: number): void {
+  for (let i = 0; i < n; i++) {
+    const id = `eter-${owner}-${i}`
+    s.instances[id] = { cardInstanceId: id, cardId: 'FB-007', owner }
+    s.players[owner].eterReserva.push(id)
+  }
+}
+
 function crearCtx(): Ctx {
   const events: Ctx['events'] = []
   return { next: () => 0, emit: (e) => { events.push(e) }, events }
@@ -60,6 +69,7 @@ function crearCtx(): Ctx {
 function conCadenaGlobal(): { s: GameState; arcana: string } {
   const s = estadoMinimo('forja')
   const arcana = conCarta(s, ARCANA, 'arcanasCombate', 0, 'A')
+  conEteres(s, 'A', 2)
   s.cadena = { origen: 'global', pila: [], prioridad: 'A', pasesConsecutivos: 0, faseAbierta: 'forja' }
   return { s, arcana }
 }
@@ -80,6 +90,7 @@ describe('cadenaActiva (F5a)', () => {
     const s0 = estadoMinimo('choque')
     const atacante = conCarta(s0, VAELA, 'campeones', 0, 'A')
     conCarta(s0, ARCANA, 'arcanasCombate', 0, 'B')
+    conEteres(s0, 'B', 2)
     const r = applyAction(s0, { type: 'declarar_ataque', atacanteIds: [atacante] }, ctx)
     if (!r.ok) throw new Error(r.error)
     const cadena = cadenaActiva(r.state)
@@ -94,6 +105,7 @@ describe('cadenaActiva (F5a)', () => {
     const s0 = estadoMinimo('choque')
     const atacante = conCarta(s0, VAELA, 'campeones', 0, 'A')
     conCarta(s0, ARCANA, 'arcanasCombate', 0, 'B')
+    conEteres(s0, 'B', 2)
     let s = applyAction(s0, { type: 'declarar_ataque', atacanteIds: [atacante] }, ctx)
     if (!s.ok) throw new Error(s.error)
     let estado = s.state

@@ -61,6 +61,19 @@ export interface PayloadEfecto {
   /** F5b: declaración de un opener — interpretEffect solo ARMA la elección de
    * objetivo (marcando el pendiente con `opener`) y NO ejecuta el efecto. */
   declararOpener?: { efectoIdx: number }
+  /** F5e: dispararTrigger en modo DECLARACIÓN — arma la elección de objetivo de los efectos
+   * que matchean (marcada con su índice en efectos[], como declararOpener) y NO ejecuta
+   * nada; tampoco corre los handlers genéricos ni por cardId. */
+  declarar?: boolean
+  /** F5e: objetivos ya elegidos al declarar, por índice en efectos[]; dispararTrigger se los
+   * pasa a cada efecto como contextoUso 'objetivo-elegido'. */
+  objetivosElegidos?: Record<number, string>
+  /** F5e: resolución de una respuesta de la pila — la elección de objetivos ya ocurrió al
+   * responder: un efecto que aún necesitaría elegir se pierde en vez de armar un pendiente. */
+  sinEleccion?: boolean
+  /** F5e: al resolver con objetivo ya elegido, éste debe seguir siendo un objetivo válido
+   * del efecto; si ya no lo es (salió del campo, etc.) el efecto se pierde. */
+  revalidarObjetivo?: boolean
   extra?: Record<string, unknown>
 }
 
@@ -687,7 +700,15 @@ export function dispararTrigger(
             if (matchea && efecto.efecto) {
               // D1 pattern: snapshot pending objectives before interpreter
               const pendientesAntes = s.objetivosPendientes?.length ?? 0
-              interpretEffect(s, ctx, inst, efecto, payload)
+              // F5e: declaración (arma la elección marcada con el índice del efecto) o
+              // resolución con el objetivo elegido al declarar
+              const efectoIdx = efectos.indexOf(efecto)
+              const objetivoElegido = payload.objetivosElegidos?.[efectoIdx]
+              interpretEffect(s, ctx, inst, efecto, {
+                ...payload,
+                ...(payload.declarar ? { declararOpener: { efectoIdx } } : {}),
+                ...(objetivoElegido ? { contextoUso: 'objetivo-elegido', objetivoId: objetivoElegido } : {}),
+              })
               const pendientesDespues = s.objetivosPendientes?.length ?? 0
 
               // If interpreter created a pending objective → D1 pattern worked
@@ -717,6 +738,8 @@ export function dispararTrigger(
     }
 
     if (handled) continue
+    // F5e: declarar solo arma elecciones del JSON; los handlers de abajo ejecutan efectos
+    if (payload.declarar) continue
 
     // 2. Handler genérico por tipo de efecto (invocar_y_equipar)
     // Skip if there's a cardId-specific handler — cardId takes precedence
@@ -783,7 +806,9 @@ export function keywordsDe(s: GameState, id: string): readonly string[] {
   const inst = s.instances[id]
   const cardId = inst?.cardId ?? null
   const meta = cardId ? getCardMeta(cardId) : null
-  const deData = meta && esCampeon(meta) ? meta.keywords : []
+  // F5e (H10): keywords del meta de CUALQUIER tipo de carta (Presteza/Fugaz de Místicas y Arcanas
+  // definen su velocidad en la cadena); Éter y Vínculo no tienen keywords
+  const deData = meta && 'keywords' in meta && meta.keywords ? meta.keywords : []
   const mods = modificadoresJSONDe(s, id)
   // keywordsHastaFase (B6): viven en su propia lista (NO en keywordsTemporales,
   // para sobrevivir al Ocaso hasta la fase objetivo) — purgarHastaFase las retira.

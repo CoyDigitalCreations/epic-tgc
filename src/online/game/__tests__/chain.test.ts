@@ -82,6 +82,14 @@ function conCarta(
   }
 }
 
+/** F5e: responder con una Arcana la PAGA — le da `n` Éteres inertes (FB-007) en la Reserva. */
+function conEteres(s: GameState, owner: PlayerId, n: number): GameState {
+  const ids = Array.from({ length: n }, (_, i) => `eter-${owner}-${i}`)
+  const instances = { ...s.instances }
+  for (const id of ids) instances[id] = { cardInstanceId: id, cardId: 'FB-007', owner }
+  return { ...s, instances, players: { ...s.players, [owner]: { ...s.players[owner], eterReserva: [...s.players[owner].eterReserva, ...ids] } } }
+}
+
 function crearCtx(): Ctx {
   const events: Ctx['events'] = []
   return { next: () => 0, emit: (e) => { events.push(e) }, events }
@@ -110,7 +118,7 @@ describe('visibleState con cadena (6.2)', () => {
     const ctx = crearCtx()
     const a = conCarta(estadoMinimo(), VAELA, 'campeones', 0)
     const arcB = conCarta(a.s, ARCANA, 'arcanasCombate', 0, { owner: 'B' })
-    const s1 = aplicar(arcB.s, { type: 'declarar_ataque', atacanteIds: [a.id] }, ctx)
+    const s1 = aplicar(conEteres(arcB.s, 'B', 2), { type: 'declarar_ataque', atacanteIds: [a.id] }, ctx)
     const s2 = aplicar(s1, { type: 'responder_cadena', cardInstanceId: arcB.id }, ctx)
 
     const visA = visibleState(s2, 'A') // el RIVAL ve la Arcana respondida
@@ -125,7 +133,7 @@ describe('entradaEsteTurno — caduca al terminar TU turno (fix 2026-10-14)', ()
     const ctx = crearCtx()
     // Arcana de A colocada en el turno de A (entradaEsteTurno=true), luego A
     // pasa el turno → el flag debe caducar.
-    const arc = conCarta(estadoMinimo(), ARCANA, 'arcanasCombate', 0, { entradaEsteTurno: true })
+    const arc = conCarta(conEteres(estadoMinimo(), 'A', 2), ARCANA, 'arcanasCombate', 0, { entradaEsteTurno: true })
     // respondibles de A con el flag puesto: NO puede responder (mismo turno)
     expect(respondiblesDe(arc.s, 'A')).not.toContain(arc.id)
     // A termina su turno (forja→choque→ocaso→alba del rival)

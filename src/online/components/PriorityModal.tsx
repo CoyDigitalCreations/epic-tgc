@@ -35,6 +35,9 @@ export function PriorityModal({ state, playerId, acciones, onAccion, onZoom }: P
   // ÚNICA acción legal es responder_prevenicion — el modal no debe tapar ese
   // checkpoint (se rinde en PreventionModal, que se monta antes).
   if (state.preventivosPendientes?.[0]) return null
+  // F5e: una respuesta que está eligiendo objetivos (la cadena sigue abierta) no se puede
+  // responder ni pasar: la elección de objetivo la muestra su propio modal
+  if (state.declaracionEnEleccion) return null
 
   // Modal SIEMPRE visible con tu prioridad (decisión 2026-10-14): un solo lugar
   // para responder/pasar — aunque no tengas respondibles, muestra el estado y

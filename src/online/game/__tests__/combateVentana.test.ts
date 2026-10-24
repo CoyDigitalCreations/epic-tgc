@@ -105,8 +105,26 @@ function escenarioBloqueo(conArcanaB = true) {
   const arcana = conARCANA(s, conArcanaB)
   return { s, atacante, bloqueador, arcana }
 }
+/**
+ * F5e: responder con la Arcana la PAGA — B recibe `n` Éteres inertes (FB-007) en la Reserva — y su
+ * recompensa (robar) ya resuelve: se le da mazo para que robar no lo deje sin cartas y termine la partida.
+ */
+function conEteresB(s: GameState, n: number): void {
+  for (let i = 0; i < n; i++) {
+    const id = `eter-B-${i}`
+    s.instances[id] = { cardInstanceId: id, cardId: 'FB-007', owner: 'B' }
+    s.players.B.eterReserva.push(id)
+  }
+  for (let i = 0; i < 4; i++) {
+    const id = `mz-B-${i}`
+    s.instances[id] = { cardInstanceId: id, cardId: 'FB-007', owner: 'B' }
+    s.players.B.mazo.push(id)
+  }
+}
 function conARCANA(s: GameState, poner: boolean): string | null {
-  return poner ? conCarta(s, ARCANA, 'arcanasCombate', 0, 'B') : null
+  if (!poner) return null
+  conEteresB(s, 2)
+  return conCarta(s, ARCANA, 'arcanasCombate', 0, 'B')
 }
 
 describe('declarar ataque abre ventana (F5c)', () => {
@@ -143,6 +161,7 @@ describe('declarar ataque abre ventana (F5c)', () => {
     const a2 = conCarta(s, ELENA, 'campeones', 1, 'A')
     conCarta(s, CASSANDRA, 'campeones', 0, 'B')
     conCarta(s, ARCANA, 'arcanasCombate', 0, 'B')
+    conEteresB(s, 2)
     let e = aplicar(s, { type: 'declarar_ataque', atacanteIds: [a1, a2] }, ctx)
     sacarDelCampo(e, a1)
     e = pasarHastaCerrar(e, ctx)
@@ -236,6 +255,7 @@ describe('declarar bloqueo abre ventana ANTES del daño (F5c)', () => {
     const a2 = conCarta(s, ELENA, 'campeones', 1, 'A')
     const bloq = conCarta(s, CASSANDRA, 'campeones', 0, 'B')
     conCarta(s, ARCANA, 'arcanasCombate', 0, 'B')
+    conEteresB(s, 2)
     conVinculos(s, 3)
     let e = aplicar(s, { type: 'declarar_ataque', atacanteIds: [a1, a2] }, ctx)
     e = pasarHastaCerrar(e, ctx)
