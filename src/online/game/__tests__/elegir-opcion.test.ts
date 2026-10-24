@@ -1,8 +1,10 @@
 // @vitest-environment node
 import { describe, it, expect } from 'vitest'
 import { applyAction } from '../actions'
-import { crearOpcionBloqueo } from '../efectos'
+import { crearOpcionBloqueo, pasivosBloqueo1A } from '../efectos'
 import { parejasBloqueoOpcion } from '../habilidades'
+import { getValidActions } from '../validActions'
+import { reagruparEter } from '../payments'
 import type { Ctx, GameState, PlayerId } from '../types'
 
 // Pasivo 1A (FB-005 Voz de las Casas): "bloquea 1 Éter de tu Reserva sobre un Campeón".
@@ -19,7 +21,7 @@ function crearCtx(): Ctx {
   return { next: () => 0, emit: (e) => { events.push(e) }, events }
 }
 
-/** Forja de A con Aurora (slot 0), dos Cassandras (slots 1-2), Vaela (slot 3), 3 Éteres en la Reserva y la opción del Pasivo pendiente. */
+/** Forja de A con Aurora (slot 0), dos Cassandras (slots 1-2), Vaela (slot 3), 3 Éteres en la Reserva y el Pasivo 1A (FB-005) en la zona de pago. */
 function escenario(): GameState {
   const jugador = (id: PlayerId) => ({
     id,
@@ -55,7 +57,6 @@ function escenario(): GameState {
   s.players.A.eterPagado = ['pasivo']
   for (const id of ['e1', 'e2', 'e3']) poner(id, ETER)
   s.players.A.eterReserva = ['e1', 'e2', 'e3']
-  s.opcionesPendientes = [{ jugador: 'A', eterId: 'pasivo' }]
   return s
 }
 
@@ -116,5 +117,82 @@ describe('Pasivo 1A — la opción solo se ofrece si hay algo que elegir', () =>
     s.opcionesPendientes = []
     expect(crearOpcionBloqueo(s, 'A', 'pasivo')).toBe(true)
     expect(s.opcionesPendientes).toEqual([{ jugador: 'A', eterId: 'pasivo' }])
+  })
+})
+
+describe('Pasivo 1A — habilidad del turno mientras la carta de Éter está en 1A (§8.3a)', () => {
+  const ofrecida = (s: GameState) =>
+    getValidActions(s, 'A').some((a) => a.type === 'elegir_opcion' && a.opcionId === 'pasivo')
+
+  it('se ofrece en Forja, en Choque (sin combate) y en Ocaso — nunca depende del Alba', () => {
+    for (const fase of ['forja', 'choque', 'ocaso'] as const) {
+      expect(ofrecida({ ...escenario(), fase })).toBe(true)
+    }
+  })
+
+  it('no se ofrece durante un combate ni se acepta (el combate tiene su propio flujo)', () => {
+    const s: GameState = {
+      ...escenario(),
+      fase: 'choque',
+      combate: { paso: 'bloqueo', atacantes: [], bloqueos: {}, rupturaDisponible: false, rupturaUsadaEsteTurno: false },
+    }
+    expect(ofrecida(s)).toBe(false)
+    expect(applyAction(s, { type: 'elegir_opcion', opcionId: 'pasivo' }, crearCtx()).ok).toBe(false)
+  })
+
+  it('no se ofrece si la carta de Éter está en la Reserva (solo funciona en 1A)', () => {
+    const s = escenario()
+    s.players.A.eterPagado = []
+    s.players.A.eterReserva = ['pasivo', 'e1', 'e2', 'e3']
+    expect(pasivosBloqueo1A(s, 'A')).toEqual([])
+    expect(ofrecida(s)).toBe(false)
+    expect(applyAction(s, { type: 'elegir_opcion', opcionId: 'pasivo' }, crearCtx()).ok).toBe(false)
+  })
+
+  it('no se ofrece sin Campeón que acepte 1 Éter ni sin Éter en la Reserva', () => {
+    const soloAurora = escenario()
+    soloAurora.players.A.campo.campeones = ['aurora', null, null, 'vaela', null]
+    expect(ofrecida(soloAurora)).toBe(false)
+
+    const sinEter = escenario()
+    sinEter.players.A.eterReserva = []
+    expect(ofrecida(sinEter)).toBe(false)
+  })
+
+  it('una vez por turno por carta: tras usarla deja de ofrecerse; al reagruparse se estrena de nuevo', () => {
+    const ctx = crearCtx()
+    const r = applyAction(escenario(), { type: 'elegir_opcion', opcionId: 'pasivo', campeonId: 'cass1', eterId: 'e1' }, ctx)
+    expect(r.ok).toBe(true)
+    if (!r.ok) return
+    expect(r.state.instances.pasivo.opcionUsadaEsteTurno).toBe(true)
+    expect(ofrecida(r.state)).toBe(false)
+    expect(applyAction(r.state, { type: 'elegir_opcion', opcionId: 'pasivo' }, crearCtx()).ok).toBe(false)
+
+    // Alba siguiente: la carta vuelve a la Reserva y su límite se reinicia
+    const s2 = structuredClone(r.state)
+    reagruparEter(s2, crearCtx(), 'A')
+    expect(s2.instances.pasivo.opcionUsadaEsteTurno).toBeUndefined()
+    expect(s2.players.A.eterReserva).toContain('pasivo')
+  })
+
+  it('bloquear con el Pasivo no agota al Campeón y no toca la opción pendiente de otras fuentes', () => {
+    const s = escenario()
+    s.opcionesPendientes = [{ jugador: 'A', eterId: 'otra-fuente' }]
+    const r = applyAction(s, { type: 'elegir_opcion', opcionId: 'pasivo', campeonId: 'cass1', eterId: 'e1' }, crearCtx())
+    expect(r.ok).toBe(true)
+    if (!r.ok) return
+    expect(r.state.instances.cass1.agotado).toBeUndefined()
+    expect(r.state.opcionesPendientes).toEqual([{ jugador: 'A', eterId: 'otra-fuente' }])
+  })
+
+  it('una opción PENDIENTE de otra fuente (p.ej. un Vínculo al inicio del Alba) sigue funcionando en Forja', () => {
+    const s = escenario()
+    s.instances.vinculo = { cardInstanceId: 'vinculo', cardId: 'FB-025', owner: 'A' }
+    s.opcionesPendientes = [{ jugador: 'A', eterId: 'vinculo' }]
+    const r = applyAction(s, { type: 'elegir_opcion', opcionId: 'vinculo', campeonId: 'cass1', eterId: 'e1' }, crearCtx())
+    expect(r.ok).toBe(true)
+    if (!r.ok) return
+    expect(r.state.opcionesPendientes).toEqual([])
+    expect(r.state.instances.cass1.eterBloqueado).toEqual(['e1'])
   })
 })

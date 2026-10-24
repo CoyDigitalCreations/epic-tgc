@@ -15,7 +15,7 @@ import {
 } from '../efectos'
 import { registrarEfectos } from '../index'
 
-// Cartas reales del catálogo (fuente de verdad: seed/PrimerColeccionEfectos.json):
+// Cartas reales del catálogo (fuente de verdad: seed/FuenteEfectos.json):
 // FB-010 Aurora · FB-011 Vaela · FB-014 Isolde (rediseñada — sin aura)
 const AURORA = 'FB-010'
 const VAELA = 'FB-011'
@@ -242,92 +242,8 @@ describe('2.1 Auras por zona — reserva (2A), derivadas del JSON (Fase 1)', () 
   })
 })
 
-describe('2.2 Pasivo 1A — FB-005/DS-006: inicio-alba habilita elegir_opción (1/turno bloquear sin agotar)', () => {
-  // Helper: set up opcionesPendientes directamente en state
-  function setupOpcion(s: GameState, jugador: PlayerId, eterId: string) {
-    s.opcionesPendientes = [...(s.opcionesPendientes ?? []), { jugador, eterId }]
-  }
-
-  it('Pasivo en 1A + Campeón propio + Éter en Reserva → opcionesPendientes incluye la opción', () => {
-    let s = estadoMinimo()
-    s.fase = 'forja'
-    s.turno = 'A'
-    s.players.A.campo.campeones[0] = 'c-FB-010-0'
-    s.instances['c-FB-010-0'] = { cardInstanceId: 'c-FB-010-0', cardId: AURORA, owner: 'A' }
-    s.players.A.eterPagado = ['e-FB-005-A']
-    s.instances['e-FB-005-A'] = { cardInstanceId: 'e-FB-005-A', cardId: FB005, owner: 'A' }
-    s.players.A.eterReserva = ['e-FB-001-A']
-    s.instances['e-FB-001-A'] = { cardInstanceId: 'e-FB-001-A', cardId: FB001, owner: 'A' }
-    s.players.A.mazo = ['dummy']
-    s.players.A.mano = []
-    // Setup opción pendiente
-    setupOpcion(s, 'A', 'e-FB-005-A')
-    // Verificar que opcionesPendientes fue creado y tiene la opción correcta
-    expect(s.opcionesPendientes?.length).toBe(1)
-    expect(s.opcionesPendientes![0].eterId).toBe('e-FB-005-A')
-  })
-
-  it('Sin Campeón propio → opcionesPendientes stays empty', () => {
-    let s = estadoMinimo()
-    s.fase = 'forja'
-    s.turno = 'A'
-    s.players.A.eterPagado = ['e-FB-005-A']
-    s.instances['e-FB-005-A'] = { cardInstanceId: 'e-FB-005-A', cardId: FB005, owner: 'A' }
-    s.players.A.eterReserva = [] // sin Éter en reserva
-    // Sin Campeón → opcionesPendientes stays empty (handler no la crea)
-    expect(s.opcionesPendientes).toBeUndefined()
-  })
-
-  it('Sin Éter en Reserva → opcionesPendientes stays empty', () => {
-    let s = estadoMinimo()
-    s.fase = 'forja'
-    s.turno = 'A'
-    s.players.A.campo.campeones[0] = 'c-FB-010-0'
-    s.instances['c-FB-010-0'] = { cardInstanceId: 'c-FB-010-0', cardId: AURORA, owner: 'A' }
-    s.players.A.eterPagado = ['e-FB-005-A']
-    s.instances['e-FB-005-A'] = { cardInstanceId: 'e-FB-005-A', cardId: FB005, owner: 'A' }
-    s.players.A.eterReserva = [] // vacío
-    // Sin Éter en Reserva → opcionesPendientes stays empty
-    expect(s.opcionesPendientes).toBeUndefined()
-  })
-
-  it('1/turno: después de "usar" la opción, se quita de opcionesPendientes', () => {
-    let s = estadoMinimo()
-    s.fase = 'forja'
-    s.turno = 'A'
-    s.players.A.campo.campeones[0] = 'c-FB-010-0'
-    s.instances['c-FB-010-0'] = { cardInstanceId: 'c-FB-010-0', cardId: AURORA, owner: 'A' }
-    s.players.A.eterPagado = ['e-FB-005-A']
-    s.instances['e-FB-005-A'] = { cardInstanceId: 'e-FB-005-A', cardId: FB005, owner: 'A' }
-    s.players.A.eterReserva = ['e-FB-001-A', 'e-FB-003-A'] // dos Éteres
-    s.instances['e-FB-001-A'] = { cardInstanceId: 'e-FB-001-A', cardId: FB001, owner: 'A' }
-    s.instances['e-FB-003-A'] = { cardInstanceId: 'e-FB-003-A', cardId: FB003, owner: 'A' }
-    s.players.A.mazo = ['dummy']
-    s.players.B.mazo = ['dummy']
-    // Setup opción pendiente
-    setupOpcion(s, 'A', 'e-FB-005-A')
-    expect(s.opcionesPendientes?.length).toBe(1)
-    // Simular "ejecutar" la opción: quitarla de la lista
-    s.opcionesPendientes = s.opcionesPendientes!.filter((o) => o.eterId !== 'e-FB-005-A')
-    expect(s.opcionesPendientes?.length).toBe(0)
-  })
-
-  it('Cross-facción: DS-006 en 1A de B → opcionesPendientes para B', () => {
-    let s = estadoMinimo()
-    s.fase = 'forja'
-    s.turno = 'B'
-    s.players.B.campo.campeones[0] = 'c-DS-001-0'
-    s.instances['c-DS-001-0'] = { cardInstanceId: 'c-DS-001-0', cardId: 'DS-001', owner: 'B' }
-    s.players.B.eterPagado = ['e-DS-006-B']
-    s.instances['e-DS-006-B'] = { cardInstanceId: 'e-DS-006-B', cardId: DS006, owner: 'B' }
-    s.players.B.eterReserva = ['e-DS-002-B']
-    s.instances['e-DS-002-B'] = { cardInstanceId: 'e-DS-002-B', cardId: DS002, owner: 'B' }
-    // Setup opción pendiente para B (DS-006 es Pasivo, igual que FB-005)
-    setupOpcion(s, 'B', 'e-DS-006-B')
-    expect(s.opcionesPendientes?.length).toBe(1)
-    expect(s.opcionesPendientes![0].eterId).toBe('e-DS-006-B')
-  })
-})
+// 2.2 Pasivo 1A (FB-005/DS-006): es una habilidad del turno mientras la carta está en 1A.
+// Sus pruebas viven en elegir-opcion.test.ts (se ofrece, 1/turno, solo en 1A, nada que ver con el Alba).
 
 describe('2.3 Gatillos al-pagar-eter (contextoUso)', () => {
   // Tests unitarios usando aplicarPago directamente (más control)

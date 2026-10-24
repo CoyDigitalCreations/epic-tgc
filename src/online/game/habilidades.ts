@@ -7,7 +7,7 @@ import { getCardMeta, efectoActivableDe, esCostoBloqueo, esArtefactoEquipable, e
 import type { CondicionEfecto, AnyCard, EfectoData } from '../../shared/types'
 import { validarPago, aplicarPago, type ContextoUso } from './payments'
 import { etiquetarEter } from './eter'
-import { dispararTrigger, condicionCumple, type TriggerEfecto, type PayloadEfecto } from './efectos'
+import { dispararTrigger, condicionCumple, pasivosBloqueo1A, type TriggerEfecto, type PayloadEfecto } from './efectos'
 import { registrarEfectoPendiente, hastaAlba } from './effectRegistry'
 import { interpretEffect, ejecutarTramo } from './effectInterpreter'
 import { tieneKeyword } from './combat'
@@ -170,13 +170,26 @@ export function parejasBloqueoOpcion(s: GameState, jugador: PlayerId): ParejaBlo
   return parejas
 }
 
-/** C2: validar elegir_opcion — solo en forja del jugador con opción pendiente. */
+/**
+ * C2: validar elegir_opcion. Dos orígenes:
+ * - opción PENDIENTE (p.ej. un Vínculo con "al inicio de tu Alba"): solo en Forja;
+ * - Pasivo 1A VIVO (carta de Éter en 1A, FB-005/DS-006): habilidad del turno, cualquier fase menos
+ *   Alba (§8.3a); en Choque, no durante un combate.
+ */
 export function validarElegirOpcion(state: GameState, action: Extract<Action, { type: 'elegir_opcion' }>): string | null {
-  if (state.fase !== 'forja') return 'elegir_opcion solo en Forja'
   const pendiente = state.opcionesPendientes?.find(
     (o) => o.jugador === state.turno && o.eterId === action.opcionId
   )
-  if (!pendiente) return 'no hay opción pendiente para este jugador'
+  if (pendiente) {
+    if (state.fase !== 'forja') return 'elegir_opcion solo en Forja'
+  } else if (pasivosBloqueo1A(state, state.turno).includes(action.opcionId)) {
+    if (state.fase !== 'forja' && state.fase !== 'choque' && state.fase !== 'ocaso') {
+      return 'el Pasivo 1A solo en Forja/Choque/Ocaso (§8.3a: nunca en Alba)'
+    }
+    if (state.fase === 'choque' && state.combate) return 'el Pasivo 1A no se usa durante un combate'
+  } else {
+    return 'no hay opción pendiente para este jugador'
+  }
   // Pareja elegida: ambos ids o ninguno, y debe ser una de las legales (anti-cheat 6.2)
   if ((action.campeonId === undefined) !== (action.eterId === undefined)) {
     return 'elegir_opcion: indica Campeón y Éter juntos'
@@ -412,8 +425,9 @@ export function ejecutarUsarTransmutar(s: GameState, action: Extract<Action, { t
 export function ejecutarElegirOpcion(s: GameState, action: Extract<Action, { type: 'elegir_opcion' }>, ctx: Ctx): void {
   const j = s.turno
   const p = s.players[j]
-  const pendiente = s.opcionesPendientes!.find((o) => o.jugador === j && o.eterId === action.opcionId)
-  if (!pendiente) return // ya validado
+  const pendiente = s.opcionesPendientes?.find((o) => o.jugador === j && o.eterId === action.opcionId)
+  const pasivoVivo = !pendiente && pasivosBloqueo1A(s, j).includes(action.opcionId)
+  if (!pendiente && !pasivoVivo) return // ya validado
 
   // Sin pareja elegida: greedy determinista = PRIMERA pareja legal. Solo califican campeones
   // con efecto continuo que usa eter_bloqueado/bloqueo_fijo (ej: Aurora, Elena, Cassandra).
@@ -423,7 +437,7 @@ export function ejecutarElegirOpcion(s: GameState, action: Extract<Action, { typ
     : parejasBloqueoOpcion(s, j)[0]
   if (!pareja) {
     // No hay pareja válida (no debería pasar si validación correcta)
-    s.opcionesPendientes = s.opcionesPendientes!.filter((o) => !(o.jugador === j && o.eterId === action.opcionId))
+    if (pendiente) s.opcionesPendientes = s.opcionesPendientes!.filter((o) => !(o.jugador === j && o.eterId === action.opcionId))
     return
   }
   const elegido = { targetInstanceId: pareja.campeonId, eterId: pareja.eterId }
@@ -444,11 +458,11 @@ export function ejecutarElegirOpcion(s: GameState, action: Extract<Action, { typ
   ctx.emit({ type: 'eter_bloqueado', jugador: j, eterIds: [elegido.eterId], campeonId: elegido.targetInstanceId })
 
   // Marcar opción usada en el Éter Pasivo
-  const eterPasivo = s.instances[pendiente.eterId]
+  const eterPasivo = s.instances[action.opcionId]
   if (eterPasivo) eterPasivo.opcionUsadaEsteTurno = true
 
   // Limpiar pendiente
-  s.opcionesPendientes = s.opcionesPendientes!.filter((o) => !(o.jugador === j && o.eterId === action.opcionId))
+  if (pendiente) s.opcionesPendientes = s.opcionesPendientes!.filter((o) => !(o.jugador === j && o.eterId === action.opcionId))
 }
 
 /**

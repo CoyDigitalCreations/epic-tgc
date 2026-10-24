@@ -1,5 +1,6 @@
 import { getCardMeta, esArcana, efectoActivableDe, esCostoBloqueo } from './cards'
 import { eterDeEfecto } from './eter'
+import { hayParejaBloqueo, pasivosBloqueo1A } from './efectos'
 import type { AnyCard } from '../../shared/types'
 import type { Action } from './actions'
 import { generarAccionesForja, validarActivarArcana } from './actions'
@@ -358,6 +359,12 @@ export function getValidActions(state: GameState, playerId: PlayerId): Action[] 
       (state.fase === 'ocaso' && p.mano.length <= 6)
     if (faseGeneralOk) {
       acciones.push(...accionesBloqueoEter(state, playerId))
+      // Pasivo 1A (FB-005/DS-006): habilidad del turno mientras la carta de Éter está en 1A (§8.3a)
+      if (hayParejaBloqueo(state, playerId)) {
+        for (const eterId of pasivosBloqueo1A(state, playerId)) {
+          acciones.push({ type: 'elegir_opcion', opcionId: eterId })
+        }
+      }
       // Activar Arcanas (A8): el jugador activa sus Arcanas boca abajo pagando su coste
       for (const id of p.campo.arcanasCombate) {
         if (!id) continue

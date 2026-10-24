@@ -522,10 +522,25 @@ export function hayParejaBloqueo(s: GameState, jugador: PlayerId): boolean {
 }
 
 /**
+ * Pasivo 1A (FB-005/DS-006): carta de Éter con un efecto `pago/block_ether` SIN trigger. Mientras está
+ * en la zona de pago (1A), su dueño puede bloquear 1 Éter de su Reserva sobre un Campeón (una vez por
+ * turno por carta). Es una habilidad del turno (§8.3a: cualquier fase menos Alba), no un evento del Alba.
+ */
+export function pasivosBloqueo1A(s: GameState, jugador: PlayerId): string[] {
+  return s.players[jugador].eterPagado.filter((id) => {
+    const inst = s.instances[id]
+    if (!inst || inst.opcionUsadaEsteTurno) return false
+    const meta = inst.cardId ? getCardMeta(inst.cardId) : null
+    if (!meta || !('efectos' in meta) || !meta.efectos) return false
+    return meta.efectos.some((e) => e.efecto === 'block_ether' && !e.trigger && e.tipo === 'pago')
+  })
+}
+
+/**
  * Crea una opción de bloqueo (opcionesPendientes + elegir_opcion):
  * "una vez por turno puedes bloquear 1 Éter de tu Reserva sobre un Campeón sin agotarlo".
- * Data-driven: lo llaman phases.ts (Éteres en 1A con block_ether sin trigger —
- * Pasivo 1A) y effectInterpreter (case block_ether — p.ej. vínculos).
+ * Data-driven: lo llama effectInterpreter (case block_ether — p.ej. vínculos con trigger de Alba).
+ * El Pasivo 1A de las cartas de Éter NO pasa por aquí: ver pasivosBloqueo1A.
  */
 export function crearOpcionBloqueo(s: GameState, jugador: PlayerId, fuenteInstanceId: string): boolean {
   const inst = s.instances[fuenteInstanceId]

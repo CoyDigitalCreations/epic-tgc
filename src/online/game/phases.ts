@@ -1,17 +1,17 @@
 import { reagruparEter } from './payments'
 import { robarCarta } from './draw'
-import { purgarEfectosTemporales, purgarHastaFase, dispararTrigger, crearOpcionBloqueo } from './efectos'
-import { getCardMeta } from './cards'
+import { purgarEfectosTemporales, purgarHastaFase, dispararTrigger } from './efectos'
 import { resolverFaseEfectos } from './effectRegistry'
 import { reagruparEfectosBloqueoAlba, exhaustFijado } from './effectInterpreter'
 import type { Ctx, GameState, PlayerId } from './types'
 
 /**
  * Alba AUTO-RESUELTA (ADR-3): nunca es un estado observable; se ejecuta dentro
- * de la acción que la dispara. Orden C2: purga 'alba-dueño' → enderezar →
- * DISPARO al-inicio-alba ANTES de reagrupar (para que Pasivo 1A evalúe 1A) →
- * reagrupar 1A→2A → robar 1.
- * Desviación: ADR-23 ordenaba tras reagrupar; Pasivo necesita 1A vivo.
+ * de la acción que la dispara. Orden del manual (§8.2): purga 'alba-dueño' →
+ * 1. enderezar → 2. reagrupar el Éter → 3. efectos "al inicio de tu turno" → 4. robar 1.
+ * Los efectos de inicio ven la zona de pago (1A) ya vacía: lo que muevan a 1A se queda ahí
+ * durante el turno. El Pasivo 1A (FB-005/DS-006) NO es del Alba: es una habilidad del turno
+ * (ver pasivosBloqueo1A).
  * Las transiciones forja→choque→ocaso→alba viven en actions.ts (C4).
  */
 export function resolverAlba(s: GameState, ctx: Ctx, jugador: PlayerId): void {
@@ -43,8 +43,16 @@ export function resolverAlba(s: GameState, ctx: Ctx, jugador: PlayerId): void {
     if (id && s.instances[id]?.entradaEsteTurno) delete s.instances[id].entradaEsteTurno
   }
 
-  // 2. C2: Disparo al-inicio-alba ANTES de reagrupar (instancias = eterPagado + vínculos del jugador)
-  //    El Pasivo 1A (FB-005/DS-006) evalúa su condición en zona 1A viva.
+  // 2. Reagrupar el Éter (§8.2): 1A → 2A (los bloqueados permanecen en el Campeón)
+  reagruparEter(s, ctx, jugador)
+
+  // 2b. Efectos con reagrupar alba propio (Aurora steal, Ragnar grant_keyword):
+  //     liberan el Éter que bloquearon CON SU EFECTO a la Reserva (independiente
+  //     del reagrupado 1A→2A). Si el efecto es steal con duracion
+  //     'mientras_ester_bloqueado', termina el robo (retorno condicional).
+  reagruparEfectosBloqueoAlba(s, ctx, jugador)
+
+  // 3. Efectos "Al inicio de tu turno..." (§8.2) — DESPUÉS de reagrupar.
   //    Los vínculos con efectos periódicos (FB-025, FB-029, DS-025, DS-029) también se evalúan aquí.
   //    §5.5: SOLO vínculos DESTRUIDOS (bocaArriba) tienen efectos vigentes —
   //    los boca-abajo son solo vida. Los destruidos permanecen boca arriba y
@@ -63,33 +71,10 @@ export function resolverAlba(s: GameState, ctx: Ctx, jugador: PlayerId): void {
     ...p.campo.misticasTacticas,
     ...p.campo.arcanasCombate,
   ].filter((id): id is string => id !== null)
-  const albaInstances = [...p.eterPagado, ...vinculosSnapshot, ...enCampoJugador]
+  const albaInstances = [...vinculosSnapshot, ...enCampoJugador]
   if (albaInstances.length > 0) {
     dispararTrigger(s, ctx, 'al-inicio-alba', jugador, albaInstances)
   }
-
-  // Fase 2a — Pasivo 1A data-driven: Éteres en 1A con block_ether sin trigger
-  // (tipo pago — FB-005/DS-006) ofrecen bloquear 1 Éter sin agotar, 1/turno.
-  for (const eterId of p.eterPagado) {
-    const eterInst = s.instances[eterId]
-    const eterMeta = eterInst?.cardId ? getCardMeta(eterInst.cardId) : null
-    if (!eterMeta || !('efectos' in eterMeta) || !eterMeta.efectos) continue
-    const esPasivoBloqueo = eterMeta.efectos.some(
-      (e) => e.efecto === 'block_ether' && !e.trigger && e.tipo === 'pago',
-    )
-    if (!esPasivoBloqueo) continue
-    if (eterInst) eterInst.opcionUsadaEsteTurno = false
-    crearOpcionBloqueo(s, jugador, eterId)
-  }
-
-  // 3. Reagrupar Éter pagado 1A → 2A (los bloqueados permanecen en el Campeón)
-  reagruparEter(s, ctx, jugador)
-
-  // 3b. Efectos con reagrupar alba propio (Aurora steal, Ragnar grant_keyword):
-  //     liberan el Éter que bloquearon CON SU EFECTO a la Reserva (independiente
-  //     del reagrupado 1A→2A). Si el efecto es steal con duracion
-  //     'mientras_ester_bloqueado', termina el robo (retorno condicional).
-  reagruparEfectosBloqueoAlba(s, ctx, jugador)
 
   // 4. Robar 1 (no consume RNG: toma del tope)
   robarCarta(s, ctx, jugador)

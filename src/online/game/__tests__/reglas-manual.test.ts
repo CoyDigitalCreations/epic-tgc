@@ -12,6 +12,7 @@
  * - §10    ARTEFACTO: si el Campeón sale, la carta equipada va al Cementerio
  * - §7.2   Éter: moverlo nunca lo hace DESAPARECER del estado (destinos)
  * - §8.2   "Al inicio de tu turno" aplica a cualquier tipo de carta en campo
+ * - §8.2   orden del Alba: enderezar → reagrupar el Éter → efectos de inicio → robar
  * - §5.3   hechizo de un solo uso vs permanente (esPermanenteEnMesa)
  */
 import { describe, it, expect } from 'vitest'
@@ -20,6 +21,7 @@ import { destruirCarta } from '../replacements'
 import { robarCarta } from '../draw'
 import { interpretEffect } from '../effectInterpreter'
 import { resolverAlba } from '../phases'
+import { registrarEfecto } from '../efectos'
 import { getValidActions } from '../validActions'
 import { applyAction } from '../actions'
 import { validarActivarArcana } from '../habilidades'
@@ -180,6 +182,69 @@ describe('§8.2 — "Al inicio de tu turno" aplica a cualquier carta en campo (A
 
     // 1 por el efecto (inicio_alba) + 1 natural del Alba = 2
     expect(s.players.A.mano).toHaveLength(2)
+  })
+})
+
+describe('§8.2 — orden del Alba: enderezar → reagrupar → efectos de inicio → robar', () => {
+  const CARTA = 'TEST-ALBA-ORDEN'
+  registrarCartas([{
+    id: CARTA,
+    name: 'Test Orden del Alba',
+    type: 'Campeón',
+    keywords: [],
+    stats: { cost: 1, poder: 1, resistencia: 1 },
+  } as never])
+
+  function escenario(): GameState {
+    const s = estadoMinimo()
+    s.instances['champ'] = { cardInstanceId: 'champ', cardId: CARTA, owner: 'A', agotado: true }
+    s.players.A.campo.campeones[0] = 'champ'
+    for (const id of ['pagado-1', 'pagado-2']) s.instances[id] = { cardInstanceId: id, cardId: 'FB-001', owner: 'A' }
+    s.players.A.eterPagado = ['pagado-1', 'pagado-2']
+    s.instances['reserva-1'] = { cardInstanceId: 'reserva-1', cardId: 'FB-001', owner: 'A' }
+    s.players.A.eterReserva = ['reserva-1']
+    s.players.A.mazo = ['robo-1']
+    s.instances['robo-1'] = { cardInstanceId: 'robo-1', cardId: 'FB-019', owner: 'A' }
+    return s
+  }
+
+  it('al llegar los efectos de inicio el Campeón ya está enderezado, el Éter reagrupado y todavía no se robó', () => {
+    const visto: { agotado?: boolean; pagado: number; reserva: number; mano: number }[] = []
+    registrarEfecto('al-inicio-alba', CARTA, (s) => {
+      visto.push({
+        agotado: s.instances['champ'].agotado,
+        pagado: s.players.A.eterPagado.length,
+        reserva: s.players.A.eterReserva.length,
+        mano: s.players.A.mano.length,
+      })
+    })
+    const s = escenario()
+    resolverAlba(s, crearCtx(), 'A')
+
+    expect(visto).toEqual([{ agotado: undefined, pagado: 0, reserva: 3, mano: 0 }])
+    expect(s.players.A.mano).toEqual(['robo-1']) // el robo es lo último
+  })
+
+  it('lo que un efecto de inicio mueve a la zona de pago (1A) se queda ahí durante el turno', () => {
+    registrarEfecto('al-inicio-alba', CARTA, (s) => {
+      const id = s.players.A.eterReserva.pop()!
+      s.players.A.eterPagado.push(id)
+    })
+    const s = escenario()
+    resolverAlba(s, crearCtx(), 'A')
+
+    expect(s.players.A.eterPagado).toHaveLength(1)
+    expect(s.players.A.eterReserva).toHaveLength(2)
+  })
+
+  it('el Éter de efectos continuos (bloqueado en un Campeón) NO se reagrupa', () => {
+    const s = escenario()
+    s.instances['bloqueado-1'] = { cardInstanceId: 'bloqueado-1', cardId: 'FB-001', owner: 'A' }
+    s.instances['champ'].eterBloqueado = ['bloqueado-1']
+    resolverAlba(s, crearCtx(), 'A')
+
+    expect(s.instances['champ'].eterBloqueado).toEqual(['bloqueado-1'])
+    expect(s.players.A.eterReserva).not.toContain('bloqueado-1')
   })
 })
 

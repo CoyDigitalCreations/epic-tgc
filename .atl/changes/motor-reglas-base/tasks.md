@@ -34,8 +34,8 @@ Ver `design.md`. Marcar al terminar cada tarea.
 - [x] Prioridad del defensor en la cadena
 
 ## F4 — Alba
-- [ ] Orden: enderezar → reagrupar → efectos de inicio → robar
-- [ ] Rediseñar el Pasivo 1A
+- [x] Orden: enderezar → reagrupar → efectos de inicio → robar
+- [x] Rediseñar el Pasivo 1A
 
 ## F5 — Pila general
 - [ ] Definir eventos que abren ventana (pregunta abierta)

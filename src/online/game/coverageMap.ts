@@ -1,7 +1,7 @@
 /**
  * Fase 0 — Mapa de cobertura: motor vs JSON (fuente de verdad).
  *
- * FUENTE DE VERDAD: seed/PrimerColeccionEfectos.json (Card-Maker).
+ * FUENTE DE VERDAD: seed/FuenteEfectos.json (Card-Maker).
  * NO paquetes.ts — esa data arrastraba efectos legacy/rediseños viejos.
  *
  * Módulo PURO (sin efectos secundarios): clasifica cada efecto de cada carta
@@ -236,7 +236,7 @@ export function clasificarEfecto(
         return {
           ...base,
           estado: 'OK_ACTIVACION',
-          ruta: 'phases.ts al-inicio-alba → crearOpcionBloqueo (data-driven desde efectos[] en 1A)',
+          ruta: 'efectos.ts pasivosBloqueo1A → elegir_opcion (habilidad del turno mientras la carta está en 1A, §8.3a)',
           notas: [...notas, 'Pasivo 1A sin handlers por cardId (FB-005/DS-006).'],
         }
       }
@@ -600,7 +600,7 @@ export function formatReporte(r: ReporteCobertura): string {
   const lines: string[] = []
   const ok = pctOK(r)
 
-  lines.push('# Mapa de Cobertura — Motor vs JSON (fuente de verdad: seed/PrimerColeccionEfectos.json)')
+  lines.push('# Mapa de Cobertura — Motor vs JSON (fuente de verdad: seed/FuenteEfectos.json)')
   lines.push('')
   lines.push(`Cartas: **${r.totalCartas}** | Efectos clasificados: **${r.totalEfectos}** | Combos únicos (tipo×trigger×efecto): **${r.combos.length}**`)
   lines.push('')

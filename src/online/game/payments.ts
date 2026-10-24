@@ -310,6 +310,8 @@ export function reagruparEter(s: GameState, ctx: Ctx, jugador: PlayerId): void {
   const p = s.players[jugador]
   if (p.eterPagado.length === 0) return
   const reagrupados = p.eterPagado
+  // El Pasivo 1A de una carta de Éter (una vez por turno) se estrena de nuevo la próxima vez que se pague
+  for (const id of reagrupados) delete s.instances[id]?.opcionUsadaEsteTurno
   p.eterReserva.push(...reagrupados)
   p.eterPagado = []
   ctx.emit({ type: 'eter_reagrupado', jugador, eterIds: reagrupados })
