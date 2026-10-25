@@ -74,13 +74,7 @@ export function interpretEffect(
   // jugar_mistica, ...] ya cobraron su pago aparte y NO duplican). Sin fondos
   // en Reserva → fizzled: ni cobra ni resuelve.
   if (payload.cobrarCosto && costo && costo.tipo === 'eter' && inst.cardId) {
-    const cant = costo.cantidad ?? 1
-    const pCobro = s.players[jugador]
-    if (pCobro.eterReserva.length < cant) return
-    if (cant > 0) {
-      const eterIdsCobro = pCobro.eterReserva.slice(0, cant)
-      aplicarPago(s, ctx, jugador, eterIdsCobro, inst.cardId, { tipo: 'habilidad', cardInstanceId: inst.cardInstanceId })
-    }
+    if (!cobrarCostoEter(s, ctx, inst, costo, jugador)) return
   }
 
   // CONTEXTO USO CHECK: if the effect specifies contextoUso (e.g., 'invocar'),
@@ -142,6 +136,28 @@ export function interpretEffect(
 }
 
 /**
+ * Cobra el costo tipo 'eter' de un efecto disparado (Reserva → 1A, B8). Devuelve false si no hay fondos
+ * (el efecto se pierde, sin cobrar nada). Compartido por interpretEffect y la resolución de triggers apilados (F5d-2).
+ */
+export function cobrarCostoEter(
+  s: GameState,
+  ctx: Ctx,
+  inst: CardInstance,
+  costo: NonNullable<EfectoData['costo']>,
+  jugador: PlayerId,
+): boolean {
+  if (costo.tipo !== 'eter' || !inst.cardId) return true
+  const cant = costo.cantidad ?? 1
+  const pCobro = s.players[jugador]
+  if (pCobro.eterReserva.length < cant) return false
+  if (cant > 0) {
+    const eterIdsCobro = pCobro.eterReserva.slice(0, cant)
+    aplicarPago(s, ctx, jugador, eterIdsCobro, inst.cardId, { tipo: 'habilidad', cardInstanceId: inst.cardInstanceId })
+  }
+  return true
+}
+
+/**
  * Objetivo del efecto con los filtros de la raíz mezclados y la zona por defecto de
  * `zonaOrigen`: lo que resolveTargets necesita (armar la elección y revalidarla al resolver).
  */
@@ -190,7 +206,7 @@ function needsPlayerChoice(objetivo: EfectoData['objetivo'], efecto?: EfectoData
  * Pre-check: can this effect actually be executed?
  * Returns false if the effect would silently fail (e.g., steal with no free slot).
  */
-function canExecuteEffect(
+export function canExecuteEffect(
   s: GameState,
   efecto: EfectoData['efecto'],
   jugador: PlayerId,

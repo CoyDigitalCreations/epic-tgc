@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
-import { aporteDe, atacantesElegibles, campeonesSacrificables, costeEterHabilidad, faccionesCompartidas, getCardMeta, sacrificiosRequeridos, esBloqueoFijo, maxEterBloqueado, efectoBloqueoAccion, parejasBloqueoOpcion, cadenaActiva } from '../game'
+import { aporteDe, atacantesElegibles, campeonesSacrificables, costeEterHabilidad, faccionesCompartidas, getCardMeta, sacrificiosRequeridos, esBloqueoFijo, maxEterBloqueado, efectoBloqueoAccion, parejasBloqueoOpcion, cadenaActiva, ordenResolucion } from '../game'
 import type { Action, CardInstance, GameState, PlayerId } from '../game'
 import { Boton as BotonUI } from '../../shared/ui/Boton'
 import { Dock } from '../../shared/ui/Dock'
@@ -1505,6 +1505,8 @@ export function Tablero({
   )
   const cadenaVista = cadenaActiva(vista)
   const pila = cadenaVista?.pila ?? []
+  const triggersCadena = cadenaVista?.triggers ?? [] // F5d-2: triggers apilados
+  const ordenCadena = cadenaVista && triggersCadena.length > 0 ? ordenResolucion(cadenaVista) : []
   const efectoActual = cadenaVista?.efectoActual
 
   const faseTurno = terminada
@@ -1874,7 +1876,7 @@ export function Tablero({
                   : 'Efecto activado'}
               </p>
             )}
-            {pila.length === 0 ? (
+            {pila.length === 0 && triggersCadena.length === 0 ? (
               <p className="text-[11px] text-gray-600 italic">Sin cadena abierta.</p>
             ) : (
               <div className="flex gap-1.5 flex-wrap items-start">
@@ -1885,6 +1887,15 @@ export function Tablero({
                     tamano="sm"
                     onZoom={() => abrirZoom(vista.instances[id])}
                   />
+                ))}
+                {/* F5d-2: triggers apilados, con su orden de resolución (1° = el primero en resolver) */}
+                {triggersCadena.map((t, i) => (
+                  <div key={`trigger-${t.cardInstanceId}-${t.efectoIdx}-${i}`} className="flex flex-col items-center gap-0.5">
+                    <MiniCard inst={vista.instances[t.cardInstanceId]} tamano="sm" onZoom={() => abrirZoom(vista.instances[t.cardInstanceId])} />
+                    <span className="rounded-full bg-amber-500/20 px-1.5 py-px font-mono text-[9px] text-amber-200">
+                      {`trigger · resuelve ${ordenCadena.findIndex((p) => 'trigger' in p && p.trigger === t) + 1}°`}
+                    </span>
+                  </div>
                 ))}
               </div>
             )}

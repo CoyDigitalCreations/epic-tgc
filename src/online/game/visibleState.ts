@@ -43,6 +43,10 @@ export function visibleState(state: GameState, playerId: PlayerId): GameState {
   // F5e: la respuesta declarada (ya pagada, aún eligiendo objetivos) tampoco: el rival la ve antes de que entre a la pila
   const respondiendo = v.declaracionEnEleccion?.respuesta
   if (respondiendo) ocultar.delete(respondiendo.cardInstanceId)
+  // F5d-2: los triggers apilados (y los declarados que aún eligen objetivos) son públicos: una Arcana que ya se
+  // volteó y generó un trigger se ve. NO se des-oculta su objetivoId: solo es un id, la carta objetivo sigue su visibilidad.
+  for (const t of cadenaActiva(v)?.triggers ?? []) ocultar.delete(t.cardInstanceId)
+  for (const t of v.declaracionEnEleccion?.triggers ?? []) ocultar.delete(t.cardInstanceId)
 
   // Búsqueda de mazo (C3/D1): mientras un pendiente de elegir_objetivo espera
   // respuesta del jugador, sus cartas opción se muestran — necesita VER qué

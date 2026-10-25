@@ -44,6 +44,10 @@ export { atacantesElegibles, bloqueadoresDisponibles } from './combat'
 // Cadena de efectos en combate (9.6)
 export { cadenaActiva, respondiblesDe, validarResponderCadena, validarPasarPrioridad } from './chain'
 
+// Triggers apilados en la cadena (F5d-2): infraestructura; los sitios de llamada llegan en F5d-3..5
+export { apilarTriggers, construirTriggers, ordenResolucion, esTriggerApilable, TRIGGERS_APILABLES } from './triggers'
+export type { TriggerApilado } from './types'
+
 // Invariantes de partida (mazo estándar de 61)
 export { verificarInvariantes, verificarZonaUnica } from './invariants'
 

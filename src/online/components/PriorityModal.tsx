@@ -15,9 +15,10 @@ import { Modal } from '../../shared/ui/Modal'
 import { Seccion } from '../../shared/ui/Seccion'
 import { MiniCard } from './MiniCard'
 import type { Action } from '../game/actions'
-import type { GameState, PlayerId, CardInstance } from '../game/types'
+import type { GameState, PlayerId, CardInstance, TriggerApilado } from '../game/types'
 import { getCardMeta } from '../game/cards'
 import { cadenaActiva, respondiblesDe, respuestasDeMano } from '../game/chain'
+import { ordenResolucion } from '../game/triggers'
 
 interface PriorityModalProps {
   state: GameState
@@ -58,6 +59,12 @@ export function PriorityModal({ state, playerId, acciones, onAccion, onZoom }: P
   const efectoMeta = efectoInst?.cardId ? getCardMeta(efectoInst.cardId) : null
 
   const esCombate = cadena.origen === 'combate'
+
+  // F5d-2: triggers apilados. Con ellos, el orden de resolución mezcla respuestas y triggers: cada uno
+  // lleva su ordinal global (1° = el que resuelve primero). Sin triggers, las etiquetas son las de siempre.
+  const triggers = cadena.triggers ?? []
+  const orden = ordenResolucion(cadena)
+  const ordinalDe = (paso: { respuesta: string } | { trigger: TriggerApilado }) => orden.findIndex((p) => ('respuesta' in paso ? 'respuesta' in p && p.respuesta === paso.respuesta : 'trigger' in p && p.trigger === paso.trigger)) + 1
 
   return (
     <Modal
@@ -106,13 +113,39 @@ export function PriorityModal({ state, playerId, acciones, onAccion, onZoom }: P
                         esUltima ? 'bg-amber-500/25 text-amber-200' : 'bg-white/10 text-gray-400'
                       }`}
                     >
-                      {esUltima ? 'resuelve 1°' : `#${idx + 1}`}
+                      {triggers.length > 0 ? `resuelve ${ordinalDe({ respuesta: id })}°` : esUltima ? 'resuelve 1°' : `#${idx + 1}`}
                     </span>
                   </div>
                 )
               })}
             </div>
             <p className="mt-2 text-[10px] text-gray-500">La cadena se resuelve en orden inverso: la última carta apilada va primero.</p>
+          </section>
+        )}
+
+        {/* ── Triggers apilados (F5d-2): efectos provocados por una acción, encima de ella ── */}
+        {triggers.length > 0 && (
+          <section>
+            <Seccion cantidad={triggers.length}>Triggers</Seccion>
+            <div className="flex flex-wrap items-end gap-2">
+              {[...triggers].reverse().map((t, idx) => {
+                const inst = state.instances[t.cardInstanceId]
+                const objetivo = t.objetivoId ? state.instances[t.objetivoId] : null
+                const objetivoMeta = objetivo?.cardId ? getCardMeta(objetivo.cardId) : null
+                return (
+                  <div key={`${t.cardInstanceId}-${t.efectoIdx}-${idx}`} className="flex flex-col items-center gap-1">
+                    <MiniCard inst={inst} anchoPx={64} sinTooltip onZoom={() => onZoom(inst)} />
+                    <span className="rounded-full bg-amber-500/25 px-1.5 py-px font-mono text-[9px] text-amber-200">
+                      {`resuelve ${ordinalDe({ trigger: t })}°`}
+                    </span>
+                    <span className="text-[9px] text-gray-400">
+                      {t.jugador === playerId ? 'Tuyo' : 'Del rival'}{objetivoMeta ? ` → ${objetivoMeta.name}` : ''}
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
+            <p className="mt-2 text-[10px] text-gray-500">Los triggers resuelven después de las respuestas y antes de la jugada que los provocó; no se pueden negar.</p>
           </section>
         )}
 

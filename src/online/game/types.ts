@@ -1,5 +1,6 @@
 import type { GameEvent } from './events'
 import type { EfectoPendiente } from './effectRegistry'
+import type { TriggerEfecto } from './efectos'
 import type { OperacionRegla, ReglaId } from '../../shared/rules/reglas'
 
 export type PlayerId = 'A' | 'B'
@@ -237,6 +238,35 @@ export interface CadenaState {
    * el resolvedor infiere el origen por la zona de la carta.
    */
   respuestas?: Record<string, RespuestaApilada>
+  /**
+   * Triggers apilados (F5d-2), en orden de apilado (el último resuelve primero, LIFO). Cada uno ya eligió
+   * sus objetivos al apilarse (su dueño, rival incluido). Resuelven DESPUÉS de las respuestas que quedaron
+   * por encima de ellos (`sobre`) y ANTES del opener. No son negables y no responden a la velocidad.
+   * Opcional: los estados persistidos sin el campo se siguen leyendo.
+   */
+  triggers?: TriggerApilado[]
+}
+
+/**
+ * Trigger apilado en la cadena (F5d-2): un efecto de una carta que se dispara como consecuencia de una
+ * acción de jugador ("Al invocar...", "Al atacar...") y entra a la pila ENCIMA de la acción que lo provocó
+ * (manual §9.6). Todo serializable: la identidad del efecto es (carta fuente, trigger, índice en efectos[]);
+ * el efecto se vuelve a leer del meta al resolver. Ver triggers.ts.
+ */
+export interface TriggerApilado {
+  /** Controlador del efecto: ES el elector de su objetivo y a quien se le cobra el costo al resolver. */
+  jugador: PlayerId
+  /** Carta fuente del efecto. */
+  cardInstanceId: string
+  trigger: TriggerEfecto
+  /** Índice del efecto en meta.efectos[] (una carta puede tener varios efectos con el mismo trigger). */
+  efectoIdx: number
+  /** Objetivo ya elegido al apilar (un efecto = a lo más un objetivo; ausente si no se eligió o no hay). */
+  objetivoId?: string
+  /** Respuesta de la pila sobre la que se apiló (ausente = sobre el fondo: el opener / la jugada que abrió la ventana). */
+  sobre?: string
+  /** Datos del suceso que lo disparó (solo ids y texto serializable). */
+  payload?: { killerId?: string; victimaId?: string; contextoUso?: string }
 }
 
 /** Datos con los que una respuesta entra a la pila (F5e). */
@@ -285,9 +315,13 @@ export interface OpenerCadena {
  * - 'respuesta' (F5e): una respuesta (jugar_respuesta / responder_cadena) con objetivos;
  *   al elegir el último la respuesta ENTRA a la pila y la prioridad alterna. Aquí la
  *   cadena YA está abierta: mientras se elige no se puede responder ni pasar.
+ * - 'triggers' (F5d-2): solo triggers apilados, sin jugada propia (jugador = el del turno); abre una ventana
+ *   global o, si la cadena ya está abierta, se suman a ella.
+ * Cualquier tipo puede traer `triggers`: los que provocó la acción, con su objetivo ya elegido al terminar
+ * la elección; entran a la cadena al abrirse la ventana (o resuelven ya si nadie puede responder).
  */
 export interface DeclaracionCadena {
-  tipo: 'opener' | 'invocacion' | 'ataque' | 'respuesta'
+  tipo: 'opener' | 'invocacion' | 'ataque' | 'respuesta' | 'triggers'
   /** Quien declaró (el jugador activo). El ELECTOR de cada objetivo es `pendiente.jugador`. */
   jugador: PlayerId
   /** invocacion: la carta invocada (descripción de la ventana). */
@@ -296,6 +330,8 @@ export interface DeclaracionCadena {
   opener?: OpenerCadena
   /** respuesta: la carta que responde; acumula los objetivos elegidos. */
   respuesta?: RespuestaCadena
+  /** Triggers que provocó la acción (F5d-2); acumulan el objetivo que su dueño elige. */
+  triggers?: TriggerApilado[]
   /** Pendientes de la acción por elegir: las primeras N entradas de objetivosPendientes. La ventana se abre al llegar a 0. */
   pendientes: number
 }
@@ -374,6 +410,12 @@ export interface GameState {
    * jugador) y solo se acepta elegir_objetivo, responder_prevenicion o rendirse.
    */
   declaracionEnEleccion?: DeclaracionCadena
+  /**
+   * Profundidad de resolución de triggers/pila en curso (F5d-2, transitorio: solo vale DENTRO de una acción,
+   * nunca queda persistido). Mientras es > 0 un trigger de acción nuevo no abre ventana ni se apila: resuelve
+   * ya (decisión g de triggers.ts); sirve además de tope contra recursión.
+   */
+  profundidadTriggers?: number
   ganador?: PlayerId
   motivo?: MotivoFin
   /** Efectos pendientes centralizados (Effect Registry, Fase 1). */

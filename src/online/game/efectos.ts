@@ -636,7 +636,7 @@ export function limpiarRegistroEfectos(): void {
 }
 
 /** Instancias en el campo del jugador (2B-2F, 3A-3C, 3D-3F, 4A-4F), orden estable. */
-function instanciasEnCampo(s: GameState, jugador: PlayerId): string[] {
+export function instanciasEnCampo(s: GameState, jugador: PlayerId): string[] {
   const p = s.players[jugador]
   return [
     ...p.campo.campeones,
@@ -653,6 +653,75 @@ const registroGenerico = new Map<string, HandlerGenerico>()
 /** Registra un handler genérico para un tipo de efecto (ej: invocar_y_equipar). */
 export function registrarEfectoGenerico(efectoTipo: string, fn: HandlerGenerico): void {
   registroGenerico.set(efectoTipo, fn)
+}
+
+/** Trigger interno → trigger del JSON (efecto.trigger). 'al-bloquear-eter' y 'activable' no tienen equivalente. */
+const TRIGGER_A_JSON: Readonly<Record<string, string>> = {
+  'al-invocar': 'al_invocar',
+  'al-atacar': 'al_atacar',
+  'al-matar-en-combate': 'al_matar_en_combate',
+  'al-inicio-alba': 'inicio_alba',
+  'al-inicio-choque': 'inicio_choque',
+  'al-pagar-eter': 'al_pagar_eter',
+  'al-jugar-mistica': 'al_jugar_mistica',
+  'al-ser-enviado-al-cementerio': 'al_ser_enviado_al_cementerio',
+  'al-ser-destruido-vinculo': 'al_ser_destruido_vinculo',
+  'al-resolver-cadena': 'al_resolver_cadena',
+  'al-activar-habilidad': 'al_activar_habilidad',
+}
+
+/** Efecto de efectos[] que matchea un trigger interno (con su índice), tal como lo ven dispararTrigger y el apilado. */
+export interface TriggerMatch {
+  inst: CardInstance
+  efecto: EfectoData
+  efectoIdx: number
+}
+
+/**
+ * Efectos del JSON que se disparan con `trigger` en las instancias `ids` (F5d-2, función PURA: no muta
+ * nada). Es el filtro de dispararTrigger extraído tal cual, y la fuente de verdad también para armar,
+ * apilar y revalidar triggers apilados:
+ * - Vínculos BOCA ABAJO no tienen efectos vigentes (§5.5).
+ * - Si la carta tiene `condicion` JSON cuyo trigger es el disparado, `condicionCumple` (con `jugador`) debe pasar.
+ * - Match por trigger JSON; 'al-bloquear-eter' (umbral Aurora) solo matchea efectos SIN trigger con costo
+ *   de bloqueo. Un trigger interno sin equivalente JSON (p. ej. 'activable') matchea los efectos sin trigger.
+ * Devuelve TODOS los efectos con match, por instancia en orden estable (ids ordenados) y luego por
+ * efectoIdx. Los handlers por cardId / genéricos (registrarEfecto*) son opacos y quedan fuera.
+ */
+export function triggersQueMatchean(s: GameState, trigger: TriggerEfecto, jugador: PlayerId, ids: readonly string[]): TriggerMatch[] {
+  const res: TriggerMatch[] = []
+  const efectoTrigger = TRIGGER_A_JSON[trigger]
+  for (const id of [...ids].sort()) {
+    const inst = s.instances[id]
+    const cardId = inst?.cardId
+    if (!inst || !cardId) continue
+    const meta = getCardMeta(cardId)
+    if (!meta || !('efectos' in meta)) continue
+    if (meta.type === 'Vínculo' && inst.bocaArriba !== true) continue
+    // CONDITION CHECK: si la carta tiene condicion JSON cuyo trigger matchea
+    // el disparado, evaluar condiciones (§5.4) — data-driven, sin guards.
+    if ('condicion' in meta) {
+      const condicion = (meta as AnyCard & { condicion?: CondicionEfecto | string }).condicion
+      if (condicion && typeof condicion === 'object' && 'trigger' in condicion) {
+        if (efectoTrigger === condicion.trigger && condicionCumple(s, condicion, jugador) !== null) continue
+      }
+    }
+    const efectos = meta.efectos as EfectoData[] | undefined
+    if (!efectos || !Array.isArray(efectos)) continue
+    efectos.forEach((efecto, efectoIdx) => {
+      // Match por trigger JSON. 'al-bloquear-eter' (re-dispatch de umbral
+      // Aurora steal_champion) SOLO matchea efectos sin trigger propios
+      // con costo de bloqueo — nunca otros efectos triggerless (destroy, etc.).
+      const esUmbral = trigger === 'al-bloquear-eter'
+      const matchea = esUmbral
+        ? !efecto.trigger &&
+          (efecto.costo?.tipo === 'bloqueo_fijo' || efecto.costo?.tipo === 'eter_bloqueado') &&
+          !!efecto.efecto
+        : efecto.trigger === efectoTrigger && !!efecto.efecto
+      if (matchea) res.push({ inst, efecto, efectoIdx })
+    })
+  }
+  return res
 }
 
 /**
@@ -678,21 +747,6 @@ export function dispararTrigger(
   // efecto al resolverse (interpretEffect) — antes solo se validaba (o nada).
   const payload: PayloadEfecto = { jugador, fromTrigger: true, cobrarCosto: true, ...payloadExtra }
 
-  // Mapeo de triggers internos → triggers del JSON
-  const triggerMapping: Record<string, string> = {
-    'al-invocar': 'al_invocar',
-    'al-atacar': 'al_atacar',
-    'al-matar-en-combate': 'al_matar_en_combate',
-    'al-inicio-alba': 'inicio_alba',
-    'al-inicio-choque': 'inicio_choque',
-    'al-pagar-eter': 'al_pagar_eter',
-    'al-jugar-mistica': 'al_jugar_mistica',
-    'al-ser-enviado-al-cementerio': 'al_ser_enviado_al_cementerio',
-    'al-ser-destruido-vinculo': 'al_ser_destruido_vinculo',
-    'al-resolver-cadena': 'al_resolver_cadena',
-    'al-activar-habilidad': 'al_activar_habilidad',
-  }
-
   for (const id of orden) {
     const inst = s.instances[id]
     const cardId = inst?.cardId
@@ -706,70 +760,41 @@ export function dispararTrigger(
     // Solo los DESTRUIDOS (bocaArriba) firean/auras. Garantía de motor,
     // no solo de los call sites (phases.ts/partida.ts).
     if (meta && meta.type === 'Vínculo' && inst.bocaArriba !== true) continue
-    if (meta && 'efectos' in meta) {
-      // CONDITION CHECK: si la carta tiene condicion JSON cuyo trigger matchea
-      // el disparado, evaluar condiciones (§5.4) — data-driven, sin guards.
-      let conditionPassed = true
-      if ('condicion' in meta) {
-        const condicion = (meta as AnyCard & { condicion?: CondicionEfecto | string }).condicion
-        if (condicion && typeof condicion === 'object' && 'trigger' in condicion) {
-          const efectoTrigger = triggerMapping[trigger]
-          if (efectoTrigger === condicion.trigger && condicionCumple(s, condicion, payload.jugador) !== null) {
-            conditionPassed = false
-          }
-        }
+    // F5d-2: el filtro (condición, trigger, Vínculo boca abajo) vive en triggersQueMatchean, evaluado
+    // POR instancia y en el momento (un efecto anterior pudo cambiar el estado). Camino inmediato:
+    // solo el PRIMER efecto con match de la carta (el apilado las separa en entradas por efectoIdx).
+    const primero = triggersQueMatchean(s, trigger, payload.jugador, [id])[0]
+    if (primero) {
+      const { efecto, efectoIdx } = primero
+      // D1 pattern: snapshot pending objectives before interpreter
+      const pendientesAntes = s.objetivosPendientes?.length ?? 0
+      // F5e: declaración (arma la elección marcada con el índice del efecto) o
+      // resolución con el objetivo elegido al declarar
+      const objetivoElegido = payload.objetivosElegidos?.[efectoIdx]
+      interpretEffect(s, ctx, inst, efecto, {
+        ...payload,
+        ...(payload.declarar ? { declararOpener: { efectoIdx } } : {}),
+        ...(objetivoElegido ? { contextoUso: 'objetivo-elegido', objetivoId: objetivoElegido } : {}),
+      })
+      const pendientesDespues = s.objetivosPendientes?.length ?? 0
+
+      // If interpreter created a pending objective → D1 pattern worked
+      if (pendientesDespues > pendientesAntes) {
+        handled = true
       }
-
-      if (conditionPassed) {
-        const efectos = ('efectos' in meta ? meta.efectos : undefined) as EfectoData[] | undefined
-        if (efectos && Array.isArray(efectos)) {
-          const efectoTrigger = triggerMapping[trigger]
-          for (const efecto of efectos) {
-            // Match por trigger JSON. 'al-bloquear-eter' (re-dispatch de umbral
-            // Aurora steal_champion) SOLO matchea efectos sin trigger propios
-            // con costo de bloqueo — nunca otros efectos triggerless (destroy, etc.).
-            const esUmbral = trigger === 'al-bloquear-eter'
-            const matchea = esUmbral
-              ? !efecto.trigger &&
-                (efecto.costo?.tipo === 'bloqueo_fijo' || efecto.costo?.tipo === 'eter_bloqueado') &&
-                !!efecto.efecto
-              : efecto.trigger === efectoTrigger && !!efecto.efecto
-            if (matchea && efecto.efecto) {
-              // D1 pattern: snapshot pending objectives before interpreter
-              const pendientesAntes = s.objetivosPendientes?.length ?? 0
-              // F5e: declaración (arma la elección marcada con el índice del efecto) o
-              // resolución con el objetivo elegido al declarar
-              const efectoIdx = efectos.indexOf(efecto)
-              const objetivoElegido = payload.objetivosElegidos?.[efectoIdx]
-              interpretEffect(s, ctx, inst, efecto, {
-                ...payload,
-                ...(payload.declarar ? { declararOpener: { efectoIdx } } : {}),
-                ...(objetivoElegido ? { contextoUso: 'objetivo-elegido', objetivoId: objetivoElegido } : {}),
-              })
-              const pendientesDespues = s.objetivosPendientes?.length ?? 0
-
-              // If interpreter created a pending objective → D1 pattern worked
-              if (pendientesDespues > pendientesAntes) {
-                handled = true
-              }
-              // If no pending, check if effect needs targeting
-              else {
-                const needsTargeting = ['steal_champion', 'toggle_exhaust', 'destroy',
-                  'return_ether', 'mover', 'copy', 'tutor', 'block_ether'].includes(efecto.efecto)
-                if (needsTargeting) {
-                  const targetIds = efecto.objetivo
-                    ? resolveTargets(s, efecto.objetivo, payload.jugador, id)
-                    : []
-                  if (targetIds.length > 0) {
-                    handled = true
-                  }
-                } else {
-                  handled = true
-                }
-              }
-              break
-            }
+      // If no pending, check if effect needs targeting
+      else {
+        const needsTargeting = ['steal_champion', 'toggle_exhaust', 'destroy',
+          'return_ether', 'mover', 'copy', 'tutor', 'block_ether'].includes(efecto.efecto!)
+        if (needsTargeting) {
+          const targetIds = efecto.objetivo
+            ? resolveTargets(s, efecto.objetivo, payload.jugador, id)
+            : []
+          if (targetIds.length > 0) {
+            handled = true
           }
+        } else {
+          handled = true
         }
       }
     }

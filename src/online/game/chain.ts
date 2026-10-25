@@ -15,18 +15,26 @@
  *   objetivos AL RESPONDER (`declararRespuesta`). Al cerrar la de combate,
  *   `continuarCombateTrasCadena` reanuda la sub-máquina de combate.
  *
+ * F5d-2: la cadena también lleva TRIGGERS apilados (`cadena.triggers`, triggers.ts): resuelven debajo de las
+ * respuestas y encima del opener, y la declaración en elección (`tipo` 'triggers' o cualquier tipo con
+ * `triggers`) deja que su dueño elija los objetivos antes de abrir la ventana.
+ *
  * 0 extracciones RNG (contrato 89 intacto). CICLO de import deliberado con
  * combat.ts: ambos módulos se usan mutuamente SOLO en runtime (ESM, seguro).
  */
 import { esArcana, esArtefactoEquipable, esMistica, esPermanenteEnMesa, getCardMeta } from './cards'
-import { abrirVentanaAtaque, continuarCombateTrasCadena } from './combat'
+import { abrirVentanaAtaque, continuarCombateTrasCadena, rivalDe } from './combat'
+import {
+  abrirVentanaTriggers, armarTriggers, asentarTriggers, enResolucion, ordenResolucion, registrarObjetivoTrigger, resolverTrigger,
+  resolverTriggersInmediatos,
+} from './triggers'
 import { condicionCumple, condicionEsCandado, dispararTrigger, velocidadDe } from './efectos'
 import { interpretEffect } from './effectInterpreter'
 import { aplicarPago, etersParaPagar, validarPago, type ContextoUso } from './payments'
 import { enviarAlCementerio } from './replacements'
 import type { CondicionEfecto, EfectoData } from '../../shared/types'
 import type {
-  Ctx, CadenaState, DeclaracionCadena, GameState, OpenerCadena, PlayerId, RespuestaApilada, RespuestaCadena,
+  Ctx, CadenaState, DeclaracionCadena, GameState, OpenerCadena, PlayerId, RespuestaApilada, RespuestaCadena, TriggerApilado,
 } from './types'
 import { slotAZona } from './zones'
 
@@ -392,13 +400,15 @@ function declararRespuesta(s: GameState, ctx: Ctx, respuesta: Omit<RespuestaCade
 }
 
 /** La respuesta ya eligió todo: entra a la pila (LIFO), la prioridad alterna y los pases se reinician. */
-function asentarRespuesta(s: GameState, ctx: Ctx, respuesta: RespuestaCadena): void {
+function asentarRespuesta(s: GameState, ctx: Ctx, respuesta: RespuestaCadena, triggers?: readonly TriggerApilado[]): void {
   const cadena = cadenaActiva(s)
   if (!cadena) return
   const { jugador, cardInstanceId, origen, objetivos } = respuesta
   cadena.pila.push(cardInstanceId)
   cadena.respuestas = { ...cadena.respuestas, [cardInstanceId]: { jugador, origen, ...(objetivos ? { objetivos } : {}) } }
   cadena.pasesConsecutivos = 0
+  // F5d-2: los triggers que provocó la respuesta quedan encima de ella
+  asentarTriggers(s, triggers)
   // Registrar velocidad del último efecto activado
   cadena.velocidadActual = velocidadDe(s, cardInstanceId)
   ctx.emit({ type: 'respuesta_encadenada', jugador, cardInstanceId })
@@ -516,12 +526,21 @@ function resolverRespuesta(s: GameState, ctx: Ctx, id: string, datos: RespuestaA
 function resolverPila(s: GameState, ctx: Ctx): void {
   const cadena = s.cadena
   if (!cadena) return
-  for (const id of [...cadena.pila].reverse()) {
-    // una respuesta que salió de la pila a media resolución (p. ej. Artefacto al Cementerio) ya no resuelve
-    if (!cadena.pila.includes(id)) continue
-    resolverRespuesta(s, ctx, id, cadena.respuestas?.[id])
-  }
-  if (cadena.opener) resolverOpener(s, ctx, cadena.opener)
+  // F5d-2: orden = respuestas en reversa con los triggers apilados debajo de ellas (ordenResolucion), luego el
+  // opener. Mientras resuelve, un trigger de acción nuevo no abre ventana (profundidadTriggers, decisión g).
+  enResolucion(s, () => {
+    for (const paso of ordenResolucion(cadena)) {
+      if ('trigger' in paso) {
+        resolverTrigger(s, ctx, paso.trigger) // no negable: negar/Marcha solo alcanza al opener
+        continue
+      }
+      const id = paso.respuesta
+      // una respuesta que salió de la pila a media resolución (p. ej. Artefacto al Cementerio) ya no resuelve
+      if (!cadena.pila.includes(id)) continue
+      resolverRespuesta(s, ctx, id, cadena.respuestas?.[id])
+    }
+    if (cadena.opener) resolverOpener(s, ctx, cadena.opener)
+  })
   s.cadena = undefined
 }
 
@@ -596,18 +615,34 @@ export function continuarDeclaracion(s: GameState, ctx: Ctx, previos: MarcadorAc
 
 /** Abre la ventana que corresponde al tipo de declaración (gate: solo si el rival puede responder). */
 function abrirVentana(s: GameState, ctx: Ctx, declaracion: Omit<DeclaracionCadena, 'pendientes'>): void {
+  // F5d-2: los triggers que provocó la acción (con su objetivo ya elegido) entran a la cadena si la ventana
+  // se abre; si nadie puede responder resuelven YA, antes de la jugada que los provocó (están encima de ella)
+  const triggers = declaracion.triggers
   if (declaracion.tipo === 'opener') {
-    abrirOpener(s, ctx, declaracion.opener!)
+    abrirOpener(s, ctx, declaracion.opener!, triggers)
   } else if (declaracion.tipo === 'ataque') {
+    if (triggers && triggers.length > 0 && s.combate) {
+      if (abrirCadena(s, rivalDe(s))) {
+        asentarTriggers(s, triggers)
+        return
+      }
+      resolverTriggersInmediatos(s, ctx, triggers)
+    }
     abrirVentanaAtaque(s, ctx)
   } else if (declaracion.tipo === 'respuesta') {
     // F5e: la cadena ya está abierta; la respuesta entra a la pila con sus objetivos fijados
-    asentarRespuesta(s, ctx, declaracion.respuesta!)
+    asentarRespuesta(s, ctx, declaracion.respuesta!, triggers)
+  } else if (declaracion.tipo === 'triggers') {
+    abrirVentanaTriggers(s, ctx, declaracion)
   } else {
     const id = declaracion.cardInstanceId!
     const cardId = s.instances[id]?.cardId
     // incluirMano: la invocación cuenta Presteza de mano pagable, igual que el opener (F5b)
-    abrirCadenaGlobal(s, declaracion.jugador, { cardInstanceId: id, descripcion: (cardId ? getCardMeta(cardId)?.name : null) ?? id }, true)
+    if (abrirCadenaGlobal(s, declaracion.jugador, { cardInstanceId: id, descripcion: (cardId ? getCardMeta(cardId)?.name : null) ?? id }, true)) {
+      asentarTriggers(s, triggers)
+    } else {
+      resolverTriggersInmediatos(s, ctx, triggers)
+    }
   }
 }
 
@@ -619,7 +654,13 @@ function abrirVentana(s: GameState, ctx: Ctx, declaracion: Omit<DeclaracionCaden
  * se eligen ANTES de abrir la ventana (declararVentana). La habilidad ya trae su
  * objetivo en la acción (`opener.objetivos`).
  */
-export function declararOpener(s: GameState, ctx: Ctx, opener: OpenerCadena, previos: MarcadorAccion = marcarInicioAccion(s)): void {
+export function declararOpener(
+  s: GameState,
+  ctx: Ctx,
+  opener: OpenerCadena,
+  previos: MarcadorAccion = marcarInicioAccion(s),
+  triggers?: readonly TriggerApilado[],
+): void {
   if (opener.tipo !== 'habilidad') {
     const { inst, hechizos } = hechizosDelOpener(s, opener.cardInstanceId)
     if (inst) {
@@ -628,7 +669,10 @@ export function declararOpener(s: GameState, ctx: Ctx, opener: OpenerCadena, pre
       }
     }
   }
-  declararVentana(s, ctx, { tipo: 'opener', jugador: opener.jugador, opener }, previos)
+  // F5d-2: los triggers que provocó la jugada eligen sus objetivos junto con los del opener (los suyos primero)
+  // y entran a la cadena encima de él. Sin triggers el flujo es idéntico al de siempre.
+  const apilados = triggers && triggers.length > 0 ? armarTriggers(s, ctx, triggers) : undefined
+  declararVentana(s, ctx, { tipo: 'opener', jugador: opener.jugador, opener, ...(apilados && apilados.length > 0 ? { triggers: apilados } : {}) }, previos)
 }
 
 /**
@@ -639,16 +683,18 @@ export function declararOpener(s: GameState, ctx: Ctx, opener: OpenerCadena, pre
  */
 export function registrarObjetivoOpener(
   s: GameState,
-  pendiente: { opener?: { efectoIdx: number } },
+  pendiente: { instId?: string; opener?: { efectoIdx: number } },
   objetivoId: string,
 ): void {
+  // F5d-2: el pendiente puede ser de un trigger apilado de la declaración (se identifica por carta + efectoIdx)
+  if (registrarObjetivoTrigger(s, pendiente, objetivoId)) return
   const destino = s.declaracionEnEleccion?.opener ?? s.declaracionEnEleccion?.respuesta
   if (!destino || !pendiente.opener) return
   if (s.instances[objetivoId]) destino.objetivos = { ...destino.objetivos, [pendiente.opener.efectoIdx]: objetivoId }
 }
 
 /** Abre la ventana con el opener al fondo (gate con mano Presteza pagable) o, si nadie puede responder, resuelve ya. */
-function abrirOpener(s: GameState, ctx: Ctx, opener: OpenerCadena): void {
+function abrirOpener(s: GameState, ctx: Ctx, opener: OpenerCadena, triggers?: readonly TriggerApilado[]): void {
   const meta = s.instances[opener.cardInstanceId]?.cardId ? getCardMeta(s.instances[opener.cardInstanceId]!.cardId!) : null
   const abierto = abrirCadenaGlobal(
     s,
@@ -658,8 +704,11 @@ function abrirOpener(s: GameState, ctx: Ctx, opener: OpenerCadena): void {
   )
   if (abierto && s.cadena) {
     s.cadena.opener = opener
+    asentarTriggers(s, triggers) // F5d-2: encima del opener, debajo de las respuestas que lleguen
     return
   }
+  // sin ventana: los triggers (encima de la jugada) resuelven antes que ella
+  resolverTriggersInmediatos(s, ctx, triggers)
   resolverOpener(s, ctx, opener)
 }
 
