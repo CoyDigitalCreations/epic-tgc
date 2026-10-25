@@ -687,8 +687,18 @@ export interface TriggerMatch {
  *   de bloqueo. Un trigger interno sin equivalente JSON (p. ej. 'activable') matchea los efectos sin trigger.
  * Devuelve TODOS los efectos con match, por instancia en orden estable (ids ordenados) y luego por
  * efectoIdx. Los handlers por cardId / genéricos (registrarEfecto*) son opacos y quedan fuera.
+ *
+ * Decisión 10b (Paso 0 de F5d): la `condicion` de un trigger se evalúa SOLO al apilar/disparar. Quien
+ * relee el efecto AL RESOLVER un trigger apilado llama con `{ evaluarCondicion: false }` para no
+ * re-evaluarla (el Vínculo boca abajo sí se sigue filtrando: sus efectos no son vigentes, §5.5).
  */
-export function triggersQueMatchean(s: GameState, trigger: TriggerEfecto, jugador: PlayerId, ids: readonly string[]): TriggerMatch[] {
+export function triggersQueMatchean(
+  s: GameState,
+  trigger: TriggerEfecto,
+  jugador: PlayerId,
+  ids: readonly string[],
+  opts?: { evaluarCondicion?: boolean },
+): TriggerMatch[] {
   const res: TriggerMatch[] = []
   const efectoTrigger = TRIGGER_A_JSON[trigger]
   for (const id of [...ids].sort()) {
@@ -700,7 +710,9 @@ export function triggersQueMatchean(s: GameState, trigger: TriggerEfecto, jugado
     if (meta.type === 'Vínculo' && inst.bocaArriba !== true) continue
     // CONDITION CHECK: si la carta tiene condicion JSON cuyo trigger matchea
     // el disparado, evaluar condiciones (§5.4) — data-driven, sin guards.
-    if ('condicion' in meta) {
+    // Decisión 10b: solo al apilar/disparar; al resolver un trigger apilado se llama
+    // con { evaluarCondicion: false } y la condicion NO se re-evalúa.
+    if (opts?.evaluarCondicion !== false && 'condicion' in meta) {
       const condicion = (meta as AnyCard & { condicion?: CondicionEfecto | string }).condicion
       if (condicion && typeof condicion === 'object' && 'trigger' in condicion) {
         if (efectoTrigger === condicion.trigger && condicionCumple(s, condicion, jugador) !== null) continue

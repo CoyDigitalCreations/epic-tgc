@@ -8,7 +8,8 @@
  *
  * Modelo (genérico: lee el efecto de la carta fuente, nada atado a cartas concretas):
  * - Un `TriggerApilado` (types.ts) es serializable: (controlador, carta fuente, trigger, efectoIdx, objetivo
- *   elegido, payload). El efecto se vuelve a leer del meta (`triggersQueMatchean`) al armar y al resolver.
+ *   elegido, payload). El efecto se vuelve a leer del meta (`triggersQueMatchean`) al armar y al resolver;
+ *   la `condicion` se evalúa SOLO al apilar (decisión 10b): al resolver NO se re-evalúa.
  * - Cada efecto con match es UNA entrada, ordenada por efectoIdx. El camino inmediato (dispararTrigger)
  *   solo ejecuta el PRIMER efecto con match de cada carta; el apilado ejecuta todos. No duplica
  *   comportamiento (cada efecto es un índice distinto de efectos[]) pero sí alcanza efectos "hermanos" que
@@ -33,8 +34,8 @@
  *   reversa; el opener al final. Un trigger apilado mientras la cadena ya tenía respuestas (la acción que lo
  *   provocó fue una respuesta) lleva `sobre` = esa respuesta y resuelve justo antes que ella.
  * - Reglas aprobadas: (a) si la fuente ya no está en el campo (ni en la pila, para cartas jugadas como
- *   respuesta) o el efecto ya no matchea el trigger (`triggersQueMatchean` vuelve a evaluar Vínculo boca
- *   abajo y `condicion`), el trigger se pierde sin efectos parciales; (b) el objetivo elegido se revalida
+ *   respuesta) o perdió su vigencia (Vínculo boca abajo), el trigger se pierde sin efectos parciales; la
+ *   `condicion` NO se re-evalúa al resolver (decisión 10b: se evaluó al apilar); (b) el objetivo elegido se revalida
  *   al resolver (resolveTargets, F5h): si ya no es válido, fizzle; (c) el costo de Éter se cobra AL RESOLVER:
  *   sin fondos, fizzle; (d) NO se pueden negar (negar/Marcha solo alcanza al opener); (e) al-pagar-eter
  *   sigue inmediato; (f) los triggers sin acción de jugador siguen inmediatos.
@@ -101,9 +102,14 @@ export function ordenarTriggers(s: GameState, lista: readonly TriggerApilado[]):
   return [...lista.filter((t) => t.jugador === s.turno), ...lista.filter((t) => t.jugador !== s.turno)]
 }
 
-/** El efecto de un trigger apilado, releído del meta (null si la carta o el match ya no existen). */
-function matchDe(s: GameState, t: TriggerApilado): TriggerMatch | undefined {
-  return triggersQueMatchean(s, t.trigger, t.jugador, [t.cardInstanceId]).find((m) => m.efectoIdx === t.efectoIdx)
+/**
+ * El efecto de un trigger apilado, releído del meta (undefined si la carta o el match ya no existen).
+ * `alResolver` (decisión 10b): la `condicion` NO se re-evalúa — se fijó al apilar; se conservan el
+ * filtro de vigencia (Vínculo boca abajo) y el match del efecto.
+ */
+function matchDe(s: GameState, t: TriggerApilado, alResolver = false): TriggerMatch | undefined {
+  return triggersQueMatchean(s, t.trigger, t.jugador, [t.cardInstanceId], alResolver ? { evaluarCondicion: false } : undefined)
+    .find((m) => m.efectoIdx === t.efectoIdx)
 }
 
 function payloadBase(t: TriggerApilado): PayloadEfecto {
@@ -264,7 +270,8 @@ function fuenteEnJuego(s: GameState, t: TriggerApilado): boolean {
 /**
  * Resuelve UN trigger apilado (ver cabecera, reglas a-d). Modos:
  * - 'elegido': el objetivo se eligió al apilar (`t.objetivoId`); sin objetivo elegido el efecto no arma pendientes
- *   nuevos (si necesitaba elegir, se pierde). Revalida fuente, efecto, objetivo y fondos antes de cobrar nada.
+ *   nuevos (si necesitaba elegir, se pierde). Revalida fuente, vigencia, objetivo y fondos antes de cobrar nada;
+ *   la `condicion` NO se re-evalúa (decisión 10b: se fijó al apilar).
  * - 'inmediato' (decisión g): como dispararTrigger — resuelve objetivos y costo ahora y las elecciones van a la cola.
  */
 export function resolverTrigger(s: GameState, ctx: Ctx, t: TriggerApilado, modo: 'elegido' | 'inmediato' = 'elegido'): void {
@@ -272,8 +279,8 @@ export function resolverTrigger(s: GameState, ctx: Ctx, t: TriggerApilado, modo:
   if ((s.profundidadTriggers ?? 0) >= MAX_PROFUNDIDAD_TRIGGERS) return
   const inst = s.instances[t.cardInstanceId]
   if (!inst || !fuenteEnJuego(s, t)) return // (a) la fuente se fue: el trigger se pierde
-  const match = matchDe(s, t)
-  if (!match) return // (a) ya no es válido para ese trigger (Vínculo boca abajo, condición)
+  const match = matchDe(s, t, true)
+  if (!match) return // (a) la fuente perdió su vigencia (Vínculo boca abajo / efecto sin match); la condicion NO se re-evalúa
   const { efecto } = match
   const contextoUso = t.payload?.contextoUso
   enResolucion(s, () => {

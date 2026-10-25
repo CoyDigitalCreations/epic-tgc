@@ -541,6 +541,54 @@ describe('reglas de resolución: fuente, objetivo y costo', () => {
   })
 })
 
+/* ───────────────────────── Decisión 10b: condicion al apilar ───────────────────────── */
+
+describe('decisión 10b: la condicion se evalúa AL APILAR, no al resolver', () => {
+  /** A: c0 TEST-COND (al invocar con `condicion`: el rival controla 2+). B: b0 y b1 Peones; bm Aviso para que la ventana abra. */
+  function escenaCondicion(): GameState {
+    const s = escena()
+    conCampeon(s, 'A', 'c0', 'TEST-COND', 0)
+    conCampeon(s, 'B', 'b0', PR.PEON, 0)
+    conCampeon(s, 'B', 'b1', PR.PEON, 1)
+    conMistica(s, 'B', 'bm', PR.AVISO, 0) // B puede responder: la ventana abre y el trigger queda en la cadena
+    return s
+  }
+
+  it('sin cumplirse AL APILAR no hay trigger: construirTriggers da [], nadie abre ventana y el camino inmediato no dispara', () => {
+    const s = escena()
+    conCampeon(s, 'A', 'c0', 'TEST-COND', 0)
+    conCampeon(s, 'B', 'b0', PR.PEON, 0) // el rival controla 1 < 2: la condicion NO se cumple
+    const ctx = crearCtx()
+    expect(triggersQueMatchean(s, 'al-invocar', 'A', ['c0'])).toEqual([])
+    expect(construirTriggers(s, 'al-invocar', 'A', ['c0'])).toEqual([])
+    apilarTriggers(s, ctx, construirTriggers(s, 'al-invocar', 'A', ['c0']))
+    expect(s.declaracionEnEleccion).toBeUndefined()
+    expect(s.cadena).toBeUndefined()
+    dispararTrigger(s, ctx, 'al-invocar', 'A', ['c0']) // el camino inmediato la evalúa AL DISPARAR (sin cambio)
+    expect(s.objetivosPendientes ?? []).toEqual([])
+    expect(valores(s, 'b0')).toEqual([])
+  })
+
+  it('NO se re-evalúa al resolver: cumplida al apilar, el efecto ocurre aunque deje de cumplirse', () => {
+    const s = escenaCondicion()
+    const ctx = crearCtx()
+    expect(construirTriggers(s, 'al-invocar', 'A', ['c0'])).toHaveLength(1) // la condicion se cumple AL APILAR
+    apilarTriggers(s, ctx, construirTriggers(s, 'al-invocar', 'A', ['c0']))
+    expect(s.declaracionEnEleccion).toMatchObject({ tipo: 'triggers', pendientes: 1 })
+    let t = aplicar(s, elegir('b0'), ctx) // el dueño (A) elige el objetivo entre los Campeones rivales
+    expect(t.cadena!.triggers).toEqual([expect.objectContaining({ cardInstanceId: 'c0', objetivoId: 'b0' })])
+    // ANTES de resolver, el rival deja de controlar 2: si la condicion se re-evaluara, el trigger se perdería
+    t = structuredClone(t)
+    t.players.B.campo.campeones[1] = null
+    t.players.B.cementerio.push('b1')
+    expect(triggersQueMatchean(t, 'al-invocar', 'A', ['c0'])).toEqual([]) // la condicion ya no pasa…
+    const r = cerrar(t, ctx)
+    expect(valores(r, 'b0')).toEqual([-2]) // …pero el trigger ya estaba apilado: resuelve igual (debuff de 2)
+    expect(valores(r, 'b1')).toEqual([])
+    expect(verificarZonaUnica(r)).toEqual([])
+  })
+})
+
 /* ───────────────────────── Decisión (g): anidados ───────────────────────── */
 
 describe('trigger de acción generado durante una resolución (decisión g)', () => {
