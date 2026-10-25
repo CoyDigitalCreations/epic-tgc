@@ -13,6 +13,8 @@ import { applyAction } from '../actions'
 import { getValidActions, actorActual } from '../validActions'
 import { botTonto, simularPartida } from '../bot'
 import { statsDe } from '../efectos'
+import { createInitialState } from '../initialState'
+import { verificarInvariantes, verificarZonaUnica } from '../invariants'
 import { registrarCartas } from '../cards'
 import type { AnyCard } from '../cards'
 import type { Action } from '../actions'
@@ -430,6 +432,25 @@ describe('el bot no se atasca con declaraciones en elección', () => {
   it.each([1, 7, 42, 66099, 66676])('seed %i: la partida simulada termina sin "sin progreso"', (seed) => {
     const r = simularPartida(expandirMazo(ESTASIS_CARDS), expandirMazo(DISONANCIA_CARDS), seed)
     expect(r.estado.fase).toBe('terminada')
+    expect(verificarInvariantes(r.estado)).toEqual([]) // F5h: incluye "una instancia, una zona"
+  })
+
+  it.each([1, 7, 42, 66099, 66676])('seed %i (bot, paso a paso): una instancia, una zona tras cada acción, también durante las elecciones', (seed) => {
+    const { state, ctx } = createInitialState(expandirMazo(ESTASIS_CARDS), expandirMazo(DISONANCIA_CARDS), seed)
+    let estado = state
+    let eleccionesVistas = 0
+    for (let i = 0; i < 1500 && estado.fase !== 'terminada'; i++) {
+      const actor = actorActual(estado) ?? estado.turno
+      const accion = botTonto(estado, actor)
+      expect(accion, `sin acción (iter ${i})`).not.toBeNull()
+      const r = applyAction(estado, accion!, ctx)
+      expect(r.ok).toBe(true)
+      if (!r.ok) return
+      estado = r.state
+      if (estado.declaracionEnEleccion) eleccionesVistas++
+      expect(verificarZonaUnica(estado), `iter ${i} tras ${JSON.stringify(accion)}`).toEqual([])
+    }
+    expect(eleccionesVistas).toBeGreaterThan(0)
   })
 
   it('botTonto elige con el actor correcto (el dueño del pendiente), no con state.turno', () => {

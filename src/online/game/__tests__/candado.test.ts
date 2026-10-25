@@ -24,6 +24,7 @@ import { visibleState } from '../visibleState'
 import { botTonto } from '../bot'
 import { getCardMeta } from '../cards'
 import { createInitialState } from '../initialState'
+import { verificarZonaUnica } from '../invariants'
 import { ESTASIS_CARDS, DISONANCIA_CARDS } from '../../../shared/data/paquetes'
 import { expandirMazo } from './helpers'
 import type { Ctx, GameState, PlayerId } from '../types'
@@ -439,8 +440,8 @@ describe('simulación con varias seeds: el candado no introduce freezes ni estad
   let habilitaciones = 0
 
   /**
-   * Jugador "respondón": prefiere responder; cada acción debe ser aplicable. No se verifica 'un id, una zona' aquí:
-   * la cola de pendientes obsoletos (F5d-1) puede destruir dos veces un objetivo viejo (hallazgo previo a F5g).
+   * Jugador "respondón": prefiere responder; cada acción debe ser aplicable. F5h: en cada paso se verifica 'un id, una zona'
+   * (antes no se podía: la cola de pendientes obsoletos destruía dos veces un objetivo viejo, seed 66099).
    */
   function simular(mazoA: string[], mazoB: string[], seed: number): void {
     const { state, ctx } = createInitialState(mazoA, mazoB, seed)
@@ -456,6 +457,7 @@ describe('simulación con varias seeds: el candado no introduce freezes ni estad
       expect(r.ok, `${accion!.type} rechazada: ${r.ok ? '' : r.error}`).toBe(true)
       if (!r.ok) return
       estado = r.state
+      expect(verificarZonaUnica(estado), `${seed}: iter ${i} tras ${JSON.stringify(accion)}`).toEqual([]) // F5h: una instancia, una zona
       for (const instancia of Object.values(estado.instances)) if (instancia.condicionHabilitada) habilitaciones++
     }
   }

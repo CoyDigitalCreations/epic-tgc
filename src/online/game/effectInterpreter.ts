@@ -41,9 +41,10 @@ export function interpretEffect(
     if (!canExecuteEffect(s, efecto, jugador)) {
       return // can't execute (e.g., steal_champion with no free slot)
     }
-    // F5e: una respuesta de la pila eligió su objetivo al responder; al resolver (LIFO) debe
-    // seguir siéndolo (salió del campo, ganó Protector...). Si ya no, el efecto se pierde.
-    if (payload.revalidarObjetivo && objetivo && objetivo.tipo !== 'self') {
+    // F5e/F5h: el objetivo se eligió ANTES de resolver (al declarar, al responder o en un
+    // pendiente de la cola); al resolver debe seguir siendo candidato del efecto (salió de la
+    // zona, ganó Protector, se exilió...). Si ya no, el efecto se pierde (fizzle) sin efectos parciales.
+    if (objetivo && objetivo.tipo !== 'self') {
       if (!resolveTargets(s, objetivoCompleto(efectoData), jugador, inst.cardInstanceId).includes(payload.objetivoId)) return
     }
     const targetIds = [payload.objetivoId]
@@ -144,7 +145,7 @@ export function interpretEffect(
  * Objetivo del efecto con los filtros de la raíz mezclados y la zona por defecto de
  * `zonaOrigen`: lo que resolveTargets necesita (armar la elección y revalidarla al resolver).
  */
-function objetivoCompleto(efectoData: EfectoData): NonNullable<EfectoData['objetivo']> {
+export function objetivoCompleto(efectoData: EfectoData): NonNullable<EfectoData['objetivo']> {
   const objetivo = efectoData.objetivo!
   // Merge top-level filtros with objetivo.filtros (top-level takes precedence)
   // EfectoData has filtros at root level AND ObjetivoEfecto has its own filtros
@@ -207,7 +208,7 @@ function canExecuteEffect(
  * JSON uses underscores (inicio_choque), game uses hyphens (al-inicio-choque).
  * Also maps JSON trigger names to internal trigger names.
  */
-function toHyphenTrigger(trigger?: string): string | undefined {
+export function toHyphenTrigger(trigger?: string): string | undefined {
   if (!trigger) return undefined
   // Map JSON triggers to internal trigger names used by the game engine
   const triggerMap: Record<string, string> = {
@@ -227,7 +228,7 @@ function toHyphenTrigger(trigger?: string): string | undefined {
 }
 
 /** Trigger interno para efectos de umbral bloqueo sin trigger JSON (Aurora steal_champion). */
-function umbralTrigger(efectoData: EfectoData): string | undefined {
+export function umbralTrigger(efectoData: EfectoData): string | undefined {
   if (efectoData.trigger) return undefined
   if (efectoData.costo?.tipo === 'bloqueo_fijo' || efectoData.costo?.tipo === 'eter_bloqueado') {
     return 'al-bloquear-eter'

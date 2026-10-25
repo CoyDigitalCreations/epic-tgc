@@ -72,7 +72,8 @@ export interface PayloadEfecto {
    * responder: un efecto que aún necesitaría elegir se pierde en vez de armar un pendiente. */
   sinEleccion?: boolean
   /** F5e: al resolver con objetivo ya elegido, éste debe seguir siendo un objetivo válido
-   * del efecto; si ya no lo es (salió del campo, etc.) el efecto se pierde. */
+   * del efecto; si ya no lo es (salió del campo, etc.) el efecto se pierde. F5h: interpretEffect
+   * revalida SIEMPRE en modo resolución; el flag se conserva por compatibilidad y ya no cambia nada. */
   revalidarObjetivo?: boolean
   extra?: Record<string, unknown>
 }

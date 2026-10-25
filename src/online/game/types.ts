@@ -315,6 +315,17 @@ export interface CombateState {
   danoPendiente?: boolean
 }
 
+/** Elección de objetivo pendiente (entrada de GameState.objetivosPendientes); ver ese campo y pendientes.ts (vigencia y obsolescencia, F5h). */
+export interface PendienteObjetivo {
+  jugador: PlayerId
+  instId: string
+  trigger: string
+  opciones: string[]
+  tramoUmbral?: number
+  opener?: { efectoIdx: number }
+  equipar?: boolean
+}
+
 /** Estado completo de partida — JSON-serializable (sin referencias circulares). */
 export interface GameState {
   version: 1
@@ -354,7 +365,7 @@ export interface GameState {
    * ejecuta ese tramo directamente en vez de re-despachar por trigger.
    * `equipar` (F5f): elección del Campeón al que se equipa un ARTEFACTO jugado/activado como respuesta.
    */
-  objetivosPendientes?: { jugador: PlayerId; instId: string; trigger: string; opciones: string[]; tramoUmbral?: number; opener?: { efectoIdx: number }; equipar?: boolean }[]
+  objetivosPendientes?: PendienteObjetivo[]
   /**
    * Declaración (F5d-1) que espera la elección de sus objetivos ANTES de abrir
    * la ventana (Yugioh: se elige al declarar, luego empiezan las respuestas). Sus

@@ -15,9 +15,51 @@
 import { esEter, getCardMeta } from './cards'
 import type { GameState, PlayerId } from './types'
 
+/**
+ * F5h — zona única: cada instancia reside en EXACTAMENTE una zona de los jugadores
+ * (mano, mazo, Cementerio, Exilio, Reserva 2A, Éter pagado 1A, slots del campo, Vínculos
+ * o Éter bloqueado sobre una carta). La pila de la cadena NO es una zona: apunta a cartas
+ * que siguen en el campo (o ya salieron de la mano) y no cuenta. Devuelve una violación por
+ * instancia repetida, con las zonas en las que aparece (vacío = ninguna repetida).
+ */
+export function verificarZonaUnica(estado: GameState): string[] {
+  const zonasDe = new Map<string, string[]>()
+  const anotar = (id: string | null | undefined, zona: string): void => {
+    if (!id) return
+    const lista = zonasDe.get(id)
+    if (lista) lista.push(zona)
+    else zonasDe.set(id, [zona])
+  }
+  for (const p of ['A', 'B'] as PlayerId[]) {
+    const st = estado.players[p]
+    for (const id of st.mano) anotar(id, `${p}.mano`)
+    for (const id of st.mazo) anotar(id, `${p}.mazo`)
+    for (const id of st.cementerio) anotar(id, `${p}.cementerio`)
+    for (const id of st.exilio) anotar(id, `${p}.exilio`)
+    for (const id of st.eterReserva) anotar(id, `${p}.eterReserva`)
+    for (const id of st.eterPagado) anotar(id, `${p}.eterPagado`)
+    for (const grupo of ['campeones', 'misticasTacticas', 'arcanasCombate'] as const) {
+      st.campo[grupo].forEach((id, i) => anotar(id, `${p}.campo.${grupo}[${i}]`))
+    }
+    st.vinculos.forEach((id, i) => anotar(id, `${p}.vinculos[${i}]`))
+    for (const grupo of ['campeones', 'misticasTacticas', 'arcanasCombate'] as const) {
+      for (const portador of st.campo[grupo]) {
+        for (const eterId of (portador ? estado.instances[portador]?.eterBloqueado : undefined) ?? []) {
+          anotar(eterId, `${p}.eterBloqueado(${portador})`)
+        }
+      }
+    }
+  }
+  const violaciones: string[] = []
+  for (const [id, zonas] of zonasDe) {
+    if (zonas.length > 1) violaciones.push(`${id}: en ${zonas.length} zonas a la vez (${zonas.join(', ')})`)
+  }
+  return violaciones
+}
+
 /** Devuelve las violaciones encontradas (vacío = estado válido). */
 export function verificarInvariantes(estado: GameState): string[] {
-  const violaciones: string[] = []
+  const violaciones: string[] = verificarZonaUnica(estado)
 
   const esEterId = (id: string): boolean => {
     const inst = estado.instances[id]

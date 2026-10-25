@@ -7,6 +7,7 @@ import { generarAccionesForja, validarActivarArcana } from './actions'
 import { atacantesElegibles, asignacionForzada, ataquesSinBloquear, bloqueadoresDisponibles, rivalDe, tieneKeyword } from './combat'
 import { cadenaActiva, respondiblesDe, respuestasDeMano } from './chain'
 import { etersParaPagar } from './payments'
+import { descartarFrentesMuertos, opcionesVigentes } from './pendientes'
 import { validarEquiparArtefacto } from './movimientos'
 import type { GameState, PlayerId, CardInstance } from './types'
 
@@ -231,13 +232,14 @@ export function getValidActions(state: GameState, playerId: PlayerId): Action[] 
   const acciones: Action[] = [{ type: 'rendirse', jugador: playerId }]
 
   // F5d-1: declaración esperando objetivos — SOLO el dueño del pendiente elige (rival
-  // incluido); el resto queda congelado hasta abrir la ventana. Si ninguna opción
-  // sigue viva se ofrece la primera igual (la ventana espera esta elección; el
-  // efecto se pierde al resolver), para no atascar la partida.
+  // incluido); el resto queda congelado hasta abrir la ventana. Se ofrecen las opciones
+  // VIGENTES (misma regla que validarElegirObjetivo, F5h); si ninguna lo es se ofrece la
+  // primera igual (la ventana espera esta elección; al ejecutarla el pendiente se resuelve
+  // como fizzle, sin efecto), para no atascar la partida.
   if (state.declaracionEnEleccion) {
     const pendiente = state.objetivosPendientes?.[0]
     if (pendiente && pendiente.jugador === playerId) {
-      const vivas = pendiente.opciones.filter((id) => state.instances[id])
+      const vivas = opcionesVigentes(state, pendiente)
       for (const objetivoId of vivas.length > 0 ? vivas : pendiente.opciones.slice(0, 1)) {
         acciones.push({ type: 'elegir_objetivo', objetivoId })
       }
@@ -290,15 +292,13 @@ export function getValidActions(state: GameState, playerId: PlayerId): Action[] 
     // antes de elegir, la acción no se ofrece (antes: panel vacío que no
     // hacía nada). Si el pendiente quedó sin opciones vivas se descarta
     // (mismo patrón defensivo que equiparPendiente) para no atascar la FIFO.
+    // F5h: "vivas" = vigentes (la instancia existe y sigue siendo candidata del efecto, pendientes.ts);
+    // el frente sin ninguna se descarta antes de ofrecer (no atasca la FIFO)
+    descartarFrentesMuertos(state)
     const pendiente = state.objetivosPendientes?.[0]
     if (pendiente && pendiente.jugador === playerId) {
-      const opcionesVivas = pendiente.opciones.filter((id) => state.instances[id])
-      if (opcionesVivas.length === 0) {
-        state.objetivosPendientes = state.objetivosPendientes!.slice(1)
-      } else {
-        for (const objetivoId of opcionesVivas) {
-          acciones.push({ type: 'elegir_objetivo', objetivoId })
-        }
+      for (const objetivoId of opcionesVigentes(state, pendiente)) {
+        acciones.push({ type: 'elegir_objetivo', objetivoId })
       }
     }
     // C3d (D4): usar_transmutar — Campeón propio con keyword `Transmutar` en

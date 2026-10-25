@@ -10,6 +10,7 @@ import { etiquetarEter } from './eter'
 import { dispararTrigger, pasivosBloqueo1A, type TriggerEfecto } from './efectos'
 import { registrarEfectoPendiente, hastaAlba } from './effectRegistry'
 import { interpretEffect, ejecutarTramo } from './effectInterpreter'
+import { opcionesVigentes } from './pendientes'
 import { tieneKeyword } from './combat'
 import { reglaBool } from './reglas'
 import { liberarEterBloqueado, enviarAlCementerio } from './replacements'
@@ -203,6 +204,15 @@ export function validarElegirObjetivo(state: GameState, action: Extract<Action, 
   // F5d-1: en una declaración en elección el elector es el DUEÑO del pendiente (puede ser el rival)
   if (!state.declaracionEnEleccion && pendiente.jugador !== state.turno) return 'no es tu turno para elegir objetivo'
   if (!pendiente.opciones.includes(action.objetivoId)) return 'el objetivo no está entre las opciones válidas'
+  // F5h: el objetivo debe seguir siendo candidato del efecto (misma regla que la oferta, pendientes.ts).
+  // Sin ninguna opción vigente, la declaración en elección acepta la primera opción para resolver
+  // el pendiente como fizzle (no atasca: la ventana espera esta elección).
+  const vigentes = opcionesVigentes(state, pendiente)
+  if (vigentes.length === 0) {
+    if (state.declaracionEnEleccion && action.objetivoId === pendiente.opciones[0]) return null
+    return 'el objetivo ya no es válido'
+  }
+  if (!vigentes.includes(action.objetivoId)) return 'el objetivo ya no es válido'
   return null
 }
 
@@ -432,13 +442,18 @@ export function ejecutarElegirOpcion(s: GameState, action: Extract<Action, { typ
 export function ejecutarElegirObjetivo(s: GameState, action: Extract<Action, { type: 'elegir_objetivo' }>, ctx: Ctx): void {
   const pendiente = s.objetivosPendientes?.[0]
   if (!pendiente) return // defensivo: ya validado en validarAccion
+  // F5h: se revalida al ejecutar; un objetivo que ya no es candidato (fizzle de la elección) consume el
+  // pendiente sin efecto alguno: ni equipa, ni registra el objetivo, ni dispara el trigger.
+  const vigente = opcionesVigentes(s, pendiente).includes(action.objetivoId)
   s.objetivosPendientes = s.objetivosPendientes!.slice(1)
   // F5d-1: con una declaración en elección, lo que la elección arme también es de la
   // declaración; al elegir el último pendiente suyo se abre la ventana (continuarDeclaracion)
   const enDeclaracion = !!s.declaracionEnEleccion
   const previos = marcarInicioAccion(s)
 
-  if (pendiente.equipar) {
+  if (!vigente) {
+    // fizzle: nada que ejecutar
+  } else if (pendiente.equipar) {
     // F5f: Campeón al que se equipa el ARTEFACTO de una respuesta (se asienta al elegir)
     equiparComoRespuesta(s, ctx, pendiente, action.objetivoId)
   } else if (pendiente.opener) {

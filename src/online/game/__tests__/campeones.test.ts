@@ -215,6 +215,8 @@ describe('C3a: infraestructura de targeting + dispatch de triggers', () => {
     s.fase = 'forja'
     s.instances['inst-1'] = { cardInstanceId: 'inst-1', cardId: CAMPEON_A, owner: 'A' }
     s.instances['inst-2'] = { cardInstanceId: 'inst-2', cardId: CAMPEON_A, owner: 'A' }
+    // F5h: un objetivo debe existir para ser vigente (antes bastaba con que estuviera en las opciones)
+    for (const id of ['obj-A', 'obj-B', 'obj-C']) s.instances[id] = { cardInstanceId: id, cardId: CAMPEON_A, owner: 'B' }
 
     // Use custom triggers that won't match JSON effects
     s.objetivosPendientes = [

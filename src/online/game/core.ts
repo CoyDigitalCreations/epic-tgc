@@ -5,6 +5,7 @@
 import type { GameEvent } from './events'
 import type { Ctx, GameState, PlayerId } from './types'
 import { shuffleFisherYates } from './rng'
+import { descartarFrentesMuertos } from './pendientes'
 
 // Domain module imports (validators + executors)
 import {
@@ -93,6 +94,8 @@ export function applyAction(state: GameState, action: Action, ctx: Ctx): ApplyAc
   if (error) return { ok: false, state, error }
   const s = structuredClone(state)
   ejecutarAccion(s, action, ctx)
+  // F5h: un pendiente sin quién ni qué elegir no se queda al frente de la cola (pendientes.ts)
+  descartarFrentesMuertos(s)
   return { ok: true, state: s, events: [...ctx.events] }
 }
 

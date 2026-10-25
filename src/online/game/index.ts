@@ -45,7 +45,7 @@ export { atacantesElegibles, bloqueadoresDisponibles } from './combat'
 export { cadenaActiva, respondiblesDe, validarResponderCadena, validarPasarPrioridad } from './chain'
 
 // Invariantes de partida (mazo estándar de 61)
-export { verificarInvariantes } from './invariants'
+export { verificarInvariantes, verificarZonaUnica } from './invariants'
 
 // Zonas y límites
 export { SLOTS_CAMPEONES, SLOTS_MISTICAS_TACTICAS, SLOTS_ARCANAS_COMBATE, SLOTS_VINCULOS, LIMITE_MANO, limiteSlots, slotAZona } from './zones'

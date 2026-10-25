@@ -184,8 +184,13 @@ function decidirBloqueo(state: GameState, acciones: Action[]): Action | null {
     }
   }
 
-  if (Object.keys(asignacionesFavorables).length > 0) {
-    return { type: 'declarar_bloqueo', asignaciones: asignacionesFavorables }
+  // F5h: el bloqueo es forzoso y maximal (9.3): un subconjunto favorable es una acción inválida; si no
+  // cubre todas las asignaciones se declara la asignación forzosa completa (el bot no tira la partida)
+  const cantidadFavorables = Object.keys(asignacionesFavorables).length
+  if (cantidadFavorables > 0) {
+    return cantidadFavorables === Object.keys(asignaciones).length
+      ? { type: 'declarar_bloqueo', asignaciones: asignacionesFavorables }
+      : declararBloqueo
   }
 
   // No hay bloqueos favorables — pasar prioridad
@@ -370,8 +375,12 @@ function decidirBloqueoAvanzado(state: GameState, acciones: Action[]): Action | 
     }
   }
 
-  if (Object.keys(asignacionesFavorables).length > 0) {
-    return { type: 'declarar_bloqueo', asignaciones: asignacionesFavorables }
+  // F5h: ídem decidirBloqueo — el bloqueo forzoso no admite un subconjunto de las asignaciones
+  const cantidadFavorables = Object.keys(asignacionesFavorables).length
+  if (cantidadFavorables > 0) {
+    return cantidadFavorables === Object.keys(asignaciones).length
+      ? { type: 'declarar_bloqueo', asignaciones: asignacionesFavorables }
+      : declararBloqueo
   }
 
   return acciones.find((a) => a.type === 'pasar_prioridad') ?? acciones[0]

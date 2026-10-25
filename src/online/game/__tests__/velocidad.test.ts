@@ -18,6 +18,7 @@ import { etersParaPagar } from '../payments'
 import { statsDe } from '../efectos'
 import { botTonto } from '../bot'
 import { createInitialState } from '../initialState'
+import { verificarZonaUnica } from '../invariants'
 import type { Action } from '../actions'
 import type { Ctx, GameState } from '../types'
 import {
@@ -489,6 +490,7 @@ describe('paridad: nunca se ofrece una respuesta que el validador rechace, ni al
         if (ctx.events.some((e) => e.type === 'respuesta_encadenada')) fugazCierres++
       }
       estado = r.state
+      expect(verificarZonaUnica(estado), `${seed}: iter ${i} tras ${JSON.stringify(accion)}`).toEqual([]) // F5h: una instancia, una zona
     }
   })
 

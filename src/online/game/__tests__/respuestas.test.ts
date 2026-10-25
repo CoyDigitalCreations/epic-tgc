@@ -14,7 +14,7 @@ import { etersParaPagar } from '../payments'
 import { statsDe, velocidadDe } from '../efectos'
 import { visibleState } from '../visibleState'
 import { botTonto, simularPartida } from '../bot'
-import { verificarInvariantes } from '../invariants'
+import { verificarInvariantes, verificarZonaUnica } from '../invariants'
 import { ESTASIS_CARDS, DISONANCIA_CARDS } from '../../../shared/data/paquetes'
 import { expandirMazo } from './helpers'
 import type { Action } from '../actions'
@@ -483,6 +483,7 @@ describe('simulación con bots: sin freeze con el nuevo modelo de respuestas (F5
       expect(r.ok, `${accion!.type} rechazada: ${r.ok ? '' : r.error}`).toBe(true)
       if (!r.ok) return
       estado = r.state
+      expect(verificarZonaUnica(estado), `${seed}: iter ${i} tras ${JSON.stringify(accion)}`).toEqual([]) // F5h: una instancia, una zona
       if (estado.declaracionEnEleccion?.tipo === 'respuesta') eleccionesDeRespuesta++
     }
   })

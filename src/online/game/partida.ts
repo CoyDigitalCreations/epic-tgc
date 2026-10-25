@@ -8,6 +8,7 @@ import { getCardMeta } from './cards'
 import { resolverFaseEfectos } from './effectRegistry'
 import { limpiarCombate, resolverAlba } from './phases'
 import { enviarAlCementerio } from './replacements'
+import { descartarPendientesObsoletos } from './pendientes'
 import type { Action } from './core'
 
 /* ─────────────────────── Validadores ─────────────────────── */
@@ -160,6 +161,8 @@ export function ejecutarPasarTurno(s: GameState, ctx: Ctx): void {
     if (inst.bloqueosEsteTurno) delete inst.bloqueosEsteTurno
   }
   delete s.rupturasEsteTurno
+  // F5h: la cola de objetivos pendientes solo vive hasta el Ocaso del turno en que se armó (pendientes.ts)
+  descartarPendientesObsoletos(s)
   s.turno = rival
   ctx.emit({ type: 'turno_iniciado', jugador: rival })
   ctx.emit({ type: 'fase_iniciada', fase: 'alba', jugador: rival })
