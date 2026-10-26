@@ -11,6 +11,7 @@ import { aplicarReglaTemporal } from './reglasTemporales'
 import { REGLAS } from '../../shared/rules/reglas'
 import { aplicarPago } from './payments'
 import { enviarAlCementerio, destruirCarta, liberarEterBloqueado, liberarArtefactosEquipados } from './replacements'
+import { esExiliable, permitirExilio } from './exilio'
 import { eterDeEfecto, quitarEteres, liberarEterA, limpiarFlagsUmbralSiVacia, evaluarFinSteal } from './eter'
 import { esCampeon, getCardMeta } from './cards'
 import type { EfectoData } from '../../shared/types'
@@ -720,6 +721,9 @@ function executeTutor(
       zonaDestino !== 'exilio' && zonaDestino !== 'mazo') return
 
   for (const targetId of targetIds) {
+    // F7: una carta que no puede ser exiliada se queda en su zona (se pregunta ANTES de removerla)
+    if (zonaDestino === 'exilio' && !permitirExilio(s, ctx, targetId)) continue
+
     // Find and remove from source zone
     let removed = false
 
@@ -812,8 +816,8 @@ function validateCost(
       return !inst?.agotado
 
     case 'exile_self':
-      // Exile self — always valid
-      return true
+      // Exile self — válido salvo que la carta no pueda ser exiliada (F7: Inexiliable)
+      return esExiliable(s, inst.cardInstanceId)
 
     case 'cemetery_self':
       // Send self to cemetery — always valid
@@ -949,6 +953,9 @@ function executeExile(
   for (const targetId of targetIds) {
     const inst = s.instances[targetId]
     if (!inst) continue
+
+    // F7: punto de control único del Exilio (Inexiliable): la carta no se mueve
+    if (!permitirExilio(s, ctx, targetId)) continue
 
     // Find which zone the card is in and remove it
     const owner = inst.owner
@@ -1262,6 +1269,9 @@ function executeReturnEther(
     if (count >= limit) break
     const inst = s.instances[targetId]
     if (!inst) continue
+
+    // F7: el Éter también pasa por el control del Exilio (una regla temporal puede prohibirlo)
+    if (zonaDestino === 'exilio' && !permitirExilio(s, ctx, targetId)) continue
 
     const owner = inst.owner
     // B5: destino = jugadorDestino (controladorDestino), remoción del dueño físico

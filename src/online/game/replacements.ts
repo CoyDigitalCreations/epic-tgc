@@ -12,6 +12,7 @@
 import { esCampeon, esVinculo, getCardMeta } from './cards'
 import { dispararTrigger, keywordsDe } from './efectos'
 import { liberarEterA, evaluarFinSteal } from './eter'
+import { esExiliable, permitirExilio } from './exilio'
 import type { CausaDestruccion, Ctx, GameState, PlayerId } from './types'
 import { slotAZona } from './zones'
 
@@ -190,7 +191,8 @@ export function buscarFuentePreventDestroy(s: GameState, dueno: PlayerId): strin
         e.trigger === 'cuando_vinculo_seria_destruido' &&
         e.costo?.tipo === 'exile_self',
     )
-    if (elegible) return fuenteId
+    // F7: el costo es exiliar la fuente; si no puede ser exiliada, no puede pagarlo
+    if (elegible && esExiliable(s, fuenteId)) return fuenteId
   }
   return null
 }
@@ -247,7 +249,7 @@ export function ejecutarResponderPrevenicion(s: GameState, ctx: Ctx, jugador: Pl
   const victim = s.instances[front.victimId]
   const fuenteEnCampo = s.players[jugador].campo.campeones.includes(front.fuenteId)
 
-  if (prevenir && fuenteEnCampo && victim && victim.destruccionPendiente) {
+  if (prevenir && fuenteEnCampo && victim && victim.destruccionPendiente && permitirExilio(s, ctx, front.fuenteId)) {
     // Costo exile_self: la fuente sale del campo al exilio (1G)
     const p = s.players[jugador]
     const slot = p.campo.campeones.indexOf(front.fuenteId)

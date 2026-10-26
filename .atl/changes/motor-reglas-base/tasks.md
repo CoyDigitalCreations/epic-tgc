@@ -58,8 +58,9 @@ Ver `design.md`. Marcar al terminar cada tarea.
 - [x] Despliegue (2026-10-26): `engine.js` regenerado (`89770e1`), migración aplicada vía MCP (`eter_games_finish_reason_empate`, constraint verificado) y `match-engine` desplegado = v9 (CLI `--use-api`). Servidor y cliente alineados con F5, H4 y F6. A partir de aquí cada cambio de `src/online/game` exige regenerar el bundle y redesplegar
 
 ## F7 — Exilio
-- [ ] Un solo punto de control de exilio
-- [ ] Inexiliable
+- [x] Un solo punto de control de exilio: `exilio.ts` (`esExiliable` sin efectos secundarios, `permitirExilio` que emite `exilio_prevenido`). Lo consultan `executeExile`, el tutor con destino Exilio, el Éter hacia el Exilio y el costo `exile_self` (una fuente Inexiliable no es fuente elegible de `prevent_destroy`)
+- [x] Inexiliable: la carta se queda donde está (campo, cementerio o mazo) y se avisa con `exilio_prevenido` (evento nuevo, 36 en el contrato); puede ser destruida (§10). Cierra H5 (`it.fails` → `it`). `engine.js` desactualizado desde F7 hasta el próximo despliegue
+- Deuda anotada: ningún efecto de la carta consulta `puedeSerExiliada` al ELEGIR objetivo (igual que Inmortal: se puede elegir y falla al resolver); no hay `modificar_regla` de ámbito "cualquier carta" para el Exilio (la regla es solo de Campeón)
 
 ## F8 — Mazos
 - [ ] Límite de copias, Vínculo ×3, Única ×1 en `validarDeck`

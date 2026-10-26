@@ -201,6 +201,13 @@ export interface DestruccionPrevenidaEvent {
   causa: CausaDestruccion
 }
 
+/** F7: un efecto quiso exiliar una carta que no puede ser exiliada (Inexiliable); se queda donde está. */
+export interface ExilioPrevenidoEvent {
+  type: 'exilio_prevenido'
+  cardInstanceId: string
+  jugador: PlayerId
+}
+
 export interface PrevenicionPendienteEvent {
   type: 'prevenicion_pendiente'
   /** Vínculo en peligro (aún vivo, destruccionPendiente=true). */
@@ -299,6 +306,7 @@ export type GameEvent =
   | CartaMuertaEvent
   | DestruccionEvent
   | DestruccionPrevenidaEvent
+  | ExilioPrevenidoEvent
   | PrevenicionPendienteEvent
   | RupturaRealizadaEvent
   | RespuestaEncadenadaEvent
@@ -338,6 +346,7 @@ export const CATALOGO_EVENTOS: readonly GameEvent[] = [
   { type: 'carta_muerta', cardInstanceId: 'c2', jugador: 'B', causa: 'combate' },
   { type: 'destruccion', cardInstanceId: 'c2', jugador: 'B', causa: 'combate' },
   { type: 'destruccion_prevenida', cardInstanceId: 'c1', jugador: 'A', causa: 'combate' },
+  { type: 'exilio_prevenido', cardInstanceId: 'c1', jugador: 'A' },
   { type: 'prevenicion_pendiente', victimId: 'c3', fuenteId: 'c1', jugador: 'A', causa: 'efecto' },
   { type: 'ruptura_realizada', atacanteId: 'c1', vinculoSlot: 2, vinculoId: 'c3' },
   { type: 'respuesta_encadenada', jugador: 'B', cardInstanceId: 'c4' },
@@ -388,6 +397,7 @@ export function validarExhaustividadEventos(tipo: GameEvent['type']): void {
     case 'carta_muerta': return
     case 'destruccion': return
     case 'destruccion_prevenida': return
+    case 'exilio_prevenido': return
     case 'prevenicion_pendiente': return
     case 'ruptura_realizada': return
     case 'respuesta_encadenada': return

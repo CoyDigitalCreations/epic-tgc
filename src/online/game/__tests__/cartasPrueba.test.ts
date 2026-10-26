@@ -723,8 +723,8 @@ describe('(c) humo — HALLAZGOS (el motor actual no cumple el texto o la decisi
 
   // H4 / H4b: RESUELTOS (el dueño ajeno al turno elige de inmediato) — ver electorAjeno.test.ts
 
-  // H5 ────────────────────────────────────────────────────────────────────────────────────────
-  it.fails('H5 PR-012 Inexiliable + PR-051 Destierro: la keyword Inexiliable (regla puedeSerExiliada=false) debería impedir el exilio', () => {
+  // H5: RESUELTO en F7 (punto de control único del Exilio) — ver exilio.test.ts. Se deja aquí como prueba de humo.
+  it('H5 PR-012 Inexiliable + PR-051 Destierro: la keyword Inexiliable (regla puedeSerExiliada=false) debería impedir el exilio', () => {
     const s0 = base()
     conMano(s0, 'A', 'des', PR.DESTIERRO)
     const pago = conEteres(s0, 'A', 2)

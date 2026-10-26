@@ -95,6 +95,10 @@ export function formatearEventoDetallado(estado: GameState, e: GameEvent): strin
       const nombre = nombreCarta(estado, e.cardInstanceId)
       return `${ts}   ✨ ${nombre} SOBREVIVE (destrucción prevenida)`
     }
+    case 'exilio_prevenido': {
+      const nombre = nombreCarta(estado, e.cardInstanceId)
+      return `${ts}   ✨ ${nombre} NO SE EXILIA (exilio prevenido)`
+    }
     case 'prevenicion_pendiente': {
       const victima = nombreCarta(estado, e.victimId)
       const fuente = nombreCarta(estado, e.fuenteId)

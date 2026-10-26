@@ -42,6 +42,7 @@ export const NOMBRES_EVENTOS = [
   'carta_muerta',
   'destruccion',
   'destruccion_prevenida',
+  'exilio_prevenido',
   'prevenicion_pendiente',
   'ruptura_realizada',
   'respuesta_encadenada',
@@ -88,6 +89,7 @@ function validarExhaustividad(tipo: GameEvent['type']): void {
     case 'carta_muerta': return
     case 'destruccion': return
     case 'destruccion_prevenida': return
+    case 'exilio_prevenido': return
     case 'prevenicion_pendiente': return
     case 'ruptura_realizada': return
     case 'respuesta_encadenada': return
@@ -191,6 +193,8 @@ const VALIDADORES: Record<GameEvent['type'], (e: GameEvent) => boolean> = {
     e.type === 'destruccion' && esId(e.cardInstanceId) && esJugador(e.jugador) && esCausa(e.causa),
   destruccion_prevenida: (e) =>
     e.type === 'destruccion_prevenida' && esId(e.cardInstanceId) && esJugador(e.jugador) && esCausa(e.causa),
+  exilio_prevenido: (e) =>
+    e.type === 'exilio_prevenido' && esId(e.cardInstanceId) && esJugador(e.jugador),
   prevenicion_pendiente: (e) =>
     e.type === 'prevenicion_pendiente' &&
     esId(e.victimId) &&
@@ -215,10 +219,10 @@ const VALIDADORES: Record<GameEvent['type'], (e: GameEvent) => boolean> = {
 }
 
 describe('contrato de eventos (ADR-10)', () => {
-  it('el catálogo expone exactamente los 35 eventos del contrato en orden', () => {
+  it('el catálogo expone exactamente los 36 eventos del contrato en orden', () => {
     const nombres = CATALOGO_EVENTOS.map((e) => e.type)
     expect(nombres).toEqual([...NOMBRES_EVENTOS])
-    expect(new Set(nombres).size).toBe(35)
+    expect(new Set(nombres).size).toBe(36)
   })
 
   it('el switch exhaustivo cubre TODO el tipo GameEvent (añadir/quitar rompe tsc)', () => {
