@@ -2,9 +2,10 @@
  * Triggers apilados en la cadena (F5d-2, manual §9.6: "Los efectos que se disparan como consecuencia
  * de otra acción (por ejemplo, 'Al invocar...') se agregan a la cadena encima de la acción que los provocó").
  *
- * Hasta F5d-1 `dispararTrigger` ejecuta el efecto al instante. Esta capa es la INFRAESTRUCTURA para apilarlo:
- * nadie la llama todavía en producción (los sitios de llamada son F5d-3 al-jugar-mistica, F5d-4 al-invocar,
- * F5d-5 al-atacar), así que el comportamiento real del juego no cambia.
+ * Hasta F5d-1 `dispararTrigger` ejecuta el efecto al instante. Esta capa es la INFRAESTRUCTURA para apilarlo.
+ * Sitios de llamada en producción (construirTriggers + armarTriggers → declararOpener/declararVentana):
+ * F5d-3 al-jugar-mistica (movimientos.ts), F5d-4 al-invocar (movimientos.ts), F5d-5 al-atacar (combat.ts).
+ * `al-activar-habilidad` sigue sin disparador (pendiente de decisión del usuario).
  *
  * Modelo (genérico: lee el efecto de la carta fuente, nada atado a cartas concretas):
  * - Un `TriggerApilado` (types.ts) es serializable: (controlador, carta fuente, trigger, efectoIdx, objetivo

@@ -350,8 +350,14 @@ describe('(c) humo — triggers con objetivo elegido ANTES de la ventana (F5d-1)
     expect(s.declaracionEnEleccion).toMatchObject({ tipo: 'ataque', pendientes: 1 })
     expect(s.objetivosPendientes?.[0].opciones.sort()).toEqual(['b0', 'b1'])
     s = aplicar(s, { type: 'elegir_objetivo', objetivoId: 'b0' }, ctx)
-    expect(statsDe(s, 'b0').poder).toBe(1)
+    // F5d-5: al-atacar se APILA — el debuff cae al resolver la cadena, no al elegir
+    expect(statsDe(s, 'b0').poder).toBe(2)
     expect(s.cadena).toMatchObject({ origen: 'combate', prioridad: 'B' })
+    expect(s.cadena?.triggers).toHaveLength(1)
+    s = aplicar(s, { type: 'pasar_prioridad' }, ctx)
+    s = aplicar(s, { type: 'pasar_prioridad' }, ctx)
+    expect(s.cadena).toBeUndefined()
+    expect(statsDe(s, 'b0').poder).toBe(1)
   })
 
   it('PR-016 al_matar_en_combate (objetivo Éter rival): tras el daño el asesino elige el Éter y se mueve a la zona de pago', () => {

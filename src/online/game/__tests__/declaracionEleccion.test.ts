@@ -285,8 +285,15 @@ describe('al-atacar con elección: antes de la ventana de combate', () => {
     expect(tipos(s, 'A')).toEqual(['elegir_objetivo', 'rendirse'])
 
     s = aplicar(s, { type: 'elegir_objetivo', objetivoId: 'b1' }, ctx)
-    expect(statsDe(s, 'b1').poder).toBe(2)
+    // F5d-5: al-atacar se APILA — elegir abre la ventana del defensor con el trigger dentro; el debuff aún no cae
+    expect(statsDe(s, 'b1').poder).toBe(3)
     expect(s.cadena).toMatchObject({ origen: 'combate', prioridad: 'B' })
+    expect(s.cadena?.triggers).toHaveLength(1)
+    s = aplicar(s, { type: 'pasar_prioridad' }, ctx)
+    s = aplicar(s, { type: 'pasar_prioridad' }, ctx)
+    expect(s.cadena).toBeUndefined()
+    expect(statsDe(s, 'b1').poder).toBe(2) // el debuff cae al resolver
+    expect(s.combate?.paso).toBe('bloqueo') // y el combate sigue: el defensor declara su bloqueo
   })
 
   it('sin ventana posible reanuda el combate (bloqueo) al elegir', () => {
@@ -295,6 +302,7 @@ describe('al-atacar con elección: antes de la ventana de combate', () => {
     expect(s.declaracionEnEleccion).toBeDefined()
     s = aplicar(s, { type: 'elegir_objetivo', objetivoId: 'b1' }, ctx)
     expect(s.cadena).toBeUndefined()
+    expect(statsDe(s, 'b1').poder).toBe(2) // F5d-5: sin ventana el trigger resuelve ya, antes del bloqueo
     expect(s.combate?.paso).toBe('bloqueo')
     expect(actorActual(s)).toBe('B')
     expect(getValidActions(s, 'B').some((a) => a.type === 'declarar_bloqueo')).toBe(true)

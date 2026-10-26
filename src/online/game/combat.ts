@@ -2,6 +2,7 @@ import { abrirCadena, declararVentana, marcarInicioAccion } from './chain'
 import { dispararTrigger, keywordsDe, statsDe, tieneDoubleAttackActivo } from './efectos'
 import { destruirCarta } from './replacements'
 import { evaluarFinSteal } from './eter'
+import { armarTriggers, construirTriggers } from './triggers'
 import { reglaBool, reglaNumero } from './reglas'
 import type { Ctx, GameState, PlayerId } from './types'
 
@@ -199,11 +200,32 @@ export function ejecutarDeclararAtaque(s: GameState, atacanteIds: string[], ctx:
     }
   }
   ctx.emit({ type: 'ataque_declarado', jugador: s.turno, atacanteIds })
-  // C3 (D5): al-atacar se dispara con los atacantes YA declarados (antes de la cadena)
-  dispararTrigger(s, ctx, 'al-atacar', s.turno, atacanteIds)
+  // C3 (D5): al-atacar se evalúa con los atacantes YA declarados (antes de la cadena).
+  // F5d-5: SE APILA — la ventana del defensor lleva sus triggers (con objetivo ya elegido por su dueño); si el
+  // defensor no puede responder resuelven antes de abrirse el bloqueo (abrirVentana, tipo 'ataque'). Los
+  // handlers opacos siguen por dispararTrigger SOLO cuando la carta no tiene match JSON (como F5d-3/F5d-4).
+  const triggers = construirTriggers(s, 'al-atacar', s.turno, atacanteIds)
+  if (triggers.length === 0) dispararTrigger(s, ctx, 'al-atacar', s.turno, atacanteIds)
+  const apilados = triggers.length > 0 ? armarTriggers(s, ctx, triggers) : []
   // F5d-1: si el ataque (Recarga, al-atacar) armó elecciones de objetivo, se
   // eligen ANTES de la ventana del defensor; la ventana se abre al elegir la última.
-  declararVentana(s, ctx, { tipo: 'ataque', jugador: s.turno }, previos)
+  declararVentana(s, ctx, { tipo: 'ataque', jugador: s.turno, ...(apilados.length > 0 ? { triggers: apilados } : {}) }, previos)
+}
+
+/**
+ * El ataque sigue vigente solo con los atacantes que siguen en el campo (F5c); si ninguno sigue (una respuesta o
+ * un trigger de al-atacar los sacó: muerte, rebote, exilio) el ataque se anula y el combate se cierra.
+ * Devuelve false si ya no hay combate.
+ */
+function depurarAtacantes(s: GameState): boolean {
+  const combate = s.combate
+  if (!combate) return false
+  combate.atacantes = combate.atacantes.filter((id) => s.players[s.turno].campo.campeones.includes(id))
+  if (combate.atacantes.length === 0) {
+    s.combate = undefined
+    return false
+  }
+  return true
 }
 
 /**
@@ -212,8 +234,9 @@ export function ejecutarDeclararAtaque(s: GameState, atacanteIds: string[], ctx:
  * cadena se abre y el auto-avance 9.3 queda DIFERIDO hasta cerrarla.
  */
 export function abrirVentanaAtaque(s: GameState, ctx: Ctx): void {
-  const combate = s.combate
-  if (!combate) return
+  // F5d-5: sin ventana, los triggers de al-atacar ya resolvieron y pudieron sacar a los atacantes del campo
+  if (!depurarAtacantes(s)) return
+  const combate = s.combate!
   if (abrirCadena(s, rivalDe(s))) return
   // Auto-avance (9.3, ADR-11): defensor sin enderezados → resolución sin
   // evento bloqueo_declarado (los ataques quedan sin bloquear)
@@ -350,13 +373,7 @@ export function continuarCombateTrasCadena(s: GameState, ctx: Ctx): void {
   }
   // F5c: el ataque sigue vigente solo con los atacantes que siguen en el campo;
   // si una respuesta los sacó a todos, el ataque se anula y el combate se cierra.
-  if (combate.paso === 'bloqueo') {
-    combate.atacantes = combate.atacantes.filter((id) => s.players[s.turno].campo.campeones.includes(id))
-    if (combate.atacantes.length === 0) {
-      s.combate = undefined
-      return
-    }
-  }
+  if (combate.paso === 'bloqueo' && !depurarAtacantes(s)) return
   if (combate.paso === 'bloqueo' && bloqueadoresDisponibles(s).length === 0) {
     combate.paso = 'resolucion'
     resolverCombate(s, ctx) // sin pares: sin muertes
