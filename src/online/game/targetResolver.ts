@@ -24,25 +24,20 @@ export function resolveTargets(
   const { tipo, controlador, zona, filtros } = objetivo
 
   // 1. Get base targets by zone and controller
-  const baseTargets = getTargetsByZone(s, tipo, zona, controlador, jugador, fuenteId)
+  let baseTargets = getTargetsByZone(s, tipo, zona, controlador, jugador, fuenteId)
 
   // Protector rule (D3): if rival has a Protector, only Protectors are valid targets
-  // for enemy champion targeting effects
+  // for enemy champion targeting effects. Los filtros y el ranking del efecto se aplican DESPUÉS, sobre los
+  // Protectores: un «RES 3 o menos» no puede elegir a un Protector de RES 4 (y sin Protector válido no hay objetivo).
   if (controlador === 'rival' && tipo === 'campeon' && zona === 'campo') {
     const rival: PlayerId = jugador === 'A' ? 'B' : 'A'
     const rivalChamps = s.players[rival].campo.campeones.filter((id): id is string => id !== null)
-    const hasProtector = rivalChamps.some((id) => {
+    const esProtector = (id: string) => {
       const inst = s.instances[id]
       const meta = inst?.cardId ? getCardMeta(inst.cardId) : null
-      return meta !== null && esCampeon(meta) && meta.keywords?.includes('Protector')
-    })
-    if (hasProtector) {
-      return rivalChamps.filter((id) => {
-        const inst = s.instances[id]
-        const meta = inst?.cardId ? getCardMeta(inst.cardId) : null
-        return meta !== null && esCampeon(meta) && meta.keywords?.includes('Protector')
-      })
+      return meta !== null && esCampeon(meta) && !!meta.keywords?.includes('Protector')
     }
+    if (rivalChamps.some(esProtector)) baseTargets = rivalChamps.filter(esProtector)
   }
 
   // 2. Apply filters

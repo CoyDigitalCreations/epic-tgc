@@ -7,7 +7,7 @@
 import { resolveTargets } from './targetResolver'
 import { robarCarta } from './draw'
 import { shuffleFisherYates } from './rng'
-import { aplicarMod, otorgarKeyword, crearOpcionBloqueo } from './efectos'
+import { aplicarMod, otorgarKeyword, crearOpcionBloqueo, statsDe, keywordsDe } from './efectos'
 import { aplicarCambioAtributo, aplicarReglaTemporal } from './reglasTemporales'
 import { reglaBool, reglaDeEfecto } from './reglas'
 import { iniciarScry } from './scry'
@@ -65,7 +65,7 @@ export function interpretEffect(
   //   (acción SEPARADA posterior al jugar) — skip validación al interpret time
   //   (patrón continuo: el costo se paga después, no aquí).
   // Only validate cost for DISPARO-style effects (no trigger, paid at activation).
-  if (!efectoData.trigger && efectoData.tipo !== 'continuo' && costo && costo.tipo !== 'ninguno') {
+  if (!efectoData.trigger && efectoData.tipo !== 'continuo' && costo && costo.tipo !== 'ninguno' && !payload.costoPagado) {
     if (costo.tipo !== 'eter_bloqueado' && costo.tipo !== 'bloqueo_fijo') {
       if (!validateCost(s, jugador, costo, inst)) {
         return
@@ -402,7 +402,13 @@ function executeEffect(
       // evento → one-shot en transición 0→≥1 (dispararCopyActivation).
       // Extensión Presteza futura: mover fire point del one-shot al chain.
       if (targetIds.length > 0) {
-        inst.copyTargetId = targetIds[0]
+        const tMeta = s.instances[targetIds[0]]?.cardId ? getCardMeta(s.instances[targetIds[0]].cardId!) : null
+        if (tMeta && esCampeon(tMeta)) {
+          // Copiar el ATQ/RES/keywords de un CAMPEÓN es de un solo uso y con duración («hasta el final del turno»)
+          executeCopiaCampeon(s, inst, targetIds[0], jugador, efectoData)
+        } else {
+          inst.copyTargetId = targetIds[0]
+        }
       }
       break
   }
@@ -1017,6 +1023,33 @@ function executeModificarRegla(s: GameState, targetIds: string[], jugador: Playe
     for (const j of afectados) aplicarReglaTemporal(s, { ...comunes, sujeto: { tipo: 'jugador', jugador: j } })
   } else {
     for (const instId of targetIds) aplicarReglaTemporal(s, { ...comunes, sujeto: { tipo: 'carta', instId } })
+  }
+}
+
+/**
+ * Execute copy sobre un CAMPEÓN (p. ej. «Al ser invocada, copia el ATQ de un Campeón rival, hasta el final del turno»):
+ * la carta pasa a tener el ATQ / la RES BASE del objetivo (sin buffs, debuffs ni auras, como dice CopyAttribute) y/o
+ * sus keywords, durante la duración del efecto. El ATQ/RES se aplica como un modificador que lleva el valor actual de la
+ * carta al del objetivo, así expira con el mismo ciclo que un buff. Otros atributos (facción, efecto) no se copian aquí.
+ */
+function executeCopiaCampeon(s: GameState, inst: CardInstance, objetivoId: string, jugador: PlayerId, efectoData: EfectoData): void {
+  const objetivo = s.instances[objetivoId]
+  const meta = objetivo?.cardId ? getCardMeta(objetivo.cardId) : null
+  if (!objetivo || !meta || !esCampeon(meta)) return
+  const atributos = efectoData.copyAttributes ?? []
+  const { duracion, duracionTurnos, duracionFase, duracionControlador } = efectoData
+  const propio = statsDe(s, inst.cardInstanceId)
+  const stats = {
+    ATQ: atributos.includes('atq') ? (objetivo.poder ?? meta.stats?.poder ?? 0) - propio.poder : 0,
+    RES: atributos.includes('res') ? (objetivo.resistencia ?? meta.stats?.resistencia ?? 0) - propio.resistencia : 0,
+  }
+  if (stats.ATQ !== 0 || stats.RES !== 0) {
+    executeBuffDebuff(s, [inst.cardInstanceId], stats, duracion, undefined, 'buff', duracionTurnos, jugador, duracionFase, duracionControlador)
+  }
+  if (atributos.includes('keyword')) {
+    for (const keyword of keywordsDe(s, objetivoId)) {
+      executeGrantKeyword(s, [inst.cardInstanceId], keyword, duracion, jugador, duracionFase, duracionControlador)
+    }
   }
 }
 

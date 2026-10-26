@@ -59,6 +59,9 @@ export interface PayloadEfecto {
    * Solo lo pone dispararTrigger — los caminos de acción (activar_habilidad,
    * jugar_mistica, etc.) ya cobraron su pago aparte. */
   cobrarCosto?: boolean
+  /** F9: el coste ya se pagó al ACTIVAR (activar_habilidad) y el efecto resuelve diferido en la pila: interpretEffect
+   * no lo vuelve a exigir en la Reserva (que ya no tiene ese Éter: pasó a 1A / quedó bloqueado). */
+  costoPagado?: boolean
   /** F5b: declaración de un opener — interpretEffect solo ARMA la elección de
    * objetivo (marcando el pendiente con `opener`) y NO ejecuta el efecto. */
   declararOpener?: { efectoIdx: number }

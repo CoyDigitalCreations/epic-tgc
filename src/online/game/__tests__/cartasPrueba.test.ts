@@ -30,7 +30,7 @@ import type { AnyCard, EfectoData } from '../../../shared/types'
 import { buildReporte, pctOK, INTERPRETER_EXEC, SISTEMAS_EXTERNOS_JSON } from '../coverageMap'
 import { getCardMeta } from '../cards'
 import { getValidActions } from '../validActions'
-import { statsDe, keywordsDe, velocidadDe } from '../efectos'
+import { statsDe, keywordsDe, velocidadDe, purgarEfectosTemporales } from '../efectos'
 import { etersParaPagar } from '../payments'
 import { respondiblesDe } from '../chain'
 import { reglaNumero } from '../reglas'
@@ -737,8 +737,8 @@ describe('(c) humo — HALLAZGOS (el motor actual no cumple el texto o la decisi
     expect(s.players.B.exilio).not.toContain('int')
   })
 
-  // H6 ────────────────────────────────────────────────────────────────────────────────────────
-  it.fails('H6 PR-053 Decreto (modificar_regla limiteMano +2): con la regla vigente en 8, pasar el turno con 7 cartas debería ser legal', () => {
+  // H6: RESUELTO (F9: partida.ts y validActions.ts leen la regla limiteMano, ya no el literal 6)
+  it('H6 PR-053 Decreto (modificar_regla limiteMano +2): con la regla vigente en 8, pasar el turno con 7 cartas debería ser legal', () => {
     const s0 = base('forja')
     conMano(s0, 'A', 'dec', PR.DECRETO)
     const pago = conEteres(s0, 'A', 1)
@@ -751,8 +751,8 @@ describe('(c) humo — HALLAZGOS (el motor actual no cumple el texto o la decisi
     expect(applyAction(s, { type: 'pasar_turno' }, ctx).ok).toBe(true)
   })
 
-  // H7 ────────────────────────────────────────────────────────────────────────────────────────
-  it.fails('H7 Protector + filtro: PR-040 Rayo (RES 3 o menos) no debería poder elegir a un Protector de RES 4', () => {
+  // H7: RESUELTO (F9: resolveTargets aplica filtros y ranking DESPUÉS de restringir a los Protectores)
+  it('H7 Protector + filtro: PR-040 Rayo (RES 3 o menos) no debería poder elegir a un Protector de RES 4', () => {
     const s0 = base()
     conMano(s0, 'A', 'rayo', PR.RAYO)
     const pago = conEteres(s0, 'A', 2)
@@ -766,7 +766,8 @@ describe('(c) humo — HALLAZGOS (el motor actual no cumple el texto o la decisi
   })
 
   // H8 ────────────────────────────────────────────────────────────────────────────────────────
-  it.fails('H8 PR-022 copy al invocar (Marek DS-015): el Imitador debería quedar con el ATQ copiado hasta el final del turno', () => {
+  // H8: RESUELTO (F9: copiar el ATQ/RES/keywords de un Campeón es de un solo uso y con duración — executeCopiaCampeon)
+  it('H8 PR-022 copy al invocar (Marek DS-015): el Imitador queda con el ATQ copiado hasta el final del turno', () => {
     const s0 = base()
     conMano(s0, 'A', 'imi', PR.IMITADOR)
     const pago = conEteres(s0, 'A', 3)
@@ -774,8 +775,10 @@ describe('(c) humo — HALLAZGOS (el motor actual no cumple el texto o la decisi
     const ctx = crearCtx()
     let s = aplicar(s0, { type: 'jugar_campeon', cardInstanceId: 'imi', slot: 0, eterIds: pago, sacrificios: [] }, ctx)
     s = aplicar(s, { type: 'elegir_objetivo', objetivoId: 'b0' }, ctx)
-    expect(s.instances['imi'].copyTargetId).toBe('b0') // lo único que hace el motor
-    expect(statsDe(s, 'imi').poder).toBe(6)
+    expect(statsDe(s, 'imi').poder).toBe(6) // ATQ copiado del Campeón rival (base 6)
+    expect(statsDe(s, 'imi').resistencia).toBe(3) // solo copia el ATQ
+    purgarEfectosTemporales(s, 'ocaso')
+    expect(statsDe(s, 'imi').poder).toBe(3) // ...hasta el final del turno
   })
 
   it('H8b PR-021 negar en Disparo (Thane DS-014): paga y agota, pero no existe nada que negar → no-op', () => {
@@ -793,20 +796,24 @@ describe('(c) humo — HALLAZGOS (el motor actual no cumple el texto o la decisi
   })
 
   // H9 ────────────────────────────────────────────────────────────────────────────────────────
-  it('H9 PR-027 Disparo con costo de Éter: el coste se paga al activar y se VUELVE a exigir en la Reserva al resolver (sin Éter de sobra, fizzle)', () => {
+  // H9: RESUELTO (F9: `costoPagado` — el coste ya se cobró al activar, resolver no lo vuelve a exigir en la Reserva)
+  it('H9 PR-027 Disparo con costo de Éter: el coste se paga UNA vez al activar y el efecto resuelve aunque la Reserva quede vacía', () => {
     const s0 = base()
     conCampeon(s0, 'A', 'ver', PR.VERDUGO, 0)
     const eteres = conEteres(s0, 'A', 2) // justo el costo
     conCampeon(s0, 'B', 'b0', PR.PEON, 0)
     conCampeon(s0, 'B', 'b1', PR.PEON, 1)
     const ctx = crearCtx()
-    const s = aplicar(s0, { type: 'activar_habilidad', cardInstanceId: 'ver', eterIds: eteres }, ctx)
+    let s = aplicar(s0, { type: 'activar_habilidad', cardInstanceId: 'ver', eterIds: eteres }, ctx)
     expect(s.players.A.eterPagado).toHaveLength(2) // se pagó...
-    expect(s.objetivosPendientes ?? []).toHaveLength(0) // ...pero el efecto no resolvió: validateCost mira la Reserva (vacía)
-    expect(s.players.B.cementerio).toHaveLength(0)
+    expect(s.players.A.eterReserva).toHaveLength(0) // ...la Reserva quedó vacía...
+    expect(s.objetivosPendientes?.[0]).toMatchObject({ jugador: 'A', instId: 'ver' }) // ...y el efecto SÍ resuelve: elige objetivo
+    s = aplicar(s, { type: 'elegir_objetivo', objetivoId: 'b1' }, ctx)
+    expect(s.players.B.cementerio).toContain('b1')
+    expect(s.players.A.eterPagado).toHaveLength(2) // no se cobró otra vez
   })
 
-  it.fails('H9b (esperado) el Disparo pagado con su costo exacto debería resolver y destruir', () => {
+  it('H9b el Disparo pagado con su costo exacto resuelve y destruye', () => {
     const s0 = base()
     conCampeon(s0, 'A', 'ver', PR.VERDUGO, 0)
     const eteres = conEteres(s0, 'A', 2)

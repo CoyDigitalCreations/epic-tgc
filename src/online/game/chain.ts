@@ -747,6 +747,7 @@ function resolverOpener(s: GameState, ctx: Ctx, opener: OpenerCadena): void {
           jugador: opener.jugador,
           contextoUso: objetivoId ? 'objetivo-elegido' : undefined,
           objetivoId,
+          costoPagado: true, // activar_habilidad ya cobró el coste (Reserva → 1A / bloqueado): no se vuelve a exigir
         })
       }
     } else {

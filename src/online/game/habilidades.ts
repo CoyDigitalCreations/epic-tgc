@@ -351,6 +351,7 @@ function declararHabilidad(
       jugador: s.turno,
       contextoUso: objetivoId ? 'objetivo-elegido' : undefined,
       objetivoId,
+      costoPagado: true,
     })
     return
   }

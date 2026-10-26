@@ -9,6 +9,7 @@ import { cadenaActiva, respondiblesDe, respuestasDeMano } from './chain'
 import { etersParaPagar } from './payments'
 import { descartarFrentesMuertos, electorAjeno, opcionesVigentes } from './pendientes'
 import { validarEquiparArtefacto } from './movimientos'
+import { reglaNumero } from './reglas'
 import { cartasVigentesScry, scryActual } from './scry'
 import type { GameState, PlayerId, CardInstance } from './types'
 
@@ -404,7 +405,7 @@ export function getValidActions(state: GameState, playerId: PlayerId): Action[] 
     const faseGeneralOk =
       state.fase === 'forja' ||
       (state.fase === 'choque' && !state.combate) ||
-      (state.fase === 'ocaso' && p.mano.length <= 6)
+      (state.fase === 'ocaso' && p.mano.length <= reglaNumero(state, 'limiteMano', { jugador: playerId }))
     if (faseGeneralOk) {
       acciones.push(...accionesBloqueoEter(state, playerId))
       // Pasivo 1A (FB-005/DS-006): habilidad del turno mientras la carta de Éter está en 1A (§8.3a)
@@ -505,7 +506,7 @@ export function getValidActions(state: GameState, playerId: PlayerId): Action[] 
       // Paso bloqueo: el actor es el DEFENSOR (rival) — el activo no tiene
       // acciones propias hasta resolver el bloqueo (R15).
     } else if (state.fase === 'ocaso') {
-      if (p.mano.length <= 6) {
+      if (p.mano.length <= reglaNumero(state, 'limiteMano', { jugador: playerId })) {
         acciones.push({ type: 'pasar_turno' })
       } else {
         for (const id of p.mano) {

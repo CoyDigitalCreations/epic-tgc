@@ -5,6 +5,7 @@
 import type { GameState, Ctx, PlayerId, FaseNombre } from './types'
 import { purgarEfectosTemporales, purgarKeywordsTemporales, purgarHastaFase, dispararTrigger, evaluarCandadosArcanas } from './efectos'
 import { getCardMeta } from './cards'
+import { reglaNumero } from './reglas'
 import { resolverFaseEfectos } from './effectRegistry'
 import { limpiarCombate, resolverAlba } from './phases'
 import { enviarAlCementerio } from './replacements'
@@ -38,7 +39,10 @@ export function validarPasarTurno(state: GameState): string | null {
         ? 'resuelve el combate antes de pasar el turno'
         : null
     case 'ocaso':
-      return p.mano.length > 6 ? 'no puedes pasar el turno con más de 6 cartas en mano' : null
+      {
+        const limite = reglaNumero(state, 'limiteMano', { jugador: state.turno }) // §8.5: 6, salvo que un efecto lo modifique
+        return p.mano.length > limite ? `no puedes pasar el turno con más de ${limite} cartas en mano` : null
+      }
     case 'pre_partida':
       return 'pasar_turno solo durante la partida'
     case 'terminada':
