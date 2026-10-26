@@ -41,7 +41,10 @@ Ver `design.md`. Marcar al terminar cada tarea.
 - [x] Definir eventos que abren ventana: acciones de jugador (jugar Mística/Campeón, activar Arcana/habilidad, declarar ataque/bloqueo) y respuestas; `al-pagar-eter` y los triggers sin acción de jugador siguen inmediatos
 - [x] Toda activación apila su efecto y resuelve al cierre (LIFO)
 - [x] Arcanas y Místicas con Presteza/Fugaz como respuestas (la velocidad manda, F5f)
-- [ ] Manual §9.6 (revisar que el texto refleje lo implementado en F5a-F5h y F5d)
+- [x] Manual §9.6 reescrito con lo implementado en F5 y neutral entre juego físico y virtual (sin "ventana", "gate", etc.); también §5.3, §5.4 (candado de Arcana), §8.3a, keywords y glosario
+- [x] Continuos (bloquear Éter) como respuesta solo durante la Forja (decisión del usuario 2026-10-26; no agotan al Campeón); `validarBloquearEter` y `getValidActions` con paridad
+- [ ] Místicas solo se juegan desde la mano: `motivoNoResponde(..., 'campo')` todavía deja responder a una Mística ya en el campo (si no entró este turno); quitarlo (~40 usos de `conMistica` en 8 archivos de tests por reescribir)
+- [ ] Un Disparo con Éter bloqueado puede activarse agotado, pero como respuesta el motor exige Campeón enderezado: decidir y alinear `motivoNoResponde` con `getValidActions`
 - Subfases hechas: F5a pila única · F5b opener resuelve último · F5c bloqueo abre ventana antes del daño · F5d-1 objetivos antes de la ventana · F5e respuestas con objetivo · F5f velocidad · F5g candado de Arcana · F5h revalidación de objetivos · F5d-2 infraestructura de triggers apilados · F5d-3 `al-jugar-mistica` · F5d-4 `al-invocar` · F5d-5 `al-atacar` · H4 elector ajeno al turno (`electorAjeno`)
 - [ ] Decidir `al-activar-habilidad` (nadie lo dispara: Draven y Korr tienen 2 efectos letra muerta); cablear en `ejecutarActivarHabilidad` o corregir las cartas en el Card-Maker
 - Deuda anotada: prevención a mitad de la pila (el bucle de resolución es síncrono, se acepta; revisar en F9) · `electorAjeno` solo mira el frente de la cola (un pendiente de umbral delante retrasa a los de resolución) · `engine.js` desactualizado desde F5a hasta el despliegue (tras F6)
@@ -60,6 +63,8 @@ Ver `design.md`. Marcar al terminar cada tarea.
 
 ## F9 — Cierre
 - [ ] Auditar el intérprete efecto por efecto (hay tipos del esquema sin ejecutor)
+- [ ] Implementar la keyword INEGABLE (hoy solo existe en el enum `enums.ts` y en el manual §10; nadie la consulta)
+- [ ] Efecto "va al Exilio" tras resolver una Mística (no existe todavía; el manual §5.3 ya lo contempla)
 - [ ] Matriz de casos borde
 - [ ] Card-Maker: formulario de `modificar_regla`
 - [ ] Regenerar manual impreso

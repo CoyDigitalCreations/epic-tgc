@@ -800,11 +800,11 @@
 
       <!-- 6.3 -->
       <div class="section-header sub" id="s5-3"><span class="num">5.3</span><h3>MÍSTICA <span style="font-weight:400;color:var(--text-muted);font-family:'Inter',sans-serif;">(Conjuro)</span></h3></div>
-      <p>Las Místicas son conjuros que se juegan <strong>SOLO en tu Fase de Forja</strong>.</p>
+      <p>Las Místicas son conjuros que se juegan <strong>SOLO desde la mano</strong>, en tu <strong>Fase de Forja</strong>. <strong>Excepción:</strong> las Místicas con <strong>PRESTEZA</strong> o <strong>FUGAZ</strong> también se pueden jugar desde la mano <strong>como respuesta</strong> dentro de una cadena, en cualquier turno, pagando su coste (ver 9.6).</p>
       <ul>
         <li><strong>SECUENCIA DE ACTIVACIÓN:</strong> 1) Se juega desde la mano a un slot de soporte (3A-3C). <span class="highlight-amber">NO se coloca boca abajo.</span> 2) Se paga su coste de Éter. 3) Se resuelve su efecto.</li>
         <li><strong>PAGO DEL COSTE (efecto de un solo uso):</strong> el Éter se mueve de la Reserva (2A) a la zona 1A (Éter pagado).</li>
-        <li>Tras resolverse, la carta va al <strong>Cementerio</strong> y libera su slot (solo la carta; el Éter nunca va al Cementerio).</li>
+        <li>Tras resolverse, la carta va al <strong>Cementerio</strong> y libera su slot (solo la carta; el Éter nunca va al Cementerio). <strong>Regla general:</strong> una Mística que no tiene nada que la mantenga en el campo (no bloquea Éter y no es ARTEFACTO) resuelve su efecto y va al Cementerio, salvo que su propio efecto indique que va al Exilio.</li>
         <li><strong>EFECTO CONTINUO:</strong> el Éter se mueve de la Reserva (2A) directamente a la carta, colocado <strong>EN HORIZONTAL sobre ella</strong> (slot 3A-3C), y permanece bloqueado mientras el efecto esté activo. La carta permanece en su slot. <span class="highlight-amber">El efecto continuo NO se puede cancelar a voluntad del controlador</span> (ver sección 7.2).</li>
         <li>No tienen Poder ni Resistencia &mdash; son puramente conjuros.</li>
       </ul>
@@ -820,6 +820,7 @@
         <li><strong class="highlight-red">NO se pueden activar el turno en que fueron colocadas:</strong> esperan hasta el turno del oponente.</li>
         <li><strong>SECUENCIA DE ACTIVACIÓN:</strong> cuando se cumple su condición: 1) la carta se <strong>VOLTEA BOCA ARRIBA</strong>; 2) se realiza el <strong>PAGO</strong> del coste de Éter; 3) se resuelve la recompensa.</li>
         <li>Si no se tiene suficiente Éter en la Reserva, no se puede activar y la carta permanece boca abajo.</li>
+        <li><strong>CUÁNDO SE HABILITA:</strong> si la condición de la Arcana depende del inicio de un momento de tu turno (tu Alba o tu Choque), la comprueba al llegar ese momento. Si se cumple, la Arcana queda <strong>habilitada</strong>: puedes activarla en cualquier momento posterior, incluso en el turno del rival, aunque la condición deje de cumplirse. Si no la activas, se vuelve a comprobar al inicio de tu siguiente turno: si todavía se cumple, se habilita de nuevo; si ya no, deja de estar habilitada hasta que la condición se cumpla otra vez en ese momento.</li>
         <li><strong>PAGO DEL COSTE (efecto de un solo uso):</strong> el Éter se mueve de la Reserva (2A) a la zona 1A; la recompensa se resuelve y la carta va al <strong>Cementerio</strong>, liberando su slot.</li>
         <li><strong>EFECTO CONTINUO:</strong> el Éter se mueve de la Reserva (2A) directamente a la carta, colocado <strong>EN HORIZONTAL sobre ella</strong> (slot 3D-3F); la carta permanece boca arriba en su slot mientras el efecto esté activo.</li>
         <li>No tienen Poder ni Resistencia.</li>
@@ -1088,7 +1089,7 @@
       </ul>
 
       <div class="section-header sub" id="s8-3a"><span class="num">8.3a</span><h3>HABILIDADES ACTIVAS (Cualquier fase menos Alba)</h3></div>
-      <p>Los efectos <strong>Disparo</strong> y <strong>Continuo</strong> de tus Campeones se pueden activar en <strong>cualquier fase excepto Alba</strong> (Forja, Choque y Ocaso). También puedes activarlos en <strong>respuesta a una cadena</strong> del mismo velocidad en el turno del rival.</p>
+      <p>Los efectos <strong>Disparo</strong> y <strong>Continuo</strong> de tus Campeones se pueden activar en <strong>cualquier fase excepto Alba</strong> (Forja, Choque y Ocaso). También puedes activar un efecto como <strong>respuesta a una cadena</strong> (en tu turno o en el del rival): un <strong>Disparo</strong> si el Campeón está enderezado, y un <strong>Continuo</strong> (bloquear Éter) solo durante la <strong>Forja</strong> y sin agotar al Campeón. Las habilidades de Campeón tienen velocidad normal: no responden a una jugada PRESTEZA ni FUGAZ (ver 9.6).</p>
       <ul>
         <li><strong>Patrón "Bloquea Éter":</strong> El éter se mueve de la Reserva al Campeón. NO agota. El efecto dura mientras el éter esté bloqueado.</li>
         <li><strong>Patrón "Paga y Agota":</strong> El éter se mueve de la Reserva a Pagado (1A). Agota la carta (salvo que tenga TIRADOR), así que no se puede repetir hasta tu próximo Alba.</li>
@@ -1232,7 +1233,7 @@
       </div>
 
       <div class="section-header sub" id="s9-6"><span class="num">9.6</span><h3>CADENA DE EFECTOS</h3></div>
-      <p>La cadena <strong>NO es exclusiva del combate</strong>: <strong>toda acción que se anuncia abre una ventana de respuesta</strong>, en la fase en que ocurra. Abren ventana:</p>
+      <p>La cadena <strong>NO es exclusiva del combate</strong>: <strong>toda acción que se anuncia permite al rival responder antes de que se resuelva</strong>, en la fase en que ocurra. Se puede responder a:</p>
       <ul>
         <li>Jugar una Mística.</li>
         <li>Activar una Arcana.</li>
@@ -1241,23 +1242,69 @@
         <li>Declarar un ataque.</li>
         <li>Declarar un bloqueo.</li>
       </ul>
-      <p>Los efectos que se disparan como consecuencia de otra acción (por ejemplo, "Al invocar...") se agregan a la cadena <strong>encima de la acción que los provocó</strong>. Se responde con Místicas y Arcanas según su velocidad (PRESTEZA o FUGAZ, sección 10).</p>
+      <p><strong>CÓMO SE ANUNCIA UNA JUGADA:</strong></p>
+      <ul>
+        <li>Se anuncia la jugada y se <strong>paga su coste</strong>. Los <strong>objetivos se eligen al anunciar</strong>, <strong>antes</strong> de que el rival pueda responder: quien controla cada efecto elige su objetivo y solo entonces el rival decide si responde. Quien responde también elige los objetivos de su respuesta en el momento de jugarla.</li>
+        <li>El rival <strong>responde o pasa</strong>. Si no tiene nada con qué responder, pasa y la jugada se resuelve de inmediato.</li>
+      </ul>
       <p><strong>ORDEN DE ACTIVACIÓN:</strong></p>
       <ol>
-        <li>Tiene prioridad el jugador que <strong>NO realizó la acción</strong> (en combate, el defensor): activa primero sus respuestas.</li>
-        <li>Luego puede responder quien realizó la acción (en combate, el atacante).</li>
+        <li>Tiene prioridad el jugador que <strong>NO realizó la acción</strong> (en combate, el defensor): puede responder o pasar.</li>
+        <li>Cada vez que alguien responde, la prioridad pasa al otro jugador, que puede responder o pasar. La cadena se cierra cuando <strong>ambos pasan seguidos</strong>; una respuesta nueva reinicia la cuenta.</li>
         <li>Se forma una <strong>CADENA</strong> que se resuelve en <strong>ORDEN INVERSO</strong>: la última activación se resuelve primero y <strong>la carta que abrió la cadena se resuelve la ÚLTIMA</strong>.</li>
       </ol>
+
+      <p><strong>VELOCIDADES Y RESPUESTAS:</strong></p>
+      <ul>
+        <li>Una jugada normal se puede responder con cualquier velocidad.</li>
+        <li>Una jugada <strong>PRESTEZA</strong> solo se responde con PRESTEZA o FUGAZ.</li>
+        <li>Una jugada <strong>FUGAZ</strong> no se puede responder: en cuanto se juega, la cadena completa se resuelve de inmediato (en orden inverso), sin dar prioridad al rival.</li>
+        <li>Se responde con: Místicas PRESTEZA o FUGAZ <strong>desde la mano</strong> (se juegan pagando su coste, también en el turno del rival; una que se queda en el campo, como un ARTEFACTO, necesita un slot libre y, para equiparse, un Campeón propio); Arcanas boca abajo con su condición cumplida (no el turno en que se colocaron; al responder se voltean y se paga su coste); el efecto Disparo de un Campeón enderezado, incluido el recién invocado (la invocación cansada solo impide atacar); y un efecto Continuo (bloquear Éter), que <strong>no agota</strong> al Campeón pero <strong>solo puede responder durante la Forja</strong>. Las habilidades de Campeón tienen velocidad normal.</li>
+      </ul>
+
+      <p><strong>EFECTOS DISPARADOS</strong> ("Al invocar...", "Al atacar...", "Al jugar esta Mística..."):</p>
+      <ul>
+        <li>Los que nacen de una <strong>acción de un jugador</strong> (invocar, atacar, jugar una Mística) se agregan a la cadena <strong>encima de la acción que los provocó</strong> y se resuelven antes que ella. Si hay varios, se apilan primero los del jugador activo y después los del rival, así que <strong>los del rival se resuelven primero</strong>.</li>
+        <li>La <strong>condición</strong> del efecto se comprueba <strong>al apilarlo</strong>, no al resolverlo. Su <strong>objetivo</strong> se elige al apilarlo y se vuelve a comprobar al resolver: si ya no es válido, el efecto no ocurre. Si tiene coste de Éter, se paga al resolver; si ya no se puede pagar, el efecto no ocurre.</li>
+        <li>Si la carta que originó el efecto <strong>sale del campo</strong> antes de que se resuelva, el efecto <strong>se pierde</strong>.</li>
+        <li>Los efectos disparados <strong>no se pueden negar</strong>: solo se niega la jugada que abrió la cadena.</li>
+        <li>Los efectos que se disparan por <strong>otras causas</strong> (una muerte, el inicio de una fase, pagar o bloquear Éter) y los que se disparan <strong>mientras la cadena se resuelve</strong> se resuelven <strong>de inmediato</strong>, sin dar oportunidad de responder.</li>
+      </ul>
+
+      <p><strong>AL RESOLVER:</strong></p>
+      <ul>
+        <li>Una Mística o Arcana de un solo uso va al <strong>Cementerio</strong> cuando termina de resolverse y libera su slot. Las de efecto continuo se quedan en el campo.</li>
+        <li>Si el objetivo de un efecto ya no es válido al resolver (por ejemplo, salió del campo), el efecto <strong>no ocurre</strong>, pero el coste ya pagado <strong>no se devuelve</strong>.</li>
+        <li>Un ARTEFACTO jugado como respuesta cuyo Campeón sale del campo antes de resolver va al Cementerio sin equiparse; su Éter pagado no se devuelve.</li>
+        <li>Si al resolverse un efecto <strong>el rival</strong> debe elegir (por ejemplo, el "Al ser enviado al Cementerio, busca…" de su Campeón destruido), <strong>lo elige él en ese momento</strong>, aunque sea tu turno: la resolución no continúa hasta que elija.</li>
+      </ul>
+
+      <p><strong>EN COMBATE:</strong></p>
+      <ul>
+        <li><strong>Declarar un ataque</strong> permite responder al defensor primero (después de elegir los objetivos de los efectos "Al atacar"). Si todos los atacantes salen del campo antes de que se resuelva, el ataque se anula y el combate termina.</li>
+        <li><strong>Declarar un bloqueo</strong> permite responder <strong>antes del daño</strong>, empezando por el defensor. El daño se calcula con el estado de las cartas al terminar las respuestas: un par cuyo Campeón salió del campo no intercambia daño.</li>
+      </ul>
 
       <div class="example">
         <div class="ex-title">Ejemplo de Cadena</div>
         <strong>Jugador A:</strong> Declara ataque con un Campeón (Poder 6). El Campeón se AGOTA al declarar.<br>
-        <strong>Jugador B:</strong> Activa una Mística → Niega el ataque.<br>
-        <strong>Jugador A:</strong> Responde con una Arcana (colocada boca abajo en un turno anterior) → +2 Ataque.<br><br>
+        <strong>Jugador B:</strong> Juega desde la mano una Mística <strong>PRESTEZA</strong> → Niega el ataque.<br>
+        <strong>Jugador A:</strong> Responde con una Arcana <strong>PRESTEZA</strong> (colocada boca abajo en un turno anterior) → +2 Ataque. <em>(Una Arcana de velocidad normal no podría responder a una jugada PRESTEZA.)</em><br><br>
         <strong>Resolución (orden inverso):</strong><br>
         1. La Arcana se resuelve: el Campeón gana +2 (ahora Poder 8).<br>
         2. La Mística se resuelve: niega el ataque.<br><br>
         <em>Resultado: el ataque es negado, pero el Campeón mantiene +2 Ataque por el resto del turno y permanece AGOTADO (el agotamiento se pagó al declarar).</em>
+      </div>
+
+      <div class="example">
+        <div class="ex-title">Ejemplo de efecto disparado</div>
+        <strong>Jugador A:</strong> Juega una Mística que dice "Al jugar esta Mística, un Campeón del rival pierde 1 de Poder" y además "Un Campeón tuyo gana 3 de Poder". A elige el objetivo de <strong>cada</strong> efecto al jugarla.<br>
+        <strong>Jugador B:</strong> Responde con una Mística <strong>PRESTEZA</strong> desde la mano.<br><br>
+        <strong>Resolución (orden inverso):</strong><br>
+        1. Se resuelve la Mística PRESTEZA de B (la última en entrar).<br>
+        2. Se resuelve el efecto disparado "Al jugar esta Mística…" (entró encima de la jugada que lo provocó).<br>
+        3. Se resuelve la Mística de A, la carta que abrió la cadena: <strong>la ÚLTIMA</strong>.<br><br>
+        <em>Si B hubiera sacado del campo a la Mística de A antes de que se resolviera, el efecto disparado se habría perdido.</em>
       </div>
 
       <div class="example con-cartas">
@@ -1287,8 +1334,8 @@
           <tr><td><strong>RECARGA</strong></td><td>Cuando este Campeón ataca, regresa 1 Éter bloqueado que controles a tu Reserva</td></tr>
           <tr><td><strong>PROTECTOR</strong></td><td>Mientras este Campeón esté en el campo, tus otros Campeones no pueden ser objetivo de habilidades Activas del rival</td></tr>
           <tr><td><strong>ARTEFACTO</strong></td><td>La carta se equipa a un Campeón. El efecto es continuo. Si el Campeón sale, la carta va al Cementerio. Si la carta es destruida, el Campeón NO se destruye</td></tr>
-          <tr><td><strong>PRESTEZA</strong></td><td>Velocidad de activación media. Solo puede ser respondida con cartas PRESTEZA o FUGAZ</td></tr>
-           <tr><td><strong>FUGAZ</strong></td><td>Velocidad máxima. Se resuelve inmediatamente sin respuesta del rival</td></tr>
+          <tr><td><strong>PRESTEZA</strong></td><td>Velocidad de activación media. Solo puede ser respondida con cartas PRESTEZA o FUGAZ. Una Mística PRESTEZA se puede jugar desde la mano como respuesta, pagando su coste, también en el turno del rival</td></tr>
+           <tr><td><strong>FUGAZ</strong></td><td>Velocidad máxima. No se puede responder: al jugarse, la cadena se resuelve de inmediato, sin respuesta del rival. Una Mística FUGAZ también se puede jugar desde la mano como respuesta, pagando su coste</td></tr>
            <tr><td><strong>INEGABLE</strong></td><td>Los efectos de esta carta no pueden ser negados ni contrarrestados por efectos del rival</td></tr>
            <tr><td><strong>COMANDANTE</strong></td><td>Aura pasiva que aplica a tus Campeones de la <strong>MISMA FACCIÓN</strong>. <strong class="highlight-red">INMUTABLE:</strong> no puede ser negado, copiado ni afectado por ningún efecto. Si el Comandante sale del campo, el aura termina</td></tr>
         </table>
@@ -1429,6 +1476,8 @@
           <tr><td>AGOTAR</td><td>Girar un Campeón al atacar o al activar un Disparo con éter pagado. Agotado no ataca, no defiende y no activa habilidades que exijan agotarlo. Se endereza al inicio de tu Alba</td></tr>
           <tr><td>BLOQUEAR (ÉTER)</td><td>Mover Éter de la Reserva a la zona de un Campeón (1B-1F) o sobre una Mística/Arcana continua para sostener un efecto continuo</td></tr>
           <tr><td>CADENA</td><td>Secuencia de efectos que se resuelven en orden inverso; la carta que abre la cadena se resuelve última</td></tr>
+          <tr><td>EFECTO DISPARADO</td><td>Efecto que ocurre como consecuencia de una acción ("Al invocar…", "Al atacar…", "Al jugar esta Mística…"). Se agrega a la cadena encima de la acción que lo provocó y no se puede negar (ver 9.6)</td></tr>
+          <tr><td>RESPONDER</td><td>Jugar una carta o activar un efecto en respuesta a una acción, antes de que esa acción se resuelva. Responde primero el jugador que no realizó la acción (ver 9.6)</td></tr>
           <tr><td>CAMPO</td><td>Zona donde están los Campeones y cartas de soporte</td></tr>
           <tr><td>CEMENTERIO</td><td>Zona de cartas destruidas, descartadas o resueltas (el Éter nunca va aquí)</td></tr>
           <tr><td>CHOQUE</td><td>Fase de combate del turno</td></tr>
