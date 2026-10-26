@@ -3,6 +3,7 @@ import type { Action } from './actions'
 import { actorActual, getValidActions } from './validActions'
 import { cadenaActiva } from './chain'
 import { electorAjeno } from './pendientes'
+import { scryActual } from './scry'
 import { createInitialState } from './initialState'
 import type { GameEvent } from './events'
 import type { GameState, PlayerId } from './types'
@@ -35,6 +36,11 @@ export function botTonto(state: GameState, playerId: PlayerId, dificultad: Dific
   if (electorAjeno(state)) {
     if (actorActual(state) !== playerId) return null
     return getValidActions(state, playerId).find((a) => a.type === 'elegir_objetivo') ?? null
+  }
+  // F9c: scry — el bot conserva el orden y no manda nada al fondo (la jugada canónica de getValidActions)
+  if (scryActual(state)) {
+    if (actorActual(state) !== playerId) return null
+    return getValidActions(state, playerId).find((a) => a.type === 'ordenar_mazo') ?? null
   }
   // Cadena (combate 9.6 O global): el bot nunca encadena cartas
   const cadena = cadenaActiva(state)

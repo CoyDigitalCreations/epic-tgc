@@ -201,6 +201,21 @@ export interface DestruccionPrevenidaEvent {
   causa: CausaDestruccion
 }
 
+/** F9c (scry): `jugador` mira las `cantidad` cartas del tope de un mazo. El rival sabe cuántas, no cuáles. */
+export interface MazoMiradoEvent {
+  type: 'mazo_mirado'
+  jugador: PlayerId
+  cantidad: number
+}
+
+/** F9c (scry): `jugador` terminó de ordenar; `arriba` cartas quedan al tope y `fondo` se mandan al fondo. */
+export interface MazoOrdenadoEvent {
+  type: 'mazo_ordenado'
+  jugador: PlayerId
+  arriba: number
+  fondo: number
+}
+
 /** F7: un efecto quiso exiliar una carta que no puede ser exiliada (Inexiliable); se queda donde está. */
 export interface ExilioPrevenidoEvent {
   type: 'exilio_prevenido'
@@ -314,6 +329,8 @@ export type GameEvent =
   | CartaActivadaEvent
   | ActivacionNegadaEvent
   | TriggerApiladoEvent
+  | MazoMiradoEvent
+  | MazoOrdenadoEvent
 
 /** Catálogo canónico: un payload de muestra por evento (orden = orden del contrato). */
 export const CATALOGO_EVENTOS: readonly GameEvent[] = [
@@ -355,6 +372,9 @@ export const CATALOGO_EVENTOS: readonly GameEvent[] = [
   { type: 'activacion_negada', jugador: 'B', cardInstanceId: 'c1', fuente: 'c4' },
   // F5d-3 (decisión 10a): triggers apilados sobre la jugada que los provocó
   { type: 'trigger_apilado', jugador: 'A', cardInstanceId: 'c1', trigger: 'al-jugar-mistica', efectoIdx: 0 },
+  // F9c: scry (mirar y ordenar el tope del mazo)
+  { type: 'mazo_mirado', jugador: 'A', cantidad: 3 },
+  { type: 'mazo_ordenado', jugador: 'A', arriba: 2, fondo: 1 },
 ]
 
 function assertNunca(x: never): never {
@@ -405,6 +425,8 @@ export function validarExhaustividadEventos(tipo: GameEvent['type']): void {
     case 'carta_activada': return
     case 'activacion_negada': return
     case 'trigger_apilado': return
+    case 'mazo_mirado': return
+    case 'mazo_ordenado': return
     default: assertNunca(tipo)
   }
 }

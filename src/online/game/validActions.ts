@@ -9,6 +9,7 @@ import { cadenaActiva, respondiblesDe, respuestasDeMano } from './chain'
 import { etersParaPagar } from './payments'
 import { descartarFrentesMuertos, electorAjeno, opcionesVigentes } from './pendientes'
 import { validarEquiparArtefacto } from './movimientos'
+import { cartasVigentesScry, scryActual } from './scry'
 import type { GameState, PlayerId, CardInstance } from './types'
 
 /**
@@ -32,6 +33,9 @@ export function actorActual(estado: GameState): PlayerId | null {
   // H4: el dueño ajeno al turno elige YA el pendiente que nació al resolver una pila (antes: se perdía al Ocaso)
   const ajeno = electorAjeno(estado)
   if (ajeno) return ajeno.jugador
+  // F9c: el mazo por ordenar (scry) espera a quien lo mira, sea o no su turno
+  const scry = scryActual(estado)
+  if (scry) return scry.jugador
   // Cadena GLOBAL (state.cadena) o de combate: el actor es SIEMPRE prioridad —
   // aunque la fase sea Forja. Sin esto, cadena global en Forja congela al
   // humano (solo rendirse) y el bot nunca pasa prioridad → FREEZE (seed 66676).
@@ -258,6 +262,14 @@ export function getValidActions(state: GameState, playerId: PlayerId): Action[] 
     if (ajeno.jugador === playerId) {
       for (const objetivoId of opcionesVigentes(state, ajeno)) acciones.push({ type: 'elegir_objetivo', objetivoId })
     }
+    return acciones
+  }
+
+  // F9c: scry — solo quien mira ordena. Se ofrece la jugada canónica (conservar el orden, nada al fondo: la del bot);
+  // la UI arma cualquier otra y el motor la valida (`validarOrdenarMazo`).
+  const scry = scryActual(state)
+  if (scry) {
+    if (scry.jugador === playerId) acciones.push({ type: 'ordenar_mazo', arriba: cartasVigentesScry(state, scry), fondo: [] })
     return acciones
   }
 

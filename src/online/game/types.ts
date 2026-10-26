@@ -351,6 +351,16 @@ export interface CombateState {
   danoPendiente?: boolean
 }
 
+/**
+ * Scry pendiente (F9c, scry.ts): `jugador` ve `cartas` (el tope del mazo de `mazoDe`, tope primero) y debe ordenarlas
+ * con `ordenar_mazo`. Mientras exista, el juego espera a `jugador`.
+ */
+export interface ScryPendiente {
+  jugador: PlayerId
+  mazoDe: PlayerId
+  cartas: string[]
+}
+
 /** Elección de objetivo pendiente (entrada de GameState.objetivosPendientes); ver ese campo y pendientes.ts (vigencia y obsolescencia, F5h). */
 export interface PendienteObjetivo {
   jugador: PlayerId
@@ -402,6 +412,8 @@ export interface GameState {
    * `equipar` (F5f): elección del Campeón al que se equipa un ARTEFACTO jugado/activado como respuesta.
    */
   objetivosPendientes?: PendienteObjetivo[]
+  /** Scry (F9c): mazos por ordenar, cola FIFO. Ver scry.ts. */
+  scryPendientes?: ScryPendiente[]
   /**
    * Declaración (F5d-1) que espera la elección de sus objetivos ANTES de abrir
    * la ventana (Yugioh: se elige al declarar, luego empiezan las respuestas). Sus

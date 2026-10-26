@@ -52,6 +52,9 @@ export const NOMBRES_EVENTOS = [
   'activacion_negada',
   // F5d-3 (decisión 10a): trigger apilado sobre la jugada que lo provocó
   'trigger_apilado',
+  // F9c: scry
+  'mazo_mirado',
+  'mazo_ordenado',
 ] as const
 
 /** Guardia exhaustiva tipo-level: añadir/quitar un evento rompe `tsc -b`. */
@@ -97,6 +100,8 @@ function validarExhaustividad(tipo: GameEvent['type']): void {
     case 'carta_activada': return
     case 'activacion_negada': return
     case 'trigger_apilado': return
+    case 'mazo_mirado': return
+    case 'mazo_ordenado': return
     default: assertNunca(tipo)
   }
 }
@@ -216,13 +221,16 @@ const VALIDADORES: Record<GameEvent['type'], (e: GameEvent) => boolean> = {
     esId(e.cardInstanceId) &&
     esId(e.trigger) &&
     typeof e.efectoIdx === 'number',
+  mazo_mirado: (e) => e.type === 'mazo_mirado' && esJugador(e.jugador) && typeof e.cantidad === 'number',
+  mazo_ordenado: (e) =>
+    e.type === 'mazo_ordenado' && esJugador(e.jugador) && typeof e.arriba === 'number' && typeof e.fondo === 'number',
 }
 
 describe('contrato de eventos (ADR-10)', () => {
-  it('el catálogo expone exactamente los 36 eventos del contrato en orden', () => {
+  it('el catálogo expone exactamente los 38 eventos del contrato en orden', () => {
     const nombres = CATALOGO_EVENTOS.map((e) => e.type)
     expect(nombres).toEqual([...NOMBRES_EVENTOS])
-    expect(new Set(nombres).size).toBe(36)
+    expect(new Set(nombres).size).toBe(38)
   })
 
   it('el switch exhaustivo cubre TODO el tipo GameEvent (añadir/quitar rompe tsc)', () => {

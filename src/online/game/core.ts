@@ -7,6 +7,7 @@ import type { Ctx, GameState, PlayerId } from './types'
 import { shuffleFisherYates } from './rng'
 import { descartarFrentesMuertos, electorAjeno } from './pendientes'
 import { confirmarFinDePartida } from './finPartida'
+import { descartarScryMuertos, ejecutarOrdenarMazo, scryActual, validarOrdenarMazo } from './scry'
 
 // Domain module imports (validators + executors)
 import {
@@ -80,6 +81,8 @@ export type Action =
   | { type: 'responder_cadena'; cardInstanceId: string; eterIds?: string[] }
   | { type: 'pasar_prioridad' }
   | { type: 'responder_prevenicion'; prevenir: boolean }
+  /** Scry (F9c): `arriba` al tope en ese orden (la primera se roba primero), `fondo` al fondo. Juntas, exactamente las cartas miradas. */
+  | { type: 'ordenar_mazo'; arriba: string[]; fondo: string[]; jugador?: PlayerId }
 
 export type ApplyActionResult =
   | { ok: true; state: GameState; events: GameEvent[] }
@@ -99,6 +102,7 @@ export function applyAction(state: GameState, action: Action, ctx: Ctx): ApplyAc
   ejecutarAccion(s, action, ctx)
   // F5h: un pendiente sin quién ni qué elegir no se queda al frente de la cola (pendientes.ts)
   descartarFrentesMuertos(s)
+  descartarScryMuertos(s)
   // F6: punto de control de fin de partida — confirma la derrota (o el EMPATE) cuando ya no queda nada obligatorio por resolver
   confirmarFinDePartida(s, ctx)
   return { ok: true, state: s, events: [...ctx.events] }
@@ -110,7 +114,7 @@ export function applyAction(state: GameState, action: Action, ctx: Ctx): ApplyAc
  * rendirse y el checkpoint de prevención (que se atiende antes).
  */
 const ACCIONES_CON_CADENA_ABIERTA: ReadonlySet<Action['type']> = new Set<Action['type']>([
-  'responder_cadena', 'jugar_respuesta', 'pasar_prioridad', 'bloquear_eter', 'rendirse', 'responder_prevenicion',
+  'responder_cadena', 'jugar_respuesta', 'pasar_prioridad', 'bloquear_eter', 'rendirse', 'responder_prevenicion', 'ordenar_mazo',
 ])
 
 function validarAccion(state: GameState, action: Action): string | null {
@@ -128,6 +132,11 @@ function validarAccion(state: GameState, action: Action): string | null {
   // H4: el dueño ajeno al turno debe elegir su objetivo (tutor del rival al morir, etc.) antes de que siga el juego
   if (electorAjeno(state) && action.type !== 'elegir_objetivo' && action.type !== 'rendirse' && action.type !== 'responder_prevenicion') {
     return 'el rival debe elegir un objetivo antes de continuar'
+  }
+  // F9c: un mazo por ordenar (scry) congela el resto del juego hasta que quien lo mira lo ordene
+  // (las elecciones de arriba van primero: si conviven, esas se atienden antes y el scry espera)
+  if (scryActual(state) && !state.declaracionEnEleccion && !electorAjeno(state) && action.type !== 'ordenar_mazo' && action.type !== 'rendirse') {
+    return 'hay un mazo por ordenar antes de continuar'
   }
   // Pila única (F5a): con la cadena abierta el turno queda congelado — solo se
   // responde o se pasa prioridad; cualquier otra acción espera a que cierre.
@@ -169,6 +178,8 @@ function validarAccion(state: GameState, action: Action): string | null {
       return validarElegirOpcion(state, action)
     case 'elegir_objetivo':
       return validarElegirObjetivo(state, action)
+    case 'ordenar_mazo':
+      return validarOrdenarMazo(state, action)
     case 'usar_transmutar':
       return validarUsarTransmutar(state, action)
     case 'activar_habilidad':
@@ -263,6 +274,10 @@ function ejecutarAccion(s: GameState, action: Action, ctx: Ctx): void {
     }
     case 'elegir_objetivo': {
       ejecutarElegirObjetivo(s, action, ctx)
+      return
+    }
+    case 'ordenar_mazo': {
+      ejecutarOrdenarMazo(s, action, ctx)
       return
     }
     case 'usar_transmutar': {

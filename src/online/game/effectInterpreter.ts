@@ -10,6 +10,7 @@ import { shuffleFisherYates } from './rng'
 import { aplicarMod, otorgarKeyword, crearOpcionBloqueo } from './efectos'
 import { aplicarReglaTemporal } from './reglasTemporales'
 import { reglaDeEfecto } from './reglas'
+import { iniciarScry } from './scry'
 import { REGLAS } from '../../shared/rules/reglas'
 import { aplicarPago } from './payments'
 import { enviarAlCementerio, destruirCarta, liberarEterBloqueado, liberarArtefactosEquipados } from './replacements'
@@ -197,7 +198,7 @@ function needsPlayerChoice(objetivo: EfectoData['objetivo'], efecto?: EfectoData
   // la ventana; sin elección (el candado con D1 se eliminó).
   // copy (Fase 3c): SÍ necesita elección (D1) — el jugador elige target
   // return_ether: automatic (target is rival's ether in a specific zone)
-  if (efecto === 'draw' || efecto === 'rival_discard' || efecto === 'block_ether' ||
+  if (efecto === 'draw' || efecto === 'scry' || efecto === 'rival_discard' || efecto === 'block_ether' ||
       efecto === 'double_attack' || efecto === 'negar') {
     return false
   }
@@ -285,6 +286,11 @@ function executeEffect(
 
     case 'draw':
       executeDraw(s, ctx, jugador, cantidad ?? 1)
+      break
+
+    case 'scry':
+      // F9c: mira las N del tope del mazo propio (o del rival con controlador 'rival') y espera el orden de quien mira
+      iniciarScry(s, ctx, jugador, objetivo?.controlador === 'rival' ? (jugador === 'A' ? 'B' : 'A') : jugador, cantidad ?? 1)
       break
 
     case 'grant_keyword':

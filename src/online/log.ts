@@ -49,6 +49,10 @@ export function formatearEvento(estado: GameState, e: GameEvent): string | null 
       return `${nombreCarta(estado, e.cardInstanceId)} sobrevive (destrucción prevenida).`
     case 'exilio_prevenido':
       return `${nombreCarta(estado, e.cardInstanceId)} no puede ser exiliada.`
+    case 'mazo_mirado':
+      return `${e.jugador} mira las ${e.cantidad} carta(s) del tope del mazo.`
+    case 'mazo_ordenado':
+      return `${e.jugador} ordena el tope del mazo (${e.fondo} al fondo).`
     case 'prevenicion_pendiente':
       return `${nombreCarta(estado, e.victimId)} está en peligro: ${nombreCarta(estado, e.fuenteId)} puede prevenir la destrucción.`
     case 'ruptura_realizada': {

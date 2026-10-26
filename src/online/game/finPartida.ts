@@ -15,6 +15,7 @@
  */
 import { cadenaActiva } from './chain'
 import { electorAjeno } from './pendientes'
+import { scryActual } from './scry'
 import { reglaBool } from './reglas'
 import type { Ctx, GameState, MotivoFin, PlayerId } from './types'
 
@@ -44,7 +45,7 @@ export function motivoDerrota(s: GameState, jugador: PlayerId): 'vinculos' | 'ma
  * La cola OPCIONAL del jugador del turno no cuenta: se puede ignorar y no debe dejar la partida sin terminar.
  */
 export function hayPendienteObligatorio(s: GameState): boolean {
-  return !!cadenaActiva(s) || !!s.declaracionEnEleccion || !!s.equiparPendiente || (s.preventivosPendientes?.length ?? 0) > 0 || !!electorAjeno(s)
+  return !!cadenaActiva(s) || !!s.declaracionEnEleccion || !!s.equiparPendiente || (s.preventivosPendientes?.length ?? 0) > 0 || !!electorAjeno(s) || !!scryActual(s)
 }
 
 /** Punto de control: si ya no hay nada obligatorio pendiente, confirma la derrota (o el empate). */

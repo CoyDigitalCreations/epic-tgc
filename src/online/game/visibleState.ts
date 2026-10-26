@@ -1,5 +1,6 @@
 import type { GameState, PlayerId } from './types'
 import { cadenaActiva } from './chain'
+import { cartasVigentesScry, scryActual } from './scry'
 
 /**
  * Proyección de visibilidad 6.2: devuelve una COPIA del estado donde cada
@@ -55,6 +56,12 @@ export function visibleState(state: GameState, playerId: PlayerId): GameState {
   const pendiente = v.objetivosPendientes?.[0]
   if (pendiente && pendiente.jugador === playerId) {
     for (const id of pendiente.opciones) ocultar.delete(id)
+  }
+
+  // F9c: las cartas del scry se le muestran SOLO a quien las mira, mientras decide
+  const scry = scryActual(v)
+  if (scry && scry.jugador === playerId) {
+    for (const id of cartasVigentesScry(v, scry)) ocultar.delete(id)
   }
 
   for (const id of ocultar) {
