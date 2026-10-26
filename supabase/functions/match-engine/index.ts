@@ -381,7 +381,8 @@ Deno.serve(async (req) => {
     const finished = (nextState as { fase?: string }).fase === 'terminada'
     const ganador = (nextState as { ganador?: 'A' | 'B' }).ganador
     const motivo = (nextState as { motivo?: string }).motivo
-    const winner = finished ? (ganador ?? (playerId === 'A' ? 'B' : 'A')) : null
+    // F6: un EMPATE no tiene ganador (winner null, finish_reason 'empate'); sin esta rama se inventaría uno
+    const winner = finished ? (motivo === 'empate' ? null : (ganador ?? (playerId === 'A' ? 'B' : 'A'))) : null
     const finishReason = finished ? (motivo ?? 'rendicion') : null
 
     const nextPersist: MatchPersist = {

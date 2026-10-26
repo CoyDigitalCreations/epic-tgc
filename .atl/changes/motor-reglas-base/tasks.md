@@ -50,9 +50,12 @@ Ver `design.md`. Marcar al terminar cada tarea.
 - Deuda anotada: prevención a mitad de la pila (el bucle de resolución es síncrono, se acepta; revisar en F9) · `electorAjeno` solo mira el frente de la cola (un pendiente de umbral delante retrasa a los de resolución) · `engine.js` desactualizado desde F5a hasta el despliegue (tras F6)
 
 ## F6 — Fin de partida
-- [ ] Resultado `empate`
-- [ ] Efectos que previenen la derrota o fuerzan empate
-- [ ] UI del empate
+- [x] Resultado `empate`: punto de control único `confirmarFinDePartida` (`finPartida.ts`) al final de cada acción y tras el robo del Alba; dos derrotados a la vez = empate (`ganador` null, motivo `'empate'`, evento `partida_terminada` con `ganador: null`)
+- [x] La derrota por Vínculos se recalcula en cada punto de control (sin bandera: algún Vínculo destruido, ninguno vivo y la regla lo permite); el mazo vacío se marca al intentar robar (`mazosAgotados`) y se confirma en el mismo punto. Lo obligatorio retrasa la confirmación (cadena, declaración, Artefacto por equipar, prevención, elector rival H4); la cola opcional del turno no
+- [x] Efectos que previenen la derrota: regla booleana `derrotaPorVinculos` (por jugador, base sí, prohibible con `modificar_regla`). No existe ni existirá un efecto `forzar_empate`
+- [x] UI del empate: modal del tablero (⚖), logs y servidor (`winner` null). Migración `20261026120000_eter_games_finish_reason_empate.sql` escrita, NO aplicada: va con el despliegue
+- [x] Corregido el bug del manual §5.5/§13: antes la derrota se confirmaba antes de que el efecto del último Vínculo pudiera resolverse (ganaba el rival aunque el efecto lo destruyera también)
+- [ ] Despliegue (una sola vez): regenerar `engine.js` (esbuild), aplicar la migración y desplegar `match-engine`
 
 ## F7 — Exilio
 - [ ] Un solo punto de control de exilio
