@@ -19,6 +19,7 @@ import { describe, it, expect } from 'vitest'
 import { registrarCartas, getCardMeta, esPermanenteEnMesa } from '../cards'
 import { destruirCarta } from '../replacements'
 import { robarCarta } from '../draw'
+import { confirmarFinDePartida } from '../finPartida'
 import { interpretEffect } from '../effectInterpreter'
 import { resolverAlba } from '../phases'
 import { registrarEfecto } from '../efectos'
@@ -60,11 +61,14 @@ function crearCtx(): Ctx {
 }
 
 describe('§13.2 — robar con el Mazo Principal vacío pierde (A3)', () => {
-  it('la primitiva compartida (Alba Y efectos) derrota al intentar robar', () => {
+  it('la primitiva compartida (Alba Y efectos) marca la derrota al intentar robar y se confirma en el punto de control (F6)', () => {
     const s = estadoMinimo()
     const ctx = crearCtx()
     // Mazo vacío: el robo de efecto (executeDraw) y el de Alba usan ESTA primitiva
-    robarCarta(s, ctx, 'A')
+    expect(robarCarta(s, ctx, 'A')).toBe(false) // no robó: quien itere (robar N) debe parar
+    expect(s.mazosAgotados).toEqual(['A'])
+    expect(s.fase).not.toBe('terminada') // F6: se confirma al terminar de resolver lo pendiente
+    confirmarFinDePartida(s, ctx)
     expect(s.fase).toBe('terminada')
     expect(s.ganador).toBe('B')
     expect(s.motivo).toBe('mazo_vacio')

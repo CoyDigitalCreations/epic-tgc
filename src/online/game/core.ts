@@ -6,6 +6,7 @@ import type { GameEvent } from './events'
 import type { Ctx, GameState, PlayerId } from './types'
 import { shuffleFisherYates } from './rng'
 import { descartarFrentesMuertos, electorAjeno } from './pendientes'
+import { confirmarFinDePartida } from './finPartida'
 
 // Domain module imports (validators + executors)
 import {
@@ -98,6 +99,8 @@ export function applyAction(state: GameState, action: Action, ctx: Ctx): ApplyAc
   ejecutarAccion(s, action, ctx)
   // F5h: un pendiente sin quién ni qué elegir no se queda al frente de la cola (pendientes.ts)
   descartarFrentesMuertos(s)
+  // F6: punto de control de fin de partida — confirma la derrota (o el EMPATE) cuando ya no queda nada obligatorio por resolver
+  confirmarFinDePartida(s, ctx)
   return { ok: true, state: s, events: [...ctx.events] }
 }
 

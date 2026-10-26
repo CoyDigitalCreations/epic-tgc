@@ -212,10 +212,10 @@ function ejecutarAccionEfecto(s: GameState, ctx: Ctx, ep: EfectoPendiente): void
     }
 
     case 'robar-cartas': {
-      // §13.2: mazo vacío al robar por efecto → derrota (misma primitiva que el Alba)
+      // §13.2: mazo vacío al robar por efecto → derrota (misma primitiva que el Alba); no sigue intentando
       for (let i = 0; i < accion.cantidad; i++) {
         if (s.fase === 'terminada') break
-        robarCarta(s, ctx, ep.owner)
+        if (!robarCarta(s, ctx, ep.owner)) break
       }
       break
     }

@@ -172,27 +172,6 @@ export function liberarEterBloqueado(s: GameState, ctx: Ctx, cardInstanceId: str
 }
 
 /**
- * Verifica derrota por Vínculos (5.7/13, reemplaza a PE, §5.5): si `owner`
- * queda con 0 Vínculos VIVOS (boca abajo) → partida_terminada(ganador=rival,
- * motivo='vinculos'). No-op si la partida ya terminó.
- */
-export function verificarDerrotaVinculos(s: GameState, ctx: Ctx, owner: PlayerId): void {
-  if (s.fase === 'terminada') return
-  const vivos = s.players[owner].vinculos.filter((id): id is string => {
-    if (!id) return false
-    const inst = s.instances[id]
-    return !!inst && !inst.bocaArriba
-  }).length
-  if (vivos === 0) {
-    const ganador: PlayerId = owner === 'A' ? 'B' : 'A'
-    s.fase = 'terminada'
-    s.ganador = ganador
-    s.motivo = 'vinculos'
-    ctx.emit({ type: 'partida_terminada', ganador, motivo: 'vinculos' })
-  }
-}
-
-/**
  * Busca en el campo del `dueno` una fuente elegible para prevent_destroy
  * (Fase 2c — data-driven desde efectos[], sin handlers):
  * efecto 'prevent_destroy' + trigger 'cuando_vinculo_seria_destruido' +
@@ -239,7 +218,8 @@ function ejecutarDestruccionVinculo(s: GameState, ctx: Ctx, cardInstanceId: stri
   // §5.5: al destruirse, activa su efecto PERMANENTE a favor del jugador que recibió el daño
   dispararTrigger(s, ctx, 'al-ser-destruido-vinculo', inst.owner, [cardInstanceId])
   ctx.emit({ type: 'destruccion', cardInstanceId, jugador: inst.owner, causa })
-  verificarDerrotaVinculos(s, ctx, inst.owner)
+  // F6: la derrota por quedarse sin Vínculos NO se confirma aquí: el efecto de este Vínculo (y todo lo que provoque)
+  // se resuelve primero; el punto de control `confirmarFinDePartida` (finPartida.ts) la confirma al final de la acción
   return true
 }
 

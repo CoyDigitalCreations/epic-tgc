@@ -12,7 +12,7 @@ export type Fase = 'pre_partida' | 'forja' | 'choque' | 'ocaso' | 'terminada'
 export type FaseNombre = 'alba' | 'forja' | 'choque' | 'ocaso'
 
 /** Motivos de fin de partida (change 2 agrega 'vinculos' — 5.7/13). */
-export type MotivoFin = 'mazo_vacio' | 'rendicion' | 'vinculos'
+export type MotivoFin = 'mazo_vacio' | 'rendicion' | 'vinculos' | 'empate'
 
 /** Causa de destrucción para destruirCarta (ADR-15) y eventos de destrucción. */
 export type CausaDestruccion = 'combate' | 'efecto' | 'ruptura'
@@ -416,6 +416,12 @@ export interface GameState {
    * ya (decisión g de triggers.ts); sirve además de tope contra recursión.
    */
   profundidadTriggers?: number
+  /**
+   * Jugadores que intentaron robar con el Mazo Principal vacío (F6, manual §13.2). La marca es permanente; la derrota
+   * se CONFIRMA en el punto de control (finPartida.ts), junto con la de Vínculos, para que dos derrotas simultáneas sean EMPATE.
+   */
+  mazosAgotados?: PlayerId[]
+  /** Ausente en un EMPATE (`motivo: 'empate'`) y mientras la partida sigue. */
   ganador?: PlayerId
   motivo?: MotivoFin
   /** Efectos pendientes centralizados (Effect Registry, Fase 1). */

@@ -72,7 +72,7 @@ export function formatearEventoDetallado(estado: GameState, e: GameEvent): strin
     case 'rendicion':
       return `${ts}   🏳 ${e.jugador} SE RINDE`
     case 'partida_terminada':
-      return `${ts}   🏆 FIN: ${e.ganador} gana por ${e.motivo}`
+      return e.ganador === null ? `${ts}   ⚖ FIN: EMPATE (ambos jugadores derrotados)` : `${ts}   🏆 FIN: ${e.ganador} gana por ${e.motivo}`
     case 'ataque_declarado': {
       const nombres = e.atacanteIds.map((id) => nombreCarta(estado, id)).join(', ')
       return `${ts}   ⚔ Ataque con ${nombres}`

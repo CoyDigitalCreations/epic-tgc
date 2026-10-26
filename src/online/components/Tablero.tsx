@@ -2236,9 +2236,12 @@ export function Tablero({
 
       {/* ── Fin de la partida ───────────────────────────────────── */}
       {terminada && (() => {
+        const empate = vista.motivo === 'empate' // F6: ambos jugadores derrotados a la vez; no hay ganador
         const gane = vista.ganador === 'A'
         const motivoTexto =
-          vista.motivo === 'vinculos'
+          empate
+            ? 'Ambos jugadores cumplieron una condición de derrota al mismo tiempo.'
+            : vista.motivo === 'vinculos'
             ? gane
               ? 'Destruiste todos los Vínculos de tu rival.'
               : 'Todos tus Vínculos fueron destruidos.'
@@ -2256,7 +2259,7 @@ export function Tablero({
         const conAnimacion = anim.velocidad !== 'off'
         return (
           <>
-          {conAnimacion && (
+          {conAnimacion && !empate && (
             <div
               aria-hidden="true"
               data-testid="fin-efecto"
@@ -2269,10 +2272,10 @@ export function Tablero({
             />
           )}
           <Modal
-            titulo={gane ? '¡Ganaste!' : 'Perdiste'}
+            titulo={empate ? 'Empate' : gane ? '¡Ganaste!' : 'Perdiste'}
             subtitulo={motivoTexto}
-            icono={<span className={conAnimacion ? 'anim-fin-icono inline-block' : undefined}>{gane ? '🏆' : '☠'}</span>}
-            tono={gane ? 'exito' : 'peligro'}
+            icono={<span className={conAnimacion ? 'anim-fin-icono inline-block' : undefined}>{empate ? '⚖' : gane ? '🏆' : '☠'}</span>}
+            tono={empate ? 'ether' : gane ? 'exito' : 'peligro'}
             ancho="sm"
             pie={
               <BotonUI variante="primario" onClick={onAbandonar}>

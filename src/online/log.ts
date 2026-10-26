@@ -36,7 +36,7 @@ export function formatearEvento(estado: GameState, e: GameEvent): string | null 
     case 'rendicion':
       return `${e.jugador} se rinde.`
     case 'partida_terminada':
-      return `¡Fin de la partida! Gana ${e.ganador} por ${e.motivo}.`
+      return e.ganador === null ? '¡Fin de la partida! Empate: ambos jugadores cumplen una condición de derrota.' : `¡Fin de la partida! Gana ${e.ganador} por ${e.motivo}.`
     case 'ataque_declarado':
       return `${e.jugador} declara ataque con ${e.atacanteIds.length} campeón(es).`
     case 'bloqueo_declarado':

@@ -1238,3 +1238,33 @@ describe('PriorityModal — unificación de respuesta a cadenas (2026-10-14)', (
     expect(screen.getAllByRole('button', { name: 'Pasar prioridad' })).toHaveLength(1)
   })
 })
+
+describe('Tablero — fin de la partida (F6)', () => {
+  function terminadaCon(motivo: 'empate' | 'vinculos', ganador?: 'A' | 'B'): GameState {
+    const s = structuredClone(partidaEnForja(42))
+    s.fase = 'terminada'
+    s.motivo = motivo
+    if (ganador) s.ganador = ganador
+    else delete s.ganador
+    return s
+  }
+  const montar = (s: GameState) =>
+    render(<Tablero vista={visibleState(s, 'A')} acciones={[]} leTocaA={false} log={[]} onAccion={vi.fn()} onAbandonar={vi.fn()} />)
+
+  it('un EMPATE se muestra como empate (no como derrota), sin velo de victoria ni de derrota', () => {
+    montar(terminadaCon('empate'))
+    expect(screen.getByText('Empate')).toBeInTheDocument()
+    expect(screen.getByText(/condición de derrota al mismo tiempo/)).toBeInTheDocument()
+    expect(screen.queryByText('Perdiste')).not.toBeInTheDocument()
+    expect(screen.queryByText('¡Ganaste!')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('fin-efecto')).not.toBeInTheDocument()
+  })
+
+  it('una derrota y una victoria por Vínculos siguen igual que antes', () => {
+    const { unmount } = montar(terminadaCon('vinculos', 'B'))
+    expect(screen.getByText('Perdiste')).toBeInTheDocument()
+    unmount()
+    montar(terminadaCon('vinculos', 'A'))
+    expect(screen.getByText('¡Ganaste!')).toBeInTheDocument()
+  })
+})

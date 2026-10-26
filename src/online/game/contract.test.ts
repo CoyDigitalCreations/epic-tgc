@@ -166,10 +166,12 @@ const VALIDADORES: Record<GameEvent['type'], (e: GameEvent) => boolean> = {
   mazo_agotado: (e) => e.type === 'mazo_agotado' && esJugador(e.jugador),
   mulligan_realizado: (e) => e.type === 'mulligan_realizado' && esJugador(e.jugador),
   rendicion: (e) => e.type === 'rendicion' && esJugador(e.jugador),
+  // F6: un EMPATE no tiene ganador (`ganador: null`) y su motivo es 'empate'; cualquier otro fin tiene ganador
   partida_terminada: (e) =>
     e.type === 'partida_terminada' &&
-    esJugador(e.ganador) &&
-    (e.motivo === 'mazo_vacio' || e.motivo === 'rendicion' || e.motivo === 'vinculos'),
+    (e.motivo === 'empate'
+      ? e.ganador === null
+      : esJugador(e.ganador) && (e.motivo === 'mazo_vacio' || e.motivo === 'rendicion' || e.motivo === 'vinculos')),
   ataque_declarado: (e) =>
     e.type === 'ataque_declarado' &&
     esJugador(e.jugador) &&

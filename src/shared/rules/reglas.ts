@@ -34,6 +34,7 @@ export const REGLAS = {
   cartasPorAlba: { etiqueta: 'Cartas que se roban en el Alba', manual: '§8.2', ambito: 'jugador', base: 1, min: 0 },
   rupturasPorTurno: { etiqueta: 'Vínculos que rompe la Ruptura por turno', manual: '§9.4', ambito: 'jugador', base: 1, min: 0 },
   atacarTrasRuptura: { etiqueta: 'Se puede seguir atacando tras romper un Vínculo', manual: '§9.4', ambito: 'jugador', base: false },
+  derrotaPorVinculos: { etiqueta: 'Pierde la partida al quedarse sin Vínculos', manual: '§13', ambito: 'jugador', base: true },
 
   /* ── campeón ── */
   agotadoPuedeBloquear: { etiqueta: 'Un Campeón agotado puede bloquear', manual: '§9.3', ambito: 'campeon', base: false },

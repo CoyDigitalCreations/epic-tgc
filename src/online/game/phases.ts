@@ -3,6 +3,7 @@ import { robarCarta } from './draw'
 import { purgarEfectosTemporales, purgarHastaFase, dispararTrigger, evaluarCandadosArcanas } from './efectos'
 import { resolverFaseEfectos } from './effectRegistry'
 import { reagruparEfectosBloqueoAlba, exhaustFijado } from './effectInterpreter'
+import { confirmarFinDePartida } from './finPartida'
 import type { Ctx, GameState, PlayerId } from './types'
 
 /**
@@ -81,6 +82,9 @@ export function resolverAlba(s: GameState, ctx: Ctx, jugador: PlayerId): void {
 
   // 4. Robar 1 (no consume RNG: toma del tope)
   robarCarta(s, ctx, jugador)
+  // F6: si el robo falló y no queda nada obligatorio por resolver, la derrota se confirma YA (la partida no pasa a la
+  // Forja); el punto de control también cubre una derrota de Vínculos del rival que estuviera esperando
+  confirmarFinDePartida(s, ctx)
 }
 
 /** Roba la carta del tope del mazo; mazo vacío → mazo_agotado + partida_terminada. */

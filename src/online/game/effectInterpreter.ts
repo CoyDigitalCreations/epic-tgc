@@ -998,9 +998,9 @@ function executeExile(
 
 /**
  * Execute draw effect.
- * §13.2: robar con el Mazo Principal vacío derrota AL MOMENTO de intentar
+ * §13.2: robar con el Mazo Principal vacío marca la derrota AL MOMENTO de intentar
  * robar — sin importar el origen del robo (Alba o efecto). Comparte la misma
- * primitiva que el Alba (draw.ts) para que la derrota sea idéntica.
+ * primitiva que el Alba (draw.ts); la derrota se confirma al terminar de resolver (F6).
  */
 function executeDraw(
   s: GameState,
@@ -1009,8 +1009,8 @@ function executeDraw(
   cantidad: number,
 ): void {
   for (let i = 0; i < cantidad; i++) {
-    if (s.fase === 'terminada') return // la partida ya terminó con este robo
-    robarCarta(s, ctx, jugador)
+    if (s.fase === 'terminada') return // la partida ya terminó
+    if (!robarCarta(s, ctx, jugador)) return // mazo vacío: no sigue intentando robar
   }
 }
 

@@ -1,9 +1,10 @@
 // @vitest-environment node
 import { describe, it, expect } from 'vitest'
 import {
-  destruirCarta, verificarDerrotaVinculos,
+  destruirCarta,
   buscarFuentePreventDestroy, ejecutarResponderPrevenicion, validarResponderPrevenicion,
 } from '../replacements'
+import { confirmarFinDePartida } from '../finPartida'
 import { applyAction } from '../actions'
 import { getValidActions } from '../validActions'
 import { registrarCartas } from '../cards'
@@ -142,16 +143,19 @@ describe('destruirCarta por causa (ADR-15)', () => {
 })
 
 describe('sexto Vínculo y derrota por vínculos (ADR-16)', () => {
-  it('destruir el último Vínculo vivo: hook NO-OP resuelto (flag anti-bucle) ANTES de partida_terminada(ganador, motivo=vinculos)', () => {
+  it('destruir el último Vínculo vivo: hook NO-OP resuelto (flag anti-bucle) ANTES de confirmar partida_terminada(ganador, motivo=vinculos)', () => {
     const ctx = crearCtx()
     const v = conVinculo(estadoMinimo(), 3, 'B') // B queda con 0 Vivos
 
     destruirCarta(v.s, ctx, v.id, 'ruptura')
+    // F6: la derrota NO se confirma al destruir: espera al punto de control (después de resolver el efecto del Vínculo)
+    expect(v.s.fase).toBe('choque')
+    expect(v.s.sextoVinculoResuelto).toBe(true)
+    confirmarFinDePartida(v.s, ctx)
     expect(ctx.events[ctx.events.length - 1]).toEqual({ type: 'partida_terminada', ganador: 'A', motivo: 'vinculos' })
     expect(v.s.fase).toBe('terminada')
     expect(v.s.ganador).toBe('A')
     expect(v.s.motivo).toBe('vinculos')
-    expect(v.s.sextoVinculoResuelto).toBe(true)
   })
 
   it('destruir un Vínculo con Vivos restantes: NO derrota, NO activa el sexto Vínculo', () => {
@@ -164,24 +168,34 @@ describe('sexto Vínculo y derrota por vínculos (ADR-16)', () => {
     expect(v2.s.sextoVinculoResuelto).toBeUndefined()
   })
 
-  it('verificarDerrotaVinculos directo: dueño con 0 Vivos → partida_terminada(ganador=rival, motivo=vinculos)', () => {
+  it('confirmarFinDePartida: dueño con Vínculos destruidos y 0 Vivos → partida_terminada(ganador=rival, motivo=vinculos)', () => {
     const ctx = crearCtx()
-    const s: GameState = { ...estadoMinimo(), players: { ...estadoMinimo().players, B: { ...estadoMinimo().players.B, vinculos: [null, null, null, null, null, null] } } }
+    const v = conVinculo(estadoMinimo(), 0, 'B')
+    v.s.instances[v.id].bocaArriba = true // su único Vínculo ya está destruido
 
-    verificarDerrotaVinculos(s, ctx, 'B')
+    confirmarFinDePartida(v.s, ctx)
     expect(ctx.events).toEqual([{ type: 'partida_terminada', ganador: 'A', motivo: 'vinculos' }])
-    expect(s.fase).toBe('terminada')
-    expect(s.ganador).toBe('A')
-    expect(s.motivo).toBe('vinculos')
+    expect(v.s.fase).toBe('terminada')
+    expect(v.s.ganador).toBe('A')
+    expect(v.s.motivo).toBe('vinculos')
   })
 
-  it('verificarDerrotaVinculos: dueño con ≥1 Vivo → sin derrota', () => {
+  it('confirmarFinDePartida: dueño con ≥1 Vivo → sin derrota', () => {
     const ctx = crearCtx()
     const v = conVinculo(estadoMinimo(), 0, 'B')
 
-    verificarDerrotaVinculos(v.s, ctx, 'B')
+    confirmarFinDePartida(v.s, ctx)
     expect(ctx.events).toEqual([])
     expect(v.s.fase).toBe('choque')
+  })
+
+  it('confirmarFinDePartida: un jugador SIN Vínculos en la escena (ninguno destruido) no está derrotado', () => {
+    const ctx = crearCtx()
+    const s = estadoMinimo()
+
+    confirmarFinDePartida(s, ctx)
+    expect(ctx.events).toEqual([])
+    expect(s.fase).toBe('choque')
   })
 })
 
@@ -333,6 +347,7 @@ describe('prevent_destroy (Fase 2c) — checkpoint de elección data-driven', ()
     const ctx = crearCtx()
     destruirCarta(s, ctx, victimId, 'efecto')
     ejecutarResponderPrevenicion(s, ctx, 'A', false)
+    confirmarFinDePartida(s, ctx) // F6: la derrota se confirma en el punto de control (applyAction lo llama al final)
 
     expect(s.fase).toBe('terminada')
     expect(s.ganador).toBe('B')

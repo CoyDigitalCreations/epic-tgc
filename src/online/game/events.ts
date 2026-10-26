@@ -159,7 +159,8 @@ export interface RendicionEvent {
 
 export interface PartidaTerminadaEvent {
   type: 'partida_terminada'
-  ganador: PlayerId
+  /** null en un EMPATE (`motivo: 'empate'`, F6). */
+  ganador: PlayerId | null
   motivo: MotivoFin
 }
 
