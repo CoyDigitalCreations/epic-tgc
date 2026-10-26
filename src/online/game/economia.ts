@@ -28,6 +28,9 @@ export function validarBloquearEter(state: GameState, action: Extract<Action, { 
   if (state.fase !== 'forja' && state.fase !== 'choque' && state.fase !== 'ocaso') {
     return 'bloquear_eter solo en Forja/Choque/Ocaso (§8.3a: nunca en Alba)'
   }
+  // Decisión del usuario (2026-10-26): un efecto continuo (bloquear Éter) solo puede usarse COMO RESPUESTA
+  // dentro de una cadena durante la Forja; no agota al Campeón (eso mantiene útiles a los efectos Disparo)
+  if (cadenaActiva(state) && state.fase !== 'forja') return 'un efecto continuo solo puede responder en la Forja (§8.3a)'
   return validarBloqueo(state, actorDeBloqueo(state), action.eterIds, action.targetInstanceId, action.efectoIdx)
 }
 

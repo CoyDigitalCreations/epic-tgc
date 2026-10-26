@@ -327,6 +327,21 @@ describe('§8.3a — Bloqueo de Éter en cualquier fase menos Alba, incluso en c
     // El rival (sin prioridad) no recibe acciones de bloqueo
     expect(getValidActions(s, 'B').map((a) => a.type)).toEqual(['rendirse'])
   })
+
+  it('como RESPUESTA solo durante la Forja (decisión 2026-10-26): en Choque u Ocaso con cadena abierta se rechaza y no se ofrece', () => {
+    for (const fase of ['choque', 'ocaso'] as const) {
+      const s = conElena(fase)
+      s.cadena = { origen: 'global', pila: [], prioridad: 'A', pasesConsecutivos: 0, faseAbierta: fase }
+      expect(validarBloquearEter(s, acc), fase).toMatch(/solo puede responder en la Forja/)
+      expect(getValidActions(s, 'A').map((a) => a.type), fase).not.toContain('bloquear_eter')
+      expect(getValidActions(s, 'A').map((a) => a.type), fase).toContain('pasar_prioridad')
+    }
+    // en Forja con cadena sigue valiendo, y fuera de cadena sigue valiendo en Choque/Ocaso (no es una respuesta)
+    const forja = conElena('forja')
+    forja.cadena = { origen: 'global', pila: [], prioridad: 'A', pasesConsecutivos: 0, faseAbierta: 'forja' }
+    expect(validarBloquearEter(forja, acc)).toBeNull()
+    expect(validarBloquearEter(conElena('choque'), acc)).toBeNull()
+  })
 })
 
 describe('§9.2 — el atacante elige CUALQUIER subconjunto de atacantes (A6)', () => {

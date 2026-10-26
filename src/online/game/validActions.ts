@@ -291,7 +291,8 @@ export function getValidActions(state: GameState, playerId: PlayerId): Action[] 
       // A9 (§8.3a): el bloqueo de Éter es una activación de continuo válida
       // COMO RESPUESTA — se expone con prioridad en la cadena (estado
       // directo, no entra a la pila; la cadena no avanza por bloquear).
-      acciones.push(...accionesBloqueoEter(state, playerId, true))
+      // Decisión del usuario (2026-10-26): como respuesta SOLO durante la Forja (paridad con validarBloquearEter).
+      if (state.fase === 'forja') acciones.push(...accionesBloqueoEter(state, playerId, true))
       acciones.push({ type: 'pasar_prioridad' })
     }
     return acciones
