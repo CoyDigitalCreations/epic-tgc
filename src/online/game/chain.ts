@@ -529,7 +529,11 @@ function resolverPila(s: GameState, ctx: Ctx): void {
   // F5d-2: orden = respuestas en reversa con los triggers apilados debajo de ellas (ordenResolucion), luego el
   // opener. Mientras resuelve, un trigger de acción nuevo no abre ventana (profundidadTriggers, decisión g).
   enResolucion(s, () => {
-    for (const paso of ordenResolucion(cadena)) {
+    // F9d: `pasoResolviendo` = posición del paso en curso (transitorio, dentro de esta acción): `redirect` lo usa para
+    // hallar la entrada inmediatamente inferior. Al terminar los pasos se queda en `length` (el opener no tiene pasos debajo).
+    const pasos = ordenResolucion(cadena)
+    for (const [i, paso] of pasos.entries()) {
+      s.pasoResolviendo = i
       if ('trigger' in paso) {
         resolverTrigger(s, ctx, paso.trigger) // no negable: negar/Marcha solo alcanza al opener
         continue
@@ -539,8 +543,10 @@ function resolverPila(s: GameState, ctx: Ctx): void {
       if (!cadena.pila.includes(id)) continue
       resolverRespuesta(s, ctx, id, cadena.respuestas?.[id])
     }
+    s.pasoResolviendo = pasos.length
     if (cadena.opener) resolverOpener(s, ctx, cadena.opener)
   })
+  delete s.pasoResolviendo
   s.cadena = undefined
 }
 

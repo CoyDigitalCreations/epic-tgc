@@ -428,6 +428,8 @@ export interface GameState {
    * ya (decisión g de triggers.ts); sirve además de tope contra recursión.
    */
   profundidadTriggers?: number
+  /** Posición (en `ordenResolucion`) del paso de la pila que se está resolviendo (F9d, transitorio como profundidadTriggers). Ver redirect.ts. */
+  pasoResolviendo?: number
   /**
    * Jugadores que intentaron robar con el Mazo Principal vacío (F6, manual §13.2). La marca es permanente; la derrota
    * se CONFIRMA en el punto de control (finPartida.ts), junto con la de Vínculos, para que dos derrotas simultáneas sean EMPATE.

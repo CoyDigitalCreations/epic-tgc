@@ -99,6 +99,8 @@ export function formatearEventoDetallado(estado: GameState, e: GameEvent): strin
       const nombre = nombreCarta(estado, e.cardInstanceId)
       return `${ts}   ✨ ${nombre} NO SE EXILIA (exilio prevenido)`
     }
+    case 'objetivo_redirigido':
+      return `${ts}   ↪ ${e.jugador} REDIRIGE el efecto de ${nombreCarta(estado, e.cardInstanceId)} hacia ${nombreCarta(estado, e.objetivoId)} [${e.objetivoId}]`
     case 'mazo_mirado':
       return `${ts}   🔮 ${e.jugador} MIRA ${e.cantidad} carta(s) del tope del mazo`
     case 'mazo_ordenado':

@@ -201,6 +201,14 @@ export interface DestruccionPrevenidaEvent {
   causa: CausaDestruccion
 }
 
+/** F9d (redirect): `jugador` cambió el objetivo del efecto de `cardInstanceId` (la entrada de la pila redirigida) a `objetivoId`. */
+export interface ObjetivoRedirigidoEvent {
+  type: 'objetivo_redirigido'
+  jugador: PlayerId
+  cardInstanceId: string
+  objetivoId: string
+}
+
 /** F9c (scry): `jugador` mira las `cantidad` cartas del tope de un mazo. El rival sabe cuántas, no cuáles. */
 export interface MazoMiradoEvent {
   type: 'mazo_mirado'
@@ -331,6 +339,7 @@ export type GameEvent =
   | TriggerApiladoEvent
   | MazoMiradoEvent
   | MazoOrdenadoEvent
+  | ObjetivoRedirigidoEvent
 
 /** Catálogo canónico: un payload de muestra por evento (orden = orden del contrato). */
 export const CATALOGO_EVENTOS: readonly GameEvent[] = [
@@ -375,6 +384,8 @@ export const CATALOGO_EVENTOS: readonly GameEvent[] = [
   // F9c: scry (mirar y ordenar el tope del mazo)
   { type: 'mazo_mirado', jugador: 'A', cantidad: 3 },
   { type: 'mazo_ordenado', jugador: 'A', arriba: 2, fondo: 1 },
+  // F9d: redirect (cambiar el objetivo de la entrada inferior de la pila)
+  { type: 'objetivo_redirigido', jugador: 'B', cardInstanceId: 'c1', objetivoId: 'c2' },
 ]
 
 function assertNunca(x: never): never {
@@ -427,6 +438,7 @@ export function validarExhaustividadEventos(tipo: GameEvent['type']): void {
     case 'trigger_apilado': return
     case 'mazo_mirado': return
     case 'mazo_ordenado': return
+    case 'objetivo_redirigido': return
     default: assertNunca(tipo)
   }
 }

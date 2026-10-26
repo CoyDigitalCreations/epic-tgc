@@ -55,6 +55,8 @@ export const NOMBRES_EVENTOS = [
   // F9c: scry
   'mazo_mirado',
   'mazo_ordenado',
+  // F9d: redirect
+  'objetivo_redirigido',
 ] as const
 
 /** Guardia exhaustiva tipo-level: añadir/quitar un evento rompe `tsc -b`. */
@@ -102,6 +104,7 @@ function validarExhaustividad(tipo: GameEvent['type']): void {
     case 'trigger_apilado': return
     case 'mazo_mirado': return
     case 'mazo_ordenado': return
+    case 'objetivo_redirigido': return
     default: assertNunca(tipo)
   }
 }
@@ -221,16 +224,18 @@ const VALIDADORES: Record<GameEvent['type'], (e: GameEvent) => boolean> = {
     esId(e.cardInstanceId) &&
     esId(e.trigger) &&
     typeof e.efectoIdx === 'number',
+  objetivo_redirigido: (e) =>
+    e.type === 'objetivo_redirigido' && esJugador(e.jugador) && esId(e.cardInstanceId) && esId(e.objetivoId),
   mazo_mirado: (e) => e.type === 'mazo_mirado' && esJugador(e.jugador) && typeof e.cantidad === 'number',
   mazo_ordenado: (e) =>
     e.type === 'mazo_ordenado' && esJugador(e.jugador) && typeof e.arriba === 'number' && typeof e.fondo === 'number',
 }
 
 describe('contrato de eventos (ADR-10)', () => {
-  it('el catálogo expone exactamente los 38 eventos del contrato en orden', () => {
+  it('el catálogo expone exactamente los 39 eventos del contrato en orden', () => {
     const nombres = CATALOGO_EVENTOS.map((e) => e.type)
     expect(nombres).toEqual([...NOMBRES_EVENTOS])
-    expect(new Set(nombres).size).toBe(38)
+    expect(new Set(nombres).size).toBe(39)
   })
 
   it('el switch exhaustivo cubre TODO el tipo GameEvent (añadir/quitar rompe tsc)', () => {

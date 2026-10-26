@@ -11,6 +11,7 @@ import { aplicarMod, otorgarKeyword, crearOpcionBloqueo } from './efectos'
 import { aplicarReglaTemporal } from './reglasTemporales'
 import { reglaDeEfecto } from './reglas'
 import { iniciarScry } from './scry'
+import { ejecutarRedirect } from './redirect'
 import { REGLAS } from '../../shared/rules/reglas'
 import { aplicarPago } from './payments'
 import { enviarAlCementerio, destruirCarta, liberarEterBloqueado, liberarArtefactosEquipados } from './replacements'
@@ -286,6 +287,11 @@ function executeEffect(
 
     case 'draw':
       executeDraw(s, ctx, jugador, cantidad ?? 1)
+      break
+
+    case 'redirect':
+      // F9d: reescribe el objetivo de la entrada inmediatamente inferior de la pila (redirect.ts)
+      ejecutarRedirect(s, ctx, inst, targetIds, jugador)
       break
 
     case 'scry':
