@@ -250,6 +250,25 @@ export interface ActivacionNegadaEvent {
   fuente: string
 }
 
+/**
+ * Trigger apilado (F5d-3, decisión 10a): un efecto "al jugar Mística / al invocar / al atacar…"
+ * se disparó como consecuencia de una acción de jugador y entró al flujo de la pila (encima de la
+ * jugada que lo provocó: resuelve antes que ella). Se emite UNA VEZ por trigger, AL APILAR (cuando
+ * arma su elección de objetivo), no al resolver. El objetivo que su dueño elija NO viaja aquí:
+ * es información oculta (visibleState no lo des-oculta).
+ */
+export interface TriggerApiladoEvent {
+  type: 'trigger_apilado'
+  /** Controlador del efecto (el elector de su objetivo). */
+  jugador: PlayerId
+  /** Carta fuente del efecto (ya volteada si era oculta). */
+  cardInstanceId: string
+  /** Trigger interno que se disparó (al-invocar, al-atacar, al-jugar-mistica, al-activar-habilidad). */
+  trigger: string
+  /** Índice del efecto en efectos[] de la carta (una carta puede tener varios con el mismo trigger). */
+  efectoIdx: number
+}
+
 export type GameEvent =
   | PartidaIniciadaEvent
   | TurnoIniciadoEvent
@@ -285,6 +304,7 @@ export type GameEvent =
   | PrioridadPasadaEvent
   | CartaActivadaEvent
   | ActivacionNegadaEvent
+  | TriggerApiladoEvent
 
 /** Catálogo canónico: un payload de muestra por evento (orden = orden del contrato). */
 export const CATALOGO_EVENTOS: readonly GameEvent[] = [
@@ -323,6 +343,8 @@ export const CATALOGO_EVENTOS: readonly GameEvent[] = [
   { type: 'prioridad_pasada', jugador: 'A' },
   { type: 'carta_activada', cardInstanceId: 'c1', jugador: 'A', slot: 0 },
   { type: 'activacion_negada', jugador: 'B', cardInstanceId: 'c1', fuente: 'c4' },
+  // F5d-3 (decisión 10a): triggers apilados sobre la jugada que los provocó
+  { type: 'trigger_apilado', jugador: 'A', cardInstanceId: 'c1', trigger: 'al-jugar-mistica', efectoIdx: 0 },
 ]
 
 function assertNunca(x: never): never {
@@ -371,6 +393,7 @@ export function validarExhaustividadEventos(tipo: GameEvent['type']): void {
     case 'prioridad_pasada': return
     case 'carta_activada': return
     case 'activacion_negada': return
+    case 'trigger_apilado': return
     default: assertNunca(tipo)
   }
 }

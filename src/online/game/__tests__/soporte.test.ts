@@ -431,8 +431,9 @@ describe('soporte C5: mecánica TUTOR (D1 interactivo)', () => {
 
     const ctx = crearCtx()
     const r = aplicar(s, { type: 'jugar_mistica', cardInstanceId: mistica, slot: 0, eterIds: ids }, ctx)
+    // F5d-3: el trigger se arma con el patrón de declaración (F5d-1) — el pendiente lleva `opener: {efectoIdx}`
     expect(r.objetivosPendientes).toEqual([
-      { jugador: 'A', instId: mistica, trigger: 'al-jugar-mistica', opciones: ['m-fb031', 'm-mistica2', 'm-ds031'] },
+      { jugador: 'A', instId: mistica, trigger: 'al-jugar-mistica', opciones: ['m-fb031', 'm-mistica2', 'm-ds031'], opener: { efectoIdx: 0 } },
     ])
 
     const r2 = aplicar(r, { type: 'elegir_objetivo', objetivoId: 'm-mistica2' }, ctx)
@@ -454,11 +455,13 @@ describe('soporte C5: mecánica TUTOR (D1 interactivo)', () => {
 
     const ctx = crearCtx()
     const r = aplicar(s, { type: 'jugar_mistica', cardInstanceId: mistica, slot: 0, eterIds: ids }, ctx)
+    // F5d-3: el trigger se arma con el patrón de declaración (F5d-1) — el pendiente lleva `opener: {efectoIdx}`
     expect(r.objetivosPendientes![0]).toEqual({
       jugador: 'A',
       instId: mistica,
       trigger: 'al-jugar-mistica',
       opciones: ['m-aurora'],
+      opener: { efectoIdx: 0 },
     })
   })
 

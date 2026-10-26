@@ -34,13 +34,15 @@
  *   reversa; el opener al final. Un trigger apilado mientras la cadena ya tenía respuestas (la acción que lo
  *   provocó fue una respuesta) lleva `sobre` = esa respuesta y resuelve justo antes que ella.
  * - Reglas aprobadas: (a) si la fuente ya no está en el campo (ni en la pila, para cartas jugadas como
- *   respuesta) o perdió su vigencia (Vínculo boca abajo), el trigger se pierde sin efectos parciales; la
- *   `condicion` NO se re-evalúa al resolver (decisión 10b: se evaluó al apilar); (b) el objetivo elegido se revalida
+ *   respuesta; el opener NO cuenta: F5d-3) o perdió su vigencia (Vínculo boca abajo), el trigger se pierde
+ *   sin efectos parciales; la `condicion` NO se re-evalúa al resolver (decisión 10b: se evaluó al apilar); (b) el objetivo elegido se revalida
  *   al resolver (resolveTargets, F5h): si ya no es válido, fizzle; (c) el costo de Éter se cobra AL RESOLVER:
  *   sin fondos, fizzle; (d) NO se pueden negar (negar/Marcha solo alcanza al opener); (e) al-pagar-eter
  *   sigue inmediato; (f) los triggers sin acción de jugador siguen inmediatos.
  * - Sin ventana posible (gate cerrado: el rival no puede responder, o la jugada es Fugaz) los triggers
  *   resuelven de inmediato en el mismo orden LIFO, ya con sus objetivos elegidos.
+ * - Decisión 10a (F5d-3): cada trigger emite `trigger_apilado` (events.ts) UNA VEZ, AL APILAR (armarTriggers
+ *   o el bucle inmediato de apilarTriggers), nunca al resolver. El objetivo elegido no viaja en el evento.
  * - La velocidad de la ventana la fija la jugada que la abre (opener / invocación / ataque); en una ventana
  *   de solo triggers, la fuente del último trigger apilado. Los triggers no entran a la pila de respuestas,
  *   así que no cuentan para la velocidad requerida (a revisar con el usuario).
@@ -134,6 +136,9 @@ export function armarTriggers(s: GameState, ctx: Ctx, lista: readonly TriggerApi
     const inst = s.instances[t.cardInstanceId]
     const match = matchDe(s, t)
     if (!inst || !match) continue
+    // Decisión 10a: `trigger_apilado` se emite UNA VEZ por trigger, AL APILAR (aquí, cuando arma su
+    // elección de objetivo); al resolver NO se vuelve a emitir. El objetivo elegido no viaja en el evento.
+    ctx.emit({ type: 'trigger_apilado', jugador: t.jugador, cardInstanceId: t.cardInstanceId, trigger: t.trigger, efectoIdx: t.efectoIdx })
     interpretEffect(s, ctx, inst, match.efecto, {
       ...payloadBase(t),
       cobrarCosto: false,
@@ -181,7 +186,11 @@ export function apilarTriggers(s: GameState, ctx: Ctx, lista: readonly TriggerAp
   const validas = lista.filter((t) => esTriggerApilable(t.trigger) && !!s.instances[t.cardInstanceId])
   if (validas.length === 0) return
   if ((s.profundidadTriggers ?? 0) > 0) {
-    for (const t of [...ordenarTriggers(s, validas)].reverse()) resolverTrigger(s, ctx, t, 'inmediato')
+    for (const t of [...ordenarTriggers(s, validas)].reverse()) {
+      // Decisión 10a: sin ventana tampoco hay re-emisión al resolver — una sola por trigger, aquí
+      ctx.emit({ type: 'trigger_apilado', jugador: t.jugador, cardInstanceId: t.cardInstanceId, trigger: t.trigger, efectoIdx: t.efectoIdx })
+      resolverTrigger(s, ctx, t, 'inmediato')
+    }
     return
   }
   const triggers = armarTriggers(s, ctx, validas)
@@ -259,12 +268,18 @@ export function enResolucion(s: GameState, fn: () => void): void {
   }
 }
 
-/** ¿La fuente sigue en juego para disparar? En el campo de su controlador o, si se jugó como respuesta/opener, en la pila. */
+/**
+ * ¿La fuente sigue en juego para disparar? En el campo de su controlador o, si se jugó como RESPUESTA,
+ * en la pila. Decisión 2: si la FUENTE sale del campo antes de resolver, el trigger se PIERDE. El
+ * opener NO cuenta como "en la pila": F5d-3 corrigió el ancla `cadena.opener` que hacía inalcanzable
+ * la regla para los triggers cuya fuente es la propia jugada (al-jugar-mistica) — una respuesta que
+ * la saca del campo mata su trigger.
+ */
 function fuenteEnJuego(s: GameState, t: TriggerApilado): boolean {
   const id = t.cardInstanceId
   if (instanciasEnCampo(s, t.jugador).includes(id)) return true
   const cadena = s.cadena
-  return !!cadena && (cadena.pila.includes(id) || cadena.opener?.cardInstanceId === id)
+  return !!cadena && cadena.pila.includes(id)
 }
 
 /**

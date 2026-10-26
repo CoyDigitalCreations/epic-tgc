@@ -5,7 +5,8 @@
  * Toda acción de jugador que arma elecciones de objetivo (triggers de la propia
  * acción, sacrificios con tutor, al-pagar-eter) las resuelve primero; la ventana
  * de respuesta se abre al elegir la última. El elector es el DUEÑO del pendiente
- * (puede ser el rival). Los triggers siguen disparándose INMEDIATOS (apilarlos es F5d-2+).
+ * (puede ser el rival). F5d-3: al-jugar-mistica YA se apila (su efecto resuelve en la
+ * cadena, antes que el opener); los demás triggers siguen inmediatos (apilarlos es F5d-4/5).
  * Cartas sintéticas (el motor es genérico, sin cartas reales hardcodeadas).
  */
 import { describe, it, expect } from 'vitest'
@@ -149,14 +150,17 @@ describe('al-jugar-mistica con elección: se elige ANTES de la ventana', () => {
 
     s = aplicar(s, { type: 'elegir_objetivo', objetivoId: 'tA2' }, ctx)
     expect(s.declaracionEnEleccion).toBeUndefined()
-    expect(s.players.A.mano).toEqual(['tA2']) // el trigger resolvió INMEDIATO (no se apila todavía)
+    // F5d-3: el trigger se APILA — todavía no resuelve ni el tutor ni el hechizo
+    expect(s.players.A.mano).toEqual([])
+    expect(s.players.A.mazo).toHaveLength(3)
     expect(s.cadena?.opener).toMatchObject({ tipo: 'mistica', cardInstanceId: 'mist' })
+    expect(s.cadena?.triggers).toHaveLength(1)
     expect(s.cadena?.prioridad).toBe('B')
-    expect(s.players.A.mazo).toHaveLength(2) // solo el tutor; el hechizo (draw) aún no resolvió
     s = aplicar(s, { type: 'pasar_prioridad' }, ctx)
     s = aplicar(s, { type: 'pasar_prioridad' }, ctx)
     expect(s.cadena).toBeUndefined()
-    expect(s.players.A.mazo).toHaveLength(1) // el hechizo resuelve ÚLTIMO
+    expect(s.players.A.mano).toEqual(['tA2', 'tA1']) // el trigger (tutor, tA2) ANTES que el hechizo (draw, tA1)
+    expect(s.players.A.mazo).toHaveLength(1) // y el hechizo (draw) resuelve ÚLTIMO
   })
 
   it('sin ventana posible (gate cerrado) elegir resuelve todo de inmediato', () => {
@@ -304,24 +308,34 @@ describe('el elector es el dueño del pendiente (puede ser el rival)', () => {
   }
   const jugar = { type: 'jugar_mistica', cardInstanceId: 'mist', slot: 0, eterIds: ['eter-A-0'] } as const
 
-  it('actorActual y getValidActions siguen al dueño de cada pendiente; la ventana espera a ambos', () => {
+  it('actorActual y getValidActions siguen al dueño del pendiente; el tutor del rival se arma a su nombre', () => {
     const ctx = crearCtx()
     let s = aplicar(escenario(), jugar, ctx)
     expect(actorActual(s)).toBe('A')
     expect(s.cadena).toBeUndefined()
-    s = aplicar(s, { type: 'elegir_objetivo', objetivoId: 'bT' }, ctx) // A destruye bT → arma el tutor de B
+    s = aplicar(s, { type: 'elegir_objetivo', objetivoId: 'bT' }, ctx) // A (dueño del pendiente) elige destruir bT
 
-    expect(s.declaracionEnEleccion).toMatchObject({ tipo: 'opener', pendientes: 1 })
-    expect(s.cadena).toBeUndefined()
-    expect(s.objetivosPendientes?.[0]).toMatchObject({ jugador: 'B', trigger: 'al-ser-enviado-al-cementerio' })
-    expect(actorActual(s)).toBe('B')
-    expect(tipos(s, 'B')).toEqual(['elegir_objetivo', 'rendirse'])
-    expect(getValidActions(s, 'A').map((a) => a.type)).toEqual(['rendirse'])
-    // B (no el turno del activo) puede elegir: la validación sigue al dueño del pendiente
-    s = aplicar(s, { type: 'elegir_objetivo', objetivoId: 'tB2' }, ctx)
-    expect(s.players.B.mano).toContain('tB2')
+    // F5d-3: el trigger se APILA — la destrucción (y el tutor de B) ocurren al RESOLVER la cadena,
+    // no al elegir. La "ventana que espera a ambos" ya no existe: la elección del tutor nace en la resolución.
     expect(s.declaracionEnEleccion).toBeUndefined()
     expect(s.cadena?.opener).toMatchObject({ tipo: 'mistica', cardInstanceId: 'mist' })
+    expect(s.cadena?.triggers).toHaveLength(1)
+    s = aplicar(s, { type: 'pasar_prioridad' }, ctx)
+    s = aplicar(s, { type: 'pasar_prioridad' }, ctx)
+    expect(s.cadena).toBeUndefined()
+
+    // el tutor de B se armó al morir bT (decisión g: elecciones de la resolución a la cola):
+    // el pendiente es de B — el DUEÑO es el elector — y A NO puede elegirlo
+    expect(s.objetivosPendientes?.[0]).toMatchObject({ jugador: 'B', trigger: 'al-ser-enviado-al-cementerio' })
+    expect(getValidActions(s, 'A').some((a) => a.type === 'elegir_objetivo')).toBe(false)
+    // cuando le toca, B (el dueño) elige y el tutor resuelve
+    const turnoDeB = structuredClone(s)
+    turnoDeB.turno = 'B'
+    expect(actorActual(turnoDeB)).toBe('B')
+    expect(getValidActions(turnoDeB, 'B').some((a) => a.type === 'elegir_objetivo')).toBe(true)
+    const r = aplicar(turnoDeB, { type: 'elegir_objetivo', objetivoId: 'tB2' }, ctx)
+    expect(r.players.B.mano).toContain('tB2')
+    expect(verificarZonaUnica(r)).toEqual([])
   })
 
   it('si el rival elector se rinde pierde ÉL, no el jugador activo', () => {
@@ -337,15 +351,21 @@ describe('el elector es el dueño del pendiente (puede ser el rival)', () => {
     expect(s.motivo).toBe('rendicion')
   })
 
-  it('visibleState muestra al rival elector las opciones de su pendiente', async () => {
+  it('visibleState muestra al elector las opciones de su pendiente', async () => {
     const { visibleState } = await import('../visibleState')
     const ctx = crearCtx()
     let s = aplicar(escenario(), jugar, ctx)
     s = aplicar(s, { type: 'elegir_objetivo', objetivoId: 'bT' }, ctx)
+    s = aplicar(s, { type: 'pasar_prioridad' }, ctx)
+    s = aplicar(s, { type: 'pasar_prioridad' }, ctx)
+    // F5d-3: el tutor de B se armó al resolver la cadena (decisión g); sus opciones (del mazo
+    // de B) las ve SOLO su dueño, igual que cuando el pendiente nacía en la declaración
+    const pendiente = s.objetivosPendientes![0]
+    expect(pendiente.jugador).toBe('B')
     const vistaB = visibleState(s, 'B')
-    for (const id of s.objetivosPendientes![0].opciones) expect(vistaB.instances[id].cardId).not.toBeNull()
+    for (const id of pendiente.opciones) expect(vistaB.instances[id].cardId).not.toBeNull()
     const vistaA = visibleState(s, 'A')
-    for (const id of s.objetivosPendientes![0].opciones) expect(vistaA.instances[id].cardId).toBeNull()
+    for (const id of pendiente.opciones) expect(vistaA.instances[id].cardId).toBeNull()
   })
 })
 

@@ -116,6 +116,10 @@ export function formatearEventoDetallado(estado: GameState, e: GameEvent): strin
       const victima = nombreCarta(estado, e.cardInstanceId)
       return `${ts}   🚫 NIEGA: ${niega} cancela la activación de ${victima} (pago consumido)`
     }
+    case 'trigger_apilado': {
+      const nombre = nombreCarta(estado, e.cardInstanceId)
+      return `${ts}   ⛓ TRIGGER APILADO: ${nombre} (${e.trigger} #${e.efectoIdx}) [${e.jugador}]`
+    }
     case 'carta_entrada_a_zona': {
       const nombre = nombreCarta(estado, e.cardInstanceId)
       const owner = estado.instances[e.cardInstanceId]?.owner ?? '?'

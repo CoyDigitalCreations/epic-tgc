@@ -8,10 +8,11 @@ import { esSingular, sacrificiosRequeridos, copiasEnCampo, campeonesSacrificable
 import { aplicarPago, validarPago, etersParaPagar, type ContextoUso } from './payments'
 import { SLOTS_CAMPEONES, SLOTS_MISTICAS_TACTICAS, SLOTS_ARCANAS_COMBATE, slotAZona } from './zones'
 import { dispararTrigger, condicionCumple } from './efectos'
+import { construirTriggers } from './triggers'
 import { liberarEterBloqueado, enviarAlCementerio } from './replacements'
 import { declararOpener, declararVentana, marcarInicioAccion } from './chain'
 import type { Action } from './core'
-import type { Ctx } from './types'
+import type { Ctx, TriggerApilado } from './types'
 import type { CondicionEfecto } from '../../shared/types'
 
 /** Requisito de juego data-driven: evalúa condicion JSON si la carta tiene. */
@@ -207,14 +208,17 @@ export function ejecutarJugarMistica(s: GameState, action: Extract<Action, { typ
     s.equiparPendiente = { artefactoId: id, jugador: s.turno, contexto: 'jugar_mistica' }
     return // efectos diferidos hasta ejecutarEquiparArtefacto
   }
-  // C5 (change 4): al-jugar-mística se dispara con la instancia YA en campo
-  // (F5b: al DECLARAR, no se apila — eso es F5d)
-  dispararTrigger(s, ctx, 'al-jugar-mistica', s.turno, [id])
+  // F5d-3: al-jugar-mística SE APILA encima del opener (resuelve antes que el hechizo) y su dueño
+  // elige el objetivo antes de abrir la ventana (declararOpener → armarTriggers). Los handlers opacos
+  // (registrarEfecto/genéricos) no son apilables: siguen por dispararTrigger SOLO cuando la carta no
+  // tiene match JSON (el intérprete JSON manda, como siempre; ver cabecera de triggers.ts).
+  const triggers = construirTriggers(s, 'al-jugar-mistica', s.turno, [id])
+  if (triggers.length === 0) dispararTrigger(s, ctx, 'al-jugar-mistica', s.turno, [id])
   // F5b: los hechizos SIN trigger NO se resuelven aquí — el opener (la Mística)
   // resuelve ÚLTIMO, tras las respuestas (chain.ts declararOpener). El objetivo
   // se elige antes de abrir la ventana; el cementerio de un solo uso (§5.3,
   // fix A4) ocurre al resolver.
-  declararOpener(s, ctx, { tipo: 'mistica', jugador: s.turno, cardInstanceId: id }, previos)
+  declararOpener(s, ctx, { tipo: 'mistica', jugador: s.turno, cardInstanceId: id }, previos, triggers)
 }
 
 /** Coloca la Arcana BOCA ABAJO en 3D-3F SIN pagar (pago al activar). */
@@ -270,11 +274,15 @@ function resolverEfectosArtefacto(s: GameState, ctx: Ctx, id: string, contexto: 
   const inst = s.instances[id]
   if (!inst) return
   const previos = marcarInicioAccion(s)
+  // F5d-3: igual que ejecutarJugarMistica — al-jugar-mistica se apila encima del opener; los handlers
+  // opacos siguen por dispararTrigger solo cuando la carta no tiene match JSON
+  let triggers: TriggerApilado[] | undefined
   if (contexto === 'jugar_mistica') {
-    dispararTrigger(s, ctx, 'al-jugar-mistica', s.turno, [id])
+    triggers = construirTriggers(s, 'al-jugar-mistica', s.turno, [id])
+    if (triggers.length === 0) dispararTrigger(s, ctx, 'al-jugar-mistica', s.turno, [id])
   }
   // F5b: hechizos SIN trigger → opener de la pila (resuelve último, tras las respuestas)
-  declararOpener(s, ctx, { tipo: contexto === 'jugar_mistica' ? 'mistica' : 'arcana', jugador: s.turno, cardInstanceId: id }, previos)
+  declararOpener(s, ctx, { tipo: contexto === 'jugar_mistica' ? 'mistica' : 'arcana', jugador: s.turno, cardInstanceId: id }, previos, triggers)
 }
 
 /* ─────────────────── Generador de acciones de Forja ─────────────────── */
