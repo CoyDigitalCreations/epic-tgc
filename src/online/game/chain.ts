@@ -488,6 +488,7 @@ function resolverRespuesta(s: GameState, ctx: Ctx, id: string, datos: RespuestaA
     hechizos()
     trigger()
     if (esPermanenteEnMesa(meta)) return // F5f: Artefacto / efecto continuo: ya tomó su slot al jugarse y permanece
+    if (p.exilio.includes(id)) return // su propio efecto la exilió («va al Exilio», §5.3): no pasa por el Cementerio
     enviarAlCementerio(s, ctx, id)
     ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: id, zona: '2G', jugador: inst.owner, bocaArriba: true })
     return

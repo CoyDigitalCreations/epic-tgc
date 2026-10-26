@@ -1151,6 +1151,13 @@ function executeExile(
       ctx.emit({ type: 'carta_exiliada', cardInstanceId: targetId, jugador: owner })
       continue
     }
+
+    // Una Mística respondida desde la MANO resuelve FUERA de toda zona (está en la pila): si su propio efecto la
+    // exilia («va al Exilio», §5.3) se queda en el Exilio y resolverRespuesta ya no la manda al Cementerio.
+    if (s.cadena?.pila.includes(targetId)) {
+      p.exilio.push(targetId)
+      ctx.emit({ type: 'carta_exiliada', cardInstanceId: targetId, jugador: owner })
+    }
   }
 }
 
