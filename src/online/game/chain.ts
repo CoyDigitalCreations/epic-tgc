@@ -23,7 +23,7 @@
  * 0 extracciones RNG (contrato 89 intacto). CICLO de import deliberado con
  * combat.ts: ambos módulos se usan mutuamente SOLO en runtime (ESM, seguro).
  */
-import { esArcana, esArtefactoEquipable, esMistica, esPermanenteEnMesa, getCardMeta } from './cards'
+import { esArcana, esArtefactoEquipable, esCostoBloqueo, esMistica, esPermanenteEnMesa, getCardMeta } from './cards'
 import { abrirVentanaAtaque, continuarCombateTrasCadena, rivalDe } from './combat'
 import {
   abrirVentanaTriggers, armarTriggers, asentarTriggers, enResolucion, ordenResolucion, registrarObjetivoTrigger, resolverTrigger,
@@ -136,7 +136,10 @@ export function motivoNoResponde(state: GameState, jugador: PlayerId, id: string
     return etersParaPagar(state, jugador, meta.id) === null ? 'no puedes pagar su coste' : null
   }
   if (meta.type === 'Campeón' && 'efectos' in meta && meta.efectos?.some((e) => e.tipo === 'disparo')) {
-    return inst.agotado ? 'el Campeón está agotado' : null
+    if (!inst.agotado) return null
+    // Un Disparo con éter BLOQUEADO no agota al Campeón (manual §5.2/§8.3a): activar_habilidad lo permite con el
+    // Campeón agotado, así que como respuesta también (antes la respuesta exigía Campeón enderezado).
+    return meta.efectos.some((e) => e.tipo === 'disparo' && esCostoBloqueo(e.costo)) ? null : 'el Campeón está agotado'
   }
   return 'esta carta no puede responder'
 }
