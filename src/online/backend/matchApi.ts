@@ -44,11 +44,27 @@ export interface ActResponse {
   status?: string
 }
 
+/**
+ * Un status no-2xx llega como `FunctionsHttpError` con un mensaje genérico; el motivo real (p. ej. el mazo
+ * ilegal que rechaza `create`/`join`) viene en el cuerpo `{ error }` de la respuesta, en `error.context`.
+ */
+async function mensajeDeError(error: { message?: string; context?: unknown }): Promise<string> {
+  if (typeof Response !== 'undefined' && error.context instanceof Response) {
+    try {
+      const body = await error.context.json()
+      if (body && typeof body.error === 'string' && body.error) return body.error
+    } catch {
+      // cuerpo no JSON: se usa el mensaje genérico
+    }
+  }
+  return error.message ?? 'match-engine error'
+}
+
 async function callMatchEngine<T>(payload: Record<string, unknown>): Promise<T> {
   const supabase = getSupabase()
   if (!supabase) throw new Error('Supabase no configurado (faltan env vars)')
   const { data, error } = await supabase.functions.invoke(FN, { body: payload })
-  if (error) throw new Error(error.message ?? 'match-engine error')
+  if (error) throw new Error(await mensajeDeError(error))
   if (data && typeof data === 'object' && 'error' in data && (data as { error?: string }).error) {
     throw new Error((data as { error: string }).error)
   }

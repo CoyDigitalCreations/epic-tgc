@@ -7,7 +7,7 @@
  */
 
 // Creación y estado
-export { createInitialState } from './initialState'
+export { createInitialState, validarDeck } from './initialState'
 export type { GameState, PlayerId, Fase, MotivoFin, Zona, CardInstance, PlayerState, Ctx, SetupOptions } from './types'
 
 // Acciones

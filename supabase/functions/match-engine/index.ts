@@ -35,6 +35,7 @@ import {
   createCtxFromDraws,
   createInitialState,
   registrarCartas,
+  validarDeck,
   visibleState,
 } from './engine.js'
 
@@ -57,6 +58,8 @@ type EngineModule = {
   visibleState: (state: never, playerId: 'A' | 'B') => never
   actorActual: (state: never) => 'A' | 'B' | null
   registrarCartas: (cartas: unknown[]) => void
+  /** Lanza Error con el motivo si el mazo es ilegal (66 cartas, 15/45/6, cardIds conocidos, límite de copias). */
+  validarDeck: (deck: string[], nombre: string) => void
 }
 
 const engine: EngineModule = {
@@ -66,6 +69,7 @@ const engine: EngineModule = {
   visibleState: visibleState as EngineModule['visibleState'],
   actorActual: actorActual as EngineModule['actorActual'],
   registrarCartas: registrarCartas as EngineModule['registrarCartas'],
+  validarDeck: validarDeck as EngineModule['validarDeck'],
 }
 
 // PostgREST de Supabase NO usa prefijo de schema en la URL para schemas
@@ -151,6 +155,20 @@ async function registrarCartasCustom(): Promise<void> {
   }
 }
 
+/**
+ * Valida el mazo con las reglas del motor (manual §3 y §12) ANTES de aceptarlo en la sala, para que un mazo ilegal
+ * se rechace al crear o unirse y no al iniciar, cuando la sala ya está llena. Devuelve la respuesta de error, o null.
+ */
+async function rechazarMazoIlegal(deck: string[], jugador: 'A' | 'B'): Promise<Response | null> {
+  await registrarCartasCustom() // los cardIds de cartas custom deben conocerse para validar
+  try {
+    engine.validarDeck(deck, jugador)
+    return null
+  } catch (e) {
+    return err(e instanceof Error ? e.message : String(e), 422)
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method !== 'POST') return err('POST only', 405)
 
@@ -176,6 +194,8 @@ Deno.serve(async (req) => {
   // ── create: genera sala lobby con código + deck del creador ──────────────
   if (action === 'create') {
     if (!esMazoValido(deck)) return err('deck must be 66 cardIds')
+    const rechazoA = await rechazarMazoIlegal(deck, 'A')
+    if (rechazoA) return rechazoA
     const roomCode = generarCodigoSala()
     const seed = Math.floor(Math.random() * 1_000_000)
     const insertRes = await sb('games', {
@@ -206,6 +226,8 @@ Deno.serve(async (req) => {
   if (action === 'join') {
     if (!code) return err('code required')
     if (!esMazoValido(deck)) return err('deck must be 66 cardIds')
+    const rechazoB = await rechazarMazoIlegal(deck, 'B')
+    if (rechazoB) return rechazoB
     const findRes = await sb(
       `games?code=eq.${encodeURIComponent(code.toUpperCase())}&status=eq.lobby&player_b_id=is.null&select=*`,
     )

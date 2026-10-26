@@ -64,7 +64,7 @@ Ver `design.md`. Marcar al terminar cada tarea.
 
 ## F8 — Mazos
 - [x] Límite de copias, Vínculo ×3, Única ×1 en `validarDeck` (`initialState.ts`): `limiteCopiasDe(cardId)` = `limiteCopias` de la carta (sin dato o ilegible, 1, igual que el editor); Única siempre 1; Vínculo con tope 3. El error nombra la carta, las copias y el límite. 16 tests en `validarMazo.test.ts`; manual §12 aclara que Única es siempre ×1
-- [ ] Decidir si el servidor valida el mazo también en `create`/`join` (hoy solo comprueba 66 cartas y la validación completa salta en `start`, con la sala ya llena); requiere cambio en `match-engine` y despliegue
+- [x] El servidor valida el mazo completo (`validarDeck`) también en `create` y `join` (422 con el motivo, tras registrar las cartas custom); el cliente (`matchApi`) muestra el motivo real y no el mensaje genérico de la Edge Function. Bundle regenerado con F7 y F8
 
 ## F9 — Cierre
 - [ ] Auditar el intérprete efecto por efecto (hay tipos del esquema sin ejecutor)
