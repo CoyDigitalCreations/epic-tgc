@@ -38,10 +38,13 @@ Ver `design.md`. Marcar al terminar cada tarea.
 - [x] Rediseñar el Pasivo 1A
 
 ## F5 — Pila general
-- [ ] Definir eventos que abren ventana (pregunta abierta)
-- [ ] Toda activación apila su efecto y resuelve al cierre (LIFO)
-- [ ] Arcanas y Místicas con Presteza como respuestas
-- [ ] Manual §9.6
+- [x] Definir eventos que abren ventana: acciones de jugador (jugar Mística/Campeón, activar Arcana/habilidad, declarar ataque/bloqueo) y respuestas; `al-pagar-eter` y los triggers sin acción de jugador siguen inmediatos
+- [x] Toda activación apila su efecto y resuelve al cierre (LIFO)
+- [x] Arcanas y Místicas con Presteza/Fugaz como respuestas (la velocidad manda, F5f)
+- [ ] Manual §9.6 (revisar que el texto refleje lo implementado en F5a-F5h y F5d)
+- Subfases hechas: F5a pila única · F5b opener resuelve último · F5c bloqueo abre ventana antes del daño · F5d-1 objetivos antes de la ventana · F5e respuestas con objetivo · F5f velocidad · F5g candado de Arcana · F5h revalidación de objetivos · F5d-2 infraestructura de triggers apilados · F5d-3 `al-jugar-mistica` · F5d-4 `al-invocar` · F5d-5 `al-atacar` · H4 elector ajeno al turno (`electorAjeno`)
+- [ ] Decidir `al-activar-habilidad` (nadie lo dispara: Draven y Korr tienen 2 efectos letra muerta); cablear en `ejecutarActivarHabilidad` o corregir las cartas en el Card-Maker
+- Deuda anotada: prevención a mitad de la pila (el bucle de resolución es síncrono, se acepta; revisar en F9) · `electorAjeno` solo mira el frente de la cola (un pendiente de umbral delante retrasa a los de resolución) · `engine.js` desactualizado desde F5a hasta el despliegue (tras F6)
 
 ## F6 — Fin de partida
 - [ ] Resultado `empate`
