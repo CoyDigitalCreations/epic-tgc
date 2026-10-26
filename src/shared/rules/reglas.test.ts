@@ -3,6 +3,7 @@ import {
   KEYWORD_REGLAS,
   REGLAS,
   REGLA_IDS,
+  describirModificacion,
   esReglaNumerica,
   operacionesDe,
   resolverRegla,
@@ -106,6 +107,25 @@ describe('resolverRegla — booleanas', () => {
 
   it('una operación numérica sobre una regla booleana se ignora', () => {
     expect(resolverRegla('puedeSerExiliada', [mod({ regla: 'puedeSerExiliada', operacion: 'sumar', valor: 3 })])).toBe(true)
+  })
+})
+
+describe('describirModificacion — frase para el texto de la carta', () => {
+  it('numérica: sumar con signo y fijar con dos puntos', () => {
+    expect(describirModificacion({ id: 'limiteMano', operacion: 'sumar', valor: 2 })).toBe('Límite de mano +2')
+    expect(describirModificacion({ id: 'limiteMano', operacion: 'sumar', valor: -1 })).toBe('Límite de mano -1')
+    expect(describirModificacion({ id: 'ataquesPorTurno', operacion: 'fijar', valor: 2 })).toBe('Ataques por turno: 2')
+  })
+  it('booleana: se permite / se prohíbe, con la etiqueta en minúscula', () => {
+    expect(describirModificacion({ id: 'agotadoPuedeBloquear', operacion: 'permitir' })).toBe('Se permite: un Campeón agotado puede bloquear')
+    expect(describirModificacion({ id: 'atacarAgota', operacion: 'prohibir' })).toBe('Se prohíbe: atacar agota al Campeón')
+  })
+  it('cada regla del catálogo produce una frase no vacía con cada una de sus operaciones', () => {
+    for (const id of REGLA_IDS) {
+      for (const operacion of operacionesDe(id)) {
+        expect(describirModificacion({ id, operacion, valor: 1 }).length).toBeGreaterThan(0)
+      }
+    }
   })
 })
 

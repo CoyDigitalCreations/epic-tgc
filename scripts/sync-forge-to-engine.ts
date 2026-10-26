@@ -46,6 +46,7 @@ const EFECTO_ACCIONES = new Set([
   'recuperar_exilio',
   'invocar', 'invocar_y_equipar',
   'mover', 'negar', 'rival_discard',
+  'fix_exhaust', 'modificar_regla',
 ])
 
 type Json = Record<string, unknown>

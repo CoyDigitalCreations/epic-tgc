@@ -6,6 +6,7 @@
 import { useState } from 'react'
 import type { EfectoData, CardType, ObjetivoEfecto, CopyAttribute } from '../../shared/types/cards'
 import { EffectField } from './fields/EffectField'
+import { REGLAS, describirModificacion } from '../../shared/rules/reglas'
 
 interface EffectListProps {
   cardType: CardType
@@ -369,6 +370,10 @@ export function generateEffectText(data: EfectoData): string {
     // Special case: double_attack - "puede declarar 2 veces ataque"
     if (data.efecto === 'double_attack') {
       targetText = `${targetText} puede declarar 2 veces ataque`
+    } else if (data.efecto === 'modificar_regla') {
+      // «Un Campeón que controlas: Límite de mano +2»; las reglas de jugador o de partida no nombran objetivo
+      const frase = data.regla ? describirModificacion(data.regla) : ''
+      targetText = data.regla && REGLAS[data.regla.id].ambito === 'campeon' ? `${targetText}: ${frase}` : frase
     } else if (data.efecto === 'invocar' || data.efecto === 'invocar_y_equipar') {
       // Composite effect: summon from zone (+ optionally equip)
       const zonaTexts: Record<string, string> = {

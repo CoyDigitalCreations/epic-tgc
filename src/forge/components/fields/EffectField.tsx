@@ -4,6 +4,11 @@
  */
 import type { EfectoData, TramoEfecto, CardType, CostoEfecto, ObjetivoEfecto, FiltroObjetivo, CopyAttribute } from '../../../shared/types/cards'
 import { FACCIONES, ESENCIAS, ROLES, KEYWORDS, CAT_HABILIDAD } from '../../../shared/types/enums'
+import { REGLAS, REGLA_IDS, esReglaNumerica, operacionesDe, type OperacionRegla, type ReglaId } from '../../../shared/rules/reglas'
+
+const OPERACION_LABELS: Record<OperacionRegla, string> = {
+  fijar: 'Fijar a', sumar: 'Sumar', permitir: 'Permitir', prohibir: 'Prohibir',
+}
 
 interface EffectFieldProps {
   label: string
@@ -81,6 +86,10 @@ export const EFFECT_CATEGORIES = [
     nombre: 'Negación',
     efectos: ['negar'] as const,
   },
+  {
+    nombre: 'Reglas',
+    efectos: ['modificar_regla'] as const,
+  },
 ]
 
 const EFECTO_OPTIONS = [
@@ -103,6 +112,7 @@ const EFECTO_OPTIONS = [
   { value: 'recuperar_mazo_top', label: 'Poner en tope de mazo' }, { value: 'recuperar_mazo_bottom', label: 'Poner en fondo de mazo' },
   { value: 'recuperar_exilio', label: 'Devolver del Exilio' },
   { value: 'invocar', label: 'Invocar' },
+  { value: 'modificar_regla', label: 'Modificar una regla' },
   { value: 'invocar_y_equipar', label: 'Invocar y equipar' },
   { value: 'rival_discard', label: 'Descartar carta rival' },
 ]
@@ -573,6 +583,46 @@ export function EffectField({ label, value, onChange, cardType }: EffectFieldPro
       {showKeyword && (
         <div className="mt-2">
           <SelectField label="Keyword" value={data.keyword} options={[{ value: '', label: 'Seleccionar...' }, ...KEYWORDS.map((k) => ({ value: k, label: k }))]} onChange={(v) => update({ keyword: v || undefined })} />
+        </div>
+      )}
+
+      {/* Regla modificada (solo para efecto 'modificar_regla'): el efecto gana al manual; la regla viene del catálogo compartido con el motor */}
+      {data.efecto === 'modificar_regla' && (
+        <div className="border border-gray-600/30 rounded p-2 mt-2">
+          <p className="text-xs text-gray-400 mb-1">Qué regla del manual cambia este efecto</p>
+          <div className="grid grid-cols-3 gap-2">
+            <SelectField
+              label="Regla"
+              value={data.regla?.id}
+              options={[{ value: '', label: 'Seleccionar...' }, ...REGLA_IDS.map((id) => ({ value: id, label: `${REGLAS[id].etiqueta} (${REGLAS[id].manual})` }))]}
+              onChange={(v) => {
+                if (!v) { update({ regla: undefined }); return }
+                const id = v as ReglaId
+                // al cambiar de regla la operación vuelve a la primera que tiene sentido para su tipo
+                update({ regla: { id, operacion: operacionesDe(id)[0], ...(esReglaNumerica(id) ? { valor: 1 } : {}) } })
+              }}
+            />
+            {data.regla && (
+              <SelectField
+                label="Operación"
+                value={data.regla.operacion}
+                options={operacionesDe(data.regla.id).map((o) => ({ value: o, label: OPERACION_LABELS[o] }))}
+                onChange={(v) => update({ regla: { ...data.regla!, operacion: v as OperacionRegla } })}
+              />
+            )}
+            {data.regla && esReglaNumerica(data.regla.id) && (
+              <NumberInput label="Valor" value={data.regla.valor} onChange={(v) => update({ regla: { ...data.regla!, valor: v } })} min={-20} max={20} />
+            )}
+          </div>
+          {data.regla && (
+            <p className="mt-1 text-[11px] text-gray-500">
+              {REGLAS[data.regla.id].ambito === 'campeon' && 'Afecta a los Campeones que elijas como objetivo.'}
+              {REGLAS[data.regla.id].ambito === 'jugador' && 'Afecta al jugador que indique el objetivo (propio, rival o ambos).'}
+              {REGLAS[data.regla.id].ambito === 'partida' && 'Afecta a toda la partida.'}
+              {REGLAS[data.regla.id].ambito === 'carta' && 'Afecta a la carta elegida como objetivo.'}
+              {' '}Lo que prohíbe gana a lo que permite. Sin duración dura mientras la carta esté en juego (pasivo/continuo) o, si es un hechizo, para siempre.
+            </p>
+          )}
         </div>
       )}
 

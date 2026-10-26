@@ -88,6 +88,20 @@ export function operacionesDe(id: ReglaId): readonly OperacionRegla[] {
 }
 
 /**
+ * Frase para el texto de una carta que modifica una regla (Card-Maker): «Límite de mano +2»,
+ * «Ataques por turno: 2», «Se permite: un Campeón agotado puede bloquear», «Se prohíbe: atacar agota al Campeón».
+ */
+export function describirModificacion(m: ModificacionRegla): string {
+  const def: DefRegla = REGLAS[m.id]
+  if (typeof def.base === 'number') {
+    const valor = m.valor ?? 0
+    return m.operacion === 'fijar' ? `${def.etiqueta}: ${valor}` : `${def.etiqueta} ${valor >= 0 ? '+' : ''}${valor}`
+  }
+  const etiqueta = def.etiqueta.charAt(0).toLowerCase() + def.etiqueta.slice(1)
+  return m.operacion === 'prohibir' ? `Se prohíbe: ${etiqueta}` : `Se permite: ${etiqueta}`
+}
+
+/**
  * Valor vigente de una regla: la base del manual con los modificadores aplicados.
  * Los modificadores de OTRA regla o de un tipo que no corresponde se ignoran (nunca rompen).
  */

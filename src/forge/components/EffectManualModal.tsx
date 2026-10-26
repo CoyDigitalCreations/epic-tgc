@@ -531,6 +531,33 @@ export function EffectManualModal({ isOpen, onClose }: EffectManualModalProps) {
             <p className="text-xs text-gray-500">Ejemplos: <strong>Doble ataque</strong>, <strong>Ataque directo</strong>, <strong>Bloqueado</strong>, <strong>Vínculo</strong>, etc.</p>
           </Section>
 
+          {/* 22b. EFECTOS NUEVOS (F9) */}
+          <Section title="22b. Efectos nuevos — cómo los resuelve el motor">
+            <Table
+              headers={['Efecto', 'Qué hace', 'Qué tienes que configurar']}
+              rows={[
+                ['Ataque directo (direct_attack)', 'El Campeón no puede ser bloqueado. Sigue rompiendo un solo Vínculo por turno', 'Objetivo (o el propio Campeón en un pasivo)'],
+                ['Mirar cartas (scry)', 'Mira las N cartas del tope del mazo, las reordena y manda las que quiera al fondo. La partida espera a que ordene', 'Cantidad. Controlador «rival» = mira y ordena el mazo del rival'],
+                ['Redirigir (redirect)', 'Cambia el objetivo del efecto que está JUSTO DEBAJO en la pila. El nuevo objetivo debe ser válido para ese efecto (mismos filtros)', 'Objetivo = el nuevo objetivo. Se juega como respuesta (Presteza/Fugaz)'],
+                ['Cambiar tipo (change_type)', 'El Campeón cambia de Facción, Esencia y/o Rol (sustituye al impreso). Dura lo que la Duración', 'Facción / Esencia / Rol («Sin cambio» = no se toca)'],
+                ['Modificar una regla (modificar_regla)', 'Cambia una regla del manual (límite de mano, ataques por turno...). Lo que prohíbe gana a lo que permite', 'Regla, Operación y Valor. Pasivo/continuo: mientras la carta esté en juego. Hechizo: con la Duración'],
+                ['Invocar / Devolver desde zona (recuperar_*)', 'Mueve cartas entre Cementerio, Exilio, mano, mazo y campo', 'Objetivo con Zona; «Zona destino» solo en Devolver del Exilio'],
+              ]}
+            />
+            <h4 className="font-semibold text-gray-200 mt-3 mb-1">Filtros de ATQ / RES</h4>
+            <p className="text-xs">
+              Cada filtro existe en dos versiones: <strong>original</strong> (el valor impreso en la carta, sin buffs ni debuffs) y <strong>actual</strong> (con buffs, debuffs y auras), tanto Max como Min. El Ranking («Seleccionar») también elige entre original y actual con «Ranking por». En un aura, si no fijas el valor, compara base + modificadores.
+            </p>
+            <h4 className="font-semibold text-gray-200 mt-3 mb-1">Keywords que son reglas</h4>
+            <p className="text-xs">
+              Inexiliable (no se exilia), Inmortal / Indestructible (no se destruye por efecto / en batalla) e <strong>Inegable</strong> (sus efectos no pueden ser negados ni redirigidos por el rival).
+            </p>
+            <h4 className="font-semibold text-gray-200 mt-3 mb-1">Una Mística que va al Exilio</h4>
+            <p className="text-xs">
+              Pon como ÚLTIMO efecto un «Exiliar» con objetivo «Esta carta» (self): tras resolver sus otros efectos se queda en el Exilio en vez del Cementerio.
+            </p>
+          </Section>
+
           {/* 23. EJEMPLOS COMPLETOS */}
           <Section title="23. Ejemplos Completos">
 

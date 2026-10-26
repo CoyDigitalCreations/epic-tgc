@@ -1,6 +1,7 @@
 import { CARD_TYPES, RARITIES, KEYWORDS } from '../../shared/types'
 import type { CardType, AnyCard } from '../../shared/types'
 import { FORM_CONFIGS } from '../types/form-config'
+import { REGLA_IDS, esReglaNumerica, operacionesDe } from '../../shared/rules/reglas'
 
 /** Fields that live inside `stats` sub-object instead of flat on the card */
 const STATS_FIELDS = new Set(['cost', 'poder', 'resistencia', 'duracion'])
@@ -54,6 +55,46 @@ export function validateCard(card: Partial<AnyCard>): ValidationError[] {
     }
   }
 
+  errors.push(...validarEfectos(card))
+  return errors
+}
+
+/**
+ * Un efecto con un dato obligatorio sin completar se juega SIN HACER NADA (el motor no tiene en qué actuar), así que
+ * el Card-Maker no deja guardarlo: `modificar_regla` necesita su regla, `change_type` en qué se convierte, `copy` qué
+ * copiar, `grant_keyword` la keyword, `negar` qué niega e `invocar_y_equipar` de dónde.
+ */
+function validarEfectos(card: Partial<AnyCard>): ValidationError[] {
+  const efectos = 'efectos' in card && Array.isArray(card.efectos) ? card.efectos : []
+  const errors: ValidationError[] = []
+  efectos.forEach((e, i) => {
+    const donde = `Efecto ${i + 1}`
+    const falta = (message: string) => errors.push({ field: 'efectos', message: `${donde}: ${message}` })
+    switch (e.efecto) {
+      case 'modificar_regla': {
+        const regla = e.regla
+        if (!regla || !REGLA_IDS.includes(regla.id)) return falta('elige qué regla del manual modifica')
+        if (!operacionesDe(regla.id).includes(regla.operacion)) return falta(`la operación '${regla.operacion}' no sirve para esa regla`)
+        if (esReglaNumerica(regla.id) && regla.valor === undefined) return falta('indica el valor de la regla')
+        return
+      }
+      case 'change_type':
+        if (!e.cambioTipo || !(e.cambioTipo.esencia || e.cambioTipo.rol || e.cambioTipo.faccion)) return falta('elige Facción, Esencia o Rol en que se convierte')
+        return
+      case 'copy':
+        if (!e.copyAttributes?.length) return falta('elige qué atributos copia')
+        return
+      case 'grant_keyword':
+        if (!e.keyword) return falta('elige la keyword que otorga')
+        return
+      case 'negar':
+        if (!e.tipoNegacion) return falta('elige qué niega')
+        return
+      case 'invocar_y_equipar':
+        if (!e.zonaOrigen) return falta('elige de qué zona invoca')
+        return
+    }
+  })
   return errors
 }
 

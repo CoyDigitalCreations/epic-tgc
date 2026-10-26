@@ -31,6 +31,8 @@ export const INTERPRETER_EXEC = new Set<string>([
   'toggle_exhaust', 'tutor', 'rival_discard', 'invocar_y_equipar', 'block_ether',
   'invocar', 'recuperar_campo', 'recuperar_mano', 'recuperar_mazo', 'recuperar_mazo_barajar',
   'recuperar_mazo_top', 'recuperar_mazo_bottom', 'recuperar_exilio', 'direct_attack', 'scry', 'redirect', 'change_type',
+  // tienen case en executeEffect (copy de un Campeón a un solo uso, F9; modificar_regla temporal) — el mapa los ignoraba
+  'copy', 'modificar_regla',
 ])
 
 /** No-ops explícitos SIN implementación verificada desde JSON.
@@ -252,6 +254,15 @@ export function clasificarEfecto(
 
     if (tipo === 'pasivo' || tipo === 'reserva' || tipo === 'bloqueo') {
       const esStat = accion === 'buff' || accion === 'debuff' || accion === 'grant_keyword'
+      if (accion === 'modificar_regla' || accion === 'direct_attack') {
+        // reglas.ts deriva los modificadores de las cartas en juego (campo, Éter en Reserva/pagado/bloqueado, Vínculos)
+        return {
+          ...base,
+          estado: 'OK_AURA_JSON',
+          ruta: 'reglas.ts modificadoresReglaDe — regla modificada derivada desde efectos[] mientras la carta está en juego (F1/F9)',
+          notas: [...notas, 'Estado derivado en reglaBool/reglaNumero: sin handlers ni estado que limpiar.'],
+        }
+      }
       if (esStat) {
         return {
           ...base,

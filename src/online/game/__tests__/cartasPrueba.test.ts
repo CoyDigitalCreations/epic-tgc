@@ -69,11 +69,11 @@ const TRIGGERS_CARD_MAKER = new Set([
 const EFECTOS_CARD_MAKER = new Set<string>(EFFECT_CATEGORIES.flatMap((c) => c.efectos))
 
 /**
- * HUECO DEL CARD-MAKER #1: `modificar_regla` existe en el esquema (EfectoAccion + EfectoData.regla) y el motor lo
- * ejecuta, pero el formulario NO lo ofrece (ni EFFECT_CATEGORIES ni un editor de `regla`). Estas cartas solo se
- * pueden producir a mano; su `texto` también (generateEffectText no tiene verbo para modificar_regla).
+ * `modificar_regla`: el Card-Maker YA lo ofrece (F9: categoría «Reglas» y editor de `regla`) y genera una frase técnica
+ * («Límite de mano +2»); el texto de estas dos cartas se redactó a mano para que lea mejor. Se siguen saltando solo
+ * en la comparación de texto, no en la del desplegable.
  */
-const SOLO_A_MANO_MODIFICAR_REGLA = new Set(['PR-030', 'PR-053'])
+const TEXTO_MODIFICAR_REGLA_A_MANO = new Set(['PR-030', 'PR-053'])
 
 /**
  * HUECO DEL CARD-MAKER #2: el generador de texto antepone "puedes" en buff/debuff con trigger y sin costo
@@ -112,7 +112,7 @@ describe('(a) auditoría — validateCard y reglas de configuración del Card-Ma
       if (e.trigger) expect(TRIGGERS_CARD_MAKER.has(e.trigger), `${id}: trigger '${e.trigger}'`).toBe(true)
       // Cada efecto se define por `efecto` o por `tramos` (Capa 3b)
       expect(e.efecto ?? (e.tramos?.length ? 'tramos' : undefined), `${id}: sin efecto ni tramos`).toBeDefined()
-      if (e.efecto && !SOLO_A_MANO_MODIFICAR_REGLA.has(id)) {
+      if (e.efecto) {
         expect(EFECTOS_CARD_MAKER.has(e.efecto), `${id}: '${e.efecto}' no está en el desplegable del Card-Maker`).toBe(true)
       }
       for (const t of e.tramos ?? []) {
@@ -134,7 +134,7 @@ describe('(a) auditoría — validateCard y reglas de configuración del Card-Ma
       // fix_exhaust solo sobre Campeones agotados (el editor fuerza el filtro)
       for (const t of e.tramos ?? []) if (t.efecto === 'fix_exhaust') expect(t.filtros?.agotado).toBe(true)
       // `texto` = lo que genera el Card-Maker (salvo los casos documentados arriba)
-      if (!SOLO_A_MANO_MODIFICAR_REGLA.has(id) && !TEXTO_CORREGIDO_A_MANO.has(id)) {
+      if (!TEXTO_MODIFICAR_REGLA_A_MANO.has(id) && !TEXTO_CORREGIDO_A_MANO.has(id)) {
         const { texto, ...sinTexto } = e
         expect(texto, `${id}: texto distinto de generateEffectText`).toBe(generateEffectText(sinTexto as EfectoData))
       }
@@ -171,18 +171,11 @@ describe('(a) auditoría — validateCard y reglas de configuración del Card-Ma
       }
     }
 
-    it('acepta el set (sin modificar_regla) sin errores de validación', () => {
-      const sinRegla = CARTAS_PRUEBA.filter((c) => !SOLO_A_MANO_MODIFICAR_REGLA.has(c.id))
-      const r = correr(sinRegla)
+    // (F9: el script ya conoce modificar_regla y fix_exhaust; antes rechazaba el set completo por no tenerlos en EFECTO_ACCIONES)
+    it('acepta el set completo, modificar_regla incluido, sin errores de validación', () => {
+      const r = correr(CARTAS_PRUEBA)
       expect(r.out).not.toContain('ERRORES DE VALIDACIÓN')
       expect(r.status).toBe(0)
-    }, 60_000)
-
-    it('HUECO DE LA HERRAMIENTA: el script rechaza modificar_regla (falta en su lista EFECTO_ACCIONES)', () => {
-      const r = correr(CARTAS_PRUEBA.filter((c) => SOLO_A_MANO_MODIFICAR_REGLA.has(c.id)))
-      expect(r.status).toBe(1)
-      expect(r.out).toContain('modificar_regla')
-      expect(r.out).toContain('inválido')
     }, 60_000)
   })
 })
@@ -195,9 +188,7 @@ describe('(a) auditoría — validateCard y reglas de configuración del Card-Ma
  */
 const HUECOS_CONOCIDOS: Record<string, string> = {
   'PR-021': 'negar en disparo trigger "ninguno" (Thane DS-014): executeEffect solo anula una activación pendiente de la cadena; el Disparo no apila nada que negar → no-op',
-  'PR-022': 'copy al invocar (Marek DS-015): guarda copyTargetId pero copyActivo exige Éter bloqueado; el ATQ copiado nunca entra en statsDe → no-op',
   'PR-024': 'tramos (Cassandra FB-016): el mapa no modela efectos sin `efecto` raíz (HUECO_NOOP del mapa); el motor SÍ los ejecuta vía dispararUmbralBloqueo/ejecutarTramo (ver humo)',
-  'PR-030': 'modificar_regla pasivo: el mapa no lo conoce (INTERPRETER_EXEC sin modificar_regla → HUECO_SIN_RUTA); el motor SÍ lo deriva en reglas.ts (ver humo) → falso hueco del MAPA',
 }
 
 describe('(b) cobertura — coverageMap sobre el set', () => {

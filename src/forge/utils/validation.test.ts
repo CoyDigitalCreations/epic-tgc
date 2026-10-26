@@ -82,3 +82,34 @@ describe('validateCard', () => {
     expect(errors.some((e) => e.field === 'condicion')).toBe(false)
   })
 })
+
+describe('validateCard — efectos a medio configurar (se jugarían sin hacer nada)', () => {
+  const mistica = (efecto: object) => ({
+    id: 'T-1', name: 'Prueba', type: 'Mística', rarity: 'Común', keywords: [], flavorText: '', paqueteId: 'test', limiteCopias: '1',
+    createdAt: '', updatedAt: '', facciones: ['Orden'], stats: { cost: 1 }, efectos: [{ tipo: 'hechizo', ...efecto }],
+  }) as never
+  const mensajes = (efecto: object) => validateCard(mistica(efecto)).filter((e) => e.field === 'efectos').map((e) => e.message)
+
+  it('modificar_regla sin regla, con una operación que no sirve o sin valor numérico', () => {
+    expect(mensajes({ efecto: 'modificar_regla' })).toEqual(['Efecto 1: elige qué regla del manual modifica'])
+    expect(mensajes({ efecto: 'modificar_regla', regla: { id: 'limiteMano', operacion: 'prohibir' } })).toHaveLength(1)
+    expect(mensajes({ efecto: 'modificar_regla', regla: { id: 'limiteMano', operacion: 'sumar' } })).toEqual(['Efecto 1: indica el valor de la regla'])
+    expect(mensajes({ efecto: 'modificar_regla', regla: { id: 'limiteMano', operacion: 'sumar', valor: 2 } })).toEqual([])
+    expect(mensajes({ efecto: 'modificar_regla', regla: { id: 'atacarAgota', operacion: 'prohibir' } })).toEqual([])
+  })
+  it('change_type exige al menos Facción, Esencia o Rol', () => {
+    expect(mensajes({ efecto: 'change_type' })).toHaveLength(1)
+    expect(mensajes({ efecto: 'change_type', cambioTipo: {} })).toHaveLength(1)
+    expect(mensajes({ efecto: 'change_type', cambioTipo: { faccion: 'Caos' } })).toEqual([])
+  })
+  it('copy, grant_keyword, negar e invocar_y_equipar exigen su dato', () => {
+    expect(mensajes({ efecto: 'copy' })).toHaveLength(1)
+    expect(mensajes({ efecto: 'grant_keyword' })).toHaveLength(1)
+    expect(mensajes({ efecto: 'negar' })).toHaveLength(1)
+    expect(mensajes({ efecto: 'invocar_y_equipar' })).toHaveLength(1)
+    expect(mensajes({ efecto: 'grant_keyword', keyword: 'Carga' })).toEqual([])
+  })
+  it('los efectos sin dato obligatorio (scry, redirect, direct_attack...) no dan error', () => {
+    for (const efecto of ['scry', 'redirect', 'direct_attack', 'draw']) expect(mensajes({ efecto })).toEqual([])
+  })
+})
