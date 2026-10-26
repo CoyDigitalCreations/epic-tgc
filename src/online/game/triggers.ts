@@ -5,6 +5,8 @@
  * Hasta F5d-1 `dispararTrigger` ejecuta el efecto al instante. Esta capa es la INFRAESTRUCTURA para apilarlo.
  * Sitios de llamada en producción (construirTriggers + armarTriggers → declararOpener/declararVentana):
  * F5d-3 al-jugar-mistica (movimientos.ts), F5d-4 al-invocar (movimientos.ts), F5d-5 al-atacar (combat.ts).
+ * También al-invocar cuando un EFECTO mete al Campeón al campo (invocar, recuperar_campo, invocar_y_equipar, tutor):
+ * ahí no hay jugada que abra ventana, así que va por `resolverTriggersDeEfecto` (inmediato, sin ventana).
  * `al-activar-habilidad` sigue sin disparador (pendiente de decisión del usuario).
  *
  * Modelo (genérico: lee el efecto de la carta fuente, nada atado a cartas concretas):
@@ -187,16 +189,31 @@ export function apilarTriggers(s: GameState, ctx: Ctx, lista: readonly TriggerAp
   const validas = lista.filter((t) => esTriggerApilable(t.trigger) && !!s.instances[t.cardInstanceId])
   if (validas.length === 0) return
   if ((s.profundidadTriggers ?? 0) > 0) {
-    for (const t of [...ordenarTriggers(s, validas)].reverse()) {
-      // Decisión 10a: sin ventana tampoco hay re-emisión al resolver — una sola por trigger, aquí
-      ctx.emit({ type: 'trigger_apilado', jugador: t.jugador, cardInstanceId: t.cardInstanceId, trigger: t.trigger, efectoIdx: t.efectoIdx })
-      resolverTrigger(s, ctx, t, 'inmediato')
-    }
+    resolverTriggersDeEfecto(s, ctx, validas)
     return
   }
   const triggers = armarTriggers(s, ctx, validas)
   if (triggers.length === 0) return
   declararVentana(s, ctx, { tipo: 'triggers', jugador: s.turno, triggers }, previos)
+}
+
+/**
+ * Triggers de acción que nacen DENTRO de un efecto (p. ej. el «Al invocar» de un Campeón que un efecto mete al
+ * campo): nunca abren ventana, resuelven de inmediato en orden LIFO (decisión g). Dentro de una resolución ya hay
+ * profundidad; fuera de ella (Alba, Choque) se cuenta un nivel aquí para que se comporten igual.
+ */
+export function resolverTriggersDeEfecto(s: GameState, ctx: Ctx, lista: readonly TriggerApilado[]): void {
+  const validas = lista.filter((t) => esTriggerApilable(t.trigger) && !!s.instances[t.cardInstanceId])
+  if (validas.length === 0) return
+  const resolver = () => {
+    for (const t of [...ordenarTriggers(s, validas)].reverse()) {
+      // Decisión 10a: sin ventana tampoco hay re-emisión al resolver — una sola por trigger, aquí
+      ctx.emit({ type: 'trigger_apilado', jugador: t.jugador, cardInstanceId: t.cardInstanceId, trigger: t.trigger, efectoIdx: t.efectoIdx })
+      resolverTrigger(s, ctx, t, 'inmediato')
+    }
+  }
+  if ((s.profundidadTriggers ?? 0) > 0) resolver()
+  else enResolucion(s, resolver)
 }
 
 /** Mete los triggers ya armados a la cadena abierta, encima de lo que haya (la última respuesta de la pila, si la hay). */

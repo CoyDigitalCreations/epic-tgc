@@ -7,7 +7,8 @@
 import { resolveTargets } from './targetResolver'
 import { robarCarta } from './draw'
 import { shuffleFisherYates } from './rng'
-import { aplicarMod, otorgarKeyword, crearOpcionBloqueo, statsDe, keywordsDe } from './efectos'
+import { aplicarMod, otorgarKeyword, crearOpcionBloqueo, statsDe, keywordsDe, dispararTrigger } from './efectos'
+import { construirTriggers, resolverTriggersDeEfecto } from './triggers'
 import { aplicarCambioAtributo, aplicarReglaTemporal } from './reglasTemporales'
 import { reglaBool, reglaDeEfecto } from './reglas'
 import { iniciarScry } from './scry'
@@ -432,6 +433,23 @@ function executeInvocarEquipar(
   if (!invocarAlCampo(s, ctx, jugador, objetivoId)) return
   inst.equipadoA = objetivoId
   inst.vinculadoA = objetivoId
+  dispararAlInvocar(s, ctx, jugador, objetivoId) // ya equipado: su «Al invocar» ve el estado final
+}
+
+/**
+ * «Al invocar» de un Campeón que ENTRA al campo por un efecto (invocar, recuperar_campo, invocar_y_equipar, tutor
+ * al campo). Entrar al campo es lo que dispara, venga de la zona que venga: el robo (`steal_champion`) NO pasa por aquí
+ * porque el Campeón ya estaba en el campo y su «Al invocar» ya se resolvió al entrar.
+ * Un efecto se ejecuta casi siempre resolviendo la pila (profundidadTriggers > 0, decisión g de triggers.ts): el trigger
+ * resuelve de inmediato, sin abrir otra ventana. Fuera de una resolución (Alba, Choque) se fuerza el mismo modo.
+ */
+function dispararAlInvocar(s: GameState, ctx: Ctx, jugador: PlayerId, campeonId: string): void {
+  const triggers = construirTriggers(s, 'al-invocar', jugador, [campeonId])
+  if (triggers.length === 0) {
+    dispararTrigger(s, ctx, 'al-invocar', jugador, [campeonId]) // handlers opacos (sin match JSON), como en jugar_campeon
+    return
+  }
+  resolverTriggersDeEfecto(s, ctx, triggers)
 }
 
 /** Invoca un campeón al campo de `jugador` (enderezado, con invocación cansada: entradaEsteTurno) desde la zona
@@ -529,7 +547,7 @@ function executeRecuperar(
 
     if (destino.zona === 'campo') {
       const meta = inst.cardId ? getCardMeta(inst.cardId) : null
-      if (meta && esCampeon(meta)) invocarAlCampo(s, ctx, jugador, id)
+      if (meta && esCampeon(meta) && invocarAlCampo(s, ctx, jugador, id)) dispararAlInvocar(s, ctx, jugador, id)
       continue
     }
 
@@ -822,6 +840,7 @@ function ejecutarInvocarEquiparUmbral(
     if (invocarAlCampo(s, ctx, jugador, id)) {
       inst.equipadoA = id
       inst.vinculadoA = id
+      dispararAlInvocar(s, ctx, jugador, id)
     }
     break // primer campeón (determinista)
   }
@@ -899,6 +918,8 @@ function executeTutor(
       if (slotLibre !== -1) {
         p.campo.campeones[slotLibre] = targetId
         ctx.emit({ type: 'carta_invocada', cardInstanceId: targetId, tipo: 'Campeón', slot: slotLibre })
+        const metaT = s.instances[targetId]?.cardId ? getCardMeta(s.instances[targetId]!.cardId!) : null
+        if (metaT && esCampeon(metaT)) dispararAlInvocar(s, ctx, jugador, targetId)
       }
     } else if (zonaDestino === 'cementerio') {
       // Ya removida de la origen: enviarAlCementerio solo inserta en 2G (idempotente)
@@ -1331,6 +1352,7 @@ function executeStealChampion(
     }
 
     playerCampo[slotLibre] = targetId
+    // Cambia el controlador, NO entra al campo: no dispara «Al invocar» (ya se resolvió cuando entró)
     targetInst.stolenBy = inst.cardInstanceId
     // El campeón robado conserva su estado de agotamiento tal cual estaba:
     // si estaba agotado llega agotado; si no, no. (regla del usuario / manual)
