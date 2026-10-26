@@ -229,9 +229,10 @@ describe('(b) cobertura — coverageMap sobre el set', () => {
       ...INTERPRETER_EXEC, ...SISTEMAS_EXTERNOS_JSON, 'modificar_regla', 'negar', 'copy',
     ])
     const sinEjecutor = [...EFECTOS_CARD_MAKER].filter((e) => !conEjecutor.has(e)).sort()
-    // F9a cerró `invocar` y los `recuperar_*` (recuperar.test.ts); faltan los que salen de la lista conforme se implementen
+    // F9a cerró `invocar` y los `recuperar_*` (recuperar.test.ts), F9b `direct_attack` (ataqueDirecto.test.ts);
+    // faltan los que salen de la lista conforme se implementen
     expect(sinEjecutor).toEqual([
-      'change_type', 'direct_attack', 'fix_exhaust', /* solo funciona como TRAMO (ejecutarTramo), no como efecto raíz */
+      'change_type', 'fix_exhaust', /* solo funciona como TRAMO (ejecutarTramo), no como efecto raíz */
       'redirect', 'scry',
     ])
   })

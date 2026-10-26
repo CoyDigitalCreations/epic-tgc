@@ -43,6 +43,7 @@ export const REGLAS = {
   disparoAgota: { etiqueta: 'Un Disparo con Éter pagado agota al Campeón', manual: '§5.2, §8.3a', ambito: 'campeon', base: true },
   ataquesPorTurno: { etiqueta: 'Ataques por turno', manual: '§9.2', ambito: 'campeon', base: 1, min: 0 },
   bloqueosPorTurno: { etiqueta: 'Bloqueos por turno', manual: '§9.3', ambito: 'campeon', base: 1, min: 0 },
+  puedeSerBloqueado: { etiqueta: 'Puede ser bloqueado al atacar', manual: '§9.3', ambito: 'campeon', base: true },
   puedeSerExiliada: { etiqueta: 'Puede ser exiliada', manual: '§10', ambito: 'campeon', base: true },
   puedeSerDestruidaPorEfecto: { etiqueta: 'Puede ser destruida por efectos', manual: '§10', ambito: 'campeon', base: true },
   puedeSerDestruidaEnBatalla: { etiqueta: 'Puede ser destruida en batalla', manual: '§10', ambito: 'campeon', base: true },

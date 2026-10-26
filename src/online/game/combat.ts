@@ -135,8 +135,17 @@ export function ataquesSinBloquear(state: GameState): string[] {
 }
 
 /**
+ * Ataques que el defensor PUEDE bloquear: los sin bloquear cuyo atacante no tiene prohibida la regla
+ * `puedeSerBloqueado` (ataque directo, `direct_attack`). Los demás siguen contando como "sin bloquear"
+ * para la Ruptura (§9.4) pero no se asignan ni se exigen en el bloqueo forzoso.
+ */
+export function ataquesBloqueables(state: GameState): string[] {
+  return ataquesSinBloquear(state).filter((id) => reglaBool(state, 'puedeSerBloqueado', { instId: id }))
+}
+
+/**
  * Asignación greedy forzada (9.3, ADR-19): los primeros k bloqueadores
- * disponibles (orden 2B-2F) cubren los primeros k ataques sin bloquear,
+ * disponibles (orden 2B-2F) cubren los primeros k ataques bloqueables,
  * con k = mín(disponibles, ataques). getValidActions emite SOLO esta
  * asignación (determinista; el payload nunca falla la validación).
  */
@@ -144,7 +153,7 @@ export function asignacionForzada(state: GameState): Record<string, string> | nu
   const combate = state.combate
   if (!combate || combate.paso !== 'bloqueo') return null
   const disponibles = bloqueadoresDisponibles(state)
-  const sinBloquear = ataquesSinBloquear(state)
+  const sinBloquear = ataquesBloqueables(state)
   const k = Math.min(disponibles.length, sinBloquear.length)
   if (k === 0) return null
   const asignaciones: Record<string, string> = {}
@@ -240,7 +249,8 @@ export function abrirVentanaAtaque(s: GameState, ctx: Ctx): void {
   if (abrirCadena(s, rivalDe(s))) return
   // Auto-avance (9.3, ADR-11): defensor sin enderezados → resolución sin
   // evento bloqueo_declarado (los ataques quedan sin bloquear)
-  if (bloqueadoresDisponibles(s).length === 0) {
+  // (o ningún ataque es bloqueable: todos directos)
+  if (bloqueadoresDisponibles(s).length === 0 || ataquesBloqueables(s).length === 0) {
     combate.paso = 'resolucion'
     resolverCombate(s, ctx) // sin pares: sin muertes
     // Fase 2b: doble ataque activo → cerrar combate para permitir 2da ola
@@ -257,7 +267,7 @@ export function validarDeclararBloqueo(state: GameState, asignaciones: Record<st
   const pares = Object.entries(asignaciones)
   if (pares.length === 0) return 'no asignaste bloqueadores'
   const disponibles = bloqueadoresDisponibles(state)
-  const sinBloquear = ataquesSinBloquear(state)
+  const sinBloquear = ataquesBloqueables(state)
   const k = Math.min(disponibles.length, sinBloquear.length)
   if (pares.length !== k) {
     return `el bloqueo es forzoso: asigna exactamente ${k} bloqueador(es) (9.3)`
@@ -374,7 +384,7 @@ export function continuarCombateTrasCadena(s: GameState, ctx: Ctx): void {
   // F5c: el ataque sigue vigente solo con los atacantes que siguen en el campo;
   // si una respuesta los sacó a todos, el ataque se anula y el combate se cierra.
   if (combate.paso === 'bloqueo' && !depurarAtacantes(s)) return
-  if (combate.paso === 'bloqueo' && bloqueadoresDisponibles(s).length === 0) {
+  if (combate.paso === 'bloqueo' && (bloqueadoresDisponibles(s).length === 0 || ataquesBloqueables(s).length === 0)) {
     combate.paso = 'resolucion'
     resolverCombate(s, ctx) // sin pares: sin muertes
     // Fase 2b: doble ataque activo → cerrar combate para permitir 2da ola

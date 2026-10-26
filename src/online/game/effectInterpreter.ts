@@ -9,6 +9,7 @@ import { robarCarta } from './draw'
 import { shuffleFisherYates } from './rng'
 import { aplicarMod, otorgarKeyword, crearOpcionBloqueo } from './efectos'
 import { aplicarReglaTemporal } from './reglasTemporales'
+import { reglaDeEfecto } from './reglas'
 import { REGLAS } from '../../shared/rules/reglas'
 import { aplicarPago } from './payments'
 import { enviarAlCementerio, destruirCarta, liberarEterBloqueado, liberarArtefactosEquipados } from './replacements'
@@ -354,6 +355,7 @@ function executeEffect(
       break
 
     case 'modificar_regla':
+    case 'direct_attack': // atajo de modificar_regla: puedeSerBloqueado prohibida (reglaDeEfecto)
       executeModificarRegla(s, targetIds, jugador, efectoData)
       break
 
@@ -943,7 +945,7 @@ function validateCost(
  * Duración: misma traducción que buff — turno/n_turnos/hasta_fase expiran; permanente/mientras_* no.
  */
 function executeModificarRegla(s: GameState, targetIds: string[], jugador: PlayerId, efectoData: EfectoData): void {
-  const m = efectoData.regla
+  const m = reglaDeEfecto(efectoData)
   if (!m) return
   const def = REGLAS[m.id]
   const { duracion, duracionTurnos, duracionFase, duracionControlador } = efectoData

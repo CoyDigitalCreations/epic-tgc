@@ -15,6 +15,7 @@ import {
   KEYWORD_REGLAS,
   REGLAS,
   resolverRegla,
+  type ModificacionRegla,
   type ModificadorRegla,
   type ReglaId,
 } from '../../shared/rules/reglas'
@@ -33,6 +34,15 @@ export type SujetoRegla = { jugador: PlayerId } | { instId: string } | undefined
 
 const otro = (j: PlayerId): PlayerId => (j === 'A' ? 'B' : 'A')
 
+/**
+ * La modificación de regla que lleva un efecto: `modificar_regla` la declara; `direct_attack` es el atajo de
+ * "este Campeón no puede ser bloqueado" (misma idea que una keyword: no tiene lógica propia, cambia una regla).
+ */
+export function reglaDeEfecto(efecto: EfectoData): ModificacionRegla | undefined {
+  if (efecto.efecto === 'direct_attack') return { id: 'puedeSerBloqueado', operacion: 'prohibir' }
+  return efecto.efecto === 'modificar_regla' ? efecto.regla : undefined
+}
+
 /** Efectos `modificar_regla` de una carta (memo por cardId: el catálogo no cambia durante la partida). */
 const memoEfectosRegla = new Map<string, { efecto: EfectoData; indice: number }[]>()
 function efectosReglaDe(cardId: string): { efecto: EfectoData; indice: number }[] {
@@ -41,7 +51,7 @@ function efectosReglaDe(cardId: string): { efecto: EfectoData; indice: number }[
   const meta = getCardMeta(cardId)
   const lista =
     meta && 'efectos' in meta && meta.efectos
-      ? meta.efectos.map((efecto, indice) => ({ efecto, indice })).filter(({ efecto }) => efecto.efecto === 'modificar_regla' && !!efecto.regla)
+      ? meta.efectos.map((efecto, indice) => ({ efecto, indice })).filter(({ efecto }) => !!reglaDeEfecto(efecto))
       : []
   memoEfectosRegla.set(cardId, lista)
   return lista
@@ -176,7 +186,7 @@ export function modificadoresReglaDe(s: GameState, regla: ReglaId, sujeto: Sujet
   for (const f of fuentesDeReglas(s)) {
     const cardId = f.inst.cardId as string
     for (const { efecto, indice } of efectosReglaDe(cardId)) {
-      const m = efecto.regla
+      const m = reglaDeEfecto(efecto)
       if (!m || m.id !== regla || !efectoActivo(s, f, efecto, indice)) continue
       let alcanza = false
       if (def.ambito === 'partida') alcanza = true

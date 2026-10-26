@@ -4,7 +4,7 @@ import { hayParejaBloqueo, pasivosBloqueo1A } from './efectos'
 import type { AnyCard } from '../../shared/types'
 import type { Action } from './actions'
 import { generarAccionesForja, validarActivarArcana } from './actions'
-import { atacantesElegibles, asignacionForzada, ataquesSinBloquear, bloqueadoresDisponibles, rivalDe, tieneKeyword } from './combat'
+import { atacantesElegibles, asignacionForzada, ataquesBloqueables, ataquesSinBloquear, bloqueadoresDisponibles, rivalDe, tieneKeyword } from './combat'
 import { cadenaActiva, respondiblesDe, respuestasDeMano } from './chain'
 import { etersParaPagar } from './payments'
 import { descartarFrentesMuertos, electorAjeno, opcionesVigentes } from './pendientes'
@@ -123,9 +123,9 @@ function accionesBloqueoEter(state: GameState, playerId: PlayerId, enCadena = fa
  * determinista (ADR-19) para que los bots no cambien de comportamiento.
  */
 function asignacionesMaximales(state: GameState): Record<string, string>[] {
-  const k = Math.min(bloqueadoresDisponibles(state).length, ataquesSinBloquear(state).length)
+  const ataques = ataquesBloqueables(state)
+  const k = Math.min(bloqueadoresDisponibles(state).length, ataques.length)
   if (k === 0) return []
-  const ataques = ataquesSinBloquear(state)
   const disponibles = bloqueadoresDisponibles(state)
 
   // Permutaciones de largo k de un arreglo (P(n,k))
