@@ -242,7 +242,7 @@ describe('al-invocar con elección (Campeón sintético)', () => {
   }
   const invocar = { type: 'jugar_campeon', cardInstanceId: 'inv', slot: 0, eterIds: ['eter-A-0'], sacrificios: [] } as const
 
-  it('el objetivo se elige antes de abrir la ventana; el efecto aplica al elegir', () => {
+  it('el objetivo se elige antes de abrir la ventana; el efecto aplica al RESOLVER la cadena (F5d-4)', () => {
     const ctx = crearCtx()
     let s = aplicar(escenario(), invocar, ctx)
     expect(s.cadena).toBeUndefined()
@@ -250,9 +250,16 @@ describe('al-invocar con elección (Campeón sintético)', () => {
     expect(getValidActions(s, 'A').filter((a) => a.type === 'elegir_objetivo')).toHaveLength(2)
     expect(statsDe(s, 'b2').poder).toBe(3)
 
+    // F5d-4: elegir apila el trigger y abre la ventana; el debuff todavía NO se aplica
     s = aplicar(s, { type: 'elegir_objetivo', objetivoId: 'b2' }, ctx)
-    expect(statsDe(s, 'b2').poder).toBe(2)
+    expect(statsDe(s, 'b2').poder).toBe(3)
     expect(s.cadena).toMatchObject({ origen: 'global', prioridad: 'B', efectoActual: { cardInstanceId: 'inv' } })
+    expect(s.cadena?.triggers).toHaveLength(1)
+    expect(s.cadena?.opener).toBeUndefined() // la invocación no tiene opener: la ventana existe por el trigger
+    s = aplicar(s, { type: 'pasar_prioridad' }, ctx)
+    s = aplicar(s, { type: 'pasar_prioridad' }, ctx)
+    expect(s.cadena).toBeUndefined()
+    expect(statsDe(s, 'b2').poder).toBe(2) // el debuff cae al resolver
   })
 })
 

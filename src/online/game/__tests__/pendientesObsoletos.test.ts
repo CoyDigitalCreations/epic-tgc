@@ -220,7 +220,11 @@ describe('fizzle: el objetivo deja de ser válido entre la elección y la ejecuc
     mover(s, 'B', 'b0', 'mano')
     expect(ofrecidas(s, 'A')).toEqual(['b1'])
     expect(applyAction(s, elegir('b0'), ctx).ok).toBe(false)
-    const t = aplicar(s, elegir('b1'), ctx)
+    let t = aplicar(s, elegir('b1'), ctx)
+    // F5d-4: al-invocar se APILA — el debuff cae al resolver la cadena, no al elegir
+    expect(statsDe(t, 'b1').poder).toBe(2)
+    t = aplicar(t, { type: 'pasar_prioridad' }, ctx)
+    t = aplicar(t, { type: 'pasar_prioridad' }, ctx)
     expect(statsDe(t, 'b1').poder).toBe(0)
   })
 

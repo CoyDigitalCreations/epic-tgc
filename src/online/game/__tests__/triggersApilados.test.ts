@@ -620,7 +620,7 @@ describe('trigger de acción generado durante una resolución (decisión g)', ()
 
 /* ───────────────────────── No regresión del juego real ───────────────────────── */
 
-describe('no regresión del juego real (F5d-3: producción apila SOLO al-jugar-mistica)', () => {
+describe('no regresión del juego real (F5d-4: producción apila SOLO al-jugar-mistica y al-invocar)', () => {
   it('ningún módulo de producción llama a apilarTriggers (el apilado va por declararOpener)', () => {
     const dir = path.resolve(__dirname, '..')
     const productivos = fs.readdirSync(dir).filter((f) => f.endsWith('.ts') && !f.endsWith('.test.ts') && f !== 'triggers.ts' && f !== 'index.ts')
@@ -630,7 +630,7 @@ describe('no regresión del juego real (F5d-3: producción apila SOLO al-jugar-m
     }
   })
 
-  it('simulaciones reales (bots) con mazos de prueba: solo triggers de al-jugar-mistica y sin profundidad', () => {
+  it('simulaciones reales (bots) con mazos de prueba: solo triggers cableados (al-jugar-mistica, al-invocar) y sin profundidad', () => {
     for (const seed of [1, 2, 3, 42]) {
       const { state, ctx } = crearPartidaPrueba(seed)
       let s = state
@@ -641,10 +641,10 @@ describe('no regresión del juego real (F5d-3: producción apila SOLO al-jugar-m
         const r = applyAction(s, accion, ctx)
         if (!r.ok) throw new Error(`seed ${seed}: ${accion.type} falló: ${r.error}`)
         s = r.state
-        // F5d-3 (regla aprobada): producción YA apila, pero solo al-jugar-mistica (F5d-4/5 pendientes):
+        // F5d-3/F5d-4 (regla aprobada): producción YA apila, pero solo al-jugar-mistica y al-invocar (F5d-5 pendiente):
         // antes este test exigía que NUNCA hubiera triggers en la cadena — eso contradice el cableado.
-        for (const t of s.cadena?.triggers ?? []) expect(t.trigger, `seed ${seed} iter ${i}`).toBe('al-jugar-mistica')
-        for (const t of s.declaracionEnEleccion?.triggers ?? []) expect(t.trigger, `seed ${seed} iter ${i}`).toBe('al-jugar-mistica')
+        for (const t of s.cadena?.triggers ?? []) expect(['al-jugar-mistica', 'al-invocar'], `seed ${seed} iter ${i}`).toContain(t.trigger)
+        for (const t of s.declaracionEnEleccion?.triggers ?? []) expect(['al-jugar-mistica', 'al-invocar'], `seed ${seed} iter ${i}`).toContain(t.trigger)
         expect(s.profundidadTriggers, `seed ${seed} iter ${i}`).toBeUndefined()
       }
     }

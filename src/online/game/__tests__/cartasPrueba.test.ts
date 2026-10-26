@@ -280,11 +280,17 @@ describe('(c) humo — triggers con objetivo elegido ANTES de la ventana (F5d-1)
     expect(applyAction(s, { type: 'pasar_turno' }, ctx).ok).toBe(false)
 
     s = aplicar(s, { type: 'elegir_objetivo', objetivoId: 'b1' }, ctx)
-    expect(statsDe(s, 'b1').poder).toBe(0) // 2 - 2
-    expect(statsDe(s, 'b0').poder).toBe(2)
     expect(s.declaracionEnEleccion).toBeUndefined()
     expect(s.cadena).toMatchObject({ origen: 'global', prioridad: 'B' }) // recién ahora se abre la ventana
     expect(s.cadena?.efectoActual?.cardInstanceId).toBe('her')
+    // F5d-4: al-invocar se APILA — el debuff cae al resolver la cadena, no al elegir
+    expect(s.cadena?.triggers).toHaveLength(1)
+    expect(statsDe(s, 'b1').poder).toBe(2)
+    s = aplicar(s, { type: 'pasar_prioridad' }, ctx)
+    s = aplicar(s, { type: 'pasar_prioridad' }, ctx)
+    expect(s.cadena).toBeUndefined()
+    expect(statsDe(s, 'b1').poder).toBe(0) // 2 - 2
+    expect(statsDe(s, 'b0').poder).toBe(2)
   })
 
   it('PR-014 al_invocar (objetivo propio): las opciones son SOLO Campeones propios, incluido el recién invocado', () => {

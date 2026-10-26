@@ -8,7 +8,7 @@ import { esSingular, sacrificiosRequeridos, copiasEnCampo, campeonesSacrificable
 import { aplicarPago, validarPago, etersParaPagar, type ContextoUso } from './payments'
 import { SLOTS_CAMPEONES, SLOTS_MISTICAS_TACTICAS, SLOTS_ARCANAS_COMBATE, slotAZona } from './zones'
 import { dispararTrigger, condicionCumple } from './efectos'
-import { construirTriggers } from './triggers'
+import { armarTriggers, construirTriggers } from './triggers'
 import { liberarEterBloqueado, enviarAlCementerio } from './replacements'
 import { declararOpener, declararVentana, marcarInicioAccion } from './chain'
 import type { Action } from './core'
@@ -179,11 +179,16 @@ export function ejecutarJugarCampeon(s: GameState, action: Extract<Action, { typ
   s.instances[id]!.entradaEsteTurno = true  // invocación cansada (§5.2) y §5.5: no responde en cadena el turno que entra
   ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: id, zona, jugador: s.turno, bocaArriba: true })
   ctx.emit({ type: 'carta_invocada', cardInstanceId: id, tipo: 'Campeón', slot: action.slot })
-  // C3 (D5): al-invocar se dispara con la instancia YA en campo (post-invocación)
-  dispararTrigger(s, ctx, 'al-invocar', s.turno, [id])
+  // C3 (D5): al-invocar se evalúa con la instancia YA en campo (post-invocación).
+  // F5d-4: SE APILA — la invocación no tiene opener propio, así que la ventana se abre solo por sus triggers
+  // y su dueño elige el objetivo antes (armarTriggers). Los handlers opacos siguen por dispararTrigger SOLO
+  // cuando la carta no tiene match JSON (como en al-jugar-mistica, F5d-3).
+  const triggers = construirTriggers(s, 'al-invocar', s.turno, [id])
+  if (triggers.length === 0) dispararTrigger(s, ctx, 'al-invocar', s.turno, [id])
+  const apilados = triggers.length > 0 ? armarTriggers(s, ctx, triggers) : []
   // §9.6: abrir cadena global — el rival puede responder con efectos (F5d-1: tras
   // elegir los objetivos pendientes; la invocación cuenta Presteza de mano pagable)
-  declararVentana(s, ctx, { tipo: 'invocacion', jugador: s.turno, cardInstanceId: id }, previos)
+  declararVentana(s, ctx, { tipo: 'invocacion', jugador: s.turno, cardInstanceId: id, ...(apilados.length > 0 ? { triggers: apilados } : {}) }, previos)
 }
 
 /** Paga y coloca la Mística boca arriba en 3A-3C. */

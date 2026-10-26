@@ -192,6 +192,9 @@ describe('decisión 2: la fuente fuera del campo pierde el trigger', () => {
 
 /* ───────────────────────── Simulaciones con el cableado real ───────────────────────── */
 
+/** Triggers que producción apila hoy (F5d-3 + F5d-4); se amplía con cada fase cableada. */
+const CABLEADOS = ['al-jugar-mistica', 'al-invocar']
+
 /** Juega una partida real con bots (mazos PR) y devuelve cuántos triggers apiló el cableado de producción. */
 function simularConCableado(seed: number, maxIter = 700): { apilados: number; iteraciones: number } {
   const { state, ctx } = crearPartidaPrueba(seed)
@@ -209,9 +212,10 @@ function simularConCableado(seed: number, maxIter = 700): { apilados: number; it
     apilados += triggersApiladosDe(ctx).length // ctx.events es buffer de la acción recién aplicada
     expect(verificarZonaUnica(s), `seed ${seed} iter ${i} (${accion.type})`).toEqual([])
     expect(s.profundidadTriggers, `seed ${seed} iter ${i}`).toBeUndefined()
-    // F5d-3 es la ÚNICA fase cableada todavía: en producción solo al-jugar-mistica se apila
-    for (const t of s.cadena?.triggers ?? []) expect(t.trigger, `seed ${seed} iter ${i}`).toBe('al-jugar-mistica')
-    for (const t of s.declaracionEnEleccion?.triggers ?? []) expect(t.trigger, `seed ${seed} iter ${i}`).toBe('al-jugar-mistica')
+    // F5d-3/F5d-4 son las fases cableadas: en producción solo se apilan al-jugar-mistica y al-invocar
+    // (al-atacar es F5d-5; al-activar-habilidad sigue sin disparador)
+    for (const t of s.cadena?.triggers ?? []) expect(CABLEADOS, `seed ${seed} iter ${i}`).toContain(t.trigger)
+    for (const t of s.declaracionEnEleccion?.triggers ?? []) expect(CABLEADOS, `seed ${seed} iter ${i}`).toContain(t.trigger)
     if (i % 25 === 0) expect(JSON.parse(JSON.stringify(s))).toEqual(s)
   }
   expect(verificarInvariantes(s), `seed ${seed} final`).toEqual([])
@@ -220,7 +224,7 @@ function simularConCableado(seed: number, maxIter = 700): { apilados: number; it
 
 describe('simulaciones con el cableado real (seeds del handoff)', () => {
   for (const seed of [66099, 66676, 1, 2, 3, 7, 42, 12345]) {
-    it(`seed ${seed}: sin freeze, zona única por paso y solo triggers de al-jugar-mistica`, () => {
+    it(`seed ${seed}: sin freeze, zona única por paso y solo triggers cableados (al-jugar-mistica, al-invocar)`, () => {
       const r = simularConCableado(seed)
       expect(r.iteraciones).toBeGreaterThan(20)
     })

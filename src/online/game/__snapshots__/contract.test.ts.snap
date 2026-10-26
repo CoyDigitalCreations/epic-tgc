@@ -55,6 +55,7 @@ exports[`integración bot ↔ contrato (5.8) > snapshot: la secuencia de accione
   "carta_salida_de_zona",
   "carta_entrada_a_zona",
   "carta_invocada",
+  "trigger_apilado",
   "prioridad_pasada",
   "prioridad_pasada",
   "eter_pagado",
