@@ -141,10 +141,18 @@ export function esAuraVinculo(efecto: EfectoData): boolean {
   return efecto.trigger === undefined || efecto.trigger === null
 }
 
+/** ATQ/RES IMPRESOS en la carta (sin buffs ni debuffs) — ranking 'original' de un aura con `seleccionar`. */
+function statsImpresasDe(s: GameState, id: string): { poder: number; resistencia: number } {
+  const inst = s.instances[id]
+  const meta = inst?.cardId ? getCardMeta(inst.cardId) : null
+  const stats = meta && esCampeon(meta) ? (meta as { stats?: { poder?: number; resistencia?: number } }).stats : undefined
+  return { poder: stats?.poder ?? 0, resistencia: stats?.resistencia ?? 0 }
+}
+
 /**
- * Stats base + modificadores temporales (SIN auras JSON) — para ranking
+ * Stats base + modificadores temporales (SIN auras JSON) — ranking 'actual'
  * en evaluarAura (seleccionar filter). Evita recursión
- * statsDe↔modificadoresJSONDe. V1: ranking por stats imprimibles.
+ * statsDe↔modificadoresJSONDe.
  */
 function statsBaseDe(s: GameState, id: string): { poder: number; resistencia: number } {
   const inst = s.instances[id]
@@ -258,7 +266,10 @@ function evaluarAura(
       // Fase 3d: filtro seleccionar (mayor/menor stat) — el aura aplica SOLO
       // al campeón que matchea el ranking del pool elegible.
       if (aplica && objetivo.filtros?.seleccionar) {
-        const { stat, orden } = objetivo.filtros.seleccionar
+        const { stat, orden, valor } = objetivo.filtros.seleccionar
+        // 'original' = el impreso. 'actual' = base + modificadores (sin otras auras: evita recursión). SIN `valor` se
+        // conserva lo que las auras hacían antes de existir la distinción (base + modificadores): DS-030 depende de ello.
+        const statsRanking = valor === 'original' ? statsImpresasDe : statsBaseDe
         const pool: string[] = []
         for (const j of ['A', 'B'] as PlayerId[]) {
           const esDuenoFiltro = objetivo.controlador === 'propio' ? j === fuente.owner : objetivo.controlador === 'rival' ? j !== fuente.owner : true
@@ -269,9 +280,9 @@ function evaluarAura(
         }
         if (pool.length === 0) return null
         let mejorId = pool[0]
-        let mejorVal = stat === 'poder' ? statsBaseDe(s, pool[0]).poder : statsBaseDe(s, pool[0]).resistencia
+        let mejorVal = stat === 'poder' ? statsRanking(s, pool[0]).poder : statsRanking(s, pool[0]).resistencia
         for (const cid of pool.slice(1)) {
-          const val = stat === 'poder' ? statsBaseDe(s, cid).poder : statsBaseDe(s, cid).resistencia
+          const val = stat === 'poder' ? statsRanking(s, cid).poder : statsRanking(s, cid).resistencia
           if (orden === 'mayor' ? val > mejorVal : val < mejorVal) {
             mejorId = cid
             mejorVal = val

@@ -5,6 +5,7 @@
  * controllers, zones, and filters defined in the structured effect system.
  */
 import { getCardMeta, esCampeon, esMistica, esArcana } from './cards'
+import { statsDe } from './efectos'
 import type { AnyCard } from '../../shared/types'
 import type { GameState, PlayerId } from './types'
 import type { ObjetivoEfecto, FiltroObjetivo } from '../../shared/types/cards'
@@ -264,7 +265,9 @@ function applyFilters(
       if (!meta.stats || meta.stats.cost > filtros.costeMax) return false
     }
 
-    // ATQ/RES filters (for champions)
+    // ATQ/RES filters (for champions). Dos lecturas, ambas explícitas en la carta:
+    //  - atqMax / resMax: el valor ORIGINAL (impreso en la carta, sin buffs ni debuffs).
+    //  - atqActualMax / resActualMax: el valor ACTUAL (statsDe: con buffs, debuffs y auras).
     if (esCampeon(meta)) {
       if (filtros.atqMax !== undefined) {
         if (!meta.stats || meta.stats.poder > filtros.atqMax) return false
@@ -272,6 +275,16 @@ function applyFilters(
       if (filtros.resMax !== undefined) {
         if (!meta.stats || meta.stats.resistencia > filtros.resMax) return false
       }
+      if (filtros.atqMin !== undefined) {
+        if (!meta.stats || meta.stats.poder < filtros.atqMin) return false
+      }
+      if (filtros.resMin !== undefined) {
+        if (!meta.stats || meta.stats.resistencia < filtros.resMin) return false
+      }
+      if (filtros.atqActualMax !== undefined && statsDe(s, id).poder > filtros.atqActualMax) return false
+      if (filtros.resActualMax !== undefined && statsDe(s, id).resistencia > filtros.resActualMax) return false
+      if (filtros.atqActualMin !== undefined && statsDe(s, id).poder < filtros.atqActualMin) return false
+      if (filtros.resActualMin !== undefined && statsDe(s, id).resistencia < filtros.resActualMin) return false
     }
 
     // Exhausted filter
@@ -321,8 +334,9 @@ function applyFilters(
 function selectByRanking(
   s: GameState,
   targets: string[],
-  seleccionar: { stat: 'poder' | 'resistencia' | 'coste'; orden: 'mayor' | 'menor' },
+  seleccionar: { stat: 'poder' | 'resistencia' | 'coste'; orden: 'mayor' | 'menor'; valor?: 'original' | 'actual' },
 ): string[] {
+  const actual = seleccionar.valor === 'actual'
   if (targets.length === 0) return []
 
   // Sort targets by stat
@@ -337,8 +351,13 @@ function selectByRanking(
       valueA = metaA?.stats?.cost ?? 0
       valueB = metaB?.stats?.cost ?? 0
     } else if (metaA && metaB && esCampeon(metaA) && esCampeon(metaB)) {
-      valueA = seleccionar.stat === 'poder' ? (metaA.stats?.poder ?? 0) : (metaA.stats?.resistencia ?? 0)
-      valueB = seleccionar.stat === 'poder' ? (metaB.stats?.poder ?? 0) : (metaB.stats?.resistencia ?? 0)
+      // original = impreso en la carta; actual = statsDe (buffs, debuffs y auras)
+      const valorDe = (id: string, meta: typeof metaA): number => {
+        if (actual) return seleccionar.stat === 'poder' ? statsDe(s, id).poder : statsDe(s, id).resistencia
+        return (seleccionar.stat === 'poder' ? meta.stats?.poder : meta.stats?.resistencia) ?? 0
+      }
+      valueA = valorDe(a, metaA)
+      valueB = valorDe(b, metaB)
     }
 
     return seleccionar.orden === 'mayor' ? valueB - valueA : valueA - valueB

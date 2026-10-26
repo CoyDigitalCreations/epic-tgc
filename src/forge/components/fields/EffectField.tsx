@@ -638,8 +638,14 @@ export function EffectField({ label, value, onChange, cardType }: EffectFieldPro
                 <SelectField label="Rol" value={data.objetivo?.filtros?.rol} options={[{ value: '', label: 'Cualquiera' }, ...ROLES.map((r) => ({ value: r, label: r }))]} onChange={(v) => updateFiltros({ rol: v as any })} />
                 <SelectField label="Categoría" value={data.objetivo?.filtros?.catHabilidad} options={[{ value: '', label: 'Cualquiera' }, ...CAT_HABILIDAD.map((c) => ({ value: c, label: c }))]} onChange={(v) => updateFiltros({ catHabilidad: v as any })} />
                 <NumberInput label="Coste min." value={data.objetivo?.filtros?.costeMin} onChange={(v) => updateFiltros({ costeMin: v })} min={0} max={20} />
-                <NumberInput label="ATQ max." value={data.objetivo?.filtros?.atqMax} onChange={(v) => updateFiltros({ atqMax: v })} min={0} max={99} />
-                <NumberInput label="RES max." value={data.objetivo?.filtros?.resMax} onChange={(v) => updateFiltros({ resMax: v })} min={0} max={99} />
+                <NumberInput label="ATQ original max." value={data.objetivo?.filtros?.atqMax} onChange={(v) => updateFiltros({ atqMax: v })} min={0} max={99} />
+                <NumberInput label="RES original max." value={data.objetivo?.filtros?.resMax} onChange={(v) => updateFiltros({ resMax: v })} min={0} max={99} />
+                <NumberInput label="ATQ actual max." value={data.objetivo?.filtros?.atqActualMax} onChange={(v) => updateFiltros({ atqActualMax: v })} min={0} max={99} />
+                <NumberInput label="RES actual max." value={data.objetivo?.filtros?.resActualMax} onChange={(v) => updateFiltros({ resActualMax: v })} min={0} max={99} />
+                <NumberInput label="ATQ original min." value={data.objetivo?.filtros?.atqMin} onChange={(v) => updateFiltros({ atqMin: v })} min={0} max={99} />
+                <NumberInput label="RES original min." value={data.objetivo?.filtros?.resMin} onChange={(v) => updateFiltros({ resMin: v })} min={0} max={99} />
+                <NumberInput label="ATQ actual min." value={data.objetivo?.filtros?.atqActualMin} onChange={(v) => updateFiltros({ atqActualMin: v })} min={0} max={99} />
+                <NumberInput label="RES actual min." value={data.objetivo?.filtros?.resActualMin} onChange={(v) => updateFiltros({ resActualMin: v })} min={0} max={99} />
                 <SelectField label="Seleccionar" value={data.objetivo?.filtros?.seleccionar ? `${data.objetivo.filtros.seleccionar.orden}_${data.objetivo.filtros.seleccionar.stat}` : ''} options={[
                   { value: '', label: 'Ninguno (todos)' },
                   { value: 'mayor_poder', label: 'Mayor ATQ' },
@@ -651,8 +657,13 @@ export function EffectField({ label, value, onChange, cardType }: EffectFieldPro
                 ]} onChange={(v) => {
                   if (!v) { updateFiltros({ seleccionar: undefined }); return }
                   const [orden, stat] = v.split('_') as [string, string]
-                  updateFiltros({ seleccionar: { stat: stat as any, orden: orden as any } })
+                  // conserva el valor (original/actual) ya elegido; no aplica al coste
+                  const valor = stat === 'coste' ? undefined : data.objetivo?.filtros?.seleccionar?.valor
+                  updateFiltros({ seleccionar: { stat: stat as any, orden: orden as any, ...(valor ? { valor } : {}) } })
                 }} />
+                {data.objetivo?.filtros?.seleccionar && data.objetivo.filtros.seleccionar.stat !== 'coste' && (
+                  <SelectField label="Ranking por" value={data.objetivo.filtros.seleccionar.valor ?? 'original'} options={[{ value: 'original', label: 'Valor original (impreso)' }, { value: 'actual', label: 'Valor actual (con buffs y debuffs)' }]} onChange={(v) => updateFiltros({ seleccionar: { ...data.objetivo!.filtros!.seleccionar!, valor: v === 'actual' ? 'actual' : undefined } })} />
+                )}
                 <SelectField label="Agotamiento" value={data.objetivo?.filtros?.agotado?.toString()} options={[{ value: '', label: 'Cualquiera' }, { value: 'true', label: 'Esté agotado' }, { value: 'false', label: 'No esté agotado' }]} onChange={(v) => updateFiltros({ agotado: v === 'true' ? true : v === 'false' ? false : undefined })} />
                 <SelectField label="Éter bloqueado" value={data.objetivo?.filtros?.conEterBloqueado?.toString()} options={[{ value: '', label: 'Cualquiera' }, { value: 'true', label: 'Con éter bloqueado' }, { value: 'false', label: 'Sin éter bloqueado' }]} onChange={(v) => updateFiltros({ conEterBloqueado: v === 'true' ? true : v === 'false' ? false : undefined })} />
                 <SelectField label="Puede bloquear Éter" value={data.objetivo?.filtros?.puedeBloquearEter?.toString()} options={[{ value: '', label: 'Cualquiera' }, { value: 'true', label: 'Puede recibir éter' }]} onChange={(v) => updateFiltros({ puedeBloquearEter: v === 'true' ? true : undefined })} />

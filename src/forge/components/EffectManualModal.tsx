@@ -230,8 +230,12 @@ export function EffectManualModal({ isOpen, onClose }: EffectManualModalProps) {
                 ['Rol: Normal', 'Normal'],
                 ['Rol: Comandante', 'Comandante'],
                 ['Coste max: N', 'coste N o menos'],
-                ['ATQ max: N', 'ATQ N o menos'],
-                ['RES max: N', 'RES N o menos'],
+                ['ATQ original max: N', 'ATQ N o menos (el impreso en la carta)'],
+                ['RES original max: N', 'RES N o menos (la impresa en la carta)'],
+                ['ATQ actual max: N', 'ATQ actual N o menos (con buffs y debuffs)'],
+                ['RES actual max: N', 'RES actual N o menos (con buffs y debuffs)'],
+                ['ATQ / RES original min: N', 'ATQ / RES N o más (el impreso en la carta)'],
+                ['ATQ / RES actual min: N', 'ATQ / RES actual N o más (con buffs y debuffs)'],
               ]}
             />
 

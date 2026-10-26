@@ -250,10 +250,22 @@ export interface FiltroObjetivo {
   costeMin?: number
   /** Maximum cost */
   costeMax?: number
-  /** Maximum ATQ (Campeón) */
+  /** Maximum ATQ ORIGINAL (Campeón): el impreso en la carta, sin buffs ni debuffs */
   atqMax?: number
-  /** Maximum RES (Campeón) */
+  /** Maximum RES ORIGINAL (Campeón): la impresa en la carta, sin buffs ni debuffs */
   resMax?: number
+  /** Maximum ATQ ACTUAL (Campeón): el vigente, con buffs, debuffs y auras */
+  atqActualMax?: number
+  /** Maximum RES ACTUAL (Campeón): la vigente, con buffs, debuffs y auras */
+  resActualMax?: number
+  /** Minimum ATQ ORIGINAL (Campeón): el impreso en la carta */
+  atqMin?: number
+  /** Minimum RES ORIGINAL (Campeón): la impresa en la carta */
+  resMin?: number
+  /** Minimum ATQ ACTUAL (Campeón): el vigente, con buffs, debuffs y auras */
+  atqActualMin?: number
+  /** Minimum RES ACTUAL (Campeón): la vigente, con buffs, debuffs y auras */
+  resActualMin?: number
   /** Exhaust status filter (Campeón): true = must be exhausted, false = must NOT be exhausted */
   agotado?: boolean
   /** Has blocked ether filter (Campeón): true = must have blocked ether, false = must NOT have blocked ether */
@@ -273,6 +285,12 @@ export interface FiltroObjetivo {
   seleccionar?: {
     stat: 'poder' | 'resistencia' | 'coste'
     orden: 'mayor' | 'menor'
+    /**
+     * Qué ATQ/RES se compara: 'original' (el impreso en la carta; por defecto) o 'actual' (con buffs y debuffs).
+     * No aplica a 'coste'. En un aura, 'actual' incluye los modificadores pero no otras auras (evita recursión) y,
+     * SIN valor, el aura sigue comparando base + modificadores (comportamiento previo, del que dependen cartas existentes).
+     */
+    valor?: 'original' | 'actual'
   }
 }
 

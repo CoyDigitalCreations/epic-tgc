@@ -79,8 +79,8 @@ function generateTargetText(objetivo: ObjetivoEfecto, sinArticulo = false, sinZo
 
   // Ranking selection: "el Campeón con mayor ATQ", etc.
   if (objetivo.filtros?.seleccionar) {
-    const { stat, orden } = objetivo.filtros.seleccionar
-    const statTexts: Record<string, string> = { 'poder': 'ATQ', 'resistencia': 'RES', 'coste': 'coste' }
+    const { stat, orden, valor } = objetivo.filtros.seleccionar
+    const statTexts: Record<string, string> = { 'poder': valor === 'actual' ? 'ATQ actual' : 'ATQ', 'resistencia': valor === 'actual' ? 'RES actual' : 'RES', 'coste': 'coste' }
     const ordenTexts: Record<string, string> = { 'mayor': 'mayor', 'menor': 'menor' }
     const controllerText = objetivo.controlador === 'rival' ? ' que controla el rival'
       : ''
@@ -137,6 +137,12 @@ function generateTargetText(objetivo: ObjetivoEfecto, sinArticulo = false, sinZo
     if (objetivo.filtros.costeMin !== undefined) filters.push(`de coste ${objetivo.filtros.costeMin} o más`)
     if (objetivo.filtros.atqMax !== undefined) filters.push(`ATQ ${objetivo.filtros.atqMax} o menos`)
     if (objetivo.filtros.resMax !== undefined) filters.push(`RES ${objetivo.filtros.resMax} o menos`)
+    if (objetivo.filtros.atqMin !== undefined) filters.push(`ATQ ${objetivo.filtros.atqMin} o más`)
+    if (objetivo.filtros.resMin !== undefined) filters.push(`RES ${objetivo.filtros.resMin} o más`)
+    if (objetivo.filtros.atqActualMin !== undefined) filters.push(`ATQ actual ${objetivo.filtros.atqActualMin} o más`)
+    if (objetivo.filtros.resActualMin !== undefined) filters.push(`RES actual ${objetivo.filtros.resActualMin} o más`)
+    if (objetivo.filtros.atqActualMax !== undefined) filters.push(`ATQ actual ${objetivo.filtros.atqActualMax} o menos`)
+    if (objetivo.filtros.resActualMax !== undefined) filters.push(`RES actual ${objetivo.filtros.resActualMax} o menos`)
     if (objetivo.filtros.agotado === true) filters.push('que esté agotado')
     if (objetivo.filtros.agotado === false) filters.push('que no esté agotado')
     if (objetivo.filtros.conEterBloqueado === true) filters.push('con éter bloqueado')
