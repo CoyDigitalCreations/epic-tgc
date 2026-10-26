@@ -55,7 +55,7 @@ Ver `design.md`. Marcar al terminar cada tarea.
 - [x] Efectos que previenen la derrota: regla booleana `derrotaPorVinculos` (por jugador, base sí, prohibible con `modificar_regla`). No existe ni existirá un efecto `forzar_empate`
 - [x] UI del empate: modal del tablero (⚖), logs y servidor (`winner` null). Migración `20261026120000_eter_games_finish_reason_empate.sql` escrita, NO aplicada: va con el despliegue
 - [x] Corregido el bug del manual §5.5/§13: antes la derrota se confirmaba antes de que el efecto del último Vínculo pudiera resolverse (ganaba el rival aunque el efecto lo destruyera también)
-- [ ] Despliegue (una sola vez): regenerar `engine.js` (esbuild), aplicar la migración y desplegar `match-engine`
+- [x] Despliegue (2026-10-26): `engine.js` regenerado (`89770e1`), migración aplicada vía MCP (`eter_games_finish_reason_empate`, constraint verificado) y `match-engine` desplegado = v9 (CLI `--use-api`). Servidor y cliente alineados con F5, H4 y F6. A partir de aquí cada cambio de `src/online/game` exige regenerar el bundle y redesplegar
 
 ## F7 — Exilio
 - [ ] Un solo punto de control de exilio
