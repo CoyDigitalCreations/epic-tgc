@@ -3038,107 +3038,6 @@ function robarCarta(s, ctx, jugador) {
   return true;
 }
 
-// src/online/game/reglasTemporales.ts
-function aplicarReglaTemporal(s, regla) {
-  const orden = (s.ordenReglas ?? 0) + 1;
-  s.ordenReglas = orden;
-  s.reglasTemporales = [...s.reglasTemporales ?? [], { ...regla, orden }];
-}
-function aplicarCambioAtributo(s, cambio) {
-  s.cambiosAtributo = [...s.cambiosAtributo ?? [], cambio];
-}
-function sinVencidas(lista, expira, jugador) {
-  return lista.map((r) => expira === "ocaso" && r.turnosRestantes !== void 0 ? { ...r, turnosRestantes: r.turnosRestantes - 1 } : r).filter((r) => {
-    if (expira === "ocaso") {
-      if (r.turnosRestantes !== void 0) return r.turnosRestantes > 0;
-      return r.expira !== "ocaso";
-    }
-    if (jugador !== void 0 && r.duenio !== jugador) return true;
-    return r.expira !== expira;
-  });
-}
-function purgarReglasTemporales(s, expira, jugador) {
-  if (s.reglasTemporales?.length) {
-    const quedan = sinVencidas(s.reglasTemporales, expira, jugador);
-    if (quedan.length === 0) delete s.reglasTemporales;
-    else s.reglasTemporales = quedan;
-  }
-  if (s.cambiosAtributo?.length) {
-    const quedan = sinVencidas(s.cambiosAtributo, expira, jugador);
-    if (quedan.length === 0) delete s.cambiosAtributo;
-    else s.cambiosAtributo = quedan;
-  }
-}
-function purgarReglasHastaFase(s, fase, turno) {
-  const vence = (r) => r.expira === "hasta-fase" && r.expiraFase === fase && r.expiraFaseJugador === turno;
-  if (s.reglasTemporales?.length) {
-    const quedan = s.reglasTemporales.filter((r) => !vence(r));
-    if (quedan.length === 0) delete s.reglasTemporales;
-    else if (quedan.length !== s.reglasTemporales.length) s.reglasTemporales = quedan;
-  }
-  if (s.cambiosAtributo?.length) {
-    const quedan = s.cambiosAtributo.filter((r) => !vence(r));
-    if (quedan.length === 0) delete s.cambiosAtributo;
-    else if (quedan.length !== s.cambiosAtributo.length) s.cambiosAtributo = quedan;
-  }
-}
-
-// src/shared/rules/reglas.ts
-var REGLAS = {
-  /* ── partida ── */
-  primerTurnoSinAtaques: { etiqueta: "Nadie ataca en el primer turno del juego", manual: "\xA78.6", ambito: "partida", base: true },
-  /* ── jugador ── */
-  limiteMano: { etiqueta: "L\xEDmite de mano", manual: "\xA77.1, \xA78.5", ambito: "jugador", base: 6, min: 0 },
-  cartasPorAlba: { etiqueta: "Cartas que se roban en el Alba", manual: "\xA78.2", ambito: "jugador", base: 1, min: 0 },
-  rupturasPorTurno: { etiqueta: "V\xEDnculos que rompe la Ruptura por turno", manual: "\xA79.4", ambito: "jugador", base: 1, min: 0 },
-  atacarTrasRuptura: { etiqueta: "Se puede seguir atacando tras romper un V\xEDnculo", manual: "\xA79.4", ambito: "jugador", base: false },
-  derrotaPorVinculos: { etiqueta: "Pierde la partida al quedarse sin V\xEDnculos", manual: "\xA713", ambito: "jugador", base: true },
-  /* ── campeón ── */
-  agotadoPuedeBloquear: { etiqueta: "Un Campe\xF3n agotado puede bloquear", manual: "\xA79.3", ambito: "campeon", base: false },
-  invocacionCansada: { etiqueta: "No ataca el turno en que es invocado", manual: "\xA79.2", ambito: "campeon", base: true },
-  atacarAgota: { etiqueta: "Atacar agota al Campe\xF3n", manual: "\xA79.2", ambito: "campeon", base: true },
-  disparoAgota: { etiqueta: "Un Disparo con \xC9ter pagado agota al Campe\xF3n", manual: "\xA75.2, \xA78.3a", ambito: "campeon", base: true },
-  ataquesPorTurno: { etiqueta: "Ataques por turno", manual: "\xA79.2", ambito: "campeon", base: 1, min: 0 },
-  bloqueosPorTurno: { etiqueta: "Bloqueos por turno", manual: "\xA79.3", ambito: "campeon", base: 1, min: 0 },
-  puedeSerBloqueado: { etiqueta: "Puede ser bloqueado al atacar", manual: "\xA79.3", ambito: "campeon", base: true },
-  puedeSerExiliada: { etiqueta: "Puede ser exiliada", manual: "\xA710", ambito: "campeon", base: true },
-  puedeSerDestruidaPorEfecto: { etiqueta: "Puede ser destruida por efectos", manual: "\xA710", ambito: "campeon", base: true },
-  puedeSerDestruidaEnBatalla: { etiqueta: "Puede ser destruida en batalla", manual: "\xA710", ambito: "campeon", base: true },
-  /* ── carta ── */
-  puedeSerNegada: { etiqueta: "Sus efectos pueden ser negados o contrarrestados por el rival", manual: "\xA710", ambito: "carta", base: true },
-  eterBloqueadoExtra: { etiqueta: "\xC9ter bloqueado extra sobre el tope del efecto", manual: "\xA77.7", ambito: "carta", base: 0, min: 0 }
-};
-var REGLA_IDS = Object.keys(REGLAS);
-function resolverRegla(id, modificadores) {
-  const def = REGLAS[id];
-  const propios = modificadores.filter((m) => m.regla === id);
-  if (typeof def.base === "boolean") {
-    if (propios.some((m) => m.operacion === "prohibir")) return false;
-    if (propios.some((m) => m.operacion === "permitir")) return true;
-    return def.base;
-  }
-  let valor = def.base;
-  const fijados = propios.filter((m) => m.operacion === "fijar" && m.valor !== void 0);
-  if (fijados.length > 0) {
-    valor = fijados.reduce((a, b) => b.orden >= a.orden ? b : a).valor;
-  }
-  for (const m of propios) {
-    if (m.operacion === "sumar" && m.valor !== void 0) valor += m.valor;
-  }
-  if (def.min !== void 0) valor = Math.max(def.min, valor);
-  if (def.max !== void 0) valor = Math.min(def.max, valor);
-  return valor;
-}
-var KEYWORD_REGLAS = {
-  Carga: [{ regla: "invocacionCansada", operacion: "prohibir" }],
-  Vigor: [{ regla: "atacarAgota", operacion: "prohibir" }],
-  Tirador: [{ regla: "disparoAgota", operacion: "prohibir" }],
-  Inexiliable: [{ regla: "puedeSerExiliada", operacion: "prohibir" }],
-  Inegable: [{ regla: "puedeSerNegada", operacion: "prohibir" }],
-  Inmortal: [{ regla: "puedeSerDestruidaPorEfecto", operacion: "prohibir" }],
-  Indestructible: [{ regla: "puedeSerDestruidaEnBatalla", operacion: "prohibir" }]
-};
-
 // src/online/game/eter.ts
 function claveEfecto(fuenteId, indiceEfecto) {
   return `${fuenteId}#${indiceEfecto}`;
@@ -3244,6 +3143,62 @@ function retornarCampeonesRobados(s, ctx, fuenteId, ladron) {
     }
   }
 }
+
+// src/shared/rules/reglas.ts
+var REGLAS = {
+  /* ── partida ── */
+  primerTurnoSinAtaques: { etiqueta: "Nadie ataca en el primer turno del juego", manual: "\xA78.6", ambito: "partida", base: true },
+  /* ── jugador ── */
+  limiteMano: { etiqueta: "L\xEDmite de mano", manual: "\xA77.1, \xA78.5", ambito: "jugador", base: 6, min: 0 },
+  cartasPorAlba: { etiqueta: "Cartas que se roban en el Alba", manual: "\xA78.2", ambito: "jugador", base: 1, min: 0 },
+  rupturasPorTurno: { etiqueta: "V\xEDnculos que rompe la Ruptura por turno", manual: "\xA79.4", ambito: "jugador", base: 1, min: 0 },
+  atacarTrasRuptura: { etiqueta: "Se puede seguir atacando tras romper un V\xEDnculo", manual: "\xA79.4", ambito: "jugador", base: false },
+  derrotaPorVinculos: { etiqueta: "Pierde la partida al quedarse sin V\xEDnculos", manual: "\xA713", ambito: "jugador", base: true },
+  /* ── campeón ── */
+  agotadoPuedeBloquear: { etiqueta: "Un Campe\xF3n agotado puede bloquear", manual: "\xA79.3", ambito: "campeon", base: false },
+  invocacionCansada: { etiqueta: "No ataca el turno en que es invocado", manual: "\xA79.2", ambito: "campeon", base: true },
+  atacarAgota: { etiqueta: "Atacar agota al Campe\xF3n", manual: "\xA79.2", ambito: "campeon", base: true },
+  disparoAgota: { etiqueta: "Un Disparo con \xC9ter pagado agota al Campe\xF3n", manual: "\xA75.2, \xA78.3a", ambito: "campeon", base: true },
+  ataquesPorTurno: { etiqueta: "Ataques por turno", manual: "\xA79.2", ambito: "campeon", base: 1, min: 0 },
+  bloqueosPorTurno: { etiqueta: "Bloqueos por turno", manual: "\xA79.3", ambito: "campeon", base: 1, min: 0 },
+  puedeSerBloqueado: { etiqueta: "Puede ser bloqueado al atacar", manual: "\xA79.3", ambito: "campeon", base: true },
+  puedeSerExiliada: { etiqueta: "Puede ser exiliada", manual: "\xA710", ambito: "campeon", base: true },
+  puedeSerDestruidaPorEfecto: { etiqueta: "Puede ser destruida por efectos", manual: "\xA710", ambito: "campeon", base: true },
+  puedeSerDestruidaEnBatalla: { etiqueta: "Puede ser destruida en batalla", manual: "\xA710", ambito: "campeon", base: true },
+  /* ── carta ── */
+  puedeSerNegada: { etiqueta: "Sus efectos pueden ser negados o contrarrestados por el rival", manual: "\xA710", ambito: "carta", base: true },
+  eterBloqueadoExtra: { etiqueta: "\xC9ter bloqueado extra sobre el tope del efecto", manual: "\xA77.7", ambito: "carta", base: 0, min: 0 }
+};
+var REGLA_IDS = Object.keys(REGLAS);
+function resolverRegla(id, modificadores) {
+  const def = REGLAS[id];
+  const propios = modificadores.filter((m) => m.regla === id);
+  if (typeof def.base === "boolean") {
+    if (propios.some((m) => m.operacion === "prohibir")) return false;
+    if (propios.some((m) => m.operacion === "permitir")) return true;
+    return def.base;
+  }
+  let valor = def.base;
+  const fijados = propios.filter((m) => m.operacion === "fijar" && m.valor !== void 0);
+  if (fijados.length > 0) {
+    valor = fijados.reduce((a, b) => b.orden >= a.orden ? b : a).valor;
+  }
+  for (const m of propios) {
+    if (m.operacion === "sumar" && m.valor !== void 0) valor += m.valor;
+  }
+  if (def.min !== void 0) valor = Math.max(def.min, valor);
+  if (def.max !== void 0) valor = Math.min(def.max, valor);
+  return valor;
+}
+var KEYWORD_REGLAS = {
+  Carga: [{ regla: "invocacionCansada", operacion: "prohibir" }],
+  Vigor: [{ regla: "atacarAgota", operacion: "prohibir" }],
+  Tirador: [{ regla: "disparoAgota", operacion: "prohibir" }],
+  Inexiliable: [{ regla: "puedeSerExiliada", operacion: "prohibir" }],
+  Inegable: [{ regla: "puedeSerNegada", operacion: "prohibir" }],
+  Inmortal: [{ regla: "puedeSerDestruidaPorEfecto", operacion: "prohibir" }],
+  Indestructible: [{ regla: "puedeSerDestruidaEnBatalla", operacion: "prohibir" }]
+};
 
 // src/online/game/reglas.ts
 var otro = (j) => j === "A" ? "B" : "A";
@@ -3378,51 +3333,6 @@ function reglaNumero(s, regla, sujeto) {
 }
 function reglaBool(s, regla, sujeto) {
   return resolverRegla(regla, modificadoresReglaDe(s, regla, sujeto));
-}
-
-// src/online/game/scry.ts
-function cartasVigentesScry(s, p) {
-  const mazo = s.players[p.mazoDe].mazo;
-  return p.cartas.filter((id) => mazo.includes(id));
-}
-function scryActual(s) {
-  const frente = s.scryPendientes?.[0];
-  return frente && cartasVigentesScry(s, frente).length > 0 ? frente : void 0;
-}
-function descartarScryMuertos(s) {
-  while (s.scryPendientes && s.scryPendientes.length > 0 && cartasVigentesScry(s, s.scryPendientes[0]).length === 0) {
-    s.scryPendientes = s.scryPendientes.slice(1);
-  }
-  if (s.scryPendientes?.length === 0) delete s.scryPendientes;
-}
-function iniciarScry(s, ctx, jugador, mazoDe, cantidad) {
-  const cartas = s.players[mazoDe].mazo.slice(0, Math.max(0, cantidad));
-  if (cartas.length === 0) return;
-  s.scryPendientes = [...s.scryPendientes ?? [], { jugador, mazoDe, cartas }];
-  ctx.emit({ type: "mazo_mirado", jugador, cantidad: cartas.length });
-}
-function validarOrdenarMazo(state, action) {
-  const pendiente = scryActual(state);
-  if (!pendiente) return "no hay un mazo por ordenar";
-  if (action.jugador !== void 0 && action.jugador !== pendiente.jugador) return "el mazo lo ordena quien lo mira";
-  const vigentes = cartasVigentesScry(state, pendiente);
-  const enviadas = [...action.arriba, ...action.fondo];
-  if (new Set(enviadas).size !== enviadas.length) return "cartas repetidas";
-  if (enviadas.length !== vigentes.length || !vigentes.every((id) => enviadas.includes(id))) {
-    return "debes ordenar exactamente las cartas que miraste";
-  }
-  return null;
-}
-function ejecutarOrdenarMazo(s, action, ctx) {
-  const pendiente = scryActual(s);
-  if (!pendiente) return;
-  const miradas = new Set(action.arriba.concat(action.fondo));
-  const p = s.players[pendiente.mazoDe];
-  const resto = p.mazo.filter((id) => !miradas.has(id));
-  p.mazo = [...action.arriba, ...resto, ...action.fondo];
-  s.scryPendientes = s.scryPendientes.slice(1);
-  if (s.scryPendientes.length === 0) delete s.scryPendientes;
-  ctx.emit({ type: "mazo_ordenado", jugador: pendiente.jugador, arriba: action.arriba.length, fondo: action.fondo.length });
 }
 
 // src/online/game/exilio.ts
@@ -4624,15 +4534,24 @@ function apilarTriggers(s, ctx, lista, previos = marcarInicioAccion(s)) {
   const validas = lista.filter((t) => esTriggerApilable(t.trigger) && !!s.instances[t.cardInstanceId]);
   if (validas.length === 0) return;
   if ((s.profundidadTriggers ?? 0) > 0) {
-    for (const t of [...ordenarTriggers(s, validas)].reverse()) {
-      ctx.emit({ type: "trigger_apilado", jugador: t.jugador, cardInstanceId: t.cardInstanceId, trigger: t.trigger, efectoIdx: t.efectoIdx });
-      resolverTrigger(s, ctx, t, "inmediato");
-    }
+    resolverTriggersDeEfecto(s, ctx, validas);
     return;
   }
   const triggers = armarTriggers(s, ctx, validas);
   if (triggers.length === 0) return;
   declararVentana(s, ctx, { tipo: "triggers", jugador: s.turno, triggers }, previos);
+}
+function resolverTriggersDeEfecto(s, ctx, lista) {
+  const validas = lista.filter((t) => esTriggerApilable(t.trigger) && !!s.instances[t.cardInstanceId]);
+  if (validas.length === 0) return;
+  const resolver = () => {
+    for (const t of [...ordenarTriggers(s, validas)].reverse()) {
+      ctx.emit({ type: "trigger_apilado", jugador: t.jugador, cardInstanceId: t.cardInstanceId, trigger: t.trigger, efectoIdx: t.efectoIdx });
+      resolverTrigger(s, ctx, t, "inmediato");
+    }
+  };
+  if ((s.profundidadTriggers ?? 0) > 0) resolver();
+  else enResolucion(s, resolver);
 }
 function asentarTriggers(s, triggers) {
   const cadena = s.cadena;
@@ -4710,6 +4629,96 @@ function resolverTrigger(s, ctx, t, modo = "elegido") {
     }
     interpretEffect(s, ctx, inst, efecto, { ...payloadBase(t), cobrarCosto: true, sinEleccion: true, ...contextoUso ? { contextoUso } : {} });
   });
+}
+
+// src/online/game/reglasTemporales.ts
+function aplicarReglaTemporal(s, regla) {
+  const orden = (s.ordenReglas ?? 0) + 1;
+  s.ordenReglas = orden;
+  s.reglasTemporales = [...s.reglasTemporales ?? [], { ...regla, orden }];
+}
+function aplicarCambioAtributo(s, cambio) {
+  s.cambiosAtributo = [...s.cambiosAtributo ?? [], cambio];
+}
+function sinVencidas(lista, expira, jugador) {
+  return lista.map((r) => expira === "ocaso" && r.turnosRestantes !== void 0 ? { ...r, turnosRestantes: r.turnosRestantes - 1 } : r).filter((r) => {
+    if (expira === "ocaso") {
+      if (r.turnosRestantes !== void 0) return r.turnosRestantes > 0;
+      return r.expira !== "ocaso";
+    }
+    if (jugador !== void 0 && r.duenio !== jugador) return true;
+    return r.expira !== expira;
+  });
+}
+function purgarReglasTemporales(s, expira, jugador) {
+  if (s.reglasTemporales?.length) {
+    const quedan = sinVencidas(s.reglasTemporales, expira, jugador);
+    if (quedan.length === 0) delete s.reglasTemporales;
+    else s.reglasTemporales = quedan;
+  }
+  if (s.cambiosAtributo?.length) {
+    const quedan = sinVencidas(s.cambiosAtributo, expira, jugador);
+    if (quedan.length === 0) delete s.cambiosAtributo;
+    else s.cambiosAtributo = quedan;
+  }
+}
+function purgarReglasHastaFase(s, fase, turno) {
+  const vence = (r) => r.expira === "hasta-fase" && r.expiraFase === fase && r.expiraFaseJugador === turno;
+  if (s.reglasTemporales?.length) {
+    const quedan = s.reglasTemporales.filter((r) => !vence(r));
+    if (quedan.length === 0) delete s.reglasTemporales;
+    else if (quedan.length !== s.reglasTemporales.length) s.reglasTemporales = quedan;
+  }
+  if (s.cambiosAtributo?.length) {
+    const quedan = s.cambiosAtributo.filter((r) => !vence(r));
+    if (quedan.length === 0) delete s.cambiosAtributo;
+    else if (quedan.length !== s.cambiosAtributo.length) s.cambiosAtributo = quedan;
+  }
+}
+
+// src/online/game/scry.ts
+function cartasVigentesScry(s, p) {
+  const mazo = s.players[p.mazoDe].mazo;
+  return p.cartas.filter((id) => mazo.includes(id));
+}
+function scryActual(s) {
+  const frente = s.scryPendientes?.[0];
+  return frente && cartasVigentesScry(s, frente).length > 0 ? frente : void 0;
+}
+function descartarScryMuertos(s) {
+  while (s.scryPendientes && s.scryPendientes.length > 0 && cartasVigentesScry(s, s.scryPendientes[0]).length === 0) {
+    s.scryPendientes = s.scryPendientes.slice(1);
+  }
+  if (s.scryPendientes?.length === 0) delete s.scryPendientes;
+}
+function iniciarScry(s, ctx, jugador, mazoDe, cantidad) {
+  const cartas = s.players[mazoDe].mazo.slice(0, Math.max(0, cantidad));
+  if (cartas.length === 0) return;
+  s.scryPendientes = [...s.scryPendientes ?? [], { jugador, mazoDe, cartas }];
+  ctx.emit({ type: "mazo_mirado", jugador, cantidad: cartas.length });
+}
+function validarOrdenarMazo(state, action) {
+  const pendiente = scryActual(state);
+  if (!pendiente) return "no hay un mazo por ordenar";
+  if (action.jugador !== void 0 && action.jugador !== pendiente.jugador) return "el mazo lo ordena quien lo mira";
+  const vigentes = cartasVigentesScry(state, pendiente);
+  const enviadas = [...action.arriba, ...action.fondo];
+  if (new Set(enviadas).size !== enviadas.length) return "cartas repetidas";
+  if (enviadas.length !== vigentes.length || !vigentes.every((id) => enviadas.includes(id))) {
+    return "debes ordenar exactamente las cartas que miraste";
+  }
+  return null;
+}
+function ejecutarOrdenarMazo(s, action, ctx) {
+  const pendiente = scryActual(s);
+  if (!pendiente) return;
+  const miradas = new Set(action.arriba.concat(action.fondo));
+  const p = s.players[pendiente.mazoDe];
+  const resto = p.mazo.filter((id) => !miradas.has(id));
+  p.mazo = [...action.arriba, ...resto, ...action.fondo];
+  s.scryPendientes = s.scryPendientes.slice(1);
+  if (s.scryPendientes.length === 0) delete s.scryPendientes;
+  ctx.emit({ type: "mazo_ordenado", jugador: pendiente.jugador, arriba: action.arriba.length, fondo: action.fondo.length });
 }
 
 // src/online/game/redirect.ts
@@ -5005,6 +5014,15 @@ function executeInvocarEquipar(s, ctx, inst, targetIds, jugador) {
   if (!invocarAlCampo(s, ctx, jugador, objetivoId)) return;
   inst.equipadoA = objetivoId;
   inst.vinculadoA = objetivoId;
+  dispararAlInvocar(s, ctx, jugador, objetivoId);
+}
+function dispararAlInvocar(s, ctx, jugador, campeonId) {
+  const triggers = construirTriggers(s, "al-invocar", jugador, [campeonId]);
+  if (triggers.length === 0) {
+    dispararTrigger(s, ctx, "al-invocar", jugador, [campeonId]);
+    return;
+  }
+  resolverTriggersDeEfecto(s, ctx, triggers);
 }
 function invocarAlCampo(s, ctx, jugador, campeonId) {
   const campo = s.players[jugador].campo;
@@ -5081,7 +5099,7 @@ function executeRecuperar(s, ctx, efecto, targetIds, jugador, efectoData) {
     if (!inst) continue;
     if (destino.zona === "campo") {
       const meta = inst.cardId ? getCardMeta(inst.cardId) : null;
-      if (meta && esCampeon(meta)) invocarAlCampo(s, ctx, jugador, id);
+      if (meta && esCampeon(meta) && invocarAlCampo(s, ctx, jugador, id)) dispararAlInvocar(s, ctx, jugador, id);
       continue;
     }
     const origen = sacarDeSuZona(s, id);
@@ -5263,6 +5281,7 @@ function ejecutarInvocarEquiparUmbral(s, ctx, inst, efecto, jugador) {
     if (invocarAlCampo(s, ctx, jugador, id)) {
       inst.equipadoA = id;
       inst.vinculadoA = id;
+      dispararAlInvocar(s, ctx, jugador, id);
     }
     break;
   }
@@ -5310,6 +5329,8 @@ function executeTutor(s, ctx, targetIds, jugador, efectoData) {
       if (slotLibre !== -1) {
         p.campo.campeones[slotLibre] = targetId;
         ctx.emit({ type: "carta_invocada", cardInstanceId: targetId, tipo: "Campe\xF3n", slot: slotLibre });
+        const metaT = s.instances[targetId]?.cardId ? getCardMeta(s.instances[targetId].cardId) : null;
+        if (metaT && esCampeon(metaT)) dispararAlInvocar(s, ctx, jugador, targetId);
       }
     } else if (zonaDestino === "cementerio") {
       enviarAlCementerio(s, ctx, targetId);
