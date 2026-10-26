@@ -31,7 +31,26 @@ function tipoDe(cardId: string): string | undefined {
   return getCardMeta(cardId)?.type
 }
 
-/** Valida la distribución del mazo (15 Éter + 45 Principal + 6 Vínculos = 66) y que todo cardId exista. */
+/** Un mismo Vínculo no puede repetirse más de 3 veces, diga lo que diga su `limiteCopias` (manual §3.1). */
+const TOPE_COPIAS_VINCULO = 3
+
+/**
+ * Copias máximas de una carta en un mazo (manual §3.2 y §12): su `limiteCopias` (sin dato, 1); la rareza Única
+ * es siempre ×1 aunque `limiteCopias` diga otra cosa; un Vínculo nunca pasa de 3. Un cardId desconocido vale 0.
+ */
+export function limiteCopiasDe(cardId: string): number {
+  const meta = getCardMeta(cardId)
+  if (!meta) return 0
+  if (meta.rarity === 'Única') return 1
+  const n = Math.floor(Number(meta.limiteCopias ?? 1))
+  const limite = Number.isFinite(n) && n >= 1 ? n : 1
+  return meta.type === 'Vínculo' ? Math.min(limite, TOPE_COPIAS_VINCULO) : limite
+}
+
+/**
+ * Valida el mazo (manual §3 y §12): 66 cartas (15 Éter + 45 Principal + 6 Vínculos), todo cardId existente y
+ * ninguna carta por encima de su límite de copias (Vínculo ×3 como tope, Única ×1).
+ */
 export function validarDeck(deck: string[], nombre: string): void {
   if (deck.length !== TOTAL_MAZO) {
     throw new Error(`Mazo ${nombre} inválido: ${deck.length} cartas (se esperaban ${TOTAL_MAZO})`)
@@ -46,6 +65,15 @@ export function validarDeck(deck: string[], nombre: string): void {
   }
   for (const id of deck) {
     if (!getCardMeta(id)) throw new Error(`Mazo ${nombre} inválido: cardId desconocido "${id}"`)
+  }
+  const copias = new Map<string, number>()
+  for (const id of deck) copias.set(id, (copias.get(id) ?? 0) + 1)
+  for (const [id, cantidad] of copias) {
+    const limite = limiteCopiasDe(id)
+    if (cantidad > limite) {
+      const nombreCarta = getCardMeta(id)?.name ?? id
+      throw new Error(`Mazo ${nombre} inválido: "${nombreCarta}" (${id}) lleva ${cantidad} copias y su límite es ${limite}`)
+    }
   }
 }
 
