@@ -3006,142 +3006,10 @@ function createInitialState(deckA, deckB, seed, opts) {
   return { state, ctx };
 }
 
-// src/online/game/campo.ts
-function sacrificiosRequeridos(roles) {
-  if (!roles) return 0;
-  if (roles.includes("Soberano")) return 1;
-  if (roles.includes("Emperador")) return 2;
-  return 0;
-}
-function esSingular(card) {
-  return card.type === "Campe\xF3n" && (card.catHabilidad?.includes("Singular") ?? false);
-}
-function copiasEnCampo(state, jugador, cardId) {
-  const p = state.players[jugador];
-  return p.campo.campeones.filter((id) => id !== null && state.instances[id]?.cardId === cardId).length;
-}
-function campeonesSacrificables(state, jugador, campeonCardId) {
-  const meta = getCardMeta(campeonCardId);
-  if (!meta) return [];
-  const p = state.players[jugador];
-  return p.campo.campeones.filter((id) => {
-    if (!id) return false;
-    const inst = state.instances[id];
-    const m = inst?.cardId ? getCardMeta(inst.cardId) : null;
-    return m !== null && esCampeon(m) && faccionesCompartidas(m.facciones, meta.facciones);
-  });
-}
-
-// src/online/game/eter.ts
-function claveEfecto(fuenteId, indiceEfecto) {
-  return `${fuenteId}#${indiceEfecto}`;
-}
-function etiquetarEter(s, eterIds, fuenteId, indiceEfecto, pagador) {
-  for (const id of eterIds) {
-    const inst = s.instances[id];
-    if (!inst) continue;
-    if (indiceEfecto >= 0) inst.bloqueadoPorEfecto = claveEfecto(fuenteId, indiceEfecto);
-    inst.pagadoPor = pagador;
-  }
-}
-function eterDeEfecto(s, cardInstanceId, indiceEfecto) {
-  const inst = s.instances[cardInstanceId];
-  if (!inst?.eterBloqueado?.length) return [];
-  const clave = claveEfecto(cardInstanceId, indiceEfecto);
-  return inst.eterBloqueado.filter((id) => {
-    const tag = s.instances[id]?.bloqueadoPorEfecto;
-    return tag === void 0 || tag === clave;
-  });
-}
-function quitarEteres(s, fuenteId, ids) {
-  const inst = s.instances[fuenteId];
-  if (!inst?.eterBloqueado) return;
-  const quedan = inst.eterBloqueado.filter((id) => !ids.includes(id));
-  if (quedan.length > 0) inst.eterBloqueado = quedan;
-  else delete inst.eterBloqueado;
-}
-function liberarEterA(s, eteres, destino, fallbackPagador) {
-  const grupos = {};
-  for (const id of eteres) {
-    const j = s.instances[id]?.pagadoPor ?? fallbackPagador;
-    (grupos[j] ??= []).push(id);
-  }
-  for (const [jugador, ids] of Object.entries(grupos)) {
-    for (const id of ids) {
-      const e = s.instances[id];
-      if (e) {
-        delete e.bloqueadoPorEfecto;
-        delete e.pagadoPor;
-      }
-    }
-    const p = s.players[jugador];
-    if (destino === "2A") p.eterReserva.push(...ids);
-    else p.eterPagado.push(...ids);
-  }
-  return grupos;
-}
-function limpiarFlagsUmbralSiVacia(s, fuenteId) {
-  const inst = s.instances[fuenteId];
-  if (!inst || (inst.eterBloqueado?.length ?? 0) > 0) return;
-  delete inst.efectoUmbralDisparado;
-  delete inst.copyOneShotDisparado;
-  delete inst.tramosDisparados;
-  delete inst.fijadoExhaustTargetId;
-}
-function evaluarFinSteal(s, ctx, fuenteId) {
-  const inst = s.instances[fuenteId];
-  if (!inst?.cardId) return;
-  if ((inst.eterBloqueado?.length ?? 0) > 0) return;
-  const meta = getCardMeta(inst.cardId);
-  const stealEfecto = meta && "efectos" in meta ? meta.efectos?.find((e) => e.efecto === "steal_champion" && e.duracion === "mientras_ester_bloqueado") : void 0;
-  if (!stealEfecto) return;
-  retornarCampeonesRobados(s, ctx, fuenteId, inst.owner);
-}
-function retornarCampeonesRobados(s, ctx, fuenteId, ladron) {
-  for (const other of Object.values(s.instances)) {
-    if (other.stolenBy !== fuenteId) continue;
-    const enCampoLadron = s.players[ladron].campo.campeones.includes(other.cardInstanceId);
-    if (!enCampoLadron) {
-      delete other.stolenBy;
-      continue;
-    }
-    const duenoOriginal = other.owner;
-    const campoOriginal = s.players[duenoOriginal].campo.campeones;
-    const slotLibre = campoOriginal.indexOf(null);
-    if (slotLibre !== -1 && duenoOriginal !== ladron) {
-      if (other.eterBloqueado && other.eterBloqueado.length > 0) {
-        const eteres = [...other.eterBloqueado];
-        delete other.eterBloqueado;
-        delete other.efectoUmbralDisparado;
-        delete other.copyOneShotDisparado;
-        delete other.tramosDisparados;
-        delete other.fijadoExhaustTargetId;
-        const grupos = liberarEterA(s, eteres, "2A", ladron);
-        for (const [jugador, ids] of Object.entries(grupos)) {
-          ctx.emit({ type: "eter_reagrupado", jugador, eterIds: ids });
-        }
-      }
-      const idxLadron = s.players[ladron].campo.campeones.indexOf(other.cardInstanceId);
-      if (idxLadron !== -1) s.players[ladron].campo.campeones[idxLadron] = null;
-      campoOriginal[slotLibre] = other.cardInstanceId;
-      delete other.stolenBy;
-      ctx.emit({
-        type: "carta_entrada_a_zona",
-        cardInstanceId: other.cardInstanceId,
-        zona: `2${String.fromCharCode(66 + slotLibre)}`,
-        jugador: duenoOriginal,
-        bocaArriba: true
-      });
-    } else {
-      delete other.stolenBy;
-    }
-  }
-}
-
 // src/online/game/targetResolver.ts
-function resolveTargets(s, objetivo, jugador) {
+function resolveTargets(s, objetivo, jugador, fuenteId) {
   const { tipo, controlador, zona, filtros } = objetivo;
-  const baseTargets = getTargetsByZone(s, tipo, zona, controlador, jugador);
+  const baseTargets = getTargetsByZone(s, tipo, zona, controlador, jugador, fuenteId);
   if (controlador === "rival" && tipo === "campeon" && zona === "campo") {
     const rival = jugador === "A" ? "B" : "A";
     const rivalChamps = s.players[rival].campo.campeones.filter((id) => id !== null);
@@ -3164,7 +3032,7 @@ function resolveTargets(s, objetivo, jugador) {
   }
   return filtered;
 }
-function getTargetsByZone(s, tipo, zona, controlador, jugador) {
+function getTargetsByZone(s, tipo, zona, controlador, jugador, fuenteId) {
   const rival = jugador === "A" ? "B" : "A";
   const playersToCheck = controlador === "ambos" ? ["A", "B"] : controlador === "rival" ? [rival] : controlador === "ninguno" ? [] : [jugador];
   if (tipo === "self") {
@@ -3177,14 +3045,10 @@ function getTargetsByZone(s, tipo, zona, controlador, jugador) {
     return s.players[rival].campo.campeones.filter((id) => id !== null);
   }
   if (tipo === "equipped_champion") {
-    const allChampions = [
-      ...s.players.A.campo.campeones,
-      ...s.players.B.campo.campeones
-    ].filter((id) => id !== null);
-    return allChampions.filter((id) => {
-      const inst = s.instances[id];
-      return inst?.equipadoA !== void 0;
-    });
+    const equipadoA = fuenteId ? s.instances[fuenteId]?.equipadoA : void 0;
+    if (!equipadoA) return [];
+    const enCampo = [...s.players.A.campo.campeones, ...s.players.B.campo.campeones].includes(equipadoA);
+    return enCampo ? [equipadoA] : [];
   }
   if (tipo === "rival_hand") {
     return [rival];
@@ -3362,96 +3226,332 @@ function robarCarta(s, ctx, jugador) {
   const tope = p.mazo.shift();
   if (tope === void 0) {
     ctx.emit({ type: "mazo_agotado", jugador });
-    const ganador = jugador === "A" ? "B" : "A";
-    s.fase = "terminada";
-    s.ganador = ganador;
-    s.motivo = "mazo_vacio";
-    ctx.emit({ type: "partida_terminada", ganador, motivo: "mazo_vacio" });
-    return;
+    if (!s.mazosAgotados?.includes(jugador)) s.mazosAgotados = [...s.mazosAgotados ?? [], jugador];
+    return false;
   }
   p.mano.push(tope);
   ctx.emit({ type: "carta_robada", jugador, cardInstanceId: tope });
+  return true;
 }
 
-// src/online/game/reglasTemporales.ts
-function aplicarReglaTemporal(s, regla) {
-  const orden = (s.ordenReglas ?? 0) + 1;
-  s.ordenReglas = orden;
-  s.reglasTemporales = [...s.reglasTemporales ?? [], { ...regla, orden }];
+// src/online/game/eter.ts
+function claveEfecto(fuenteId, indiceEfecto) {
+  return `${fuenteId}#${indiceEfecto}`;
 }
-function purgarReglasTemporales(s, expira, jugador) {
-  if (!s.reglasTemporales?.length) return;
-  const quedan = s.reglasTemporales.map((r) => expira === "ocaso" && r.turnosRestantes !== void 0 ? { ...r, turnosRestantes: r.turnosRestantes - 1 } : r).filter((r) => {
-    if (expira === "ocaso") {
-      if (r.turnosRestantes !== void 0) return r.turnosRestantes > 0;
-      return r.expira !== "ocaso";
-    }
-    if (jugador !== void 0 && r.duenio !== jugador) return true;
-    return r.expira !== expira;
+function etiquetarEter(s, eterIds, fuenteId, indiceEfecto, pagador) {
+  for (const id of eterIds) {
+    const inst = s.instances[id];
+    if (!inst) continue;
+    if (indiceEfecto >= 0) inst.bloqueadoPorEfecto = claveEfecto(fuenteId, indiceEfecto);
+    inst.pagadoPor = pagador;
+  }
+}
+function eterDeEfecto(s, cardInstanceId, indiceEfecto) {
+  const inst = s.instances[cardInstanceId];
+  if (!inst?.eterBloqueado?.length) return [];
+  const clave = claveEfecto(cardInstanceId, indiceEfecto);
+  return inst.eterBloqueado.filter((id) => {
+    const tag = s.instances[id]?.bloqueadoPorEfecto;
+    return tag === void 0 || tag === clave;
   });
-  if (quedan.length === 0) delete s.reglasTemporales;
-  else s.reglasTemporales = quedan;
 }
-function purgarReglasHastaFase(s, fase, turno) {
-  if (!s.reglasTemporales?.length) return;
-  const quedan = s.reglasTemporales.filter(
-    (r) => !(r.expira === "hasta-fase" && r.expiraFase === fase && r.expiraFaseJugador === turno)
-  );
-  if (quedan.length === 0) delete s.reglasTemporales;
-  else if (quedan.length !== s.reglasTemporales.length) s.reglasTemporales = quedan;
+function quitarEteres(s, fuenteId, ids) {
+  const inst = s.instances[fuenteId];
+  if (!inst?.eterBloqueado) return;
+  const quedan = inst.eterBloqueado.filter((id) => !ids.includes(id));
+  if (quedan.length > 0) inst.eterBloqueado = quedan;
+  else delete inst.eterBloqueado;
+}
+function liberarEterA(s, eteres, destino, fallbackPagador) {
+  const grupos = {};
+  for (const id of eteres) {
+    const j = s.instances[id]?.pagadoPor ?? fallbackPagador;
+    (grupos[j] ??= []).push(id);
+  }
+  for (const [jugador, ids] of Object.entries(grupos)) {
+    for (const id of ids) {
+      const e = s.instances[id];
+      if (e) {
+        delete e.bloqueadoPorEfecto;
+        delete e.pagadoPor;
+      }
+    }
+    const p = s.players[jugador];
+    if (destino === "2A") p.eterReserva.push(...ids);
+    else p.eterPagado.push(...ids);
+  }
+  return grupos;
+}
+function limpiarFlagsUmbralSiVacia(s, fuenteId) {
+  const inst = s.instances[fuenteId];
+  if (!inst || (inst.eterBloqueado?.length ?? 0) > 0) return;
+  delete inst.efectoUmbralDisparado;
+  delete inst.copyOneShotDisparado;
+  delete inst.tramosDisparados;
+  delete inst.fijadoExhaustTargetId;
+}
+function evaluarFinSteal(s, ctx, fuenteId) {
+  const inst = s.instances[fuenteId];
+  if (!inst?.cardId) return;
+  if ((inst.eterBloqueado?.length ?? 0) > 0) return;
+  const meta = getCardMeta(inst.cardId);
+  const stealEfecto = meta && "efectos" in meta ? meta.efectos?.find((e) => e.efecto === "steal_champion" && e.duracion === "mientras_ester_bloqueado") : void 0;
+  if (!stealEfecto) return;
+  retornarCampeonesRobados(s, ctx, fuenteId, inst.owner);
+}
+function retornarCampeonesRobados(s, ctx, fuenteId, ladron) {
+  for (const other of Object.values(s.instances)) {
+    if (other.stolenBy !== fuenteId) continue;
+    const enCampoLadron = s.players[ladron].campo.campeones.includes(other.cardInstanceId);
+    if (!enCampoLadron) {
+      delete other.stolenBy;
+      continue;
+    }
+    const duenoOriginal = other.owner;
+    const campoOriginal = s.players[duenoOriginal].campo.campeones;
+    const slotLibre = campoOriginal.indexOf(null);
+    if (slotLibre !== -1 && duenoOriginal !== ladron) {
+      if (other.eterBloqueado && other.eterBloqueado.length > 0) {
+        const eteres = [...other.eterBloqueado];
+        delete other.eterBloqueado;
+        delete other.efectoUmbralDisparado;
+        delete other.copyOneShotDisparado;
+        delete other.tramosDisparados;
+        delete other.fijadoExhaustTargetId;
+        const grupos = liberarEterA(s, eteres, "2A", ladron);
+        for (const [jugador, ids] of Object.entries(grupos)) {
+          ctx.emit({ type: "eter_reagrupado", jugador, eterIds: ids });
+        }
+      }
+      const idxLadron = s.players[ladron].campo.campeones.indexOf(other.cardInstanceId);
+      if (idxLadron !== -1) s.players[ladron].campo.campeones[idxLadron] = null;
+      campoOriginal[slotLibre] = other.cardInstanceId;
+      delete other.stolenBy;
+      ctx.emit({
+        type: "carta_entrada_a_zona",
+        cardInstanceId: other.cardInstanceId,
+        zona: `2${String.fromCharCode(66 + slotLibre)}`,
+        jugador: duenoOriginal,
+        bocaArriba: true
+      });
+    } else {
+      delete other.stolenBy;
+    }
+  }
 }
 
-// src/shared/rules/reglas.ts
-var REGLAS = {
-  /* ── partida ── */
-  primerTurnoSinAtaques: { etiqueta: "Nadie ataca en el primer turno del juego", manual: "\xA78.6", ambito: "partida", base: true },
-  /* ── jugador ── */
-  limiteMano: { etiqueta: "L\xEDmite de mano", manual: "\xA77.1, \xA78.5", ambito: "jugador", base: 6, min: 0 },
-  cartasPorAlba: { etiqueta: "Cartas que se roban en el Alba", manual: "\xA78.2", ambito: "jugador", base: 1, min: 0 },
-  rupturasPorTurno: { etiqueta: "V\xEDnculos que rompe la Ruptura por turno", manual: "\xA79.4", ambito: "jugador", base: 1, min: 0 },
-  atacarTrasRuptura: { etiqueta: "Se puede seguir atacando tras romper un V\xEDnculo", manual: "\xA79.4", ambito: "jugador", base: false },
-  /* ── campeón ── */
-  agotadoPuedeBloquear: { etiqueta: "Un Campe\xF3n agotado puede bloquear", manual: "\xA79.3", ambito: "campeon", base: false },
-  invocacionCansada: { etiqueta: "No ataca el turno en que es invocado", manual: "\xA79.2", ambito: "campeon", base: true },
-  atacarAgota: { etiqueta: "Atacar agota al Campe\xF3n", manual: "\xA79.2", ambito: "campeon", base: true },
-  disparoAgota: { etiqueta: "Un Disparo con \xC9ter pagado agota al Campe\xF3n", manual: "\xA75.2, \xA78.3a", ambito: "campeon", base: true },
-  ataquesPorTurno: { etiqueta: "Ataques por turno", manual: "\xA79.2", ambito: "campeon", base: 1, min: 0 },
-  bloqueosPorTurno: { etiqueta: "Bloqueos por turno", manual: "\xA79.3", ambito: "campeon", base: 1, min: 0 },
-  puedeSerExiliada: { etiqueta: "Puede ser exiliada", manual: "\xA710", ambito: "campeon", base: true },
-  puedeSerDestruidaPorEfecto: { etiqueta: "Puede ser destruida por efectos", manual: "\xA710", ambito: "campeon", base: true },
-  puedeSerDestruidaEnBatalla: { etiqueta: "Puede ser destruida en batalla", manual: "\xA710", ambito: "campeon", base: true },
-  /* ── carta ── */
-  eterBloqueadoExtra: { etiqueta: "\xC9ter bloqueado extra sobre el tope del efecto", manual: "\xA77.7", ambito: "carta", base: 0, min: 0 }
-};
-var REGLA_IDS = Object.keys(REGLAS);
-function resolverRegla(id, modificadores) {
-  const def = REGLAS[id];
-  const propios = modificadores.filter((m) => m.regla === id);
-  if (typeof def.base === "boolean") {
-    if (propios.some((m) => m.operacion === "prohibir")) return false;
-    if (propios.some((m) => m.operacion === "permitir")) return true;
-    return def.base;
-  }
-  let valor = def.base;
-  const fijados = propios.filter((m) => m.operacion === "fijar" && m.valor !== void 0);
-  if (fijados.length > 0) {
-    valor = fijados.reduce((a, b) => b.orden >= a.orden ? b : a).valor;
-  }
-  for (const m of propios) {
-    if (m.operacion === "sumar" && m.valor !== void 0) valor += m.valor;
-  }
-  if (def.min !== void 0) valor = Math.max(def.min, valor);
-  if (def.max !== void 0) valor = Math.min(def.max, valor);
-  return valor;
+// src/online/game/payments.ts
+function aporteDe(eterCardId, _objetivoCardId) {
+  const eter = getCardMeta(eterCardId);
+  if (!eter) return 0;
+  return 1;
 }
-var KEYWORD_REGLAS = {
-  Carga: [{ regla: "invocacionCansada", operacion: "prohibir" }],
-  Vigor: [{ regla: "atacarAgota", operacion: "prohibir" }],
-  Tirador: [{ regla: "disparoAgota", operacion: "prohibir" }],
-  Inexiliable: [{ regla: "puedeSerExiliada", operacion: "prohibir" }],
-  Inmortal: [{ regla: "puedeSerDestruidaPorEfecto", operacion: "prohibir" }],
-  Indestructible: [{ regla: "puedeSerDestruidaEnBatalla", operacion: "prohibir" }]
-};
+function validarPago(state, jugador, eterIds, objetivoCardId) {
+  if (eterIds.length === 0) return { ok: false, error: "no indicaste \xC9teres para pagar" };
+  const objetivo = getCardMeta(objetivoCardId);
+  if (!objetivo) return { ok: false, error: `carta objetivo desconocida: ${objetivoCardId}` };
+  const p = state.players[jugador];
+  const vistos = /* @__PURE__ */ new Set();
+  let suma = 0;
+  for (const id of eterIds) {
+    if (vistos.has(id)) return { ok: false, error: `\xC9ter duplicado: ${id}` };
+    vistos.add(id);
+    const inst = state.instances[id];
+    const meta = inst?.cardId ? getCardMeta(inst.cardId) : null;
+    if (!inst || !meta || !esEter(meta)) return { ok: false, error: `no es un \xC9ter: ${id}` };
+    if (!p.eterReserva.includes(id)) return { ok: false, error: `el \xC9ter no est\xE1 en tu Reserva: ${id}` };
+    suma += aporteDe(meta.id, objetivoCardId);
+  }
+  if (suma < objetivo.stats.cost) return { ok: false, error: "pago insuficiente" };
+  if (suma > objetivo.stats.cost) return { ok: false, error: "sobrepago no permitido \u2014 selecciona exactamente el coste" };
+  return { ok: true, aportado: suma };
+}
+function aplicarPago(s, ctx, jugador, eterIds, objetivoCardId, contextoUso) {
+  const validado = validarPago(s, jugador, eterIds, objetivoCardId);
+  if (!validado.ok || validado.aportado === void 0) return s;
+  const objetivo = getCardMeta(objetivoCardId);
+  if (!objetivo) return s;
+  const p = s.players[jugador];
+  for (const id of eterIds) {
+    const idx = p.eterReserva.indexOf(id);
+    if (idx !== -1) p.eterReserva.splice(idx, 1);
+    p.eterPagado.push(id);
+  }
+  ctx.emit({
+    type: "eter_pagado",
+    jugador,
+    eterIds,
+    costo: objetivo.stats.cost,
+    aportado: validado.aportado
+  });
+  const gatillos = eterIds.filter((id) => {
+    const inst = s.instances[id];
+    const meta = inst?.cardId ? getCardMeta(inst.cardId) : null;
+    if (!meta || !esEter(meta)) return false;
+    if ("efectos" in meta && meta.efectos) {
+      return meta.efectos.some((e) => e.trigger === "al_pagar_eter");
+    }
+    return false;
+  });
+  for (const id of gatillos) {
+    dispararTrigger(s, ctx, "al-pagar-eter", jugador, [id], {
+      contextoUso: contextoUso?.tipo,
+      objetivoId: contextoUso?.cardInstanceId
+    });
+  }
+  return s;
+}
+function etersParaPagar(state, jugador, objetivoCardId) {
+  const objetivo = getCardMeta(objetivoCardId);
+  if (!objetivo) return null;
+  const p = state.players[jugador];
+  const coste = objetivo.stats.cost;
+  const eteres = [];
+  for (const id of p.eterReserva) {
+    const inst = state.instances[id];
+    const meta = inst?.cardId ? getCardMeta(inst.cardId) : null;
+    if (!meta) continue;
+    eteres.push({ id, contrib: aporteDe(meta.id, objetivoCardId) });
+  }
+  function buscar(start, sumaActual, seleccionados) {
+    if (sumaActual === coste) return seleccionados;
+    if (sumaActual > coste) return null;
+    for (let i = start; i < eteres.length; i++) {
+      const resultado = buscar(i + 1, sumaActual + eteres[i].contrib, [...seleccionados, eteres[i].id]);
+      if (resultado) return resultado;
+    }
+    return null;
+  }
+  return buscar(0, 0, []);
+}
+function validarBloqueo(state, jugador, eterIds, targetInstanceId, efectoIdx) {
+  const inst = state.instances[targetInstanceId];
+  if (!inst) return "la carta no existe";
+  const p = state.players[jugador];
+  const enCampo = p.campo.campeones.includes(targetInstanceId) || p.campo.misticasTacticas.includes(targetInstanceId) || p.campo.arcanasCombate.includes(targetInstanceId);
+  if (!enCampo) return "la carta no est\xE1 en tu campo";
+  const meta = inst.cardId ? getCardMeta(inst.cardId) : null;
+  if (!meta) return "carta desconocida";
+  if (!p.campo.campeones.includes(targetInstanceId)) {
+    if (!cartaNecesitaEterBloqueado(meta)) {
+      return "esta carta no tiene efecto que use \xC9ter bloqueado";
+    }
+  }
+  if (eterIds.length === 0) return "no indicaste \xC9teres para bloquear";
+  const fuente = efectoIdx !== void 0 && "efectos" in meta && meta.efectos?.[efectoIdx] ? { efecto: meta.efectos[efectoIdx], indice: efectoIdx } : efectoBloqueoAccion(meta);
+  const maxEter = fuente?.efecto.costo?.cantidad ?? 1;
+  const fijo = fuente?.efecto.costo?.tipo === "bloqueo_fijo";
+  const actuales = fuente ? eterDeEfecto(state, targetInstanceId, fuente.indice).length : inst.eterBloqueado?.length ?? 0;
+  const total = actuales + eterIds.length;
+  if (fijo) {
+    if (total !== maxEter) {
+      return `bloqueo fijo: debes bloquear exactamente ${maxEter} \xC9ter(es) en esta carta (ya tiene ${actuales}, seleccionaste ${eterIds.length})`;
+    }
+  } else if (total > maxEter) {
+    return `m\xE1ximo ${maxEter} \xC9ter(es) bloqueado(s) en esta carta (ya tiene ${actuales})`;
+  }
+  for (const id of eterIds) {
+    const eterInst = state.instances[id];
+    const eterMeta = eterInst?.cardId ? getCardMeta(eterInst.cardId) : null;
+    if (!eterInst || !eterMeta || !esEter(eterMeta)) return `no es un \xC9ter: ${id}`;
+    const origenPagado = fuente?.efecto.costo?.origen === "pagado";
+    const zonaOrigen = origenPagado ? p.eterPagado : p.eterReserva;
+    if (!zonaOrigen.includes(id)) {
+      return origenPagado ? `el \xC9ter no est\xE1 en tu \xC9ter Pagado (1A): ${id}` : `el \xC9ter no est\xE1 en tu Reserva: ${id}`;
+    }
+    if (inst.eterBloqueado?.includes(id)) return `el \xC9ter ya est\xE1 bloqueado en esta carta`;
+    for (const grupo of ["campeones", "misticasTacticas", "arcanasCombate"]) {
+      for (const cid of p.campo[grupo]) {
+        if (cid && cid !== targetInstanceId) {
+          const ci = state.instances[cid];
+          if (ci?.eterBloqueado?.includes(id)) return `el \xC9ter ya est\xE1 bloqueado en otra carta`;
+        }
+      }
+    }
+  }
+  return null;
+}
+function maxEterBloqueado(card) {
+  if ("efectos" in card && card.efectos) {
+    for (const e of card.efectos) {
+      if (e.costo?.tipo === "eter_bloqueado" && e.costo.cantidad !== void 0) {
+        return e.costo.cantidad;
+      }
+      if (e.costo?.tipo === "bloqueo_fijo" && e.costo.cantidad !== void 0) {
+        return e.costo.cantidad;
+      }
+    }
+  }
+  return 1;
+}
+function esBloqueoFijo(card) {
+  if ("efectos" in card && card.efectos) {
+    return card.efectos.some((e) => e.costo?.tipo === "bloqueo_fijo");
+  }
+  return false;
+}
+function bloquearEter(s, ctx, jugador, eterIds, targetInstanceId, efectoIdx) {
+  const error = validarBloqueo(s, jugador, eterIds, targetInstanceId, efectoIdx);
+  if (error) return error;
+  const p = s.players[jugador];
+  const instTarget = s.instances[targetInstanceId];
+  instTarget.eterBloqueado = [...instTarget.eterBloqueado ?? [], ...eterIds];
+  const meta = instTarget.cardId ? getCardMeta(instTarget.cardId) : null;
+  const fuente = efectoIdx !== void 0 && meta && "efectos" in meta && meta.efectos?.[efectoIdx] ? { efecto: meta.efectos[efectoIdx], indice: efectoIdx } : meta ? efectoBloqueoAccion(meta) : null;
+  const zonaOrigen = fuente?.efecto.costo?.origen === "pagado" ? p.eterPagado : p.eterReserva;
+  for (const id of eterIds) {
+    const idx = zonaOrigen.indexOf(id);
+    if (idx !== -1) zonaOrigen.splice(idx, 1);
+  }
+  etiquetarEter(s, eterIds, targetInstanceId, fuente?.indice ?? -1, jugador);
+  ctx.emit({ type: "eter_bloqueado", jugador, eterIds, campeonId: targetInstanceId });
+  return null;
+}
+function reagruparEter(s, ctx, jugador) {
+  const p = s.players[jugador];
+  if (p.eterPagado.length === 0) return;
+  const reagrupados = p.eterPagado;
+  for (const id of reagrupados) delete s.instances[id]?.opcionUsadaEsteTurno;
+  p.eterReserva.push(...reagrupados);
+  p.eterPagado = [];
+  ctx.emit({ type: "eter_reagrupado", jugador, eterIds: reagrupados });
+}
+
+// src/online/game/zones.ts
+var SLOTS_CAMPEONES = 5;
+var SLOTS_MISTICAS_TACTICAS = 3;
+var SLOTS_ARCANAS_COMBATE = 3;
+var SLOTS_VINCULOS = 6;
+var LIMITE_MANO = 6;
+var LETRAS_CAMPEONES = ["B", "C", "D", "E", "F"];
+var LETRAS_MISTICAS = ["A", "B", "C"];
+var LETRAS_ARCANAS = ["D", "E", "F"];
+var LETRAS_VINCULOS = ["A", "B", "C", "D", "E", "F"];
+function limiteSlots(grupo) {
+  switch (grupo) {
+    case "campeones":
+      return SLOTS_CAMPEONES;
+    case "misticasTacticas":
+      return SLOTS_MISTICAS_TACTICAS;
+    case "arcanasCombate":
+      return SLOTS_ARCANAS_COMBATE;
+    case "vinculos":
+      return SLOTS_VINCULOS;
+  }
+}
+function slotAZona(grupo, slot) {
+  if (slot < 0) return null;
+  switch (grupo) {
+    case "campeones":
+      return slot < LETRAS_CAMPEONES.length ? `2${LETRAS_CAMPEONES[slot]}` : null;
+    case "misticasTacticas":
+      return slot < LETRAS_MISTICAS.length ? `3${LETRAS_MISTICAS[slot]}` : null;
+    case "arcanasCombate":
+      return slot < LETRAS_ARCANAS.length ? `3${LETRAS_ARCANAS[slot]}` : null;
+    case "vinculos":
+      return slot < LETRAS_VINCULOS.length ? `4${LETRAS_VINCULOS[slot]}` : null;
+  }
+}
 
 // src/online/game/replacements.ts
 function moverAlCementerio(s, ctx, cardInstanceId) {
@@ -3468,6 +3568,10 @@ function moverAlCementerio(s, ctx, cardInstanceId) {
     }
     const manoIdx = p2.mano.indexOf(cardInstanceId);
     if (manoIdx !== -1) p2.mano.splice(manoIdx, 1);
+  }
+  delete inst.condicionHabilitada;
+  if (s.cadena?.pila.includes(cardInstanceId)) {
+    s.cadena.pila = s.cadena.pila.filter((id) => id !== cardInstanceId);
   }
   liberarEterBloqueadoCore(s, ctx, cardInstanceId, "1A");
   const p = s.players[inst.owner];
@@ -3502,8 +3606,10 @@ function liberarArtefactosEquipados(s, ctx, campeonId) {
     const other = s.instances[otherId];
     if (other && other.equipadoA === campeonId) {
       other.equipadoA = void 0;
+      const arcIdx = s.players[other.owner].campo.arcanasCombate.indexOf(otherId);
+      const zonaSalida = arcIdx !== -1 ? slotAZona("arcanasCombate", arcIdx) ?? "3D" : "3A";
       moverAlCementerio(s, ctx, otherId);
-      ctx.emit({ type: "carta_salida_de_zona", cardInstanceId: otherId, zona: "3A", jugador: other.owner });
+      ctx.emit({ type: "carta_salida_de_zona", cardInstanceId: otherId, zona: zonaSalida, jugador: other.owner });
       ctx.emit({ type: "carta_entrada_a_zona", cardInstanceId: otherId, zona: "2G", jugador: other.owner, bocaArriba: true });
     }
   }
@@ -3524,21 +3630,6 @@ function liberarEterBloqueadoCore(s, ctx, cardInstanceId, destino) {
 }
 function liberarEterBloqueado(s, ctx, cardInstanceId, destino) {
   liberarEterBloqueadoCore(s, ctx, cardInstanceId, destino);
-}
-function verificarDerrotaVinculos(s, ctx, owner) {
-  if (s.fase === "terminada") return;
-  const vivos = s.players[owner].vinculos.filter((id) => {
-    if (!id) return false;
-    const inst = s.instances[id];
-    return !!inst && !inst.bocaArriba;
-  }).length;
-  if (vivos === 0) {
-    const ganador = owner === "A" ? "B" : "A";
-    s.fase = "terminada";
-    s.ganador = ganador;
-    s.motivo = "vinculos";
-    ctx.emit({ type: "partida_terminada", ganador, motivo: "vinculos" });
-  }
 }
 function buscarFuentePreventDestroy(s, dueno) {
   const p = s.players[dueno];
@@ -3569,7 +3660,6 @@ function ejecutarDestruccionVinculo(s, ctx, cardInstanceId, causa) {
   inst.bocaArriba = true;
   dispararTrigger(s, ctx, "al-ser-destruido-vinculo", inst.owner, [cardInstanceId]);
   ctx.emit({ type: "destruccion", cardInstanceId, jugador: inst.owner, causa });
-  verificarDerrotaVinculos(s, ctx, inst.owner);
   return true;
 }
 function validarResponderPrevenicion(state, jugador) {
@@ -3639,6 +3729,2076 @@ function destruirCarta(s, ctx, cardInstanceId, causa) {
   return true;
 }
 
+// src/online/game/effectRegistry.ts
+function generarId(s) {
+  const count = s.efectosPendientes?.length ?? 0;
+  return `ep-${count + 1}`;
+}
+function registrarEfectoPendiente(s, params) {
+  if (!s.efectosPendientes) s.efectosPendientes = [];
+  const id = generarId(s);
+  const efecto = {
+    id,
+    fuente: params.fuente,
+    owner: params.owner,
+    triggerFase: params.triggerFase,
+    triggerOwner: params.triggerOwner ?? "due\xF1o",
+    accion: params.accion,
+    duracion: params.duracion
+  };
+  s.efectosPendientes.push(efecto);
+  return id;
+}
+function resolverFaseEfectos(s, ctx, fase, jugadorActual) {
+  if (!s.efectosPendientes || s.efectosPendientes.length === 0) return;
+  const aResolver = s.efectosPendientes.filter((ep) => {
+    if (ep.triggerFase !== fase) return false;
+    if (ep.triggerOwner === "due\xF1o" && ep.owner !== jugadorActual) return false;
+    if (ep.triggerOwner === "rival" && ep.owner === jugadorActual) return false;
+    if (ep.resuelto) return false;
+    return true;
+  });
+  for (const ep of aResolver) {
+    ejecutarAccionEfecto(s, ctx, ep);
+    ep.resuelto = true;
+  }
+  purgarEfectosPendientes(s, fase, jugadorActual);
+}
+function ejecutarAccionEfecto(s, ctx, ep) {
+  const accion = ep.accion;
+  switch (accion.tipo) {
+    case "modificar": {
+      const inst = s.instances[accion.objetivo];
+      if (!inst) return;
+      if (!inst.modificadores) inst.modificadores = [];
+      inst.modificadores.push({
+        stat: accion.stat,
+        valor: accion.delta,
+        expira: duracionAExpira(ep.duracion),
+        turnosRestantes: ep.duracion.tipo === "turnos" ? ep.duracion.restantes : void 0
+      });
+      break;
+    }
+    case "liberar-eter": {
+      const inst = s.instances[ep.fuente];
+      if (!inst?.eterBloqueado || inst.eterBloqueado.length === 0) break;
+      const eteresVivos = accion.eterIds.filter((id) => inst.eterBloqueado.includes(id));
+      if (eteresVivos.length === 0) break;
+      quitarEteres(s, ep.fuente, eteresVivos);
+      const grupos = liberarEterA(s, eteresVivos, "2A", ep.owner);
+      for (const [pagador, ids] of Object.entries(grupos)) {
+        ctx.emit({ type: "eter_reagrupado", jugador: pagador, eterIds: ids });
+      }
+      evaluarFinSteal(s, ctx, ep.fuente);
+      break;
+    }
+    case "destruir": {
+      const inst = s.instances[accion.objetivo];
+      if (!inst) return;
+      const p = s.players[inst.owner];
+      const slotIdx = p.campo.campeones.indexOf(accion.objetivo);
+      if (slotIdx !== -1) {
+        p.campo.campeones[slotIdx] = null;
+        ctx.emit({ type: "carta_salida_de_zona", cardInstanceId: accion.objetivo, zona: `2${String.fromCharCode(66 + slotIdx)}`, jugador: inst.owner });
+        enviarAlCementerio(s, ctx, accion.objetivo);
+        ctx.emit({ type: "carta_entrada_a_zona", cardInstanceId: accion.objetivo, zona: "2G", jugador: inst.owner, bocaArriba: true });
+      }
+      break;
+    }
+    case "agotar": {
+      const inst = s.instances[accion.objetivo];
+      if (inst) inst.agotado = true;
+      break;
+    }
+    case "robar-cartas": {
+      for (let i = 0; i < accion.cantidad; i++) {
+        if (s.fase === "terminada") break;
+        if (!robarCarta(s, ctx, ep.owner)) break;
+      }
+      break;
+    }
+    case "keyword-temporal": {
+      const inst = s.instances[accion.objetivo];
+      if (!inst) return;
+      if (!inst.keywordsTemporales) inst.keywordsTemporales = [];
+      if (!inst.keywordsTemporales.includes(accion.keyword)) {
+        inst.keywordsTemporales.push(accion.keyword);
+      }
+      break;
+    }
+    case "enviar-cementerio": {
+      const inst = s.instances[accion.objetivo];
+      if (!inst) break;
+      const p = s.players[inst.owner];
+      const slotMT = p.campo.misticasTacticas.indexOf(accion.objetivo);
+      if (slotMT !== -1) {
+        const zona = `3${String.fromCharCode(65 + slotMT)}`;
+        ctx.emit({ type: "carta_salida_de_zona", cardInstanceId: accion.objetivo, zona, jugador: inst.owner });
+        p.campo.misticasTacticas[slotMT] = null;
+        p.cementerio.push(accion.objetivo);
+        ctx.emit({ type: "carta_entrada_a_zona", cardInstanceId: accion.objetivo, zona: "2G", jugador: inst.owner, bocaArriba: true });
+        break;
+      }
+      const slotAC = p.campo.arcanasCombate.indexOf(accion.objetivo);
+      if (slotAC !== -1) {
+        const zona = `3${String.fromCharCode(68 + slotAC)}`;
+        ctx.emit({ type: "carta_salida_de_zona", cardInstanceId: accion.objetivo, zona, jugador: inst.owner });
+        p.campo.arcanasCombate[slotAC] = null;
+        p.cementerio.push(accion.objetivo);
+        ctx.emit({ type: "carta_entrada_a_zona", cardInstanceId: accion.objetivo, zona: "2G", jugador: inst.owner, bocaArriba: true });
+        break;
+      }
+      const slotCP = p.campo.campeones.indexOf(accion.objetivo);
+      if (slotCP !== -1) {
+        const zona = `2${String.fromCharCode(66 + slotCP)}`;
+        ctx.emit({ type: "carta_salida_de_zona", cardInstanceId: accion.objetivo, zona, jugador: inst.owner });
+        p.campo.campeones[slotCP] = null;
+        enviarAlCementerio(s, ctx, accion.objetivo);
+        ctx.emit({ type: "carta_entrada_a_zona", cardInstanceId: accion.objetivo, zona: "2G", jugador: inst.owner, bocaArriba: true });
+      }
+      break;
+    }
+  }
+}
+function purgarEfectosPendientes(s, fase, jugadorActual) {
+  if (!s.efectosPendientes) return;
+  s.efectosPendientes = s.efectosPendientes.filter((ep) => {
+    if (ep.resuelto && ep.duracion.tipo !== "permanente") {
+      if (ep.duracion.tipo === "turnos" && ep.duracion.restantes !== void 0 && ep.duracion.restantes > 0) {
+        return true;
+      }
+      return false;
+    }
+    if (ep.duracion.tipo === "turnos" && fase === "ocaso" && ep.owner === jugadorActual) {
+      if (ep.duracion.restantes !== void 0) {
+        ep.duracion.restantes -= 1;
+        if (ep.duracion.restantes <= 0) return false;
+      }
+      return true;
+    }
+    if (ep.duracion.tipo === "hasta-fase" && ep.duracion.hastaFase === fase) {
+      if (ep.duracion.ownerTrigger === "due\xF1o" && ep.owner === jugadorActual) return false;
+      if (ep.duracion.ownerTrigger === "rival" && ep.owner !== jugadorActual) return false;
+      if (ep.duracion.ownerTrigger === "cualquiera") return false;
+    }
+    return true;
+  });
+}
+function duracionAExpira(duracion) {
+  switch (duracion.tipo) {
+    case "turnos":
+      return "ocaso";
+    case "hasta-fase":
+      return duracion.hastaFase === "alba" ? "alba-due\xF1o" : "ocaso";
+    case "permanente":
+      return "permanente";
+  }
+}
+function hastaAlba() {
+  return { tipo: "hasta-fase", hastaFase: "alba", ownerTrigger: "due\xF1o" };
+}
+
+// src/online/game/triggers.ts
+var TRIGGERS_APILABLES = ["al-invocar", "al-atacar", "al-jugar-mistica", "al-activar-habilidad"];
+var MAX_PROFUNDIDAD_TRIGGERS = 8;
+function esTriggerApilable(trigger) {
+  return TRIGGERS_APILABLES.includes(trigger);
+}
+function construirTriggers(s, trigger, jugador, ids, payload) {
+  if (!esTriggerApilable(trigger)) return [];
+  const datos = {};
+  if (payload?.killerId) datos.killerId = payload.killerId;
+  if (payload?.victimaId) datos.victimaId = payload.victimaId;
+  if (payload?.contextoUso) datos.contextoUso = payload.contextoUso;
+  return triggersQueMatchean(s, trigger, jugador, ids).map((m) => ({
+    jugador,
+    cardInstanceId: m.inst.cardInstanceId,
+    trigger,
+    efectoIdx: m.efectoIdx,
+    ...Object.keys(datos).length > 0 ? { payload: { ...datos } } : {}
+  }));
+}
+function ordenarTriggers(s, lista) {
+  return [...lista.filter((t) => t.jugador === s.turno), ...lista.filter((t) => t.jugador !== s.turno)];
+}
+function matchDe(s, t, alResolver = false) {
+  return triggersQueMatchean(s, t.trigger, t.jugador, [t.cardInstanceId], alResolver ? { evaluarCondicion: false } : void 0).find((m) => m.efectoIdx === t.efectoIdx);
+}
+function payloadBase(t) {
+  return {
+    jugador: t.jugador,
+    fromTrigger: true,
+    ...t.payload?.killerId ? { killerId: t.payload.killerId } : {},
+    ...t.payload?.victimaId ? { victimaId: t.payload.victimaId } : {}
+  };
+}
+function armarTriggers(s, ctx, lista) {
+  const armados = [];
+  for (const t of ordenarTriggers(s, lista)) {
+    if (!esTriggerApilable(t.trigger)) continue;
+    const inst = s.instances[t.cardInstanceId];
+    const match = matchDe(s, t);
+    if (!inst || !match) continue;
+    ctx.emit({ type: "trigger_apilado", jugador: t.jugador, cardInstanceId: t.cardInstanceId, trigger: t.trigger, efectoIdx: t.efectoIdx });
+    interpretEffect(s, ctx, inst, match.efecto, {
+      ...payloadBase(t),
+      cobrarCosto: false,
+      declararOpener: { efectoIdx: t.efectoIdx },
+      ...t.payload?.contextoUso ? { contextoUso: t.payload.contextoUso } : {}
+    });
+    armados.push({
+      jugador: t.jugador,
+      cardInstanceId: t.cardInstanceId,
+      trigger: t.trigger,
+      efectoIdx: t.efectoIdx,
+      ...t.payload ? { payload: { ...t.payload } } : {}
+    });
+  }
+  return armados;
+}
+function registrarObjetivoTrigger(s, pendiente, objetivoId) {
+  const t = s.declaracionEnEleccion?.triggers?.find(
+    (x) => x.objetivoId === void 0 && x.cardInstanceId === pendiente.instId && x.efectoIdx === pendiente.opener?.efectoIdx
+  );
+  if (!t) return false;
+  if (s.instances[objetivoId]) t.objetivoId = objetivoId;
+  return true;
+}
+function apilarTriggers(s, ctx, lista, previos = marcarInicioAccion(s)) {
+  const validas = lista.filter((t) => esTriggerApilable(t.trigger) && !!s.instances[t.cardInstanceId]);
+  if (validas.length === 0) return;
+  if ((s.profundidadTriggers ?? 0) > 0) {
+    for (const t of [...ordenarTriggers(s, validas)].reverse()) {
+      ctx.emit({ type: "trigger_apilado", jugador: t.jugador, cardInstanceId: t.cardInstanceId, trigger: t.trigger, efectoIdx: t.efectoIdx });
+      resolverTrigger(s, ctx, t, "inmediato");
+    }
+    return;
+  }
+  const triggers = armarTriggers(s, ctx, validas);
+  if (triggers.length === 0) return;
+  declararVentana(s, ctx, { tipo: "triggers", jugador: s.turno, triggers }, previos);
+}
+function asentarTriggers(s, triggers) {
+  const cadena = s.cadena;
+  if (!cadena || !triggers || triggers.length === 0) return;
+  const sobre = cadena.pila.length > 0 ? cadena.pila[cadena.pila.length - 1] : void 0;
+  cadena.triggers = [...cadena.triggers ?? [], ...triggers.map((t) => sobre ? { ...t, sobre } : { ...t })];
+  cadena.pasesConsecutivos = 0;
+}
+function resolverTriggersInmediatos(s, ctx, triggers) {
+  for (const t of [...triggers ?? []].reverse()) resolverTrigger(s, ctx, t, "elegido");
+}
+function abrirVentanaTriggers(s, ctx, declaracion) {
+  const triggers = declaracion.triggers ?? [];
+  if (triggers.length === 0) return;
+  if (s.cadena) {
+    asentarTriggers(s, triggers);
+    return;
+  }
+  const ultimo = triggers[triggers.length - 1];
+  const cardId = s.instances[ultimo.cardInstanceId]?.cardId;
+  const descripcion = (cardId ? getCardMeta(cardId)?.name : null) ?? ultimo.cardInstanceId;
+  if (abrirCadenaGlobal(s, declaracion.jugador, { cardInstanceId: ultimo.cardInstanceId, descripcion }, true)) {
+    asentarTriggers(s, triggers);
+    return;
+  }
+  resolverTriggersInmediatos(s, ctx, triggers);
+}
+function ordenResolucion(cadena) {
+  const triggers = cadena.triggers ?? [];
+  const abajoArriba = triggers.filter((t) => !t.sobre || !cadena.pila.includes(t.sobre)).map((trigger) => ({ trigger }));
+  for (const id of cadena.pila) {
+    abajoArriba.push({ respuesta: id });
+    for (const t of triggers) if (t.sobre === id) abajoArriba.push({ trigger: t });
+  }
+  return abajoArriba.reverse();
+}
+function enResolucion(s, fn) {
+  s.profundidadTriggers = (s.profundidadTriggers ?? 0) + 1;
+  try {
+    fn();
+  } finally {
+    const n = (s.profundidadTriggers ?? 1) - 1;
+    if (n <= 0) delete s.profundidadTriggers;
+    else s.profundidadTriggers = n;
+  }
+}
+function fuenteEnJuego(s, t) {
+  const id = t.cardInstanceId;
+  if (instanciasEnCampo(s, t.jugador).includes(id)) return true;
+  const cadena = s.cadena;
+  return !!cadena && cadena.pila.includes(id);
+}
+function resolverTrigger(s, ctx, t, modo = "elegido") {
+  if (s.fase === "terminada") return;
+  if ((s.profundidadTriggers ?? 0) >= MAX_PROFUNDIDAD_TRIGGERS) return;
+  const inst = s.instances[t.cardInstanceId];
+  if (!inst || !fuenteEnJuego(s, t)) return;
+  const match = matchDe(s, t, true);
+  if (!match) return;
+  const { efecto } = match;
+  const contextoUso = t.payload?.contextoUso;
+  enResolucion(s, () => {
+    if (modo === "inmediato") {
+      interpretEffect(s, ctx, inst, efecto, { ...payloadBase(t), cobrarCosto: true, ...contextoUso ? { contextoUso } : {} });
+      return;
+    }
+    if (t.objetivoId !== void 0) {
+      if (!canExecuteEffect(s, efecto.efecto, t.jugador)) return;
+      if (efecto.objetivo && efecto.objetivo.tipo !== "self") {
+        if (!resolveTargets(s, objetivoCompleto(efecto), t.jugador, t.cardInstanceId).includes(t.objetivoId)) return;
+      }
+      if (efecto.costo && !cobrarCostoEter(s, ctx, inst, efecto.costo, t.jugador)) return;
+      interpretEffect(s, ctx, inst, efecto, { ...payloadBase(t), sinEleccion: true, contextoUso: "objetivo-elegido", objetivoId: t.objetivoId });
+      return;
+    }
+    interpretEffect(s, ctx, inst, efecto, { ...payloadBase(t), cobrarCosto: true, sinEleccion: true, ...contextoUso ? { contextoUso } : {} });
+  });
+}
+
+// src/online/game/chain.ts
+function velocidadRequeridaDe(state) {
+  const cadena = cadenaActiva(state);
+  if (!cadena) return "normal";
+  const tope = cadena.pila.length > 0 ? cadena.pila[cadena.pila.length - 1] : cadena.efectoActual?.cardInstanceId;
+  return tope ? velocidadDe(state, tope) : "normal";
+}
+function puedeResponder(vel, requerida) {
+  if (requerida === "fugaz") return false;
+  if (requerida === "presteza") return vel === "presteza" || vel === "fugaz";
+  return true;
+}
+function motivoArcanaNoActivable(state, jugador, id) {
+  const inst = state.instances[id];
+  const meta = inst?.cardId ? getCardMeta(inst.cardId) : null;
+  if (!inst || !meta) return "instancia no encontrada";
+  if (!esArcana(meta)) return "no es una Arcana";
+  const p = state.players[jugador];
+  if (!p.campo.arcanasCombate.includes(id)) return "la Arcana no est\xE1 en el campo";
+  if (inst.bocaArriba) return "la Arcana ya est\xE1 boca arriba";
+  if (inst.entradaEsteTurno) return "la Arcana no se puede activar el turno en que fue colocada (\xA75.4)";
+  const condicion = "condicion" in meta ? meta.condicion : void 0;
+  if (condicionEsCandado(condicion)) {
+    if (!inst.condicionHabilitada) return "la condici\xF3n de la Arcana no se cumpli\xF3 al inicio de su momento (Alba/Choque)";
+  } else {
+    const condError = condicionCumple(state, condicion, jugador);
+    if (condError) return condError;
+  }
+  if (esArtefactoEquipable(meta) && !p.campo.campeones.some((c) => c !== null)) {
+    return "no puedes activar un ARTEFACTO sin un Campe\xF3n en tu campo";
+  }
+  return null;
+}
+function motivoNoResponde(state, jugador, id, origen) {
+  const cadena = cadenaActiva(state);
+  const inst = state.instances[id];
+  const meta = inst?.cardId ? getCardMeta(inst.cardId) : null;
+  if (!inst || !meta) return "carta desconocida";
+  if (cadena && (cadena.pila.includes(id) || cadena.opener?.cardInstanceId === id)) return "la carta ya est\xE1 en la pila";
+  const p = state.players[jugador];
+  const vel = velocidadDe(state, id);
+  const requerida = velocidadRequeridaDe(state);
+  if (!puedeResponder(vel, requerida)) {
+    return requerida === "fugaz" ? "una jugada FUGAZ no se puede responder" : "una jugada PRESTEZA solo se responde con PRESTEZA o FUGAZ";
+  }
+  if (origen === "mano") {
+    if (!p.mano.includes(id)) return "la carta no est\xE1 en tu mano";
+    if (!esMistica(meta)) return "no es una M\xEDstica";
+    if (vel === "normal") return "solo cartas con PRESTEZA o FUGAZ juegan desde la mano como respuesta";
+    if (esPermanenteEnMesa(meta)) {
+      if (!p.campo.misticasTacticas.includes(null)) return "no tienes un slot libre para una carta que permanece en mesa";
+      if (esArtefactoEquipable(meta) && !p.campo.campeones.some((c) => c !== null)) {
+        return "no puedes jugar un ARTEFACTO sin un Campe\xF3n en tu campo";
+      }
+    }
+    if (etersParaPagar(state, jugador, meta.id) === null) return "no puedes pagar su coste";
+    return null;
+  }
+  if (esMistica(meta)) return "las M\xEDsticas solo se juegan desde la mano: una M\xEDstica en el campo no responde (\xA75.3)";
+  if (esArcana(meta)) {
+    const motivo = motivoArcanaNoActivable(state, jugador, id);
+    if (motivo) return motivo;
+    return etersParaPagar(state, jugador, meta.id) === null ? "no puedes pagar su coste" : null;
+  }
+  if (meta.type === "Campe\xF3n" && "efectos" in meta && meta.efectos?.some((e) => e.tipo === "disparo")) {
+    return inst.agotado ? "el Campe\xF3n est\xE1 agotado" : null;
+  }
+  return "esta carta no puede responder";
+}
+function respondiblesDe(state, playerId) {
+  const p = state.players[playerId];
+  const enCampo = [...p.campo.misticasTacticas, ...p.campo.arcanasCombate, ...p.campo.campeones];
+  return enCampo.filter((id) => !!id && motivoNoResponde(state, playerId, id, "campo") === null);
+}
+function abrirCadena(s, primerRespondedor) {
+  const combate = s.combate;
+  if (!combate) return false;
+  if (respondiblesDe(s, primerRespondedor).length === 0 && respuestasDeMano(s, primerRespondedor).length === 0) return false;
+  s.cadena = { origen: "combate", pila: [], prioridad: primerRespondedor, pasesConsecutivos: 0, faseAbierta: s.fase };
+  return true;
+}
+function respuestasDeMano(state, playerId) {
+  return state.players[playerId].mano.filter((id) => motivoNoResponde(state, playerId, id, "mano") === null);
+}
+function abrirCadenaGlobal(s, jugadorActivo, efecto, incluirMano = false) {
+  const vel = velocidadDe(s, efecto.cardInstanceId);
+  if (vel === "fugaz") return false;
+  const rival = jugadorActivo === "A" ? "B" : "A";
+  s.cadena = {
+    origen: "global",
+    pila: [],
+    prioridad: rival,
+    // el rival responde primero
+    pasesConsecutivos: 0,
+    faseAbierta: s.fase,
+    efectoActual: { jugador: jugadorActivo, ...efecto },
+    velocidadActual: vel
+  };
+  const conCampo = respondiblesDe(s, rival).length > 0;
+  const conMano = incluirMano && respuestasDeMano(s, rival).length > 0;
+  if (!conCampo && !conMano) {
+    s.cadena = void 0;
+    return false;
+  }
+  return true;
+}
+function cadenaActiva(s) {
+  return s.cadena;
+}
+function validarResponderCadena(state, cardInstanceId, eterIds) {
+  const cadena = cadenaActiva(state);
+  if (!cadena) return "no hay cadena abierta";
+  if (!respondiblesDe(state, cadena.prioridad).includes(cardInstanceId)) {
+    return "esa carta no puede responder ahora";
+  }
+  const inst = state.instances[cardInstanceId];
+  const meta = inst?.cardId ? getCardMeta(inst.cardId) : null;
+  if (meta && esArcana(meta) && eterIds !== void 0 && meta.stats.cost > 0) {
+    const pago = validarPago(state, cadena.prioridad, eterIds, meta.id);
+    if (!pago.ok) return pago.error ?? "pago inv\xE1lido";
+  }
+  return null;
+}
+function validarPasarPrioridad(state) {
+  if (!cadenaActiva(state)) return "no hay cadena abierta";
+  return null;
+}
+function validarJugarRespuesta(state, cardInstanceId, eterIds) {
+  const cadena = cadenaActiva(state);
+  if (!cadena) return "no hay cadena abierta";
+  const jugador = cadena.prioridad;
+  const motivo = motivoNoResponde(state, jugador, cardInstanceId, "mano");
+  if (motivo) return motivo;
+  const meta = getCardMeta(state.instances[cardInstanceId].cardId);
+  if ((meta.stats.cost ?? 0) > 0) {
+    const pago = validarPago(state, jugador, eterIds, meta.id);
+    if (!pago.ok) return pago.error ?? "pago inv\xE1lido";
+  }
+  return null;
+}
+function ejecutarJugarRespuesta(s, cardInstanceId, eterIds, ctx) {
+  const cadena = cadenaActiva(s);
+  if (!cadena) return;
+  const jugador = cadena.prioridad;
+  const p = s.players[jugador];
+  const inst = s.instances[cardInstanceId];
+  if (!inst?.cardId) return;
+  const previos = marcarInicioAccion(s);
+  const contextoUso = { tipo: "jugar", cardInstanceId };
+  aplicarPago(s, ctx, jugador, eterIds, inst.cardId, contextoUso);
+  const manoIdx = p.mano.indexOf(cardInstanceId);
+  if (manoIdx !== -1) p.mano.splice(manoIdx, 1);
+  ctx.emit({ type: "carta_salida_de_zona", cardInstanceId, zona: "mano", jugador });
+  const meta = getCardMeta(inst.cardId);
+  if (meta && esPermanenteEnMesa(meta)) {
+    const slot = p.campo.misticasTacticas.indexOf(null);
+    p.campo.misticasTacticas[slot] = cardInstanceId;
+    inst.entradaEsteTurno = true;
+    ctx.emit({ type: "carta_entrada_a_zona", cardInstanceId, zona: slotAZona("misticasTacticas", slot) ?? "3A", jugador, bocaArriba: true });
+    ctx.emit({ type: "carta_invocada", cardInstanceId, tipo: "M\xEDstica", slot });
+  }
+  declararRespuesta(s, ctx, { jugador, cardInstanceId, origen: "mano" }, previos);
+}
+function ejecutarResponderCadena(s, cardInstanceId, ctx, eterIds) {
+  const cadena = cadenaActiva(s);
+  if (!cadena) return;
+  const jugador = cadena.prioridad;
+  const previos = marcarInicioAccion(s);
+  const inst = s.instances[cardInstanceId];
+  const meta = inst?.cardId ? getCardMeta(inst.cardId) : null;
+  if (inst && meta && esArcana(meta)) {
+    const pagos = eterIds ?? etersParaPagar(s, jugador, meta.id) ?? [];
+    if (pagos.length > 0) aplicarPago(s, ctx, jugador, pagos, meta.id, { tipo: "habilidad", cardInstanceId });
+  }
+  if (meta && esArcana(meta)) {
+    inst.bocaArriba = true;
+    const slot = s.players[jugador].campo.arcanasCombate.indexOf(cardInstanceId);
+    ctx.emit({ type: "carta_activada", cardInstanceId, jugador, slot });
+  }
+  if (meta && meta.type === "Campe\xF3n" && "efectos" in meta && meta.efectos?.some((e) => e.tipo === "disparo")) {
+    inst.bocaArriba = true;
+  }
+  declararRespuesta(s, ctx, { jugador, cardInstanceId, origen: "campo" }, previos);
+}
+function ejecutarPasarPrioridad(s, ctx) {
+  const cadena = cadenaActiva(s);
+  if (!cadena) return;
+  const jugador = cadena.prioridad;
+  cadena.pasesConsecutivos++;
+  ctx.emit({ type: "prioridad_pasada", jugador });
+  if (cadena.pasesConsecutivos >= 2) {
+    cerrarCadena(s, ctx);
+  } else {
+    cadena.prioridad = jugador === "A" ? "B" : "A";
+  }
+}
+function hechizosDeRespuesta(s, id, origen) {
+  const meta = s.instances[id]?.cardId ? getCardMeta(s.instances[id].cardId) : null;
+  const aportaHechizos = !!meta && (esArcana(meta) || esMistica(meta) && origen === "mano");
+  return aportaHechizos ? hechizosDelOpener(s, id).hechizos : [];
+}
+function declararRespuesta(s, ctx, respuesta, previos) {
+  const { jugador, cardInstanceId, origen } = respuesta;
+  const inst = s.instances[cardInstanceId];
+  if (inst) {
+    const meta = inst.cardId ? getCardMeta(inst.cardId) : null;
+    if (meta && esArtefactoEquipable(meta) && !inst.equipadoA) {
+      const opciones = s.players[jugador].campo.campeones.filter((c) => c !== null);
+      if (opciones.length > 0) {
+        s.objetivosPendientes = [...s.objetivosPendientes ?? [], { jugador, instId: cardInstanceId, trigger: "equipar", opciones, equipar: true }];
+      }
+    }
+    for (const { efecto, efectoIdx } of hechizosDeRespuesta(s, cardInstanceId, origen)) {
+      interpretEffect(s, ctx, inst, efecto, { jugador, fromTrigger: true, declararOpener: { efectoIdx } });
+    }
+    dispararTrigger(s, ctx, "al-resolver-cadena", jugador, [cardInstanceId], { declarar: true, cobrarCosto: false });
+  }
+  declararVentana(s, ctx, { tipo: "respuesta", jugador, respuesta: { jugador, cardInstanceId, origen } }, previos);
+}
+function asentarRespuesta(s, ctx, respuesta, triggers) {
+  const cadena = cadenaActiva(s);
+  if (!cadena) return;
+  const { jugador, cardInstanceId, origen, objetivos } = respuesta;
+  cadena.pila.push(cardInstanceId);
+  cadena.respuestas = { ...cadena.respuestas, [cardInstanceId]: { jugador, origen, ...objetivos ? { objetivos } : {} } };
+  cadena.pasesConsecutivos = 0;
+  asentarTriggers(s, triggers);
+  cadena.velocidadActual = velocidadDe(s, cardInstanceId);
+  ctx.emit({ type: "respuesta_encadenada", jugador, cardInstanceId });
+  cadena.prioridad = jugador === "A" ? "B" : "A";
+  if (cadena.velocidadActual === "fugaz") cerrarCadena(s, ctx);
+}
+function equiparComoRespuesta(s, ctx, pendiente, campeonId) {
+  const inst = s.instances[pendiente.instId];
+  if (!inst || !s.instances[campeonId]) return;
+  inst.equipadoA = campeonId;
+  ctx.emit({ type: "carta_activada", cardInstanceId: pendiente.instId, jugador: pendiente.jugador, slot: -1 });
+}
+function cerrarCadena(s, ctx) {
+  const origen = s.cadena?.origen;
+  resolverPila(s, ctx);
+  if (origen === "combate" && s.combate) continuarCombateTrasCadena(s, ctx);
+}
+function sinReceptor(s, ctx, id) {
+  const inst = s.instances[id];
+  if (!inst) return;
+  for (const grupo of ["misticasTacticas", "arcanasCombate"]) {
+    const idx = s.players[inst.owner].campo[grupo].indexOf(id);
+    if (idx === -1) continue;
+    ctx.emit({ type: "carta_salida_de_zona", cardInstanceId: id, zona: slotAZona(grupo, idx) ?? "3A", jugador: inst.owner });
+    enviarAlCementerio(s, ctx, id);
+    ctx.emit({ type: "carta_entrada_a_zona", cardInstanceId: id, zona: "2G", jugador: inst.owner, bocaArriba: true });
+    return;
+  }
+}
+function resolverRespuesta(s, ctx, id, datos) {
+  const inst = s.instances[id];
+  const meta = inst?.cardId ? getCardMeta(inst.cardId) : null;
+  if (!inst || !meta) return;
+  const p = s.players[inst.owner];
+  if (esArtefactoEquipable(meta) && !inst.equipadoA) {
+    sinReceptor(s, ctx, id);
+    return;
+  }
+  const enCampo = p.campo.campeones.includes(id) || p.campo.misticasTacticas.includes(id) || p.campo.arcanasCombate.includes(id);
+  const origen = datos?.origen ?? (enCampo ? "campo" : "mano");
+  const objetivos = datos?.objetivos;
+  const jugador = datos?.jugador ?? inst.owner;
+  const opciones = { jugador, fromTrigger: true, sinEleccion: true, revalidarObjetivo: true };
+  const hechizos = () => {
+    for (const { efecto, efectoIdx } of hechizosDeRespuesta(s, id, origen)) {
+      const objetivoId = objetivos?.[efectoIdx];
+      interpretEffect(s, ctx, inst, efecto, { ...opciones, contextoUso: objetivoId ? "objetivo-elegido" : void 0, objetivoId });
+    }
+  };
+  const trigger = () => dispararTrigger(s, ctx, "al-resolver-cadena", jugador, [id], { sinEleccion: true, revalidarObjetivo: true, objetivosElegidos: objetivos });
+  if (esMistica(meta) && origen === "mano") {
+    hechizos();
+    trigger();
+    if (esPermanenteEnMesa(meta)) return;
+    enviarAlCementerio(s, ctx, id);
+    ctx.emit({ type: "carta_entrada_a_zona", cardInstanceId: id, zona: "2G", jugador: inst.owner, bocaArriba: true });
+    return;
+  }
+  if (esArcana(meta)) {
+    hechizos();
+    if (esPermanenteEnMesa(meta)) {
+      trigger();
+      return;
+    }
+    const idx = p.campo.arcanasCombate.indexOf(id);
+    if (idx !== -1) {
+      const zona = slotAZona("arcanasCombate", idx) ?? "3D";
+      ctx.emit({ type: "carta_salida_de_zona", cardInstanceId: id, zona, jugador: inst.owner });
+      enviarAlCementerio(s, ctx, id);
+      ctx.emit({ type: "carta_entrada_a_zona", cardInstanceId: id, zona: "2G", jugador: inst.owner, bocaArriba: true });
+    }
+    trigger();
+    return;
+  }
+  trigger();
+}
+function resolverPila(s, ctx) {
+  const cadena = s.cadena;
+  if (!cadena) return;
+  enResolucion(s, () => {
+    for (const paso of ordenResolucion(cadena)) {
+      if ("trigger" in paso) {
+        resolverTrigger(s, ctx, paso.trigger);
+        continue;
+      }
+      const id = paso.respuesta;
+      if (!cadena.pila.includes(id)) continue;
+      resolverRespuesta(s, ctx, id, cadena.respuestas?.[id]);
+    }
+    if (cadena.opener) resolverOpener(s, ctx, cadena.opener);
+  });
+  s.cadena = void 0;
+}
+function hechizosDelOpener(s, cardInstanceId) {
+  const inst = s.instances[cardInstanceId];
+  const meta = inst?.cardId ? getCardMeta(inst.cardId) : null;
+  const res = [];
+  if (!inst || !meta || !("efectos" in meta) || !meta.efectos) return { inst, meta, hechizos: res };
+  meta.efectos.forEach((efecto, efectoIdx) => {
+    if (efecto.tipo === "hechizo" && !efecto.trigger && efecto.efecto) res.push({ efecto, efectoIdx });
+  });
+  return { inst, meta, hechizos: res };
+}
+function marcarInicioAccion(s) {
+  return new Set(s.objetivosPendientes ?? []);
+}
+function reclamarPendientes(s, previos) {
+  const cola = s.objetivosPendientes ?? [];
+  const nuevos = cola.filter((pp) => !previos.has(pp));
+  if (nuevos.length === 0) return 0;
+  s.objetivosPendientes = [...nuevos, ...cola.filter((pp) => previos.has(pp))];
+  return nuevos.length;
+}
+function declararVentana(s, ctx, declaracion, previos) {
+  const pendientes = reclamarPendientes(s, previos);
+  if (pendientes > 0) {
+    s.declaracionEnEleccion = { ...declaracion, pendientes };
+    return;
+  }
+  abrirVentana(s, ctx, declaracion);
+}
+function continuarDeclaracion(s, ctx, previos) {
+  const declaracion = s.declaracionEnEleccion;
+  if (!declaracion) return;
+  declaracion.pendientes += reclamarPendientes(s, previos) - 1;
+  if (declaracion.pendientes > 0) return;
+  delete s.declaracionEnEleccion;
+  if (s.fase === "terminada") return;
+  abrirVentana(s, ctx, declaracion);
+}
+function abrirVentana(s, ctx, declaracion) {
+  const triggers = declaracion.triggers;
+  if (declaracion.tipo === "opener") {
+    abrirOpener(s, ctx, declaracion.opener, triggers);
+  } else if (declaracion.tipo === "ataque") {
+    if (triggers && triggers.length > 0 && s.combate) {
+      if (abrirCadena(s, rivalDe(s))) {
+        asentarTriggers(s, triggers);
+        return;
+      }
+      resolverTriggersInmediatos(s, ctx, triggers);
+    }
+    abrirVentanaAtaque(s, ctx);
+  } else if (declaracion.tipo === "respuesta") {
+    asentarRespuesta(s, ctx, declaracion.respuesta, triggers);
+  } else if (declaracion.tipo === "triggers") {
+    abrirVentanaTriggers(s, ctx, declaracion);
+  } else {
+    const id = declaracion.cardInstanceId;
+    const cardId = s.instances[id]?.cardId;
+    if (abrirCadenaGlobal(s, declaracion.jugador, { cardInstanceId: id, descripcion: (cardId ? getCardMeta(cardId)?.name : null) ?? id }, true)) {
+      asentarTriggers(s, triggers);
+    } else {
+      resolverTriggersInmediatos(s, ctx, triggers);
+    }
+  }
+}
+function declararOpener(s, ctx, opener, previos = marcarInicioAccion(s), triggers) {
+  if (opener.tipo !== "habilidad") {
+    const { inst, hechizos } = hechizosDelOpener(s, opener.cardInstanceId);
+    if (inst) {
+      for (const { efecto, efectoIdx } of hechizos) {
+        interpretEffect(s, ctx, inst, efecto, { jugador: opener.jugador, fromTrigger: true, declararOpener: { efectoIdx } });
+      }
+    }
+  }
+  const apilados = triggers && triggers.length > 0 ? armarTriggers(s, ctx, triggers) : void 0;
+  declararVentana(s, ctx, { tipo: "opener", jugador: opener.jugador, opener, ...apilados && apilados.length > 0 ? { triggers: apilados } : {} }, previos);
+}
+function registrarObjetivoOpener(s, pendiente, objetivoId) {
+  if (registrarObjetivoTrigger(s, pendiente, objetivoId)) return;
+  const destino = s.declaracionEnEleccion?.opener ?? s.declaracionEnEleccion?.respuesta;
+  if (!destino || !pendiente.opener) return;
+  if (s.instances[objetivoId]) destino.objetivos = { ...destino.objetivos, [pendiente.opener.efectoIdx]: objetivoId };
+}
+function abrirOpener(s, ctx, opener, triggers) {
+  const meta = s.instances[opener.cardInstanceId]?.cardId ? getCardMeta(s.instances[opener.cardInstanceId].cardId) : null;
+  const abierto = abrirCadenaGlobal(
+    s,
+    opener.jugador,
+    { cardInstanceId: opener.cardInstanceId, descripcion: meta?.name ?? opener.cardInstanceId },
+    true
+    // incluirMano: Místicas Presteza pagables del rival en mano también cuentan
+  );
+  if (abierto && s.cadena) {
+    s.cadena.opener = opener;
+    asentarTriggers(s, triggers);
+    return;
+  }
+  resolverTriggersInmediatos(s, ctx, triggers);
+  resolverOpener(s, ctx, opener);
+}
+function resolverOpener(s, ctx, opener) {
+  const inst = s.instances[opener.cardInstanceId];
+  const meta = inst?.cardId ? getCardMeta(inst.cardId) : null;
+  if (!inst || !meta) return;
+  const sinReceptorOpener = opener.tipo !== "habilidad" && esArtefactoEquipable(meta) && !inst.equipadoA;
+  if (sinReceptorOpener) {
+    sinReceptor(s, ctx, opener.cardInstanceId);
+    return;
+  }
+  if (!opener.negada) {
+    if (opener.tipo === "habilidad") {
+      const efecto = "efectos" in meta ? meta.efectos?.[opener.efectoIdx ?? -1] : void 0;
+      const objetivoId = opener.objetivos?.[opener.efectoIdx ?? -1];
+      if (efecto) {
+        interpretEffect(s, ctx, inst, efecto, {
+          jugador: opener.jugador,
+          contextoUso: objetivoId ? "objetivo-elegido" : void 0,
+          objetivoId
+        });
+      }
+    } else {
+      for (const { efecto, efectoIdx } of hechizosDelOpener(s, opener.cardInstanceId).hechizos) {
+        const objetivoId = opener.objetivos?.[efectoIdx];
+        interpretEffect(s, ctx, inst, efecto, {
+          jugador: opener.jugador,
+          fromTrigger: true,
+          contextoUso: objetivoId ? "objetivo-elegido" : void 0,
+          objetivoId
+        });
+      }
+    }
+  }
+  if (opener.tipo === "habilidad" || esPermanenteEnMesa(meta)) return;
+  const slots = opener.tipo === "mistica" ? s.players[opener.jugador].campo.misticasTacticas : s.players[opener.jugador].campo.arcanasCombate;
+  const slotIdx = slots.indexOf(opener.cardInstanceId);
+  if (slotIdx === -1) return;
+  const zonaSlot = slotAZona(opener.tipo === "mistica" ? "misticasTacticas" : "arcanasCombate", slotIdx) ?? (opener.tipo === "mistica" ? "3A" : "3D");
+  ctx.emit({ type: "carta_salida_de_zona", cardInstanceId: opener.cardInstanceId, zona: zonaSlot, jugador: opener.jugador });
+  enviarAlCementerio(s, ctx, opener.cardInstanceId);
+  ctx.emit({ type: "carta_entrada_a_zona", cardInstanceId: opener.cardInstanceId, zona: "2G", jugador: opener.jugador, bocaArriba: true });
+}
+
+// src/shared/rules/reglas.ts
+var REGLAS = {
+  /* ── partida ── */
+  primerTurnoSinAtaques: { etiqueta: "Nadie ataca en el primer turno del juego", manual: "\xA78.6", ambito: "partida", base: true },
+  /* ── jugador ── */
+  limiteMano: { etiqueta: "L\xEDmite de mano", manual: "\xA77.1, \xA78.5", ambito: "jugador", base: 6, min: 0 },
+  cartasPorAlba: { etiqueta: "Cartas que se roban en el Alba", manual: "\xA78.2", ambito: "jugador", base: 1, min: 0 },
+  rupturasPorTurno: { etiqueta: "V\xEDnculos que rompe la Ruptura por turno", manual: "\xA79.4", ambito: "jugador", base: 1, min: 0 },
+  atacarTrasRuptura: { etiqueta: "Se puede seguir atacando tras romper un V\xEDnculo", manual: "\xA79.4", ambito: "jugador", base: false },
+  derrotaPorVinculos: { etiqueta: "Pierde la partida al quedarse sin V\xEDnculos", manual: "\xA713", ambito: "jugador", base: true },
+  /* ── campeón ── */
+  agotadoPuedeBloquear: { etiqueta: "Un Campe\xF3n agotado puede bloquear", manual: "\xA79.3", ambito: "campeon", base: false },
+  invocacionCansada: { etiqueta: "No ataca el turno en que es invocado", manual: "\xA79.2", ambito: "campeon", base: true },
+  atacarAgota: { etiqueta: "Atacar agota al Campe\xF3n", manual: "\xA79.2", ambito: "campeon", base: true },
+  disparoAgota: { etiqueta: "Un Disparo con \xC9ter pagado agota al Campe\xF3n", manual: "\xA75.2, \xA78.3a", ambito: "campeon", base: true },
+  ataquesPorTurno: { etiqueta: "Ataques por turno", manual: "\xA79.2", ambito: "campeon", base: 1, min: 0 },
+  bloqueosPorTurno: { etiqueta: "Bloqueos por turno", manual: "\xA79.3", ambito: "campeon", base: 1, min: 0 },
+  puedeSerExiliada: { etiqueta: "Puede ser exiliada", manual: "\xA710", ambito: "campeon", base: true },
+  puedeSerDestruidaPorEfecto: { etiqueta: "Puede ser destruida por efectos", manual: "\xA710", ambito: "campeon", base: true },
+  puedeSerDestruidaEnBatalla: { etiqueta: "Puede ser destruida en batalla", manual: "\xA710", ambito: "campeon", base: true },
+  /* ── carta ── */
+  eterBloqueadoExtra: { etiqueta: "\xC9ter bloqueado extra sobre el tope del efecto", manual: "\xA77.7", ambito: "carta", base: 0, min: 0 }
+};
+var REGLA_IDS = Object.keys(REGLAS);
+function resolverRegla(id, modificadores) {
+  const def = REGLAS[id];
+  const propios = modificadores.filter((m) => m.regla === id);
+  if (typeof def.base === "boolean") {
+    if (propios.some((m) => m.operacion === "prohibir")) return false;
+    if (propios.some((m) => m.operacion === "permitir")) return true;
+    return def.base;
+  }
+  let valor = def.base;
+  const fijados = propios.filter((m) => m.operacion === "fijar" && m.valor !== void 0);
+  if (fijados.length > 0) {
+    valor = fijados.reduce((a, b) => b.orden >= a.orden ? b : a).valor;
+  }
+  for (const m of propios) {
+    if (m.operacion === "sumar" && m.valor !== void 0) valor += m.valor;
+  }
+  if (def.min !== void 0) valor = Math.max(def.min, valor);
+  if (def.max !== void 0) valor = Math.min(def.max, valor);
+  return valor;
+}
+var KEYWORD_REGLAS = {
+  Carga: [{ regla: "invocacionCansada", operacion: "prohibir" }],
+  Vigor: [{ regla: "atacarAgota", operacion: "prohibir" }],
+  Tirador: [{ regla: "disparoAgota", operacion: "prohibir" }],
+  Inexiliable: [{ regla: "puedeSerExiliada", operacion: "prohibir" }],
+  Inmortal: [{ regla: "puedeSerDestruidaPorEfecto", operacion: "prohibir" }],
+  Indestructible: [{ regla: "puedeSerDestruidaEnBatalla", operacion: "prohibir" }]
+};
+
+// src/online/game/reglas.ts
+var otro = (j) => j === "A" ? "B" : "A";
+var memoEfectosRegla = /* @__PURE__ */ new Map();
+function efectosReglaDe(cardId) {
+  const memo = memoEfectosRegla.get(cardId);
+  if (memo) return memo;
+  const meta = getCardMeta(cardId);
+  const lista = meta && "efectos" in meta && meta.efectos ? meta.efectos.map((efecto, indice) => ({ efecto, indice })).filter(({ efecto }) => efecto.efecto === "modificar_regla" && !!efecto.regla) : [];
+  memoEfectosRegla.set(cardId, lista);
+  return lista;
+}
+function fuentesDeReglas(s) {
+  const fuentes = [];
+  const tiene = (inst) => !!inst?.cardId && efectosReglaDe(inst.cardId).length > 0;
+  for (const j of ["A", "B"]) {
+    const p = s.players[j];
+    for (const id of [...p.campo.campeones, ...p.campo.misticasTacticas, ...p.campo.arcanasCombate]) {
+      if (!id) continue;
+      const inst = s.instances[id];
+      if (!inst) continue;
+      if (tiene(inst)) fuentes.push({ inst, origen: "campo", controlador: j });
+      for (const eterId of inst.eterBloqueado ?? []) {
+        const eter = s.instances[eterId];
+        if (tiene(eter)) fuentes.push({ inst: eter, origen: "bloqueo", controlador: j, anfitrion: id });
+      }
+    }
+    for (const id of p.eterReserva) {
+      const inst = s.instances[id];
+      if (tiene(inst)) fuentes.push({ inst, origen: "reserva", controlador: j });
+    }
+    for (const id of p.eterPagado) {
+      const inst = s.instances[id];
+      if (tiene(inst)) fuentes.push({ inst, origen: "pagado", controlador: j });
+    }
+    for (const id of p.vinculos) {
+      const inst = id ? s.instances[id] : void 0;
+      if (tiene(inst) && inst.bocaArriba === true) fuentes.push({ inst, origen: "vinculo", controlador: j });
+    }
+  }
+  return fuentes;
+}
+function efectoActivo(s, f, efecto, indice) {
+  if (efecto.trigger !== void 0 && efecto.trigger !== "ninguno") return false;
+  switch (f.origen) {
+    case "campo": {
+      if (efecto.tipo !== "pasivo" && efecto.tipo !== "continuo" && efecto.tipo !== "comandante") return false;
+      const meta = f.inst.cardId ? getCardMeta(f.inst.cardId) : null;
+      if (meta?.type === "Arcana" && f.inst.bocaArriba !== true) return false;
+      const costo = efecto.costo;
+      const pagaConBloqueo = costo?.tipo === "eter_bloqueado" || costo?.tipo === "bloqueo_fijo";
+      if (pagaConBloqueo || efecto.duracion === "mientras_ester_bloqueado") {
+        const requerido = costo?.umbral ?? (costo?.tipo === "bloqueo_fijo" ? costo.cantidad : void 0) ?? 1;
+        return eterDeEfecto(s, f.inst.cardInstanceId, indice).length >= requerido;
+      }
+      return true;
+    }
+    case "reserva":
+      return efecto.tipo === "reserva";
+    case "pagado":
+      return efecto.tipo === "pago";
+    case "bloqueo":
+      return efecto.tipo === "bloqueo";
+    case "vinculo":
+      return efecto.tipo === "vinculo";
+  }
+}
+function jugadoresAfectados(f, efecto) {
+  const c = efecto.objetivo?.controlador ?? "propio";
+  if (c === "ambos") return ["A", "B"];
+  if (c === "rival") return [otro(f.controlador)];
+  return [f.controlador];
+}
+function afectaACarta(s, f, efecto, instId) {
+  if (f.origen === "bloqueo") return f.anfitrion === instId;
+  const objetivo = efecto.objetivo;
+  const destino = s.instances[instId];
+  if (!destino) return false;
+  const mismoControlador = (j) => s.players[j].campo.campeones.includes(instId) || s.players[j].campo.misticasTacticas.includes(instId) || s.players[j].campo.arcanasCombate.includes(instId);
+  switch (objetivo?.tipo ?? "self") {
+    case "self":
+      return f.inst.cardInstanceId === instId;
+    case "equipped_champion":
+      return f.inst.equipadoA === instId;
+    case "todos_campeones_propios":
+      return mismoControlador(f.controlador);
+    case "todos_campeones_rivales":
+      return mismoControlador(otro(f.controlador));
+    case "campeon": {
+      const c = objetivo?.controlador ?? "propio";
+      if (c === "ambos") return mismoControlador("A") || mismoControlador("B");
+      return mismoControlador(c === "rival" ? otro(f.controlador) : f.controlador);
+    }
+    default:
+      return false;
+  }
+}
+function modificadoresReglaDe(s, regla, sujeto) {
+  const def = REGLAS[regla];
+  const mods = [];
+  if (sujeto && "instId" in sujeto) {
+    for (const kw of keywordsDe(s, sujeto.instId)) {
+      for (const m of KEYWORD_REGLAS[kw] ?? []) if (m.regla === regla) mods.push({ ...m, orden: 0 });
+    }
+  }
+  for (const f of fuentesDeReglas(s)) {
+    const cardId = f.inst.cardId;
+    for (const { efecto, indice } of efectosReglaDe(cardId)) {
+      const m = efecto.regla;
+      if (!m || m.id !== regla || !efectoActivo(s, f, efecto, indice)) continue;
+      let alcanza = false;
+      if (def.ambito === "partida") alcanza = true;
+      else if (def.ambito === "jugador") alcanza = !!sujeto && "jugador" in sujeto && jugadoresAfectados(f, efecto).includes(sujeto.jugador);
+      else alcanza = !!sujeto && "instId" in sujeto && afectaACarta(s, f, efecto, sujeto.instId);
+      if (alcanza) mods.push({ regla, operacion: m.operacion, valor: m.valor, orden: 0 });
+    }
+  }
+  for (const r of s.reglasTemporales ?? []) {
+    if (r.regla !== regla) continue;
+    const su = r.sujeto;
+    const alcanza = su.tipo === "partida" || su.tipo === "jugador" && !!sujeto && "jugador" in sujeto && su.jugador === sujeto.jugador || su.tipo === "carta" && !!sujeto && "instId" in sujeto && su.instId === sujeto.instId;
+    if (alcanza) mods.push({ regla, operacion: r.operacion, valor: r.valor, orden: r.orden });
+  }
+  return mods;
+}
+function reglaNumero(s, regla, sujeto) {
+  return resolverRegla(regla, modificadoresReglaDe(s, regla, sujeto));
+}
+function reglaBool(s, regla, sujeto) {
+  return resolverRegla(regla, modificadoresReglaDe(s, regla, sujeto));
+}
+
+// src/online/game/combat.ts
+var tieneKeyword = (state, id, kw) => keywordsDe(state, id).includes(kw);
+var rupturasHechas = (state) => state.rupturasEsteTurno ?? 0;
+var rupturasAgotadas = (state) => rupturasHechas(state) >= reglaNumero(state, "rupturasPorTurno", { jugador: state.turno });
+var atacarBloqueadoPorRuptura = (state) => rupturasHechas(state) > 0 && !reglaBool(state, "atacarTrasRuptura", { jugador: state.turno });
+var rivalDe = (state) => state.turno === "A" ? "B" : "A";
+function controladorDe(s, id) {
+  for (const j of ["A", "B"]) {
+    if (s.players[j].campo.campeones.includes(id)) return j;
+  }
+  return null;
+}
+function atacantesElegibles(state) {
+  if (state.primerTurno && reglaBool(state, "primerTurnoSinAtaques")) return [];
+  if (atacarBloqueadoPorRuptura(state)) return [];
+  const p = state.players[state.turno];
+  return p.campo.campeones.filter((id) => {
+    if (!id) return false;
+    const inst = state.instances[id];
+    if (!inst) return false;
+    const doubleActivo = tieneDoubleAttackActivo(state, id);
+    if (inst.atacoEsteTurno && !doubleActivo) return false;
+    if (inst.agotado) {
+      if (!(doubleActivo && inst.atacoEsteTurno)) return false;
+    }
+    if (inst.entradaEsteTurno && reglaBool(state, "invocacionCansada", { instId: id })) return false;
+    return true;
+  });
+}
+function rupturaPendiente(s) {
+  const combate = s.combate;
+  if (!combate || combate.paso !== "resolucion" || rupturasAgotadas(s)) return false;
+  const hayVinculoVivo = s.players[rivalDe(s)].vinculos.some((id) => !!id && !s.instances[id]?.bocaArriba);
+  if (!hayVinculoVivo) return false;
+  return ataquesSinBloquear(s).some((id) => s.players[s.turno].campo.campeones.includes(id));
+}
+function cerrarCombateSiDoubleAttack(s) {
+  const combate = s.combate;
+  if (!combate) return;
+  if (rupturaPendiente(s)) return;
+  const dobles = combate.atacantes.some(
+    (id) => s.players[s.turno].campo.campeones.includes(id) && tieneDoubleAttackActivo(s, id)
+  );
+  if (dobles) s.combate = void 0;
+}
+function bloqueadoresDisponibles(state) {
+  const defensor = rivalDe(state);
+  const p = state.players[defensor];
+  return p.campo.campeones.filter((id) => {
+    if (id === null) return false;
+    const inst = state.instances[id];
+    if (!inst) return false;
+    if ((inst.bloqueosEsteTurno ?? 0) >= reglaNumero(state, "bloqueosPorTurno", { instId: id })) return false;
+    return !inst.agotado || reglaBool(state, "agotadoPuedeBloquear", { instId: id });
+  });
+}
+function ataquesSinBloquear(state) {
+  const combate = state.combate;
+  if (!combate) return [];
+  return combate.atacantes.filter((a) => !(a in combate.bloqueos));
+}
+function asignacionForzada(state) {
+  const combate = state.combate;
+  if (!combate || combate.paso !== "bloqueo") return null;
+  const disponibles = bloqueadoresDisponibles(state);
+  const sinBloquear = ataquesSinBloquear(state);
+  const k = Math.min(disponibles.length, sinBloquear.length);
+  if (k === 0) return null;
+  const asignaciones = {};
+  for (let i = 0; i < k; i++) asignaciones[sinBloquear[i]] = disponibles[i];
+  return asignaciones;
+}
+function validarDeclararAtaque(state, atacanteIds) {
+  if (state.fase !== "choque") return "declarar_ataque solo en Choque";
+  if (state.combate) return "el combate ya fue declarado";
+  if (state.primerTurno && reglaBool(state, "primerTurnoSinAtaques")) return "nadie ataca en el primer turno (\xA78.6)";
+  if (atacarBloqueadoPorRuptura(state)) return "no se puede atacar despu\xE9s de una Ruptura (\xA79.4)";
+  if (atacanteIds.length === 0) return "no declaraste atacantes";
+  if (new Set(atacanteIds).size !== atacanteIds.length) return "atacantes duplicados";
+  const elegibles = atacantesElegibles(state);
+  for (const id of atacanteIds) {
+    if (!elegibles.includes(id)) return `el Campe\xF3n no puede atacar: ${id}`;
+  }
+  return null;
+}
+function ejecutarDeclararAtaque(s, atacanteIds, ctx) {
+  const previos = marcarInicioAccion(s);
+  s.combate = {
+    paso: "bloqueo",
+    atacantes: atacanteIds,
+    bloqueos: {},
+    rupturaDisponible: true,
+    rupturaUsadaEsteTurno: rupturasAgotadas(s)
+  };
+  for (const id of atacanteIds) {
+    const inst = s.instances[id];
+    inst.atacoEsteTurno = true;
+    if (reglaBool(s, "atacarAgota", { instId: id })) inst.agotado = true;
+    if (tieneKeyword(s, id, "Recarga") && inst.eterBloqueado && inst.eterBloqueado.length > 0) {
+      const eter = inst.eterBloqueado.shift();
+      const pagador = s.instances[eter]?.pagadoPor ?? inst.owner;
+      const e = s.instances[eter];
+      if (e) {
+        delete e.bloqueadoPorEfecto;
+        delete e.pagadoPor;
+      }
+      s.players[pagador].eterReserva.push(eter);
+      ctx.emit({ type: "eter_reagrupado", jugador: pagador, eterIds: [eter] });
+      evaluarFinSteal(s, ctx, id);
+    }
+  }
+  ctx.emit({ type: "ataque_declarado", jugador: s.turno, atacanteIds });
+  const triggers = construirTriggers(s, "al-atacar", s.turno, atacanteIds);
+  if (triggers.length === 0) dispararTrigger(s, ctx, "al-atacar", s.turno, atacanteIds);
+  const apilados = triggers.length > 0 ? armarTriggers(s, ctx, triggers) : [];
+  declararVentana(s, ctx, { tipo: "ataque", jugador: s.turno, ...apilados.length > 0 ? { triggers: apilados } : {} }, previos);
+}
+function depurarAtacantes(s) {
+  const combate = s.combate;
+  if (!combate) return false;
+  combate.atacantes = combate.atacantes.filter((id) => s.players[s.turno].campo.campeones.includes(id));
+  if (combate.atacantes.length === 0) {
+    s.combate = void 0;
+    return false;
+  }
+  return true;
+}
+function abrirVentanaAtaque(s, ctx) {
+  if (!depurarAtacantes(s)) return;
+  const combate = s.combate;
+  if (abrirCadena(s, rivalDe(s))) return;
+  if (bloqueadoresDisponibles(s).length === 0) {
+    combate.paso = "resolucion";
+    resolverCombate(s, ctx);
+    cerrarCombateSiDoubleAttack(s);
+  }
+}
+function validarDeclararBloqueo(state, asignaciones) {
+  if (state.fase !== "choque") return "declarar_bloqueo solo en Choque";
+  const combate = state.combate;
+  if (!combate || combate.paso !== "bloqueo") return "no hay bloqueo pendiente";
+  const pares = Object.entries(asignaciones);
+  if (pares.length === 0) return "no asignaste bloqueadores";
+  const disponibles = bloqueadoresDisponibles(state);
+  const sinBloquear = ataquesSinBloquear(state);
+  const k = Math.min(disponibles.length, sinBloquear.length);
+  if (pares.length !== k) {
+    return `el bloqueo es forzoso: asigna exactamente ${k} bloqueador(es) (9.3)`;
+  }
+  const bloqueadoresUsados = /* @__PURE__ */ new Set();
+  for (const [atacanteId, bloqueadorId] of pares) {
+    if (!sinBloquear.includes(atacanteId)) return `no es un ataque sin bloquear: ${atacanteId}`;
+    if (!disponibles.includes(bloqueadorId)) return `el bloqueador no est\xE1 disponible: ${bloqueadorId}`;
+    if (bloqueadoresUsados.has(bloqueadorId)) return "un bloqueador no puede cubrir 2 ataques (\xA79.3)";
+    bloqueadoresUsados.add(bloqueadorId);
+  }
+  return null;
+}
+function ejecutarDeclararBloqueo(s, asignaciones, ctx) {
+  const combate = s.combate;
+  combate.bloqueos = { ...combate.bloqueos, ...asignaciones };
+  for (const bloqueadorId of Object.values(asignaciones)) {
+    const b = s.instances[bloqueadorId];
+    if (b) b.bloqueosEsteTurno = (b.bloqueosEsteTurno ?? 0) + 1;
+  }
+  combate.paso = "resolucion";
+  combate.rupturaDisponible = ataquesSinBloquear(s).length > 0;
+  ctx.emit({ type: "bloqueo_declarado", jugador: rivalDe(s), asignaciones });
+  if (abrirCadena(s, rivalDe(s))) {
+    combate.danoPendiente = true;
+    return;
+  }
+  resolverCombate(s, ctx);
+}
+function resolverCombate(s, ctx) {
+  const combate = s.combate;
+  if (!combate) return;
+  const muertosAtacantes = [];
+  const muertosBloqueadores = [];
+  const killerDe = /* @__PURE__ */ new Map();
+  for (const atacante of combate.atacantes) {
+    const bloqueador = combate.bloqueos[atacante];
+    if (!bloqueador) continue;
+    if (!s.players[s.turno].campo.campeones.includes(atacante)) continue;
+    if (!s.players[rivalDe(s)].campo.campeones.includes(bloqueador)) continue;
+    const statsAtacante = statsDe(s, atacante);
+    const statsBloqueador = statsDe(s, bloqueador);
+    if (statsAtacante.poder >= statsBloqueador.resistencia) {
+      muertosBloqueadores.push(bloqueador);
+      killerDe.set(bloqueador, atacante);
+    }
+    if (statsBloqueador.poder >= statsAtacante.resistencia) {
+      muertosAtacantes.push(atacante);
+      killerDe.set(atacante, bloqueador);
+    }
+  }
+  const controladores = /* @__PURE__ */ new Map();
+  for (const id of [...muertosAtacantes, ...muertosBloqueadores]) {
+    const killerId = killerDe.get(id);
+    if (killerId && !controladores.has(killerId)) {
+      const c = controladorDe(s, killerId);
+      if (c) controladores.set(killerId, c);
+    }
+  }
+  for (const id of [...muertosAtacantes, ...muertosBloqueadores]) {
+    const killerId = killerDe.get(id);
+    const jugador = killerId ? controladores.get(killerId) : void 0;
+    if (destruirCarta(s, ctx, id, "combate") && killerId && jugador) {
+      dispararTrigger(s, ctx, "al-matar-en-combate", jugador, [id, killerId], { killerId, victimaId: id });
+    }
+  }
+}
+function continuarCombateTrasCadena(s, ctx) {
+  const combate = s.combate;
+  if (!combate || s.fase !== "choque") return;
+  if (combate.paso === "resolucion") {
+    if (combate.danoPendiente) {
+      delete combate.danoPendiente;
+      resolverCombate(s, ctx);
+    }
+    return;
+  }
+  if (combate.paso === "bloqueo" && !depurarAtacantes(s)) return;
+  if (combate.paso === "bloqueo" && bloqueadoresDisponibles(s).length === 0) {
+    combate.paso = "resolucion";
+    resolverCombate(s, ctx);
+    cerrarCombateSiDoubleAttack(s);
+  }
+}
+function validarElegirRuptura(state, atacanteId, vinculoSlot) {
+  if (state.fase !== "choque") return "elegir_ruptura solo en Choque";
+  const combate = state.combate;
+  if (!combate || combate.paso !== "resolucion") return "no hay resoluci\xF3n pendiente";
+  if (rupturasAgotadas(state)) return "ya hiciste la Ruptura de este turno (\xA79.4)";
+  if (atacanteId === null) {
+    return "la Ruptura es obligatoria si hay un ataque sin bloquear (\xA79.4)";
+  }
+  if (!combate.rupturaDisponible) return "no hay ataques sin bloquear para romper";
+  if (!combate.atacantes.includes(atacanteId)) return "no es un atacante declarado";
+  if (atacanteId in combate.bloqueos) return "el ataque fue bloqueado: no rompe (\xA79.4-B)";
+  if (!state.players[state.turno].campo.campeones.includes(atacanteId)) return "el atacante muri\xF3";
+  if (vinculoSlot === void 0 || vinculoSlot < 0 || vinculoSlot > 5) return "vinculoSlot 0-5";
+  const vinculoId = state.players[rivalDe(state)].vinculos[vinculoSlot];
+  if (!vinculoId) return "no hay V\xEDnculo vivo en ese slot";
+  if (state.instances[vinculoId]?.bocaArriba) return "el V\xEDnculo ya fue destruido";
+  return null;
+}
+function ejecutarElegirRuptura(s, atacanteId, vinculoSlot, ctx) {
+  if (atacanteId === null || vinculoSlot === void 0) return;
+  const vinculoId = s.players[rivalDe(s)].vinculos[vinculoSlot];
+  ctx.emit({ type: "ruptura_realizada", atacanteId, vinculoSlot, vinculoId });
+  destruirCarta(s, ctx, vinculoId, "ruptura");
+  s.rupturasEsteTurno = rupturasHechas(s) + 1;
+  if (s.combate) s.combate.rupturaUsadaEsteTurno = rupturasAgotadas(s);
+  cerrarCombateSiDoubleAttack(s);
+}
+
+// src/online/game/habilidades.ts
+function validarActivarArcana(state, action) {
+  if (state.fase !== "forja" && state.fase !== "choque" && state.fase !== "ocaso") {
+    return "activar_arcana solo en Forja/Choque/Ocaso (\xA78.3a: nunca en Alba)";
+  }
+  const inst = state.instances[action.cardInstanceId];
+  if (!inst) return "instancia no encontrada";
+  const meta = inst.cardId ? getCardMeta(inst.cardId) : null;
+  if (!meta) return "carta desconocida";
+  const p = state.players[state.turno];
+  const motivo = motivoArcanaNoActivable(state, state.turno, action.cardInstanceId);
+  if (motivo) return motivo;
+  const idx = p.campo.arcanasCombate.indexOf(action.cardInstanceId);
+  if (action.slot !== idx) return "el slot no coincide con la posici\xF3n de la Arcana";
+  const pago = validarPago(state, state.turno, action.eterIds, meta.id);
+  if (!pago.ok) return pago.error ?? "pago inv\xE1lido";
+  return null;
+}
+function validarActivarHabilidad(state, action) {
+  const p = state.players[state.turno];
+  const inst = state.instances[action.cardInstanceId];
+  if (!inst) return "la carta no existe";
+  if (!p.campo.campeones.includes(action.cardInstanceId)) return "la carta no est\xE1 en tu campo";
+  const meta = inst.cardId ? getCardMeta(inst.cardId) : null;
+  if (!meta) return "carta desconocida";
+  const efectoSel = efectoActivableDe(meta, !!action.objetivoId);
+  if (!efectoSel) {
+    return "esta carta se activa bloqueando \xC9ter (usa la acci\xF3n bloquear_eter)";
+  }
+  const esBloqueado = esCostoBloqueo(efectoSel.costo);
+  if (esBloqueado) {
+    if (inst.opcionUsadaEsteTurno) return "ya usaste esta habilidad este turno";
+    const costoEsperado = efectoSel.costo?.cantidad ?? 0;
+    if (costoEsperado > 0 && action.eterIds.length !== costoEsperado) {
+      return `${meta.name} requiere exactamente ${costoEsperado} \xC9ter(es), indicaste ${action.eterIds.length}`;
+    }
+    if (action.eterIds.length === 0) return "no indicaste \xC9teres para bloquear";
+    if (new Set(action.eterIds).size !== action.eterIds.length) return "\xE9teres repetidos";
+    const zonaOrigen = efectoSel.costo?.origen === "pagado" ? p.eterPagado : p.eterReserva;
+    for (const eterId of action.eterIds) {
+      if (!zonaOrigen.includes(eterId)) {
+        return efectoSel.costo?.origen === "pagado" ? `el \xC9ter ${eterId} no est\xE1 en tu \xC9ter Pagado (1A)` : `el \xC9ter ${eterId} no est\xE1 en tu Reserva`;
+      }
+      const eterInst = state.instances[eterId];
+      const eterMeta = eterInst?.cardId ? getCardMeta(eterInst.cardId) : null;
+      if (!eterMeta) return `\xC9ter desconocido: ${eterId}`;
+    }
+  } else {
+    if (inst.agotado) return "la carta ya est\xE1 agotada";
+    if (efectoSel.tipo !== "disparo" && inst.opcionUsadaEsteTurno) return "ya usaste esta habilidad este turno";
+    const costoEsperado = efectoSel.costo?.cantidad ?? 0;
+    const costoReal = costoEsperado > 0 ? costoEsperado : 1;
+    if (action.eterIds.length !== costoReal) {
+      return `${meta.name} requiere exactamente ${costoReal} \xC9ter(es), indicaste ${action.eterIds.length}`;
+    }
+    for (const eterId of action.eterIds) {
+      if (!p.eterReserva.includes(eterId)) return `el \xC9ter ${eterId} no est\xE1 en tu Reserva`;
+    }
+  }
+  return null;
+}
+function validarUsarTransmutar(state, action) {
+  const p = state.players[state.turno];
+  const inst = state.instances[action.cardInstanceId];
+  if (!inst) return "la carta no existe";
+  if (!tieneKeyword(state, action.cardInstanceId, "Transmutar")) return "la carta no tiene Transmutar";
+  if (!p.campo.campeones.includes(action.cardInstanceId)) return "la carta no est\xE1 en tu campo";
+  if (action.eterIds.length > 2) return "m\xE1ximo 2 \xC9teres pagados";
+  if (new Set(action.eterIds).size !== action.eterIds.length) return "\xE9teres repetidos";
+  for (const eterId of action.eterIds) {
+    if (!p.eterPagado.includes(eterId)) return "un \xC9ter no est\xE1 pagado (1A)";
+  }
+  return null;
+}
+function parejasBloqueoOpcion(s, jugador) {
+  const p = s.players[jugador];
+  const parejas = [];
+  for (const campeonId of p.campo.campeones) {
+    if (!campeonId) continue;
+    const metaC = s.instances[campeonId]?.cardId ? getCardMeta(s.instances[campeonId].cardId) : null;
+    if (!metaC || !campeonElegibleBloqueoEter(metaC)) continue;
+    for (const eterId of p.eterReserva) {
+      const metaE = s.instances[eterId]?.cardId ? getCardMeta(s.instances[eterId].cardId) : null;
+      if (!metaE || !faccionesCompartidas(metaE.facciones, metaC.facciones)) continue;
+      if (validarBloqueo(s, jugador, [eterId], campeonId) !== null) continue;
+      parejas.push({ campeonId, eterId });
+    }
+  }
+  return parejas;
+}
+function validarElegirOpcion(state, action) {
+  const pendiente = state.opcionesPendientes?.find(
+    (o) => o.jugador === state.turno && o.eterId === action.opcionId
+  );
+  if (pendiente) {
+    if (state.fase !== "forja") return "elegir_opcion solo en Forja";
+  } else if (pasivosBloqueo1A(state, state.turno).includes(action.opcionId)) {
+    if (state.fase !== "forja" && state.fase !== "choque" && state.fase !== "ocaso") {
+      return "el Pasivo 1A solo en Forja/Choque/Ocaso (\xA78.3a: nunca en Alba)";
+    }
+    if (state.fase === "choque" && state.combate) return "el Pasivo 1A no se usa durante un combate";
+  } else {
+    return "no hay opci\xF3n pendiente para este jugador";
+  }
+  if (action.campeonId === void 0 !== (action.eterId === void 0)) {
+    return "elegir_opcion: indica Campe\xF3n y \xC9ter juntos";
+  }
+  if (action.campeonId !== void 0 && action.eterId !== void 0) {
+    const { campeonId, eterId } = action;
+    const legal = parejasBloqueoOpcion(state, state.turno).some((q) => q.campeonId === campeonId && q.eterId === eterId);
+    if (!legal) return "la pareja Campe\xF3n/\xC9ter no es v\xE1lida para esta opci\xF3n";
+  }
+  return null;
+}
+function validarElegirObjetivo(state, action) {
+  const pendiente = state.objetivosPendientes?.[0];
+  if (!pendiente) return "no hay objetivo pendiente";
+  if (action.jugador !== void 0 && action.jugador !== pendiente.jugador) return "el objetivo lo elige el due\xF1o del pendiente";
+  if (!state.declaracionEnEleccion && pendiente.jugador !== state.turno && electorAjeno(state) !== pendiente) {
+    return "no es tu turno para elegir objetivo";
+  }
+  if (!pendiente.opciones.includes(action.objetivoId)) return "el objetivo no est\xE1 entre las opciones v\xE1lidas";
+  const vigentes = opcionesVigentes(state, pendiente);
+  if (vigentes.length === 0) {
+    if (state.declaracionEnEleccion && action.objetivoId === pendiente.opciones[0]) return null;
+    return "el objetivo ya no es v\xE1lido";
+  }
+  if (!vigentes.includes(action.objetivoId)) return "el objetivo ya no es v\xE1lido";
+  return null;
+}
+function ejecutarActivarArcana(s, action, ctx) {
+  const id = action.cardInstanceId;
+  const inst = s.instances[id];
+  if (!inst) return;
+  const previos = marcarInicioAccion(s);
+  const contextoUso = { tipo: "habilidad", cardInstanceId: id };
+  aplicarPago(s, ctx, s.turno, action.eterIds, inst.cardId, contextoUso);
+  inst.bocaArriba = true;
+  ctx.emit({ type: "carta_activada", cardInstanceId: id, jugador: s.turno, slot: action.slot });
+  const meta = getCardMeta(inst.cardId);
+  if (meta && esArtefactoEquipable(meta)) {
+    s.equiparPendiente = { artefactoId: id, jugador: s.turno, contexto: "activar_arcana" };
+    return;
+  }
+  declararOpener(s, ctx, { tipo: "arcana", jugador: s.turno, cardInstanceId: id }, previos);
+}
+function ejecutarActivarHabilidad(s, action, ctx) {
+  const p = s.players[s.turno];
+  const inst = s.instances[action.cardInstanceId];
+  const meta = inst.cardId ? getCardMeta(inst.cardId) : null;
+  if (!meta) return;
+  const efectoSel = efectoActivableDe(meta, !!action.objetivoId);
+  if (!efectoSel) return;
+  const previos = marcarInicioAccion(s);
+  if (esCostoBloqueo(efectoSel.costo)) {
+    const zonaOrigen = efectoSel.costo?.origen === "pagado" ? p.eterPagado : p.eterReserva;
+    for (const eterId of action.eterIds) {
+      const idx = zonaOrigen.indexOf(eterId);
+      if (idx !== -1) zonaOrigen.splice(idx, 1);
+    }
+    inst.eterBloqueado = [...inst.eterBloqueado ?? [], ...action.eterIds];
+    const idxSel = meta.efectos?.indexOf(efectoSel) ?? -1;
+    etiquetarEter(s, action.eterIds, action.cardInstanceId, idxSel, s.turno);
+    const efectoConReagrupar = meta.efectos && "efectos" in meta ? meta.efectos.find((e) => e.reagrupar && esCostoBloqueo(e.costo)) : void 0;
+    if (efectoConReagrupar?.reagrupar) {
+      registrarEfectoPendiente(s, {
+        fuente: action.cardInstanceId,
+        owner: s.turno,
+        triggerFase: efectoConReagrupar.reagrupar.fase,
+        triggerOwner: efectoConReagrupar.reagrupar.turno === "propio" ? "due\xF1o" : "rival",
+        accion: { tipo: "liberar-eter", eterIds: [...action.eterIds], destino: "reserva" },
+        duracion: hastaAlba()
+      });
+    }
+    ctx.emit({ type: "eter_bloqueado", jugador: s.turno, eterIds: action.eterIds, campeonId: action.cardInstanceId });
+    inst.opcionUsadaEsteTurno = true;
+    if (efectoSel.tipo === "continuo") {
+      inst.agotado = true;
+    }
+    declararHabilidad(s, ctx, inst, meta, efectoSel, previos, action.objetivoId);
+  } else {
+    for (const eterId of action.eterIds) {
+      const idx = p.eterReserva.indexOf(eterId);
+      if (idx !== -1) p.eterReserva.splice(idx, 1);
+      p.eterPagado.push(eterId);
+    }
+    if (action.eterIds.length > 0) {
+      ctx.emit({ type: "eter_pagado", jugador: s.turno, eterIds: action.eterIds, costo: action.eterIds.length, aportado: action.eterIds.length });
+    }
+    if (efectoSel.tipo !== "disparo") inst.opcionUsadaEsteTurno = true;
+    if (efectoSel.tipo === "disparo" && reglaBool(s, "disparoAgota", { instId: action.cardInstanceId })) {
+      inst.agotado = true;
+    }
+    declararHabilidad(s, ctx, inst, meta, efectoSel, previos, action.objetivoId);
+  }
+}
+function declararHabilidad(s, ctx, inst, meta, efectoSel, previos, objetivoId) {
+  const efectoIdx = "efectos" in meta && meta.efectos ? meta.efectos.indexOf(efectoSel) : -1;
+  if (efectoIdx === -1) {
+    interpretEffect(s, ctx, inst, efectoSel, {
+      jugador: s.turno,
+      contextoUso: objetivoId ? "objetivo-elegido" : void 0,
+      objetivoId
+    });
+    return;
+  }
+  declararOpener(s, ctx, {
+    tipo: "habilidad",
+    jugador: s.turno,
+    cardInstanceId: inst.cardInstanceId,
+    efectoIdx,
+    objetivos: objetivoId ? { [efectoIdx]: objetivoId } : void 0
+  }, previos);
+}
+function ejecutarUsarTransmutar(s, action, ctx) {
+  const p = s.players[s.turno];
+  const id = action.cardInstanceId;
+  const inst = s.instances[id];
+  for (const eterId of action.eterIds) {
+    const idx = p.eterPagado.indexOf(eterId);
+    if (idx !== -1) p.eterPagado.splice(idx, 1);
+  }
+  p.eterReserva.push(...action.eterIds);
+  if (action.eterIds.length > 0) {
+    ctx.emit({ type: "eter_reagrupado", jugador: s.turno, eterIds: action.eterIds });
+  }
+  const slotIdx = p.campo.campeones.indexOf(id);
+  const zona = slotAZona("campeones", slotIdx) ?? "2B";
+  ctx.emit({ type: "carta_salida_de_zona", cardInstanceId: id, zona, jugador: s.turno });
+  p.campo.campeones[slotIdx] = null;
+  liberarEterBloqueado(s, ctx, id, "1A");
+  enviarAlCementerio(s, ctx, id);
+  ctx.emit({ type: "carta_entrada_a_zona", cardInstanceId: id, zona: "2G", jugador: inst.owner, bocaArriba: true });
+}
+function ejecutarElegirOpcion(s, action, ctx) {
+  const j = s.turno;
+  const p = s.players[j];
+  const pendiente = s.opcionesPendientes?.find((o) => o.jugador === j && o.eterId === action.opcionId);
+  const pasivoVivo = !pendiente && pasivosBloqueo1A(s, j).includes(action.opcionId);
+  if (!pendiente && !pasivoVivo) return;
+  const pareja = action.campeonId !== void 0 && action.eterId !== void 0 ? { campeonId: action.campeonId, eterId: action.eterId } : parejasBloqueoOpcion(s, j)[0];
+  if (!pareja) {
+    if (pendiente) s.opcionesPendientes = s.opcionesPendientes.filter((o) => !(o.jugador === j && o.eterId === action.opcionId));
+    return;
+  }
+  const elegido = { targetInstanceId: pareja.campeonId, eterId: pareja.eterId };
+  const instCampeon = s.instances[elegido.targetInstanceId];
+  instCampeon.eterBloqueado = [...instCampeon.eterBloqueado ?? [], elegido.eterId];
+  const eterIdx = p.eterReserva.indexOf(elegido.eterId);
+  if (eterIdx !== -1) p.eterReserva.splice(eterIdx, 1);
+  const metaElegido = s.instances[elegido.targetInstanceId]?.cardId ? getCardMeta(s.instances[elegido.targetInstanceId].cardId) : null;
+  const idxFuente = metaElegido && "efectos" in metaElegido && metaElegido.efectos ? metaElegido.efectos.findIndex((e) => e.tipo === "continuo" && esCostoBloqueo(e.costo)) : -1;
+  etiquetarEter(s, [elegido.eterId], elegido.targetInstanceId, idxFuente, j);
+  ctx.emit({ type: "eter_bloqueado", jugador: j, eterIds: [elegido.eterId], campeonId: elegido.targetInstanceId });
+  const eterPasivo = s.instances[action.opcionId];
+  if (eterPasivo) eterPasivo.opcionUsadaEsteTurno = true;
+  if (pendiente) s.opcionesPendientes = s.opcionesPendientes.filter((o) => !(o.jugador === j && o.eterId === action.opcionId));
+}
+function ejecutarElegirObjetivo(s, action, ctx) {
+  const pendiente = s.objetivosPendientes?.[0];
+  if (!pendiente) return;
+  const vigente = opcionesVigentes(s, pendiente).includes(action.objetivoId);
+  s.objetivosPendientes = s.objetivosPendientes.slice(1);
+  const enDeclaracion = !!s.declaracionEnEleccion;
+  const previos = marcarInicioAccion(s);
+  if (!vigente) {
+  } else if (pendiente.equipar) {
+    equiparComoRespuesta(s, ctx, pendiente, action.objetivoId);
+  } else if (pendiente.opener) {
+    registrarObjetivoOpener(s, pendiente, action.objetivoId);
+  } else if (pendiente.tramoUmbral !== void 0) {
+    ejecutarTramo(s, ctx, pendiente.instId, pendiente.tramoUmbral, action.objetivoId);
+  } else {
+    dispararTrigger(s, ctx, pendiente.trigger, pendiente.jugador, [pendiente.instId], {
+      contextoUso: "objetivo-elegido",
+      objetivoId: action.objetivoId
+    });
+  }
+  if (enDeclaracion) continuarDeclaracion(s, ctx, previos);
+}
+
+// src/online/game/reglasTemporales.ts
+function aplicarReglaTemporal(s, regla) {
+  const orden = (s.ordenReglas ?? 0) + 1;
+  s.ordenReglas = orden;
+  s.reglasTemporales = [...s.reglasTemporales ?? [], { ...regla, orden }];
+}
+function purgarReglasTemporales(s, expira, jugador) {
+  if (!s.reglasTemporales?.length) return;
+  const quedan = s.reglasTemporales.map((r) => expira === "ocaso" && r.turnosRestantes !== void 0 ? { ...r, turnosRestantes: r.turnosRestantes - 1 } : r).filter((r) => {
+    if (expira === "ocaso") {
+      if (r.turnosRestantes !== void 0) return r.turnosRestantes > 0;
+      return r.expira !== "ocaso";
+    }
+    if (jugador !== void 0 && r.duenio !== jugador) return true;
+    return r.expira !== expira;
+  });
+  if (quedan.length === 0) delete s.reglasTemporales;
+  else s.reglasTemporales = quedan;
+}
+function purgarReglasHastaFase(s, fase, turno) {
+  if (!s.reglasTemporales?.length) return;
+  const quedan = s.reglasTemporales.filter(
+    (r) => !(r.expira === "hasta-fase" && r.expiraFase === fase && r.expiraFaseJugador === turno)
+  );
+  if (quedan.length === 0) delete s.reglasTemporales;
+  else if (quedan.length !== s.reglasTemporales.length) s.reglasTemporales = quedan;
+}
+
+// src/online/game/efectos.ts
+var registro = /* @__PURE__ */ new Map();
+function esEfectoStat(efecto) {
+  return efecto.efecto === "buff" || efecto.efecto === "debuff" || efecto.efecto === "grant_keyword";
+}
+function esAuraZona(efecto) {
+  if (!esEfectoStat(efecto)) return false;
+  const sinTriggerDeEvento = efecto.trigger === void 0 || efecto.trigger === "ninguno";
+  return (efecto.tipo === "pasivo" || efecto.tipo === "reserva" || efecto.tipo === "bloqueo") && sinTriggerDeEvento;
+}
+function esAuraCondicionada(efecto) {
+  if (efecto.tipo === "disparo" || efecto.tipo === "continuo") return false;
+  if (efecto.duracion !== "mientras_ester_bloqueado") return false;
+  if (!esEfectoStat(efecto)) return false;
+  const t = efecto.objetivo?.tipo;
+  return t === "todos_campeones_propios" || t === "self";
+}
+function esAuraEquipada(efecto) {
+  if (efecto.efecto !== "buff" && efecto.efecto !== "debuff") return false;
+  if (!efecto.buffPerBlockedEther) return false;
+  if (efecto.costo?.tipo !== "eter_bloqueado" && efecto.costo?.tipo !== "bloqueo_fijo") return false;
+  return efecto.objetivo?.tipo === "equipped_champion";
+}
+function esAuraVinculo(efecto) {
+  if (efecto.tipo !== "vinculo") return false;
+  if (!esEfectoStat(efecto)) return false;
+  if (efecto.duracion !== "mientras_en_campo") return false;
+  return efecto.trigger === void 0 || efecto.trigger === null;
+}
+function statsBaseDe(s, id) {
+  const inst = s.instances[id];
+  const meta = inst?.cardId ? getCardMeta(inst.cardId) : null;
+  const esCamp = !!meta && esCampeon(meta);
+  const stats = esCamp ? meta.stats : void 0;
+  let poder = inst?.poder ?? stats?.poder ?? 0;
+  let resistencia = inst?.resistencia ?? stats?.resistencia ?? 0;
+  for (const m of inst?.modificadores ?? []) {
+    if (m.stat === "poder") poder += m.valor;
+    else resistencia += m.valor;
+  }
+  return { poder, resistencia };
+}
+function evaluarAura(s, efecto, fuente, esComandante, objetivoId, objetivoInst, origen) {
+  const objetivo = efecto.objetivo;
+  if (!objetivo) return null;
+  const mismoDueno = fuente.owner === objetivoInst.owner;
+  let aplica = false;
+  let excluirSelf = false;
+  switch (objetivo.tipo) {
+    case "self":
+      aplica = objetivoId === fuente.cardInstanceId;
+      break;
+    case "todos_campeones_propios":
+      aplica = mismoDueno;
+      if (esComandante && aplica) {
+        const fuenteMeta = fuente.cardId ? getCardMeta(fuente.cardId) : null;
+        const objetivoMeta = objetivoInst.cardId ? getCardMeta(objetivoInst.cardId) : null;
+        if (fuenteMeta && objetivoMeta && "facciones" in fuenteMeta && "facciones" in objetivoMeta) {
+          aplica = faccionesCompartidas(fuenteMeta.facciones, objetivoMeta.facciones);
+        }
+      }
+      excluirSelf = !esComandante && origen === "campo" && esAuraZona(efecto) && !esAuraCondicionada(efecto);
+      break;
+    case "campeon":
+      if (objetivo.controlador === "propio") aplica = mismoDueno;
+      else if (objetivo.controlador === "rival") aplica = !mismoDueno;
+      else aplica = true;
+      if (aplica && objetivo.filtros?.seleccionar) {
+        const { stat, orden } = objetivo.filtros.seleccionar;
+        const pool = [];
+        for (const j of ["A", "B"]) {
+          const esDuenoFiltro = objetivo.controlador === "propio" ? j === fuente.owner : objetivo.controlador === "rival" ? j !== fuente.owner : true;
+          if (!esDuenoFiltro) continue;
+          for (const cid of s.players[j].campo.campeones) {
+            if (cid) pool.push(cid);
+          }
+        }
+        if (pool.length === 0) return null;
+        let mejorId = pool[0];
+        let mejorVal = stat === "poder" ? statsBaseDe(s, pool[0]).poder : statsBaseDe(s, pool[0]).resistencia;
+        for (const cid of pool.slice(1)) {
+          const val = stat === "poder" ? statsBaseDe(s, cid).poder : statsBaseDe(s, cid).resistencia;
+          if (orden === "mayor" ? val > mejorVal : val < mejorVal) {
+            mejorId = cid;
+            mejorVal = val;
+          }
+        }
+        if (mejorId !== objetivoId) return null;
+      }
+      break;
+    case "equipped_champion":
+      aplica = mismoDueno && fuente.equipadoA === objetivoId;
+      break;
+    default:
+      return null;
+  }
+  if (!aplica) return null;
+  if (excluirSelf && objetivoId === fuente.cardInstanceId) return null;
+  if (origen === "reserva") {
+    if (!s.players[fuente.owner].eterReserva.includes(fuente.cardInstanceId)) return null;
+    if (objetivo.controlador === "rival" && objetivoInst.owner === fuente.owner) return null;
+    if (objetivo.controlador === "propio" && objetivoInst.owner !== fuente.owner) return null;
+  }
+  if (origen === "bloqueo") {
+    if (!(objetivoInst.eterBloqueado ?? []).includes(fuente.cardInstanceId)) return null;
+  }
+  if (efecto.duracion === "mientras_ester_bloqueado" && origen !== "bloqueo") {
+    if ((fuente.eterBloqueado?.length ?? 0) === 0) return null;
+  }
+  let escala = 1;
+  if (efecto.buffPerBlockedEther) {
+    if (objetivo.tipo === "equipped_champion") {
+      const bloqueadosFuente = fuente.eterBloqueado?.length ?? 0;
+      if (bloqueadosFuente === 0) return null;
+      escala = efecto.cantidadMax !== void 0 ? Math.min(bloqueadosFuente, efecto.cantidadMax) : bloqueadosFuente;
+    } else {
+      const rival = objetivoInst.owner === "A" ? "B" : "A";
+      const bloqueadosRival = s.players[rival].campo.campeones.filter((cId) => cId !== null).reduce((acc, cId) => acc + (s.instances[cId]?.eterBloqueado?.length ?? 0), 0);
+      if (bloqueadosRival === 0) return null;
+      escala = efecto.cantidadMax !== void 0 ? Math.min(bloqueadosRival, efecto.cantidadMax) : bloqueadosRival;
+    }
+  }
+  const signo = efecto.efecto === "debuff" && !statsDebuffYaNegativos(efecto) ? -1 : 1;
+  const resultado = {};
+  if (efecto.stats?.ATQ) resultado.poder = efecto.stats.ATQ * signo * escala;
+  if (efecto.stats?.RES) resultado.resistencia = efecto.stats.RES * signo * escala;
+  if (efecto.efecto === "grant_keyword" && efecto.keyword) {
+    resultado.keywords = [efecto.keyword];
+  }
+  return resultado;
+}
+function statsDebuffYaNegativos(efecto) {
+  const atq = efecto.stats?.ATQ ?? 0;
+  const res = efecto.stats?.RES ?? 0;
+  return atq < 0 || atq === 0 && res < 0;
+}
+function modificadoresJSONDe(s, id) {
+  const vacio = { poder: 0, resistencia: 0, keywords: [] };
+  const inst = s.instances[id];
+  if (!inst) return vacio;
+  const meta = inst.cardId ? getCardMeta(inst.cardId) : null;
+  if (!meta || !esCampeon(meta)) return vacio;
+  const owner = inst.owner;
+  const candidatos = [];
+  const campo = s.players[owner].campo;
+  const fuentesCampo = [
+    ...campo.campeones,
+    ...campo.misticasTacticas,
+    ...campo.arcanasCombate
+  ].filter((x) => x !== null);
+  for (const fuenteId of fuentesCampo) {
+    const fuenteInst = s.instances[fuenteId];
+    if (!fuenteInst?.cardId) continue;
+    const fuenteMeta = getCardMeta(fuenteInst.cardId);
+    if (!fuenteMeta) continue;
+    if (fuenteMeta.type === "Campe\xF3n" && fuenteMeta.efectoComandante) {
+      candidatos.push({ inst: fuenteInst, meta: fuenteMeta, esComandante: true, origen: "campo" });
+    }
+    if ("efectos" in fuenteMeta && fuenteMeta.efectos?.some((e) => esAuraZona(e) || esAuraCondicionada(e) || esAuraEquipada(e))) {
+      candidatos.push({ inst: fuenteInst, meta: fuenteMeta, esComandante: false, origen: "campo" });
+    }
+  }
+  for (const eterOwner of ["A", "B"]) {
+    for (const eterId of s.players[eterOwner].eterReserva) {
+      const eterInst = s.instances[eterId];
+      if (!eterInst?.cardId) continue;
+      const eterMeta = getCardMeta(eterInst.cardId);
+      if (!eterMeta) continue;
+      if ("efectos" in eterMeta && eterMeta.efectos?.some((e) => e.tipo === "reserva" && esAuraZona(e))) {
+        candidatos.push({ inst: eterInst, meta: eterMeta, esComandante: false, origen: "reserva" });
+      }
+    }
+  }
+  for (const eterId of inst.eterBloqueado ?? []) {
+    const eterInst = s.instances[eterId];
+    if (!eterInst?.cardId) continue;
+    const eterMeta = getCardMeta(eterInst.cardId);
+    if (!eterMeta) continue;
+    if ("efectos" in eterMeta && eterMeta.efectos?.some((e) => e.tipo === "bloqueo" && esAuraZona(e))) {
+      candidatos.push({ inst: eterInst, meta: eterMeta, esComandante: false, origen: "bloqueo" });
+    }
+  }
+  for (const vincOwner of ["A", "B"]) {
+    for (const vincId of s.players[vincOwner].vinculos) {
+      if (!vincId) continue;
+      const vincInst = s.instances[vincId];
+      if (!vincInst?.cardId) continue;
+      if (vincInst.bocaArriba !== true) continue;
+      const vincMeta = getCardMeta(vincInst.cardId);
+      if (!vincMeta) continue;
+      if ("efectos" in vincMeta && vincMeta.efectos?.some((e) => esAuraVinculo(e))) {
+        candidatos.push({ inst: vincInst, meta: vincMeta, esComandante: false, origen: "vinculo" });
+      }
+    }
+  }
+  let poder = 0;
+  let resistencia = 0;
+  const keywords = [];
+  for (const c of candidatos) {
+    const efectos = [];
+    if (c.esComandante && c.meta.type === "Campe\xF3n" && c.meta.efectoComandante) {
+      efectos.push(c.meta.efectoComandante);
+    }
+    if ("efectos" in c.meta && c.meta.efectos) {
+      for (const e of c.meta.efectos) {
+        if (c.origen === "reserva" && e.tipo === "reserva" && esAuraZona(e)) efectos.push(e);
+        else if (c.origen === "bloqueo" && e.tipo === "bloqueo" && esAuraZona(e)) efectos.push(e);
+        else if (c.origen === "vinculo" && e.tipo === "vinculo" && esAuraVinculo(e)) efectos.push(e);
+        else if (c.origen === "campo" && (esAuraZona(e) || esAuraCondicionada(e) || esAuraEquipada(e))) efectos.push(e);
+      }
+    }
+    for (const efecto of efectos) {
+      const resultado = evaluarAura(s, efecto, c.inst, c.esComandante, id, inst, c.origen);
+      if (!resultado) continue;
+      poder += resultado.poder ?? 0;
+      resistencia += resultado.resistencia ?? 0;
+      if (resultado.keywords) keywords.push(...resultado.keywords);
+    }
+  }
+  return { poder, resistencia, keywords: [...new Set(keywords)] };
+}
+function condicionCumple(s, condicion, jugador) {
+  if (!condicion || typeof condicion !== "object" || !("trigger" in condicion)) return null;
+  for (const cond of condicion.condiciones ?? []) {
+    const checkRival = cond.tipo === "rival_controla_minimo" || cond.tipo === "rival_controla_maximo" || (cond.objetivo?.controlador !== void 0 ? cond.objetivo.controlador === "rival" : condicion.controladorTrigger === "rival");
+    const j = checkRival ? jugador === "A" ? "B" : "A" : jugador;
+    const min = cond.cantidad ?? cond.objetivo?.cantidad ?? 1;
+    if (cond.tipo === "controlar_maximo" || cond.tipo === "rival_controla_maximo") {
+      const count = s.players[j].campo.campeones.filter((id) => id !== null).length;
+      if (count > min) return `m\xE1ximo ${min} Campeones en campo`;
+    } else if (cond.tipo === "tener_mano_maximo") {
+      if (s.players[j].mano.length > min) return `m\xE1ximo ${min} cartas en mano`;
+    } else if (cond.tipo === "tener_mano_minimo") {
+      if (s.players[j].mano.length < min) return `se requieren ${min} cartas en mano`;
+    } else if (cond.tipo === "tener_eter_pagado") {
+      if (s.players[j].eterPagado.length < min) return `se requieren ${min} \xC9teres pagados`;
+    } else if (cond.tipo === "tener_eter_bloqueado" || cond.objetivo?.tipo === "campeon_con_eter") {
+      const count = s.players[j].campo.campeones.filter(
+        (id) => id !== null && (s.instances[id]?.eterBloqueado?.length ?? 0) >= 1
+      ).length;
+      if (count < min) return `se requieren ${min} o m\xE1s Campeones con \xC9ter bloqueado`;
+    } else if (cond.tipo === "controlar_minimo" || cond.tipo === "rival_controla_minimo") {
+      const conEter = cond.objetivo?.filtros?.conEterBloqueado === true;
+      const count = s.players[j].campo.campeones.filter(
+        (id) => id !== null && (!conEter || (s.instances[id]?.eterBloqueado?.length ?? 0) >= 1)
+      ).length;
+      if (count < min) {
+        return conEter ? `se requieren ${min} o m\xE1s Campeones con \xC9ter bloqueado` : `se requieren ${min} o m\xE1s Campeones en campo`;
+      }
+    }
+  }
+  return null;
+}
+var TRIGGERS_CANDADO = ["inicio_alba", "inicio_choque"];
+function condicionEsCandado(condicion) {
+  return !!condicion && typeof condicion === "object" && TRIGGERS_CANDADO.includes(condicion.trigger);
+}
+function evaluarCandadosArcanas(s, trigger, activo) {
+  for (const dueno of ["A", "B"]) {
+    for (const id of s.players[dueno].campo.arcanasCombate) {
+      const inst = id ? s.instances[id] : void 0;
+      const meta = inst?.cardId ? getCardMeta(inst.cardId) : null;
+      if (!id || !inst || !meta || meta.type !== "Arcana" || inst.bocaArriba || inst.entradaEsteTurno) continue;
+      const condicion = meta.condicion;
+      if (!condicion || typeof condicion !== "object" || condicion.trigger !== trigger) continue;
+      const duenoDelTrigger = condicion.controladorTrigger === "rival" ? dueno === "A" ? "B" : "A" : dueno;
+      if (duenoDelTrigger !== activo) continue;
+      inst.condicionHabilitada = condicionCumple(s, condicion, dueno) === null;
+    }
+  }
+}
+function hayParejaBloqueo(s, jugador) {
+  return parejasBloqueoOpcion(s, jugador).length > 0;
+}
+function pasivosBloqueo1A(s, jugador) {
+  return s.players[jugador].eterPagado.filter((id) => {
+    const inst = s.instances[id];
+    if (!inst || inst.opcionUsadaEsteTurno) return false;
+    const meta = inst.cardId ? getCardMeta(inst.cardId) : null;
+    if (!meta || !("efectos" in meta) || !meta.efectos) return false;
+    return meta.efectos.some((e) => e.efecto === "block_ether" && !e.trigger && e.tipo === "pago");
+  });
+}
+function crearOpcionBloqueo(s, jugador, fuenteInstanceId) {
+  const inst = s.instances[fuenteInstanceId];
+  if (!inst) return false;
+  if (inst.opcionUsadaEsteTurno) return false;
+  if (!hayParejaBloqueo(s, jugador)) return false;
+  s.opcionesPendientes = [...s.opcionesPendientes ?? [], { jugador, eterId: fuenteInstanceId }];
+  return true;
+}
+function tieneDoubleAttackActivo(s, id) {
+  const inst = s.instances[id];
+  if (!inst?.cardId || (inst.eterBloqueado?.length ?? 0) === 0) return false;
+  const meta = getCardMeta(inst.cardId);
+  if (!meta || !("efectos" in meta) || !meta.efectos) return false;
+  return meta.efectos.some(
+    (e) => e.efecto === "double_attack" && e.duracion === "mientras_ester_bloqueado"
+  );
+}
+function registrarEfecto(trigger, cardId, fn) {
+  let porCarta = registro.get(trigger);
+  if (!porCarta) {
+    porCarta = /* @__PURE__ */ new Map();
+    registro.set(trigger, porCarta);
+  }
+  porCarta.set(cardId, fn);
+}
+function limpiarRegistroEfectos() {
+  registro.clear();
+}
+function instanciasEnCampo(s, jugador) {
+  const p = s.players[jugador];
+  return [
+    ...p.campo.campeones,
+    ...p.campo.misticasTacticas,
+    ...p.campo.arcanasCombate,
+    ...p.vinculos
+  ].filter((id) => id !== null);
+}
+var registroGenerico = /* @__PURE__ */ new Map();
+var TRIGGER_A_JSON = {
+  "al-invocar": "al_invocar",
+  "al-atacar": "al_atacar",
+  "al-matar-en-combate": "al_matar_en_combate",
+  "al-inicio-alba": "inicio_alba",
+  "al-inicio-choque": "inicio_choque",
+  "al-pagar-eter": "al_pagar_eter",
+  "al-jugar-mistica": "al_jugar_mistica",
+  "al-ser-enviado-al-cementerio": "al_ser_enviado_al_cementerio",
+  "al-ser-destruido-vinculo": "al_ser_destruido_vinculo",
+  "al-resolver-cadena": "al_resolver_cadena",
+  "al-activar-habilidad": "al_activar_habilidad"
+};
+function triggersQueMatchean(s, trigger, jugador, ids, opts) {
+  const res = [];
+  const efectoTrigger = TRIGGER_A_JSON[trigger];
+  for (const id of [...ids].sort()) {
+    const inst = s.instances[id];
+    const cardId = inst?.cardId;
+    if (!inst || !cardId) continue;
+    const meta = getCardMeta(cardId);
+    if (!meta || !("efectos" in meta)) continue;
+    if (meta.type === "V\xEDnculo" && inst.bocaArriba !== true) continue;
+    if (opts?.evaluarCondicion !== false && "condicion" in meta) {
+      const condicion = meta.condicion;
+      if (condicion && typeof condicion === "object" && "trigger" in condicion) {
+        if (efectoTrigger === condicion.trigger && condicionCumple(s, condicion, jugador) !== null) continue;
+      }
+    }
+    const efectos = meta.efectos;
+    if (!efectos || !Array.isArray(efectos)) continue;
+    efectos.forEach((efecto, efectoIdx) => {
+      const esUmbral = trigger === "al-bloquear-eter";
+      const matchea = esUmbral ? !efecto.trigger && (efecto.costo?.tipo === "bloqueo_fijo" || efecto.costo?.tipo === "eter_bloqueado") && !!efecto.efecto : efecto.trigger === efectoTrigger && !!efecto.efecto;
+      if (matchea) res.push({ inst, efecto, efectoIdx });
+    });
+  }
+  return res;
+}
+function dispararTrigger(s, ctx, trigger, jugador, instancias, payloadExtra) {
+  const porCarta = registro.get(trigger);
+  const ids = instancias ?? instanciasEnCampo(s, jugador);
+  const orden = [...ids].sort();
+  const payload = { jugador, fromTrigger: true, cobrarCosto: true, ...payloadExtra };
+  for (const id of orden) {
+    const inst = s.instances[id];
+    const cardId = inst?.cardId;
+    if (!inst || !cardId) continue;
+    let handled = false;
+    const meta = getCardMeta(cardId);
+    if (meta && meta.type === "V\xEDnculo" && inst.bocaArriba !== true) continue;
+    const primero = triggersQueMatchean(s, trigger, payload.jugador, [id])[0];
+    if (primero) {
+      const { efecto, efectoIdx } = primero;
+      const pendientesAntes = s.objetivosPendientes?.length ?? 0;
+      const objetivoElegido = payload.objetivosElegidos?.[efectoIdx];
+      interpretEffect(s, ctx, inst, efecto, {
+        ...payload,
+        ...payload.declarar ? { declararOpener: { efectoIdx } } : {},
+        ...objetivoElegido ? { contextoUso: "objetivo-elegido", objetivoId: objetivoElegido } : {}
+      });
+      const pendientesDespues = s.objetivosPendientes?.length ?? 0;
+      if (pendientesDespues > pendientesAntes) {
+        handled = true;
+      } else {
+        const needsTargeting = [
+          "steal_champion",
+          "toggle_exhaust",
+          "destroy",
+          "return_ether",
+          "mover",
+          "copy",
+          "tutor",
+          "block_ether"
+        ].includes(efecto.efecto);
+        if (needsTargeting) {
+          const targetIds = efecto.objetivo ? resolveTargets(s, efecto.objetivo, payload.jugador, id) : [];
+          if (targetIds.length > 0) {
+            handled = true;
+          }
+        } else {
+          handled = true;
+        }
+      }
+    }
+    if (handled) continue;
+    if (payload.declarar) continue;
+    const hasCardHandler = porCarta?.has(cardId) ?? false;
+    if (!hasCardHandler) {
+      for (const [efectoTipo, genericFn] of registroGenerico) {
+        if (!meta || !("efectos" in meta) || !meta.efectos) continue;
+        const tieneEfecto = meta.efectos.some((e) => e.efecto === efectoTipo);
+        if (tieneEfecto) {
+          genericFn(s, ctx, inst, payload);
+          handled = true;
+          break;
+        }
+      }
+    }
+    if (handled) continue;
+    const fn = porCarta?.get(cardId);
+    if (fn) {
+      fn(s, ctx, inst, payload);
+    }
+  }
+}
+function statsDe(s, id) {
+  const inst = s.instances[id];
+  const cardId = inst?.cardId ?? null;
+  const meta = cardId ? getCardMeta(cardId) : null;
+  const esCamp = !!meta && esCampeon(meta);
+  let poder = inst?.poder ?? (esCamp && meta.stats ? meta.stats.poder : 0);
+  let resistencia = inst?.resistencia ?? (esCamp && meta.stats ? meta.stats.resistencia : 0);
+  for (const m of inst?.modificadores ?? []) {
+    if (m.stat === "poder") poder += m.valor;
+    else resistencia += m.valor;
+  }
+  const mods = modificadoresJSONDe(s, id);
+  poder += mods.poder;
+  resistencia += mods.resistencia;
+  return { poder: Math.max(0, poder), resistencia: Math.max(0, resistencia) };
+}
+function keywordsDe(s, id) {
+  const inst = s.instances[id];
+  const cardId = inst?.cardId ?? null;
+  const meta = cardId ? getCardMeta(cardId) : null;
+  const deData = meta && "keywords" in meta && meta.keywords ? meta.keywords : [];
+  const mods = modificadoresJSONDe(s, id);
+  const hastaFase = (inst?.keywordsHastaFase ?? []).map((k) => k.keyword);
+  return [.../* @__PURE__ */ new Set([...deData, ...inst?.keywords ?? [], ...inst?.keywordsTemporales ?? [], ...hastaFase, ...mods.keywords])];
+}
+function velocidadDe(s, id) {
+  const kws = keywordsDe(s, id);
+  if (kws.includes("Fugaz")) return "fugaz";
+  if (kws.includes("Presteza")) return "presteza";
+  return "normal";
+}
+function aplicarMod(s, id, stat, valor, expira, turnosRestantes, hastaFase) {
+  const inst = s.instances[id];
+  if (!inst) return;
+  inst.modificadores = [
+    ...inst.modificadores ?? [],
+    { stat, valor, expira, turnosRestantes, ...hastaFase ? { expiraFase: hastaFase.fase, expiraFaseJugador: hastaFase.jugador } : {} }
+  ];
+}
+function otorgarKeyword(s, id, kw, temporal = false) {
+  const inst = s.instances[id];
+  if (!inst) return;
+  if (temporal) {
+    inst.keywordsTemporales = [.../* @__PURE__ */ new Set([...inst.keywordsTemporales ?? [], kw])];
+  } else {
+    inst.keywords = [.../* @__PURE__ */ new Set([...inst.keywords ?? [], kw])];
+  }
+}
+function purgarEfectosTemporales(s, expira, jugador, _ctx) {
+  purgarReglasTemporales(s, expira, jugador);
+  const jugadores = jugador ? [jugador] : ["A", "B"];
+  for (const j of jugadores) {
+    for (const id of instanciasEnCampo(s, j)) {
+      const inst = s.instances[id];
+      if (!inst?.modificadores) continue;
+      if (expira === "ocaso") {
+        const restantes = inst.modificadores.map((m) => {
+          if (m.turnosRestantes !== void 0) {
+            return { ...m, turnosRestantes: m.turnosRestantes - 1 };
+          }
+          return m;
+        }).filter((m) => {
+          if (m.turnosRestantes !== void 0) return m.turnosRestantes > 0;
+          return m.expira !== expira;
+        });
+        inst.modificadores = restantes;
+      } else {
+        const restantes = inst.modificadores.filter((m) => m.expira !== expira);
+        inst.modificadores = restantes;
+      }
+    }
+  }
+}
+function purgarHastaFase(s, fase, turno) {
+  purgarReglasHastaFase(s, fase, turno);
+  for (const inst of Object.values(s.instances)) {
+    if (inst.modificadores?.length) {
+      const quedan = inst.modificadores.filter(
+        (m) => !(m.expira === "hasta-fase" && m.expiraFase === fase && m.expiraFaseJugador === turno)
+      );
+      if (quedan.length !== inst.modificadores.length) inst.modificadores = quedan;
+    }
+    if (inst.keywordsHastaFase?.length) {
+      const expiradas = inst.keywordsHastaFase.filter((k) => k.fase === fase && k.jugador === turno);
+      if (expiradas.length > 0) {
+        for (const k of expiradas) {
+          inst.keywordsTemporales = (inst.keywordsTemporales ?? []).filter((x) => x !== k.keyword);
+        }
+        const quedan = inst.keywordsHastaFase.filter((k) => !(k.fase === fase && k.jugador === turno));
+        if (quedan.length > 0) inst.keywordsHastaFase = quedan;
+        else delete inst.keywordsHastaFase;
+      }
+    }
+  }
+}
+function purgarKeywordsTemporales(s) {
+  for (const j of ["A", "B"]) {
+    for (const id of instanciasEnCampo(s, j)) {
+      const inst = s.instances[id];
+      if (inst?.keywordsTemporales && inst.keywordsTemporales.length > 0) {
+        inst.keywordsTemporales = [];
+      }
+    }
+  }
+}
+
 // src/online/game/effectInterpreter.ts
 function interpretEffect(s, ctx, inst, efectoData, payload) {
   const { efecto, objetivo, costo } = efectoData;
@@ -3646,6 +5806,9 @@ function interpretEffect(s, ctx, inst, efectoData, payload) {
   if (payload.contextoUso === "objetivo-elegido" && payload.objetivoId) {
     if (!canExecuteEffect(s, efecto, jugador)) {
       return;
+    }
+    if (objetivo && objetivo.tipo !== "self") {
+      if (!resolveTargets(s, objetivoCompleto(efectoData), jugador, inst.cardInstanceId).includes(payload.objetivoId)) return;
     }
     const targetIds2 = [payload.objetivoId];
     executeEffect(s, ctx, inst, efecto, targetIds2, jugador, efectoData);
@@ -3659,13 +5822,7 @@ function interpretEffect(s, ctx, inst, efectoData, payload) {
     }
   }
   if (payload.cobrarCosto && costo && costo.tipo === "eter" && inst.cardId) {
-    const cant = costo.cantidad ?? 1;
-    const pCobro = s.players[jugador];
-    if (pCobro.eterReserva.length < cant) return;
-    if (cant > 0) {
-      const eterIdsCobro = pCobro.eterReserva.slice(0, cant);
-      aplicarPago(s, ctx, jugador, eterIdsCobro, inst.cardId, { tipo: "habilidad", cardInstanceId: inst.cardInstanceId });
-    }
+    if (!cobrarCostoEter(s, ctx, inst, costo, jugador)) return;
   }
   if (efectoData.contextoUso && efectoData.contextoUso !== "ninguno") {
     if (payload.contextoUso !== efectoData.contextoUso) {
@@ -3677,11 +5834,7 @@ function interpretEffect(s, ctx, inst, efectoData, payload) {
     if (objetivo.tipo === "self") {
       targetIds = [inst.cardInstanceId];
     } else {
-      let mergedObjetivo = efectoData.filtros ? { ...objetivo, filtros: { ...objetivo.filtros, ...efectoData.filtros } } : objetivo;
-      if (!mergedObjetivo.zona && efectoData.zonaOrigen) {
-        mergedObjetivo = { ...mergedObjetivo, zona: efectoData.zonaOrigen };
-      }
-      targetIds = resolveTargets(s, mergedObjetivo, jugador);
+      targetIds = resolveTargets(s, objetivoCompleto(efectoData), jugador, inst.cardInstanceId);
     }
   }
   const isTriggered = payload.fromTrigger === true;
@@ -3693,19 +5846,41 @@ function interpretEffect(s, ctx, inst, efectoData, payload) {
     if (!canExecuteEffect(s, efecto, jugador)) {
       return;
     }
+    if (payload.sinEleccion) return;
     s.objetivosPendientes = [...s.objetivosPendientes ?? [], {
       jugador,
       instId: inst.cardInstanceId,
       trigger: toHyphenTrigger(efectoData.trigger) ?? umbralTrigger(efectoData) ?? "ninguno",
-      opciones: targetIds
+      opciones: targetIds,
+      ...payload.declararOpener ? { opener: payload.declararOpener } : {}
     }];
     return;
   }
+  if (payload.declararOpener) return;
   executeEffect(s, ctx, inst, efecto, targetIds, jugador, efectoData);
+}
+function cobrarCostoEter(s, ctx, inst, costo, jugador) {
+  if (costo.tipo !== "eter" || !inst.cardId) return true;
+  const cant = costo.cantidad ?? 1;
+  const pCobro = s.players[jugador];
+  if (pCobro.eterReserva.length < cant) return false;
+  if (cant > 0) {
+    const eterIdsCobro = pCobro.eterReserva.slice(0, cant);
+    aplicarPago(s, ctx, jugador, eterIdsCobro, inst.cardId, { tipo: "habilidad", cardInstanceId: inst.cardInstanceId });
+  }
+  return true;
+}
+function objetivoCompleto(efectoData) {
+  const objetivo = efectoData.objetivo;
+  let mergedObjetivo = efectoData.filtros ? { ...objetivo, filtros: { ...objetivo.filtros, ...efectoData.filtros } } : objetivo;
+  if (!mergedObjetivo.zona && efectoData.zonaOrigen) {
+    mergedObjetivo = { ...mergedObjetivo, zona: efectoData.zonaOrigen };
+  }
+  return mergedObjetivo;
 }
 function needsPlayerChoice(objetivo, efecto) {
   if (!objetivo) return false;
-  if (objetivo.tipo === "self" || objetivo.tipo === "todos_campeones_propios" || objetivo.tipo === "todos_campeones_rivales" || objetivo.tipo === "rival_hand") {
+  if (objetivo.tipo === "self" || objetivo.tipo === "todos_campeones_propios" || objetivo.tipo === "todos_campeones_rivales" || objetivo.tipo === "rival_hand" || objetivo.tipo === "equipped_champion") {
     return false;
   }
   if (efecto === "draw" || efecto === "rival_discard" || efecto === "block_ether" || efecto === "double_attack" || efecto === "negar") {
@@ -3802,8 +5977,8 @@ function executeEffect(s, ctx, inst, efecto, targetIds, jugador, efectoData) {
       executeModificarRegla(s, targetIds, jugador, efectoData);
       break;
     case "negar": {
-      const cadenaNeg = s.cadena ?? s.combate?.cadena;
-      const pend = cadenaNeg?.activacionPendiente;
+      const cadenaNeg = cadenaActiva(s);
+      const pend = cadenaNeg?.opener;
       if (pend && !pend.negada && pend.jugador !== jugador) {
         pend.negada = true;
         ctx.emit({ type: "activacion_negada", jugador, cardInstanceId: pend.cardInstanceId, fuente: inst.cardInstanceId });
@@ -4185,7 +6360,7 @@ function executeExile(s, ctx, targetIds) {
 function executeDraw(s, ctx, jugador, cantidad) {
   for (let i = 0; i < cantidad; i++) {
     if (s.fase === "terminada") return;
-    robarCarta(s, ctx, jugador);
+    if (!robarCarta(s, ctx, jugador)) return;
   }
 }
 function executeGrantKeyword(s, targetIds, keyword, duracion, caster, duracionFase, duracionControlador) {
@@ -4392,1804 +6567,120 @@ function removeFromCurrentZone(s, targetId, owner) {
   return false;
 }
 
-// src/online/game/effectRegistry.ts
-function generarId(s) {
-  const count = s.efectosPendientes?.length ?? 0;
-  return `ep-${count + 1}`;
+// src/online/game/pendientes.ts
+function claveTrigger(efecto) {
+  return toHyphenTrigger(efecto.trigger) ?? umbralTrigger(efecto) ?? "ninguno";
 }
-function registrarEfectoPendiente(s, params) {
-  if (!s.efectosPendientes) s.efectosPendientes = [];
-  const id = generarId(s);
-  const efecto = {
-    id,
-    fuente: params.fuente,
-    owner: params.owner,
-    triggerFase: params.triggerFase,
-    triggerOwner: params.triggerOwner ?? "due\xF1o",
-    accion: params.accion,
-    duracion: params.duracion
-  };
-  s.efectosPendientes.push(efecto);
-  return id;
-}
-function resolverFaseEfectos(s, ctx, fase, jugadorActual) {
-  if (!s.efectosPendientes || s.efectosPendientes.length === 0) return;
-  const aResolver = s.efectosPendientes.filter((ep) => {
-    if (ep.triggerFase !== fase) return false;
-    if (ep.triggerOwner === "due\xF1o" && ep.owner !== jugadorActual) return false;
-    if (ep.triggerOwner === "rival" && ep.owner === jugadorActual) return false;
-    if (ep.resuelto) return false;
-    return true;
-  });
-  for (const ep of aResolver) {
-    ejecutarAccionEfecto(s, ctx, ep);
-    ep.resuelto = true;
+function opcionesVigentes(s, p) {
+  const vivas = p.opciones.filter((id) => s.instances[id]);
+  if (vivas.length === 0) return vivas;
+  if (p.equipar) return vivas.filter((id) => s.players[p.jugador].campo.campeones.includes(id));
+  const fuente = s.instances[p.instId];
+  const meta = fuente?.cardId ? getCardMeta(fuente.cardId) : null;
+  const efectos = meta && "efectos" in meta ? meta.efectos : void 0;
+  if (!fuente || !efectos) return vivas;
+  if (p.tramoUmbral !== void 0) {
+    const raiz = efectos.find((e) => e.tramos?.some((t) => t.umbral === p.tramoUmbral));
+    const tramo = raiz?.tramos?.find((t) => t.umbral === p.tramoUmbral);
+    if (!raiz?.objetivo || !tramo) return vivas;
+    const candidatos2 = resolveTargets(s, { ...raiz.objetivo, filtros: { ...raiz.objetivo.filtros, ...tramo.filtros } }, fuente.owner);
+    return vivas.filter((id) => candidatos2.includes(id));
   }
-  purgarEfectosPendientes(s, fase, jugadorActual);
+  const armadores = p.opener ? [efectos[p.opener.efectoIdx]].filter((e) => !!e?.objetivo && e.objetivo.tipo !== "self") : efectos.filter((e) => !!e.objetivo && e.objetivo.tipo !== "self" && claveTrigger(e) === p.trigger);
+  if (armadores.length === 0) return vivas;
+  const candidatos = /* @__PURE__ */ new Set();
+  for (const e of armadores) for (const id of resolveTargets(s, objetivoCompleto(e), p.jugador, p.instId)) candidatos.add(id);
+  return vivas.filter((id) => candidatos.has(id));
 }
-function ejecutarAccionEfecto(s, ctx, ep) {
-  const accion = ep.accion;
-  switch (accion.tipo) {
-    case "modificar": {
-      const inst = s.instances[accion.objetivo];
-      if (!inst) return;
-      if (!inst.modificadores) inst.modificadores = [];
-      inst.modificadores.push({
-        stat: accion.stat,
-        valor: accion.delta,
-        expira: duracionAExpira(ep.duracion),
-        turnosRestantes: ep.duracion.tipo === "turnos" ? ep.duracion.restantes : void 0
-      });
-      break;
-    }
-    case "liberar-eter": {
-      const inst = s.instances[ep.fuente];
-      if (!inst?.eterBloqueado || inst.eterBloqueado.length === 0) break;
-      const eteresVivos = accion.eterIds.filter((id) => inst.eterBloqueado.includes(id));
-      if (eteresVivos.length === 0) break;
-      quitarEteres(s, ep.fuente, eteresVivos);
-      const grupos = liberarEterA(s, eteresVivos, "2A", ep.owner);
-      for (const [pagador, ids] of Object.entries(grupos)) {
-        ctx.emit({ type: "eter_reagrupado", jugador: pagador, eterIds: ids });
-      }
-      evaluarFinSteal(s, ctx, ep.fuente);
-      break;
-    }
-    case "destruir": {
-      const inst = s.instances[accion.objetivo];
-      if (!inst) return;
-      const p = s.players[inst.owner];
-      const slotIdx = p.campo.campeones.indexOf(accion.objetivo);
-      if (slotIdx !== -1) {
-        p.campo.campeones[slotIdx] = null;
-        ctx.emit({ type: "carta_salida_de_zona", cardInstanceId: accion.objetivo, zona: `2${String.fromCharCode(66 + slotIdx)}`, jugador: inst.owner });
-        enviarAlCementerio(s, ctx, accion.objetivo);
-        ctx.emit({ type: "carta_entrada_a_zona", cardInstanceId: accion.objetivo, zona: "2G", jugador: inst.owner, bocaArriba: true });
-      }
-      break;
-    }
-    case "agotar": {
-      const inst = s.instances[accion.objetivo];
-      if (inst) inst.agotado = true;
-      break;
-    }
-    case "robar-cartas": {
-      for (let i = 0; i < accion.cantidad; i++) {
-        if (s.fase === "terminada") break;
-        robarCarta(s, ctx, ep.owner);
-      }
-      break;
-    }
-    case "keyword-temporal": {
-      const inst = s.instances[accion.objetivo];
-      if (!inst) return;
-      if (!inst.keywordsTemporales) inst.keywordsTemporales = [];
-      if (!inst.keywordsTemporales.includes(accion.keyword)) {
-        inst.keywordsTemporales.push(accion.keyword);
-      }
-      break;
-    }
-    case "enviar-cementerio": {
-      const inst = s.instances[accion.objetivo];
-      if (!inst) break;
-      const p = s.players[inst.owner];
-      const slotMT = p.campo.misticasTacticas.indexOf(accion.objetivo);
-      if (slotMT !== -1) {
-        const zona = `3${String.fromCharCode(65 + slotMT)}`;
-        ctx.emit({ type: "carta_salida_de_zona", cardInstanceId: accion.objetivo, zona, jugador: inst.owner });
-        p.campo.misticasTacticas[slotMT] = null;
-        p.cementerio.push(accion.objetivo);
-        ctx.emit({ type: "carta_entrada_a_zona", cardInstanceId: accion.objetivo, zona: "2G", jugador: inst.owner, bocaArriba: true });
-        break;
-      }
-      const slotAC = p.campo.arcanasCombate.indexOf(accion.objetivo);
-      if (slotAC !== -1) {
-        const zona = `3${String.fromCharCode(68 + slotAC)}`;
-        ctx.emit({ type: "carta_salida_de_zona", cardInstanceId: accion.objetivo, zona, jugador: inst.owner });
-        p.campo.arcanasCombate[slotAC] = null;
-        p.cementerio.push(accion.objetivo);
-        ctx.emit({ type: "carta_entrada_a_zona", cardInstanceId: accion.objetivo, zona: "2G", jugador: inst.owner, bocaArriba: true });
-        break;
-      }
-      const slotCP = p.campo.campeones.indexOf(accion.objetivo);
-      if (slotCP !== -1) {
-        const zona = `2${String.fromCharCode(66 + slotCP)}`;
-        ctx.emit({ type: "carta_salida_de_zona", cardInstanceId: accion.objetivo, zona, jugador: inst.owner });
-        p.campo.campeones[slotCP] = null;
-        enviarAlCementerio(s, ctx, accion.objetivo);
-        ctx.emit({ type: "carta_entrada_a_zona", cardInstanceId: accion.objetivo, zona: "2G", jugador: inst.owner, bocaArriba: true });
-      }
-      break;
-    }
+function esDeUmbral(p) {
+  return p.tramoUmbral !== void 0 || p.trigger === "al-bloquear-eter";
+}
+function electorAjeno(s) {
+  if (s.declaracionEnEleccion) return void 0;
+  const frente = s.objetivosPendientes?.[0];
+  if (!frente || frente.jugador === s.turno || esDeUmbral(frente)) return void 0;
+  return opcionesVigentes(s, frente).length > 0 ? frente : void 0;
+}
+function descartarFrentesMuertos(s) {
+  if (s.declaracionEnEleccion) return 0;
+  let quitados = 0;
+  while (s.objetivosPendientes && s.objetivosPendientes.length > 0) {
+    const frente = s.objetivosPendientes[0];
+    if (opcionesVigentes(s, frente).length > 0) break;
+    s.objetivosPendientes = s.objetivosPendientes.slice(1);
+    quitados++;
   }
+  return quitados;
 }
-function purgarEfectosPendientes(s, fase, jugadorActual) {
-  if (!s.efectosPendientes) return;
-  s.efectosPendientes = s.efectosPendientes.filter((ep) => {
-    if (ep.resuelto && ep.duracion.tipo !== "permanente") {
-      if (ep.duracion.tipo === "turnos" && ep.duracion.restantes !== void 0 && ep.duracion.restantes > 0) {
-        return true;
-      }
-      return false;
-    }
-    if (ep.duracion.tipo === "turnos" && fase === "ocaso" && ep.owner === jugadorActual) {
-      if (ep.duracion.restantes !== void 0) {
-        ep.duracion.restantes -= 1;
-        if (ep.duracion.restantes <= 0) return false;
-      }
-      return true;
-    }
-    if (ep.duracion.tipo === "hasta-fase" && ep.duracion.hastaFase === fase) {
-      if (ep.duracion.ownerTrigger === "due\xF1o" && ep.owner === jugadorActual) return false;
-      if (ep.duracion.ownerTrigger === "rival" && ep.owner !== jugadorActual) return false;
-      if (ep.duracion.ownerTrigger === "cualquiera") return false;
-    }
-    return true;
-  });
-}
-function duracionAExpira(duracion) {
-  switch (duracion.tipo) {
-    case "turnos":
-      return "ocaso";
-    case "hasta-fase":
-      return duracion.hastaFase === "alba" ? "alba-due\xF1o" : "ocaso";
-    case "permanente":
-      return "permanente";
-  }
-}
-function hastaAlba() {
-  return { tipo: "hasta-fase", hastaFase: "alba", ownerTrigger: "due\xF1o" };
+function descartarPendientesObsoletos(s) {
+  const cola = s.objetivosPendientes;
+  if (!cola || cola.length === 0 || s.declaracionEnEleccion) return 0;
+  const vigentes = cola.filter((p) => esDeUmbral(p) && s.instances[p.instId] && opcionesVigentes(s, p).length > 0);
+  if (vigentes.length === cola.length) return 0;
+  const descartados = cola.length - vigentes.length;
+  s.objetivosPendientes = vigentes;
+  return descartados;
 }
 
-// src/online/game/zones.ts
-var SLOTS_CAMPEONES = 5;
-var SLOTS_MISTICAS_TACTICAS = 3;
-var SLOTS_ARCANAS_COMBATE = 3;
-var SLOTS_VINCULOS = 6;
-var LIMITE_MANO = 6;
-var LETRAS_CAMPEONES = ["B", "C", "D", "E", "F"];
-var LETRAS_MISTICAS = ["A", "B", "C"];
-var LETRAS_ARCANAS = ["D", "E", "F"];
-var LETRAS_VINCULOS = ["A", "B", "C", "D", "E", "F"];
-function limiteSlots(grupo) {
-  switch (grupo) {
-    case "campeones":
-      return SLOTS_CAMPEONES;
-    case "misticasTacticas":
-      return SLOTS_MISTICAS_TACTICAS;
-    case "arcanasCombate":
-      return SLOTS_ARCANAS_COMBATE;
-    case "vinculos":
-      return SLOTS_VINCULOS;
-  }
+// src/online/game/finPartida.ts
+var JUGADORES = ["A", "B"];
+function derrotadoPorVinculos(s, jugador) {
+  const insts = s.players[jugador].vinculos.filter((id) => !!id).map((id) => s.instances[id]).filter((v) => !!v);
+  const vivos = insts.filter((v) => !v.bocaArriba).length;
+  const destruidos = insts.length - vivos;
+  return vivos === 0 && destruidos > 0 && reglaBool(s, "derrotaPorVinculos", { jugador });
 }
-function slotAZona(grupo, slot) {
-  if (slot < 0) return null;
-  switch (grupo) {
-    case "campeones":
-      return slot < LETRAS_CAMPEONES.length ? `2${LETRAS_CAMPEONES[slot]}` : null;
-    case "misticasTacticas":
-      return slot < LETRAS_MISTICAS.length ? `3${LETRAS_MISTICAS[slot]}` : null;
-    case "arcanasCombate":
-      return slot < LETRAS_ARCANAS.length ? `3${LETRAS_ARCANAS[slot]}` : null;
-    case "vinculos":
-      return slot < LETRAS_VINCULOS.length ? `4${LETRAS_VINCULOS[slot]}` : null;
+function motivoDerrota(s, jugador) {
+  if (derrotadoPorVinculos(s, jugador)) return "vinculos";
+  if (s.mazosAgotados?.includes(jugador)) return "mazo_vacio";
+  return null;
+}
+function hayPendienteObligatorio(s) {
+  return !!cadenaActiva(s) || !!s.declaracionEnEleccion || !!s.equiparPendiente || (s.preventivosPendientes?.length ?? 0) > 0 || !!electorAjeno(s);
+}
+function confirmarFinDePartida(s, ctx) {
+  if (s.fase === "terminada" || hayPendienteObligatorio(s)) return;
+  const derrotas = JUGADORES.map((j) => ({ jugador: j, motivo: motivoDerrota(s, j) })).filter((d) => d.motivo !== null);
+  if (derrotas.length === 0) return;
+  s.fase = "terminada";
+  if (derrotas.length === JUGADORES.length) {
+    delete s.ganador;
+    s.motivo = "empate";
+    ctx.emit({ type: "partida_terminada", ganador: null, motivo: "empate" });
+    return;
   }
+  const { jugador: perdedor, motivo } = derrotas[0];
+  const ganador = perdedor === "A" ? "B" : "A";
+  const m = motivo;
+  s.ganador = ganador;
+  s.motivo = m;
+  ctx.emit({ type: "partida_terminada", ganador, motivo: m });
 }
 
-// src/online/game/chain.ts
-function respondiblesDe(state, playerId) {
-  const p = state.players[playerId];
-  const cadena = state.combate?.cadena ?? state.cadena;
-  const enPila = new Set(cadena?.pila ?? []);
-  let velocidadRequerida = "normal";
-  if (cadena && cadena.pila.length > 0) {
-    const ultimoId = cadena.pila[cadena.pila.length - 1];
-    const velUltimo = velocidadDe(state, ultimoId);
-    if (velUltimo === "fugaz") return [];
-    if (velUltimo === "presteza") velocidadRequerida = "presteza";
-  }
-  const res = [];
-  for (const id of p.campo.misticasTacticas) {
-    if (!id) continue;
-    if (enPila.has(id)) continue;
-    const inst = state.instances[id];
-    const meta = inst?.cardId ? getCardMeta(inst.cardId) : null;
-    if (meta && esMistica(meta) && !inst.entradaEsteTurno) {
-      const vel = velocidadDe(state, id);
-      if (puedeResponder(vel, velocidadRequerida)) res.push(id);
-    }
-  }
-  for (const id of p.campo.arcanasCombate) {
-    if (!id) continue;
-    if (enPila.has(id)) continue;
-    const inst = state.instances[id];
-    const meta = inst?.cardId ? getCardMeta(inst.cardId) : null;
-    if (!meta) continue;
-    if (esArcana(meta) && !inst.entradaEsteTurno) {
-      const vel = velocidadDe(state, id);
-      if (puedeResponder(vel, velocidadRequerida)) res.push(id);
-    }
-  }
-  for (const id of p.campo.campeones) {
-    if (!id) continue;
-    if (enPila.has(id)) continue;
-    const inst = state.instances[id];
-    if (inst?.agotado) continue;
-    const meta = inst?.cardId ? getCardMeta(inst.cardId) : null;
-    if (meta && meta.type === "Campe\xF3n" && "efectos" in meta && meta.efectos?.some((e) => e.tipo === "disparo")) {
-      const vel = velocidadDe(state, id);
-      if (puedeResponder(vel, velocidadRequerida)) res.push(id);
-    }
-  }
-  return res;
+// src/online/game/campo.ts
+function sacrificiosRequeridos(roles) {
+  if (!roles) return 0;
+  if (roles.includes("Soberano")) return 1;
+  if (roles.includes("Emperador")) return 2;
+  return 0;
 }
-function puedeResponder(vel, requerida) {
-  if (requerida === "fugaz") return false;
-  if (requerida === "presteza") return vel === "presteza" || vel === "fugaz";
-  return true;
+function esSingular(card) {
+  return card.type === "Campe\xF3n" && (card.catHabilidad?.includes("Singular") ?? false);
 }
-function abrirCadena(s, primerRespondedor) {
-  const combate = s.combate;
-  if (!combate) return false;
-  if (respondiblesDe(s, primerRespondedor).length === 0) return false;
-  combate.cadena = { pila: [], prioridad: primerRespondedor, pasesConsecutivos: 0, faseAbierta: s.fase };
-  return true;
-}
-function respuestasDeMano(state, playerId) {
-  const p = state.players[playerId];
-  const res = [];
-  for (const id of p.mano) {
-    const inst = state.instances[id];
-    const meta = inst?.cardId ? getCardMeta(inst.cardId) : null;
-    if (meta && esMistica(meta) && "keywords" in meta && meta.keywords?.includes("Presteza")) {
-      res.push(id);
-    }
-  }
-  return res;
-}
-function abrirCadenaGlobal(s, jugadorActivo, efecto, incluirMano = false) {
-  const vel = velocidadDe(s, efecto.cardInstanceId);
-  if (vel === "fugaz") return false;
-  const rival = jugadorActivo === "A" ? "B" : "A";
-  const conCampo = respondiblesDe(s, rival).length > 0;
-  const conMano = incluirMano && respuestasDeMano(s, rival).length > 0;
-  if (!conCampo && !conMano) return false;
-  s.cadena = {
-    pila: [],
-    prioridad: rival,
-    // el rival responde primero
-    pasesConsecutivos: 0,
-    faseAbierta: s.fase,
-    efectoActual: { jugador: jugadorActivo, ...efecto },
-    velocidadActual: vel
-  };
-  return true;
-}
-function cadenaActiva(s) {
-  return s.combate?.cadena ?? s.cadena;
-}
-function esCadenaDeCombate(s) {
-  return !!s.combate?.cadena;
-}
-function validarResponderCadena(state, cardInstanceId) {
-  const cadena = cadenaActiva(state);
-  if (!cadena) return "no hay cadena abierta";
-  if (!respondiblesDe(state, cadena.prioridad).includes(cardInstanceId)) {
-    return "esa carta no puede responder ahora";
-  }
-  return null;
-}
-function validarPasarPrioridad(state) {
-  if (!cadenaActiva(state)) return "no hay cadena abierta";
-  return null;
-}
-function validarJugarRespuesta(state, cardInstanceId, eterIds) {
-  const cadena = cadenaActiva(state);
-  if (!cadena) return "no hay cadena abierta";
-  const jugador = cadena.prioridad;
+function copiasEnCampo(state, jugador, cardId) {
   const p = state.players[jugador];
-  if (!p.mano.includes(cardInstanceId)) return "la carta no est\xE1 en tu mano";
-  const inst = state.instances[cardInstanceId];
-  const meta = inst?.cardId ? getCardMeta(inst.cardId) : null;
-  if (!meta || !esMistica(meta)) return "no es una M\xEDstica";
-  if (!("keywords" in meta) || !meta.keywords?.includes("Presteza")) {
-    return "solo cartas con PRESTEZA juegan desde la mano como respuesta";
-  }
-  if (esPermanenteEnMesa(meta)) {
-    return "esta carta permanece en mesa: no puede jugarse como respuesta";
-  }
-  if ((meta.stats.cost ?? 0) > 0) {
-    const pago = validarPago(state, jugador, eterIds, meta.id);
-    if (!pago.ok) return pago.error ?? "pago inv\xE1lido";
-  }
-  return null;
+  return p.campo.campeones.filter((id) => id !== null && state.instances[id]?.cardId === cardId).length;
 }
-function ejecutarJugarRespuesta(s, cardInstanceId, eterIds, ctx) {
-  const cadena = cadenaActiva(s);
-  if (!cadena) return;
-  const jugador = cadena.prioridad;
-  const p = s.players[jugador];
-  const inst = s.instances[cardInstanceId];
-  if (!inst?.cardId) return;
-  const contextoUso = { tipo: "jugar", cardInstanceId };
-  aplicarPago(s, ctx, jugador, eterIds, inst.cardId, contextoUso);
-  const manoIdx = p.mano.indexOf(cardInstanceId);
-  if (manoIdx !== -1) p.mano.splice(manoIdx, 1);
-  ctx.emit({ type: "carta_salida_de_zona", cardInstanceId, zona: "mano", jugador });
-  cadena.pila.push(cardInstanceId);
-  cadena.pasesConsecutivos = 0;
-  cadena.velocidadActual = velocidadDe(s, cardInstanceId);
-  ctx.emit({ type: "respuesta_encadenada", jugador, cardInstanceId });
-  cadena.prioridad = jugador === "A" ? "B" : "A";
-}
-function ejecutarResponderCadena(s, cardInstanceId, ctx) {
-  const cadena = cadenaActiva(s);
-  if (!cadena) return;
-  const jugador = cadena.prioridad;
-  cadena.pila.push(cardInstanceId);
-  cadena.pasesConsecutivos = 0;
-  cadena.velocidadActual = velocidadDe(s, cardInstanceId);
-  const inst = s.instances[cardInstanceId];
-  const meta = inst?.cardId ? getCardMeta(inst.cardId) : null;
-  if (meta && esArcana(meta)) inst.bocaArriba = true;
-  if (meta && meta.type === "Campe\xF3n" && "efectos" in meta && meta.efectos?.some((e) => e.tipo === "disparo")) {
-    inst.bocaArriba = true;
-  }
-  ctx.emit({ type: "respuesta_encadenada", jugador, cardInstanceId });
-  cadena.prioridad = jugador === "A" ? "B" : "A";
-}
-function ejecutarPasarPrioridad(s, ctx) {
-  const cadena = cadenaActiva(s);
-  if (!cadena) return;
-  const jugador = cadena.prioridad;
-  cadena.pasesConsecutivos++;
-  ctx.emit({ type: "prioridad_pasada", jugador });
-  if (cadena.pasesConsecutivos >= 2) {
-    if (esCadenaDeCombate(s)) {
-      resolverCadenaCombate(s, ctx);
-    } else {
-      resolverCadenaGlobal(s, ctx);
-    }
-  } else {
-    cadena.prioridad = jugador === "A" ? "B" : "A";
-  }
-}
-function resolverCadenaCombate(s, ctx) {
-  const combate = s.combate;
-  const cadena = combate?.cadena;
-  if (!combate || !cadena) return;
-  for (const id of [...cadena.pila].reverse()) {
-    const inst = s.instances[id];
-    const meta = inst?.cardId ? getCardMeta(inst.cardId) : null;
-    if (!meta) continue;
-    if (esArcana(meta)) {
-      const p = s.players[inst.owner];
-      const idx = p.campo.arcanasCombate.indexOf(id);
-      if (idx !== -1) {
-        const zona = slotAZona("arcanasCombate", idx) ?? "3D";
-        ctx.emit({ type: "carta_salida_de_zona", cardInstanceId: id, zona, jugador: inst.owner });
-        enviarAlCementerio(s, ctx, id);
-        ctx.emit({ type: "carta_entrada_a_zona", cardInstanceId: id, zona: "2G", jugador: inst.owner, bocaArriba: true });
-      }
-      dispararTrigger(s, ctx, "al-resolver-cadena", inst.owner, [id]);
-    }
-  }
-  combate.cadena = void 0;
-  continuarCombateTrasCadena(s, ctx);
-}
-function resolverCadenaGlobal(s, ctx) {
-  const cadena = s.cadena;
-  if (!cadena) return;
-  for (const id of [...cadena.pila].reverse()) {
-    const inst = s.instances[id];
-    const meta = inst?.cardId ? getCardMeta(inst.cardId) : null;
-    if (!meta) continue;
-    const p = s.players[inst.owner];
-    const enCampo = p.campo.campeones.includes(id) || p.campo.misticasTacticas.includes(id) || p.campo.arcanasCombate.includes(id);
-    if (esMistica(meta) && !enCampo) {
-      if ("efectos" in meta && meta.efectos) {
-        for (const efecto of meta.efectos) {
-          if (efecto.tipo === "hechizo" && !efecto.trigger && efecto.efecto) {
-            interpretEffect(s, ctx, inst, efecto, { jugador: inst.owner, fromTrigger: true });
-          }
-        }
-      }
-      dispararTrigger(s, ctx, "al-resolver-cadena", inst.owner, [id]);
-      enviarAlCementerio(s, ctx, id);
-      ctx.emit({ type: "carta_entrada_a_zona", cardInstanceId: id, zona: "2G", jugador: inst.owner, bocaArriba: true });
-      continue;
-    }
-    if (esArcana(meta)) {
-      const idx = p.campo.arcanasCombate.indexOf(id);
-      if (idx !== -1) {
-        const zona = slotAZona("arcanasCombate", idx) ?? "3D";
-        ctx.emit({ type: "carta_salida_de_zona", cardInstanceId: id, zona, jugador: inst.owner });
-        enviarAlCementerio(s, ctx, id);
-        ctx.emit({ type: "carta_entrada_a_zona", cardInstanceId: id, zona: "2G", jugador: inst.owner, bocaArriba: true });
-      }
-      dispararTrigger(s, ctx, "al-resolver-cadena", inst.owner, [id]);
-    } else {
-      dispararTrigger(s, ctx, "al-resolver-cadena", inst.owner, [id]);
-    }
-  }
-  const pend = cadena.activacionPendiente;
-  if (pend) {
-    const champ = s.instances[pend.cardInstanceId];
-    const metaChamp = champ?.cardId ? getCardMeta(champ.cardId) : null;
-    if (!pend.negada && champ && metaChamp && "efectos" in metaChamp) {
-      const efecto = metaChamp.efectos?.[pend.efectoIdx];
-      if (efecto) {
-        interpretEffect(s, ctx, champ, efecto, {
-          jugador: pend.jugador,
-          contextoUso: pend.objetivoId ? "objetivo-elegido" : void 0,
-          objetivoId: pend.objetivoId
-        });
-      }
-    }
-  }
-  s.cadena = void 0;
-}
-
-// src/online/game/reglas.ts
-var otro = (j) => j === "A" ? "B" : "A";
-var memoEfectosRegla = /* @__PURE__ */ new Map();
-function efectosReglaDe(cardId) {
-  const memo = memoEfectosRegla.get(cardId);
-  if (memo) return memo;
-  const meta = getCardMeta(cardId);
-  const lista = meta && "efectos" in meta && meta.efectos ? meta.efectos.map((efecto, indice) => ({ efecto, indice })).filter(({ efecto }) => efecto.efecto === "modificar_regla" && !!efecto.regla) : [];
-  memoEfectosRegla.set(cardId, lista);
-  return lista;
-}
-function fuentesDeReglas(s) {
-  const fuentes = [];
-  const tiene = (inst) => !!inst?.cardId && efectosReglaDe(inst.cardId).length > 0;
-  for (const j of ["A", "B"]) {
-    const p = s.players[j];
-    for (const id of [...p.campo.campeones, ...p.campo.misticasTacticas, ...p.campo.arcanasCombate]) {
-      if (!id) continue;
-      const inst = s.instances[id];
-      if (!inst) continue;
-      if (tiene(inst)) fuentes.push({ inst, origen: "campo", controlador: j });
-      for (const eterId of inst.eterBloqueado ?? []) {
-        const eter = s.instances[eterId];
-        if (tiene(eter)) fuentes.push({ inst: eter, origen: "bloqueo", controlador: j, anfitrion: id });
-      }
-    }
-    for (const id of p.eterReserva) {
-      const inst = s.instances[id];
-      if (tiene(inst)) fuentes.push({ inst, origen: "reserva", controlador: j });
-    }
-    for (const id of p.eterPagado) {
-      const inst = s.instances[id];
-      if (tiene(inst)) fuentes.push({ inst, origen: "pagado", controlador: j });
-    }
-    for (const id of p.vinculos) {
-      const inst = id ? s.instances[id] : void 0;
-      if (tiene(inst) && inst.bocaArriba === true) fuentes.push({ inst, origen: "vinculo", controlador: j });
-    }
-  }
-  return fuentes;
-}
-function efectoActivo(s, f, efecto, indice) {
-  if (efecto.trigger !== void 0 && efecto.trigger !== "ninguno") return false;
-  switch (f.origen) {
-    case "campo": {
-      if (efecto.tipo !== "pasivo" && efecto.tipo !== "continuo" && efecto.tipo !== "comandante") return false;
-      const meta = f.inst.cardId ? getCardMeta(f.inst.cardId) : null;
-      if (meta?.type === "Arcana" && f.inst.bocaArriba !== true) return false;
-      const costo = efecto.costo;
-      const pagaConBloqueo = costo?.tipo === "eter_bloqueado" || costo?.tipo === "bloqueo_fijo";
-      if (pagaConBloqueo || efecto.duracion === "mientras_ester_bloqueado") {
-        const requerido = costo?.umbral ?? (costo?.tipo === "bloqueo_fijo" ? costo.cantidad : void 0) ?? 1;
-        return eterDeEfecto(s, f.inst.cardInstanceId, indice).length >= requerido;
-      }
-      return true;
-    }
-    case "reserva":
-      return efecto.tipo === "reserva";
-    case "pagado":
-      return efecto.tipo === "pago";
-    case "bloqueo":
-      return efecto.tipo === "bloqueo";
-    case "vinculo":
-      return efecto.tipo === "vinculo";
-  }
-}
-function jugadoresAfectados(f, efecto) {
-  const c = efecto.objetivo?.controlador ?? "propio";
-  if (c === "ambos") return ["A", "B"];
-  if (c === "rival") return [otro(f.controlador)];
-  return [f.controlador];
-}
-function afectaACarta(s, f, efecto, instId) {
-  if (f.origen === "bloqueo") return f.anfitrion === instId;
-  const objetivo = efecto.objetivo;
-  const destino = s.instances[instId];
-  if (!destino) return false;
-  const mismoControlador = (j) => s.players[j].campo.campeones.includes(instId) || s.players[j].campo.misticasTacticas.includes(instId) || s.players[j].campo.arcanasCombate.includes(instId);
-  switch (objetivo?.tipo ?? "self") {
-    case "self":
-      return f.inst.cardInstanceId === instId;
-    case "equipped_champion":
-      return f.inst.equipadoA === instId;
-    case "todos_campeones_propios":
-      return mismoControlador(f.controlador);
-    case "todos_campeones_rivales":
-      return mismoControlador(otro(f.controlador));
-    case "campeon": {
-      const c = objetivo?.controlador ?? "propio";
-      if (c === "ambos") return mismoControlador("A") || mismoControlador("B");
-      return mismoControlador(c === "rival" ? otro(f.controlador) : f.controlador);
-    }
-    default:
-      return false;
-  }
-}
-function modificadoresReglaDe(s, regla, sujeto) {
-  const def = REGLAS[regla];
-  const mods = [];
-  if (sujeto && "instId" in sujeto) {
-    for (const kw of keywordsDe(s, sujeto.instId)) {
-      for (const m of KEYWORD_REGLAS[kw] ?? []) if (m.regla === regla) mods.push({ ...m, orden: 0 });
-    }
-  }
-  for (const f of fuentesDeReglas(s)) {
-    const cardId = f.inst.cardId;
-    for (const { efecto, indice } of efectosReglaDe(cardId)) {
-      const m = efecto.regla;
-      if (!m || m.id !== regla || !efectoActivo(s, f, efecto, indice)) continue;
-      let alcanza = false;
-      if (def.ambito === "partida") alcanza = true;
-      else if (def.ambito === "jugador") alcanza = !!sujeto && "jugador" in sujeto && jugadoresAfectados(f, efecto).includes(sujeto.jugador);
-      else alcanza = !!sujeto && "instId" in sujeto && afectaACarta(s, f, efecto, sujeto.instId);
-      if (alcanza) mods.push({ regla, operacion: m.operacion, valor: m.valor, orden: 0 });
-    }
-  }
-  for (const r of s.reglasTemporales ?? []) {
-    if (r.regla !== regla) continue;
-    const su = r.sujeto;
-    const alcanza = su.tipo === "partida" || su.tipo === "jugador" && !!sujeto && "jugador" in sujeto && su.jugador === sujeto.jugador || su.tipo === "carta" && !!sujeto && "instId" in sujeto && su.instId === sujeto.instId;
-    if (alcanza) mods.push({ regla, operacion: r.operacion, valor: r.valor, orden: r.orden });
-  }
-  return mods;
-}
-function reglaNumero(s, regla, sujeto) {
-  return resolverRegla(regla, modificadoresReglaDe(s, regla, sujeto));
-}
-function reglaBool(s, regla, sujeto) {
-  return resolverRegla(regla, modificadoresReglaDe(s, regla, sujeto));
-}
-
-// src/online/game/combat.ts
-var tieneKeyword = (state, id, kw) => keywordsDe(state, id).includes(kw);
-var rupturasHechas = (state) => state.rupturasEsteTurno ?? 0;
-var rupturasAgotadas = (state) => rupturasHechas(state) >= reglaNumero(state, "rupturasPorTurno", { jugador: state.turno });
-var atacarBloqueadoPorRuptura = (state) => rupturasHechas(state) > 0 && !reglaBool(state, "atacarTrasRuptura", { jugador: state.turno });
-var rivalDe = (state) => state.turno === "A" ? "B" : "A";
-function controladorDe(s, id) {
-  for (const j of ["A", "B"]) {
-    if (s.players[j].campo.campeones.includes(id)) return j;
-  }
-  return null;
-}
-function atacantesElegibles(state) {
-  if (state.primerTurno && reglaBool(state, "primerTurnoSinAtaques")) return [];
-  if (atacarBloqueadoPorRuptura(state)) return [];
-  const p = state.players[state.turno];
+function campeonesSacrificables(state, jugador, campeonCardId) {
+  const meta = getCardMeta(campeonCardId);
+  if (!meta) return [];
+  const p = state.players[jugador];
   return p.campo.campeones.filter((id) => {
     if (!id) return false;
     const inst = state.instances[id];
-    if (!inst) return false;
-    const doubleActivo = tieneDoubleAttackActivo(state, id);
-    if (inst.atacoEsteTurno && !doubleActivo) return false;
-    if (inst.agotado) {
-      if (!(doubleActivo && inst.atacoEsteTurno)) return false;
-    }
-    if (inst.entradaEsteTurno && reglaBool(state, "invocacionCansada", { instId: id })) return false;
-    return true;
+    const m = inst?.cardId ? getCardMeta(inst.cardId) : null;
+    return m !== null && esCampeon(m) && faccionesCompartidas(m.facciones, meta.facciones);
   });
-}
-function rupturaPendiente(s) {
-  const combate = s.combate;
-  if (!combate || combate.paso !== "resolucion" || rupturasAgotadas(s)) return false;
-  const hayVinculoVivo = s.players[rivalDe(s)].vinculos.some((id) => !!id && !s.instances[id]?.bocaArriba);
-  if (!hayVinculoVivo) return false;
-  return ataquesSinBloquear(s).some((id) => s.players[s.turno].campo.campeones.includes(id));
-}
-function cerrarCombateSiDoubleAttack(s) {
-  const combate = s.combate;
-  if (!combate) return;
-  if (rupturaPendiente(s)) return;
-  const dobles = combate.atacantes.some(
-    (id) => s.players[s.turno].campo.campeones.includes(id) && tieneDoubleAttackActivo(s, id)
-  );
-  if (dobles) s.combate = void 0;
-}
-function bloqueadoresDisponibles(state) {
-  const defensor = rivalDe(state);
-  const p = state.players[defensor];
-  return p.campo.campeones.filter((id) => {
-    if (id === null) return false;
-    const inst = state.instances[id];
-    if (!inst) return false;
-    if ((inst.bloqueosEsteTurno ?? 0) >= reglaNumero(state, "bloqueosPorTurno", { instId: id })) return false;
-    return !inst.agotado || reglaBool(state, "agotadoPuedeBloquear", { instId: id });
-  });
-}
-function ataquesSinBloquear(state) {
-  const combate = state.combate;
-  if (!combate) return [];
-  return combate.atacantes.filter((a) => !(a in combate.bloqueos));
-}
-function asignacionForzada(state) {
-  const combate = state.combate;
-  if (!combate || combate.paso !== "bloqueo") return null;
-  const disponibles = bloqueadoresDisponibles(state);
-  const sinBloquear = ataquesSinBloquear(state);
-  const k = Math.min(disponibles.length, sinBloquear.length);
-  if (k === 0) return null;
-  const asignaciones = {};
-  for (let i = 0; i < k; i++) asignaciones[sinBloquear[i]] = disponibles[i];
-  return asignaciones;
-}
-function validarDeclararAtaque(state, atacanteIds) {
-  if (state.fase !== "choque") return "declarar_ataque solo en Choque";
-  if (state.combate) return "el combate ya fue declarado";
-  if (state.primerTurno && reglaBool(state, "primerTurnoSinAtaques")) return "nadie ataca en el primer turno (\xA78.6)";
-  if (atacarBloqueadoPorRuptura(state)) return "no se puede atacar despu\xE9s de una Ruptura (\xA79.4)";
-  if (atacanteIds.length === 0) return "no declaraste atacantes";
-  if (new Set(atacanteIds).size !== atacanteIds.length) return "atacantes duplicados";
-  const elegibles = atacantesElegibles(state);
-  for (const id of atacanteIds) {
-    if (!elegibles.includes(id)) return `el Campe\xF3n no puede atacar: ${id}`;
-  }
-  return null;
-}
-function ejecutarDeclararAtaque(s, atacanteIds, ctx) {
-  s.combate = {
-    paso: "bloqueo",
-    atacantes: atacanteIds,
-    bloqueos: {},
-    rupturaDisponible: true,
-    rupturaUsadaEsteTurno: rupturasAgotadas(s)
-  };
-  for (const id of atacanteIds) {
-    const inst = s.instances[id];
-    inst.atacoEsteTurno = true;
-    if (reglaBool(s, "atacarAgota", { instId: id })) inst.agotado = true;
-    if (tieneKeyword(s, id, "Recarga") && inst.eterBloqueado && inst.eterBloqueado.length > 0) {
-      const eter = inst.eterBloqueado.shift();
-      const pagador = s.instances[eter]?.pagadoPor ?? inst.owner;
-      const e = s.instances[eter];
-      if (e) {
-        delete e.bloqueadoPorEfecto;
-        delete e.pagadoPor;
-      }
-      s.players[pagador].eterReserva.push(eter);
-      ctx.emit({ type: "eter_reagrupado", jugador: pagador, eterIds: [eter] });
-      evaluarFinSteal(s, ctx, id);
-    }
-  }
-  ctx.emit({ type: "ataque_declarado", jugador: s.turno, atacanteIds });
-  dispararTrigger(s, ctx, "al-atacar", s.turno, atacanteIds);
-  if (abrirCadena(s, rivalDe(s))) return;
-  if (bloqueadoresDisponibles(s).length === 0) {
-    s.combate.paso = "resolucion";
-    resolverCombate(s, ctx);
-    cerrarCombateSiDoubleAttack(s);
-  }
-}
-function validarDeclararBloqueo(state, asignaciones) {
-  if (state.fase !== "choque") return "declarar_bloqueo solo en Choque";
-  const combate = state.combate;
-  if (!combate || combate.paso !== "bloqueo") return "no hay bloqueo pendiente";
-  const pares = Object.entries(asignaciones);
-  if (pares.length === 0) return "no asignaste bloqueadores";
-  const disponibles = bloqueadoresDisponibles(state);
-  const sinBloquear = ataquesSinBloquear(state);
-  const k = Math.min(disponibles.length, sinBloquear.length);
-  if (pares.length !== k) {
-    return `el bloqueo es forzoso: asigna exactamente ${k} bloqueador(es) (9.3)`;
-  }
-  const bloqueadoresUsados = /* @__PURE__ */ new Set();
-  for (const [atacanteId, bloqueadorId] of pares) {
-    if (!sinBloquear.includes(atacanteId)) return `no es un ataque sin bloquear: ${atacanteId}`;
-    if (!disponibles.includes(bloqueadorId)) return `el bloqueador no est\xE1 disponible: ${bloqueadorId}`;
-    if (bloqueadoresUsados.has(bloqueadorId)) return "un bloqueador no puede cubrir 2 ataques (\xA79.3)";
-    bloqueadoresUsados.add(bloqueadorId);
-  }
-  return null;
-}
-function ejecutarDeclararBloqueo(s, asignaciones, ctx) {
-  const combate = s.combate;
-  combate.bloqueos = { ...combate.bloqueos, ...asignaciones };
-  for (const bloqueadorId of Object.values(asignaciones)) {
-    const b = s.instances[bloqueadorId];
-    if (b) b.bloqueosEsteTurno = (b.bloqueosEsteTurno ?? 0) + 1;
-  }
-  combate.paso = "resolucion";
-  combate.rupturaDisponible = ataquesSinBloquear(s).length > 0;
-  ctx.emit({ type: "bloqueo_declarado", jugador: rivalDe(s), asignaciones });
-  resolverCombate(s, ctx);
-  abrirCadena(s, rivalDe(s));
-}
-function resolverCombate(s, ctx) {
-  const combate = s.combate;
-  if (!combate) return;
-  const muertosAtacantes = [];
-  const muertosBloqueadores = [];
-  const killerDe = /* @__PURE__ */ new Map();
-  for (const atacante of combate.atacantes) {
-    const bloqueador = combate.bloqueos[atacante];
-    if (!bloqueador) continue;
-    const statsAtacante = statsDe(s, atacante);
-    const statsBloqueador = statsDe(s, bloqueador);
-    if (statsAtacante.poder >= statsBloqueador.resistencia) {
-      muertosBloqueadores.push(bloqueador);
-      killerDe.set(bloqueador, atacante);
-    }
-    if (statsBloqueador.poder >= statsAtacante.resistencia) {
-      muertosAtacantes.push(atacante);
-      killerDe.set(atacante, bloqueador);
-    }
-  }
-  const controladores = /* @__PURE__ */ new Map();
-  for (const id of [...muertosAtacantes, ...muertosBloqueadores]) {
-    const killerId = killerDe.get(id);
-    if (killerId && !controladores.has(killerId)) {
-      const c = controladorDe(s, killerId);
-      if (c) controladores.set(killerId, c);
-    }
-  }
-  for (const id of [...muertosAtacantes, ...muertosBloqueadores]) {
-    const killerId = killerDe.get(id);
-    const jugador = killerId ? controladores.get(killerId) : void 0;
-    if (destruirCarta(s, ctx, id, "combate") && killerId && jugador) {
-      dispararTrigger(s, ctx, "al-matar-en-combate", jugador, [id, killerId], { killerId, victimaId: id });
-    }
-  }
-}
-function continuarCombateTrasCadena(s, ctx) {
-  const combate = s.combate;
-  if (!combate) return;
-  if (combate.paso === "bloqueo" && bloqueadoresDisponibles(s).length === 0) {
-    combate.paso = "resolucion";
-    resolverCombate(s, ctx);
-    cerrarCombateSiDoubleAttack(s);
-  }
-}
-function validarElegirRuptura(state, atacanteId, vinculoSlot) {
-  if (state.fase !== "choque") return "elegir_ruptura solo en Choque";
-  const combate = state.combate;
-  if (!combate || combate.paso !== "resolucion") return "no hay resoluci\xF3n pendiente";
-  if (rupturasAgotadas(state)) return "ya hiciste la Ruptura de este turno (\xA79.4)";
-  if (atacanteId === null) {
-    return "la Ruptura es obligatoria si hay un ataque sin bloquear (\xA79.4)";
-  }
-  if (!combate.rupturaDisponible) return "no hay ataques sin bloquear para romper";
-  if (!combate.atacantes.includes(atacanteId)) return "no es un atacante declarado";
-  if (atacanteId in combate.bloqueos) return "el ataque fue bloqueado: no rompe (\xA79.4-B)";
-  if (!state.players[state.turno].campo.campeones.includes(atacanteId)) return "el atacante muri\xF3";
-  if (vinculoSlot === void 0 || vinculoSlot < 0 || vinculoSlot > 5) return "vinculoSlot 0-5";
-  const vinculoId = state.players[rivalDe(state)].vinculos[vinculoSlot];
-  if (!vinculoId) return "no hay V\xEDnculo vivo en ese slot";
-  if (state.instances[vinculoId]?.bocaArriba) return "el V\xEDnculo ya fue destruido";
-  return null;
-}
-function ejecutarElegirRuptura(s, atacanteId, vinculoSlot, ctx) {
-  if (atacanteId === null || vinculoSlot === void 0) return;
-  const vinculoId = s.players[rivalDe(s)].vinculos[vinculoSlot];
-  ctx.emit({ type: "ruptura_realizada", atacanteId, vinculoSlot, vinculoId });
-  destruirCarta(s, ctx, vinculoId, "ruptura");
-  s.rupturasEsteTurno = rupturasHechas(s) + 1;
-  if (s.combate) s.combate.rupturaUsadaEsteTurno = rupturasAgotadas(s);
-  cerrarCombateSiDoubleAttack(s);
-}
-
-// src/online/game/habilidades.ts
-function validarActivarArcana(state, action) {
-  if (state.fase !== "forja" && state.fase !== "choque" && state.fase !== "ocaso") {
-    return "activar_arcana solo en Forja/Choque/Ocaso (\xA78.3a: nunca en Alba)";
-  }
-  const inst = state.instances[action.cardInstanceId];
-  if (!inst) return "instancia no encontrada";
-  const meta = inst.cardId ? getCardMeta(inst.cardId) : null;
-  if (!meta) return "carta desconocida";
-  const p = state.players[state.turno];
-  const idx = p.campo.arcanasCombate.indexOf(action.cardInstanceId);
-  if (idx === -1) return "la Arcana no est\xE1 en el campo";
-  if (inst.bocaArriba) return "la Arcana ya est\xE1 boca arriba";
-  if (inst.entradaEsteTurno) return "la Arcana no se puede activar el turno en que fue colocada (\xA75.4)";
-  const condicion = "condicion" in meta ? meta.condicion : void 0;
-  const condError = condicionCumple(state, condicion, state.turno);
-  if (condError) return condError;
-  if (action.slot !== idx) return "el slot no coincide con la posici\xF3n de la Arcana";
-  const pago = validarPago(state, state.turno, action.eterIds, meta.id);
-  if (!pago.ok) return pago.error ?? "pago inv\xE1lido";
-  if (esArtefactoEquipable(meta)) {
-    if (!p.campo.campeones.some((id) => id !== null)) {
-      return "no puedes activar un ARTEFACTO sin un Campe\xF3n en tu campo";
-    }
-  }
-  return null;
-}
-function validarActivarHabilidad(state, action) {
-  const p = state.players[state.turno];
-  const inst = state.instances[action.cardInstanceId];
-  if (!inst) return "la carta no existe";
-  if (!p.campo.campeones.includes(action.cardInstanceId)) return "la carta no est\xE1 en tu campo";
-  const meta = inst.cardId ? getCardMeta(inst.cardId) : null;
-  if (!meta) return "carta desconocida";
-  const efectoSel = efectoActivableDe(meta, !!action.objetivoId);
-  if (!efectoSel) {
-    return "esta carta se activa bloqueando \xC9ter (usa la acci\xF3n bloquear_eter)";
-  }
-  const esBloqueado = esCostoBloqueo(efectoSel.costo);
-  if (esBloqueado) {
-    if (inst.opcionUsadaEsteTurno) return "ya usaste esta habilidad este turno";
-    const costoEsperado = efectoSel.costo?.cantidad ?? 0;
-    if (costoEsperado > 0 && action.eterIds.length !== costoEsperado) {
-      return `${meta.name} requiere exactamente ${costoEsperado} \xC9ter(es), indicaste ${action.eterIds.length}`;
-    }
-    if (action.eterIds.length === 0) return "no indicaste \xC9teres para bloquear";
-    if (new Set(action.eterIds).size !== action.eterIds.length) return "\xE9teres repetidos";
-    const zonaOrigen = efectoSel.costo?.origen === "pagado" ? p.eterPagado : p.eterReserva;
-    for (const eterId of action.eterIds) {
-      if (!zonaOrigen.includes(eterId)) {
-        return efectoSel.costo?.origen === "pagado" ? `el \xC9ter ${eterId} no est\xE1 en tu \xC9ter Pagado (1A)` : `el \xC9ter ${eterId} no est\xE1 en tu Reserva`;
-      }
-      const eterInst = state.instances[eterId];
-      const eterMeta = eterInst?.cardId ? getCardMeta(eterInst.cardId) : null;
-      if (!eterMeta) return `\xC9ter desconocido: ${eterId}`;
-    }
-  } else {
-    if (inst.agotado) return "la carta ya est\xE1 agotada";
-    if (efectoSel.tipo !== "disparo" && inst.opcionUsadaEsteTurno) return "ya usaste esta habilidad este turno";
-    const costoEsperado = efectoSel.costo?.cantidad ?? 0;
-    const costoReal = costoEsperado > 0 ? costoEsperado : 1;
-    if (action.eterIds.length !== costoReal) {
-      return `${meta.name} requiere exactamente ${costoReal} \xC9ter(es), indicaste ${action.eterIds.length}`;
-    }
-    for (const eterId of action.eterIds) {
-      if (!p.eterReserva.includes(eterId)) return `el \xC9ter ${eterId} no est\xE1 en tu Reserva`;
-    }
-  }
-  return null;
-}
-function validarUsarTransmutar(state, action) {
-  const p = state.players[state.turno];
-  const inst = state.instances[action.cardInstanceId];
-  if (!inst) return "la carta no existe";
-  if (!tieneKeyword(state, action.cardInstanceId, "Transmutar")) return "la carta no tiene Transmutar";
-  if (!p.campo.campeones.includes(action.cardInstanceId)) return "la carta no est\xE1 en tu campo";
-  if (action.eterIds.length > 2) return "m\xE1ximo 2 \xC9teres pagados";
-  if (new Set(action.eterIds).size !== action.eterIds.length) return "\xE9teres repetidos";
-  for (const eterId of action.eterIds) {
-    if (!p.eterPagado.includes(eterId)) return "un \xC9ter no est\xE1 pagado (1A)";
-  }
-  return null;
-}
-function parejasBloqueoOpcion(s, jugador) {
-  const p = s.players[jugador];
-  const parejas = [];
-  for (const campeonId of p.campo.campeones) {
-    if (!campeonId) continue;
-    const metaC = s.instances[campeonId]?.cardId ? getCardMeta(s.instances[campeonId].cardId) : null;
-    if (!metaC || !campeonElegibleBloqueoEter(metaC)) continue;
-    for (const eterId of p.eterReserva) {
-      const metaE = s.instances[eterId]?.cardId ? getCardMeta(s.instances[eterId].cardId) : null;
-      if (!metaE || !faccionesCompartidas(metaE.facciones, metaC.facciones)) continue;
-      if (validarBloqueo(s, jugador, [eterId], campeonId) !== null) continue;
-      parejas.push({ campeonId, eterId });
-    }
-  }
-  return parejas;
-}
-function validarElegirOpcion(state, action) {
-  const pendiente = state.opcionesPendientes?.find(
-    (o) => o.jugador === state.turno && o.eterId === action.opcionId
-  );
-  if (pendiente) {
-    if (state.fase !== "forja") return "elegir_opcion solo en Forja";
-  } else if (pasivosBloqueo1A(state, state.turno).includes(action.opcionId)) {
-    if (state.fase !== "forja" && state.fase !== "choque" && state.fase !== "ocaso") {
-      return "el Pasivo 1A solo en Forja/Choque/Ocaso (\xA78.3a: nunca en Alba)";
-    }
-    if (state.fase === "choque" && state.combate) return "el Pasivo 1A no se usa durante un combate";
-  } else {
-    return "no hay opci\xF3n pendiente para este jugador";
-  }
-  if (action.campeonId === void 0 !== (action.eterId === void 0)) {
-    return "elegir_opcion: indica Campe\xF3n y \xC9ter juntos";
-  }
-  if (action.campeonId !== void 0 && action.eterId !== void 0) {
-    const { campeonId, eterId } = action;
-    const legal = parejasBloqueoOpcion(state, state.turno).some((q) => q.campeonId === campeonId && q.eterId === eterId);
-    if (!legal) return "la pareja Campe\xF3n/\xC9ter no es v\xE1lida para esta opci\xF3n";
-  }
-  return null;
-}
-function validarElegirObjetivo(state, action) {
-  const pendiente = state.objetivosPendientes?.[0];
-  if (!pendiente) return "no hay objetivo pendiente";
-  if (pendiente.jugador !== state.turno) return "no es tu turno para elegir objetivo";
-  if (!pendiente.opciones.includes(action.objetivoId)) return "el objetivo no est\xE1 entre las opciones v\xE1lidas";
-  return null;
-}
-function ejecutarActivarArcana(s, action, ctx) {
-  const id = action.cardInstanceId;
-  const inst = s.instances[id];
-  if (!inst) return;
-  const contextoUso = { tipo: "habilidad", cardInstanceId: id };
-  aplicarPago(s, ctx, s.turno, action.eterIds, inst.cardId, contextoUso);
-  inst.bocaArriba = true;
-  ctx.emit({ type: "carta_activada", cardInstanceId: id, jugador: s.turno, slot: action.slot });
-  const meta = getCardMeta(inst.cardId);
-  if (meta && esArtefactoEquipable(meta)) {
-    s.equiparPendiente = { artefactoId: id, jugador: s.turno, contexto: "activar_arcana" };
-    return;
-  }
-  if (meta && "efectos" in meta && meta.efectos) {
-    for (const efecto of meta.efectos) {
-      if (efecto.tipo === "hechizo" && !efecto.trigger && efecto.efecto) {
-        interpretEffect(s, ctx, inst, efecto, { jugador: s.turno, fromTrigger: true });
-      }
-    }
-  }
-  abrirCadenaGlobal(s, s.turno, { cardInstanceId: id, descripcion: meta?.name ?? id });
-  const enPila = (s.cadena?.pila ?? []).includes(id) || (s.combate?.cadena?.pila ?? []).includes(id);
-  if (!enPila && meta && !esPermanenteEnMesa(meta)) {
-    const slotIdx = s.players[s.turno].campo.arcanasCombate.indexOf(id);
-    if (slotIdx !== -1) {
-      const zonaSlot = slotAZona("arcanasCombate", slotIdx) ?? "3D";
-      ctx.emit({ type: "carta_salida_de_zona", cardInstanceId: id, zona: zonaSlot, jugador: s.turno });
-      enviarAlCementerio(s, ctx, id);
-      ctx.emit({ type: "carta_entrada_a_zona", cardInstanceId: id, zona: "2G", jugador: s.turno, bocaArriba: true });
-    }
-  }
-}
-function ejecutarActivarHabilidad(s, action, ctx) {
-  const p = s.players[s.turno];
-  const inst = s.instances[action.cardInstanceId];
-  const meta = inst.cardId ? getCardMeta(inst.cardId) : null;
-  if (!meta) return;
-  const efectoSel = efectoActivableDe(meta, !!action.objetivoId);
-  if (!efectoSel) return;
-  if (esCostoBloqueo(efectoSel.costo)) {
-    const zonaOrigen = efectoSel.costo?.origen === "pagado" ? p.eterPagado : p.eterReserva;
-    for (const eterId of action.eterIds) {
-      const idx = zonaOrigen.indexOf(eterId);
-      if (idx !== -1) zonaOrigen.splice(idx, 1);
-    }
-    inst.eterBloqueado = [...inst.eterBloqueado ?? [], ...action.eterIds];
-    const idxSel = meta.efectos?.indexOf(efectoSel) ?? -1;
-    etiquetarEter(s, action.eterIds, action.cardInstanceId, idxSel, s.turno);
-    const efectoConReagrupar = meta.efectos && "efectos" in meta ? meta.efectos.find((e) => e.reagrupar && esCostoBloqueo(e.costo)) : void 0;
-    if (efectoConReagrupar?.reagrupar) {
-      registrarEfectoPendiente(s, {
-        fuente: action.cardInstanceId,
-        owner: s.turno,
-        triggerFase: efectoConReagrupar.reagrupar.fase,
-        triggerOwner: efectoConReagrupar.reagrupar.turno === "propio" ? "due\xF1o" : "rival",
-        accion: { tipo: "liberar-eter", eterIds: [...action.eterIds], destino: "reserva" },
-        duracion: hastaAlba()
-      });
-    }
-    ctx.emit({ type: "eter_bloqueado", jugador: s.turno, eterIds: action.eterIds, campeonId: action.cardInstanceId });
-    inst.opcionUsadaEsteTurno = true;
-    if (efectoSel.tipo === "continuo") {
-      inst.agotado = true;
-    }
-    const payloadBloqueo = {
-      jugador: s.turno,
-      contextoUso: action.objetivoId ? "objetivo-elegido" : void 0,
-      objetivoId: action.objetivoId
-    };
-    if (diferirActivacion(s, inst, meta, efectoSel, action.objetivoId)) return;
-    interpretEffect(s, ctx, inst, efectoSel, payloadBloqueo);
-  } else {
-    for (const eterId of action.eterIds) {
-      const idx = p.eterReserva.indexOf(eterId);
-      if (idx !== -1) p.eterReserva.splice(idx, 1);
-      p.eterPagado.push(eterId);
-    }
-    if (action.eterIds.length > 0) {
-      ctx.emit({ type: "eter_pagado", jugador: s.turno, eterIds: action.eterIds, costo: action.eterIds.length, aportado: action.eterIds.length });
-    }
-    if (efectoSel.tipo !== "disparo") inst.opcionUsadaEsteTurno = true;
-    if (efectoSel.tipo === "disparo" && reglaBool(s, "disparoAgota", { instId: action.cardInstanceId })) {
-      inst.agotado = true;
-    }
-    const payload = {
-      jugador: s.turno,
-      contextoUso: action.objetivoId ? "objetivo-elegido" : void 0,
-      objetivoId: action.objetivoId
-    };
-    if (diferirActivacion(s, inst, meta, efectoSel, action.objetivoId)) return;
-    interpretEffect(s, ctx, inst, efectoSel, payload);
-  }
-}
-function diferirActivacion(s, inst, meta, efectoSel, objetivoId) {
-  const abierto = abrirCadenaGlobal(
-    s,
-    s.turno,
-    { cardInstanceId: inst.cardInstanceId, descripcion: meta.name ?? inst.cardInstanceId },
-    true
-    // incluirMano: Místicas Presteza del rival en mano pueden responder
-  );
-  if (!abierto || !s.cadena) return false;
-  const efectoIdx = "efectos" in meta && meta.efectos ? meta.efectos.indexOf(efectoSel) : -1;
-  if (efectoIdx === -1) {
-    s.cadena = void 0;
-    return false;
-  }
-  s.cadena.activacionPendiente = {
-    jugador: s.turno,
-    cardInstanceId: inst.cardInstanceId,
-    efectoIdx,
-    objetivoId
-  };
-  return true;
-}
-function ejecutarUsarTransmutar(s, action, ctx) {
-  const p = s.players[s.turno];
-  const id = action.cardInstanceId;
-  const inst = s.instances[id];
-  for (const eterId of action.eterIds) {
-    const idx = p.eterPagado.indexOf(eterId);
-    if (idx !== -1) p.eterPagado.splice(idx, 1);
-  }
-  p.eterReserva.push(...action.eterIds);
-  if (action.eterIds.length > 0) {
-    ctx.emit({ type: "eter_reagrupado", jugador: s.turno, eterIds: action.eterIds });
-  }
-  const slotIdx = p.campo.campeones.indexOf(id);
-  const zona = slotAZona("campeones", slotIdx) ?? "2B";
-  ctx.emit({ type: "carta_salida_de_zona", cardInstanceId: id, zona, jugador: s.turno });
-  p.campo.campeones[slotIdx] = null;
-  liberarEterBloqueado(s, ctx, id, "1A");
-  enviarAlCementerio(s, ctx, id);
-  ctx.emit({ type: "carta_entrada_a_zona", cardInstanceId: id, zona: "2G", jugador: inst.owner, bocaArriba: true });
-}
-function ejecutarElegirOpcion(s, action, ctx) {
-  const j = s.turno;
-  const p = s.players[j];
-  const pendiente = s.opcionesPendientes?.find((o) => o.jugador === j && o.eterId === action.opcionId);
-  const pasivoVivo = !pendiente && pasivosBloqueo1A(s, j).includes(action.opcionId);
-  if (!pendiente && !pasivoVivo) return;
-  const pareja = action.campeonId !== void 0 && action.eterId !== void 0 ? { campeonId: action.campeonId, eterId: action.eterId } : parejasBloqueoOpcion(s, j)[0];
-  if (!pareja) {
-    if (pendiente) s.opcionesPendientes = s.opcionesPendientes.filter((o) => !(o.jugador === j && o.eterId === action.opcionId));
-    return;
-  }
-  const elegido = { targetInstanceId: pareja.campeonId, eterId: pareja.eterId };
-  const instCampeon = s.instances[elegido.targetInstanceId];
-  instCampeon.eterBloqueado = [...instCampeon.eterBloqueado ?? [], elegido.eterId];
-  const eterIdx = p.eterReserva.indexOf(elegido.eterId);
-  if (eterIdx !== -1) p.eterReserva.splice(eterIdx, 1);
-  const metaElegido = s.instances[elegido.targetInstanceId]?.cardId ? getCardMeta(s.instances[elegido.targetInstanceId].cardId) : null;
-  const idxFuente = metaElegido && "efectos" in metaElegido && metaElegido.efectos ? metaElegido.efectos.findIndex((e) => e.tipo === "continuo" && esCostoBloqueo(e.costo)) : -1;
-  etiquetarEter(s, [elegido.eterId], elegido.targetInstanceId, idxFuente, j);
-  ctx.emit({ type: "eter_bloqueado", jugador: j, eterIds: [elegido.eterId], campeonId: elegido.targetInstanceId });
-  const eterPasivo = s.instances[action.opcionId];
-  if (eterPasivo) eterPasivo.opcionUsadaEsteTurno = true;
-  if (pendiente) s.opcionesPendientes = s.opcionesPendientes.filter((o) => !(o.jugador === j && o.eterId === action.opcionId));
-}
-function ejecutarElegirObjetivo(s, action, ctx) {
-  const pendiente = s.objetivosPendientes?.[0];
-  if (!pendiente) return;
-  s.objetivosPendientes = s.objetivosPendientes.slice(1);
-  if (pendiente.tramoUmbral !== void 0) {
-    ejecutarTramo(s, ctx, pendiente.instId, pendiente.tramoUmbral, action.objetivoId);
-    return;
-  }
-  dispararTrigger(s, ctx, pendiente.trigger, pendiente.jugador, [pendiente.instId], {
-    contextoUso: "objetivo-elegido",
-    objetivoId: action.objetivoId
-  });
-}
-
-// src/online/game/efectos.ts
-var registro = /* @__PURE__ */ new Map();
-function esEfectoStat(efecto) {
-  return efecto.efecto === "buff" || efecto.efecto === "debuff" || efecto.efecto === "grant_keyword";
-}
-function esAuraZona(efecto) {
-  if (!esEfectoStat(efecto)) return false;
-  const sinTriggerDeEvento = efecto.trigger === void 0 || efecto.trigger === "ninguno";
-  return (efecto.tipo === "pasivo" || efecto.tipo === "reserva" || efecto.tipo === "bloqueo") && sinTriggerDeEvento;
-}
-function esAuraCondicionada(efecto) {
-  if (efecto.tipo === "disparo" || efecto.tipo === "continuo") return false;
-  if (efecto.duracion !== "mientras_ester_bloqueado") return false;
-  if (!esEfectoStat(efecto)) return false;
-  const t = efecto.objetivo?.tipo;
-  return t === "todos_campeones_propios" || t === "self";
-}
-function esAuraEquipada(efecto) {
-  if (efecto.efecto !== "buff" && efecto.efecto !== "debuff") return false;
-  if (!efecto.buffPerBlockedEther) return false;
-  if (efecto.costo?.tipo !== "eter_bloqueado" && efecto.costo?.tipo !== "bloqueo_fijo") return false;
-  return efecto.objetivo?.tipo === "equipped_champion";
-}
-function esAuraVinculo(efecto) {
-  if (efecto.tipo !== "vinculo") return false;
-  if (!esEfectoStat(efecto)) return false;
-  if (efecto.duracion !== "mientras_en_campo") return false;
-  return efecto.trigger === void 0 || efecto.trigger === null;
-}
-function statsBaseDe(s, id) {
-  const inst = s.instances[id];
-  const meta = inst?.cardId ? getCardMeta(inst.cardId) : null;
-  const esCamp = !!meta && esCampeon(meta);
-  const stats = esCamp ? meta.stats : void 0;
-  let poder = inst?.poder ?? stats?.poder ?? 0;
-  let resistencia = inst?.resistencia ?? stats?.resistencia ?? 0;
-  for (const m of inst?.modificadores ?? []) {
-    if (m.stat === "poder") poder += m.valor;
-    else resistencia += m.valor;
-  }
-  return { poder, resistencia };
-}
-function evaluarAura(s, efecto, fuente, esComandante, objetivoId, objetivoInst, origen) {
-  const objetivo = efecto.objetivo;
-  if (!objetivo) return null;
-  const mismoDueno = fuente.owner === objetivoInst.owner;
-  let aplica = false;
-  let excluirSelf = false;
-  switch (objetivo.tipo) {
-    case "self":
-      aplica = objetivoId === fuente.cardInstanceId;
-      break;
-    case "todos_campeones_propios":
-      aplica = mismoDueno;
-      if (esComandante && aplica) {
-        const fuenteMeta = fuente.cardId ? getCardMeta(fuente.cardId) : null;
-        const objetivoMeta = objetivoInst.cardId ? getCardMeta(objetivoInst.cardId) : null;
-        if (fuenteMeta && objetivoMeta && "facciones" in fuenteMeta && "facciones" in objetivoMeta) {
-          aplica = faccionesCompartidas(fuenteMeta.facciones, objetivoMeta.facciones);
-        }
-      }
-      excluirSelf = !esComandante && origen === "campo" && esAuraZona(efecto) && !esAuraCondicionada(efecto);
-      break;
-    case "campeon":
-      if (objetivo.controlador === "propio") aplica = mismoDueno;
-      else if (objetivo.controlador === "rival") aplica = !mismoDueno;
-      else aplica = true;
-      if (aplica && objetivo.filtros?.seleccionar) {
-        const { stat, orden } = objetivo.filtros.seleccionar;
-        const pool = [];
-        for (const j of ["A", "B"]) {
-          const esDuenoFiltro = objetivo.controlador === "propio" ? j === fuente.owner : objetivo.controlador === "rival" ? j !== fuente.owner : true;
-          if (!esDuenoFiltro) continue;
-          for (const cid of s.players[j].campo.campeones) {
-            if (cid) pool.push(cid);
-          }
-        }
-        if (pool.length === 0) return null;
-        let mejorId = pool[0];
-        let mejorVal = stat === "poder" ? statsBaseDe(s, pool[0]).poder : statsBaseDe(s, pool[0]).resistencia;
-        for (const cid of pool.slice(1)) {
-          const val = stat === "poder" ? statsBaseDe(s, cid).poder : statsBaseDe(s, cid).resistencia;
-          if (orden === "mayor" ? val > mejorVal : val < mejorVal) {
-            mejorId = cid;
-            mejorVal = val;
-          }
-        }
-        if (mejorId !== objetivoId) return null;
-      }
-      break;
-    case "equipped_champion":
-      aplica = mismoDueno && fuente.equipadoA === objetivoId;
-      break;
-    default:
-      return null;
-  }
-  if (!aplica) return null;
-  if (excluirSelf && objetivoId === fuente.cardInstanceId) return null;
-  if (origen === "reserva") {
-    if (!s.players[fuente.owner].eterReserva.includes(fuente.cardInstanceId)) return null;
-    if (objetivo.controlador === "rival" && objetivoInst.owner === fuente.owner) return null;
-    if (objetivo.controlador === "propio" && objetivoInst.owner !== fuente.owner) return null;
-  }
-  if (origen === "bloqueo") {
-    if (!(objetivoInst.eterBloqueado ?? []).includes(fuente.cardInstanceId)) return null;
-  }
-  if (efecto.duracion === "mientras_ester_bloqueado" && origen !== "bloqueo") {
-    if ((fuente.eterBloqueado?.length ?? 0) === 0) return null;
-  }
-  let escala = 1;
-  if (efecto.buffPerBlockedEther) {
-    if (objetivo.tipo === "equipped_champion") {
-      const bloqueadosFuente = fuente.eterBloqueado?.length ?? 0;
-      if (bloqueadosFuente === 0) return null;
-      escala = efecto.cantidadMax !== void 0 ? Math.min(bloqueadosFuente, efecto.cantidadMax) : bloqueadosFuente;
-    } else {
-      const rival = objetivoInst.owner === "A" ? "B" : "A";
-      const bloqueadosRival = s.players[rival].campo.campeones.filter((cId) => cId !== null).reduce((acc, cId) => acc + (s.instances[cId]?.eterBloqueado?.length ?? 0), 0);
-      if (bloqueadosRival === 0) return null;
-      escala = efecto.cantidadMax !== void 0 ? Math.min(bloqueadosRival, efecto.cantidadMax) : bloqueadosRival;
-    }
-  }
-  const signo = efecto.efecto === "debuff" && !statsDebuffYaNegativos(efecto) ? -1 : 1;
-  const resultado = {};
-  if (efecto.stats?.ATQ) resultado.poder = efecto.stats.ATQ * signo * escala;
-  if (efecto.stats?.RES) resultado.resistencia = efecto.stats.RES * signo * escala;
-  if (efecto.efecto === "grant_keyword" && efecto.keyword) {
-    resultado.keywords = [efecto.keyword];
-  }
-  return resultado;
-}
-function statsDebuffYaNegativos(efecto) {
-  const atq = efecto.stats?.ATQ ?? 0;
-  const res = efecto.stats?.RES ?? 0;
-  return atq < 0 || atq === 0 && res < 0;
-}
-function modificadoresJSONDe(s, id) {
-  const vacio = { poder: 0, resistencia: 0, keywords: [] };
-  const inst = s.instances[id];
-  if (!inst) return vacio;
-  const meta = inst.cardId ? getCardMeta(inst.cardId) : null;
-  if (!meta || !esCampeon(meta)) return vacio;
-  const owner = inst.owner;
-  const candidatos = [];
-  const campo = s.players[owner].campo;
-  const fuentesCampo = [
-    ...campo.campeones,
-    ...campo.misticasTacticas,
-    ...campo.arcanasCombate
-  ].filter((x) => x !== null);
-  for (const fuenteId of fuentesCampo) {
-    const fuenteInst = s.instances[fuenteId];
-    if (!fuenteInst?.cardId) continue;
-    const fuenteMeta = getCardMeta(fuenteInst.cardId);
-    if (!fuenteMeta) continue;
-    if (fuenteMeta.type === "Campe\xF3n" && fuenteMeta.efectoComandante) {
-      candidatos.push({ inst: fuenteInst, meta: fuenteMeta, esComandante: true, origen: "campo" });
-    }
-    if ("efectos" in fuenteMeta && fuenteMeta.efectos?.some((e) => esAuraZona(e) || esAuraCondicionada(e) || esAuraEquipada(e))) {
-      candidatos.push({ inst: fuenteInst, meta: fuenteMeta, esComandante: false, origen: "campo" });
-    }
-  }
-  for (const eterOwner of ["A", "B"]) {
-    for (const eterId of s.players[eterOwner].eterReserva) {
-      const eterInst = s.instances[eterId];
-      if (!eterInst?.cardId) continue;
-      const eterMeta = getCardMeta(eterInst.cardId);
-      if (!eterMeta) continue;
-      if ("efectos" in eterMeta && eterMeta.efectos?.some((e) => e.tipo === "reserva" && esAuraZona(e))) {
-        candidatos.push({ inst: eterInst, meta: eterMeta, esComandante: false, origen: "reserva" });
-      }
-    }
-  }
-  for (const eterId of inst.eterBloqueado ?? []) {
-    const eterInst = s.instances[eterId];
-    if (!eterInst?.cardId) continue;
-    const eterMeta = getCardMeta(eterInst.cardId);
-    if (!eterMeta) continue;
-    if ("efectos" in eterMeta && eterMeta.efectos?.some((e) => e.tipo === "bloqueo" && esAuraZona(e))) {
-      candidatos.push({ inst: eterInst, meta: eterMeta, esComandante: false, origen: "bloqueo" });
-    }
-  }
-  for (const vincOwner of ["A", "B"]) {
-    for (const vincId of s.players[vincOwner].vinculos) {
-      if (!vincId) continue;
-      const vincInst = s.instances[vincId];
-      if (!vincInst?.cardId) continue;
-      if (vincInst.bocaArriba !== true) continue;
-      const vincMeta = getCardMeta(vincInst.cardId);
-      if (!vincMeta) continue;
-      if ("efectos" in vincMeta && vincMeta.efectos?.some((e) => esAuraVinculo(e))) {
-        candidatos.push({ inst: vincInst, meta: vincMeta, esComandante: false, origen: "vinculo" });
-      }
-    }
-  }
-  let poder = 0;
-  let resistencia = 0;
-  const keywords = [];
-  for (const c of candidatos) {
-    const efectos = [];
-    if (c.esComandante && c.meta.type === "Campe\xF3n" && c.meta.efectoComandante) {
-      efectos.push(c.meta.efectoComandante);
-    }
-    if ("efectos" in c.meta && c.meta.efectos) {
-      for (const e of c.meta.efectos) {
-        if (c.origen === "reserva" && e.tipo === "reserva" && esAuraZona(e)) efectos.push(e);
-        else if (c.origen === "bloqueo" && e.tipo === "bloqueo" && esAuraZona(e)) efectos.push(e);
-        else if (c.origen === "vinculo" && e.tipo === "vinculo" && esAuraVinculo(e)) efectos.push(e);
-        else if (c.origen === "campo" && (esAuraZona(e) || esAuraCondicionada(e) || esAuraEquipada(e))) efectos.push(e);
-      }
-    }
-    for (const efecto of efectos) {
-      const resultado = evaluarAura(s, efecto, c.inst, c.esComandante, id, inst, c.origen);
-      if (!resultado) continue;
-      poder += resultado.poder ?? 0;
-      resistencia += resultado.resistencia ?? 0;
-      if (resultado.keywords) keywords.push(...resultado.keywords);
-    }
-  }
-  return { poder, resistencia, keywords: [...new Set(keywords)] };
-}
-function condicionCumple(s, condicion, jugador) {
-  if (!condicion || typeof condicion !== "object" || !("trigger" in condicion)) return null;
-  for (const cond of condicion.condiciones ?? []) {
-    const checkRival = cond.tipo === "rival_controla_minimo" || cond.tipo === "rival_controla_maximo" || condicion.controladorTrigger === "rival";
-    const j = checkRival ? jugador === "A" ? "B" : "A" : jugador;
-    const min = cond.cantidad ?? cond.objetivo?.cantidad ?? 1;
-    if (cond.tipo === "controlar_maximo" || cond.tipo === "rival_controla_maximo") {
-      const count = s.players[j].campo.campeones.filter((id) => id !== null).length;
-      if (count > min) return `m\xE1ximo ${min} Campeones en campo`;
-    } else if (cond.tipo === "tener_mano_maximo") {
-      if (s.players[j].mano.length > min) return `m\xE1ximo ${min} cartas en mano`;
-    } else if (cond.tipo === "tener_mano_minimo") {
-      if (s.players[j].mano.length < min) return `se requieren ${min} cartas en mano`;
-    } else if (cond.tipo === "tener_eter_pagado") {
-      if (s.players[j].eterPagado.length < min) return `se requieren ${min} \xC9teres pagados`;
-    } else if (cond.tipo === "tener_eter_bloqueado" || cond.objetivo?.tipo === "campeon_con_eter") {
-      const count = s.players[j].campo.campeones.filter(
-        (id) => id !== null && (s.instances[id]?.eterBloqueado?.length ?? 0) >= 1
-      ).length;
-      if (count < min) return `se requieren ${min} o m\xE1s Campeones con \xC9ter bloqueado`;
-    } else if (cond.tipo === "controlar_minimo" || cond.tipo === "rival_controla_minimo") {
-      const conEter = cond.objetivo?.filtros?.conEterBloqueado === true;
-      const count = s.players[j].campo.campeones.filter(
-        (id) => id !== null && (!conEter || (s.instances[id]?.eterBloqueado?.length ?? 0) >= 1)
-      ).length;
-      if (count < min) {
-        return conEter ? `se requieren ${min} o m\xE1s Campeones con \xC9ter bloqueado` : `se requieren ${min} o m\xE1s Campeones en campo`;
-      }
-    }
-  }
-  return null;
-}
-function hayParejaBloqueo(s, jugador) {
-  return parejasBloqueoOpcion(s, jugador).length > 0;
-}
-function pasivosBloqueo1A(s, jugador) {
-  return s.players[jugador].eterPagado.filter((id) => {
-    const inst = s.instances[id];
-    if (!inst || inst.opcionUsadaEsteTurno) return false;
-    const meta = inst.cardId ? getCardMeta(inst.cardId) : null;
-    if (!meta || !("efectos" in meta) || !meta.efectos) return false;
-    return meta.efectos.some((e) => e.efecto === "block_ether" && !e.trigger && e.tipo === "pago");
-  });
-}
-function crearOpcionBloqueo(s, jugador, fuenteInstanceId) {
-  const inst = s.instances[fuenteInstanceId];
-  if (!inst) return false;
-  if (inst.opcionUsadaEsteTurno) return false;
-  if (!hayParejaBloqueo(s, jugador)) return false;
-  s.opcionesPendientes = [...s.opcionesPendientes ?? [], { jugador, eterId: fuenteInstanceId }];
-  return true;
-}
-function tieneDoubleAttackActivo(s, id) {
-  const inst = s.instances[id];
-  if (!inst?.cardId || (inst.eterBloqueado?.length ?? 0) === 0) return false;
-  const meta = getCardMeta(inst.cardId);
-  if (!meta || !("efectos" in meta) || !meta.efectos) return false;
-  return meta.efectos.some(
-    (e) => e.efecto === "double_attack" && e.duracion === "mientras_ester_bloqueado"
-  );
-}
-function registrarEfecto(trigger, cardId, fn) {
-  let porCarta = registro.get(trigger);
-  if (!porCarta) {
-    porCarta = /* @__PURE__ */ new Map();
-    registro.set(trigger, porCarta);
-  }
-  porCarta.set(cardId, fn);
-}
-function limpiarRegistroEfectos() {
-  registro.clear();
-}
-function instanciasEnCampo(s, jugador) {
-  const p = s.players[jugador];
-  return [
-    ...p.campo.campeones,
-    ...p.campo.misticasTacticas,
-    ...p.campo.arcanasCombate,
-    ...p.vinculos
-  ].filter((id) => id !== null);
-}
-var registroGenerico = /* @__PURE__ */ new Map();
-function dispararTrigger(s, ctx, trigger, jugador, instancias, payloadExtra) {
-  const porCarta = registro.get(trigger);
-  const ids = instancias ?? instanciasEnCampo(s, jugador);
-  const orden = [...ids].sort();
-  const payload = { jugador, fromTrigger: true, cobrarCosto: true, ...payloadExtra };
-  const triggerMapping = {
-    "al-invocar": "al_invocar",
-    "al-atacar": "al_atacar",
-    "al-matar-en-combate": "al_matar_en_combate",
-    "al-inicio-alba": "inicio_alba",
-    "al-inicio-choque": "inicio_choque",
-    "al-pagar-eter": "al_pagar_eter",
-    "al-jugar-mistica": "al_jugar_mistica",
-    "al-ser-enviado-al-cementerio": "al_ser_enviado_al_cementerio",
-    "al-ser-destruido-vinculo": "al_ser_destruido_vinculo",
-    "al-resolver-cadena": "al_resolver_cadena",
-    "al-activar-habilidad": "al_activar_habilidad"
-  };
-  for (const id of orden) {
-    const inst = s.instances[id];
-    const cardId = inst?.cardId;
-    if (!inst || !cardId) continue;
-    let handled = false;
-    const meta = getCardMeta(cardId);
-    if (meta && meta.type === "V\xEDnculo" && inst.bocaArriba !== true) continue;
-    if (meta && "efectos" in meta) {
-      let conditionPassed = true;
-      if ("condicion" in meta) {
-        const condicion = meta.condicion;
-        if (condicion && typeof condicion === "object" && "trigger" in condicion) {
-          const efectoTrigger = triggerMapping[trigger];
-          if (efectoTrigger === condicion.trigger && condicionCumple(s, condicion, payload.jugador) !== null) {
-            conditionPassed = false;
-          }
-        }
-      }
-      if (conditionPassed) {
-        const efectos = "efectos" in meta ? meta.efectos : void 0;
-        if (efectos && Array.isArray(efectos)) {
-          const efectoTrigger = triggerMapping[trigger];
-          for (const efecto of efectos) {
-            const esUmbral = trigger === "al-bloquear-eter";
-            const matchea = esUmbral ? !efecto.trigger && (efecto.costo?.tipo === "bloqueo_fijo" || efecto.costo?.tipo === "eter_bloqueado") && !!efecto.efecto : efecto.trigger === efectoTrigger && !!efecto.efecto;
-            if (matchea && efecto.efecto) {
-              const pendientesAntes = s.objetivosPendientes?.length ?? 0;
-              interpretEffect(s, ctx, inst, efecto, payload);
-              const pendientesDespues = s.objetivosPendientes?.length ?? 0;
-              if (pendientesDespues > pendientesAntes) {
-                handled = true;
-              } else {
-                const needsTargeting = [
-                  "steal_champion",
-                  "toggle_exhaust",
-                  "destroy",
-                  "return_ether",
-                  "mover",
-                  "copy",
-                  "tutor",
-                  "block_ether"
-                ].includes(efecto.efecto);
-                if (needsTargeting) {
-                  const targetIds = efecto.objetivo ? resolveTargets(s, efecto.objetivo, payload.jugador) : [];
-                  if (targetIds.length > 0) {
-                    handled = true;
-                  }
-                } else {
-                  handled = true;
-                }
-              }
-              break;
-            }
-          }
-        }
-      }
-    }
-    if (handled) continue;
-    const hasCardHandler = porCarta?.has(cardId) ?? false;
-    if (!hasCardHandler) {
-      for (const [efectoTipo, genericFn] of registroGenerico) {
-        if (!meta || !("efectos" in meta) || !meta.efectos) continue;
-        const tieneEfecto = meta.efectos.some((e) => e.efecto === efectoTipo);
-        if (tieneEfecto) {
-          genericFn(s, ctx, inst, payload);
-          handled = true;
-          break;
-        }
-      }
-    }
-    if (handled) continue;
-    const fn = porCarta?.get(cardId);
-    if (fn) {
-      fn(s, ctx, inst, payload);
-    }
-  }
-}
-function statsDe(s, id) {
-  const inst = s.instances[id];
-  const cardId = inst?.cardId ?? null;
-  const meta = cardId ? getCardMeta(cardId) : null;
-  const esCamp = !!meta && esCampeon(meta);
-  let poder = inst?.poder ?? (esCamp && meta.stats ? meta.stats.poder : 0);
-  let resistencia = inst?.resistencia ?? (esCamp && meta.stats ? meta.stats.resistencia : 0);
-  for (const m of inst?.modificadores ?? []) {
-    if (m.stat === "poder") poder += m.valor;
-    else resistencia += m.valor;
-  }
-  const mods = modificadoresJSONDe(s, id);
-  poder += mods.poder;
-  resistencia += mods.resistencia;
-  return { poder: Math.max(0, poder), resistencia: Math.max(0, resistencia) };
-}
-function keywordsDe(s, id) {
-  const inst = s.instances[id];
-  const cardId = inst?.cardId ?? null;
-  const meta = cardId ? getCardMeta(cardId) : null;
-  const deData = meta && esCampeon(meta) ? meta.keywords : [];
-  const mods = modificadoresJSONDe(s, id);
-  const hastaFase = (inst?.keywordsHastaFase ?? []).map((k) => k.keyword);
-  return [.../* @__PURE__ */ new Set([...deData, ...inst?.keywords ?? [], ...inst?.keywordsTemporales ?? [], ...hastaFase, ...mods.keywords])];
-}
-function velocidadDe(s, id) {
-  const kws = keywordsDe(s, id);
-  if (kws.includes("Fugaz")) return "fugaz";
-  if (kws.includes("Presteza")) return "presteza";
-  return "normal";
-}
-function aplicarMod(s, id, stat, valor, expira, turnosRestantes, hastaFase) {
-  const inst = s.instances[id];
-  if (!inst) return;
-  inst.modificadores = [
-    ...inst.modificadores ?? [],
-    { stat, valor, expira, turnosRestantes, ...hastaFase ? { expiraFase: hastaFase.fase, expiraFaseJugador: hastaFase.jugador } : {} }
-  ];
-}
-function otorgarKeyword(s, id, kw, temporal = false) {
-  const inst = s.instances[id];
-  if (!inst) return;
-  if (temporal) {
-    inst.keywordsTemporales = [.../* @__PURE__ */ new Set([...inst.keywordsTemporales ?? [], kw])];
-  } else {
-    inst.keywords = [.../* @__PURE__ */ new Set([...inst.keywords ?? [], kw])];
-  }
-}
-function purgarEfectosTemporales(s, expira, jugador, _ctx) {
-  purgarReglasTemporales(s, expira, jugador);
-  const jugadores = jugador ? [jugador] : ["A", "B"];
-  for (const j of jugadores) {
-    for (const id of instanciasEnCampo(s, j)) {
-      const inst = s.instances[id];
-      if (!inst?.modificadores) continue;
-      if (expira === "ocaso") {
-        const restantes = inst.modificadores.map((m) => {
-          if (m.turnosRestantes !== void 0) {
-            return { ...m, turnosRestantes: m.turnosRestantes - 1 };
-          }
-          return m;
-        }).filter((m) => {
-          if (m.turnosRestantes !== void 0) return m.turnosRestantes > 0;
-          return m.expira !== expira;
-        });
-        inst.modificadores = restantes;
-      } else {
-        const restantes = inst.modificadores.filter((m) => m.expira !== expira);
-        inst.modificadores = restantes;
-      }
-    }
-  }
-}
-function purgarHastaFase(s, fase, turno) {
-  purgarReglasHastaFase(s, fase, turno);
-  for (const inst of Object.values(s.instances)) {
-    if (inst.modificadores?.length) {
-      const quedan = inst.modificadores.filter(
-        (m) => !(m.expira === "hasta-fase" && m.expiraFase === fase && m.expiraFaseJugador === turno)
-      );
-      if (quedan.length !== inst.modificadores.length) inst.modificadores = quedan;
-    }
-    if (inst.keywordsHastaFase?.length) {
-      const expiradas = inst.keywordsHastaFase.filter((k) => k.fase === fase && k.jugador === turno);
-      if (expiradas.length > 0) {
-        for (const k of expiradas) {
-          inst.keywordsTemporales = (inst.keywordsTemporales ?? []).filter((x) => x !== k.keyword);
-        }
-        const quedan = inst.keywordsHastaFase.filter((k) => !(k.fase === fase && k.jugador === turno));
-        if (quedan.length > 0) inst.keywordsHastaFase = quedan;
-        else delete inst.keywordsHastaFase;
-      }
-    }
-  }
-}
-function purgarKeywordsTemporales(s) {
-  for (const j of ["A", "B"]) {
-    for (const id of instanciasEnCampo(s, j)) {
-      const inst = s.instances[id];
-      if (inst?.keywordsTemporales && inst.keywordsTemporales.length > 0) {
-        inst.keywordsTemporales = [];
-      }
-    }
-  }
-}
-
-// src/online/game/payments.ts
-function aporteDe(eterCardId, _objetivoCardId) {
-  const eter = getCardMeta(eterCardId);
-  if (!eter) return 0;
-  return 1;
-}
-function validarPago(state, jugador, eterIds, objetivoCardId) {
-  if (eterIds.length === 0) return { ok: false, error: "no indicaste \xC9teres para pagar" };
-  const objetivo = getCardMeta(objetivoCardId);
-  if (!objetivo) return { ok: false, error: `carta objetivo desconocida: ${objetivoCardId}` };
-  const p = state.players[jugador];
-  const vistos = /* @__PURE__ */ new Set();
-  let suma = 0;
-  for (const id of eterIds) {
-    if (vistos.has(id)) return { ok: false, error: `\xC9ter duplicado: ${id}` };
-    vistos.add(id);
-    const inst = state.instances[id];
-    const meta = inst?.cardId ? getCardMeta(inst.cardId) : null;
-    if (!inst || !meta || !esEter(meta)) return { ok: false, error: `no es un \xC9ter: ${id}` };
-    if (!p.eterReserva.includes(id)) return { ok: false, error: `el \xC9ter no est\xE1 en tu Reserva: ${id}` };
-    suma += aporteDe(meta.id, objetivoCardId);
-  }
-  if (suma < objetivo.stats.cost) return { ok: false, error: "pago insuficiente" };
-  if (suma > objetivo.stats.cost) return { ok: false, error: "sobrepago no permitido \u2014 selecciona exactamente el coste" };
-  return { ok: true, aportado: suma };
-}
-function aplicarPago(s, ctx, jugador, eterIds, objetivoCardId, contextoUso) {
-  const validado = validarPago(s, jugador, eterIds, objetivoCardId);
-  if (!validado.ok || validado.aportado === void 0) return s;
-  const objetivo = getCardMeta(objetivoCardId);
-  if (!objetivo) return s;
-  const p = s.players[jugador];
-  for (const id of eterIds) {
-    const idx = p.eterReserva.indexOf(id);
-    if (idx !== -1) p.eterReserva.splice(idx, 1);
-    p.eterPagado.push(id);
-  }
-  ctx.emit({
-    type: "eter_pagado",
-    jugador,
-    eterIds,
-    costo: objetivo.stats.cost,
-    aportado: validado.aportado
-  });
-  const gatillos = eterIds.filter((id) => {
-    const inst = s.instances[id];
-    const meta = inst?.cardId ? getCardMeta(inst.cardId) : null;
-    if (!meta || !esEter(meta)) return false;
-    if ("efectos" in meta && meta.efectos) {
-      return meta.efectos.some((e) => e.trigger === "al_pagar_eter");
-    }
-    return false;
-  });
-  for (const id of gatillos) {
-    dispararTrigger(s, ctx, "al-pagar-eter", jugador, [id], {
-      contextoUso: contextoUso?.tipo,
-      objetivoId: contextoUso?.cardInstanceId
-    });
-  }
-  return s;
-}
-function etersParaPagar(state, jugador, objetivoCardId) {
-  const objetivo = getCardMeta(objetivoCardId);
-  if (!objetivo) return null;
-  const p = state.players[jugador];
-  const coste = objetivo.stats.cost;
-  const eteres = [];
-  for (const id of p.eterReserva) {
-    const inst = state.instances[id];
-    const meta = inst?.cardId ? getCardMeta(inst.cardId) : null;
-    if (!meta) continue;
-    eteres.push({ id, contrib: aporteDe(meta.id, objetivoCardId) });
-  }
-  function buscar(start, sumaActual, seleccionados) {
-    if (sumaActual === coste) return seleccionados;
-    if (sumaActual > coste) return null;
-    for (let i = start; i < eteres.length; i++) {
-      const resultado = buscar(i + 1, sumaActual + eteres[i].contrib, [...seleccionados, eteres[i].id]);
-      if (resultado) return resultado;
-    }
-    return null;
-  }
-  return buscar(0, 0, []);
-}
-function validarBloqueo(state, jugador, eterIds, targetInstanceId, efectoIdx) {
-  const inst = state.instances[targetInstanceId];
-  if (!inst) return "la carta no existe";
-  const p = state.players[jugador];
-  const enCampo = p.campo.campeones.includes(targetInstanceId) || p.campo.misticasTacticas.includes(targetInstanceId) || p.campo.arcanasCombate.includes(targetInstanceId);
-  if (!enCampo) return "la carta no est\xE1 en tu campo";
-  const meta = inst.cardId ? getCardMeta(inst.cardId) : null;
-  if (!meta) return "carta desconocida";
-  if (!p.campo.campeones.includes(targetInstanceId)) {
-    if (!cartaNecesitaEterBloqueado(meta)) {
-      return "esta carta no tiene efecto que use \xC9ter bloqueado";
-    }
-  }
-  if (eterIds.length === 0) return "no indicaste \xC9teres para bloquear";
-  const fuente = efectoIdx !== void 0 && "efectos" in meta && meta.efectos?.[efectoIdx] ? { efecto: meta.efectos[efectoIdx], indice: efectoIdx } : efectoBloqueoAccion(meta);
-  const maxEter = fuente?.efecto.costo?.cantidad ?? 1;
-  const fijo = fuente?.efecto.costo?.tipo === "bloqueo_fijo";
-  const actuales = fuente ? eterDeEfecto(state, targetInstanceId, fuente.indice).length : inst.eterBloqueado?.length ?? 0;
-  const total = actuales + eterIds.length;
-  if (fijo) {
-    if (total !== maxEter) {
-      return `bloqueo fijo: debes bloquear exactamente ${maxEter} \xC9ter(es) en esta carta (ya tiene ${actuales}, seleccionaste ${eterIds.length})`;
-    }
-  } else if (total > maxEter) {
-    return `m\xE1ximo ${maxEter} \xC9ter(es) bloqueado(s) en esta carta (ya tiene ${actuales})`;
-  }
-  for (const id of eterIds) {
-    const eterInst = state.instances[id];
-    const eterMeta = eterInst?.cardId ? getCardMeta(eterInst.cardId) : null;
-    if (!eterInst || !eterMeta || !esEter(eterMeta)) return `no es un \xC9ter: ${id}`;
-    const origenPagado = fuente?.efecto.costo?.origen === "pagado";
-    const zonaOrigen = origenPagado ? p.eterPagado : p.eterReserva;
-    if (!zonaOrigen.includes(id)) {
-      return origenPagado ? `el \xC9ter no est\xE1 en tu \xC9ter Pagado (1A): ${id}` : `el \xC9ter no est\xE1 en tu Reserva: ${id}`;
-    }
-    if (inst.eterBloqueado?.includes(id)) return `el \xC9ter ya est\xE1 bloqueado en esta carta`;
-    for (const grupo of ["campeones", "misticasTacticas", "arcanasCombate"]) {
-      for (const cid of p.campo[grupo]) {
-        if (cid && cid !== targetInstanceId) {
-          const ci = state.instances[cid];
-          if (ci?.eterBloqueado?.includes(id)) return `el \xC9ter ya est\xE1 bloqueado en otra carta`;
-        }
-      }
-    }
-  }
-  return null;
-}
-function maxEterBloqueado(card) {
-  if ("efectos" in card && card.efectos) {
-    for (const e of card.efectos) {
-      if (e.costo?.tipo === "eter_bloqueado" && e.costo.cantidad !== void 0) {
-        return e.costo.cantidad;
-      }
-      if (e.costo?.tipo === "bloqueo_fijo" && e.costo.cantidad !== void 0) {
-        return e.costo.cantidad;
-      }
-    }
-  }
-  return 1;
-}
-function esBloqueoFijo(card) {
-  if ("efectos" in card && card.efectos) {
-    return card.efectos.some((e) => e.costo?.tipo === "bloqueo_fijo");
-  }
-  return false;
-}
-function bloquearEter(s, ctx, jugador, eterIds, targetInstanceId, efectoIdx) {
-  const error = validarBloqueo(s, jugador, eterIds, targetInstanceId, efectoIdx);
-  if (error) return error;
-  const p = s.players[jugador];
-  const instTarget = s.instances[targetInstanceId];
-  instTarget.eterBloqueado = [...instTarget.eterBloqueado ?? [], ...eterIds];
-  const meta = instTarget.cardId ? getCardMeta(instTarget.cardId) : null;
-  const fuente = efectoIdx !== void 0 && meta && "efectos" in meta && meta.efectos?.[efectoIdx] ? { efecto: meta.efectos[efectoIdx], indice: efectoIdx } : meta ? efectoBloqueoAccion(meta) : null;
-  const zonaOrigen = fuente?.efecto.costo?.origen === "pagado" ? p.eterPagado : p.eterReserva;
-  for (const id of eterIds) {
-    const idx = zonaOrigen.indexOf(id);
-    if (idx !== -1) zonaOrigen.splice(idx, 1);
-  }
-  etiquetarEter(s, eterIds, targetInstanceId, fuente?.indice ?? -1, jugador);
-  ctx.emit({ type: "eter_bloqueado", jugador, eterIds, campeonId: targetInstanceId });
-  return null;
-}
-function reagruparEter(s, ctx, jugador) {
-  const p = s.players[jugador];
-  if (p.eterPagado.length === 0) return;
-  const reagrupados = p.eterPagado;
-  for (const id of reagrupados) delete s.instances[id]?.opcionUsadaEsteTurno;
-  p.eterReserva.push(...reagrupados);
-  p.eterPagado = [];
-  ctx.emit({ type: "eter_reagrupado", jugador, eterIds: reagrupados });
 }
 
 // src/online/game/movimientos.ts
@@ -6300,6 +6791,7 @@ function ejecutarJugarCampeon(s, action, ctx) {
   const p = s.players[s.turno];
   const id = action.cardInstanceId;
   const cardId = s.instances[id].cardId;
+  const previos = marcarInicioAccion(s);
   const contextoUso = { tipo: "invocar", cardInstanceId: id };
   aplicarPago(s, ctx, s.turno, action.eterIds, cardId, contextoUso);
   for (const sacId of action.sacrificios ?? []) {
@@ -6319,13 +6811,15 @@ function ejecutarJugarCampeon(s, action, ctx) {
   s.instances[id].entradaEsteTurno = true;
   ctx.emit({ type: "carta_entrada_a_zona", cardInstanceId: id, zona, jugador: s.turno, bocaArriba: true });
   ctx.emit({ type: "carta_invocada", cardInstanceId: id, tipo: "Campe\xF3n", slot: action.slot });
-  dispararTrigger(s, ctx, "al-invocar", s.turno, [id]);
-  const metaC = getCardMeta(s.instances[id].cardId);
-  abrirCadenaGlobal(s, s.turno, { cardInstanceId: id, descripcion: metaC?.name ?? id });
+  const triggers = construirTriggers(s, "al-invocar", s.turno, [id]);
+  if (triggers.length === 0) dispararTrigger(s, ctx, "al-invocar", s.turno, [id]);
+  const apilados = triggers.length > 0 ? armarTriggers(s, ctx, triggers) : [];
+  declararVentana(s, ctx, { tipo: "invocacion", jugador: s.turno, cardInstanceId: id, ...apilados.length > 0 ? { triggers: apilados } : {} }, previos);
 }
 function ejecutarJugarMistica(s, action, ctx) {
   const p = s.players[s.turno];
   const id = action.cardInstanceId;
+  const previos = marcarInicioAccion(s);
   const contextoUso = { tipo: "jugar", cardInstanceId: id };
   aplicarPago(s, ctx, s.turno, action.eterIds, s.instances[id].cardId, contextoUso);
   const manoIdxM = p.mano.indexOf(id);
@@ -6342,25 +6836,9 @@ function ejecutarJugarMistica(s, action, ctx) {
     s.equiparPendiente = { artefactoId: id, jugador: s.turno, contexto: "jugar_mistica" };
     return;
   }
-  dispararTrigger(s, ctx, "al-jugar-mistica", s.turno, [id]);
-  if (meta && "efectos" in meta && meta.efectos) {
-    for (const efecto of meta.efectos) {
-      if (efecto.tipo === "hechizo" && !efecto.trigger && efecto.efecto) {
-        interpretEffect(s, ctx, inst, efecto, { jugador: s.turno, fromTrigger: true });
-      }
-    }
-  }
-  const metaM = getCardMeta(s.instances[id].cardId);
-  abrirCadenaGlobal(s, s.turno, { cardInstanceId: id, descripcion: metaM?.name ?? id });
-  if (meta && !esPermanenteEnMesa(meta)) {
-    const slotIdx = p.campo.misticasTacticas.indexOf(id);
-    if (slotIdx !== -1) {
-      const zonaSlot = slotAZona("misticasTacticas", slotIdx) ?? "3A";
-      ctx.emit({ type: "carta_salida_de_zona", cardInstanceId: id, zona: zonaSlot, jugador: s.turno });
-      enviarAlCementerio(s, ctx, id);
-      ctx.emit({ type: "carta_entrada_a_zona", cardInstanceId: id, zona: "2G", jugador: s.turno, bocaArriba: true });
-    }
-  }
+  const triggers = construirTriggers(s, "al-jugar-mistica", s.turno, [id]);
+  if (triggers.length === 0) dispararTrigger(s, ctx, "al-jugar-mistica", s.turno, [id]);
+  declararOpener(s, ctx, { tipo: "mistica", jugador: s.turno, cardInstanceId: id }, previos, triggers);
 }
 function ejecutarColocarArcana(s, action, ctx) {
   const p = s.players[s.turno];
@@ -6372,6 +6850,7 @@ function ejecutarColocarArcana(s, action, ctx) {
   p.campo.arcanasCombate[action.slot] = id;
   s.instances[id].bocaArriba = false;
   s.instances[id].entradaEsteTurno = true;
+  delete s.instances[id].condicionHabilitada;
   ctx.emit({ type: "carta_entrada_a_zona", cardInstanceId: id, zona, jugador: s.turno, bocaArriba: false });
   ctx.emit({ type: "carta_invocada", cardInstanceId: id, tipo: "Arcana", slot: action.slot });
 }
@@ -6401,18 +6880,13 @@ function ejecutarEquiparArtefacto(s, action, ctx) {
 function resolverEfectosArtefacto(s, ctx, id, contexto) {
   const inst = s.instances[id];
   if (!inst) return;
-  const meta = inst.cardId ? getCardMeta(inst.cardId) : null;
+  const previos = marcarInicioAccion(s);
+  let triggers;
   if (contexto === "jugar_mistica") {
-    dispararTrigger(s, ctx, "al-jugar-mistica", s.turno, [id]);
+    triggers = construirTriggers(s, "al-jugar-mistica", s.turno, [id]);
+    if (triggers.length === 0) dispararTrigger(s, ctx, "al-jugar-mistica", s.turno, [id]);
   }
-  if (meta && "efectos" in meta && meta.efectos) {
-    for (const efecto of meta.efectos) {
-      if (efecto.tipo === "hechizo" && !efecto.trigger && efecto.efecto) {
-        interpretEffect(s, ctx, inst, efecto, { jugador: s.turno, fromTrigger: true });
-      }
-    }
-  }
-  abrirCadenaGlobal(s, s.turno, { cardInstanceId: id, descripcion: meta?.name ?? id });
+  declararOpener(s, ctx, { tipo: contexto === "jugar_mistica" ? "mistica" : "arcana", jugador: s.turno, cardInstanceId: id }, previos, triggers);
 }
 function generarAccionesForja(state, playerId, cardInstanceId) {
   const p = state.players[playerId];
@@ -6464,13 +6938,14 @@ function generarAccionesForja(state, playerId, cardInstanceId) {
 
 // src/online/game/economia.ts
 function actorDeBloqueo(state) {
-  const cadena = state.combate?.cadena ?? state.cadena;
+  const cadena = cadenaActiva(state);
   return cadena ? cadena.prioridad : state.turno;
 }
 function validarBloquearEter(state, action) {
   if (state.fase !== "forja" && state.fase !== "choque" && state.fase !== "ocaso") {
     return "bloquear_eter solo en Forja/Choque/Ocaso (\xA78.3a: nunca en Alba)";
   }
+  if (cadenaActiva(state) && state.fase !== "forja") return "un efecto continuo solo puede responder en la Forja (\xA78.3a)";
   return validarBloqueo(state, actorDeBloqueo(state), action.eterIds, action.targetInstanceId, action.efectoIdx);
 }
 function ejecutarBloquearEter(s, action, ctx) {
@@ -6497,6 +6972,7 @@ function resolverAlba(s, ctx, jugador) {
   }
   reagruparEter(s, ctx, jugador);
   reagruparEfectosBloqueoAlba(s, ctx, jugador);
+  evaluarCandadosArcanas(s, "inicio_alba", jugador);
   const vinculosSnapshot = p.vinculos.filter((id) => {
     if (!id) return false;
     return s.instances[id]?.bocaArriba === true;
@@ -6511,6 +6987,7 @@ function resolverAlba(s, ctx, jugador) {
     dispararTrigger(s, ctx, "al-inicio-alba", jugador, albaInstances);
   }
   robarCarta(s, ctx, jugador);
+  confirmarFinDePartida(s, ctx);
 }
 function limpiarCombate(s) {
   s.combate = void 0;
@@ -6578,6 +7055,7 @@ function ejecutarPasarTurno(s, ctx) {
       purgarKeywordsTemporales(s);
     }
     if (s.fase === "forja") {
+      evaluarCandadosArcanas(s, "inicio_choque", s.turno);
       const p = s.players[s.turno];
       const campeones = p.campo.campeones.filter((x) => x !== null);
       const misticas = p.campo.misticasTacticas.filter((x) => x !== null);
@@ -6613,6 +7091,7 @@ function ejecutarPasarTurno(s, ctx) {
     if (inst.bloqueosEsteTurno) delete inst.bloqueosEsteTurno;
   }
   delete s.rupturasEsteTurno;
+  descartarPendientesObsoletos(s);
   s.turno = rival;
   ctx.emit({ type: "turno_iniciado", jugador: rival });
   ctx.emit({ type: "fase_iniciada", fase: "alba", jugador: rival });
@@ -6645,12 +7124,31 @@ function applyAction(state, action, ctx) {
   if (error) return { ok: false, state, error };
   const s = structuredClone(state);
   ejecutarAccion(s, action, ctx);
+  descartarFrentesMuertos(s);
+  confirmarFinDePartida(s, ctx);
   return { ok: true, state: s, events: [...ctx.events] };
 }
+var ACCIONES_CON_CADENA_ABIERTA = /* @__PURE__ */ new Set([
+  "responder_cadena",
+  "jugar_respuesta",
+  "pasar_prioridad",
+  "bloquear_eter",
+  "rendirse",
+  "responder_prevenicion"
+]);
 function validarAccion(state, action) {
   const preven = state.preventivosPendientes?.[0];
   if (preven && action.type !== "responder_prevenicion") {
     return "hay una prevenicion pendiente de resolver";
+  }
+  if (state.declaracionEnEleccion && action.type !== "elegir_objetivo" && action.type !== "rendirse" && action.type !== "responder_prevenicion") {
+    return "hay un objetivo por elegir antes de abrir la ventana";
+  }
+  if (electorAjeno(state) && action.type !== "elegir_objetivo" && action.type !== "rendirse" && action.type !== "responder_prevenicion") {
+    return "el rival debe elegir un objetivo antes de continuar";
+  }
+  if (cadenaActiva(state) && !state.declaracionEnEleccion && !ACCIONES_CON_CADENA_ABIERTA.has(action.type)) {
+    return "hay una cadena abierta: solo se puede responder o pasar prioridad";
   }
   switch (action.type) {
     case "rendirse":
@@ -6696,7 +7194,7 @@ function validarAccion(state, action) {
     case "elegir_ruptura":
       return validarElegirRuptura(state, action.atacanteId, action.vinculoSlot);
     case "responder_cadena":
-      return validarResponderCadena(state, action.cardInstanceId);
+      return validarResponderCadena(state, action.cardInstanceId, action.eterIds);
     case "pasar_prioridad":
       return validarPasarPrioridad(state);
     default:
@@ -6706,8 +7204,9 @@ function validarAccion(state, action) {
 function ejecutarAccion(s, action, ctx) {
   switch (action.type) {
     case "rendirse": {
-      ctx.emit({ type: "rendicion", jugador: s.turno });
-      const ganador = s.turno === "A" ? "B" : "A";
+      const quien = action.jugador ?? s.turno;
+      ctx.emit({ type: "rendicion", jugador: quien });
+      const ganador = quien === "A" ? "B" : "A";
       s.fase = "terminada";
       s.ganador = ganador;
       s.motivo = "rendicion";
@@ -6798,7 +7297,7 @@ function ejecutarAccion(s, action, ctx) {
       return;
     }
     case "responder_cadena": {
-      ejecutarResponderCadena(s, action.cardInstanceId, ctx);
+      ejecutarResponderCadena(s, action.cardInstanceId, ctx, action.eterIds);
       return;
     }
     case "pasar_prioridad": {
@@ -6818,7 +7317,13 @@ function actorActual(estado) {
   if (estado.fase === "terminada") return null;
   const preven = estado.preventivosPendientes?.[0];
   if (preven) return preven.jugador;
-  const cadena = estado.combate?.cadena ?? estado.cadena;
+  if (estado.declaracionEnEleccion) {
+    const pendiente = estado.objetivosPendientes?.[0];
+    if (pendiente) return pendiente.jugador;
+  }
+  const ajeno = electorAjeno(estado);
+  if (ajeno) return ajeno.jugador;
+  const cadena = cadenaActiva(estado);
   if (cadena) return cadena.prioridad;
   if (estado.fase === "choque" && estado.combate?.paso === "bloqueo") {
     return estado.turno === "A" ? "B" : "A";
@@ -6933,8 +7438,8 @@ function getValidActions(state, playerId) {
     if (instPend?.equipadoA) {
       delete state.equiparPendiente;
     } else {
-      if (playerId !== equipPend.jugador) return [{ type: "rendirse" }];
-      const accionesEquip = [{ type: "rendirse" }];
+      if (playerId !== equipPend.jugador) return [{ type: "rendirse", jugador: playerId }];
+      const accionesEquip = [{ type: "rendirse", jugador: playerId }];
       if (instPend) {
         const p = state.players[playerId];
         for (const campeonId of p.campo.campeones) {
@@ -6948,13 +7453,31 @@ function getValidActions(state, playerId) {
     }
   }
   if (state.fase === "terminada") return [];
-  const acciones = [{ type: "rendirse" }];
+  const acciones = [{ type: "rendirse", jugador: playerId }];
+  if (state.declaracionEnEleccion) {
+    const pendiente = state.objetivosPendientes?.[0];
+    if (pendiente && pendiente.jugador === playerId) {
+      const vivas = opcionesVigentes(state, pendiente);
+      for (const objetivoId of vivas.length > 0 ? vivas : pendiente.opciones.slice(0, 1)) {
+        acciones.push({ type: "elegir_objetivo", objetivoId });
+      }
+    }
+    return acciones;
+  }
+  descartarFrentesMuertos(state);
+  const ajeno = electorAjeno(state);
+  if (ajeno) {
+    if (ajeno.jugador === playerId) {
+      for (const objetivoId of opcionesVigentes(state, ajeno)) acciones.push({ type: "elegir_objetivo", objetivoId });
+    }
+    return acciones;
+  }
   if (state.turno === playerId && state.fase === "pre_partida") {
     const p = state.players[playerId];
     if (!p.mulliganUsado) acciones.push({ type: "mulligan" });
     acciones.push({ type: "pasar_mulligan" });
   }
-  const cadena = state.combate?.cadena ?? state.cadena;
+  const cadena = cadenaActiva(state);
   if (cadena) {
     if (cadena.prioridad === playerId) {
       for (const id of respondiblesDe(state, playerId)) {
@@ -6968,22 +7491,18 @@ function getValidActions(state, playerId) {
           acciones.push({ type: "jugar_respuesta", cardInstanceId: id, eterIds });
         }
       }
-      acciones.push(...accionesBloqueoEter(state, playerId, true));
+      if (state.fase === "forja") acciones.push(...accionesBloqueoEter(state, playerId, true));
       acciones.push({ type: "pasar_prioridad" });
     }
     return acciones;
   }
   if (state.turno === playerId) {
     const p = state.players[playerId];
+    descartarFrentesMuertos(state);
     const pendiente = state.objetivosPendientes?.[0];
     if (pendiente && pendiente.jugador === playerId) {
-      const opcionesVivas = pendiente.opciones.filter((id) => state.instances[id]);
-      if (opcionesVivas.length === 0) {
-        state.objetivosPendientes = state.objetivosPendientes.slice(1);
-      } else {
-        for (const objetivoId of opcionesVivas) {
-          acciones.push({ type: "elegir_objetivo", objetivoId });
-        }
+      for (const objetivoId of opcionesVigentes(state, pendiente)) {
+        acciones.push({ type: "elegir_objetivo", objetivoId });
       }
     }
     for (const champId of p.campo.campeones) {
@@ -7135,22 +7654,67 @@ function visibleState(state, playerId) {
   for (const id of v.players[rival].mano) ocultar.add(id);
   for (const id of v.players[rival].campo.arcanasCombate) if (id) ocultar.add(id);
   for (const id of v.players[rival].vinculos) if (id && !v.instances[id]?.bocaArriba) ocultar.add(id);
-  const pila = v.combate?.cadena?.pila ?? [];
+  const pila = cadenaActiva(v)?.pila ?? [];
   for (const id of pila) ocultar.delete(id);
+  const opener = cadenaActiva(v)?.opener;
+  if (opener) ocultar.delete(opener.cardInstanceId);
+  const enEleccion = v.declaracionEnEleccion?.opener;
+  if (enEleccion) ocultar.delete(enEleccion.cardInstanceId);
+  const respondiendo = v.declaracionEnEleccion?.respuesta;
+  if (respondiendo) ocultar.delete(respondiendo.cardInstanceId);
+  for (const t of cadenaActiva(v)?.triggers ?? []) ocultar.delete(t.cardInstanceId);
+  for (const t of v.declaracionEnEleccion?.triggers ?? []) ocultar.delete(t.cardInstanceId);
   const pendiente = v.objetivosPendientes?.[0];
   if (pendiente && pendiente.jugador === playerId) {
     for (const id of pendiente.opciones) ocultar.delete(id);
   }
   for (const id of ocultar) {
     const inst = v.instances[id];
-    if (inst) inst.cardId = null;
+    if (inst) {
+      inst.cardId = null;
+      delete inst.condicionHabilitada;
+    }
   }
   return v;
 }
 
 // src/online/game/invariants.ts
-function verificarInvariantes(estado) {
+function verificarZonaUnica(estado) {
+  const zonasDe = /* @__PURE__ */ new Map();
+  const anotar = (id, zona) => {
+    if (!id) return;
+    const lista = zonasDe.get(id);
+    if (lista) lista.push(zona);
+    else zonasDe.set(id, [zona]);
+  };
+  for (const p of ["A", "B"]) {
+    const st = estado.players[p];
+    for (const id of st.mano) anotar(id, `${p}.mano`);
+    for (const id of st.mazo) anotar(id, `${p}.mazo`);
+    for (const id of st.cementerio) anotar(id, `${p}.cementerio`);
+    for (const id of st.exilio) anotar(id, `${p}.exilio`);
+    for (const id of st.eterReserva) anotar(id, `${p}.eterReserva`);
+    for (const id of st.eterPagado) anotar(id, `${p}.eterPagado`);
+    for (const grupo of ["campeones", "misticasTacticas", "arcanasCombate"]) {
+      st.campo[grupo].forEach((id, i) => anotar(id, `${p}.campo.${grupo}[${i}]`));
+    }
+    st.vinculos.forEach((id, i) => anotar(id, `${p}.vinculos[${i}]`));
+    for (const grupo of ["campeones", "misticasTacticas", "arcanasCombate"]) {
+      for (const portador of st.campo[grupo]) {
+        for (const eterId of (portador ? estado.instances[portador]?.eterBloqueado : void 0) ?? []) {
+          anotar(eterId, `${p}.eterBloqueado(${portador})`);
+        }
+      }
+    }
+  }
   const violaciones = [];
+  for (const [id, zonas] of zonasDe) {
+    if (zonas.length > 1) violaciones.push(`${id}: en ${zonas.length} zonas a la vez (${zonas.join(", ")})`);
+  }
+  return violaciones;
+}
+function verificarInvariantes(estado) {
+  const violaciones = verificarZonaUnica(estado);
   const esEterId = (id) => {
     const inst = estado.instances[id];
     const meta = inst?.cardId ? getCardMeta(inst.cardId) : null;
@@ -7229,7 +7793,9 @@ var CATALOGO_EVENTOS = [
   { type: "respuesta_encadenada", jugador: "B", cardInstanceId: "c4" },
   { type: "prioridad_pasada", jugador: "A" },
   { type: "carta_activada", cardInstanceId: "c1", jugador: "A", slot: 0 },
-  { type: "activacion_negada", jugador: "B", cardInstanceId: "c1", fuente: "c4" }
+  { type: "activacion_negada", jugador: "B", cardInstanceId: "c1", fuente: "c4" },
+  // F5d-3 (decisión 10a): triggers apilados sobre la jugada que los provocó
+  { type: "trigger_apilado", jugador: "A", cardInstanceId: "c1", trigger: "al-jugar-mistica", efectoIdx: 0 }
 ];
 function assertNunca(x) {
   throw new Error(`Evento inesperado del cat\xE1logo: ${String(x)}`);
@@ -7303,6 +7869,8 @@ function validarExhaustividadEventos(tipo) {
     case "carta_activada":
       return;
     case "activacion_negada":
+      return;
+    case "trigger_apilado":
       return;
     default:
       assertNunca(tipo);
@@ -7417,8 +7985,9 @@ function decidirBloqueo(state, acciones) {
       asignacionesFavorables[atacanteId] = bloqueadorId;
     }
   }
-  if (Object.keys(asignacionesFavorables).length > 0) {
-    return { type: "declarar_bloqueo", asignaciones: asignacionesFavorables };
+  const cantidadFavorables = Object.keys(asignacionesFavorables).length;
+  if (cantidadFavorables > 0) {
+    return cantidadFavorables === Object.keys(asignaciones).length ? { type: "declarar_bloqueo", asignaciones: asignacionesFavorables } : declararBloqueo;
   }
   return acciones.find((a) => a.type === "pasar_prioridad") ?? acciones[0];
 }
@@ -7538,8 +8107,9 @@ function decidirBloqueoAvanzado(state, acciones) {
       asignacionesFavorables[atacanteId] = bloqueadorId;
     }
   }
-  if (Object.keys(asignacionesFavorables).length > 0) {
-    return { type: "declarar_bloqueo", asignaciones: asignacionesFavorables };
+  const cantidadFavorables = Object.keys(asignacionesFavorables).length;
+  if (cantidadFavorables > 0) {
+    return cantidadFavorables === Object.keys(asignaciones).length ? { type: "declarar_bloqueo", asignaciones: asignacionesFavorables } : declararBloqueo;
   }
   return acciones.find((a) => a.type === "pasar_prioridad") ?? acciones[0];
 }
@@ -7551,7 +8121,15 @@ function botTonto(state, playerId, dificultad = "facil") {
     if (preven.jugador !== playerId) return null;
     return { type: "responder_prevenicion", prevenir: elegirPrevenicion(state, playerId) };
   }
-  const cadena = state.combate?.cadena ?? state.cadena;
+  if (state.declaracionEnEleccion) {
+    if (actorActual(state) !== playerId) return null;
+    return getValidActions(state, playerId).find((a) => a.type === "elegir_objetivo") ?? null;
+  }
+  if (electorAjeno(state)) {
+    if (actorActual(state) !== playerId) return null;
+    return getValidActions(state, playerId).find((a) => a.type === "elegir_objetivo") ?? null;
+  }
+  const cadena = cadenaActiva(state);
   if (cadena) {
     return cadena.prioridad === playerId ? { type: "pasar_prioridad" } : null;
   }
@@ -7582,9 +8160,7 @@ function simularPartida(deckA, deckB, seed, maxTurnos = 1e3, dificultadA = "faci
   let iteraciones = 0;
   let estado = state;
   while (estado.fase !== "terminada" && iteraciones < maxTurnos) {
-    const preven = estado.preventivosPendientes?.[0];
-    const cadena = estado.combate?.cadena ?? estado.cadena;
-    const actor = preven ? preven.jugador : cadena ? cadena.prioridad : estado.fase === "choque" && estado.combate?.paso === "bloqueo" ? estado.turno === "A" ? "B" : "A" : estado.turno;
+    const actor = actorActual(estado) ?? estado.turno;
     const dif = actor === "A" ? dificultadA : dificultadB;
     const accion = botTonto(estado, actor, dif);
     if (!accion) throw new Error("el bot no encontr\xF3 acci\xF3n v\xE1lida (sin progreso)");
@@ -7611,7 +8187,9 @@ export {
   SLOTS_CAMPEONES,
   SLOTS_MISTICAS_TACTICAS,
   SLOTS_VINCULOS,
+  TRIGGERS_APILABLES,
   actorActual,
+  apilarTriggers,
   aplicarMod,
   aplicarPago,
   aporteDe,
@@ -7620,8 +8198,10 @@ export {
   bloqueadoresDisponibles,
   bloquearEter,
   botTonto,
+  cadenaActiva,
   campeonNecesitaEterBloqueado,
   campeonesSacrificables,
+  construirTriggers,
   copiasEnCampo,
   costeEterHabilidad,
   createCtx,
@@ -7637,6 +8217,7 @@ export {
   esEter,
   esMistica,
   esSingular,
+  esTriggerApilable,
   esVinculo,
   exhaustFijado,
   faccionesCompartidas,
@@ -7647,6 +8228,7 @@ export {
   limiteSlots,
   limpiarRegistroEfectos,
   maxEterBloqueado,
+  ordenResolucion,
   otorgarKeyword,
   parejasBloqueoOpcion,
   purgarEfectosTemporales,
@@ -7672,5 +8254,6 @@ export {
   validarPasarPrioridad,
   validarResponderCadena,
   verificarInvariantes,
+  verificarZonaUnica,
   visibleState
 };
