@@ -21,7 +21,7 @@ import type { Action } from '../actions'
 import type { Ctx, GameState } from '../types'
 import {
   PR, CARTAS_PRUEBA, cargarCartasPrueba, crearCtx, crearPartidaPrueba, escenaVacia, aplicar, conMano, conEteres, conMazo,
-  conCampeon, conMistica,
+  conCampeon, conRespuestaDeMano,
 } from './helpers/cartasPrueba'
 
 beforeAll(() => {
@@ -71,7 +71,7 @@ describe('al-jugar-mistica se apila encima del opener', () => {
     const s0 = escena()
     conCampeon(s0, 'B', 'b0', PR.PEON, 0)
     conCampeon(s0, 'B', 'b1', PR.PEON, 1)
-    conMistica(s0, 'B', 'bm', PR.AVISO, 0) // B puede responder: la ventana se abre
+    conRespuestaDeMano(s0, 'B') // B puede responder (Presteza de la mano): la ventana se abre
     const ctx = crearCtx()
     let s = jugar(s0, ctx, 'avi', PR.AVISO)
     // la ventana ESPERA: primero se elige el objetivo del trigger (declaración F5d-1)
@@ -95,7 +95,7 @@ describe('al-jugar-mistica se apila encima del opener', () => {
   it('evento trigger_apilado (decisión 10a): se emite UNA vez al apilar, sin objetivo, y no se re-emite al resolver', () => {
     const s0 = escena()
     conCampeon(s0, 'B', 'b0', PR.PEON, 0)
-    conMistica(s0, 'B', 'bm', PR.AVISO, 0) // la ventana se abre
+    conRespuestaDeMano(s0, 'B') // la ventana se abre
     const ctx = crearCtx()
     let s = jugar(s0, ctx, 'avi', PR.AVISO)
     expect(triggersApiladosDe(ctx)).toEqual([
@@ -174,7 +174,7 @@ describe('decisión 2: la fuente fuera del campo pierde el trigger', () => {
   it('la Mística sale del campo antes de resolver: el trigger se pierde sin efectos parciales', () => {
     const s0 = escena()
     conCampeon(s0, 'B', 'b0', PR.PEON, 0)
-    conMistica(s0, 'B', 'bm', PR.AVISO, 0) // la ventana se abre
+    conRespuestaDeMano(s0, 'B') // la ventana se abre
     const ctx = crearCtx()
     let s = jugar(s0, ctx, 'avi', PR.AVISO)
     s = aplicar(s, elegir('b0'), ctx)

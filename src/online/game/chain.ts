@@ -5,7 +5,8 @@
  * - `abrirCadena(s, primerRespondedor)`: apertura CONDICIONAL — solo si el
  *   jugador tiene cartas respondibles (F5f: UNA regla, `motivoNoResponde`, manda la
  *   VELOCIDAD normal < Presteza < Fugaz; Arcana con su condición cumplida y colocada
- *   en turnos ANTERIORES §5.4/§5.5 → flag `entradaEsteTurno`; Presteza/Fugaz de la mano).
+ *   en turnos ANTERIORES §5.4 → flag `entradaEsteTurno`; Disparo de Campeón; Presteza/Fugaz de la mano —
+ *   una Mística en el campo NO responde, §5.3).
  *   Una FUGAZ apilada cierra la pila al instante (nadie puede responderla).
  * - Pila + prioridad + pasesConsecutivos: con 2 pases seguidos la pila se
  *   resuelve en ORDEN INVERSO (§9.6): la última activación primero.
@@ -124,10 +125,10 @@ export function motivoNoResponde(state: GameState, jugador: PlayerId, id: string
     if (etersParaPagar(state, jugador, meta.id) === null) return 'no puedes pagar su coste'
     return null
   }
-  if (esMistica(meta)) {
-    if (inst.entradaEsteTurno) return 'la carta entró este turno (§5.5)'
-    return null
-  }
+  // Decisión del usuario (2026-10-26, manual §5.3): las Místicas SOLO se juegan desde la mano. Una que ya está en el
+  // campo (continua o ARTEFACTO) no se activa otra vez: no responde. Se responde con una Mística jugándola desde la
+  // mano (origen 'mano', arriba), con Arcanas boca abajo o con Disparos de Campeones.
+  if (esMistica(meta)) return 'las Místicas solo se juegan desde la mano: una Mística en el campo no responde (§5.3)'
   if (esArcana(meta)) {
     // responder la activa: mismas condiciones que activar_arcana y su coste se debe poder pagar (F5e)
     const motivo = motivoArcanaNoActivable(state, jugador, id)
@@ -141,13 +142,12 @@ export function motivoNoResponde(state: GameState, jugador: PlayerId, id: string
 }
 
 /**
- * Cartas del jugador que pueden responder en la cadena (9.6 + global), todas por motivoNoResponde:
- * - Místicas del campo que NO estén en activación diferida (§5.5)
+ * Cartas YA EN EL CAMPO del jugador que pueden responder en la cadena (9.6 + global), todas por motivoNoResponde:
  * - Arcanas boca abajo que cumplan su condición, no estén en activación diferida (§5.4) y cuyo
  *   coste se pueda pagar (F5e: responder las activa, igual que activar_arcana)
  * - Campeones con efectos[] tipo disparo que no estén agotados
- * Sin distinguir permanentes (Artefacto): la velocidad manda (F5f). Con la pila en Presteza solo
- * responden PRESTEZA o FUGAZ; si el tope es FUGAZ, nadie responde.
+ * Las Místicas NO están aquí: solo se juegan desde la mano (manual §5.3, decisión 2026-10-26); las de la mano
+ * son `respuestasDeMano`. Con la pila en Presteza solo responden PRESTEZA o FUGAZ; si el tope es FUGAZ, nadie.
  */
 export function respondiblesDe(state: GameState, playerId: PlayerId): string[] {
   const p = state.players[playerId]

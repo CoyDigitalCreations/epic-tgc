@@ -43,7 +43,7 @@ Ver `design.md`. Marcar al terminar cada tarea.
 - [x] Arcanas y Místicas con Presteza/Fugaz como respuestas (la velocidad manda, F5f)
 - [x] Manual §9.6 reescrito con lo implementado en F5 y neutral entre juego físico y virtual (sin "ventana", "gate", etc.); también §5.3, §5.4 (candado de Arcana), §8.3a, keywords y glosario
 - [x] Continuos (bloquear Éter) como respuesta solo durante la Forja (decisión del usuario 2026-10-26; no agotan al Campeón); `validarBloquearEter` y `getValidActions` con paridad
-- [ ] Místicas solo se juegan desde la mano: `motivoNoResponde(..., 'campo')` todavía deja responder a una Mística ya en el campo (si no entró este turno); quitarlo (~40 usos de `conMistica` en 8 archivos de tests por reescribir)
+- [x] Místicas solo se juegan desde la mano: `motivoNoResponde(..., 'campo')` ya no deja responder a una Mística del campo (helper de tests `conRespuestaDeMano`; 21 tests reescritos; snapshot del bot seed 1: -142 ventanas, ver Engram)
 - [ ] Un Disparo con Éter bloqueado puede activarse agotado, pero como respuesta el motor exige Campeón enderezado: decidir y alinear `motivoNoResponde` con `getValidActions`
 - Subfases hechas: F5a pila única · F5b opener resuelve último · F5c bloqueo abre ventana antes del daño · F5d-1 objetivos antes de la ventana · F5e respuestas con objetivo · F5f velocidad · F5g candado de Arcana · F5h revalidación de objetivos · F5d-2 infraestructura de triggers apilados · F5d-3 `al-jugar-mistica` · F5d-4 `al-invocar` · F5d-5 `al-atacar` · H4 elector ajeno al turno (`electorAjeno`)
 - [ ] Decidir `al-activar-habilidad` (nadie lo dispara: Draven y Korr tienen 2 efectos letra muerta); cablear en `ejecutarActivarHabilidad` o corregir las cartas en el Card-Maker

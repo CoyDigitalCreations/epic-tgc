@@ -9,7 +9,7 @@
 import { describe, it, expect, beforeAll } from 'vitest'
 import { applyAction } from '../actions'
 import { actorActual, getValidActions } from '../validActions'
-import { cadenaActiva, respondiblesDe, respuestasDeMano } from '../chain'
+import { cadenaActiva, motivoNoResponde, respondiblesDe, respuestasDeMano } from '../chain'
 import { etersParaPagar } from '../payments'
 import { statsDe, velocidadDe } from '../efectos'
 import { visibleState } from '../visibleState'
@@ -328,30 +328,48 @@ describe('resolvedor único de la pila: combate y global (F5e)', () => {
     expect(s.combate?.paso).toBe('bloqueo')
   })
 
-  it('Mística en campo (Eco, al_resolver_cadena): su efecto llega con la pila de combate y la carta permanece', () => {
+  it('Mística en el campo (Eco) NO responde (manual §5.3: las Místicas solo se juegan desde la mano): sin respondedores no hay ventana', () => {
     const s0 = base('choque')
     conCampeon(s0, 'A', 'a0', PR.PEON, 0)
     conCampeon(s0, 'B', 'b0', PR.PEON, 0)
     conMistica(s0, 'B', 'eco', PR.ECO, 0)
     const ctx = crearCtx()
+    const s = aplicar(s0, { type: 'declarar_ataque', atacanteIds: ['a0'] }, ctx)
+    expect(respondiblesDe(s, 'B')).toEqual([])
+    expect(s.cadena).toBeUndefined() // el gate no abre: nadie puede responder
+    expect(s.combate?.paso).toBe('bloqueo')
+    expect(motivoNoResponde(s, 'B', 'eco', 'campo')).toMatch(/solo se juegan desde la mano/)
+  })
+
+  it('Eco (Presteza, al_resolver_cadena) jugada DESDE LA MANO como respuesta: roba al resolver y va al Cementerio', () => {
+    const s0 = base('choque')
+    conCampeon(s0, 'A', 'a0', PR.PEON, 0)
+    conCampeon(s0, 'B', 'b0', PR.PEON, 0)
+    conMano(s0, 'B', 'eco', PR.ECO)
+    conEteres(s0, 'B', 1)
+    const ctx = crearCtx()
     let s = aplicar(s0, { type: 'declarar_ataque', atacanteIds: ['a0'] }, ctx)
-    expect(respondiblesDe(s, 'B')).toEqual(['eco'])
+    expect(respuestasDeMano(s, 'B')).toEqual(['eco'])
     const mano = s.players.B.mano.length
-    s = aplicar(s, { type: 'responder_cadena', cardInstanceId: 'eco' }, ctx)
+    s = aplicar(s, { type: 'jugar_respuesta', cardInstanceId: 'eco', eterIds: pagoDe(s, 'B', PR.ECO) }, ctx)
     s = cerrar(s, ctx)
-    expect(s.players.B.mano.length).toBe(mano + 1)
-    expect(s.players.B.campo.misticasTacticas[0]).toBe('eco')
+    expect(s.players.B.mano.length).toBe(mano) // salió 'eco' (-1) y robó 1 (+1)
+    expect(s.players.B.cementerio).toContain('eco')
+    expect(s.players.B.campo.misticasTacticas).not.toContain('eco')
   })
 })
 
 describe('velocidad: normal < Presteza < Fugaz (F5e, manual: PRESTEZA solo se responde con PRESTEZA o FUGAZ; FUGAZ no se responde)', () => {
-  /** B tiene una Arcana normal, una Mística Presteza, una Mística normal y un Campeón con Disparo, todas en campo y pagables. */
+  /**
+   * B tiene una Arcana normal y un Campeón con Disparo (normal) en el campo, y tres Místicas en la MANO (Presteza,
+   * Presteza/Eco y Fugaz), todo pagable. Las Místicas solo responden desde la mano (manual §5.3).
+   */
   function escenaDeRespuestas(): GameState {
     const s = base()
     conCampeon(s, 'B', 'rea', PR.REACTIVO, 0) // Disparo, normal
-    conMistica(s, 'B', 'pre', PR.PRESTEZA_ROBA, 0) // Presteza
-    conMistica(s, 'B', 'eco', PR.ECO, 1) // Presteza (Eco)
-    conMistica(s, 'B', 'fug', PR.FUGAZ, 2) // Fugaz
+    conMano(s, 'B', 'pre', PR.PRESTEZA_ROBA) // Presteza
+    conMano(s, 'B', 'eco', PR.ECO) // Presteza (Eco)
+    conMano(s, 'B', 'fug', PR.FUGAZ) // Fugaz
     conArcana(s, 'B', 'arc', PR.PACTO, 0) // normal
     conMano(s, 'B', 'relleno', PR.PEON) // F5f: PR-060 exige ≥1 carta en mano para activarse
     conEteres(s, 'B', 2)
@@ -366,7 +384,8 @@ describe('velocidad: normal < Presteza < Fugaz (F5e, manual: PRESTEZA solo se re
     const ctx = crearCtx()
     let s = aplicar(s0, { type: 'jugar_mistica', cardInstanceId: 'rayo', slot: 0, eterIds: pago }, ctx)
     s = aplicar(s, { type: 'elegir_objetivo', objetivoId: 'rea' }, ctx)
-    expect([...respondiblesDe(s, 'B')].sort()).toEqual(['arc', 'eco', 'fug', 'pre', 'rea'])
+    expect([...respondiblesDe(s, 'B')].sort()).toEqual(['arc', 'rea']) // en el campo: la Arcana y el Disparo
+    expect([...respuestasDeMano(s, 'B')].sort()).toEqual(['eco', 'fug', 'pre']) // en la mano: las tres Místicas
   })
 
   it('un opener Presteza solo se responde con Presteza/Fugaz', () => {
@@ -378,7 +397,8 @@ describe('velocidad: normal < Presteza < Fugaz (F5e, manual: PRESTEZA solo se re
     let s = aplicar(s0, { type: 'jugar_mistica', cardInstanceId: 'deb', slot: 0, eterIds: pago }, ctx)
     s = aplicar(s, { type: 'elegir_objetivo', objetivoId: 'rea' }, ctx)
     expect(velocidadDe(s, 'deb')).toBe('presteza')
-    expect([...respondiblesDe(s, 'B')].sort()).toEqual(['eco', 'fug', 'pre'])
+    expect(respondiblesDe(s, 'B')).toEqual([]) // la Arcana y el Disparo son normales: no responden a una Presteza
+    expect([...respuestasDeMano(s, 'B')].sort()).toEqual(['eco', 'fug', 'pre'])
   })
 
   it('tras una respuesta Presteza solo Presteza/Fugaz; tras una Fugaz, nadie (ni siquiera la Presteza de la mano)', () => {
@@ -386,8 +406,8 @@ describe('velocidad: normal < Presteza < Fugaz (F5e, manual: PRESTEZA solo se re
     conMano(s0, 'A', 'rayo', PR.RAYO)
     const pago = conEteres(s0, 'A', 2)
     conCampeon(s0, 'A', 'a0', PR.PEON, 0)
-    conMistica(s0, 'A', 'preA', PR.PRESTEZA_ROBA, 0)
-    conMistica(s0, 'A', 'fugA', PR.FUGAZ, 1)
+    conMano(s0, 'A', 'preA', PR.PRESTEZA_ROBA)
+    conMano(s0, 'A', 'fugA', PR.FUGAZ)
     conArcana(s0, 'A', 'arcA', PR.PACTO, 0)
     conMano(s0, 'A', 'manoPre', PR.PRESTEZA_ROBA)
     conEteres(s0, 'A', 3)
@@ -395,11 +415,11 @@ describe('velocidad: normal < Presteza < Fugaz (F5e, manual: PRESTEZA solo se re
     const ctx = crearCtx()
     let s = aplicar(s0, { type: 'jugar_mistica', cardInstanceId: 'rayo', slot: 2, eterIds: pago }, ctx)
     s = aplicar(s, { type: 'elegir_objetivo', objetivoId: 'rea' }, ctx)
-    // B responde con su Presteza del campo (no tiene objetivo: entra directo)
-    s = aplicar(s, { type: 'responder_cadena', cardInstanceId: 'pre' }, ctx)
+    // B responde con su Presteza jugada desde la mano (no tiene objetivo: entra directo)
+    s = aplicar(s, { type: 'jugar_respuesta', cardInstanceId: 'pre', eterIds: pagoDe(s, 'B', PR.PRESTEZA_ROBA) }, ctx)
     expect(s.cadena?.velocidadActual).toBe('presteza')
-    expect([...respondiblesDe(s, 'A')].sort()).toEqual(['fugA', 'preA'])
-    expect(respuestasDeMano(s, 'A')).toEqual(['manoPre']) // la Presteza de la mano sí responde a una Presteza
+    expect(respondiblesDe(s, 'A')).toEqual([]) // la Arcana de A es normal: no responde a una Presteza
+    expect([...respuestasDeMano(s, 'A')].sort()).toEqual(['fugA', 'manoPre', 'preA']) // las de la mano sí (Presteza/Fugaz)
     // Con una Fugaz en el tope NADIE responde (tampoco la Presteza de la mano). F5f: responder con una Fugaz cierra la
     // pila al instante, así que el estado "Fugaz en el tope" se arma a mano para comprobar la regla de velocidad.
     s = structuredClone(s)
@@ -418,7 +438,8 @@ describe('velocidad: normal < Presteza < Fugaz (F5e, manual: PRESTEZA solo se re
     const pago = conEteres(s0, 'A', 2)
     conCampeon(s0, 'A', 'a0', PR.PEON, 0)
     conCampeon(s0, 'B', 'b0', PR.PEON, 0)
-    conMistica(s0, 'B', 'fug', PR.FUGAZ, 0)
+    conMano(s0, 'B', 'fug', PR.FUGAZ) // B puede responder con una Fugaz desde la mano: la ventana abre
+    conEteres(s0, 'B', 1)
     conMano(s0, 'A', 'manoPre', PR.PRESTEZA_ROBA)
     conEteres(s0, 'A', 1)
     const ctx = crearCtx()

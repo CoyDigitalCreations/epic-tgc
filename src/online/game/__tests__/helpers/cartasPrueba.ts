@@ -158,9 +158,23 @@ export function conCampeon(s: GameState, owner: PlayerId, id: string, cardId: st
   return id
 }
 
+/**
+ * Mística en un slot de soporte. OJO (manual §5.3): una Mística en el campo NO responde a una cadena; úsala para
+ * Místicas permanentes/continuas (fuente de un trigger, receptor de un Artefacto, etc.), no como "respondedor".
+ */
 export function conMistica(s: GameState, owner: PlayerId, id: string, cardId: string, slot: number, extra: Partial<CardInstance> = {}): string {
   inst(s, id, cardId, owner, extra)
   s.players[owner].campo.misticasTacticas[slot] = id
+  return id
+}
+
+/**
+ * Una respuesta LEGAL para `owner`: una Mística PRESTEZA en la mano (id `id`) y 1 Éter para pagarla. Hace que el rival
+ * del que actúa pueda responder (la ventana se abre). Requiere mazo para que la Presteza (roba 1) resuelva.
+ */
+export function conRespuestaDeMano(s: GameState, owner: PlayerId, id = 'respMano'): string {
+  conMano(s, owner, id, PR.PRESTEZA_ROBA)
+  conEteres(s, owner, 1)
   return id
 }
 

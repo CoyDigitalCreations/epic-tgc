@@ -235,7 +235,7 @@ describe('Fugaz como respuesta desde la mano: resuelve sin ventana para el rival
     expect(s.players.B.cementerio).toContain('veto')
   })
 
-  it('la Presteza (de la mano o del campo) no responde a una Fugaz; una Fugaz en el tope no admite respuestas de nadie', () => {
+  it('la Presteza de la mano no responde a una Fugaz; una Fugaz en el tope no admite respuestas de nadie (y una Mística en el campo nunca responde, §5.3)', () => {
     const { s: s1 } = abre(PR.RAYO, 'b0', (s0) => {
       conCampeon(s0, 'B', 'b0', PR.PEON, 0)
       conMistica(s0, 'B', 'preCampo', PR.PRESTEZA_ROBA, 1)
@@ -243,7 +243,7 @@ describe('Fugaz como respuesta desde la mano: resuelve sin ventana para el rival
       conMano(s0, 'B', 'fugMano', PR.FUGAZ)
       conEteres(s0, 'B', 3)
     })
-    expect([...respondiblesDe(s1, 'B')].sort()).toEqual(['preCampo'])
+    expect(respondiblesDe(s1, 'B')).toEqual([]) // la Presteza del CAMPO no responde: las Místicas solo se juegan desde la mano
     expect([...respuestasDeMano(s1, 'B')].sort()).toEqual(['fugMano', 'preMano'])
     const s = structuredClone(s1)
     s.cadena!.pila.push('fugMano') // estado "Fugaz en el tope" armado a mano (jugarla la cierra al instante)

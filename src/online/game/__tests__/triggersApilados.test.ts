@@ -26,7 +26,7 @@ import type { Action } from '../actions'
 import type { CadenaState, Ctx, GameState, TriggerApilado } from '../types'
 import {
   PR, CARTAS_PRUEBA, cargarCartasPrueba, crearCtx, crearPartidaPrueba, escenaVacia, aplicar, conMano, conEteres, conMazo,
-  conCampeon, conMistica, conArcana, conVinculo,
+  conCampeon, conMistica, conArcana, conVinculo, conRespuestaDeMano,
 } from './helpers/cartasPrueba'
 
 beforeAll(() => {
@@ -76,8 +76,8 @@ function mesa(conRespondible = true): GameState {
   conCampeon(s, 'A', 'ha', PR.HERALDO_ALIADO, 1)
   conCampeon(s, 'B', 'b0', PR.PEON, 0)
   conCampeon(s, 'B', 'hb', PR.HOSTIGADOR, 1)
-  // una Mística de B en el campo desde turnos anteriores: puede responder (la ventana abre)
-  if (conRespondible) conMistica(s, 'B', 'bm', PR.AVISO, 0)
+  // B puede responder (Mística PRESTEZA en la mano + Éter): la ventana abre. (Una Mística en el campo no responde, manual §5.3)
+  if (conRespondible) conRespuestaDeMano(s, 'B')
   return s
 }
 
@@ -234,7 +234,7 @@ describe('objetivos al apilar: el DUEÑO del trigger elige (rival incluido) ante
     expect(actorActual(s)).toBe('A')
     expect(getValidActions(s, 'A').map((a) => a.type).sort()).toEqual(['elegir_objetivo', 'elegir_objetivo', 'rendirse'])
     expect(getValidActions(s, 'B').map((a) => a.type)).toEqual(['rendirse'])
-    for (const accion of [pasar, { type: 'pasar_turno' }, { type: 'responder_cadena', cardInstanceId: 'bm' }] as Action[]) {
+    for (const accion of [pasar, { type: 'pasar_turno' }, { type: 'responder_cadena', cardInstanceId: 'arc' }] as Action[]) {
       expect(applyAction(s, accion, ctx).ok, accion.type).toBe(false)
     }
     // A elige el suyo; ahora le toca elegir AL RIVAL (dueño de su trigger), A queda congelado
@@ -300,7 +300,7 @@ describe('objetivos al apilar: el DUEÑO del trigger elige (rival incluido) ante
     conCampeon(s, 'A', 'a0', PR.PEON, 0)
     conArcana(s, 'B', 'arc', 'TEST-ARC', 0, { bocaArriba: true })
     conArcana(s, 'B', 'arc2', 'TEST-ARC', 1)
-    conMistica(s, 'B', 'bm', PR.AVISO, 0)
+    conRespuestaDeMano(s, 'B')
     expect(visibleState(s, 'A').instances['arc'].cardId).toBeNull()
     const ctx = crearCtx()
     // el trigger de B (rival del turno) con ventana abierta: la fuente se ve, la otra Arcana sigue oculta
@@ -487,12 +487,13 @@ describe('reglas de resolución: fuente, objetivo y costo', () => {
     expect(verificarZonaUnica(s)).toEqual([])
   })
 
-  /** A (Rompecadenas al activar habilidad: paga 2 Éter, destruye una Mística rival) vs B con una Mística que puede responder. */
+  /** A (Rompecadenas al activar habilidad: paga 2 Éter, destruye una Mística rival) vs B con una Mística en el campo (el objetivo) y una Presteza en la mano (la respuesta). */
   function rompecadenas(): { s: GameState; ctx: Ctx } {
     const s0 = escena()
     conCampeon(s0, 'A', 'rc', PR.ROMPECADENAS, 0)
     conEteres(s0, 'A', 2)
     conMistica(s0, 'B', 'bm', PR.AVISO, 0)
+    conRespuestaDeMano(s0, 'B')
     const ctx = crearCtx()
     let s = structuredClone(s0)
     apilarTriggers(s, ctx, construirTriggers(s, 'al-activar-habilidad', 'A', ['rc']))
@@ -527,7 +528,7 @@ describe('reglas de resolución: fuente, objetivo y costo', () => {
     const s = escena()
     conCampeon(s, 'A', 'a0', PR.PEON, 0)
     conArcana(s, 'B', 'arc', 'TEST-ARC', 0, { bocaArriba: true })
-    conMistica(s, 'A', 'am', PR.AVISO, 0) // A puede responder: la ventana abre (el trigger es de B → prioridad del rival de A... ver abajo)
+    conRespuestaDeMano(s, 'A') // A puede responder (Presteza de la mano): la ventana abre (el trigger es de B → prioridad de A)
     const ctx = crearCtx()
     const manoAntes = s.players.B.mano.length
     s.turno = 'B' // el turno es de B: el rival es A
@@ -550,7 +551,7 @@ describe('decisión 10b: la condicion se evalúa AL APILAR, no al resolver', () 
     conCampeon(s, 'A', 'c0', 'TEST-COND', 0)
     conCampeon(s, 'B', 'b0', PR.PEON, 0)
     conCampeon(s, 'B', 'b1', PR.PEON, 1)
-    conMistica(s, 'B', 'bm', PR.AVISO, 0) // B puede responder: la ventana abre y el trigger queda en la cadena
+    conRespuestaDeMano(s, 'B') // B puede responder (Presteza de la mano): la ventana abre y el trigger queda en la cadena
     return s
   }
 
