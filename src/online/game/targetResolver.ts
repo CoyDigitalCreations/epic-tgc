@@ -55,6 +55,23 @@ export function resolveTargets(
 }
 
 /**
+ * ¿La carta es del tipo que pide el objetivo? Zonas fuera del campo (Cementerio, Exilio, mano, mazo): ahí el campo
+ * donde vive la carta no dice su tipo, así que se mira la carta. `carta` y `mano` aceptan cualquiera.
+ */
+function coincideTipo(s: GameState, id: string, tipo: ObjetivoEfecto['tipo']): boolean {
+  if (tipo === 'carta' || tipo === 'mano') return true
+  const cardId = s.instances[id]?.cardId
+  const meta = cardId ? getCardMeta(cardId) : null
+  if (!meta) return false
+  if (tipo === 'campeon') return esCampeon(meta)
+  if (tipo === 'mistica') return esMistica(meta)
+  if (tipo === 'arcana') return esArcana(meta)
+  if (tipo === 'mistica_arcana') return esMistica(meta) || esArcana(meta)
+  if (tipo === 'eter') return meta.type === 'Éter'
+  return true
+}
+
+/**
  * Get targets by zone and controller.
  */
 function getTargetsByZone(
@@ -144,12 +161,12 @@ function getTargetsByZone(
       }
 
       case 'cementerio': {
-        targets.push(...p.cementerio.filter((id): id is string => id !== null))
+        targets.push(...p.cementerio.filter((id): id is string => id !== null && coincideTipo(s, id, tipo)))
         break
       }
 
       case 'exilio': {
-        targets.push(...p.exilio.filter((id): id is string => id !== null))
+        targets.push(...p.exilio.filter((id): id is string => id !== null && coincideTipo(s, id, tipo)))
         break
       }
 
@@ -184,22 +201,13 @@ function getTargetsByZone(
       }
 
       case 'mano': {
-        targets.push(...p.mano.filter((id): id is string => id !== null))
+        targets.push(...p.mano.filter((id): id is string => id !== null && coincideTipo(s, id, tipo)))
         break
       }
 
       case 'mazo': {
         // For tutor effects — return card IDs from deck, filtered by tipo
-        targets.push(...p.mazo.filter((id): id is string => {
-          if (id === null) return false
-          if (tipo === 'carta') return true // 'carta' matches any card type
-          const meta = s.instances[id]?.cardId ? getCardMeta(s.instances[id]!.cardId!) : null
-          if (!meta) return false
-          if (tipo === 'campeon') return esCampeon(meta)
-          if (tipo === 'mistica') return esMistica(meta)
-          if (tipo === 'arcana') return esArcana(meta)
-          return true
-        }))
+        targets.push(...p.mazo.filter((id): id is string => id !== null && coincideTipo(s, id, tipo)))
         break
       }
     }

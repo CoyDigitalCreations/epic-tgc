@@ -6,6 +6,7 @@
  */
 import { resolveTargets } from './targetResolver'
 import { robarCarta } from './draw'
+import { shuffleFisherYates } from './rng'
 import { aplicarMod, otorgarKeyword, crearOpcionBloqueo } from './efectos'
 import { aplicarReglaTemporal } from './reglasTemporales'
 import { REGLAS } from '../../shared/rules/reglas'
@@ -330,6 +331,17 @@ function executeEffect(
       executeInvocarEquipar(s, ctx, inst, targetIds, jugador)
       break
 
+    case 'invocar':
+    case 'recuperar_campo':
+    case 'recuperar_mano':
+    case 'recuperar_mazo':
+    case 'recuperar_mazo_barajar':
+    case 'recuperar_mazo_top':
+    case 'recuperar_mazo_bottom':
+    case 'recuperar_exilio':
+      executeRecuperar(s, ctx, efecto, targetIds, jugador, efectoData)
+      break
+
     case 'block_ether':
       // Opción de bloqueo data-driven (Fase 2a): arma opcionesPendientes para
       // que el jugador bloquee 1 Éter sobre un Campeón compatible (Pasivo 1A
@@ -396,30 +408,126 @@ function executeInvocarEquipar(
   inst.vinculadoA = objetivoId
 }
 
-/** Invoca un campeón desde una zona del jugador al campo (enderezado, con invocación cansada: entradaEsteTurno).
+/** Invoca un campeón al campo de `jugador` (enderezado, con invocación cansada: entradaEsteTurno) desde la zona
+ * (Cementerio, Exilio, mano o mazo) de su DUEÑO: «invoca un Campeón del Cementerio de su dueño». Si el dueño es el
+ * rival, el Campeón entra bajo el control de `jugador`.
  * CHEQUEA slot libre ANTES de remover de la zona — sin eso, un slot lleno
  * orfana la carta (removida del cementerio/mano y nunca colocada). */
 function invocarAlCampo(s: GameState, ctx: Ctx, jugador: PlayerId, campeonId: string): boolean {
-  const p = s.players[jugador]
-  const slotLibre = p.campo.campeones.indexOf(null)
+  const campo = s.players[jugador].campo
+  const slotLibre = campo.campeones.indexOf(null)
   if (slotLibre === -1) return false
-  const zonas: Array<{ arr: string[]; nombre: string }> = [
-    { arr: p.cementerio, nombre: 'cementerio' },
-    { arr: p.exilio, nombre: 'exilio' },
-    { arr: p.mano, nombre: 'mano' },
-    { arr: p.mazo, nombre: 'mazo' },
-  ]
-  for (const { arr } of zonas) {
+  const inst = s.instances[campeonId]
+  if (!inst) return false
+  const p = s.players[inst.owner]
+  for (const arr of [p.cementerio, p.exilio, p.mano, p.mazo]) {
     const idx = arr.indexOf(campeonId)
     if (idx !== -1) {
       arr.splice(idx, 1)
-      p.campo.campeones[slotLibre] = campeonId
-      s.instances[campeonId].entradaEsteTurno = true
+      campo.campeones[slotLibre] = campeonId
+      inst.entradaEsteTurno = true
       ctx.emit({ type: 'carta_invocada', cardInstanceId: campeonId, tipo: 'Campeón', slot: slotLibre })
       return true
     }
   }
   return false
+}
+
+/** A dónde manda un efecto `recuperar_*` / `invocar` la carta elegida. */
+interface DestinoRecuperar {
+  zona: 'mano' | 'mazo' | 'cementerio' | 'campo'
+  /** Solo `mazo`: tope, fondo o fondo y barajar todo el mazo. */
+  posicion?: 'tope' | 'fondo' | 'barajar'
+}
+
+function destinoDeRecuperar(efecto: EfectoData['efecto'], efectoData: EfectoData): DestinoRecuperar {
+  switch (efecto) {
+    case 'recuperar_mano': return { zona: 'mano' }
+    case 'recuperar_mazo': return { zona: 'mazo', posicion: 'fondo' }
+    case 'recuperar_mazo_bottom': return { zona: 'mazo', posicion: 'fondo' }
+    case 'recuperar_mazo_top': return { zona: 'mazo', posicion: 'tope' }
+    case 'recuperar_mazo_barajar': return { zona: 'mazo', posicion: 'barajar' }
+    case 'recuperar_campo':
+    case 'invocar': return { zona: 'campo' }
+    default: {
+      // recuperar_exilio: el destino lo dice el objetivo; sin destino, la mano de su dueño
+      const z = efectoData.objetivo?.zonaDestino
+      if (z === 'campo' || z === 'cementerio') return { zona: z }
+      if (z === 'mazo') return { zona: 'mazo', posicion: 'fondo' }
+      return { zona: 'mano' }
+    }
+  }
+}
+
+/**
+ * Saca una instancia de la zona donde esté, de CUALQUIER jugador (un Campeón robado vive en el campo del ladrón).
+ * Devuelve false si no está en ninguna zona.
+ */
+function sacarDeSuZona(s: GameState, id: string): { zona: 'campo' | 'mano' | 'mazo' | 'cementerio' | 'exilio' } | null {
+  for (const j of ['A', 'B'] as PlayerId[]) {
+    const p = s.players[j]
+    const zonas = [
+      { zona: 'mano', arr: p.mano }, { zona: 'mazo', arr: p.mazo },
+      { zona: 'cementerio', arr: p.cementerio }, { zona: 'exilio', arr: p.exilio },
+    ] as const
+    for (const { zona, arr } of zonas) {
+      const i = arr.indexOf(id)
+      if (i !== -1) { arr.splice(i, 1); return { zona } }
+    }
+    for (const grupo of ['campeones', 'misticasTacticas', 'arcanasCombate'] as const) {
+      const i = p.campo[grupo].indexOf(id)
+      if (i !== -1) { p.campo[grupo][i] = null; return { zona: 'campo' } }
+    }
+  }
+  return null
+}
+
+/**
+ * Efectos de recuperación y de invocación (`recuperar_mano`, `recuperar_mazo`, `_mazo_barajar`, `_mazo_top`,
+ * `_mazo_bottom`, `recuperar_exilio`, `recuperar_campo`, `invocar`): llevan la carta elegida a su destino.
+ * Mano y mazo son los del DUEÑO (o los que diga `controladorDestino`); el campo es el de quien controla el efecto.
+ * Mazo sin posición = al fondo (como el tutor); el tope es el índice 0 (el que se roba).
+ */
+function executeRecuperar(
+  s: GameState,
+  ctx: Ctx,
+  efecto: EfectoData['efecto'],
+  targetIds: string[],
+  jugador: PlayerId,
+  efectoData: EfectoData,
+): void {
+  const destino = destinoDeRecuperar(efecto, efectoData)
+  for (const id of targetIds) {
+    const inst = s.instances[id]
+    if (!inst) continue
+
+    if (destino.zona === 'campo') {
+      const meta = inst.cardId ? getCardMeta(inst.cardId) : null
+      if (meta && esCampeon(meta)) invocarAlCampo(s, ctx, jugador, id)
+      continue
+    }
+
+    const origen = sacarDeSuZona(s, id)
+    if (!origen) continue
+    if (origen.zona === 'campo') {
+      liberarEterBloqueado(s, ctx, id, '1A') // §7.7: la carta deja el campo → su Éter bloqueado se libera
+      liberarArtefactosEquipados(s, ctx, id) // §10: el Artefacto equipado sale con el Campeón
+    }
+
+    const dueno = jugadorDestino(efectoData.objetivo?.controladorDestino, jugador, inst)
+    const p = s.players[dueno]
+    if (destino.zona === 'mano') {
+      p.mano.push(id)
+      ctx.emit({ type: 'carta_devuelta_a_mano', cardInstanceId: id, jugador: dueno })
+    } else if (destino.zona === 'cementerio') {
+      enviarAlCementerio(s, ctx, id) // ya removida: solo inserta en 2G y dispara al-ser-enviado-al-cementerio
+    } else {
+      if (destino.posicion === 'tope') p.mazo.unshift(id)
+      else p.mazo.push(id)
+      if (destino.posicion === 'barajar') p.mazo = shuffleFisherYates(ctx, p.mazo)
+      ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: id, zona: '3G', jugador: dueno, bocaArriba: false })
+    }
+  }
 }
 
 /**

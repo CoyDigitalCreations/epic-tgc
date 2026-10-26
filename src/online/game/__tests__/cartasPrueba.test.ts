@@ -229,10 +229,10 @@ describe('(b) cobertura — coverageMap sobre el set', () => {
       ...INTERPRETER_EXEC, ...SISTEMAS_EXTERNOS_JSON, 'modificar_regla', 'negar', 'copy',
     ])
     const sinEjecutor = [...EFECTOS_CARD_MAKER].filter((e) => !conEjecutor.has(e)).sort()
+    // F9a cerró `invocar` y los `recuperar_*` (recuperar.test.ts); faltan los que salen de la lista conforme se implementen
     expect(sinEjecutor).toEqual([
       'change_type', 'direct_attack', 'fix_exhaust', /* solo funciona como TRAMO (ejecutarTramo), no como efecto raíz */
-      'invocar', 'recuperar_exilio', 'recuperar_mano', 'recuperar_mazo', 'recuperar_mazo_barajar',
-      'recuperar_mazo_bottom', 'recuperar_mazo_top', 'redirect', 'scry',
+      'redirect', 'scry',
     ])
   })
 
