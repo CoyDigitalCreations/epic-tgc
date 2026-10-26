@@ -11,6 +11,7 @@
  */
 import { getCardMeta } from './cards'
 import { objetivoCompleto } from './effectInterpreter'
+import { reglaBool } from './reglas'
 import { resolveTargets } from './targetResolver'
 import { ordenResolucion, type PasoResolucion } from './triggers'
 import type { EfectoData } from '../../shared/types'
@@ -61,6 +62,12 @@ export function ejecutarRedirect(s: GameState, ctx: Ctx, fuente: CardInstance, t
   if (!esDeFuente(pasos[i], fuente.cardInstanceId)) return
 
   const debajo = pasos[i + 1]
+  // INEGABLE (§10): un efecto del rival no puede contrarrestar los efectos de una carta con `puedeSerNegada` apagada
+  const cartaDebajo = debajo ? ('trigger' in debajo ? debajo.trigger.cardInstanceId : debajo.respuesta) : cadena.opener?.cardInstanceId
+  const duenioDebajo = debajo
+    ? 'trigger' in debajo ? debajo.trigger.jugador : (cadena.respuestas?.[debajo.respuesta]?.jugador ?? s.instances[debajo.respuesta]?.owner)
+    : cadena.opener?.jugador
+  if (cartaDebajo && duenioDebajo !== jugador && !reglaBool(s, 'puedeSerNegada', { instId: cartaDebajo })) return
   let entrada: string | undefined
   let cambio = false
   if (debajo && 'trigger' in debajo) {

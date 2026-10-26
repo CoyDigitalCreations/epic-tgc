@@ -49,6 +49,7 @@ export const REGLAS = {
   puedeSerDestruidaEnBatalla: { etiqueta: 'Puede ser destruida en batalla', manual: '§10', ambito: 'campeon', base: true },
 
   /* ── carta ── */
+  puedeSerNegada: { etiqueta: 'Sus efectos pueden ser negados o contrarrestados por el rival', manual: '§10', ambito: 'carta', base: true },
   eterBloqueadoExtra: { etiqueta: 'Éter bloqueado extra sobre el tope del efecto', manual: '§7.7', ambito: 'carta', base: 0, min: 0 },
 } as const satisfies Record<string, DefRegla>
 
@@ -122,6 +123,7 @@ export const KEYWORD_REGLAS: Readonly<Record<string, readonly Omit<ModificadorRe
   Vigor: [{ regla: 'atacarAgota', operacion: 'prohibir' }],
   Tirador: [{ regla: 'disparoAgota', operacion: 'prohibir' }],
   Inexiliable: [{ regla: 'puedeSerExiliada', operacion: 'prohibir' }],
+  Inegable: [{ regla: 'puedeSerNegada', operacion: 'prohibir' }],
   Inmortal: [{ regla: 'puedeSerDestruidaPorEfecto', operacion: 'prohibir' }],
   Indestructible: [{ regla: 'puedeSerDestruidaEnBatalla', operacion: 'prohibir' }],
 }

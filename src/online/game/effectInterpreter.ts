@@ -9,7 +9,7 @@ import { robarCarta } from './draw'
 import { shuffleFisherYates } from './rng'
 import { aplicarMod, otorgarKeyword, crearOpcionBloqueo } from './efectos'
 import { aplicarCambioAtributo, aplicarReglaTemporal } from './reglasTemporales'
-import { reglaDeEfecto } from './reglas'
+import { reglaBool, reglaDeEfecto } from './reglas'
 import { iniciarScry } from './scry'
 import { ejecutarRedirect } from './redirect'
 import { REGLAS } from '../../shared/rules/reglas'
@@ -386,7 +386,9 @@ function executeEffect(
       // implementar (B3).
       const cadenaNeg = cadenaActiva(s)
       const pend = cadenaNeg?.opener
-      if (pend && !pend.negada && pend.jugador !== jugador) {
+      // INEGABLE (§10): los efectos de una carta con la regla `puedeSerNegada` apagada no se pueden negar (la Marcha
+      // se consume igual, como cualquier negación sin activación pendiente)
+      if (pend && !pend.negada && pend.jugador !== jugador && reglaBool(s, 'puedeSerNegada', { instId: pend.cardInstanceId })) {
         pend.negada = true
         ctx.emit({ type: 'activacion_negada', jugador, cardInstanceId: pend.cardInstanceId, fuente: inst.cardInstanceId })
       }

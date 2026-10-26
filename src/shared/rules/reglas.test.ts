@@ -121,6 +121,7 @@ describe('KEYWORD_REGLAS — una keyword es una regla modificada', () => {
     ['Vigor', 'atacarAgota'],
     ['Tirador', 'disparoAgota'],
     ['Inexiliable', 'puedeSerExiliada'],
+    ['Inegable', 'puedeSerNegada'],
     ['Inmortal', 'puedeSerDestruidaPorEfecto'],
     ['Indestructible', 'puedeSerDestruidaEnBatalla'],
   ] as const)('%s apaga la regla %s', (kw, regla) => {
