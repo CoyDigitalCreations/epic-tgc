@@ -5,7 +5,7 @@
 import type { GameEvent } from './events'
 import type { Ctx, GameState, PlayerId } from './types'
 import { shuffleFisherYates } from './rng'
-import { descartarFrentesMuertos } from './pendientes'
+import { descartarFrentesMuertos, electorAjeno } from './pendientes'
 
 // Domain module imports (validators + executors)
 import {
@@ -67,7 +67,9 @@ export type Action =
    * pareja legal (bot y compatibilidad).
    */
   | { type: 'elegir_opcion'; opcionId: string; campeonId?: string; eterId?: string }
-  | { type: 'elegir_objetivo'; objetivoId: string }
+  // `jugador` (H4): quien elige. Opcional (como en rendirse); si viene, debe ser el DUEÑO del pendiente.
+  // El servidor lo fija al jugador autenticado: nunca se confía en el cliente.
+  | { type: 'elegir_objetivo'; objetivoId: string; jugador?: PlayerId }
   | { type: 'usar_transmutar'; cardInstanceId: string; eterIds: string[] }
   | { type: 'activar_habilidad'; cardInstanceId: string; eterIds: string[]; objetivoId?: string }
   | { type: 'declarar_ataque'; atacanteIds: string[] }
@@ -119,6 +121,10 @@ function validarAccion(state: GameState, action: Action): string | null {
   // ataque) — solo elegir (el checkpoint de prevención ya se atendió arriba) o rendirse
   if (state.declaracionEnEleccion && action.type !== 'elegir_objetivo' && action.type !== 'rendirse' && action.type !== 'responder_prevenicion') {
     return 'hay un objetivo por elegir antes de abrir la ventana'
+  }
+  // H4: el dueño ajeno al turno debe elegir su objetivo (tutor del rival al morir, etc.) antes de que siga el juego
+  if (electorAjeno(state) && action.type !== 'elegir_objetivo' && action.type !== 'rendirse' && action.type !== 'responder_prevenicion') {
+    return 'el rival debe elegir un objetivo antes de continuar'
   }
   // Pila única (F5a): con la cadena abierta el turno queda congelado — solo se
   // responde o se pasa prioridad; cualquier otra acción espera a que cierre.

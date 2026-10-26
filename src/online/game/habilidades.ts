@@ -10,7 +10,7 @@ import { etiquetarEter } from './eter'
 import { dispararTrigger, pasivosBloqueo1A, type TriggerEfecto } from './efectos'
 import { registrarEfectoPendiente, hastaAlba } from './effectRegistry'
 import { interpretEffect, ejecutarTramo } from './effectInterpreter'
-import { opcionesVigentes } from './pendientes'
+import { electorAjeno, opcionesVigentes } from './pendientes'
 import { tieneKeyword } from './combat'
 import { reglaBool } from './reglas'
 import { liberarEterBloqueado, enviarAlCementerio } from './replacements'
@@ -201,8 +201,13 @@ export function validarElegirOpcion(state: GameState, action: Extract<Action, { 
 export function validarElegirObjetivo(state: GameState, action: Extract<Action, { type: 'elegir_objetivo' }>): string | null {
   const pendiente = state.objetivosPendientes?.[0]
   if (!pendiente) return 'no hay objetivo pendiente'
-  // F5d-1: en una declaración en elección el elector es el DUEÑO del pendiente (puede ser el rival)
-  if (!state.declaracionEnEleccion && pendiente.jugador !== state.turno) return 'no es tu turno para elegir objetivo'
+  // H4: el que elige es el DUEÑO del pendiente; si la acción dice quién elige, debe coincidir (el servidor lo fija)
+  if (action.jugador !== undefined && action.jugador !== pendiente.jugador) return 'el objetivo lo elige el dueño del pendiente'
+  // F5d-1: en una declaración en elección el elector es el DUEÑO del pendiente (puede ser el rival);
+  // H4: fuera de ella, también si es el dueño ajeno al turno que debe elegir ya (electorAjeno)
+  if (!state.declaracionEnEleccion && pendiente.jugador !== state.turno && electorAjeno(state) !== pendiente) {
+    return 'no es tu turno para elegir objetivo'
+  }
   if (!pendiente.opciones.includes(action.objetivoId)) return 'el objetivo no está entre las opciones válidas'
   // F5h: el objetivo debe seguir siendo candidato del efecto (misma regla que la oferta, pendientes.ts).
   // Sin ninguna opción vigente, la declaración en elección acepta la primera opción para resolver

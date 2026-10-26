@@ -2,6 +2,7 @@ import { applyAction } from './actions'
 import type { Action } from './actions'
 import { actorActual, getValidActions } from './validActions'
 import { cadenaActiva } from './chain'
+import { electorAjeno } from './pendientes'
 import { createInitialState } from './initialState'
 import type { GameEvent } from './events'
 import type { GameState, PlayerId } from './types'
@@ -27,6 +28,11 @@ export function botTonto(state: GameState, playerId: PlayerId, dificultad: Dific
   }
   // F5d-1: declaración en elección — elige el DUEÑO del pendiente (puede no ser el activo)
   if (state.declaracionEnEleccion) {
+    if (actorActual(state) !== playerId) return null
+    return getValidActions(state, playerId).find((a) => a.type === 'elegir_objetivo') ?? null
+  }
+  // H4: pendiente del dueño ajeno al turno (tutor del rival al morir) — lo elige ÉL, ya, aunque no sea su turno
+  if (electorAjeno(state)) {
     if (actorActual(state) !== playerId) return null
     return getValidActions(state, playerId).find((a) => a.type === 'elegir_objetivo') ?? null
   }

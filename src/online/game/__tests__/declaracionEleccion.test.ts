@@ -335,12 +335,10 @@ describe('el elector es el dueño del pendiente (puede ser el rival)', () => {
     // el pendiente es de B — el DUEÑO es el elector — y A NO puede elegirlo
     expect(s.objetivosPendientes?.[0]).toMatchObject({ jugador: 'B', trigger: 'al-ser-enviado-al-cementerio' })
     expect(getValidActions(s, 'A').some((a) => a.type === 'elegir_objetivo')).toBe(false)
-    // cuando le toca, B (el dueño) elige y el tutor resuelve
-    const turnoDeB = structuredClone(s)
-    turnoDeB.turno = 'B'
-    expect(actorActual(turnoDeB)).toBe('B')
-    expect(getValidActions(turnoDeB, 'B').some((a) => a.type === 'elegir_objetivo')).toBe(true)
-    const r = aplicar(turnoDeB, { type: 'elegir_objetivo', objetivoId: 'tB2' }, ctx)
+    // H4: B (el dueño) elige YA, aunque no sea su turno, y el tutor resuelve
+    expect(actorActual(s)).toBe('B')
+    expect(getValidActions(s, 'B').some((a) => a.type === 'elegir_objetivo')).toBe(true)
+    const r = aplicar(s, { type: 'elegir_objetivo', objetivoId: 'tB2' }, ctx)
     expect(r.players.B.mano).toContain('tB2')
     expect(verificarZonaUnica(r)).toEqual([])
   })

@@ -350,7 +350,7 @@ describe('pendientes obsoletos: se descartan sin tocar los legítimos', () => {
     expect(s.opcionesPendientes).toHaveLength(1)
   })
 
-  it('H4 (pendiente del jugador NO activo): no se elige en el turno ajeno ni resucita en el propio', () => {
+  it('H4 (pendiente del jugador NO activo): ya no se pierde al Ocaso — su dueño lo elige de inmediato y el turno no avanza sin él', () => {
     const s0 = base()
     conMano(s0, 'A', 'rayo', PR.RAYO)
     const pago = conEteres(s0, 'A', 2)
@@ -360,10 +360,10 @@ describe('pendientes obsoletos: se descartan sin tocar los legítimos', () => {
     let s = aplicar(s0, { type: 'jugar_mistica', cardInstanceId: 'rayo', slot: 0, eterIds: pago }, ctx)
     s = aplicar(s, elegir('uv'), ctx)
     expect(s.objetivosPendientes?.[0]).toMatchObject({ jugador: 'B', trigger: 'al-ser-enviado-al-cementerio' })
-    s = aplicar(aplicar(aplicar(s, { type: 'pasar_turno' }, ctx), { type: 'pasar_turno' }, ctx), { type: 'pasar_turno' }, ctx)
-    expect(s.turno).toBe('B')
+    expect(applyAction(s, { type: 'pasar_turno' }, ctx).ok).toBe(false) // A no puede pasar: B debe elegir primero
+    s = aplicar(s, elegir('vieja'), ctx)
+    expect(s.players.B.mano).toContain('vieja')
     expect(s.objetivosPendientes ?? []).toHaveLength(0)
-    expect(s.players.B.mano).not.toContain('vieja')
   })
 })
 

@@ -7,7 +7,7 @@ import { generarAccionesForja, validarActivarArcana } from './actions'
 import { atacantesElegibles, asignacionForzada, ataquesSinBloquear, bloqueadoresDisponibles, rivalDe, tieneKeyword } from './combat'
 import { cadenaActiva, respondiblesDe, respuestasDeMano } from './chain'
 import { etersParaPagar } from './payments'
-import { descartarFrentesMuertos, opcionesVigentes } from './pendientes'
+import { descartarFrentesMuertos, electorAjeno, opcionesVigentes } from './pendientes'
 import { validarEquiparArtefacto } from './movimientos'
 import type { GameState, PlayerId, CardInstance } from './types'
 
@@ -29,6 +29,9 @@ export function actorActual(estado: GameState): PlayerId | null {
     const pendiente = estado.objetivosPendientes?.[0]
     if (pendiente) return pendiente.jugador
   }
+  // H4: el dueño ajeno al turno elige YA el pendiente que nació al resolver una pila (antes: se perdía al Ocaso)
+  const ajeno = electorAjeno(estado)
+  if (ajeno) return ajeno.jugador
   // Cadena GLOBAL (state.cadena) o de combate: el actor es SIEMPRE prioridad —
   // aunque la fase sea Forja. Sin esto, cadena global en Forja congela al
   // humano (solo rendirse) y el bot nunca pasa prioridad → FREEZE (seed 66676).
@@ -243,6 +246,17 @@ export function getValidActions(state: GameState, playerId: PlayerId): Action[] 
       for (const objetivoId of vivas.length > 0 ? vivas : pendiente.opciones.slice(0, 1)) {
         acciones.push({ type: 'elegir_objetivo', objetivoId })
       }
+    }
+    return acciones
+  }
+
+  // H4: pendiente nacido al resolver una pila cuyo DUEÑO no es el jugador del turno (tutor del rival al morir):
+  // solo él elige, ya, aunque no sea su turno; el resto queda congelado hasta que elija (como en la declaración).
+  descartarFrentesMuertos(state)
+  const ajeno = electorAjeno(state)
+  if (ajeno) {
+    if (ajeno.jugador === playerId) {
+      for (const objetivoId of opcionesVigentes(state, ajeno)) acciones.push({ type: 'elegir_objetivo', objetivoId })
     }
     return acciones
   }

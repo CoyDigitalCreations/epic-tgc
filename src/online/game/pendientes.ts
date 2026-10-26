@@ -17,8 +17,9 @@
  *   2. no le queda ninguna opción vigente (fuera de una declaración en elección: dentro, la
  *      declaración cuenta sus pendientes y el elector lo resuelve como fizzle);
  *   3. nació en un turno que ya terminó: la cola solo vive hasta el Ocaso del turno en que se
- *      armó (quien pasa el turno renuncia a lo que no eligió; el pendiente de quien no es el
- *      jugador del turno no tuvo elector posible y no resucita en un turno ajeno). Salvedad:
+ *      armó (quien pasa el turno renuncia a lo que no eligió). Desde H4 el pendiente de quien
+ *      NO es el jugador del turno ya no se pierde por esta vía: su dueño lo elige de inmediato
+ *      (ver `electorAjeno`: el turno queda congelado hasta que elija). Salvedad:
  *      los de UMBRAL de Éter bloqueado (`tramoUmbral` o trigger 'al-bloquear-eter', p. ej.
  *      steal_champion) son estado de una fuente que sigue bloqueando y se conservan mientras
  *      sigan cumpliendo 1 y 2.
@@ -70,6 +71,21 @@ export function opcionesVigentes(s: GameState, p: PendienteObjetivo): string[] {
 /** ¿El pendiente es de umbral de Éter bloqueado? (sobrevive al fin de turno mientras su fuente siga igual) */
 function esDeUmbral(p: PendienteObjetivo): boolean {
   return p.tramoUmbral !== undefined || p.trigger === 'al-bloquear-eter'
+}
+
+/**
+ * H4 (decisión 8): el pendiente que el DUEÑO ajeno al turno debe elegir YA. Nace al resolver una pila (el tutor del
+ * rival al morir su Campeón, un efecto de una respuesta suya) y, fuera de una declaración en elección, queda al frente
+ * de la cola: el elector es su dueño aunque no sea su turno (`actorActual`), y mientras no elija el resto del juego
+ * espera (`validarAccion`: solo elegir / rendirse / prevenir). Los de umbral de Éter bloqueado NO entran: son estado de
+ * una fuente que sigue bloqueando y se eligen en el turno de su dueño (ver `esDeUmbral`). Solo mira el FRENTE (la cola es
+ * FIFO): un pendiente suyo detrás de uno de umbral espera a que el frente se atienda. Puro: no modifica el estado.
+ */
+export function electorAjeno(s: GameState): PendienteObjetivo | undefined {
+  if (s.declaracionEnEleccion) return undefined
+  const frente = s.objetivosPendientes?.[0]
+  if (!frente || frente.jugador === s.turno || esDeUmbral(frente)) return undefined
+  return opcionesVigentes(s, frente).length > 0 ? frente : undefined
 }
 
 /**

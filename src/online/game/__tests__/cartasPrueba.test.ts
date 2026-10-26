@@ -715,34 +715,7 @@ describe('(c) humo — respuestas con objetivo, Arcanas y velocidad (F5e; antes 
 
 describe('(c) humo — HALLAZGOS (el motor actual no cumple el texto o la decisión de diseño; it.fails = pasa mientras siga fallando)', () => {
 
-  // H4 ────────────────────────────────────────────────────────────────────────────────────────
-  it('H4 pendiente del jugador NO activo: PR-017 muere por el Rayo del rival → el tutor de B queda sin poder elegirse', () => {
-    const s0 = base()
-    conMano(s0, 'A', 'rayo', PR.RAYO)
-    const pago = conEteres(s0, 'A', 2)
-    conCampeon(s0, 'B', 'uv', PR.ULTIMA_VOLUNTAD, 0)
-    enCementerio(s0, 'B', 'vieja', PR.PEON)
-    const ctx = crearCtx()
-    let s = aplicar(s0, { type: 'jugar_mistica', cardInstanceId: 'rayo', slot: 0, eterIds: pago }, ctx)
-    s = aplicar(s, { type: 'elegir_objetivo', objetivoId: 'uv' }, ctx)
-    expect(s.players.B.cementerio).toContain('uv')
-    expect(s.objetivosPendientes?.[0]).toMatchObject({ jugador: 'B', trigger: 'al-ser-enviado-al-cementerio' })
-    expect(getValidActions(s, 'B').some((a) => a.type === 'elegir_objetivo')).toBe(false)
-    expect(getValidActions(s, 'A').some((a) => a.type === 'elegir_objetivo')).toBe(false)
-    expect(s.players.B.mano).not.toContain('vieja') // el tutor nunca se resuelve
-  })
-
-  it.fails('H4b (esperado, decisión 8: cualquier jugador puede ser elector): B debería poder elegir su tutor', () => {
-    const s0 = base()
-    conMano(s0, 'A', 'rayo', PR.RAYO)
-    const pago = conEteres(s0, 'A', 2)
-    conCampeon(s0, 'B', 'uv', PR.ULTIMA_VOLUNTAD, 0)
-    enCementerio(s0, 'B', 'vieja', PR.PEON)
-    const ctx = crearCtx()
-    let s = aplicar(s0, { type: 'jugar_mistica', cardInstanceId: 'rayo', slot: 0, eterIds: pago }, ctx)
-    s = aplicar(s, { type: 'elegir_objetivo', objetivoId: 'uv' }, ctx)
-    expect(getValidActions(s, 'B').some((a) => a.type === 'elegir_objetivo')).toBe(true)
-  })
+  // H4 / H4b: RESUELTOS (el dueño ajeno al turno elige de inmediato) — ver electorAjeno.test.ts
 
   // H5 ────────────────────────────────────────────────────────────────────────────────────────
   it.fails('H5 PR-012 Inexiliable + PR-051 Destierro: la keyword Inexiliable (regla puedeSerExiliada=false) debería impedir el exilio', () => {
