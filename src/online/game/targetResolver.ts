@@ -6,6 +6,7 @@
  */
 import { getCardMeta, esCampeon, esMistica, esArcana } from './cards'
 import { statsDe } from './efectos'
+import { esenciaDe, faccionesDe, rolesDe } from './atributos'
 import type { AnyCard } from '../../shared/types'
 import type { GameState, PlayerId } from './types'
 import type { ObjetivoEfecto, FiltroObjetivo } from '../../shared/types/cards'
@@ -234,9 +235,10 @@ function applyFilters(
     if (!meta) return false
 
     // Faction filter
+    // (Facción, Esencia y Rol se leen de atributos.ts: un `change_type` vigente manda sobre lo impreso)
     if (filtros.faccion) {
       const card = meta as AnyCard
-      if ('facciones' in card && !card.facciones?.includes(filtros.faccion)) {
+      if ('facciones' in card && !faccionesDe(s, id)?.includes(filtros.faccion)) {
         return false
       }
     }
@@ -244,7 +246,7 @@ function applyFilters(
     // Essence filter
     if (filtros.esencia) {
       const card = meta as AnyCard
-      if ('esencia' in card && card.esencia !== filtros.esencia) {
+      if ('esencia' in card && esenciaDe(s, id) !== filtros.esencia) {
         return false
       }
     }
@@ -252,7 +254,7 @@ function applyFilters(
     // Role filter
     if (filtros.rol) {
       const card = meta as AnyCard
-      if ('roles' in card && !card.roles?.includes(filtros.rol)) {
+      if ('roles' in card && !rolesDe(s, id)?.includes(filtros.rol)) {
         return false
       }
     }

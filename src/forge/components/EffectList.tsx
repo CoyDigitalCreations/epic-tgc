@@ -439,6 +439,11 @@ export function generateEffectText(data: EfectoData): string {
       } else if (data.efecto === 'rival_discard') {
         const qty = data.cantidad ?? 1
         targetText = `descarta ${qty} carta${qty > 1 ? 's' : ''} de su mano`
+      } else if (data.efecto === 'change_type' && data.cambioTipo) {
+        const { faccion, esencia, rol } = data.cambioTipo
+        const partes = [faccion && `de facción ${faccion}`, esencia && `de esencia ${esencia}`, rol && `de rol ${rol}`].filter(Boolean) as string[]
+        const lista = partes.length > 1 ? `${partes.slice(0, -1).join(', ')} y ${partes[partes.length - 1]}` : partes[0] ?? ''
+        targetText = `${targetText} ${effectVerb} ${lista}`.trim()
       } else if (data.efecto === 'grant_keyword' && data.keyword) {
         targetText = `${targetText} ${effectVerb} ${data.keyword}`
       } else if (['draw', 'destroy', 'exile', 'scry', 'tutor', 'return_hand', 'recuperar_campo', 'recuperar_mano', 'recuperar_mazo', 'recuperar_mazo_barajar', 'recuperar_mazo_top', 'recuperar_mazo_bottom', 'recuperar_exilio', 'steal_champion', 'steal_ether', 'free_ether', 'invocar', 'invocar_y_equipar'].includes(data.efecto)) {

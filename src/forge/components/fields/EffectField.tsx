@@ -576,6 +576,18 @@ export function EffectField({ label, value, onChange, cardType }: EffectFieldPro
         </div>
       )}
 
+      {/* Cambio de tipo (solo para efecto 'change_type'): lo que no se elige no se toca; Facción y Rol SUSTITUYEN a los de la carta */}
+      {data.efecto === 'change_type' && (
+        <div className="border border-gray-600/30 rounded p-2 mt-2">
+          <p className="text-xs text-gray-400 mb-1">Se convierte en (lo que dejes vacío no cambia)</p>
+          <div className="grid grid-cols-3 gap-2">
+            <SelectField label="Facción" value={data.cambioTipo?.faccion} options={[{ value: '', label: 'Sin cambio' }, ...FACCIONES.map((f) => ({ value: f, label: f }))]} onChange={(v) => update({ cambioTipo: { ...data.cambioTipo, faccion: (v || undefined) as any } })} />
+            <SelectField label="Esencia" value={data.cambioTipo?.esencia} options={[{ value: '', label: 'Sin cambio' }, ...ESENCIAS.map((e) => ({ value: e, label: e }))]} onChange={(v) => update({ cambioTipo: { ...data.cambioTipo, esencia: (v || undefined) as any } })} />
+            <SelectField label="Rol" value={data.cambioTipo?.rol} options={[{ value: '', label: 'Sin cambio' }, ...ROLES.map((r) => ({ value: r, label: r }))]} onChange={(v) => update({ cambioTipo: { ...data.cambioTipo, rol: (v || undefined) as any } })} />
+          </div>
+        </div>
+      )}
+
       {/* Capa 5b: Copy Attributes (solo para efecto 'copy') */}
       {data.efecto === 'copy' && (
         <div className="border border-gray-600/30 rounded p-2 mt-2">

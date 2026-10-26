@@ -126,6 +126,13 @@ export interface EfectoData {
   /** Qué regla del manual cambia este efecto y cómo (Capa 2: el efecto gana al manual). */
   regla?: ModificacionRegla
 
+  // ── Cambio de tipo (solo cuando efecto = 'change_type') ──
+  /**
+   * En qué se convierte el Campeón objetivo. Cada atributo presente SUSTITUYE al de la carta (Facción incluida: queda
+   * solo la nueva); el que falta no se toca. Dura lo que dure el efecto (`duracion`; sin duración, mientras exista).
+   */
+  cambioTipo?: { esencia?: Esencia; rol?: Rol; faccion?: Faccion }
+
   // ── Modificador: SIN ACTIVAR EFECTO ──
   /** When true, the moved/returned ether does NOT trigger its effects (until opponent's Alba) */
   sinActivarEfecto?: boolean

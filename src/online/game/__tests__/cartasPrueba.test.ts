@@ -230,9 +230,10 @@ describe('(b) cobertura — coverageMap sobre el set', () => {
     ])
     const sinEjecutor = [...EFECTOS_CARD_MAKER].filter((e) => !conEjecutor.has(e)).sort()
     // F9a cerró `invocar` y los `recuperar_*` (recuperar.test.ts), F9b `direct_attack` (ataqueDirecto.test.ts),
-    // F9c `scry` (scry.test.ts), F9d `redirect` (redirect.test.ts); faltan los que salen de la lista conforme se implementen
+    // F9c `scry` (scry.test.ts), F9d `redirect` (redirect.test.ts), F9e `change_type` (cambioTipo.test.ts);
+    // faltan los que salen de la lista conforme se implementen
     expect(sinEjecutor).toEqual([
-      'change_type', 'fix_exhaust', /* solo funciona como TRAMO (ejecutarTramo), no como efecto raíz */
+      'fix_exhaust', /* solo funciona como TRAMO (ejecutarTramo), no como efecto raíz */
     ])
   })
 

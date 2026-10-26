@@ -60,6 +60,22 @@ export interface ReglaTemporal {
   expiraFaseJugador?: PlayerId
 }
 
+/**
+ * Cambio de Esencia, Rol o Facción de un Campeón (F9e, `change_type`, atributos.ts). `valor` SUSTITUYE al de la carta
+ * (el Rol y la Facción pasan a ser solo `valor`). Mismo ciclo de vida que `ReglaTemporal`; el más reciente de cada
+ * atributo (el último de la lista) gana.
+ */
+export interface CambioAtributo {
+  instId: string
+  atributo: 'esencia' | 'rol' | 'faccion'
+  valor: string
+  duenio: PlayerId
+  expira: ExpiraModificador
+  turnosRestantes?: number
+  expiraFase?: 'alba' | 'forja' | 'choque' | 'ocaso'
+  expiraFaseJugador?: PlayerId
+}
+
 /** Pasos de la sub-máquina de combate en Choque (9.1, ADR-11). */
 export type CombatePaso = 'ataque' | 'bloqueo' | 'resolucion'
 
@@ -397,6 +413,8 @@ export interface GameState {
   cadena?: CadenaState
   /** Reglas del manual modificadas con duración (Capa 2). Ver reglasTemporales.ts. */
   reglasTemporales?: ReglaTemporal[]
+  /** Cambios de Esencia/Rol/Facción de Campeones (F9e). Ver atributos.ts. */
+  cambiosAtributo?: CambioAtributo[]
   /** Contador monotónico para ordenar las reglasTemporales. */
   ordenReglas?: number
   /** Flag anti-bucle del sexto Vínculo (5.7/13, ADR-16): el hook NO-OP se resuelve UNA vez. */

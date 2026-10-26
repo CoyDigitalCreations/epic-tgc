@@ -8,7 +8,7 @@ import { resolveTargets } from './targetResolver'
 import { robarCarta } from './draw'
 import { shuffleFisherYates } from './rng'
 import { aplicarMod, otorgarKeyword, crearOpcionBloqueo } from './efectos'
-import { aplicarReglaTemporal } from './reglasTemporales'
+import { aplicarCambioAtributo, aplicarReglaTemporal } from './reglasTemporales'
 import { reglaDeEfecto } from './reglas'
 import { iniciarScry } from './scry'
 import { ejecutarRedirect } from './redirect'
@@ -287,6 +287,10 @@ function executeEffect(
 
     case 'draw':
       executeDraw(s, ctx, jugador, cantidad ?? 1)
+      break
+
+    case 'change_type':
+      executeChangeType(s, targetIds, jugador, efectoData)
       break
 
     case 'redirect':
@@ -956,10 +960,8 @@ function validateCost(
  * aquí: se derivan del estado en reglas.ts. Esto cubre los de resolución (hechizo, disparo, trigger).
  * Duración: misma traducción que buff — turno/n_turnos/hasta_fase expiran; permanente/mientras_* no.
  */
-function executeModificarRegla(s: GameState, targetIds: string[], jugador: PlayerId, efectoData: EfectoData): void {
-  const m = reglaDeEfecto(efectoData)
-  if (!m) return
-  const def = REGLAS[m.id]
+/** Duración de un efecto de resolución traducida al ciclo de vida de lo temporal (reglas y cambios de atributo). */
+function duracionTemporal(efectoData: EfectoData, jugador: PlayerId) {
   const { duracion, duracionTurnos, duracionFase, duracionControlador } = efectoData
   const expira: ExpiraModificador =
     duracion === undefined || duracion === 'permanente' || duracion === 'mientras_en_campo' || duracion === 'mientras_ester_bloqueado' || duracion === 'mientras_equipped'
@@ -967,16 +969,41 @@ function executeModificarRegla(s: GameState, targetIds: string[], jugador: Playe
       : duracion === 'hasta_fase'
         ? 'hasta-fase'
         : 'ocaso'
-  const comunes = {
-    regla: m.id,
-    operacion: m.operacion,
-    valor: m.valor,
+  return {
     duenio: jugador,
     expira,
     ...(duracion === 'n_turnos' ? { turnosRestantes: duracionTurnos } : {}),
     ...(expira === 'hasta-fase' && duracionFase
       ? { expiraFase: duracionFase, expiraFaseJugador: duracionControlador === 'rival' ? (jugador === 'A' ? 'B' : 'A') : jugador }
       : {}),
+  } as const
+}
+
+/**
+ * Execute change_type (F9e): los Campeones objetivo cambian de Esencia, Rol y/o Facción (`cambioTipo`). Cada atributo
+ * presente SUSTITUYE al de la carta y dura lo que la duración del efecto (sin duración, permanente). Ver atributos.ts.
+ */
+function executeChangeType(s: GameState, targetIds: string[], jugador: PlayerId, efectoData: EfectoData): void {
+  const cambio = efectoData.cambioTipo
+  if (!cambio) return
+  const duracion = duracionTemporal(efectoData, jugador)
+  const atributos = [['esencia', cambio.esencia], ['rol', cambio.rol], ['faccion', cambio.faccion]] as const
+  for (const instId of targetIds) {
+    for (const [atributo, valor] of atributos) {
+      if (valor) aplicarCambioAtributo(s, { instId, atributo, valor, ...duracion })
+    }
+  }
+}
+
+function executeModificarRegla(s: GameState, targetIds: string[], jugador: PlayerId, efectoData: EfectoData): void {
+  const m = reglaDeEfecto(efectoData)
+  if (!m) return
+  const def = REGLAS[m.id]
+  const comunes = {
+    regla: m.id,
+    operacion: m.operacion,
+    valor: m.valor,
+    ...duracionTemporal(efectoData, jugador),
   } as const
   const rival: PlayerId = jugador === 'A' ? 'B' : 'A'
 

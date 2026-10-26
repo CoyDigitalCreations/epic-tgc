@@ -3,6 +3,7 @@
  * Extraído de actions.ts para separación de dominios (change: refactor-engine).
  */
 import type { GameState, PlayerId, CardInstance, Zona } from './types'
+import { faccionesDe } from './atributos'
 import { esCampeon, esMistica, esArcana, esVinculo, esArtefactoEquipable, faccionesCompartidas, getCardMeta } from './cards'
 import { esSingular, sacrificiosRequeridos, copiasEnCampo, campeonesSacrificables } from './campo'
 import { aplicarPago, validarPago, etersParaPagar, type ContextoUso } from './payments'
@@ -62,7 +63,7 @@ export function validarJugarCampeon(state: GameState, action: Extract<Action, { 
     const sInst = state.instances[id]
     const sMeta = sInst?.cardId ? getCardMeta(sInst.cardId) : null
     if (!sInst || !sMeta || !esCampeon(sMeta)) return `el sacrificio no es un Campeón: ${id}`
-    if (!faccionesCompartidas(sMeta.facciones, meta.facciones)) return `el sacrificio no comparte facción con el Campeón: ${id}`
+    if (!faccionesCompartidas(faccionesDe(state, id), meta.facciones)) return `el sacrificio no comparte facción con el Campeón: ${id}`
   }
   if (esSingular(meta) && copiasEnCampo(state, state.turno, meta.id) >= 1) {
     return 'Singular: solo puede haber 1 copia en el campo'

@@ -3,6 +3,7 @@
  * Extraído de actions.ts para separación de dominios (change: refactor-engine).
  */
 import type { GameState, Ctx, CardInstance, PlayerId } from './types'
+import { faccionesDe } from './atributos'
 import { getCardMeta, efectoActivableDe, esCostoBloqueo, esArtefactoEquipable, campeonElegibleBloqueoEter, faccionesCompartidas } from './cards'
 import type { AnyCard, EfectoData } from '../../shared/types'
 import { validarPago, aplicarPago, type ContextoUso } from './payments'
@@ -152,7 +153,7 @@ export function parejasBloqueoOpcion(s: GameState, jugador: PlayerId): ParejaBlo
     if (!metaC || !campeonElegibleBloqueoEter(metaC)) continue
     for (const eterId of p.eterReserva) {
       const metaE = s.instances[eterId]?.cardId ? getCardMeta(s.instances[eterId]!.cardId!) : null
-      if (!metaE || !faccionesCompartidas(metaE.facciones, metaC.facciones)) continue
+      if (!metaE || !faccionesCompartidas(faccionesDe(s, eterId), faccionesDe(s, campeonId))) continue
       if (validarBloqueo(s, jugador, [eterId], campeonId) !== null) continue
       parejas.push({ campeonId, eterId })
     }

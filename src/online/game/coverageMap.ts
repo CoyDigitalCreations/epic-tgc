@@ -30,7 +30,7 @@ export const INTERPRETER_EXEC = new Set<string>([
   'steal_champion', 'steal_ether', 'free_ether', 'return_ether', 'mover',
   'toggle_exhaust', 'tutor', 'rival_discard', 'invocar_y_equipar', 'block_ether',
   'invocar', 'recuperar_campo', 'recuperar_mano', 'recuperar_mazo', 'recuperar_mazo_barajar',
-  'recuperar_mazo_top', 'recuperar_mazo_bottom', 'recuperar_exilio', 'direct_attack', 'scry', 'redirect',
+  'recuperar_mazo_top', 'recuperar_mazo_bottom', 'recuperar_exilio', 'direct_attack', 'scry', 'redirect', 'change_type',
 ])
 
 /** No-ops explícitos SIN implementación verificada desde JSON.

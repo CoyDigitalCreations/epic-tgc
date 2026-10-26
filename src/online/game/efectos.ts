@@ -4,6 +4,7 @@ import { interpretEffect } from './effectInterpreter'
 import { parejasBloqueoOpcion } from './habilidades'
 import { resolveTargets } from './targetResolver'
 import { purgarReglasHastaFase, purgarReglasTemporales } from './reglasTemporales'
+import { faccionesDe } from './atributos'
 import type { CondicionEfecto, EfectoData } from '../../shared/types'
 
 /**
@@ -248,7 +249,7 @@ function evaluarAura(
         const fuenteMeta = fuente.cardId ? getCardMeta(fuente.cardId) : null
         const objetivoMeta = objetivoInst.cardId ? getCardMeta(objetivoInst.cardId) : null
         if (fuenteMeta && objetivoMeta && 'facciones' in fuenteMeta && 'facciones' in objetivoMeta) {
-          aplica = faccionesCompartidas(fuenteMeta.facciones, objetivoMeta.facciones)
+          aplica = faccionesCompartidas(faccionesDe(s, fuente.cardInstanceId), faccionesDe(s, objetivoId))
         }
       }
       // Convención del motor (por semántica del JSON, no por cardId):

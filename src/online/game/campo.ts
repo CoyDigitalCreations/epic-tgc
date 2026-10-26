@@ -1,4 +1,5 @@
 import { esCampeon, faccionesCompartidas, getCardMeta } from './cards'
+import { faccionesDe } from './atributos'
 import type { AnyCard } from '../../shared/types'
 import type { Rol } from '../../shared/types'
 import type { GameState, PlayerId } from './types'
@@ -36,6 +37,6 @@ export function campeonesSacrificables(state: GameState, jugador: PlayerId, camp
     if (!id) return false
     const inst = state.instances[id]
     const m = inst?.cardId ? getCardMeta(inst.cardId) : null
-    return m !== null && esCampeon(m) && faccionesCompartidas(m.facciones, meta.facciones)
+    return m !== null && esCampeon(m) && faccionesCompartidas(faccionesDe(state, id), meta.facciones)
   })
 }
