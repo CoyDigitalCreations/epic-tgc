@@ -86,22 +86,23 @@ export function verificarInvariantes(estado: GameState): string[] {
     return n
   }
 
-  /** Total de MEMBRESÍAS de zonas del jugador (cartas + éter bloqueado). */
-  const totalDe = (p: PlayerId): number => {
+  /** Todas las cartas que hay en las zonas de `p` (y el Éter bloqueado sobre las de su campo), sin importar de quién son. */
+  const idsEnZonasDe = (p: PlayerId): string[] => {
     const st = estado.players[p]
-    const campeones = st.campo.campeones.filter((x): x is string => x !== null).length
-    const misticas = st.campo.misticasTacticas.filter((x): x is string => x !== null).length
-    const arcanas = st.campo.arcanasCombate.filter((x): x is string => x !== null).length
-    const vinculos = st.vinculos.filter((x): x is string => x !== null).length
-    const bloqueados = st.campo.campeones
-      .concat(st.campo.misticasTacticas, st.campo.arcanasCombate)
-      .reduce((acc, id) => acc + (id ? estado.instances[id]?.eterBloqueado?.length ?? 0 : 0), 0)
-    return (
-      st.mano.length + st.mazo.length + st.cementerio.length + st.exilio.length +
-      st.eterReserva.length + st.eterPagado.length +
-      campeones + misticas + arcanas + vinculos + bloqueados
-    )
+    const enCampo = [...st.campo.campeones, ...st.campo.misticasTacticas, ...st.campo.arcanasCombate].filter((x): x is string => x !== null)
+    const bloqueados = enCampo.flatMap((id) => estado.instances[id]?.eterBloqueado ?? [])
+    return [
+      ...st.mano, ...st.mazo, ...st.cementerio, ...st.exilio, ...st.eterReserva, ...st.eterPagado,
+      ...enCampo, ...st.vinculos.filter((x): x is string => x !== null), ...bloqueados,
+    ]
   }
+
+  /**
+   * Cartas NO-Éter de `p` como DUEÑO, estén donde estén: un Campeón robado (steal_champion, legal) sigue siendo de su dueño
+   * aunque esté en el campo del ladrón. Contarlas por la zona en que están daba un falso positivo (+1 al ladrón, −1 a la víctima).
+   */
+  const noEterDeDueno = (p: PlayerId): number =>
+    [...idsEnZonasDe('A'), ...idsEnZonasDe('B')].filter((id) => !esEterId(id) && estado.instances[id]?.owner === p).length
 
   const eterGlobal = eterDe('A') + eterDe('B')
   if (eterGlobal !== 30) violaciones.push(`global: ${eterGlobal} Éter ≠ 30 (transferido/fuente perdida o duplicada)`)
@@ -113,7 +114,7 @@ export function verificarInvariantes(estado: GameState): string[] {
 
     // Cartas NO-Éter del jugador: 51 fijas (66 − 15) — el Éter por jugador
     // puede variar con transferencias Capa 2 (ver cabecera), el resto no.
-    const noEter = totalDe(p) - eterDe(p)
+    const noEter = noEterDeDueno(p)
     if (noEter !== 51) violaciones.push(`${p}: cartas no-Éter ${noEter} ≠ 51`)
 
     const campeones = st.campo.campeones.filter((x): x is string => x !== null).length
