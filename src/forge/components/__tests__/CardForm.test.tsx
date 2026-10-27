@@ -82,6 +82,59 @@ describe('CardForm', () => {
   })
 })
 
+describe('CardForm — pestañas (Datos / Efectos / Extras)', () => {
+  const panel = (id: string) => document.getElementById(`panel-${id}`) as HTMLElement
+  const oculto = (id: string) => panel(id).className.split(' ').includes('hidden')
+
+  it('arranca en «Datos»: solo ese panel está visible', () => {
+    render(<CardForm />)
+    expect(screen.getByRole('tab', { name: /Datos/ })).toHaveAttribute('aria-selected', 'true')
+    expect(oculto('datos')).toBe(false)
+    expect(oculto('efectos')).toBe(true)
+    expect(oculto('extras')).toBe(true)
+  })
+
+  it('cambiar de pestaña muestra su panel y oculta el anterior, SIN desmontar nada', () => {
+    render(<CardForm />)
+    fireEvent.click(screen.getByRole('tab', { name: /Efectos/ }))
+    expect(screen.getByRole('tab', { name: /Efectos/ })).toHaveAttribute('aria-selected', 'true')
+    expect(oculto('efectos')).toBe(false)
+    expect(oculto('datos')).toBe(true)
+    // el campo de «Datos» sigue en el DOM (conserva su estado al volver)
+    expect(screen.getByPlaceholderText(/Aurelion/)).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('tab', { name: /Extras/ }))
+    expect(oculto('extras')).toBe(false)
+    expect(oculto('efectos')).toBe(true)
+  })
+
+  it('cada campo del configurador vive en su pestaña', () => {
+    render(<CardForm />)
+    expect(panel('datos')).toContainElement(screen.getByPlaceholderText(/Aurelion/))
+    expect(panel('efectos')).toContainElement(screen.getByText('Efectos (0/3)'))
+    expect(panel('extras')).toContainElement(screen.getByLabelText('Paquete'))
+    expect(panel('extras')).toContainElement(screen.getByLabelText('Variante'))
+    expect(panel('extras')).toContainElement(screen.getByPlaceholderText(/Notas del diseñador/))
+  })
+
+  it('la pestaña «Efectos» muestra cuántos efectos tiene la carta', () => {
+    useCardStore.setState({
+      draft: {
+        name: 'X', type: 'Campeón', rarity: 'Común', keywords: [], flavorText: '', stats: { cost: 0, poder: 0, resistencia: 0 },
+        efectos: [{ tipo: 'pasivo', efecto: 'buff' }, { tipo: 'disparo', efecto: 'draw' }],
+      },
+    })
+    render(<CardForm />)
+    expect(screen.getByRole('tab', { name: /Efectos/ })).toHaveTextContent('2')
+  })
+
+  it('Guardar/Actualizar y Cancelar siguen visibles sin importar la pestaña', () => {
+    render(<CardForm />)
+    fireEvent.click(screen.getByRole('tab', { name: /Extras/ }))
+    expect(screen.getByText('Guardar')).toBeInTheDocument()
+    expect(screen.getByText('Cancelar')).toBeInTheDocument()
+  })
+})
+
 describe('CardForm — metadata de autoría (A1/A2)', () => {
   it('muestra los campos Variante y Comentario', () => {
     render(<CardForm />)

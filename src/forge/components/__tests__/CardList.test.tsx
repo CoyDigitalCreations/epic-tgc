@@ -116,6 +116,76 @@ describe('CardList', () => {
   })
 })
 
+describe('CardList — layout compacto', () => {
+  const carta = {
+    id: 'card-1', name: 'Test', type: 'Campeón', rarity: 'Común', keywords: [], flavorText: '',
+    createdAt: '2024-01-01', updatedAt: '2024-01-01', stats: { cost: 0, poder: 0, resistencia: 0 },
+  } as import('../../../shared/types').CampeonCard
+  const rejilla = () => document.querySelector('[style*="grid-template-columns"]') as HTMLElement
+
+  beforeEach(() => {
+    try { localStorage.removeItem('forge:coleccion-densidad') } catch { /* sin almacenamiento */ }
+  })
+
+  it('las acciones de importar/exportar viven en el menú «Archivo»', () => {
+    useCardStore.setState({ cards: [carta] })
+    render(<CardList />)
+    const menu = screen.getByText(/Archivo/).closest('details') as HTMLDetailsElement
+    expect(menu).toContainElement(screen.getByText(/Importar cartas/))
+    expect(menu).toContainElement(screen.getByText(/Exportar FuenteEfectos/))
+    expect(menu).toContainElement(screen.getByText(/Limpiar colección/))
+  })
+
+  it('al usar una opción del menú, el menú se cierra', () => {
+    useCardStore.setState({ cards: [carta] })
+    render(<CardList />)
+    const menu = screen.getByText(/Archivo/).closest('details') as HTMLDetailsElement
+    menu.open = true
+    fireEvent.click(screen.getByText(/Exportar cartas \(sin arte\)/))
+    expect(menu.open).toBe(false)
+  })
+
+  it('«Más filtros» muestra cuántos filtros hay activos', () => {
+    render(<CardList />)
+    expect(screen.getByText(/Más filtros y paquetes/)).not.toHaveTextContent('activo')
+    fireEvent.click(screen.getByRole('button', { name: '3' })) // filtro de coste 3
+    expect(screen.getByText(/Más filtros y paquetes/)).toHaveTextContent('1 activo')
+  })
+
+  it('la densidad cambia el ancho mínimo de las miniaturas y se recuerda', () => {
+    useCardStore.setState({ cards: [carta] })
+    const { unmount } = render(<CardList />)
+    expect(rejilla().style.gridTemplateColumns).toContain('minmax(96px')
+    fireEvent.click(screen.getByRole('button', { name: 'Miniaturas pequeñas' }))
+    expect(rejilla().style.gridTemplateColumns).toContain('minmax(72px')
+    fireEvent.click(screen.getByRole('button', { name: 'Miniaturas grandes' }))
+    expect(rejilla().style.gridTemplateColumns).toContain('minmax(132px')
+    unmount()
+    render(<CardList />) // se recuerda entre montajes
+    expect(rejilla().style.gridTemplateColumns).toContain('minmax(132px')
+  })
+
+  it('con onPlegar muestra el botón para plegar la colección', () => {
+    const onPlegar = vi.fn()
+    render(<CardList onPlegar={onPlegar} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Plegar la colección' }))
+    expect(onPlegar).toHaveBeenCalledTimes(1)
+  })
+
+  it('sin onPlegar no hay botón de plegar', () => {
+    render(<CardList />)
+    expect(screen.queryByRole('button', { name: 'Plegar la colección' })).toBeNull()
+  })
+
+  it('editar y eliminar una carta siguen disponibles (botones con etiqueta accesible)', () => {
+    useCardStore.setState({ cards: [carta] })
+    render(<CardList />)
+    fireEvent.click(screen.getByRole('button', { name: 'Editar Test' }))
+    expect(useCardStore.getState().selectedCardId).toBe('card-1')
+    expect(screen.getByRole('button', { name: 'Eliminar Test' })).toBeInTheDocument()
+  })
+})
+
 describe('CardList — paquetes personalizados', () => {
   const paqueteMutantes = {
     id: 'mutantes',

@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from 'react'
+import { useState, useMemo, useRef, useEffect } from 'react'
 import { useCardStore } from '../store/useCardStore'
 import { exportCollectionToJson, importCollectionFromJson, exportCollectionSinArte, FUENTE_ARTE, FUENTE_EFECTOS } from '../utils/export-json'
 import { exportPaqueteToJson, importPaqueteFromJson } from '../utils/export-paquete'
@@ -17,6 +17,24 @@ const CARTAS_POR_PAQUETE: Record<string, AnyCard[]> = {
   disonancia: DISONANCIA_CARDS,
 }
 
+/** Tamaño de las miniaturas: ancho mínimo de cada tarjeta en la rejilla (S/M/L). */
+const DENSIDADES = { s: 72, m: 96, l: 132 } as const
+type Densidad = keyof typeof DENSIDADES
+const CLAVE_DENSIDAD = 'forge:coleccion-densidad'
+
+function leerDensidad(): Densidad {
+  try {
+    const v = localStorage.getItem(CLAVE_DENSIDAD)
+    return v === 's' || v === 'm' || v === 'l' ? v : 'm'
+  } catch {
+    return 'm'
+  }
+}
+
+const ITEM_MENU = 'w-full cursor-pointer rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-left text-xs text-gray-300 transition-colors hover:bg-white/10'
+const ITEM_MENU_ORO = 'w-full cursor-pointer rounded-lg border border-amber-400/30 bg-amber-500/10 px-3 py-1.5 text-left text-xs text-amber-200 transition-colors hover:bg-amber-500/20'
+const ITEM_MENU_PELIGRO = 'w-full cursor-pointer rounded-lg border border-red-400/20 bg-red-600/20 px-3 py-1.5 text-left text-xs text-red-200 transition-colors hover:bg-red-600/40'
+
 interface CardGridItemProps {
   card: AnyCard
   selected: boolean
@@ -31,7 +49,7 @@ function CardGridItem({ card, selected, onSelect, onEdit, onDelete }: CardGridIt
   return (
     <div
       onClick={onSelect}
-      className={`bg-white/[0.03] border rounded-xl p-3 cursor-pointer transition-all hover:-translate-y-0.5
+      className={`bg-white/[0.03] border rounded-lg p-1.5 cursor-pointer transition-all hover:-translate-y-0.5
         ${selected
           ? 'border-ether-400 ring-1 ring-ether-400 shadow-[0_10px_30px_-10px_rgba(80,80,255,0.6)]'
           : 'border-white/10 hover:border-white/25'
@@ -109,7 +127,7 @@ function CardGridItem({ card, selected, onSelect, onEdit, onDelete }: CardGridIt
       {/* Card name + actions */}
       <div className="mt-1.5">
         <div className="flex items-center gap-1.5">
-          <p className="text-xs text-gray-200 truncate font-medium flex-1">
+          <p className="text-[11px] text-gray-200 truncate font-medium flex-1">
             {card.name || 'Sin nombre'}
           </p>
           {card.limiteCopias && (
@@ -118,7 +136,7 @@ function CardGridItem({ card, selected, onSelect, onEdit, onDelete }: CardGridIt
             </span>
           )}
         </div>
-        <p className="text-[10px] text-gray-500 flex items-center gap-1">
+        <p className="text-[9px] text-gray-500 flex items-center gap-1">
           {card.type}
           {(() => {
             const paquete = PAQUETES.find((p) => p.id === card.paqueteId)
@@ -134,33 +152,57 @@ function CardGridItem({ card, selected, onSelect, onEdit, onDelete }: CardGridIt
           })()}
         </p>
       </div>
-      <div className="flex gap-1 mt-1.5">
+      <div className="flex gap-1 mt-1">
         <button
           onClick={(e) => {
             e.stopPropagation()
             onEdit()
           }}
-          className="flex-1 text-[10px] bg-ether-600/25 hover:bg-ether-600/45 text-ether-200 py-1 
+          title="Editar"
+          aria-label={`Editar ${card.name || "carta"}`}
+          className="flex-1 text-[10px] bg-ether-600/25 hover:bg-ether-600/45 text-ether-200 py-0.5
                      rounded-md transition-colors cursor-pointer"
         >
-          Editar
+          ✏️
         </button>
         <button
           onClick={(e) => {
             e.stopPropagation()
             onDelete()
           }}
-          className="flex-1 text-[10px] bg-red-600/20 hover:bg-red-600/40 text-red-200 py-1 
+          title="Eliminar"
+          aria-label={`Eliminar ${card.name || "carta"}`}
+          className="flex-1 text-[10px] bg-red-600/20 hover:bg-red-600/40 text-red-200 py-0.5
                      rounded-md transition-colors cursor-pointer"
         >
-          Eliminar
+          🗑️
         </button>
       </div>
     </div>
   )
 }
 
-export function CardList() {
+export function CardList({ onPlegar }: { onPlegar?: () => void } = {}) {
+  const menuArchivoRef = useRef<HTMLDetailsElement>(null)
+  const [densidad, setDensidad] = useState<Densidad>(leerDensidad)
+  const elegirDensidad = (d: Densidad) => {
+    setDensidad(d)
+    try {
+      localStorage.setItem(CLAVE_DENSIDAD, d)
+    } catch {
+      /* sin almacenamiento: solo se pierde el recuerdo */
+    }
+  }
+  const cerrarMenuArchivo = () => menuArchivoRef.current?.removeAttribute("open")
+  // El menú «Archivo» se cierra al hacer clic fuera de él
+  useEffect(() => {
+    const alHacerClic = (e: MouseEvent) => {
+      const menu = menuArchivoRef.current
+      if (menu?.open && e.target instanceof Node && !menu.contains(e.target)) menu.removeAttribute("open")
+    }
+    document.addEventListener("click", alHacerClic)
+    return () => document.removeEventListener("click", alHacerClic)
+  }, [])
   const cards = useCardStore((s) => s.cards)
   const deleteCard = useCardStore((s) => s.deleteCard)
   const loadCards = useCardStore((s) => s.loadCards)
@@ -316,10 +358,20 @@ export function CardList() {
     e.target.value = ''
   }
 
+  // Filtros del panel plegable (los de tipo y la búsqueda están siempre a la vista)
+  const filtrosActivos = [
+    costeFilter !== 'Todos',
+    faccionFilter !== 'Todas',
+    keywordFilter !== 'Todas',
+    rarityFilter !== 'Todas',
+    paqueteFilter !== 'Todos',
+  ].filter(Boolean).length
+
   return (
-    <div>
+    <div className="flex min-h-0 flex-col xl:h-full">
+      <div className="shrink-0">
       {/* Selector de colección (A3) */}
-      <div className="flex items-center gap-2 flex-wrap mb-3">
+      <div className="flex items-center gap-2 flex-wrap mb-2">
         <label className="text-[10px] uppercase tracking-wider text-gray-500 mr-1">
           Colección:
         </label>
@@ -366,74 +418,118 @@ export function CardList() {
       </div>
 
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-        <h2 className="text-xl font-display text-gray-100">
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+        <h2 className="text-base font-display text-gray-100">
           Colección
           {filteredCards.length !== cards.length
             ? ` (${filteredCards.length}/${cards.length})`
             : ` (${cards.length})`}
         </h2>
-        <div className="flex flex-wrap gap-2">
-          {cards.length > 0 && (
-            <>
+        <div className="flex items-center gap-1.5">
+          <div role="group" aria-label="Tamaño de las miniaturas" className="flex overflow-hidden rounded-lg border border-white/10">
+            {(Object.keys(DENSIDADES) as Densidad[]).map((d) => (
+              <button
+                key={d}
+                type="button"
+                aria-pressed={densidad === d}
+                title={`Miniaturas ${d === "s" ? "pequeñas" : d === "m" ? "medianas" : "grandes"}`}
+                aria-label={`Miniaturas ${d === "s" ? "pequeñas" : d === "m" ? "medianas" : "grandes"}`}
+                onClick={() => elegirDensidad(d)}
+                className={`cursor-pointer px-2 py-1 text-[11px] font-medium uppercase transition-colors ${
+                  densidad === d ? "bg-ether-600 text-white" : "bg-white/[0.04] text-gray-400 hover:text-gray-100"
+                }`}
+              >
+                {d}
+              </button>
+            ))}
+          </div>
+          <details ref={menuArchivoRef} className="relative">
+            <summary className="cursor-pointer list-none rounded-lg border border-white/10 bg-white/5 px-3 py-1 text-xs text-gray-200 transition-colors hover:bg-white/10">
+              Archivo ▾
+            </summary>
+            <div className="absolute right-0 z-20 mt-1 flex w-64 flex-col gap-1 rounded-xl border border-white/10 bg-[#13131f] p-2 shadow-xl">
               <button
                 onClick={() => {
-                  void exportCollectionToJson(cards, coleccionActiva?.nombre).catch((err) => {
-                    console.error('Error al exportar JSON:', err)
-                  })
+                  cerrarMenuArchivo()
+                  handleImport()
                 }}
-                title="Descargar todas las cartas CON arte (archivos grandes)"
-                className="text-xs border border-white/10 bg-white/5 hover:bg-white/10 text-gray-300 px-3 py-1.5 rounded-lg 
-                           transition-colors cursor-pointer"
+                title="Cargar cartas desde un archivo JSON exportado"
+                className={ITEM_MENU}
               >
-                📥 Exportar colección (con arte)
+                📤 Importar cartas (JSON)
               </button>
-              <button
-                onClick={() => exportCollectionSinArte(cards, coleccionActiva?.nombre)}
-                title="Descargar cartas SIN arte (solo datos, archivo liviano)"
-                className="text-xs border border-white/10 bg-white/5 hover:bg-white/10 text-gray-300 px-3 py-1.5 rounded-lg 
-                           transition-colors cursor-pointer"
-              >
-                📄 Exportar cartas (sin arte)
-              </button>
-              <button
-                onClick={() => exportCollectionSinArte(cards, FUENTE_EFECTOS)}
-                title="Descargar las cartas SIN arte con el nombre FuenteEfectos.json (fuente de verdad del motor, va en seed/)"
-                className="text-xs border border-amber-400/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-200 px-3 py-1.5 rounded-lg
-                           transition-colors cursor-pointer"
-              >
-                ⭐ Exportar FuenteEfectos.json
-              </button>
-              <button
-                onClick={() => {
-                  void exportCollectionToJson(cards, FUENTE_ARTE).catch((err) => {
-                    console.error('Error al exportar FuenteArte.json:', err)
-                  })
-                }}
-                title="Descargar las cartas CON arte con el nombre FuenteArte.json (fuente de verdad del arte, va en seed/; archivo grande)"
-                className="text-xs border border-amber-400/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-200 px-3 py-1.5 rounded-lg
-                           transition-colors cursor-pointer"
-              >
-                ⭐ Exportar FuenteArte.json
-              </button>
-              <button
-                onClick={() => setShowClearModal(true)}
-                title="Eliminar TODAS las cartas de la colección"
-                className="text-xs border border-red-400/20 bg-red-600/20 hover:bg-red-600/40 text-red-200 px-3 py-1.5 rounded-lg 
-                           transition-colors cursor-pointer"
-              >
-                🗑️ Limpiar colección
-              </button>
-            </>
+              {cards.length > 0 && (
+                <>
+                  <button
+                    onClick={() => {
+                      cerrarMenuArchivo()
+                      void exportCollectionToJson(cards, coleccionActiva?.nombre).catch((err) => {
+                        console.error("Error al exportar JSON:", err)
+                      })
+                    }}
+                    title="Descargar todas las cartas CON arte (archivos grandes)"
+                    className={ITEM_MENU}
+                  >
+                    📥 Exportar colección (con arte)
+                  </button>
+                  <button
+                    onClick={() => {
+                      cerrarMenuArchivo()
+                      exportCollectionSinArte(cards, coleccionActiva?.nombre)
+                    }}
+                    title="Descargar cartas SIN arte (solo datos, archivo liviano)"
+                    className={ITEM_MENU}
+                  >
+                    📄 Exportar cartas (sin arte)
+                  </button>
+                  <button
+                    onClick={() => {
+                      cerrarMenuArchivo()
+                      exportCollectionSinArte(cards, FUENTE_EFECTOS)
+                    }}
+                    title="Descargar las cartas SIN arte con el nombre FuenteEfectos.json (fuente de verdad del motor, va en seed/)"
+                    className={ITEM_MENU_ORO}
+                  >
+                    ⭐ Exportar FuenteEfectos.json
+                  </button>
+                  <button
+                    onClick={() => {
+                      cerrarMenuArchivo()
+                      void exportCollectionToJson(cards, FUENTE_ARTE).catch((err) => {
+                        console.error("Error al exportar FuenteArte.json:", err)
+                      })
+                    }}
+                    title="Descargar las cartas CON arte con el nombre FuenteArte.json (fuente de verdad del arte, va en seed/; archivo grande)"
+                    className={ITEM_MENU_ORO}
+                  >
+                    ⭐ Exportar FuenteArte.json
+                  </button>
+                  <hr className="my-1 border-white/10" />
+                  <button
+                    onClick={() => {
+                      cerrarMenuArchivo()
+                      setShowClearModal(true)
+                    }}
+                    title="Eliminar TODAS las cartas de la colección"
+                    className={ITEM_MENU_PELIGRO}
+                  >
+                    🗑️ Limpiar colección
+                  </button>
+                </>
+              )}
+            </div>
+          </details>
+          {onPlegar && (
+            <button
+              type="button"
+              onClick={onPlegar}
+              title="Plegar la colección para dar más espacio al formulario"
+              aria-label="Plegar la colección"
+              className="hidden cursor-pointer rounded-lg border border-white/10 bg-white/5 px-2 py-1 text-xs text-gray-300 transition-colors hover:bg-white/10 xl:block"
+            >
+              ▶
+            </button>
           )}
-          <button
-            onClick={handleImport}
-            title="Cargar cartas desde un archivo JSON exportado"
-            className="text-xs border border-white/10 bg-white/5 hover:bg-white/10 text-gray-300 px-3 py-1.5 rounded-lg 
-                       transition-colors cursor-pointer"
-          >
-            📤 Importar cartas (JSON)
-          </button>
         </div>
         <input
           ref={fileInputRef}
@@ -443,9 +539,8 @@ export function CardList() {
           className="hidden"
         />
       </div>
-
       {/* Search + Filters */}
-      <div className="flex flex-col sm:flex-row gap-3 mb-4">
+      <div className="flex flex-col sm:flex-row gap-3 mb-2">
         {/* Search bar */}
         <div className="relative flex-1">
           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm pointer-events-none">
@@ -472,10 +567,8 @@ export function CardList() {
         </div>
       </div>
 
-      {/* Panel de filtros */}
-      <div className="mb-5 rounded-xl border border-white/10 bg-white/[0.02] p-3 pb-0">
       {/* Type filter pills */}
-      <div className="flex gap-1.5 flex-wrap mb-4">
+      <div className="flex gap-1.5 flex-wrap mb-2">
         <button
           onClick={() => setTypeFilter('Todas')}
           className={`px-3 py-1 rounded-full text-xs font-medium transition-colors cursor-pointer
@@ -501,6 +594,11 @@ export function CardList() {
         ))}
       </div>
 
+      <details className="group mb-2 rounded-xl border border-white/10 bg-white/[0.02]">
+        <summary className="cursor-pointer list-none px-3 py-1.5 text-xs text-gray-300 hover:text-gray-100">
+          Más filtros y paquetes ▾{filtrosActivos > 0 ? ` · ${filtrosActivos} activo${filtrosActivos === 1 ? "" : "s"}` : ""}
+        </summary>
+      <div className="p-3 pb-0">
       {/* Coste filter pills */}
       <div className="flex gap-1.5 flex-wrap items-center mb-3">
         <span className="text-[10px] uppercase tracking-wider text-gray-500 mr-1">Coste:</span>
@@ -737,7 +835,10 @@ export function CardList() {
       )}
 
       </div>
+      </details>
+      </div>
 
+      <div className="min-h-0 flex-1 xl:overflow-y-auto">
       {/* Empty states */}
       {cards.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-white/10 bg-white/[0.015] text-center py-12 text-gray-500">
@@ -769,7 +870,7 @@ export function CardList() {
         </div>
       ) : (
         /* Card grid */
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+        <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(auto-fill, minmax(${DENSIDADES[densidad]}px, 1fr))` }}>
           {filteredCards.map((card) => (
             <CardGridItem
               key={card.id}
@@ -786,6 +887,7 @@ export function CardList() {
           ))}
         </div>
       )}
+      </div>
 
       {/* Clear confirmation modal */}
       <ConfirmModal

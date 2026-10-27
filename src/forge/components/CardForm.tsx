@@ -25,6 +25,28 @@ const COLOR_TIPO: Record<string, string> = {
   Vínculo: '#ec4899',
 }
 
+type Pestana = 'datos' | 'efectos' | 'extras'
+
+const PESTANAS: { id: Pestana; etiqueta: string }[] = [
+  { id: 'datos', etiqueta: 'Datos' },
+  { id: 'efectos', etiqueta: 'Efectos' },
+  { id: 'extras', etiqueta: 'Extras' },
+]
+
+/** Pestaña de cada campo del configurador; lo que no aparece aquí va en «Datos». */
+const PESTANA_DE_CAMPO: Record<string, Pestana> = {
+  efectos: 'efectos',
+  efectoComandante: 'efectos',
+  condicion: 'efectos',
+  keywords: 'extras',
+  flavorText: 'extras',
+  limiteCopias: 'extras',
+  id: 'extras',
+  paqueteId: 'extras',
+  variante: 'extras',
+  comentario: 'extras',
+}
+
 export function CardForm() {
   const draft = useCardStore((s) => s.draft)
   const updateDraft = useCardStore((s) => s.updateDraft)
@@ -40,6 +62,7 @@ export function CardForm() {
 
   const isEditing = draft.id && cards.some((c) => c.id === draft.id)
   const [showManual, setShowManual] = useState(false)
+  const [pestana, setPestana] = useState<Pestana>('datos')
 
   // Auto-load card data when a card is selected in the collection
   useEffect(() => {
@@ -235,9 +258,18 @@ export function CardForm() {
     }
   }
 
+  // ── Pestañas: todo el configurador sigue accesible, repartido para no hacer scroll interminable ──
+  // Los tres paneles se renderizan SIEMPRE (los inactivos solo se ocultan con CSS) para no perder el estado de lo que
+  // tengan dentro (p. ej. el efecto abierto en la lista) al cambiar de pestaña.
+  const campos = config?.fields ?? []
+  const camposDe = (t: Pestana) => campos.filter((f) => (PESTANA_DE_CAMPO[f.name] ?? 'datos') === t)
+  const numericos = camposDe('datos').filter((f) => f.type === 'number')
+  const otrosDatos = camposDe('datos').filter((f) => f.type !== 'number')
+  const nEfectos = Array.isArray(draft.efectos) ? (draft.efectos as unknown[]).length : 0
+
   return (
-    <div className="flex flex-col gap-4">
-      <h2 className="flex items-center gap-2 text-xl font-display text-gray-100">
+    <div className="flex min-h-0 flex-col gap-3 xl:h-full">
+      <h2 className="flex shrink-0 items-center gap-2 font-display text-lg text-gray-100">
         {isEditing ? 'Editar Carta' : 'Nueva Carta'}
         {isEditing ? (
           <span aria-hidden="true" className="rounded-full bg-amber-400/15 px-2 py-0.5 font-body text-[10px] font-semibold uppercase tracking-wider text-amber-300">
@@ -247,7 +279,7 @@ export function CardForm() {
       </h2>
 
       {/* Card Type Selector */}
-      <div className="flex gap-2 flex-wrap">
+      <div className="flex shrink-0 flex-wrap gap-1.5">
         {CARD_TYPES.map((type) => {
           const activo = draft.type === type
           const color = COLOR_TIPO[type] ?? '#7070ff'
@@ -256,7 +288,7 @@ export function CardForm() {
               key={type}
               aria-pressed={activo}
               onClick={() => handleTypeChange(type)}
-              className={`cursor-pointer rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
+              className={`cursor-pointer rounded-lg border px-3 py-1 text-sm font-medium transition-colors ${
                 activo ? 'text-white' : 'border-white/10 bg-white/[0.03] text-gray-400 hover:bg-white/[0.07] hover:text-gray-200'
               }`}
               style={activo ? { background: `${color}26`, borderColor: `${color}99`, boxShadow: `0 0 14px -4px ${color}80` } : undefined}
@@ -267,30 +299,74 @@ export function CardForm() {
         })}
       </div>
 
-      {/* Rarity */}
-      <SelectField
-        label="Rareza"
-        value={(draft.rarity as string) ?? 'Común'}
-        onChange={(v) => updateDraft('rarity', v)}
-        options={[...RARITIES]}
-      />
+      {/* Barra de pestañas (+ Manual de Efectos a la derecha) */}
+      <div className="flex shrink-0 items-end justify-between gap-2 border-b border-white/10">
+        <div role="tablist" aria-label="Secciones de la carta" className="flex gap-1">
+          {PESTANAS.map((p) => {
+            const activa = pestana === p.id
+            return (
+              <button
+                key={p.id}
+                role="tab"
+                id={`tab-${p.id}`}
+                aria-selected={activa}
+                aria-controls={`panel-${p.id}`}
+                onClick={() => setPestana(p.id)}
+                className={`-mb-px cursor-pointer rounded-t-lg border border-b-0 px-3 py-1.5 text-sm font-medium transition-colors ${
+                  activa
+                    ? 'border-white/15 bg-white/[0.06] text-white'
+                    : 'border-transparent text-gray-400 hover:bg-white/[0.04] hover:text-gray-200'
+                }`}
+              >
+                {p.etiqueta}
+                {p.id === 'efectos' && nEfectos > 0 ? (
+                  <span className="ml-1.5 rounded-full bg-ether-600/40 px-1.5 text-[10px] text-ether-100">{nEfectos}</span>
+                ) : null}
+              </button>
+            )
+          })}
+        </div>
+        <Boton variante="fantasma" tam="sm" className="mb-1" onClick={() => setShowManual(true)}>
+          📖 Manual de Efectos
+        </Boton>
+      </div>
 
-      {/* Image upload */}
-      <ImageUpload
-        value={draft.imageUrl as string | undefined}
-        onChange={(dataUrl) => {
-          updateDraft('imageUrl', dataUrl)
-          // Remover la imagen = marcar hasImage:false para que updateCard la
-          // borre de IndexedDB. Si no se toca, hasImage queda true y se conserva.
-          if (!dataUrl) updateDraft('hasImage', false)
-        }}
-      />
+      {/* Paneles: el que no está activo se oculta (sigue montado) */}
+      <div className="min-h-0 flex-1 pr-1 xl:overflow-y-auto">
+        <div role="tabpanel" id="panel-datos" aria-labelledby="tab-datos" className={pestana === 'datos' ? 'flex flex-col gap-3' : 'hidden'}>
+          <SelectField
+            label="Rareza"
+            value={(draft.rarity as string) ?? 'Común'}
+            onChange={(v) => updateDraft('rarity', v)}
+            options={[...RARITIES]}
+          />
+          {/* El nombre va primero; las cifras (coste, poder, resistencia) en una sola fila */}
+          {otrosDatos.filter((f) => f.name === 'name').map(renderField)}
+          {numericos.length > 0 && <div className="grid grid-cols-3 gap-3">{numericos.map(renderField)}</div>}
+          {otrosDatos.filter((f) => f.name !== 'name').map(renderField)}
+        </div>
 
-      {/* Dynamic fields from config */}
-      {config?.fields?.map(renderField) ?? null}
+        <div role="tabpanel" id="panel-efectos" aria-labelledby="tab-efectos" className={pestana === 'efectos' ? 'flex flex-col gap-3' : 'hidden'}>
+          {camposDe('efectos').map(renderField)}
+        </div>
 
-      {/* Buttons: barra fija al pie para guardar sin tener que volver arriba */}
-      <div className="sticky bottom-0 z-10 -mx-5 -mb-5 flex gap-2 rounded-b-2xl border-t border-white/10 bg-[#13131f]/95 px-5 py-3 backdrop-blur">
+        <div role="tabpanel" id="panel-extras" aria-labelledby="tab-extras" className={pestana === 'extras' ? 'flex flex-col gap-3' : 'hidden'}>
+          {/* Image upload */}
+          <ImageUpload
+            value={draft.imageUrl as string | undefined}
+            onChange={(dataUrl) => {
+              updateDraft('imageUrl', dataUrl)
+              // Remover la imagen = marcar hasImage:false para que updateCard la
+              // borre de IndexedDB. Si no se toca, hasImage queda true y se conserva.
+              if (!dataUrl) updateDraft('hasImage', false)
+            }}
+          />
+          {camposDe('extras').map(renderField)}
+        </div>
+      </div>
+
+      {/* Acciones: siempre visibles al pie del formulario */}
+      <div className="flex shrink-0 gap-2 border-t border-white/10 pt-3">
         <Boton variante="primario" tam="lg" className="flex-1" onClick={handleSave}>
           {isEditing ? 'Actualizar' : 'Guardar'}
         </Boton>
@@ -303,13 +379,6 @@ export function CardForm() {
           }}
         >
           Cancelar
-        </Boton>
-      </div>
-
-      {/* Manual de Efectos button */}
-      <div className="-mt-1">
-        <Boton variante="fantasma" tam="sm" className="w-full" onClick={() => setShowManual(true)}>
-          📖 Manual de Efectos
         </Boton>
       </div>
 
