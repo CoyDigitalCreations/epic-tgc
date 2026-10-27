@@ -1935,9 +1935,6 @@ var FuenteEfectos_default = [
         },
         texto: "Puedes pagar 3 \xC9ter, Niega el efecto activo de un Campe\xF3n que controla el rival, hasta el final del turno.",
         duracion: "turno",
-        copyAttributes: [
-          "atq"
-        ],
         tipoNegacion: "efecto_activo",
         costo: {
           tipo: "eter",
