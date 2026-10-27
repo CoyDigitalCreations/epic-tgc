@@ -71,6 +71,36 @@ export interface ResumenTorneo {
   motivos: Record<string, number>
 }
 
+/** Suma resúmenes de torneos parciales (los que corrieron en procesos distintos) en uno solo. */
+export function unir(partes: ResumenTorneo[]): ResumenTorneo {
+  const r: ResumenTorneo = {
+    partidas: 0, victoriasX: 0, victoriasY: 0, empates: 0, anomalias: 0, detallesAnomalias: [], porcentajeX: 0,
+    porAsiento: { comoA: { jugadas: 0, ganadas: 0 }, comoB: { jugadas: 0, ganadas: 0 } },
+    porMazo: {}, promedioTurnos: 0, motivos: {},
+  }
+  let turnos = 0
+  for (const p of partes) {
+    r.partidas += p.partidas; r.victoriasX += p.victoriasX; r.victoriasY += p.victoriasY; r.empates += p.empates; r.anomalias += p.anomalias
+    r.detallesAnomalias.push(...p.detallesAnomalias.slice(0, 5))
+    for (const lado of ['comoA', 'comoB'] as const) {
+      r.porAsiento[lado].jugadas += p.porAsiento[lado].jugadas
+      r.porAsiento[lado].ganadas += p.porAsiento[lado].ganadas
+    }
+    for (const [k, v] of Object.entries(p.porMazo)) {
+      r.porMazo[k] ??= { jugadas: 0, ganadas: 0 }
+      r.porMazo[k].jugadas += v.jugadas
+      r.porMazo[k].ganadas += v.ganadas
+    }
+    for (const [k, v] of Object.entries(p.motivos)) r.motivos[k] = (r.motivos[k] ?? 0) + v
+    turnos += p.promedioTurnos * p.partidas
+  }
+  const decididas = r.victoriasX + r.victoriasY
+  r.porcentajeX = decididas ? (100 * r.victoriasX) / decididas : 0
+  r.promedioTurnos = r.partidas ? turnos / r.partidas : 0
+  r.detallesAnomalias = r.detallesAnomalias.slice(0, 5)
+  return r
+}
+
 /**
  * X contra Y sobre `semillas` semillas. Por cada semilla se juegan las 4 combinaciones de asiento × mazo para que ni el asiento ni
  * el mazo favorezcan a nadie: X en A con el mazo 1, X en B con el mazo 1, X en A con el mazo 2 y X en B con el mazo 2.
