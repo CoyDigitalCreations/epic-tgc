@@ -50,6 +50,8 @@ export const NOMBRES_EVENTOS = [
   'carta_activada',
   // Ventana de negación (obs 1874): contador de un solo uso sobre activar_habilidad
   'activacion_negada',
+  // Negar un «efecto activo» (Thane)
+  'efectos_negados',
   // F5d-3 (decisión 10a): trigger apilado sobre la jugada que lo provocó
   'trigger_apilado',
   // F9c: scry
@@ -101,6 +103,7 @@ function validarExhaustividad(tipo: GameEvent['type']): void {
     case 'prioridad_pasada': return
     case 'carta_activada': return
     case 'activacion_negada': return
+    case 'efectos_negados': return
     case 'trigger_apilado': return
     case 'mazo_mirado': return
     case 'mazo_ordenado': return
@@ -218,6 +221,8 @@ const VALIDADORES: Record<GameEvent['type'], (e: GameEvent) => boolean> = {
     e.type === 'carta_activada' && esId(e.cardInstanceId) && esJugador(e.jugador) && typeof e.slot === 'number',
   activacion_negada: (e) =>
     e.type === 'activacion_negada' && esJugador(e.jugador) && esId(e.cardInstanceId) && esId(e.fuente),
+  efectos_negados: (e) =>
+    e.type === 'efectos_negados' && esJugador(e.jugador) && esId(e.cardInstanceId) && esId(e.fuente),
   trigger_apilado: (e) =>
     e.type === 'trigger_apilado' &&
     esJugador(e.jugador) &&
@@ -232,10 +237,10 @@ const VALIDADORES: Record<GameEvent['type'], (e: GameEvent) => boolean> = {
 }
 
 describe('contrato de eventos (ADR-10)', () => {
-  it('el catálogo expone exactamente los 39 eventos del contrato en orden', () => {
+  it('el catálogo expone exactamente los 40 eventos del contrato en orden', () => {
     const nombres = CATALOGO_EVENTOS.map((e) => e.type)
     expect(nombres).toEqual([...NOMBRES_EVENTOS])
-    expect(new Set(nombres).size).toBe(39)
+    expect(new Set(nombres).size).toBe(40)
   })
 
   it('el switch exhaustivo cubre TODO el tipo GameEvent (añadir/quitar rompe tsc)', () => {

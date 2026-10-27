@@ -33,6 +33,7 @@ import { condicionCumple, condicionEsCandado, dispararTrigger, velocidadDe } fro
 import { interpretEffect } from './effectInterpreter'
 import { aplicarPago, etersParaPagar, validarPago, type ContextoUso } from './payments'
 import { enviarAlCementerio } from './replacements'
+import { efectosNegados } from './reglas'
 import type { CondicionEfecto, EfectoData } from '../../shared/types'
 import type {
   Ctx, CadenaState, DeclaracionCadena, GameState, OpenerCadena, PlayerId, RespuestaApilada, RespuestaCadena, TriggerApilado,
@@ -136,6 +137,7 @@ export function motivoNoResponde(state: GameState, jugador: PlayerId, id: string
     return etersParaPagar(state, jugador, meta.id) === null ? 'no puedes pagar su coste' : null
   }
   if (meta.type === 'Campeón' && 'efectos' in meta && meta.efectos?.some((e) => e.tipo === 'disparo')) {
+    if (efectosNegados(state, id)) return 'los efectos de esta carta están negados'
     if (!inst.agotado) return null
     // Un Disparo con éter BLOQUEADO no agota al Campeón (manual §5.2/§8.3a): activar_habilidad lo permite con el
     // Campeón agotado, así que como respuesta también (antes la respuesta exigía Campeón enderezado).
@@ -738,7 +740,9 @@ function resolverOpener(s: GameState, ctx: Ctx, opener: OpenerCadena): void {
     sinReceptor(s, ctx, opener.cardInstanceId)
     return
   }
-  if (!opener.negada) {
+  // Una habilidad ya declarada cuya carta vio negados sus efectos antes de resolver tampoco resuelve (el pago se mantiene)
+  const habilidadNegada = opener.tipo === 'habilidad' && efectosNegados(s, opener.cardInstanceId)
+  if (!opener.negada && !habilidadNegada) {
     if (opener.tipo === 'habilidad') {
       const efecto = 'efectos' in meta ? meta.efectos?.[opener.efectoIdx ?? -1] : undefined
       const objetivoId = opener.objetivos?.[opener.efectoIdx ?? -1]

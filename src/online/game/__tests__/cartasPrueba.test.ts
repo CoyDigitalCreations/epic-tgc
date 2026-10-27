@@ -33,7 +33,7 @@ import { getValidActions } from '../validActions'
 import { statsDe, keywordsDe, velocidadDe, purgarEfectosTemporales } from '../efectos'
 import { etersParaPagar } from '../payments'
 import { respondiblesDe } from '../chain'
-import { reglaNumero } from '../reglas'
+import { efectosNegados, reglaNumero } from '../reglas'
 import { exhaustFijado } from '../effectInterpreter'
 import { validarDeck } from '../initialState'
 import { applyAction } from '../actions'
@@ -186,9 +186,7 @@ describe('(a) auditoría — validateCard y reglas de configuración del Card-Ma
  * Huecos ya conocidos del mapa de cobertura (efecto del set → motivo). El test NO falla por ellos; falla si
  * aparece un hueco NUEVO (algo del set sin ejecutor que nadie anotó aquí).
  */
-const HUECOS_CONOCIDOS: Record<string, string> = {
-  'PR-021': 'negar en disparo trigger "ninguno" (Thane DS-014): executeEffect solo anula una activación pendiente de la cadena y no lee el resto de `tipoNegacion` (efecto_activo...); el Disparo no apila nada que negar → no-op',
-}
+const HUECOS_CONOCIDOS: Record<string, string> = {}
 
 describe('(b) cobertura — coverageMap sobre el set', () => {
   const reporte = buildReporte(CARTAS_PRUEBA)
@@ -771,18 +769,22 @@ describe('(c) humo — HALLAZGOS (el motor actual no cumple el texto o la decisi
     expect(statsDe(s, 'imi').poder).toBe(3) // ...hasta el final del turno
   })
 
-  it('H8b PR-021 negar en Disparo (Thane DS-014): paga y agota, pero no existe nada que negar → no-op', () => {
+  // H8b: RESUELTO (negar `efecto_activo`, decisión del usuario 2026-10-27: el Campeón elegido tiene sus efectos negados
+  // hasta el final del turno; ver negarEfectosActivos.test.ts). Antes el Disparo pagaba y no hacía nada.
+  it('H8b PR-021 negar «efecto activo» en Disparo (Thane DS-014): paga, elige a cuál de los Campeones rivales y le niega los efectos', () => {
     const s0 = base()
     conCampeon(s0, 'A', 'esc', PR.ESCUDO, 0)
     conEteres(s0, 'A', 3)
     conCampeon(s0, 'B', 'b0', PR.PEON, 0)
-    conCampeon(s0, 'B', 'b1', PR.PEON, 1) // dos objetivos si Protector no mandara; el Escudo es del lado A
+    conCampeon(s0, 'B', 'b1', PR.PEON, 1)
     const ctx = crearCtx()
-    const s = aplicar(s0, { type: 'activar_habilidad', cardInstanceId: 'esc', eterIds: s0.players.A.eterReserva.slice(0, 3) }, ctx)
+    let s = aplicar(s0, { type: 'activar_habilidad', cardInstanceId: 'esc', eterIds: s0.players.A.eterReserva.slice(0, 3) }, ctx)
     expect(s.players.A.eterPagado).toHaveLength(3)
-    expect(evs(ctx, 'activacion_negada')).toHaveLength(0)
-    expect(s.instances['b0'].agotado).toBeUndefined()
-    expect(s.objetivosPendientes ?? []).toHaveLength(0)
+    expect(s.objetivosPendientes ?? []).toHaveLength(1) // elige a cuál de los dos
+    s = aplicar(s, { type: 'elegir_objetivo', objetivoId: 'b1' }, ctx)
+    expect(efectosNegados(s, 'b1')).toBe(true)
+    expect(efectosNegados(s, 'b0')).toBe(false)
+    expect(evs(ctx, 'activacion_negada')).toHaveLength(0) // no es la negación de una activación
   })
 
   // H9 ────────────────────────────────────────────────────────────────────────────────────────

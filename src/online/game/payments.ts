@@ -2,6 +2,7 @@ import { esEter, getCardMeta, cartaNecesitaEterBloqueado, efectoBloqueoAccion } 
 import { etiquetarEter, eterDeEfecto } from './eter'
 import type { AnyCard } from '../../shared/types'
 import { dispararTrigger } from './efectos'
+import { efectosNegados } from './reglas'
 import type { Ctx, GameState, PlayerId } from './types'
 
 /**
@@ -187,6 +188,8 @@ export function validarBloqueo(
   if (!enCampo) return 'la carta no está en tu campo'
   const meta = inst.cardId ? getCardMeta(inst.cardId) : null
   if (!meta) return 'carta desconocida'
+  // Negar un «efecto activo»: el Campeón no puede activar (bloquear Éter) sus efectos Continuos hasta que acabe
+  if (efectosNegados(state, targetInstanceId)) return 'los efectos de esta carta están negados'
   // Fase 3a: Campeones siempre; Artefactos (Místicas/Arcanas) solo si tienen
   // efecto con costo-bloqueado en efectos[] (manual §7.7 — soporte continua).
   if (!p.campo.campeones.includes(targetInstanceId)) {

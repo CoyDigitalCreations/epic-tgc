@@ -13,7 +13,7 @@ import { registrarEfectoPendiente, hastaAlba } from './effectRegistry'
 import { interpretEffect, ejecutarTramo } from './effectInterpreter'
 import { electorAjeno, opcionesVigentes } from './pendientes'
 import { tieneKeyword } from './combat'
-import { reglaBool } from './reglas'
+import { efectosNegados, reglaBool } from './reglas'
 import { liberarEterBloqueado, enviarAlCementerio } from './replacements'
 import { slotAZona } from './zones'
 import { validarBloqueo } from './payments'
@@ -62,6 +62,7 @@ export function validarActivarHabilidad(state: GameState, action: Extract<Action
   if (!p.campo.campeones.includes(action.cardInstanceId)) return 'la carta no está en tu campo'
   const meta = inst.cardId ? getCardMeta(inst.cardId) : null
   if (!meta) return 'carta desconocida'
+  if (efectosNegados(state, action.cardInstanceId)) return 'los efectos de esta carta están negados'
 
   // ROUTING POR EFECTO (§7.7): el efecto que activar_habilidad ejecuta lo
   // decide SU costo — mismo selector que validActions y el ejecutor.

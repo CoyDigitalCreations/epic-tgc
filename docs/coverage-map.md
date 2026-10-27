@@ -2,16 +2,15 @@
 
 Cartas: **65** | Efectos clasificados: **76** | Combos únicos (tipo×trigger×efecto): **52**
 
-## Cobertura data-driven: **98.7%** de los efectos se ejecutan por el puro motor (interpreter/activación)
+## Cobertura data-driven: **100%** de los efectos se ejecutan por el puro motor (interpreter/activación)
 
 ## Resumen por estado
 
 | Estado | Efectos | % |
 |---|---:|---:|
 | OK_INTERPRETER | 26 | 34.2% |
-| OK_ACTIVACION | 37 | 48.7% |
+| OK_ACTIVACION | 38 | 50% |
 | OK_AURA_JSON | 12 | 15.8% |
-| HUECO_NOOP | 1 | 1.3% |
 
 ## Matriz de combos (tipo × trigger × efecto)
 
@@ -28,7 +27,7 @@ Cartas: **65** | Efectos clasificados: **76** | Combos únicos (tipo×trigger×e
 | `disparo` × `(sin trigger)` × `mover` | FB-017, DS-017 | OK_ACTIVACION |
 | `disparo` × `(sin trigger)` × `return_hand` | DS-018 | OK_ACTIVACION |
 | `disparo` × `(sin trigger)` × `toggle_exhaust` | FB-013 | OK_ACTIVACION |
-| `disparo` × `ninguno` × `negar` | DS-014 | HUECO_NOOP |
+| `disparo` × `ninguno` × `negar` | DS-014 | OK_ACTIVACION |
 | `hechizo` × `(sin trigger)` × `buff` | FB-020, FB-024, DS-021, DS-024 | OK_AURA_JSON, OK_ACTIVACION |
 | `hechizo` × `(sin trigger)` × `copy` | FB-022 | OK_ACTIVACION |
 | `hechizo` × `(sin trigger)` × `debuff` | DS-020, DS-023 | OK_ACTIVACION |
@@ -74,9 +73,3 @@ Cartas: **65** | Efectos clasificados: **76** | Combos únicos (tipo×trigger×e
 
 
 ## Detalle de NO-OK (huecos y parciales)
-
-### HUECO_NOOP (1)
-
-- **DS-014** Thane, Voz del Trueno (Campeón) — `disparo`×`ninguno`×`negar` [efectos]
-  - Ruta: negar → executeEffect solo niega la activación pendiente de la ventana; tipoNegacion 'efecto_activo' no se lee
-  - Falta implementar tipoNegacion 'efecto_activo' (hoy actúa como 'activacion'). Requiere decisión de diseño.

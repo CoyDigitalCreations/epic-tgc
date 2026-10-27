@@ -282,6 +282,18 @@ export interface ActivacionNegadaEvent {
 }
 
 /**
+ * Negar un «efecto activo» (Thane): `jugador` niega los efectos de `cardInstanceId` durante la duración del efecto
+ * (no activa ni mantiene sus habilidades, pasivos ni auras; las keywords y el Comandante no se niegan).
+ * `fuente` = la carta que niega. Si el objetivo es INEGABLE no se emite.
+ */
+export interface EfectosNegadosEvent {
+  type: 'efectos_negados'
+  jugador: PlayerId
+  cardInstanceId: string
+  fuente: string
+}
+
+/**
  * Trigger apilado (F5d-3, decisión 10a): un efecto "al jugar Mística / al invocar / al atacar…"
  * se disparó como consecuencia de una acción de jugador y entró al flujo de la pila (encima de la
  * jugada que lo provocó: resuelve antes que ella). Se emite UNA VEZ por trigger, AL APILAR (cuando
@@ -336,6 +348,7 @@ export type GameEvent =
   | PrioridadPasadaEvent
   | CartaActivadaEvent
   | ActivacionNegadaEvent
+  | EfectosNegadosEvent
   | TriggerApiladoEvent
   | MazoMiradoEvent
   | MazoOrdenadoEvent
@@ -379,6 +392,8 @@ export const CATALOGO_EVENTOS: readonly GameEvent[] = [
   { type: 'prioridad_pasada', jugador: 'A' },
   { type: 'carta_activada', cardInstanceId: 'c1', jugador: 'A', slot: 0 },
   { type: 'activacion_negada', jugador: 'B', cardInstanceId: 'c1', fuente: 'c4' },
+  // Negar un «efecto activo» (Thane): los efectos del Campeón quedan negados un tiempo
+  { type: 'efectos_negados', jugador: 'B', cardInstanceId: 'c1', fuente: 'c4' },
   // F5d-3 (decisión 10a): triggers apilados sobre la jugada que los provocó
   { type: 'trigger_apilado', jugador: 'A', cardInstanceId: 'c1', trigger: 'al-jugar-mistica', efectoIdx: 0 },
   // F9c: scry (mirar y ordenar el tope del mazo)
@@ -435,6 +450,7 @@ export function validarExhaustividadEventos(tipo: GameEvent['type']): void {
     case 'prioridad_pasada': return
     case 'carta_activada': return
     case 'activacion_negada': return
+    case 'efectos_negados': return
     case 'trigger_apilado': return
     case 'mazo_mirado': return
     case 'mazo_ordenado': return

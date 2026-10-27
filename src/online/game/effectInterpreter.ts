@@ -10,7 +10,7 @@ import { shuffleFisherYates } from './rng'
 import { aplicarMod, otorgarKeyword, crearOpcionBloqueo, statsDe, keywordsDe, dispararTrigger } from './efectos'
 import { construirTriggers, resolverTriggersDeEfecto } from './triggers'
 import { aplicarCambioAtributo, aplicarReglaTemporal } from './reglasTemporales'
-import { reglaBool, reglaDeEfecto } from './reglas'
+import { efectosNegados, reglaBool, reglaDeEfecto } from './reglas'
 import { iniciarScry } from './scry'
 import { ejecutarRedirect } from './redirect'
 import { REGLAS } from '../../shared/rules/reglas'
@@ -117,7 +117,7 @@ export function interpretEffect(
     : objetivo?.filtros
   const hasAutoSelect = mergedFiltros?.seleccionar != null
   const needsPending = isTriggered ? (targetIds.length > 0 && !hasAutoSelect) : (targetIds.length > 1)
-  if (needsPlayerChoice(objetivo, efecto) && !autoResolver && needsPending) {
+  if (needsPlayerChoice(objetivo, efecto, efectoData.tipoNegacion) && !autoResolver && needsPending) {
     // Pre-check: can this effect actually be executed?
     if (!canExecuteEffect(s, efecto, jugador)) {
       return // can't execute (e.g., steal_champion with no free slot)
@@ -186,8 +186,10 @@ export function objetivoCompleto(efectoData: EfectoData): NonNullable<EfectoData
 /**
  * Check if the effect target requires player choice (single selection from multiple).
  */
-function needsPlayerChoice(objetivo: EfectoData['objetivo'], efecto?: EfectoData['efecto']): boolean {
+function needsPlayerChoice(objetivo: EfectoData['objetivo'], efecto?: EfectoData['efecto'], tipoNegacion?: EfectoData['tipoNegacion']): boolean {
   if (!objetivo) return false
+  // negar un «efecto activo» SÍ elige al Campeón al que se lo niega (a diferencia de negar la activación pendiente)
+  if (efecto === 'negar' && tipoNegacion === 'efecto_activo') return true
   // Self and auto-targets don't need choice
   if (objetivo.tipo === 'self' || objetivo.tipo === 'todos_campeones_propios' || 
       objetivo.tipo === 'todos_campeones_rivales' || objetivo.tipo === 'rival_hand' ||
@@ -376,6 +378,10 @@ function executeEffect(
       break
 
     case 'negar': {
+      if (efectoData.tipoNegacion === 'efecto_activo') {
+        executeNegarEfectosActivos(s, ctx, inst, targetIds, jugador, efectoData)
+        break
+      }
       // REDISEÑO obs 1874 (Marcha de las Primeras): contador de UN SOLO USO —
       // niega la ACTIVACIÓN pendiente de la ventana (tipoNegacion 'activacion'):
       // el pago del activador NO se devuelve y el efecto NO se resuelve. Sin
@@ -588,6 +594,7 @@ export function dispararUmbralBloqueo(s: GameState, ctx: Ctx, targetInstanceId: 
   if (!inst?.cardId) return
   const meta = getCardMeta(inst.cardId)
   if (!meta || !('efectos' in meta) || !meta.efectos) return
+  if (efectosNegados(s, targetInstanceId)) return // sus efectos están negados: el umbral no dispara nada ahora
   const bloqueadosEn = (idxEfecto: number): number => eterDeEfecto(s, targetInstanceId, idxEfecto).length
 
   for (const [idxEfecto, efecto] of meta.efectos.entries()) {
@@ -1043,6 +1050,32 @@ function executeModificarRegla(s: GameState, targetIds: string[], jugador: Playe
     for (const j of afectados) aplicarReglaTemporal(s, { ...comunes, sujeto: { tipo: 'jugador', jugador: j } })
   } else {
     for (const instId of targetIds) aplicarReglaTemporal(s, { ...comunes, sujeto: { tipo: 'carta', instId } })
+  }
+}
+
+/**
+ * Execute negar con `tipoNegacion` «efecto_activo» (Thane): los Campeones objetivo tienen sus efectos negados durante la
+ * duración del efecto (por omisión, hasta el final del turno). No pueden ACTIVAR sus Disparos ni Continuos, los Continuos ya
+ * activados dejan de aplicar (el Éter bloqueado se queda donde está), y sus pasivos, auras y triggers no hacen nada. NO se
+ * niegan las keywords (identidad de la carta) ni el efecto de Comandante (§10). INEGABLE (`puedeSerNegada`) lo evita.
+ * Es la regla `efectosActivos` prohibida sobre la carta: lo demás lo derivan quienes la consultan (ver reglas.efectosNegados).
+ */
+function executeNegarEfectosActivos(
+  s: GameState,
+  ctx: Ctx,
+  inst: CardInstance,
+  targetIds: string[],
+  jugador: PlayerId,
+  efectoData: EfectoData,
+): void {
+  const duracion = duracionTemporal({ ...efectoData, duracion: efectoData.duracion ?? 'turno' }, jugador)
+  for (const instId of targetIds) {
+    const objetivo = s.instances[instId]
+    const meta = objetivo?.cardId ? getCardMeta(objetivo.cardId) : null
+    if (!objetivo || !meta || !esCampeon(meta)) continue
+    if (!reglaBool(s, 'puedeSerNegada', { instId })) continue // INEGABLE
+    aplicarReglaTemporal(s, { regla: 'efectosActivos', operacion: 'prohibir', ...duracion, sujeto: { tipo: 'carta', instId } })
+    ctx.emit({ type: 'efectos_negados', jugador, cardInstanceId: instId, fuente: inst.cardInstanceId })
   }
 }
 

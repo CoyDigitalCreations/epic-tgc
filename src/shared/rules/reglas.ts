@@ -47,6 +47,9 @@ export const REGLAS = {
   puedeSerExiliada: { etiqueta: 'Puede ser exiliada', manual: '§10', ambito: 'campeon', base: true },
   puedeSerDestruidaPorEfecto: { etiqueta: 'Puede ser destruida por efectos', manual: '§10', ambito: 'campeon', base: true },
   puedeSerDestruidaEnBatalla: { etiqueta: 'Puede ser destruida en batalla', manual: '§10', ambito: 'campeon', base: true },
+  // Negar un «efecto activo» (Thane) la prohíbe un tiempo: el Campeón no activa ni mantiene sus efectos. NO alcanza a
+  // sus keywords (identidad de la carta) ni a su efecto de Comandante (§10): quien la consulta los exceptúa.
+  efectosActivos: { etiqueta: 'Sus efectos están activos (no negados)', manual: '§10', ambito: 'campeon', base: true },
 
   /* ── carta ── */
   puedeSerNegada: { etiqueta: 'Sus efectos pueden ser negados o contrarrestados por el rival', manual: '§10', ambito: 'carta', base: true },

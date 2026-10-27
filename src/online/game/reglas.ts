@@ -170,13 +170,27 @@ function afectaACarta(s: GameState, f: FuenteRegla, efecto: EfectoData, instId: 
   }
 }
 
+/**
+ * Reglas que alguna keyword modifica: solo para esas hace falta mirar las keywords del sujeto. Además de ahorrar trabajo,
+ * evita un ciclo: `efectosActivos` se consulta desde `modificadoresJSONDe`, que alimenta a `keywordsDe`.
+ */
+const REGLAS_DE_KEYWORD = new Set<ReglaId>(Object.values(KEYWORD_REGLAS).flatMap((ms) => ms.map((m) => m.regla)))
+
+/**
+ * ¿Tiene `instId` sus efectos negados? (negar «efecto activo»: la regla `efectosActivos` está prohibida).
+ * Quien lo consulta exceptúa lo que NO se niega: las keywords (identidad de la carta) y el efecto de Comandante (§10).
+ */
+export function efectosNegados(s: GameState, instId: string): boolean {
+  return !reglaBool(s, 'efectosActivos', { instId })
+}
+
 /** Todos los modificadores que hoy alcanzan a `sujeto` para la regla `regla` (sin resolver). */
 export function modificadoresReglaDe(s: GameState, regla: ReglaId, sujeto: SujetoRegla): ModificadorRegla[] {
   const def = REGLAS[regla]
   const mods: ModificadorRegla[] = []
 
   // 1. Keywords del Campeón (una keyword es una regla modificada). Orden 0: las más antiguas.
-  if (sujeto && 'instId' in sujeto) {
+  if (sujeto && 'instId' in sujeto && REGLAS_DE_KEYWORD.has(regla)) {
     for (const kw of keywordsDe(s, sujeto.instId)) {
       for (const m of KEYWORD_REGLAS[kw] ?? []) if (m.regla === regla) mods.push({ ...m, orden: 0 })
     }
@@ -188,6 +202,9 @@ export function modificadoresReglaDe(s: GameState, regla: ReglaId, sujeto: Sujet
     for (const { efecto, indice } of efectosReglaDe(cardId)) {
       const m = reglaDeEfecto(efecto)
       if (!m || m.id !== regla || !efectoActivo(s, f, efecto, indice)) continue
+      // Un Campeón con sus efectos negados no modifica reglas (salvo su efecto de Comandante). `efectosActivos` no se
+      // niega a sí misma: así no hay recursión.
+      if (regla !== 'efectosActivos' && f.origen === 'campo' && efecto.tipo !== 'comandante' && efectosNegados(s, f.inst.cardInstanceId)) continue
       let alcanza = false
       if (def.ambito === 'partida') alcanza = true
       else if (def.ambito === 'jugador') alcanza = !!sujeto && 'jugador' in sujeto && jugadoresAfectados(f, efecto).includes(sujeto.jugador)

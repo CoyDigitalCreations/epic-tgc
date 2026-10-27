@@ -209,12 +209,13 @@ export function clasificarEfecto(
     notas.push(h.drift)
   }
 
-  // ── negar: el motor solo implementa la negación de la ACTIVACIÓN pendiente; no lee el resto de `tipoNegacion` (B3) ──
-  if (accion === 'negar' && efecto.tipoNegacion && efecto.tipoNegacion !== 'activacion') {
+  // ── negar: el motor implementa la negación de la ACTIVACIÓN pendiente y la de EFECTOS ACTIVOS (regla `efectosActivos`);
+  //    el resto de `tipoNegacion` no se lee (B3) ──
+  if (accion === 'negar' && efecto.tipoNegacion && efecto.tipoNegacion !== 'activacion' && efecto.tipoNegacion !== 'efecto_activo') {
     return {
       ...base,
       estado: 'HUECO_NOOP',
-      ruta: `negar → executeEffect solo niega la activación pendiente de la ventana; tipoNegacion '${efecto.tipoNegacion}' no se lee`,
+      ruta: `negar → executeEffect solo niega la activación pendiente de la ventana o los efectos activos de un Campeón; tipoNegacion '${efecto.tipoNegacion}' no se lee`,
       notas: [...notas, `Falta implementar tipoNegacion '${efecto.tipoNegacion}' (hoy actúa como 'activacion'). Requiere decisión de diseño.`],
     }
   }

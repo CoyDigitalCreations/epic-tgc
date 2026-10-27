@@ -72,6 +72,8 @@ export function formatearEvento(estado: GameState, e: GameEvent): string | null 
       return `${e.jugador} activa ${nombreCarta(estado, e.cardInstanceId)}.`
     case 'activacion_negada':
       return `${nombreCarta(estado, e.fuente)} niega la activación de ${nombreCarta(estado, e.cardInstanceId)}.`
+    case 'efectos_negados':
+      return `${nombreCarta(estado, e.fuente)} niega los efectos de ${nombreCarta(estado, e.cardInstanceId)}.`
     case 'trigger_apilado':
       return `${e.jugador} apila un efecto de ${nombreCarta(estado, e.cardInstanceId)}.`
     case 'carta_devuelta_a_mano':

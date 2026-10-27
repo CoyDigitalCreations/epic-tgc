@@ -9,7 +9,7 @@ import { cadenaActiva, respondiblesDe, respuestasDeMano } from './chain'
 import { etersParaPagar } from './payments'
 import { descartarFrentesMuertos, electorAjeno, opcionesVigentes } from './pendientes'
 import { validarEquiparArtefacto } from './movimientos'
-import { reglaNumero } from './reglas'
+import { efectosNegados, reglaNumero } from './reglas'
 import { cartasVigentesScry, scryActual } from './scry'
 import type { GameState, PlayerId, CardInstance } from './types'
 
@@ -64,6 +64,7 @@ function accionesBloqueoEter(state: GameState, playerId: PlayerId, enCadena = fa
   // - eter_bloqueado ("hasta X") → una acción por Éter hasta el máximo.
   const generarBloqueos = (targets: { id: string; inst: CardInstance; meta: AnyCard }[]) => {
     for (const t of targets) {
+      if (efectosNegados(state, t.id)) continue // efectos negados (Thane): no puede activar su Continuo
       // Fase 2 (b): una tanda de acciones POR CADA efecto fuente (NO-disparo
       // con costo-bloqueo). Carta de UN efecto → idéntico a antes; multi-efecto
       // → cada efecto valida/cuenta SOLO su Éter (eterDeEfecto) y la acción
@@ -352,7 +353,9 @@ export function getValidActions(state: GameState, playerId: PlayerId): Action[] 
       if (!meta) continue
 
       // Fase 3b → REDISEÑO obs 1874: el candado championNegado se eliminó —
-      // la negación es un contador sobre la activación pendiente de la ventana.
+      // la negación de una ACTIVACIÓN es un contador sobre la activación pendiente de la ventana.
+      // Distinto: negar un «efecto activo» (Thane) deja al Campeón sin poder activar nada hasta el final del turno.
+      if (efectosNegados(state, champId)) continue
 
       // Check efectos[] for active abilities — ROUTING POR EFECTO (§7.7).
       // El efecto que activar_habilidad ejecuta lo decide SU costo:

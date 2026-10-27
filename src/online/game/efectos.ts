@@ -5,6 +5,7 @@ import { parejasBloqueoOpcion } from './habilidades'
 import { resolveTargets } from './targetResolver'
 import { purgarReglasHastaFase, purgarReglasTemporales } from './reglasTemporales'
 import { faccionesDe } from './atributos'
+import { efectosNegados } from './reglas'
 import type { CondicionEfecto, EfectoData } from '../../shared/types'
 
 /**
@@ -455,6 +456,8 @@ export function modificadoresJSONDe(s: GameState, id: string): ModificadoresJSON
 
   for (const c of candidatos) {
     const efectos: EfectoData[] = []
+    // Negar un «efecto activo» apaga las auras del Campeón, NO su efecto de Comandante (§10: inmutable)
+    const negada = c.origen === 'campo' && efectosNegados(s, c.inst.cardInstanceId)
     if (c.esComandante && c.meta.type === 'Campeón' && c.meta.efectoComandante) {
       efectos.push(c.meta.efectoComandante)
     }
@@ -463,7 +466,7 @@ export function modificadoresJSONDe(s: GameState, id: string): ModificadoresJSON
         if (c.origen === 'reserva' && e.tipo === 'reserva' && esAuraZona(e)) efectos.push(e)
         else if (c.origen === 'bloqueo' && e.tipo === 'bloqueo' && esAuraZona(e)) efectos.push(e)
         else if (c.origen === 'vinculo' && e.tipo === 'vinculo' && esAuraVinculo(e)) efectos.push(e)
-        else if (c.origen === 'campo' && (esAuraZona(e) || esAuraCondicionada(e) || esAuraEquipada(e))) efectos.push(e)
+        else if (c.origen === 'campo' && !negada && (esAuraZona(e) || esAuraCondicionada(e) || esAuraEquipada(e))) efectos.push(e)
       }
     }
 
@@ -733,16 +736,22 @@ export function triggersQueMatchean(
     }
     const efectos = meta.efectos as EfectoData[] | undefined
     if (!efectos || !Array.isArray(efectos)) continue
+    // Efectos negados (negar «efecto activo»): no se dispara nada de la carta, salvo su efecto de Comandante
+    const negada = efectosNegados(s, id)
     efectos.forEach((efecto, efectoIdx) => {
+      if (negada && efecto.tipo !== 'comandante') return
       // Match por trigger JSON. 'al-bloquear-eter' (re-dispatch de umbral
       // Aurora steal_champion) SOLO matchea efectos sin trigger propios
       // con costo de bloqueo — nunca otros efectos triggerless (destroy, etc.).
+      // 'ninguno' (lo que escribe el Card-Maker por omisión) equivale a NO tener trigger: sin esto, un Disparo con
+      // `trigger: "ninguno"` y elección de objetivo (Thane) nunca coincidía al resolver su pendiente.
+      const triggerDelEfecto = efecto.trigger === 'ninguno' ? undefined : efecto.trigger
       const esUmbral = trigger === 'al-bloquear-eter'
       const matchea = esUmbral
-        ? !efecto.trigger &&
+        ? !triggerDelEfecto &&
           (efecto.costo?.tipo === 'bloqueo_fijo' || efecto.costo?.tipo === 'eter_bloqueado') &&
           !!efecto.efecto
-        : efecto.trigger === efectoTrigger && !!efecto.efecto
+        : triggerDelEfecto === efectoTrigger && !!efecto.efecto
       if (matchea) res.push({ inst, efecto, efectoIdx })
     })
   }
@@ -785,6 +794,8 @@ export function dispararTrigger(
     // Solo los DESTRUIDOS (bocaArriba) firean/auras. Garantía de motor,
     // no solo de los call sites (phases.ts/partida.ts).
     if (meta && meta.type === 'Vínculo' && inst.bocaArriba !== true) continue
+    // Efectos negados (negar «efecto activo»): ni el JSON ni los handlers de la carta se disparan
+    if (efectosNegados(s, id)) continue
     // F5d-2: el filtro (condición, trigger, Vínculo boca abajo) vive en triggersQueMatchean, evaluado
     // POR instancia y en el momento (un efecto anterior pudo cambiar el estado). Camino inmediato:
     // solo el PRIMER efecto con match de la carta (el apilado las separa en entradas por efectoIdx).
