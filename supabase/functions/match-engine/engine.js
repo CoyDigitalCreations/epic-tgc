@@ -8236,21 +8236,29 @@ function verificarInvariantes(estado) {
     }
     return n;
   };
-  const totalDe = (p) => {
+  const idsEnZonasDe = (p) => {
     const st = estado.players[p];
-    const campeones = st.campo.campeones.filter((x) => x !== null).length;
-    const misticas = st.campo.misticasTacticas.filter((x) => x !== null).length;
-    const arcanas = st.campo.arcanasCombate.filter((x) => x !== null).length;
-    const vinculos = st.vinculos.filter((x) => x !== null).length;
-    const bloqueados = st.campo.campeones.concat(st.campo.misticasTacticas, st.campo.arcanasCombate).reduce((acc, id) => acc + (id ? estado.instances[id]?.eterBloqueado?.length ?? 0 : 0), 0);
-    return st.mano.length + st.mazo.length + st.cementerio.length + st.exilio.length + st.eterReserva.length + st.eterPagado.length + campeones + misticas + arcanas + vinculos + bloqueados;
+    const enCampo = [...st.campo.campeones, ...st.campo.misticasTacticas, ...st.campo.arcanasCombate].filter((x) => x !== null);
+    const bloqueados = enCampo.flatMap((id) => estado.instances[id]?.eterBloqueado ?? []);
+    return [
+      ...st.mano,
+      ...st.mazo,
+      ...st.cementerio,
+      ...st.exilio,
+      ...st.eterReserva,
+      ...st.eterPagado,
+      ...enCampo,
+      ...st.vinculos.filter((x) => x !== null),
+      ...bloqueados
+    ];
   };
+  const noEterDeDueno = (p) => [...idsEnZonasDe("A"), ...idsEnZonasDe("B")].filter((id) => !esEterId(id) && estado.instances[id]?.owner === p).length;
   const eterGlobal = eterDe("A") + eterDe("B");
   if (eterGlobal !== 30) violaciones.push(`global: ${eterGlobal} \xC9ter \u2260 30 (transferido/fuente perdida o duplicada)`);
   for (const p of ["A", "B"]) {
     const st = estado.players[p];
     if (st.mano.length > 45) violaciones.push(`${p}: mano ${st.mano.length} > 45 (imposible: mazo principal = 45)`);
-    const noEter = totalDe(p) - eterDe(p);
+    const noEter = noEterDeDueno(p);
     if (noEter !== 51) violaciones.push(`${p}: cartas no-\xC9ter ${noEter} \u2260 51`);
     const campeones = st.campo.campeones.filter((x) => x !== null).length;
     if (campeones > 5) violaciones.push(`${p}: ${campeones} Campeones > 5`);
