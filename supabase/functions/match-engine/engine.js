@@ -3071,9 +3071,17 @@ function reiniciarCampeon(s, instId) {
     if (quedan.length === 0) delete s.cambiosAtributo;
     else if (quedan.length !== s.cambiosAtributo.length) s.cambiosAtributo = quedan;
   }
+  if (s.efectosPrestados?.length) {
+    const quedan = s.efectosPrestados.filter((p) => p.instId !== instId);
+    if (quedan.length === 0) delete s.efectosPrestados;
+    else if (quedan.length !== s.efectosPrestados.length) s.efectosPrestados = quedan;
+  }
 }
 function aplicarCambioAtributo(s, cambio) {
   s.cambiosAtributo = [...s.cambiosAtributo ?? [], cambio];
+}
+function aplicarEfectosPrestados(s, prestado) {
+  s.efectosPrestados = [...s.efectosPrestados ?? [], prestado];
 }
 function sinVencidas(lista, expira, jugador) {
   return lista.map((r) => expira === "ocaso" && r.turnosRestantes !== void 0 ? { ...r, turnosRestantes: r.turnosRestantes - 1 } : r).filter((r) => {
@@ -3096,6 +3104,11 @@ function purgarReglasTemporales(s, expira, jugador) {
     if (quedan.length === 0) delete s.cambiosAtributo;
     else s.cambiosAtributo = quedan;
   }
+  if (s.efectosPrestados?.length) {
+    const quedan = sinVencidas(s.efectosPrestados, expira, jugador);
+    if (quedan.length === 0) delete s.efectosPrestados;
+    else s.efectosPrestados = quedan;
+  }
 }
 function purgarReglasHastaFase(s, fase, turno) {
   const vence = (r) => r.expira === "hasta-fase" && r.expiraFase === fase && r.expiraFaseJugador === turno;
@@ -3108,6 +3121,11 @@ function purgarReglasHastaFase(s, fase, turno) {
     const quedan = s.cambiosAtributo.filter((r) => !vence(r));
     if (quedan.length === 0) delete s.cambiosAtributo;
     else if (quedan.length !== s.cambiosAtributo.length) s.cambiosAtributo = quedan;
+  }
+  if (s.efectosPrestados?.length) {
+    const quedan = s.efectosPrestados.filter((r) => !vence(r));
+    if (quedan.length === 0) delete s.efectosPrestados;
+    else if (quedan.length !== s.efectosPrestados.length) s.efectosPrestados = quedan;
   }
 }
 
@@ -3276,6 +3294,27 @@ var KEYWORD_REGLAS = {
   Indestructible: [{ regla: "puedeSerDestruidaEnBatalla", operacion: "prohibir" }]
 };
 
+// src/online/game/efectosInstancia.ts
+function esEfectoCopiable(efecto) {
+  if (efecto.tipo !== "pasivo" && efecto.tipo !== "continuo" && efecto.tipo !== "disparo") return false;
+  if (efecto.efecto === "copy") return false;
+  if (esCostoBloqueo(efecto.costo) || efecto.tramos?.length) return false;
+  return true;
+}
+function efectosPrestadosDe(s, instId) {
+  const lista = s.efectosPrestados;
+  if (!lista?.length) return [];
+  return lista.filter((p) => p.instId === instId).flatMap((p) => p.efectos);
+}
+function metaDeInstancia(s, instId) {
+  const cardId = s.instances[instId]?.cardId;
+  const meta = cardId ? getCardMeta(cardId) : null;
+  if (!meta || !("efectos" in meta)) return meta;
+  const prestados = efectosPrestadosDe(s, instId);
+  if (prestados.length === 0) return meta;
+  return { ...meta, efectos: [...meta.efectos ?? [], ...prestados] };
+}
+
 // src/online/game/reglas.ts
 var otro = (j) => j === "A" ? "B" : "A";
 function reglaDeEfecto(efecto) {
@@ -3291,9 +3330,17 @@ function efectosReglaDe(cardId) {
   memoEfectosRegla.set(cardId, lista);
   return lista;
 }
+function efectosReglaDeInst(s, inst) {
+  const impresos = efectosReglaDe(inst.cardId);
+  const prestados = efectosPrestadosDe(s, inst.cardInstanceId);
+  if (prestados.length === 0) return impresos;
+  const meta = getCardMeta(inst.cardId);
+  const n = meta && "efectos" in meta ? meta.efectos?.length ?? 0 : 0;
+  return [...impresos, ...prestados.map((efecto, k) => ({ efecto, indice: n + k })).filter(({ efecto }) => !!reglaDeEfecto(efecto))];
+}
 function fuentesDeReglas(s) {
   const fuentes = [];
-  const tiene = (inst) => !!inst?.cardId && efectosReglaDe(inst.cardId).length > 0;
+  const tiene = (inst) => !!inst?.cardId && efectosReglaDeInst(s, inst).length > 0;
   for (const j of ["A", "B"]) {
     const p = s.players[j];
     for (const id of [...p.campo.campeones, ...p.campo.misticasTacticas, ...p.campo.arcanasCombate]) {
@@ -3389,8 +3436,7 @@ function modificadoresReglaDe(s, regla, sujeto) {
     }
   }
   for (const f of fuentesDeReglas(s)) {
-    const cardId = f.inst.cardId;
-    for (const { efecto, indice } of efectosReglaDe(cardId)) {
+    for (const { efecto, indice } of efectosReglaDeInst(s, f.inst)) {
       const m = reglaDeEfecto(efecto);
       if (!m || m.id !== regla || !efectoActivo(s, f, efecto, indice)) continue;
       if (regla !== "efectosActivos" && f.origen === "campo" && efecto.tipo !== "comandante" && efectosNegados(s, f.inst.cardInstanceId)) continue;
@@ -4350,7 +4396,7 @@ function disparoDeRespuesta(meta) {
 function motivoNoResponde(state, jugador, id, origen) {
   const cadena = cadenaActiva(state);
   const inst = state.instances[id];
-  const meta = inst?.cardId ? getCardMeta(inst.cardId) : null;
+  const meta = metaDeInstancia(state, id);
   if (!inst || !meta) return "carta desconocida";
   if (cadena && (cadena.pila.includes(id) || cadena.opener?.cardInstanceId === id)) return "la carta ya est\xE1 en la pila";
   const p = state.players[jugador];
@@ -4436,8 +4482,7 @@ function validarResponderCadena(state, cardInstanceId, eterIds) {
   if (!respondiblesDe(state, cadena.prioridad).includes(cardInstanceId)) {
     return "esa carta no puede responder ahora";
   }
-  const inst = state.instances[cardInstanceId];
-  const meta = inst?.cardId ? getCardMeta(inst.cardId) : null;
+  const meta = metaDeInstancia(state, cardInstanceId);
   if (meta && esArcana(meta) && eterIds !== void 0 && meta.stats.cost > 0) {
     const pago = validarPago(state, cadena.prioridad, eterIds, meta.id);
     if (!pago.ok) return pago.error ?? "pago inv\xE1lido";
@@ -4500,7 +4545,7 @@ function ejecutarResponderCadena(s, cardInstanceId, ctx, eterIds) {
   const jugador = cadena.prioridad;
   const previos = marcarInicioAccion(s);
   const inst = s.instances[cardInstanceId];
-  const meta = inst?.cardId ? getCardMeta(inst.cardId) : null;
+  const meta = metaDeInstancia(s, cardInstanceId);
   if (inst && meta && esArcana(meta)) {
     const pagos = eterIds ?? etersParaPagar(s, jugador, meta.id) ?? [];
     if (pagos.length > 0) aplicarPago(s, ctx, jugador, pagos, meta.id, { tipo: "habilidad", cardInstanceId });
@@ -4530,7 +4575,7 @@ function ejecutarPasarPrioridad(s, ctx) {
   }
 }
 function hechizosDeRespuesta(s, id, origen) {
-  const meta = s.instances[id]?.cardId ? getCardMeta(s.instances[id].cardId) : null;
+  const meta = metaDeInstancia(s, id);
   if (meta && meta.type === "Campe\xF3n" && origen === "campo") {
     const disparo = disparoDeRespuesta(meta);
     return disparo ? [disparo] : [];
@@ -4769,7 +4814,7 @@ function abrirOpener(s, ctx, opener, triggers) {
 }
 function resolverOpener(s, ctx, opener) {
   const inst = s.instances[opener.cardInstanceId];
-  const meta = inst?.cardId ? getCardMeta(inst.cardId) : null;
+  const meta = metaDeInstancia(s, opener.cardInstanceId);
   if (!inst || !meta) return;
   const sinReceptorOpener = opener.tipo !== "habilidad" && esArtefactoEquipable(meta) && !inst.equipadoA;
   if (sinReceptorOpener) {
@@ -4977,6 +5022,41 @@ function resolverTrigger(s, ctx, t, modo = "elegido") {
     }
     interpretEffect(s, ctx, inst, efecto, { ...payloadBase(t), cobrarCosto: true, sinEleccion: true, ...contextoUso ? { contextoUso } : {} });
   });
+}
+
+// src/online/game/atributos.ts
+function ultimoCambio(s, instId, atributo) {
+  const lista = s.cambiosAtributo;
+  if (!lista?.length) return void 0;
+  for (let i = lista.length - 1; i >= 0; i--) {
+    if (lista[i].instId === instId && lista[i].atributo === atributo) return lista[i];
+  }
+  return void 0;
+}
+function cambioDe(s, instId, atributo) {
+  return ultimoCambio(s, instId, atributo)?.valor;
+}
+function metaDe(s, instId) {
+  const cardId = s.instances[instId]?.cardId;
+  return cardId ? getCardMeta(cardId) : null;
+}
+function esenciaDe(s, instId) {
+  const cambio = cambioDe(s, instId, "esencia");
+  if (cambio) return cambio;
+  const meta = metaDe(s, instId);
+  return meta && "esencia" in meta ? meta.esencia : void 0;
+}
+function rolesDe(s, instId) {
+  const cambio = cambioDe(s, instId, "rol");
+  if (cambio) return [cambio];
+  const meta = metaDe(s, instId);
+  return meta && "roles" in meta ? meta.roles : void 0;
+}
+function faccionesDe(s, instId) {
+  const cambio = ultimoCambio(s, instId, "faccion");
+  if (cambio) return cambio.valores ?? [cambio.valor];
+  const meta = metaDe(s, instId);
+  return meta && "facciones" in meta ? meta.facciones : void 0;
 }
 
 // src/online/game/scry.ts
@@ -5766,6 +5846,29 @@ function executeCopiaCampeon(s, inst, objetivoId, jugador, efectoData) {
       executeGrantKeyword(s, [inst.cardInstanceId], keyword, duracion, jugador, duracionFase, duracionControlador);
     }
   }
+  if (atributos.includes("faccion")) {
+    const facciones = faccionesDe(s, objetivoId);
+    if (facciones && facciones.length > 0) {
+      aplicarCambioAtributo(s, {
+        instId: inst.cardInstanceId,
+        atributo: "faccion",
+        valor: facciones[0],
+        ...facciones.length > 1 ? { valores: [...facciones] } : {},
+        ...duracionTemporal(efectoData, jugador)
+      });
+    }
+  }
+  if (atributos.includes("efecto")) {
+    const copiables = (meta.efectos ?? []).filter(esEfectoCopiable);
+    if (copiables.length > 0) {
+      aplicarEfectosPrestados(s, {
+        instId: inst.cardInstanceId,
+        origenId: objetivoId,
+        efectos: structuredClone(copiables),
+        ...duracionTemporal(efectoData, jugador)
+      });
+    }
+  }
 }
 function executeBuffDebuff(s, targetIds, stats, duracion, buffPerBlockedEther, efecto, duracionTurnos, caster, duracionFase, duracionControlador) {
   if (!stats) return;
@@ -6051,38 +6154,6 @@ function removeFromCurrentZone(s, targetId, owner) {
   return false;
 }
 
-// src/online/game/atributos.ts
-function cambioDe(s, instId, atributo) {
-  const lista = s.cambiosAtributo;
-  if (!lista?.length) return void 0;
-  for (let i = lista.length - 1; i >= 0; i--) {
-    if (lista[i].instId === instId && lista[i].atributo === atributo) return lista[i].valor;
-  }
-  return void 0;
-}
-function metaDe(s, instId) {
-  const cardId = s.instances[instId]?.cardId;
-  return cardId ? getCardMeta(cardId) : null;
-}
-function esenciaDe(s, instId) {
-  const cambio = cambioDe(s, instId, "esencia");
-  if (cambio) return cambio;
-  const meta = metaDe(s, instId);
-  return meta && "esencia" in meta ? meta.esencia : void 0;
-}
-function rolesDe(s, instId) {
-  const cambio = cambioDe(s, instId, "rol");
-  if (cambio) return [cambio];
-  const meta = metaDe(s, instId);
-  return meta && "roles" in meta ? meta.roles : void 0;
-}
-function faccionesDe(s, instId) {
-  const cambio = cambioDe(s, instId, "faccion");
-  if (cambio) return [cambio];
-  const meta = metaDe(s, instId);
-  return meta && "facciones" in meta ? meta.facciones : void 0;
-}
-
 // src/online/game/habilidades.ts
 function validarActivarArcana(state, action) {
   if (state.fase !== "forja" && state.fase !== "choque" && state.fase !== "ocaso") {
@@ -6106,7 +6177,7 @@ function validarActivarHabilidad(state, action) {
   const inst = state.instances[action.cardInstanceId];
   if (!inst) return "la carta no existe";
   if (!p.campo.campeones.includes(action.cardInstanceId)) return "la carta no est\xE1 en tu campo";
-  const meta = inst.cardId ? getCardMeta(inst.cardId) : null;
+  const meta = metaDeInstancia(state, action.cardInstanceId);
   if (!meta) return "carta desconocida";
   if (efectosNegados(state, action.cardInstanceId)) return "los efectos de esta carta est\xE1n negados";
   const efectoSel = efectoActivableDe(meta, !!action.objetivoId);
@@ -6232,7 +6303,7 @@ function ejecutarActivarArcana(s, action, ctx) {
 }
 function ejecutarActivarHabilidad(s, action, ctx) {
   const inst = s.instances[action.cardInstanceId];
-  const meta = inst.cardId ? getCardMeta(inst.cardId) : null;
+  const meta = metaDeInstancia(s, action.cardInstanceId);
   if (!meta) return;
   const efectoSel = efectoActivableDe(meta, !!action.objetivoId);
   if (!efectoSel) return;
@@ -6486,7 +6557,7 @@ function modificadoresJSONDe(s, id) {
   for (const fuenteId of fuentesCampo) {
     const fuenteInst = s.instances[fuenteId];
     if (!fuenteInst?.cardId) continue;
-    const fuenteMeta = getCardMeta(fuenteInst.cardId);
+    const fuenteMeta = metaDeInstancia(s, fuenteId);
     if (!fuenteMeta) continue;
     if (fuenteMeta.type === "Campe\xF3n" && fuenteMeta.efectoComandante) {
       candidatos.push({ inst: fuenteInst, meta: fuenteMeta, esComandante: true, origen: "campo" });
@@ -6674,7 +6745,7 @@ function triggersQueMatchean(s, trigger, jugador, ids, opts) {
     const inst = s.instances[id];
     const cardId = inst?.cardId;
     if (!inst || !cardId) continue;
-    const meta = getCardMeta(cardId);
+    const meta = metaDeInstancia(s, id);
     if (!meta || !("efectos" in meta)) continue;
     if (meta.type === "V\xEDnculo" && inst.bocaArriba !== true) continue;
     if (opts?.evaluarCondicion !== false && "condicion" in meta) {
@@ -8046,7 +8117,7 @@ function getValidActions(state, playerId) {
   if (cadena) {
     if (cadena.prioridad === playerId) {
       for (const id of respondiblesDe(state, playerId)) {
-        const metaR = state.instances[id]?.cardId ? getCardMeta(state.instances[id].cardId) : null;
+        const metaR = metaDeInstancia(state, id);
         const disparo = metaR?.type === "Campe\xF3n" ? disparoDeRespuesta(metaR) : null;
         const eterIds = disparo ? eterIdsParaHabilidad(state, playerId, disparo.efecto) : null;
         acciones.push(eterIds ? { type: "responder_cadena", cardInstanceId: id, eterIds } : { type: "responder_cadena", cardInstanceId: id });
@@ -8082,7 +8153,7 @@ function getValidActions(state, playerId) {
     for (const champId of p.campo.campeones) {
       if (!champId) continue;
       const inst = state.instances[champId];
-      const meta = inst?.cardId ? getCardMeta(inst.cardId) : null;
+      const meta = metaDeInstancia(state, champId);
       if (!meta) continue;
       if (efectosNegados(state, champId)) continue;
       const efectoAct = efectoActivableDe(meta, false);
