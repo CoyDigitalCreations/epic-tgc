@@ -3051,6 +3051,8 @@ var ESTADO_DE_CAMPO = [
   "efectoUmbralDisparado",
   "tramosDisparados",
   "fijadoExhaustTargetId",
+  "sostenidos",
+  "efectosUmbralDisparados",
   "stolenBy",
   "agotado",
   "bloqueosEsteTurno",
@@ -3184,6 +3186,8 @@ function limpiarFlagsUmbralSiVacia(s, fuenteId) {
   delete inst.copyOneShotDisparado;
   delete inst.tramosDisparados;
   delete inst.fijadoExhaustTargetId;
+  delete inst.sostenidos;
+  delete inst.efectosUmbralDisparados;
 }
 function evaluarFinSteal(s, ctx, fuenteId) {
   const inst = s.instances[fuenteId];
@@ -3213,6 +3217,8 @@ function retornarCampeonesRobados(s, ctx, fuenteId, ladron) {
         delete other.copyOneShotDisparado;
         delete other.tramosDisparados;
         delete other.fijadoExhaustTargetId;
+        delete other.sostenidos;
+        delete other.efectosUmbralDisparados;
         const grupos = liberarEterA(s, eteres, "2A", ladron);
         for (const [jugador, ids] of Object.entries(grupos)) {
           ctx.emit({ type: "eter_reagrupado", jugador, eterIds: ids });
@@ -3300,6 +3306,39 @@ function esEfectoCopiable(efecto) {
   if (efecto.efecto === "copy") return false;
   if (esCostoBloqueo(efecto.costo) || efecto.tramos?.length) return false;
   return true;
+}
+function umbralDeBloqueo(efecto) {
+  return efecto.costo?.umbral ?? (efecto.costo?.tipo === "bloqueo_fijo" ? efecto.costo.cantidad : void 0) ?? 1;
+}
+function esContinuoDeBloqueo(efecto) {
+  return efecto.tipo === "continuo" && esCostoBloqueo(efecto.costo);
+}
+var SISTEMA_PROPIO = /* @__PURE__ */ new Set([
+  "steal_champion",
+  "invocar_y_equipar",
+  "double_attack",
+  "prevent_destroy",
+  "modificar_regla",
+  "direct_attack",
+  "copy",
+  "block_ether",
+  "redirect"
+]);
+var SOSTENIBLES = /* @__PURE__ */ new Set(["buff", "debuff", "grant_keyword"]);
+function claseDeContinuo(efecto) {
+  const accion = efecto.efecto;
+  if (!accion || SISTEMA_PROPIO.has(accion)) return "propio";
+  if (accion === "negar" && efecto.tipoNegacion !== "efecto_activo") return "propio";
+  if (accion === "fix_exhaust") return "sostenido";
+  if (SOSTENIBLES.has(accion) && (efecto.duracion === void 0 || efecto.duracion === "mientras_ester_bloqueado")) return "sostenido";
+  return "instantaneo";
+}
+var SIN_ELECCION = /* @__PURE__ */ new Set(["draw", "scry", "rival_discard", "block_ether", "double_attack"]);
+function eligeObjetivo(efecto) {
+  if (!efecto.efecto || SIN_ELECCION.has(efecto.efecto)) return false;
+  if (efecto.efecto === "negar" && efecto.tipoNegacion !== "efecto_activo") return false;
+  const tipo = efecto.objetivo?.tipo;
+  return !!tipo && !["self", "todos_campeones_propios", "todos_campeones_rivales", "equipped_champion", "rival_hand"].includes(tipo);
 }
 function efectosPrestadosDe(s, instId) {
   const lista = s.efectosPrestados;
@@ -3587,6 +3626,8 @@ function liberarEterBloqueadoCore(s, ctx, cardInstanceId, destino) {
   delete inst.copyOneShotDisparado;
   delete inst.tramosDisparados;
   delete inst.fijadoExhaustTargetId;
+  delete inst.sostenidos;
+  delete inst.efectosUmbralDisparados;
   const fuenteSteal = inst.stolenBy ? s.instances[inst.stolenBy] : void 0;
   const duenoDelEter = fuenteSteal ? fuenteSteal.owner : inst.owner;
   liberarEterA(s, eteres, destino, duenoDelEter);
@@ -5548,9 +5589,17 @@ function dispararUmbralBloqueo(s, ctx, targetInstanceId) {
       }
       continue;
     }
+    if (efecto.costo?.tipo !== "eter_bloqueado" && efecto.costo?.tipo !== "bloqueo_fijo") continue;
+    const conSuCamino = efecto.efecto === "steal_champion" || efecto.efecto === "invocar_y_equipar";
+    if (!conSuCamino) {
+      if (efecto.tipo !== "continuo" || claseDeContinuo(efecto) === "propio") continue;
+      if (bloqueadosEn(idxEfecto) < umbralDeBloqueo(efecto)) continue;
+      if (inst.efectosUmbralDisparados?.includes(idxEfecto)) continue;
+      armarContinuoDeBloqueo(s, ctx, inst, efecto, idxEfecto);
+      continue;
+    }
     const umbral = efecto.costo?.cantidad;
     if (!umbral) continue;
-    if (efecto.costo?.tipo !== "eter_bloqueado" && efecto.costo?.tipo !== "bloqueo_fijo") continue;
     if (bloqueadosEn(idxEfecto) < umbral) continue;
     if (inst.efectoUmbralDisparado) continue;
     if (efecto.efecto === "steal_champion") {
@@ -5571,6 +5620,43 @@ function dispararUmbralBloqueo(s, ctx, targetInstanceId) {
     inst.efectoUmbralDisparado = true;
     ejecutarInvocarEquiparUmbral(s, ctx, inst, efecto, inst.owner);
   }
+}
+function armarContinuoDeBloqueo(s, ctx, inst, efecto, idxEfecto) {
+  const clase = claseDeContinuo(efecto);
+  if (clase === "sostenido" && efecto.efecto !== "fix_exhaust" && !eligeObjetivo(efecto)) return;
+  const marcar = () => {
+    inst.efectosUmbralDisparados = [...inst.efectosUmbralDisparados ?? [], idxEfecto];
+  };
+  if (clase === "sostenido" || eligeObjetivo(efecto)) {
+    const opciones = efecto.objetivo ? resolveTargets(s, objetivoCompleto(efecto), inst.owner, inst.cardInstanceId) : [];
+    if (opciones.length === 0) return;
+    marcar();
+    s.objetivosPendientes = [
+      { jugador: inst.owner, instId: inst.cardInstanceId, trigger: "al-bloquear-eter", opciones, efectoUmbralIdx: idxEfecto },
+      ...s.objetivosPendientes ?? []
+    ];
+    return;
+  }
+  marcar();
+  interpretEffect(s, ctx, inst, efecto, { jugador: inst.owner, fromTrigger: true, costoPagado: true });
+}
+function resolverUmbralElegido(s, ctx, fuenteId, efectoIdx, objetivoId) {
+  const inst = s.instances[fuenteId];
+  const meta = inst?.cardId ? getCardMeta(inst.cardId) : null;
+  const efecto = meta && "efectos" in meta ? meta.efectos?.[efectoIdx] : void 0;
+  if (!inst || !efecto) return;
+  if (efectosNegados(s, fuenteId)) return;
+  if (eterDeEfecto(s, fuenteId, efectoIdx).length < umbralDeBloqueo(efecto)) return;
+  if (claseDeContinuo(efecto) === "sostenido") {
+    if (efecto.efecto === "fix_exhaust") {
+      inst.fijadoExhaustTargetId = objetivoId;
+      ctx.emit({ type: "exhaust_fijado", jugador: inst.owner, campeonId: objetivoId, fuenteId });
+      return;
+    }
+    inst.sostenidos = [...inst.sostenidos ?? [], { efectoIdx, objetivoId }];
+    return;
+  }
+  interpretEffect(s, ctx, inst, efecto, { jugador: inst.owner, contextoUso: "objetivo-elegido", objetivoId, costoPagado: true });
 }
 function canExecuteSteal(s, jugador) {
   return s.players[jugador].campo.campeones.includes(null);
@@ -5627,7 +5713,11 @@ function exhaustFijado(s, champId) {
       if (!meta || !("efectos" in meta) || !meta.efectos) continue;
       const efecto = meta.efectos.find((e) => e.tramos?.some((t) => t.efecto === "fix_exhaust"));
       const tramo = efecto?.tramos?.find((t) => t.efecto === "fix_exhaust");
-      if (!tramo) continue;
+      if (!tramo) {
+        const idxRaiz = meta.efectos.findIndex((e) => e.efecto === "fix_exhaust" && !e.tramos?.length);
+        if (idxRaiz !== -1 && !efectosNegados(s, id) && eterDeEfecto(s, id, idxRaiz).length >= umbralDeBloqueo(meta.efectos[idxRaiz])) return true;
+        continue;
+      }
       if ((fuente.eterBloqueado?.length ?? 0) >= tramo.umbral) return true;
     }
   }
@@ -5809,6 +5899,8 @@ function cancelarEstadoEnCurso(s, ctx, instId, meta) {
   const inst = s.instances[instId];
   if (!inst) return;
   delete inst.fijadoExhaustTargetId;
+  delete inst.sostenidos;
+  delete inst.efectosUmbralDisparados;
   const roboContinuo = "efectos" in meta && !!meta.efectos?.some((e) => e.efecto === "steal_champion" && e.duracion === "mientras_ester_bloqueado");
   if (roboContinuo) {
     const ladron = s.players.A.campo.campeones.includes(instId) ? "A" : "B";
@@ -5993,6 +6085,8 @@ function executeStealChampion(s, ctx, targetIds, jugador, inst) {
       delete targetInst.copyOneShotDisparado;
       delete targetInst.tramosDisparados;
       delete targetInst.fijadoExhaustTargetId;
+      delete targetInst.sostenidos;
+      delete targetInst.efectosUmbralDisparados;
       const grupos = liberarEterA(s, eteres, "2A", targetInst.owner);
       for (const [pagador, ids] of Object.entries(grupos)) {
         ctx.emit({ type: "eter_reagrupado", jugador: pagador, eterIds: ids });
@@ -6386,6 +6480,8 @@ function ejecutarElegirObjetivo(s, action, ctx) {
     equiparComoRespuesta(s, ctx, pendiente, action.objetivoId);
   } else if (pendiente.opener) {
     registrarObjetivoOpener(s, pendiente, action.objetivoId);
+  } else if (pendiente.efectoUmbralIdx !== void 0) {
+    resolverUmbralElegido(s, ctx, pendiente.instId, pendiente.efectoUmbralIdx, action.objetivoId);
   } else if (pendiente.tramoUmbral !== void 0) {
     ejecutarTramo(s, ctx, pendiente.instId, pendiente.tramoUmbral, action.objetivoId);
   } else {
@@ -6408,11 +6504,18 @@ function esAuraZona(efecto) {
   return (efecto.tipo === "pasivo" || efecto.tipo === "reserva" || efecto.tipo === "bloqueo") && sinTriggerDeEvento;
 }
 function esAuraCondicionada(efecto) {
-  if (efecto.tipo === "disparo" || efecto.tipo === "continuo") return false;
-  if (efecto.duracion !== "mientras_ester_bloqueado") return false;
+  if (efecto.tipo === "disparo") return false;
+  if (efecto.tipo === "continuo") {
+    if (!esContinuoDeBloqueo(efecto) || claseDeContinuo(efecto) !== "sostenido" || eligeObjetivo(efecto)) return false;
+  } else if (efecto.duracion !== "mientras_ester_bloqueado") {
+    return false;
+  }
   if (!esEfectoStat(efecto)) return false;
   const t = efecto.objetivo?.tipo;
-  return t === "todos_campeones_propios" || t === "self";
+  return t === "todos_campeones_propios" || t === "todos_campeones_rivales" || t === "self";
+}
+function exigeEterBloqueado(efecto) {
+  return efecto.duracion === "mientras_ester_bloqueado" || esContinuoDeBloqueo(efecto);
 }
 function esAuraEquipada(efecto) {
   if (efecto.efecto !== "buff" && efecto.efecto !== "debuff") return false;
@@ -6445,6 +6548,9 @@ function statsBaseDe(s, id) {
   }
   return { poder, resistencia };
 }
+function esAuraContraRivales(efecto) {
+  return efecto.objetivo?.tipo === "todos_campeones_rivales" && (esAuraZona(efecto) || esAuraCondicionada(efecto));
+}
 function evaluarAura(s, efecto, fuente, esComandante, objetivoId, objetivoInst, origen) {
   const objetivo = efecto.objetivo;
   if (!objetivo) return null;
@@ -6465,6 +6571,9 @@ function evaluarAura(s, efecto, fuente, esComandante, objetivoId, objetivoInst, 
         }
       }
       excluirSelf = !esComandante && origen === "campo" && esAuraZona(efecto) && !esAuraCondicionada(efecto);
+      break;
+    case "todos_campeones_rivales":
+      aplica = !mismoDueno;
       break;
     case "campeon":
       if (objetivo.controlador === "propio") aplica = mismoDueno;
@@ -6510,7 +6619,7 @@ function evaluarAura(s, efecto, fuente, esComandante, objetivoId, objetivoInst, 
   if (origen === "bloqueo") {
     if (!(objetivoInst.eterBloqueado ?? []).includes(fuente.cardInstanceId)) return null;
   }
-  if (efecto.duracion === "mientras_ester_bloqueado" && origen !== "bloqueo") {
+  if (exigeEterBloqueado(efecto) && origen !== "bloqueo") {
     if ((fuente.eterBloqueado?.length ?? 0) === 0) return null;
   }
   let escala = 1;
@@ -6526,6 +6635,9 @@ function evaluarAura(s, efecto, fuente, esComandante, objetivoId, objetivoInst, 
       escala = efecto.cantidadMax !== void 0 ? Math.min(bloqueadosRival, efecto.cantidadMax) : bloqueadosRival;
     }
   }
+  return contribucionDeEfecto(efecto, escala);
+}
+function contribucionDeEfecto(efecto, escala = 1) {
   const signo = efecto.efecto === "debuff" && !statsDebuffYaNegativos(efecto) ? -1 : 1;
   const resultado = {};
   if (efecto.stats?.ATQ) resultado.poder = efecto.stats.ATQ * signo * escala;
@@ -6534,6 +6646,28 @@ function evaluarAura(s, efecto, fuente, esComandante, objetivoId, objetivoInst, 
     resultado.keywords = [efecto.keyword];
   }
   return resultado;
+}
+function aportesSostenidos(s, objetivoId) {
+  const total = { poder: 0, resistencia: 0, keywords: [] };
+  for (const j of ["A", "B"]) {
+    for (const fuenteId of s.players[j].campo.campeones) {
+      const fuente = fuenteId ? s.instances[fuenteId] : void 0;
+      if (!fuenteId || !fuente?.sostenidos?.length || !fuente.cardId) continue;
+      const meta = getCardMeta(fuente.cardId);
+      if (!meta || !("efectos" in meta) || !meta.efectos) continue;
+      for (const { efectoIdx, objetivoId: elegido } of fuente.sostenidos) {
+        const efecto = meta.efectos[efectoIdx];
+        if (elegido !== objetivoId || !efecto || !esEfectoStat(efecto)) continue;
+        if (efectosNegados(s, fuenteId)) continue;
+        if (eterDeEfecto(s, fuenteId, efectoIdx).length < umbralDeBloqueo(efecto)) continue;
+        const aporte = contribucionDeEfecto(efecto);
+        total.poder += aporte.poder ?? 0;
+        total.resistencia += aporte.resistencia ?? 0;
+        if (aporte.keywords) total.keywords.push(...aporte.keywords);
+      }
+    }
+  }
+  return total;
 }
 function statsDebuffYaNegativos(efecto) {
   const atq = efecto.stats?.ATQ ?? 0;
@@ -6564,6 +6698,17 @@ function modificadoresJSONDe(s, id) {
     }
     if ("efectos" in fuenteMeta && fuenteMeta.efectos?.some((e) => esAuraZona(e) || esAuraCondicionada(e) || esAuraEquipada(e))) {
       candidatos.push({ inst: fuenteInst, meta: fuenteMeta, esComandante: false, origen: "campo" });
+    }
+  }
+  const rivalDelObjetivo = owner === "A" ? "B" : "A";
+  const campoRival = s.players[rivalDelObjetivo].campo;
+  for (const fuenteId of [...campoRival.campeones, ...campoRival.misticasTacticas, ...campoRival.arcanasCombate]) {
+    if (!fuenteId) continue;
+    const fuenteInst = s.instances[fuenteId];
+    const fuenteMeta = fuenteInst?.cardId ? metaDeInstancia(s, fuenteId) : null;
+    if (!fuenteInst || !fuenteMeta || !("efectos" in fuenteMeta)) continue;
+    if (fuenteMeta.efectos?.some(esAuraContraRivales)) {
+      candidatos.push({ inst: fuenteInst, meta: fuenteMeta, esComandante: false, origen: "campo", soloRivales: true });
     }
   }
   for (const eterOwner of ["A", "B"]) {
@@ -6613,7 +6758,9 @@ function modificadoresJSONDe(s, id) {
         if (c.origen === "reserva" && e.tipo === "reserva" && esAuraZona(e)) efectos.push(e);
         else if (c.origen === "bloqueo" && e.tipo === "bloqueo" && esAuraZona(e)) efectos.push(e);
         else if (c.origen === "vinculo" && e.tipo === "vinculo" && esAuraVinculo(e)) efectos.push(e);
-        else if (c.origen === "campo" && !negada && (esAuraZona(e) || esAuraCondicionada(e) || esAuraEquipada(e))) efectos.push(e);
+        else if (c.origen === "campo" && !negada && c.soloRivales) {
+          if (esAuraContraRivales(e)) efectos.push(e);
+        } else if (c.origen === "campo" && !negada && (esAuraZona(e) || esAuraCondicionada(e) || esAuraEquipada(e))) efectos.push(e);
       }
     }
     for (const efecto of efectos) {
@@ -6624,6 +6771,10 @@ function modificadoresJSONDe(s, id) {
       if (resultado.keywords) keywords.push(...resultado.keywords);
     }
   }
+  const sostenidos = aportesSostenidos(s, id);
+  poder += sostenidos.poder;
+  resistencia += sostenidos.resistencia;
+  keywords.push(...sostenidos.keywords);
   return { poder, resistencia, keywords: [...new Set(keywords)] };
 }
 function condicionCumple(s, condicion, jugador) {
@@ -7184,6 +7335,12 @@ function opcionesVigentes(s, p) {
     const tramo = raiz?.tramos?.find((t) => t.umbral === p.tramoUmbral);
     if (!raiz?.objetivo || !tramo) return vivas;
     const candidatos2 = resolveTargets(s, { ...raiz.objetivo, filtros: { ...raiz.objetivo.filtros, ...tramo.filtros } }, fuente.owner);
+    return vivas.filter((id) => candidatos2.includes(id));
+  }
+  if (p.efectoUmbralIdx !== void 0) {
+    const raiz = efectos[p.efectoUmbralIdx];
+    if (!raiz?.objetivo) return vivas;
+    const candidatos2 = resolveTargets(s, objetivoCompleto(raiz), fuente.owner, p.instId);
     return vivas.filter((id) => candidatos2.includes(id));
   }
   const armadores = p.opener ? [efectos[p.opener.efectoIdx]].filter((e) => !!e?.objetivo && e.objetivo.tipo !== "self") : efectos.filter((e) => !!e.objetivo && e.objetivo.tipo !== "self" && claveTrigger(e) === p.trigger);
