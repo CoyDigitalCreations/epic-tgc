@@ -174,8 +174,6 @@ const VALIDADORES: Record<GameEvent['type'], (e: GameEvent) => boolean> = {
     e.type === 'exhaust_fijado' && esJugador(e.jugador) && esId(e.campeonId) && esId(e.fuenteId),
   eter_reagrupado: (e) =>
     e.type === 'eter_reagrupado' && esJugador(e.jugador) && Array.isArray(e.eterIds) && e.eterIds.every(esId),
-  eter_movido: (e) =>
-    e.type === 'eter_movido' && esJugador(e.jugador) && esId(e.cardInstanceId) && typeof e.destino === 'string',
   mazo_agotado: (e) => e.type === 'mazo_agotado' && esJugador(e.jugador),
   mulligan_realizado: (e) => e.type === 'mulligan_realizado' && esJugador(e.jugador),
   rendicion: (e) => e.type === 'rendicion' && esJugador(e.jugador),

@@ -28,8 +28,7 @@ const base = {
 }
 const campeon = (id: string, efectos: unknown[] = [], facciones: string[] = ['Orden'], extra: Record<string, unknown> = {}): AnyCard =>
   ({ ...base, id, name: id, type: 'Campeón', keywords: [], facciones, stats: { cost: 2, poder: 2, resistencia: 2 }, efectos, ...extra }) as never
-const RIVAL = { tipo: 'campeon', controlador: 'rival', zona: 'campo' }
-const COPIA = (atributos: string[]): EfectoData =>
+const COPIA =(atributos: string[]): EfectoData =>
   ({ tipo: 'pasivo', efecto: 'copy', trigger: 'al_invocar', duracion: 'turno', copyAttributes: atributos as never, objetivo: { tipo: 'campeon', controlador: 'rival', zona: 'campo' } })
 
 const DISPARO = { tipo: 'disparo', efecto: 'destroy', objetivo: { tipo: 'mistica', controlador: 'rival', zona: 'campo' }, costo: { tipo: 'eter', cantidad: 1 } }

@@ -16,7 +16,7 @@ import { efectosNegados } from '../reglas'
 import { aplicarCambioAtributo, aplicarReglaTemporal } from '../reglasTemporales'
 import type { AnyCard, EfectoData } from '../../../shared/types'
 import type { GameState } from '../types'
-import { cargarCartasPrueba, conCampeon, conMazo, crearCtx, enCementerio, escenaVacia } from './helpers/cartasPrueba'
+import { cargarCartasPrueba, conCampeon, conMazo, crearCtx, escenaVacia } from './helpers/cartasPrueba'
 
 const base = {
   rarity: 'Común' as const, flavorText: '', paqueteId: 'test', limiteCopias: '3' as const,
