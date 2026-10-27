@@ -8,6 +8,7 @@ import { validarBloqueo, bloquearEter } from './payments'
 import { dispararUmbralBloqueo } from './effectInterpreter'
 import type { Action } from './core'
 import { cadenaActiva } from './chain'
+import { efectoBloqueoAccion, getCardMeta } from './cards'
 
 /* ─────────────────────── Validador ─────────────────────── */
 
@@ -39,6 +40,9 @@ export function validarBloquearEter(state: GameState, action: Extract<Action, { 
 /** Bloqueo: 2A → target.eterBloqueado. Tras bloquear, chequea one-shot de umbral (FB-032). */
 export function ejecutarBloquearEter(s: GameState, action: Extract<Action, { type: 'bloquear_eter' }>, ctx: Ctx): void {
   bloquearEter(s, ctx, actorDeBloqueo(s), action.eterIds, action.targetInstanceId, action.efectoIdx)
-  // Fase 3a Phase D: one-shot al alcanzar umbral de costo-bloqueado
-  dispararUmbralBloqueo(s, ctx, action.targetInstanceId)
+  // Fase B: la acción es UNA activación del efecto que pagó (mismo resolutor que el validador: explícito o el primero costo-bloqueo)
+  const meta = getCardMeta(s.instances[action.targetInstanceId]?.cardId ?? '')
+  const activacionIdx = action.efectoIdx ?? (meta ? efectoBloqueoAccion(meta)?.indice : undefined)
+  // Fase 3a Phase D: disparo por umbral (eter_bloqueado) o por activación (bloqueo_fijo)
+  dispararUmbralBloqueo(s, ctx, action.targetInstanceId, activacionIdx)
 }

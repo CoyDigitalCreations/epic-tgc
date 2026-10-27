@@ -7,7 +7,7 @@ import { faccionesDe } from './atributos'
 import { getCardMeta, efectoActivableDe, esCostoBloqueo, esArtefactoEquipable, campeonElegibleBloqueoEter, faccionesCompartidas } from './cards'
 import type { AnyCard, EfectoData } from '../../shared/types'
 import { validarPago, aplicarPago, type ContextoUso } from './payments'
-import { etiquetarEter } from './eter'
+import { etiquetarEterExterno } from './eter'
 import { dispararTrigger, pasivosBloqueo1A, type TriggerEfecto } from './efectos'
 import { interpretEffect, ejecutarTramo, resolverUmbralElegido } from './effectInterpreter'
 import { electorAjeno, opcionesVigentes } from './pendientes'
@@ -156,7 +156,7 @@ export function parejasBloqueoOpcion(s: GameState, jugador: PlayerId): ParejaBlo
     for (const eterId of p.eterReserva) {
       const metaE = s.instances[eterId]?.cardId ? getCardMeta(s.instances[eterId]!.cardId!) : null
       if (!metaE || !faccionesCompartidas(faccionesDe(s, eterId), faccionesDe(s, campeonId))) continue
-      if (validarBloqueo(s, jugador, [eterId], campeonId) !== null) continue
+      if (validarBloqueo(s, jugador, [eterId], campeonId, undefined, { externo: true }) !== null) continue
       parejas.push({ campeonId, eterId })
     }
   }
@@ -370,15 +370,11 @@ export function ejecutarElegirOpcion(s: GameState, action: Extract<Action, { typ
   instCampeon.eterBloqueado = [...(instCampeon.eterBloqueado ?? []), elegido.eterId]
   const eterIdx = p.eterReserva.indexOf(elegido.eterId)
   if (eterIdx !== -1) p.eterReserva.splice(eterIdx, 1)
-  // Fase 2: filiación — el continuo costo-bloqueo del campeón es la fuente
-  // (mismo predicado que campeonElegibleBloqueoEter) y j lo pagó.
-  const metaElegido = s.instances[elegido.targetInstanceId]?.cardId
-    ? getCardMeta(s.instances[elegido.targetInstanceId]!.cardId!)
-    : null
-  const idxFuente = metaElegido && 'efectos' in metaElegido && metaElegido.efectos
-    ? metaElegido.efectos.findIndex((e) => e.tipo === 'continuo' && esCostoBloqueo(e.costo))
-    : -1
-  etiquetarEter(s, [elegido.eterId], elegido.targetInstanceId, idxFuente, j)
+  // Éter EXTERNO: lo bloqueó el Pasivo 1A de OTRA carta (FB-005/DS-006), no un
+  // efecto del Campeón. Va con la clave `#ext`: no cuenta como propio (no libera
+  // el reagrupar de Alba del Campeón ni ocupa su cupo «hasta N»), pero sí suma
+  // para umbrales/tramos de eter_bloqueado (eterQueCuenta). j lo pagó (§7.8).
+  etiquetarEterExterno(s, [elegido.eterId], elegido.targetInstanceId, j)
   ctx.emit({ type: 'eter_bloqueado', jugador: j, eterIds: [elegido.eterId], campeonId: elegido.targetInstanceId })
 
   // Marcar opción usada en el Éter Pasivo

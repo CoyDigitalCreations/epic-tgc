@@ -23,7 +23,7 @@ import type { EfectoData } from '../../shared/types'
 import { getCardMeta } from './cards'
 import { keywordsDe } from './efectos'
 import { efectosPrestadosDe } from './efectosInstancia'
-import { eterDeEfecto } from './eter'
+import { contarEterUmbral } from './eter'
 import type { CardInstance, GameState, PlayerId } from './types'
 
 /** Reglas cuyo valor base es un número / un booleano (para que el tipo de retorno sea exacto). */
@@ -132,7 +132,7 @@ function efectoActivo(s: GameState, f: FuenteRegla, efecto: EfectoData, indice: 
       const pagaConBloqueo = costo?.tipo === 'eter_bloqueado' || costo?.tipo === 'bloqueo_fijo'
       if (pagaConBloqueo || efecto.duracion === 'mientras_ester_bloqueado') {
         const requerido = costo?.umbral ?? (costo?.tipo === 'bloqueo_fijo' ? costo.cantidad : undefined) ?? 1
-        return eterDeEfecto(s, f.inst.cardInstanceId, indice).length >= requerido
+        return contarEterUmbral(s, f.inst.cardInstanceId, indice, efecto) >= requerido
       }
       return true
     }

@@ -163,6 +163,7 @@ export function ejecutarPasarTurno(s: GameState, ctx: Ctx): void {
   for (const inst of Object.values(s.instances)) {
     if (inst.entradaEsteTurno) delete inst.entradaEsteTurno
     if (inst.bloqueosEsteTurno) delete inst.bloqueosEsteTurno
+    if (inst.efectosUsadosEsteTurno) delete inst.efectosUsadosEsteTurno // Fase B: «una vez por turno» se reinicia
   }
   delete s.rupturasEsteTurno
   // F5h: la cola de objetivos pendientes solo vive hasta el Ocaso del turno en que se armó (pendientes.ts)

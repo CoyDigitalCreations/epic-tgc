@@ -7,7 +7,7 @@ import { purgarReglasHastaFase, purgarReglasTemporales } from './reglasTemporale
 import { faccionesDe } from './atributos'
 import { efectosNegados } from './reglas'
 import { claseDeContinuo, eligeObjetivo, esContinuoDeBloqueo, metaDeInstancia, umbralDeBloqueo } from './efectosInstancia'
-import { eterDeEfecto } from './eter'
+import { contarEterUmbral } from './eter'
 import type { CondicionEfecto, EfectoData } from '../../shared/types'
 
 /**
@@ -413,7 +413,7 @@ function aportesSostenidos(s: GameState, objetivoId: string): { poder: number; r
         const efecto = meta.efectos[efectoIdx]
         if (elegido !== objetivoId || !efecto || !esEfectoStat(efecto)) continue
         if (efectosNegados(s, fuenteId)) continue
-        if (eterDeEfecto(s, fuenteId, efectoIdx).length < umbralDeBloqueo(efecto)) continue
+        if (contarEterUmbral(s, fuenteId, efectoIdx, efecto) < umbralDeBloqueo(efecto)) continue
         const aporte = contribucionDeEfecto(efecto)
         total.poder += aporte.poder ?? 0
         total.resistencia += aporte.resistencia ?? 0

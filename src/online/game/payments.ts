@@ -176,7 +176,11 @@ export function validarBloqueo(
   eterIds: string[],
   targetInstanceId: string,
   efectoIdx?: number,
+  opciones?: { externo?: boolean },
 ): string | null {
+  // Decisión A (Pasivo 1A ajeno, FB-005/DS-006): un Éter EXTERNO se bloquea desde la
+  // Reserva y NO ocupa el cupo ni el pago exacto de la carta («bloqueo fijo» o «hasta N»).
+  const externo = opciones?.externo === true
   const inst = state.instances[targetInstanceId]
   if (!inst) return 'la carta no existe'
   const p = state.players[jugador]
@@ -212,12 +216,20 @@ export function validarBloqueo(
     ? eterDeEfecto(state, targetInstanceId, fuente.indice).length
     : (inst.eterBloqueado?.length ?? 0)
   const total = actuales + eterIds.length
-  if (fijo) {
-    if (total !== maxEter) {
-      return `bloqueo fijo: debes bloquear exactamente ${maxEter} Éter(es) en esta carta (ya tiene ${actuales}, seleccionaste ${eterIds.length})`
+  if (!externo) {
+    // Fase B: bloqueo_fijo = N EXACTOS POR ACTIVACIÓN (cada acción es una activación, repetible).
+    // Ya no se mide contra el total acumulado: 8 Éter = 2 activaciones de 4.
+    if (fijo) {
+      if (eterIds.length !== maxEter) {
+        return `bloqueo fijo: debes bloquear exactamente ${maxEter} Éter(es) por activación (seleccionaste ${eterIds.length})`
+      }
+      // «Una vez por turno» (opcional, Fase B): la misma activación del mismo efecto no se repite este turno
+      if (fuente && fuente.efecto.unaVezPorTurno && (inst.efectosUsadosEsteTurno ?? []).includes(fuente.indice)) {
+        return 'ya usaste este efecto este turno (una vez por turno)'
+      }
+    } else if (total > maxEter) {
+      return `máximo ${maxEter} Éter(es) bloqueado(s) en esta carta (ya tiene ${actuales})`
     }
-  } else if (total > maxEter) {
-    return `máximo ${maxEter} Éter(es) bloqueado(s) en esta carta (ya tiene ${actuales})`
   }
 
   for (const id of eterIds) {
@@ -225,7 +237,8 @@ export function validarBloqueo(
     const eterMeta = eterInst?.cardId ? getCardMeta(eterInst.cardId) : null
     if (!eterInst || !eterMeta || !esEter(eterMeta)) return `no es un Éter: ${id}`
     // Fase 2 (c): zona de ORIGEN del pago — 'reserva' (2A) o 'pagado' (1A)
-    const origenPagado = fuente?.efecto.costo?.origen === 'pagado'
+    // El externo lo paga el Pasivo 1A desde la Reserva (nunca desde 1A)
+    const origenPagado = !externo && fuente?.efecto.costo?.origen === 'pagado'
     const zonaOrigen = origenPagado ? p.eterPagado : p.eterReserva
     if (!zonaOrigen.includes(id)) {
       return origenPagado ? `el Éter no está en tu Éter Pagado (1A): ${id}` : `el Éter no está en tu Reserva: ${id}`
@@ -303,6 +316,10 @@ export function bloquearEter(
     if (idx !== -1) zonaOrigen.splice(idx, 1)
   }
   etiquetarEter(s, eterIds, targetInstanceId, fuente?.indice ?? -1, jugador)
+  // Fase B: «una vez por turno» se GASTA al pagar (aunque la activación luego sea negada)
+  if (fuente?.efecto.costo?.tipo === 'bloqueo_fijo' && fuente.efecto.unaVezPorTurno) {
+    instTarget.efectosUsadosEsteTurno = [...(instTarget.efectosUsadosEsteTurno ?? []), fuente.indice]
+  }
   // campeonId = id de instancia target (Campeón o Artefacto) — ver events.ts
   ctx.emit({ type: 'eter_bloqueado', jugador, eterIds, campeonId: targetInstanceId })
   return null

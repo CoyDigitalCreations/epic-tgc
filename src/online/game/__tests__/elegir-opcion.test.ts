@@ -8,8 +8,8 @@ import { reagruparEter } from '../payments'
 import type { Ctx, GameState, PlayerId } from '../types'
 
 // Pasivo 1A (FB-005 Voz de las Casas): "bloquea 1 Éter de tu Reserva sobre un Campeón".
-// Cassandra FB-016 bloquea "hasta N" Éter (acepta 1 suelto). Aurora FB-010 es de bloqueo FIJO (exige 4 juntos):
-// el Pasivo no puede cumplirlo con 1 Éter. Vaela FB-011 no usa Éter bloqueado.
+// Cassandra FB-016 bloquea "hasta N" Éter (acepta 1 suelto). Aurora FB-010 es de bloqueo FIJO (4 propios exactos),
+// pero DECISIÓN A: el Éter del Pasivo entra como EXTERNO y no le exige los 4 juntos. Vaela FB-011 no usa Éter bloqueado.
 const CASSANDRA = 'FB-016'
 const AURORA = 'FB-010'
 const VAELA = 'FB-011'
@@ -61,11 +61,12 @@ function escenario(): GameState {
 }
 
 describe('Pasivo 1A — elegir_opcion con pareja Campeón + Éter', () => {
-  it('parejasBloqueoOpcion lista solo Campeones que aceptan 1 Éter × Éteres de la Reserva', () => {
+  it('parejasBloqueoOpcion lista Campeones con efecto de Éter bloqueado (incl. bloqueo fijo, decisión A) × Reserva', () => {
     const parejas = parejasBloqueoOpcion(escenario(), 'A')
-    expect(new Set(parejas.map((p) => p.campeonId))).toEqual(new Set(['cass1', 'cass2']))
+    expect(new Set(parejas.map((p) => p.campeonId))).toEqual(new Set(['aurora', 'cass1', 'cass2']))
     expect(parejas).toContainEqual({ campeonId: 'cass2', eterId: 'e3' })
-    expect(parejas.some((p) => p.campeonId === 'aurora' || p.campeonId === 'vaela')).toBe(false)
+    expect(parejas).toContainEqual({ campeonId: 'aurora', eterId: 'e1' })
+    expect(parejas.some((p) => p.campeonId === 'vaela')).toBe(false)
   })
 
   it('con pareja: bloquea ESE Éter sobre ESE Campeón (no el primero)', () => {
@@ -87,9 +88,15 @@ describe('Pasivo 1A — elegir_opcion con pareja Campeón + Éter', () => {
     expect(r.state.instances[primera.campeonId].eterBloqueado).toEqual([primera.eterId])
   })
 
+  it('con pareja Aurora (bloqueo fijo): el Éter externo entra sin exigir los 4 juntos (decisión A)', () => {
+    const r = applyAction(escenario(), { type: 'elegir_opcion', opcionId: 'pasivo', campeonId: 'aurora', eterId: 'e1' }, crearCtx())
+    expect(r.ok).toBe(true)
+    if (!r.ok) return
+    expect(r.state.instances.aurora.eterBloqueado).toEqual(['e1'])
+  })
+
   it.each([
     ['Campeón que no usa Éter bloqueado (Vaela)', { campeonId: 'vaela', eterId: 'e1' }],
-    ['Campeón de bloqueo fijo (Aurora exige 4 juntos)', { campeonId: 'aurora', eterId: 'e1' }],
     ['Éter que no está en la Reserva', { campeonId: 'cass1', eterId: 'pasivo' }],
     ['Campeón inexistente', { campeonId: 'nadie', eterId: 'e1' }],
   ])('rechaza una pareja inválida: %s', (_nombre, pareja) => {
@@ -104,12 +111,19 @@ describe('Pasivo 1A — elegir_opcion con pareja Campeón + Éter', () => {
 })
 
 describe('Pasivo 1A — la opción solo se ofrece si hay algo que elegir', () => {
-  it('con solo Campeones de bloqueo fijo (Aurora) no hay pareja: no se crea la opción', () => {
+  it('sin Campeón elegible (solo Vaela) no hay pareja: no se crea la opción', () => {
     const s = escenario()
-    s.players.A.campo.campeones = ['aurora', null, null, 'vaela', null]
+    s.players.A.campo.campeones = ['vaela', null, null, null, null]
     s.opcionesPendientes = []
     expect(crearOpcionBloqueo(s, 'A', 'pasivo')).toBe(false)
     expect(s.opcionesPendientes).toEqual([])
+  })
+
+  it('con solo Aurora (bloqueo fijo) SÍ hay pareja externa: la opción se crea (decisión A)', () => {
+    const s = escenario()
+    s.players.A.campo.campeones = ['aurora', null, null, 'vaela', null]
+    s.opcionesPendientes = []
+    expect(crearOpcionBloqueo(s, 'A', 'pasivo')).toBe(true)
   })
 
   it('con una Cassandra en mesa sí se crea', () => {
@@ -149,10 +163,14 @@ describe('Pasivo 1A — habilidad del turno mientras la carta de Éter está en 
     expect(applyAction(s, { type: 'elegir_opcion', opcionId: 'pasivo' }, crearCtx()).ok).toBe(false)
   })
 
-  it('no se ofrece sin Campeón que acepte 1 Éter ni sin Éter en la Reserva', () => {
+  it('no se ofrece sin Campeón que acepte Éter ni sin Éter en la Reserva', () => {
+    const sinElegible = escenario()
+    sinElegible.players.A.campo.campeones = ['vaela', null, null, null, null]
+    expect(ofrecida(sinElegible)).toBe(false)
+
     const soloAurora = escenario()
     soloAurora.players.A.campo.campeones = ['aurora', null, null, 'vaela', null]
-    expect(ofrecida(soloAurora)).toBe(false)
+    expect(ofrecida(soloAurora)).toBe(true) // decisión A: Aurora acepta el externo
 
     const sinEter = escenario()
     sinEter.players.A.eterReserva = []

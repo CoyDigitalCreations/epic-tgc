@@ -132,6 +132,12 @@ export interface CardInstance {
   /** Bloqueos que este Campeón ya hizo en el turno en curso (regla `bloqueosPorTurno`, §9.3). Se borra al terminar el turno. */
   bloqueosEsteTurno?: number
   /**
+   * Fase B: índices (en `efectos[]`) de los efectos `bloqueo_fijo` con `unaVezPorTurno` que ya
+   * se activaron este turno. Se gasta al pagar; se borra al terminar el turno (partida.ts) y al
+   * cambiar de zona (ESTADO_DE_CAMPO).
+   */
+  efectosUsadosEsteTurno?: number[]
+  /**
    * Activación diferida (§5.5, C4): la carta entró al campo ESTE turno.
    * Tácticas/Arcanas recién colocadas NO pueden responder en la cadena 9.6
    * (solo las de turnos anteriores); la Alba del dueño lo borra (phases.ts).
@@ -214,8 +220,9 @@ export interface CardInstance {
    opcionUsadaEsteTurno?: boolean
     /** ID del campeón al que está equipada esta carta (ARTEFACTO). Si el campeón sale, la carta va al cementerio. */
     equipadoA?: string
-    /** ID del campeón que fue invocado por esta carta (invocar_y_equipar). Si esta carta sale, el campeón también. */
-    vinculadoA?: string
+    /** IDs de los campeones invocados por esta carta (invocar_y_equipar). Si esta carta sale, todos ellos también
+     * (un bloqueo_fijo repetido invoca uno por activación). */
+    vinculadoA?: string[]
 }
 
 export interface PlayerState {

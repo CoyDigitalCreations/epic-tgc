@@ -28,7 +28,7 @@ export function aplicarReglaTemporal(s: GameState, regla: Omit<ReglaTemporal, 'o
 const ESTADO_DE_CAMPO = [
   'poder', 'resistencia', 'modificadores', 'keywords', 'keywordsTemporales', 'keywordsHastaFase', 'copyTargetId',
   'copyOneShotDisparado', 'efectoUmbralDisparado', 'tramosDisparados', 'fijadoExhaustTargetId', 'sostenidos', 'efectosUmbralDisparados', 'stolenBy',
-  'agotado', 'bloqueosEsteTurno', 'opcionUsadaEsteTurno', 'destruccionPendiente',
+  'agotado', 'bloqueosEsteTurno', 'efectosUsadosEsteTurno', 'opcionUsadaEsteTurno', 'destruccionPendiente',
 ] as const
 
 /**

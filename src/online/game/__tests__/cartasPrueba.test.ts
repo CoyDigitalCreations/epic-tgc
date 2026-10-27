@@ -967,7 +967,7 @@ describe('(c) humo — auras, reglas y Éter derivados del JSON', () => {
     s = aplicar(s, { type: 'elegir_objetivo', objetivoId: 'ex' }, ctx)
     expect(s.players.A.campo.campeones).toContain('ex')
     expect(s.players.A.exilio).not.toContain('ex')
-    expect(s.instances['rec']).toMatchObject({ equipadoA: 'ex', vinculadoA: 'ex' })
+    expect(s.instances['rec']).toMatchObject({ equipadoA: 'ex', vinculadoA: ['ex'] })
     expect(s.players.A.campo.misticasTacticas[0]).toBe('rec') // Artefacto: permanece en mesa
   })
 

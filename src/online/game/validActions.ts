@@ -88,12 +88,13 @@ function accionesBloqueoEter(state: GameState, playerId: PlayerId, enCadena = fa
         const fijo = efecto.costo?.tipo === 'bloqueo_fijo'
         const multi = fuentes.length > 1 ? { efectoIdx: i } : {}
         if (fijo) {
-          // Pago exacto: arma la acción completa con los Éteres que faltan.
-          const falta = maxEter - actuales
-          if (falta > 0 && disponibles.length >= falta) {
+          // Fase B: bloqueo_fijo = N EXACTOS por activación, repetible. Una vez por turno si el efecto
+          // lo declara y ya se activó (mismo criterio que validarBloqueo — paridad).
+          const usado = efecto.unaVezPorTurno === true && (t.inst.efectosUsadosEsteTurno ?? []).includes(i)
+          if (!usado && disponibles.length >= maxEter) {
             acciones.push({
               type: 'bloquear_eter',
-              eterIds: disponibles.slice(0, falta),
+              eterIds: disponibles.slice(0, maxEter),
               targetInstanceId: t.id,
               ...multi,
             })

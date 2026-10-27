@@ -46,6 +46,13 @@ export interface EfectoData {
   // ── Capa 3: COSTO (opcional, anidado) ──
   /** What the player must pay to activate */
   costo?: CostoEfecto
+  /**
+   * Fase B: restricción «una vez por turno» de la activación. SOLO tiene sentido con
+   * `costo.tipo === 'bloqueo_fijo'` (el Card-Maker lo limpia/valida en Fase C). Se cuenta
+   * por carta (instancia) y por efecto (índice); se gasta al pagar y se reinicia al terminar el turno.
+   * Ausente o `false` = sin restricción (bloqueo fijo repetible).
+   */
+  unaVezPorTurno?: boolean
 
   // ── Capa 3b: TRAMOS de Éter bloqueado (opcional) ──
   /** Recompensas por umbrales dentro de UN bloqueo "hasta" (CostoEfecto.cantidad).

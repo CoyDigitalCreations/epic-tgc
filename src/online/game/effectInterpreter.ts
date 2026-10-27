@@ -19,7 +19,7 @@ import { REGLAS } from '../../shared/rules/reglas'
 import { aplicarPago } from './payments'
 import { enviarAlCementerio, destruirCarta, liberarEterBloqueado, liberarArtefactosEquipados } from './replacements'
 import { esExiliable, permitirExilio } from './exilio'
-import { eterDeEfecto, quitarEteres, liberarEterA, limpiarFlagsUmbralSiVacia, evaluarFinSteal, retornarCampeonesRobados } from './eter'
+import { eterDeEfecto, contarEterUmbral, quitarEteres, liberarEterA, limpiarFlagsUmbralSiVacia, evaluarFinSteal, retornarCampeonesRobados } from './eter'
 import { esCampeon, getCardMeta, type AnyCard } from './cards'
 import type { EfectoData } from '../../shared/types'
 import type { CardInstance, Ctx, ExpiraModificador, GameState, PlayerId } from './types'
@@ -446,7 +446,7 @@ function executeInvocarEquipar(
   const objetivoId = targetIds[0]
   if (!invocarAlCampo(s, ctx, jugador, objetivoId)) return
   inst.equipadoA = objetivoId
-  inst.vinculadoA = objetivoId
+  inst.vinculadoA = [...(inst.vinculadoA ?? []), objetivoId]
   dispararAlInvocar(s, ctx, jugador, objetivoId) // ya equipado: su «Al invocar» ve el estado final
 }
 
@@ -599,13 +599,15 @@ function executeRecuperar(
  * Flag efectoUmbralDisparado evita re-disparo; liberarEterBloqueado lo limpia
  * (manual §7.7: el efecto se desactiva cuando el Éter se libera).
  */
-export function dispararUmbralBloqueo(s: GameState, ctx: Ctx, targetInstanceId: string): void {
+export function dispararUmbralBloqueo(s: GameState, ctx: Ctx, targetInstanceId: string, activacionIdx?: number): void {
   const inst = s.instances[targetInstanceId]
   if (!inst?.cardId) return
   const meta = getCardMeta(inst.cardId)
   if (!meta || !('efectos' in meta) || !meta.efectos) return
   if (efectosNegados(s, targetInstanceId)) return // sus efectos están negados: el umbral no dispara nada ahora
-  const bloqueadosEn = (idxEfecto: number): number => eterDeEfecto(s, targetInstanceId, idxEfecto).length
+  // Éter que cuenta para el umbral de ESE efecto (propio; + externo si es eter_bloqueado)
+  const bloqueadosEn = (idxEfecto: number, efecto: Pick<EfectoData, 'costo'>): number =>
+    contarEterUmbral(s, targetInstanceId, idxEfecto, efecto)
 
   for (const [idxEfecto, efecto] of meta.efectos.entries()) {
     // Capa 3b: tramos escalonados — UN bloqueo "hasta" con recompensas por
@@ -613,9 +615,10 @@ export function dispararUmbralBloqueo(s: GameState, ctx: Ctx, targetInstanceId: 
     // tramo); tramosDisparados evita re-disparo mientras el Éter se sostiene
     // y se limpia al liberar (nuevo ciclo → tramos re-armados).
     if (efecto.tramos && efecto.tramos.length > 0) {
-      if (efecto.costo?.tipo !== 'eter_bloqueado' && efecto.costo?.tipo !== 'bloqueo_fijo') continue
+      // Fase B: los tramos son solo de eter_bloqueado (ningún bloqueo_fijo de la colección los declara; si aparece, PARAR)
+      if (efecto.costo?.tipo !== 'eter_bloqueado') continue
       // Fase 2 (e): el umbral cuenta SOLO el Éter de ESTA fuente/efecto
-      const bloqueados = bloqueadosEn(idxEfecto)
+      const bloqueados = bloqueadosEn(idxEfecto, efecto)
       // Acumular los pendientes del batch — se insertan al frente PRESERVANDO
       // el orden de umbral (2 antes que 4; unshift directo los invertiría)
       const nuevosPendientes: typeof s.objetivosPendientes = []
@@ -648,30 +651,37 @@ export function dispararUmbralBloqueo(s: GameState, ctx: Ctx, targetInstanceId: 
     }
 
     if (efecto.costo?.tipo !== 'eter_bloqueado' && efecto.costo?.tipo !== 'bloqueo_fijo') continue
+    // Fase B — bloqueo_fijo dispara POR ACTIVACIÓN: solo el efecto que PAGÓ esta acción (activacionIdx) y una
+    // vez por acción. No mira el total acumulado ni los flags de un solo uso (efectoUmbralDisparado /
+    // efectosUmbralDisparados / yaRobo): 8 Éter = 2 activaciones = 2 disparos. Sin activación (llamada
+    // directa) no dispara nada. eter_bloqueado ("hasta N") sigue por umbral, con sus flags de siempre.
+    const fijo = efecto.costo?.tipo === 'bloqueo_fijo'
+    if (fijo && idxEfecto !== activacionIdx) continue
     // steal_champion e invocar_y_equipar tienen su camino (abajo, con su flag y su umbral de siempre). Cualquier OTRO efecto
     // raíz de un Continuo de bloqueo es sostenido o instantáneo (ver claseDeContinuo): antes se IGNORABA en silencio.
     const conSuCamino = efecto.efecto === 'steal_champion' || efecto.efecto === 'invocar_y_equipar'
     if (!conSuCamino) {
       if (efecto.tipo !== 'continuo' || claseDeContinuo(efecto) === 'propio') continue
-      if (bloqueadosEn(idxEfecto) < umbralDeBloqueo(efecto)) continue
-      if (inst.efectosUmbralDisparados?.includes(idxEfecto)) continue
-      armarContinuoDeBloqueo(s, ctx, inst, efecto, idxEfecto)
+      if (!fijo && bloqueadosEn(idxEfecto, efecto) < umbralDeBloqueo(efecto)) continue
+      if (!fijo && inst.efectosUmbralDisparados?.includes(idxEfecto)) continue
+      armarContinuoDeBloqueo(s, ctx, inst, efecto, idxEfecto, fijo)
       continue
     }
 
     const umbral = efecto.costo?.cantidad
     if (!umbral) continue
     // Fase 2 (e): el umbral legacy también cuenta SOLO el Éter de esta fuente
-    if (bloqueadosEn(idxEfecto) < umbral) continue
-    // Legacy one-shot (sin tramos): flag de protección — se limpia al liberar
-    if (inst.efectoUmbralDisparado) continue
+    if (!fijo && bloqueadosEn(idxEfecto, efecto) < umbral) continue
+    // Legacy one-shot (sin tramos): flag de protección — se limpia al liberar (solo eter_bloqueado)
+    if (!fijo && inst.efectoUmbralDisparado) continue
 
-    // One-shot steal_champion (Aurora): no re-steal si ya controla uno robado por esta fuente
+    // One-shot steal_champion (Aurora): no re-steal si ya controla uno robado por esta fuente (solo eter_bloqueado).
+    // Fase B: bloqueo_fijo arma un robo POR ACTIVACIÓN (varios campeones robados conviven, cada uno stolenBy = fuente).
     if (efecto.efecto === 'steal_champion') {
       const yaRobo = Object.values(s.instances).some((i) => i.stolenBy === inst.cardInstanceId)
-      if (yaRobo) continue
+      if (!fijo && yaRobo) continue
       if (!canExecuteSteal(s, inst.owner)) continue
-      inst.efectoUmbralDisparado = true
+      if (!fijo) inst.efectoUmbralDisparado = true
       // D1: interpretEffect arma pendiente si hay opciones (incluso 1 — elección explícita)
       const pendientesAntes = s.objetivosPendientes?.length ?? 0
       interpretEffect(s, ctx, inst, efecto, { jugador: inst.owner, fromTrigger: true })
@@ -687,9 +697,10 @@ export function dispararUmbralBloqueo(s: GameState, ctx: Ctx, targetInstanceId: 
       continue
     }
 
-    // One-shot: efectos que ejecutan al alcanzar el umbral (no auras stat derivadas)
+    // One-shot: efectos que ejecutan al alcanzar el umbral (no auras stat derivadas). Fase B: bloqueo_fijo → una
+    // invocación+equipo POR ACTIVACIÓN (invoca el siguiente campeón del exilio; el equipo apunta al último).
     if (efecto.efecto !== 'invocar_y_equipar') continue
-    inst.efectoUmbralDisparado = true
+    if (!fijo) inst.efectoUmbralDisparado = true
     ejecutarInvocarEquiparUmbral(s, ctx, inst, efecto, inst.owner)
   }
 }
@@ -703,10 +714,12 @@ export function dispararUmbralBloqueo(s: GameState, ctx: Ctx, targetInstanceId: 
  *  - instantáneo sin elección (draw, scry...): ocurre ya.
  * Cada efecto ocurre una vez por ciclo de bloqueo (`efectosUmbralDisparados`, se rearma al liberar el Éter).
  */
-function armarContinuoDeBloqueo(s: GameState, ctx: Ctx, inst: CardInstance, efecto: EfectoData, idxEfecto: number): void {
+function armarContinuoDeBloqueo(s: GameState, ctx: Ctx, inst: CardInstance, efecto: EfectoData, idxEfecto: number, fijo = false): void {
   const clase = claseDeContinuo(efecto)
+  // Fase B: sostenido SIN elección = aura derivada → cada activación de bloqueo_fijo es idempotente (no apila)
   if (clase === 'sostenido' && efecto.efecto !== 'fix_exhaust' && !eligeObjetivo(efecto)) return
-  const marcar = () => { inst.efectosUmbralDisparados = [...(inst.efectosUmbralDisparados ?? []), idxEfecto] }
+  // Fase B: un bloqueo_fijo no usa el flag de «una vez por ciclo»: cada activación arma su elección / su efecto
+  const marcar = () => { if (!fijo) inst.efectosUmbralDisparados = [...(inst.efectosUmbralDisparados ?? []), idxEfecto] }
 
   if (clase === 'sostenido' || eligeObjetivo(efecto)) {
     const opciones = efecto.objetivo ? resolveTargets(s, objetivoCompleto(efecto), inst.owner, inst.cardInstanceId) : []
@@ -734,7 +747,7 @@ export function resolverUmbralElegido(s: GameState, ctx: Ctx, fuenteId: string, 
   const efecto = meta && 'efectos' in meta ? meta.efectos?.[efectoIdx] : undefined
   if (!inst || !efecto) return
   if (efectosNegados(s, fuenteId)) return
-  if (eterDeEfecto(s, fuenteId, efectoIdx).length < umbralDeBloqueo(efecto)) return
+  if (contarEterUmbral(s, fuenteId, efectoIdx, efecto) < umbralDeBloqueo(efecto)) return
   if (claseDeContinuo(efecto) === 'sostenido') {
     if (efecto.efecto === 'fix_exhaust') {
       inst.fijadoExhaustTargetId = objetivoId
@@ -832,7 +845,7 @@ export function exhaustFijado(s: GameState, champId: string): boolean {
       if (!tramo) {
         // fix_exhaust como efecto RAÍZ de un Continuo de bloqueo: vale mientras ESE efecto tenga su Éter bloqueado
         const idxRaiz = meta.efectos.findIndex((e) => e.efecto === 'fix_exhaust' && !e.tramos?.length)
-        if (idxRaiz !== -1 && !efectosNegados(s, id) && eterDeEfecto(s, id, idxRaiz).length >= umbralDeBloqueo(meta.efectos[idxRaiz])) return true
+        if (idxRaiz !== -1 && !efectosNegados(s, id) && contarEterUmbral(s, id, idxRaiz, meta.efectos[idxRaiz]) >= umbralDeBloqueo(meta.efectos[idxRaiz])) return true
         continue
       }
       if ((fuente.eterBloqueado?.length ?? 0) >= tramo.umbral) return true
@@ -924,7 +937,7 @@ function ejecutarInvocarEquiparUmbral(
     if (!meta || !esCampeon(meta)) continue
     if (invocarAlCampo(s, ctx, jugador, id)) {
       inst.equipadoA = id
-      inst.vinculadoA = id
+      inst.vinculadoA = [...(inst.vinculadoA ?? []), id]
       dispararAlInvocar(s, ctx, jugador, id)
     }
     break // primer campeón (determinista)

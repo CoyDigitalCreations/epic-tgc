@@ -26,11 +26,34 @@
  * de la colección (FB/DS) lo declara hoy.
  */
 import { getCardMeta } from './cards'
+import type { EfectoData } from '../../shared/types'
 import type { Ctx, GameState, PlayerId } from './types'
 
 /** Clave de filiación efecto → `${fuenteInstanceId}#${indiceEnEfectos}`. */
 export function claveEfecto(fuenteId: string, indiceEfecto: number): string {
   return `${fuenteId}#${indiceEfecto}`
+}
+
+/**
+ * Clave del Éter EXTERNO: bloqueado sobre un Campeón por un efecto que NO es
+ * suyo (hoy solo el Pasivo 1A de FB-005/DS-006 vía elegir_opcion). `#ext` nunca
+ * colisiona con `claveEfecto` porque el índice siempre es numérico.
+ */
+export function claveExterno(fuenteId: string): string {
+  return `${fuenteId}#ext`
+}
+
+/**
+ * Etiqueta los Éteres EXTERNOS recién bloqueados sobre `fuenteId` (el Campeón).
+ * Conserva `pagadoPor` (§7.8: la liberación se la devuelve a quien lo pagó).
+ */
+export function etiquetarEterExterno(s: GameState, eterIds: string[], fuenteId: string, pagador: PlayerId): void {
+  for (const id of eterIds) {
+    const inst = s.instances[id]
+    if (!inst) continue
+    inst.bloqueadoPorEfecto = claveExterno(fuenteId)
+    inst.pagadoPor = pagador
+  }
 }
 
 /**
@@ -64,6 +87,41 @@ export function eterDeEfecto(s: GameState, cardInstanceId: string, indiceEfecto:
     const tag = s.instances[id]?.bloqueadoPorEfecto
     return tag === undefined || tag === clave
   })
+}
+
+/** Éteres bloqueados en `cardInstanceId` que son EXTERNOS (`#ext`, ajenos a todo efecto de la carta). */
+export function eterExternoDe(s: GameState, cardInstanceId: string): string[] {
+  const inst = s.instances[cardInstanceId]
+  if (!inst?.eterBloqueado?.length) return []
+  const clave = claveExterno(cardInstanceId)
+  return inst.eterBloqueado.filter((id) => s.instances[id]?.bloqueadoPorEfecto === clave)
+}
+
+/**
+ * Éter que cuenta para UMBRALES / tramos / sostenidos de `indiceEfecto`:
+ * PROPIO ∪ EXTERNO (decisión 2.3). NO incluye el Éter etiquetado a otra
+ * fuente (ni a otro efecto de la misma carta).
+ */
+export function eterQueCuenta(s: GameState, cardInstanceId: string, indiceEfecto: number): string[] {
+  const inst = s.instances[cardInstanceId]
+  if (!inst?.eterBloqueado?.length) return []
+  const clave = claveEfecto(cardInstanceId, indiceEfecto)
+  const claveExt = claveExterno(cardInstanceId)
+  return inst.eterBloqueado.filter((id) => {
+    const tag = s.instances[id]?.bloqueadoPorEfecto
+    return tag === undefined || tag === clave || tag === claveExt
+  })
+}
+
+/**
+ * Cuántos Éter cuentan para el UMBRAL de un efecto. `eter_bloqueado` ("hasta N")
+ * suma externos (eterQueCuenta). `bloqueo_fijo` NO: un externo no completa un
+ * bloqueo fijo (decisión 2.4) → solo propio (eterDeEfecto). Sin costo → propio.
+ */
+export function contarEterUmbral(s: GameState, cardInstanceId: string, indiceEfecto: number, efecto: Pick<EfectoData, 'costo'>): number {
+  return efecto.costo?.tipo === 'eter_bloqueado'
+    ? eterQueCuenta(s, cardInstanceId, indiceEfecto).length
+    : eterDeEfecto(s, cardInstanceId, indiceEfecto).length
 }
 
 /** Quita SOLO `ids` del array de Éter bloqueado de la fuente (release selectivo). */

@@ -87,14 +87,16 @@ export function enviarAlCementerio(s: GameState, ctx: Ctx, cardInstanceId: strin
   const inst = s.instances[cardInstanceId]
   if (!inst) return
   // VÍNCULO INVERTIDO (invocar_y_equipar): si esta carta tiene un campeón vinculado,
-  // destruir también al campeón ANTES de mover esta carta al cementerio.
+  // destruir también a TODOS los campeones vinculados (uno por activación) ANTES de mover esta carta al cementerio.
+  // `concat` tolera el formato viejo de partidas guardadas (un solo id en vez de lista).
   if (inst.vinculadoA) {
-    const vinculadoId = inst.vinculadoA
+    const vinculados = ([] as string[]).concat(inst.vinculadoA)
     inst.vinculadoA = undefined
-    // Solo destruir si el campeón sigue en campo del dueño
     const p = s.players[inst.owner]
-    const slotIdx = p.campo.campeones.indexOf(vinculadoId)
-    if (slotIdx !== -1) {
+    for (const vinculadoId of vinculados) {
+      // Solo destruir si el campeón sigue en campo del dueño
+      const slotIdx = p.campo.campeones.indexOf(vinculadoId)
+      if (slotIdx === -1) continue
       p.campo.campeones[slotIdx] = null
       ctx.emit({ type: 'carta_salida_de_zona', cardInstanceId: vinculadoId, zona: `2${String.fromCharCode(66 + slotIdx)}` as any, jugador: inst.owner })
       enviarAlCementerio(s, ctx, vinculadoId, 'campo')

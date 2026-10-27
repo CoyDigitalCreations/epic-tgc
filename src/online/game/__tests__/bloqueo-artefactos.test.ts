@@ -19,7 +19,7 @@ import { getValidActions } from '../validActions'
 import { bloquearEter, validarBloqueo, reagruparEter } from '../payments'
 import { statsDe } from '../efectos'
 import { dispararUmbralBloqueo, reagruparEfectosBloqueoAlba } from '../effectInterpreter'
-import { destruirCarta, liberarEterBloqueado } from '../replacements'
+import { destruirCarta, enviarAlCementerio, liberarEterBloqueado } from '../replacements'
 import { resolverAlba } from '../phases'
 import type { Ctx, GameState, PlayerId } from '../types'
 
@@ -534,16 +534,52 @@ describe('FB-032 Rito del Alba — one-shot invocar_y_equipar (Fase 3a Phase D)'
     // Primer disparo: bloquear 4 exactos → champ1 invocado
     s = aplicar(s, { type: 'bloquear_eter', eterIds: ids.slice(0, 4), targetInstanceId: fb032Id }, ctx)
     expect(s.players.A.campo.campeones).toContain(champ1)
-    expect(s.instances[fb032Id].efectoUmbralDisparado).toBe(true)
+    // Fase B: bloqueo_fijo ya no marca el flag de un solo uso (cada activación invoca; no hay «one-shot»)
+    expect(s.instances[fb032Id].efectoUmbralDisparado).toBeUndefined()
 
     // Liberar Éter → flag limpiado
     liberarEterBloqueado(s, ctx, fb032Id, '1A')
     expect(s.instances[fb032Id].efectoUmbralDisparado).toBeUndefined()
 
-    // Re-bloquear 4 exactos → RE-DISPARA (champ2 invocado)
+    // Re-bloquear 4 exactos en el SIGUIENTE turno (FB-032 lleva «una vez por turno»; pasar_turno reinicia el contador)
+    s.instances[fb032Id].efectosUsadosEsteTurno = undefined
     s = aplicar(s, { type: 'bloquear_eter', eterIds: ids.slice(4, 8), targetInstanceId: fb032Id }, ctx)
     expect(s.players.A.campo.campeones).toContain(champ2)
     expect(s.instances[fb032Id].equipadoA).toBe(champ2)
+  })
+
+  it('dos activaciones vinculan a AMBOS campeones: si FB-032 sale del campo, los dos salen con ella', () => {
+    const ctx = crearCtx()
+    const conMist = conMisticaEnCampo(estadoMinimo(), FB032, 0)
+    const champ1 = 'camp-exilio-1'
+    const champ2 = 'camp-exilio-2'
+    const ids = Array.from({ length: 8 }, (_, i) => `e-${i}`)
+    let s: GameState = {
+      ...conMist.s,
+      instances: {
+        ...conMist.s.instances,
+        [champ1]: { cardInstanceId: champ1, cardId: CAMPEON, owner: 'A' as PlayerId },
+        [champ2]: { cardInstanceId: champ2, cardId: CAMPEON, owner: 'A' as PlayerId },
+        ...Object.fromEntries(ids.map((id) => [id, { cardInstanceId: id, cardId: ETER_ORDEN, owner: 'A' as PlayerId }])),
+      },
+      players: {
+        ...conMist.s.players,
+        A: { ...conMist.s.players.A, exilio: [champ1, champ2], eterReserva: ids },
+      },
+    }
+    const fb032Id = conMist.id
+    s = aplicar(s, { type: 'bloquear_eter', eterIds: ids.slice(0, 4), targetInstanceId: fb032Id }, ctx)
+    // La segunda activación en el MISMO turno la rechaza «una vez por turno»; en el siguiente turno ya se puede
+    expect(validarBloqueo(s, 'A', ids.slice(4, 8), fb032Id)).toMatch(/una vez por turno/)
+    s.instances[fb032Id].efectosUsadosEsteTurno = undefined
+    s = aplicar(s, { type: 'bloquear_eter', eterIds: ids.slice(4, 8), targetInstanceId: fb032Id }, ctx)
+    expect(s.instances[fb032Id].vinculadoA).toEqual([champ1, champ2])
+    expect(s.players.A.campo.campeones).toEqual(expect.arrayContaining([champ1, champ2]))
+
+    enviarAlCementerio(s, ctx, fb032Id)
+    expect(s.players.A.campo.campeones).not.toContain(champ1)
+    expect(s.players.A.campo.campeones).not.toContain(champ2)
+    expect(s.players.A.cementerio).toEqual(expect.arrayContaining([champ1, champ2]))
   })
 
   it('alba: el Éter permanece bloqueado en FB-032 (no se reagrupa)', () => {
@@ -614,7 +650,8 @@ describe('Aurora FB-010 — steal_champion vía bloqueo_fijo', () => {
     const { s, auroraId, rivalId, ids } = setupAurora()
     const s2 = aplicar(s, { type: 'bloquear_eter', eterIds: ids.slice(0, 4), targetInstanceId: auroraId }, ctx)
     expect(s2.instances[auroraId].eterBloqueado).toHaveLength(4)
-    expect(s2.instances[auroraId].efectoUmbralDisparado).toBe(true)
+    // Fase B: sin flag de un solo uso para bloqueo_fijo (el disparo es por activación)
+    expect(s2.instances[auroraId].efectoUmbralDisparado).toBeUndefined()
     // Pendiente D1: jugador elige qué campeón rival robar
     expect(s2.objetivosPendientes).toBeDefined()
     expect(s2.objetivosPendientes![0].opciones).toContain(rivalId)
