@@ -123,7 +123,10 @@ export function validarColocarVinculo(state: GameState, action: Extract<Action, 
  * se equipa a un Campeón propio en el campo.
  */
 export function validarEquiparArtefacto(state: GameState, action: Extract<Action, { type: 'equipar_artefacto' }>): string | null {
-  if (state.fase !== 'forja') return 'equipar_artefacto solo en Forja'
+  // Un equipar PENDIENTE de ese Artefacto se resuelve en la fase en que nació: una Arcana-Artefacto se activa en Choque, y si
+  // aquí se exigiera Forja nadie podría equiparla y el jugador quedaba solo con «rendirse» (partida congelada).
+  const pendiente = state.equiparPendiente?.artefactoId === action.cardInstanceId
+  if (state.fase !== 'forja' && !pendiente) return 'equipar_artefacto solo en Forja'
   const inst = state.instances[action.cardInstanceId]
   if (!inst) return 'carta no encontrada'
   const meta = inst.cardId ? getCardMeta(inst.cardId) : null

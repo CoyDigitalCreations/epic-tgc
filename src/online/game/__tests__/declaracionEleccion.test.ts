@@ -481,6 +481,30 @@ describe('varias elecciones seguidas, pendientes obsoletos y al-pagar-eter', () 
     expect(s1.equiparPendiente).toBeUndefined()
     expect(actorActual(s1)).toBe('B')
   })
+
+  it('una Arcana-Artefacto activada en CHOQUE se puede equipar (antes solo se aceptaba en Forja y el jugador quedaba con «rendirse»)', () => {
+    const s0 = estadoMinimo()
+    s0.fase = 'choque'
+    conCampeon(s0, 'A', 'a1', CAMP, 0)
+    inst(s0, 'art', 'DS-021', 'A')
+    s0.players.A.campo.arcanasCombate[0] = 'art'
+    s0.equiparPendiente = { artefactoId: 'art', jugador: 'A', contexto: 'activar_arcana' }
+
+    expect(getValidActions(s0, 'A').some((a) => a.type === 'equipar_artefacto')).toBe(true)
+    const s1 = aplicar(s0, { type: 'equipar_artefacto', cardInstanceId: 'art', campeonInstanceId: 'a1' }, crearCtx())
+    expect(s1.instances['art'].equipadoA).toBe('a1')
+    expect(s1.equiparPendiente).toBeUndefined()
+  })
+
+  it('sin equipar pendiente, equipar fuera de Forja sigue rechazado', () => {
+    const s0 = estadoMinimo()
+    s0.fase = 'choque'
+    conCampeon(s0, 'A', 'a1', CAMP, 0)
+    inst(s0, 'art', 'DS-021', 'A')
+    s0.players.A.campo.arcanasCombate[0] = 'art'
+    const r = applyAction(s0, { type: 'equipar_artefacto', cardInstanceId: 'art', campeonInstanceId: 'a1' }, crearCtx())
+    expect(r.ok).toBe(false)
+  })
 })
 
 describe('el bot no se atasca con declaraciones en elección', () => {
