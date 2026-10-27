@@ -1,5 +1,6 @@
 import { Suspense, lazy } from 'react'
 import { Navigate, Route, Routes } from 'react-router'
+import { BotonPantallaCompleta } from './BotonPantallaCompleta'
 import Landing from './Landing'
 
 const ForgeApp = lazy(() => import('./forge/App'))
@@ -16,6 +17,8 @@ export function AppFallback() {
 
 export function AppRoutes() {
   return (
+    <>
+    <BotonPantallaCompleta />
     <Routes>
       <Route path="/" element={<Landing />} />
       <Route
@@ -44,5 +47,6 @@ export function AppRoutes() {
       />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    </>
   )
 }
