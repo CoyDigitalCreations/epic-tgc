@@ -11,6 +11,11 @@ export const CONFIG_FACIL: Config = { ...CONFIG, profundidad: 2, anchoRival: 1, 
 export const CONFIG_MEDIO: Config = { ...CONFIG, profundidad: 4, anchoRival: 2, presupuesto: 500, ruido: 0.12 }
 export const CONFIG_DIFICIL: Config = CONFIG
 
+/** Un bot NUEVO por nivel (cada uno lleva su propia memoria anti-bucle): uno por partida en el cliente. */
+export function crearBotNivel(dificultad: 'facil' | 'medio' | 'dificil'): Bot {
+  return crearBotBusqueda(dificultad === 'facil' ? CONFIG_FACIL : dificultad === 'medio' ? CONFIG_MEDIO : CONFIG_DIFICIL)
+}
+
 export const botFacilNuevo: Bot = crearBotBusqueda(CONFIG_FACIL)
 export const botMedioNuevo: Bot = crearBotBusqueda(CONFIG_MEDIO)
 export const botDificilNuevo: Bot = crearBotBusqueda(CONFIG_DIFICIL)

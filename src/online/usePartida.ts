@@ -3,6 +3,8 @@ import { applyAction, botTonto, createInitialState, getValidActions, actorActual
 import type { Action, Ctx, GameState, PlayerId } from './game'
 import type { Dificultad } from './game/bot'
 import { getCardMeta } from './game/cards'
+import { crearMotorBot } from '../bot/cliente'
+import type { MotorBot } from '../bot/cliente'
 import { eventosParaLog } from './log'
 import { eventosDetalladosParaLog, diagnosticarActor, resumenJugador } from './logDetallado'
 import { describirEfectosDeCarta } from './describirEfecto'
@@ -375,6 +377,17 @@ export function usePartida(config: PartidaConfig) {
     return () => window.clearTimeout(timeout)
   }, [animaciones])
 
+  // Un motor de bot (con su worker) por partida; se cierra al salir
+  const motorBotRef = useRef<MotorBot | null>(null)
+  useEffect(() => {
+    const motor = crearMotorBot()
+    motorBotRef.current = motor
+    return () => {
+      motor.cerrar()
+      motorBotRef.current = null
+    }
+  }, [])
+
   /** El bot juega solo cuando el actor actual es B, con delay, hasta devolverle el turno al humano. */
   useEffect(() => {
     if (estado.fase === 'terminada') return
@@ -382,13 +395,18 @@ export function usePartida(config: PartidaConfig) {
     if (preview) return
     const actor = actorActual(estado)
     if (!actor || actor === 'A') return
-    const timeout = window.setTimeout(() => {
+    let cancelado = false
+    const timeout = window.setTimeout(async () => {
       const s = estadoRef.current
       if (!s || s.fase === 'terminada') return
       const act = actorActual(s)
       if (!act || act === 'A') return
       jugadasBotRef.current += 1
-      const accion = botTonto(s, act, config.dificultad)
+      const dificultad = config.dificultad ?? 'facil'
+      // La búsqueda corre en un worker (no congela la pantalla); si falla, el bot básico del motor evita dejar la partida colgada
+      const accion = (await motorBotRef.current?.jugar(s, act, dificultad)) ?? botTonto(s, act, dificultad)
+      // Mientras pensaba pudo cambiar la partida (reinicio, rendición…): esa jugada ya no vale
+      if (cancelado || estadoRef.current !== s) return
       if (!accion || jugadasBotRef.current > MAX_JUGADAS_BOT) {
         // Sin progreso posible: el bot se rinde para no colgar la partida.
         aplicarInterna({ type: 'rendirse', jugador: act }, true)
@@ -398,7 +416,10 @@ export function usePartida(config: PartidaConfig) {
       if (solicitarPreview(accion, true)) return
       aplicarInterna(accion, true)
     }, delayRef.current)
-    return () => window.clearTimeout(timeout)
+    return () => {
+      cancelado = true
+      window.clearTimeout(timeout)
+    }
   }, [estado, preview, aplicarInterna, solicitarPreview, config.dificultad])
 
   const leTocaA = !preview && estado.fase !== 'terminada' && actorActual(estado) === 'A'
@@ -410,6 +431,7 @@ export function usePartida(config: PartidaConfig) {
     estadoRef.current = inicial.state
     ctxRef.current = inicial.ctx
     jugadasBotRef.current = 0
+    motorBotRef.current?.reiniciar()
     previewAccionRef.current = null
     setPreview(null)
     logRef.current = [`La partida comienza (seed ${config.seed}).`]

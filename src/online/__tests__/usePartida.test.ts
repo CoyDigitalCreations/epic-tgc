@@ -33,8 +33,8 @@ describe('usePartida', () => {
       },
       { timeout: 5000 },
     )
-    // El log narró el mulligan del bot
-    expect(result.current.log.some((l) => l.includes('mulligan'))).toBe(true)
+    // Salir de pre_partida implica que el bot decidió su mulligan (puede hacerlo o pasar: eso depende del nivel, no se fija aquí)
+    expect(result.current.estado.players.B.mano.length).toBeGreaterThan(0)
   })
 
   // Soak test (NO unit): partida completa humano-vs-bot hasta 20k iteraciones /
