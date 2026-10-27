@@ -135,7 +135,7 @@ describe('qué se apaga cuando los efectos están negados', () => {
     expect(activa(s)).toBe(false)
   })
   it('no puede RESPONDER con su Disparo en una cadena', () => {
-    const s = escena(); conCampeon(s, 'A', 'x', 'T-VIC', 0)
+    const s = escena(); conCampeon(s, 'A', 'x', 'T-VIC', 0); conEteres(s, 'A', 1) // responder paga el Disparo: hay que poder pagarlo
     expect(motivoNoResponde(s, 'A', 'x', 'campo')).toBeNull()
     negar(s, 'x')
     expect(motivoNoResponde(s, 'A', 'x', 'campo')).toMatch(/negados/)

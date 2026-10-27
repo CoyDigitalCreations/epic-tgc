@@ -923,8 +923,12 @@ function executeTutor(
       const slotLibre = p.campo.campeones.indexOf(null)
       if (slotLibre !== -1) {
         p.campo.campeones[slotLibre] = targetId
+        const instT = s.instances[targetId]
+        const metaT = instT?.cardId ? getCardMeta(instT.cardId) : null
+        // Entrar al campo por tutor es una invocación más: invocación cansada (no ataca) y no responde en cadena
+        // el turno que entra (§5.2, §5.5), igual que invocarAlCampo
+        if (instT) instT.entradaEsteTurno = true
         ctx.emit({ type: 'carta_invocada', cardInstanceId: targetId, tipo: 'Campeón', slot: slotLibre })
-        const metaT = s.instances[targetId]?.cardId ? getCardMeta(s.instances[targetId]!.cardId!) : null
         if (metaT && esCampeon(metaT)) dispararAlInvocar(s, ctx, jugador, targetId)
       }
     } else if (zonaDestino === 'cementerio') {

@@ -5,7 +5,8 @@ import type { AnyCard } from '../../shared/types'
 import type { Action } from './actions'
 import { generarAccionesForja, validarActivarArcana } from './actions'
 import { atacantesElegibles, asignacionForzada, ataquesBloqueables, ataquesSinBloquear, bloqueadoresDisponibles, rivalDe, tieneKeyword } from './combat'
-import { cadenaActiva, respondiblesDe, respuestasDeMano } from './chain'
+import { cadenaActiva, disparoDeRespuesta, respondiblesDe, respuestasDeMano } from './chain'
+import { eterIdsParaHabilidad } from './habilidadPago'
 import { etersParaPagar } from './payments'
 import { descartarFrentesMuertos, electorAjeno, opcionesVigentes } from './pendientes'
 import { validarEquiparArtefacto } from './movimientos'
@@ -290,7 +291,11 @@ export function getValidActions(state: GameState, playerId: PlayerId): Action[] 
   if (cadena) {
     if (cadena.prioridad === playerId) {
       for (const id of respondiblesDe(state, playerId)) {
-        acciones.push({ type: 'responder_cadena', cardInstanceId: id })
+        // Un Campeón que responde con su Disparo lo paga: se ofrecen los Éteres con que (respondiblesDe ya comprobó que puede)
+        const metaR = state.instances[id]?.cardId ? getCardMeta(state.instances[id]!.cardId!) : null
+        const disparo = metaR?.type === 'Campeón' ? disparoDeRespuesta(metaR) : null
+        const eterIds = disparo ? eterIdsParaHabilidad(state, playerId, disparo.efecto) : null
+        acciones.push(eterIds ? { type: 'responder_cadena', cardInstanceId: id, eterIds } : { type: 'responder_cadena', cardInstanceId: id })
       }
       // Respuesta desde la MANO (obs 1874): Místicas Presteza jugadas pagando
       // su coste — entran directo a la pila (jugar_respuesta).

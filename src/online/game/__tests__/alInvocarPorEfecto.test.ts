@@ -102,6 +102,19 @@ describe('«Al invocar» por efecto — todo Campeón que entra al campo lo disp
     expect(s.instances.fuente.equipadoA).toBe('c1')
     expect(s.players.A.mano).toEqual(['mzA1'])
   })
+  it('tutor con destino campo: entra, dispara su «Al invocar» y queda con invocación cansada (como cualquier invocación)', () => {
+    const s = estado(); carta(s, 'c1', 'T-ROBA', 'A', 'mazo')
+    const tutor: EfectoData = { tipo: 'disparo', efecto: 'tutor', objetivo: { tipo: 'campeon', controlador: 'propio', zona: 'mazo', zonaDestino: 'campo' } }
+    lanzar(s, ctx(), tutor, 'c1')
+    expect(s.players.A.campo.campeones[0]).toBe('c1')
+    expect(s.instances.c1.entradaEsteTurno).toBe(true)
+    expect(s.players.A.mano).toEqual(['mzA1'])
+  })
+  it('invocar también deja la invocación cansada (regresión)', () => {
+    const s = estado(); carta(s, 'c1', 'T-MUDO', 'A', 'cementerio')
+    lanzar(s, ctx(), efecto('invocar', 'cementerio'), 'c1')
+    expect(s.instances.c1.entradaEsteTurno).toBe(true)
+  })
   it('un Campeón sin «Al invocar» entra sin disparar nada', () => {
     const s = estado(); carta(s, 'c1', 'T-MUDO', 'A', 'cementerio'); const c = ctx()
     lanzar(s, c, efecto('invocar', 'cementerio'), 'c1')

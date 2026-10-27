@@ -9,7 +9,6 @@ import type { AnyCard, EfectoData } from '../../shared/types'
 import { validarPago, aplicarPago, type ContextoUso } from './payments'
 import { etiquetarEter } from './eter'
 import { dispararTrigger, pasivosBloqueo1A, type TriggerEfecto } from './efectos'
-import { registrarEfectoPendiente, hastaAlba } from './effectRegistry'
 import { interpretEffect, ejecutarTramo } from './effectInterpreter'
 import { electorAjeno, opcionesVigentes } from './pendientes'
 import { tieneKeyword } from './combat'
@@ -17,6 +16,7 @@ import { efectosNegados, reglaBool } from './reglas'
 import { liberarEterBloqueado, enviarAlCementerio } from './replacements'
 import { slotAZona } from './zones'
 import { validarBloqueo } from './payments'
+import { pagarHabilidad } from './habilidadPago'
 import { continuarDeclaracion, declararOpener, equiparComoRespuesta, marcarInicioAccion, motivoArcanaNoActivable, registrarObjetivoOpener, type MarcadorAccion } from './chain'
 import type { Action } from './core'
 
@@ -260,7 +260,6 @@ export function ejecutarActivarArcana(s: GameState, action: Extract<Action, { ty
  * El efecto se resuelve leyendo efectos[] de la carta — sin hardcodear nada.
  */
 export function ejecutarActivarHabilidad(s: GameState, action: Extract<Action, { type: 'activar_habilidad' }>, ctx: Ctx): void {
-  const p = s.players[s.turno]
   const inst = s.instances[action.cardInstanceId]!
   const meta = inst.cardId ? getCardMeta(inst.cardId) : null
   if (!meta) return
@@ -271,63 +270,12 @@ export function ejecutarActivarHabilidad(s: GameState, action: Extract<Action, {
   if (!efectoSel) return
   const previos = marcarInicioAccion(s) // F5d-1: las elecciones de la acción van antes de la ventana
 
-  if (esCostoBloqueo(efectoSel.costo)) {
-    // Patrón "Bloqueado": mueve éteres de la zona de ORIGEN (Fase 2 (c):
-    // 'reserva' 2A default, 'pagado' 1A) → Campeón.eterBloqueado
-    const zonaOrigen = efectoSel.costo?.origen === 'pagado' ? p.eterPagado : p.eterReserva
-    for (const eterId of action.eterIds) {
-      const idx = zonaOrigen.indexOf(eterId)
-      if (idx !== -1) zonaOrigen.splice(idx, 1)
-    }
-    inst.eterBloqueado = [...(inst.eterBloqueado ?? []), ...action.eterIds]
-    // Fase 2: filiación — el efecto activado (índice en efectos[]) es la
-    // fuente que bloquea; s.turno lo pagó.
-    const idxSel = meta.efectos?.indexOf(efectoSel) ?? -1
-    etiquetarEter(s, action.eterIds, action.cardInstanceId, idxSel, s.turno)
-    // Check if effect has reagrupar (Alba) — register pending effect
-    const efectoConReagrupar = meta.efectos && 'efectos' in meta
-      ? meta.efectos.find((e) => e.reagrupar && esCostoBloqueo(e.costo))
-      : undefined
-    if (efectoConReagrupar?.reagrupar) {
-      registrarEfectoPendiente(s, {
-        fuente: action.cardInstanceId,
-        owner: s.turno,
-        triggerFase: efectoConReagrupar.reagrupar.fase,
-        triggerOwner: efectoConReagrupar.reagrupar.turno === 'propio' ? 'dueño' : 'rival',
-        accion: { tipo: 'liberar-eter', eterIds: [...action.eterIds], destino: 'reserva' },
-        duracion: hastaAlba(),
-      })
-    }
-    ctx.emit({ type: 'eter_bloqueado', jugador: s.turno, eterIds: action.eterIds, campeonId: action.cardInstanceId })
-    inst.opcionUsadaEsteTurno = true
-    if (efectoSel.tipo === 'continuo') {
-      inst.agotado = true
-    }
-    // Ventana de negación (obs 1874): la activación está DECLARADA (el pago
-    // del bloqueo ya se aplicó y se MANTIENE). Si el rival puede responder,
-    // la resolución se DIFIERE a la cadena — al cerrar se ejecuta salvo que
-    // una negación (tipoNegacion 'activacion') la haya cancelado.
-    declararHabilidad(s, ctx, inst, meta, efectoSel, previos, action.objetivoId)
-  } else {
-    // Patrón "Agota"/Continuo pago: éteres → 1A (pagado) + 1/turno
-    for (const eterId of action.eterIds) {
-      const idx = p.eterReserva.indexOf(eterId)
-      if (idx !== -1) p.eterReserva.splice(idx, 1)
-      p.eterPagado.push(eterId)
-    }
-    if (action.eterIds.length > 0) {
-      ctx.emit({ type: 'eter_pagado', jugador: s.turno, eterIds: action.eterIds, costo: action.eterIds.length, aportado: action.eterIds.length })
-    }
-    if (efectoSel.tipo !== 'disparo') inst.opcionUsadaEsteTurno = true
-    // Paga y Agota (§5.2, §8.3a): el Disparo con Éter pagado agota al Campeón, salvo que la regla
-    // `disparoAgota` esté prohibida (Tirador, §10). El agotamiento es parte del coste: se paga ya.
-    if (efectoSel.tipo === 'disparo' && reglaBool(s, 'disparoAgota', { instId: action.cardInstanceId })) {
-      inst.agotado = true
-    }
-    // Ventana de negación (obs 1874): pago YA hecho (queda) — si hay
-    // respuesta, el efecto se difiere a la cadena (fizzled si lo niegan).
-    declararHabilidad(s, ctx, inst, meta, efectoSel, previos, action.objetivoId)
-  }
+  // El coste (pago, bloqueo, 1/turno, agotar) se cobra al DECLARAR y se MANTIENE aunque la activación se niegue
+  // (obs 1874); el mismo cobro lo usa responder en una cadena con el Disparo de un Campeón (habilidadPago.ts)
+  pagarHabilidad(s, ctx, s.turno, action.cardInstanceId, efectoSel, action.eterIds)
+  // Ventana de negación (obs 1874): la activación está DECLARADA. Si el rival puede responder, la resolución se
+  // DIFIERE a la cadena — al cerrar se ejecuta salvo que una negación (tipoNegacion 'activacion') la haya cancelado.
+  declararHabilidad(s, ctx, inst, meta, efectoSel, previos, action.objetivoId)
 }
 
 /**

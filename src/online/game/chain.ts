@@ -34,6 +34,7 @@ import { interpretEffect } from './effectInterpreter'
 import { aplicarPago, etersParaPagar, validarPago, type ContextoUso } from './payments'
 import { enviarAlCementerio } from './replacements'
 import { efectosNegados } from './reglas'
+import { eterIdsParaHabilidad, pagarHabilidad } from './habilidadPago'
 import type { CondicionEfecto, EfectoData } from '../../shared/types'
 import type {
   Ctx, CadenaState, DeclaracionCadena, GameState, OpenerCadena, PlayerId, RespuestaApilada, RespuestaCadena, TriggerApilado,
@@ -99,6 +100,17 @@ export function motivoArcanaNoActivable(state: GameState, jugador: PlayerId, id:
  * permanece en mesa. `origen`: 'campo' (carta ya en mesa) o 'mano' (Mística que se juega pagando; exige
  * PRESTEZA o FUGAZ). Devuelve el motivo del rechazo o null.
  */
+/**
+ * El Disparo que un Campeón usa al RESPONDER en una cadena (§9.6): el primero sin trigger (o `ninguno`), que es el que
+ * `activar_habilidad` activa. Se paga, agota y elige su objetivo AL RESPONDER y resuelve en la pila. Un Disparo con trigger
+ * `al_resolver_cadena` no pasa por aquí: lo despacha el trigger de la resolución (su coste se cobra al resolver).
+ */
+export function disparoDeRespuesta(meta: AnyCard | null | undefined): { efecto: EfectoData; efectoIdx: number } | null {
+  if (!meta || !('efectos' in meta) || !meta.efectos) return null
+  const efectoIdx = meta.efectos.findIndex((e) => e.tipo === 'disparo' && !!e.efecto && (!e.trigger || e.trigger === 'ninguno'))
+  return efectoIdx === -1 ? null : { efecto: meta.efectos[efectoIdx], efectoIdx }
+}
+
 export function motivoNoResponde(state: GameState, jugador: PlayerId, id: string, origen: 'campo' | 'mano'): string | null {
   const cadena = cadenaActiva(state)
   const inst = state.instances[id]
@@ -138,10 +150,16 @@ export function motivoNoResponde(state: GameState, jugador: PlayerId, id: string
   }
   if (meta.type === 'Campeón' && 'efectos' in meta && meta.efectos?.some((e) => e.tipo === 'disparo')) {
     if (efectosNegados(state, id)) return 'los efectos de esta carta están negados'
-    if (!inst.agotado) return null
     // Un Disparo con éter BLOQUEADO no agota al Campeón (manual §5.2/§8.3a): activar_habilidad lo permite con el
     // Campeón agotado, así que como respuesta también (antes la respuesta exigía Campeón enderezado).
-    return meta.efectos.some((e) => e.tipo === 'disparo' && esCostoBloqueo(e.costo)) ? null : 'el Campeón está agotado'
+    if (inst.agotado && !meta.efectos.some((e) => e.tipo === 'disparo' && esCostoBloqueo(e.costo))) return 'el Campeón está agotado'
+    // Responder con el Disparo lo PAGA (igual que activar_habilidad): si no se puede pagar, no es una respuesta
+    const disparo = disparoDeRespuesta(meta)
+    if (disparo) {
+      if (esCostoBloqueo(disparo.efecto.costo) && inst.opcionUsadaEsteTurno) return 'ya usaste esta habilidad este turno'
+      if (eterIdsParaHabilidad(state, jugador, disparo.efecto) === null) return 'no puedes pagar su coste'
+    }
+    return null
   }
   return 'esta carta no puede responder'
 }
@@ -249,6 +267,17 @@ export function validarResponderCadena(state: GameState, cardInstanceId: string,
     const pago = validarPago(state, cadena.prioridad, eterIds, meta.id)
     if (!pago.ok) return pago.error ?? 'pago inválido'
   }
+  // Un Campeón que responde con su Disparo paga lo mismo que activar_habilidad: si indica Éteres, los justos y de su zona
+  const disparo = meta?.type === 'Campeón' ? disparoDeRespuesta(meta) : null
+  if (disparo && eterIds !== undefined) {
+    const esperado = eterIdsParaHabilidad(state, cadena.prioridad, disparo.efecto)
+    if (!esperado) return 'no puedes pagar su coste'
+    if (eterIds.length !== esperado.length) return `${meta!.name} requiere exactamente ${esperado.length} Éter(es), indicaste ${eterIds.length}`
+    const p = state.players[cadena.prioridad]
+    const zona = esCostoBloqueo(disparo.efecto.costo) && disparo.efecto.costo?.origen === 'pagado' ? p.eterPagado : p.eterReserva
+    if (new Set(eterIds).size !== eterIds.length) return 'éteres repetidos'
+    for (const id of eterIds) if (!zona.includes(id)) return `el Éter ${id} no está en la zona de pago`
+  }
   return null
 }
 
@@ -341,6 +370,10 @@ export function ejecutarResponderCadena(s: GameState, cardInstanceId: string, ct
   // Campeones con efecto disparo se revelan también
   if (meta && meta.type === 'Campeón' && 'efectos' in meta && meta.efectos?.some((e) => e.tipo === 'disparo')) {
     inst!.bocaArriba = true
+    // Responder con el Disparo lo PAGA como activar_habilidad (Reserva → 1A y agota, o bloquea Éter): es parte de
+    // declarar la respuesta, no de resolverla. Sin eterIds, el motor elige los primeros que sirvan.
+    const disparo = disparoDeRespuesta(meta)
+    if (disparo) pagarHabilidad(s, ctx, jugador, cardInstanceId, disparo.efecto, eterIds ?? eterIdsParaHabilidad(s, jugador, disparo.efecto) ?? [])
   }
   declararRespuesta(s, ctx, { jugador, cardInstanceId, origen: 'campo' }, previos)
 }
@@ -373,6 +406,11 @@ export function ejecutarPasarPrioridad(s: GameState, ctx: Ctx): void {
  */
 function hechizosDeRespuesta(s: GameState, id: string, origen: RespuestaApilada['origen']) {
   const meta = s.instances[id]?.cardId ? getCardMeta(s.instances[id]!.cardId!) : null
+  // Un Campeón que responde aporta su Disparo (ya pagado al responder); Mística/Arcana, sus hechizos
+  if (meta && meta.type === 'Campeón' && origen === 'campo') {
+    const disparo = disparoDeRespuesta(meta)
+    return disparo ? [disparo] : []
+  }
   const aportaHechizos = !!meta && (esArcana(meta) || (esMistica(meta) && origen === 'mano'))
   return aportaHechizos ? hechizosDelOpener(s, id).hechizos : []
 }
@@ -396,8 +434,10 @@ function declararRespuesta(s: GameState, ctx: Ctx, respuesta: Omit<RespuestaCade
         s.objetivosPendientes = [...(s.objetivosPendientes ?? []), { jugador, instId: cardInstanceId, trigger: 'equipar', opciones, equipar: true }]
       }
     }
+    // El Disparo de un Campeón ya se pagó al responder: la elección de objetivo no vuelve a exigir el coste
+    const costoPagado = meta?.type === 'Campeón'
     for (const { efecto, efectoIdx } of hechizosDeRespuesta(s, cardInstanceId, origen)) {
-      interpretEffect(s, ctx, inst, efecto, { jugador, fromTrigger: true, declararOpener: { efectoIdx } })
+      interpretEffect(s, ctx, inst, efecto, { jugador, fromTrigger: true, declararOpener: { efectoIdx }, ...(costoPagado ? { costoPagado } : {}) })
     }
     dispararTrigger(s, ctx, 'al-resolver-cadena', jugador, [cardInstanceId], { declarar: true, cobrarCosto: false })
   }
@@ -517,6 +557,14 @@ function resolverRespuesta(s: GameState, ctx: Ctx, id: string, datos: RespuestaA
     }
     trigger()
     return
+  }
+  // Campeón que respondió con su Disparo (§9.6): el coste ya se pagó al responder; aquí resuelve su efecto con el
+  // objetivo elegido. Si salió del campo antes de resolver, o sus efectos quedaron negados, el efecto se pierde.
+  if (meta.type === 'Campeón' && enCampo && !efectosNegados(s, id)) {
+    for (const { efecto, efectoIdx } of hechizosDeRespuesta(s, id, origen)) {
+      const objetivoId = objetivos?.[efectoIdx]
+      interpretEffect(s, ctx, inst, efecto, { ...opciones, costoPagado: true, contextoUso: objetivoId ? 'objetivo-elegido' : undefined, objetivoId })
+    }
   }
   // Táctica / Mística en campo / Campeón Disparo: permanece, solo dispara el trigger
   trigger()

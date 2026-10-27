@@ -759,6 +759,8 @@ describe('bloqueos por turno y prioridad del defensor (§9.3, §9.6)', () => {
     const ctx = crearCtx()
     const a = conCampeon(estadoMinimo(), CASSANDRA, 0)
     const d = conCampeon(a.s, ISOLDE, 0, { owner: 'B' })
+    // Isolde responde con su Disparo (2 Éter): con Éter para pagarlo B PUEDE responder y la ventana se abre; sin él no es una respuesta
+    d.s.players.B.eterReserva = ['eb1', 'eb2']
     let s = aplicar(d.s, { type: 'declarar_ataque', atacanteIds: [a.id] }, ctx)
     s = cerrarCadena(s, ctx)
     const bloqueo = getValidActions(s, 'B').find((x) => x.type === 'declarar_bloqueo')
