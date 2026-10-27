@@ -341,7 +341,8 @@
         "reagrupar": {
           "fase": "alba",
           "turno": "propio"
-        }
+        },
+        "unaVezPorTurno": true
       }
     ],
     "efectoComandante": {
@@ -581,7 +582,8 @@
           "tipo": "bloqueo_fijo",
           "cantidad": 3
         },
-        "duracion": "mientras_ester_bloqueado"
+        "duracion": "mientras_ester_bloqueado",
+        "unaVezPorTurno": true
       }
     ],
     "variante": "normal"
@@ -874,7 +876,8 @@
           "mistica_hechizo",
           "mistica_continuo",
           "arcana_recompensa"
-        ]
+        ],
+        "unaVezPorTurno": true
       }
     ]
   },
@@ -1250,7 +1253,8 @@
         "costo": {
           "tipo": "bloqueo_fijo",
           "cantidad": 4
-        }
+        },
+        "unaVezPorTurno": true
       }
     ]
   },
@@ -1317,7 +1321,8 @@
         "reagrupar": {
           "fase": "alba",
           "turno": "propio"
-        }
+        },
+        "unaVezPorTurno": true
       }
     ],
     "efectoComandante": {

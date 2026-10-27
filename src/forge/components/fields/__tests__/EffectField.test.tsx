@@ -40,6 +40,27 @@ describe('EffectField — filtros del objetivo plegables', () => {
   })
 })
 
+describe('EffectField — «Una vez por turno» (bloqueo fijo)', () => {
+  const FIJO: EfectoData = { tipo: 'continuo', efecto: 'steal_champion', costo: { tipo: 'bloqueo_fijo', cantidad: 4 }, objetivo: { tipo: 'campeon', controlador: 'rival', zona: 'campo' } }
+
+  it('solo aparece con el coste «Bloqueo fijo»', () => {
+    const { rerender } = render(<EffectField label="" value={FIJO} onChange={() => {}} cardType="Campeón" />)
+    expect(screen.getByLabelText('Una vez por turno')).toBeInTheDocument()
+    rerender(<EffectField label="" value={{ ...FIJO, costo: { tipo: 'eter_bloqueado', cantidad: 4 } }} onChange={() => {}} cardType="Campeón" />)
+    expect(screen.queryByLabelText('Una vez por turno')).toBeNull()
+  })
+
+  it('marcarla la guarda; desmarcarla quita la clave (undefined)', () => {
+    const onChange = vi.fn()
+    const { rerender } = render(<EffectField label="" value={FIJO} onChange={onChange} cardType="Campeón" />)
+    fireEvent.click(screen.getByLabelText('Una vez por turno'))
+    expect(onChange).toHaveBeenLastCalledWith(expect.objectContaining({ unaVezPorTurno: true }))
+    rerender(<EffectField label="" value={{ ...FIJO, unaVezPorTurno: true }} onChange={onChange} cardType="Campeón" />)
+    fireEvent.click(screen.getByLabelText('Una vez por turno'))
+    expect(onChange).toHaveBeenLastCalledWith(expect.objectContaining({ unaVezPorTurno: undefined }))
+  })
+})
+
 describe('EffectField — stats en una sola fila', () => {
   it('ATQ, RES y «Buff por éter bloqueado» conviven y la casilla sigue ligada a su etiqueta', () => {
     const onChange = vi.fn()

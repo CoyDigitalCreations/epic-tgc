@@ -62,6 +62,16 @@ describe('limpiarCamposAjenos', () => {
     const buff: EfectoData = { tipo: 'pasivo', efecto: 'buff', stats: { ATQ: -1 } } // un buff negativo es otra cosa: no se toca
     expect(limpiarCamposAjenos(buff)).toBe(buff)
   })
+  it('«Una vez por turno» se queda con un bloqueo fijo y se va con cualquier otro coste (o sin coste)', () => {
+    const fijo: EfectoData = { tipo: 'continuo', efecto: 'steal_champion', costo: { tipo: 'bloqueo_fijo', cantidad: 4 }, unaVezPorTurno: true }
+    expect(limpiarCamposAjenos(fijo)).toBe(fijo)
+    expect('unaVezPorTurno' in limpiarCamposAjenos({ ...fijo, costo: { tipo: 'eter_bloqueado', cantidad: 4 } })).toBe(false)
+    expect('unaVezPorTurno' in limpiarCamposAjenos({ ...fijo, costo: undefined })).toBe(false)
+  })
+  it('«Una vez por turno» se limpia aunque el efecto no tenga `efecto` raíz (tramos)', () => {
+    const e = { tipo: 'continuo', costo: { tipo: 'eter_bloqueado', cantidad: 4 }, unaVezPorTurno: true, tramos: [{ umbral: 1, efecto: 'toggle_exhaust' }] } as unknown as EfectoData
+    expect('unaVezPorTurno' in limpiarCamposAjenos(e)).toBe(false)
+  })
   it('un efecto sin `efecto` raíz (los tramos definen los suyos) no se toca', () => {
     const tramos: EfectoData = { tipo: 'continuo', copyAttributes: ['atq'], tramos: [{ umbral: 1, efecto: 'toggle_exhaust' }] } as never
     expect(limpiarCamposAjenos(tramos)).toBe(tramos)

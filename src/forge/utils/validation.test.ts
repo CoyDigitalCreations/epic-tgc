@@ -123,6 +123,13 @@ describe('validateCard — efectos a medio configurar (se jugarían sin hacer na
     expect(cont({ efecto: 'destroy' })).toEqual([])
     expect(mensajes({ efecto: 'redirect' })).toEqual([]) // un hechizo normal sí puede
   })
+  it('«Una vez por turno» solo se acepta con el coste «Bloqueo fijo»', () => {
+    const fijo = { tipo: 'continuo', efecto: 'destroy', costo: { tipo: 'bloqueo_fijo', cantidad: 4 } }
+    expect(mensajes({ ...fijo, unaVezPorTurno: true })).toEqual([])
+    expect(mensajes({ ...fijo, costo: { tipo: 'eter_bloqueado', cantidad: 4 }, unaVezPorTurno: true })).toEqual(['Efecto 1: «Una vez por turno» solo sirve con el coste «Bloqueo fijo»'])
+    expect(mensajes({ ...fijo, costo: undefined, unaVezPorTurno: true })).toHaveLength(1)
+    expect(mensajes({ ...fijo, costo: { tipo: 'eter_bloqueado', cantidad: 4 } })).toEqual([]) // sin el flag no hay nada que decir
+  })
   describe('prevent_destroy y su trigger (Rowena): solo funcionan juntos', () => {
     const campeon = (efecto: object) => ({
       id: 'T-2', name: 'Rowena', type: 'Campeón', rarity: 'Común', keywords: [], flavorText: '', paqueteId: 'test', limiteCopias: '1',
