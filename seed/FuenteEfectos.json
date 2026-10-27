@@ -1785,7 +1785,7 @@
     "paqueteId": "disonancia",
     "limiteCopias": "3",
     "createdAt": "2026-08-03T00:00:00.000Z",
-    "updatedAt": "2026-10-24T18:16:00.977Z",
+    "updatedAt": "2026-10-27T00:26:09.195Z",
     "facciones": [
       "Caos"
     ],
@@ -1819,7 +1819,6 @@
       },
       {
         "tipo": "disparo",
-        "trigger": "al_activar_habilidad",
         "costo": {
           "tipo": "eter",
           "cantidad": 2
@@ -1830,7 +1829,7 @@
           "controlador": "rival",
           "zona": "campo"
         },
-        "texto": "Al activar esta habilidad, puedes pagar 2 Éter, destruye 1 Mística que controla el rival."
+        "texto": "Puedes pagar 2 Éter, destruye 1 Mística que controla el rival."
       }
     ]
   },
@@ -1994,7 +1993,7 @@
     "paqueteId": "disonancia",
     "limiteCopias": "3",
     "createdAt": "2026-08-03T00:00:00.000Z",
-    "updatedAt": "2026-10-08T05:20:29.945Z",
+    "updatedAt": "2026-10-27T00:26:22.051Z",
     "facciones": [
       "Caos"
     ],
@@ -2013,7 +2012,6 @@
     "efectos": [
       {
         "tipo": "disparo",
-        "trigger": "al_activar_habilidad",
         "costo": {
           "tipo": "eter",
           "cantidad": 2
@@ -2025,7 +2023,7 @@
         "objetivo": {
           "tipo": "todos_campeones_propios"
         },
-        "texto": "Al activar esta habilidad, puedes pagar 2 Éter, todos tus Campeones ganan 1 de ATQ, hasta el final del turno.",
+        "texto": "Puedes pagar 2 Éter, todos tus Campeones ganan 1 de ATQ, hasta el final del turno.",
         "duracion": "turno"
       }
     ]
