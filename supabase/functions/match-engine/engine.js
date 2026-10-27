@@ -3163,6 +3163,9 @@ var REGLAS = {
   puedeSerExiliada: { etiqueta: "Puede ser exiliada", manual: "\xA710", ambito: "campeon", base: true },
   puedeSerDestruidaPorEfecto: { etiqueta: "Puede ser destruida por efectos", manual: "\xA710", ambito: "campeon", base: true },
   puedeSerDestruidaEnBatalla: { etiqueta: "Puede ser destruida en batalla", manual: "\xA710", ambito: "campeon", base: true },
+  // Negar un «efecto activo» (Thane) la prohíbe un tiempo: el Campeón no activa ni mantiene sus efectos. NO alcanza a
+  // sus keywords (identidad de la carta) ni a su efecto de Comandante (§10): quien la consulta los exceptúa.
+  efectosActivos: { etiqueta: "Sus efectos est\xE1n activos (no negados)", manual: "\xA710", ambito: "campeon", base: true },
   /* ── carta ── */
   puedeSerNegada: { etiqueta: "Sus efectos pueden ser negados o contrarrestados por el rival", manual: "\xA710", ambito: "carta", base: true },
   eterBloqueadoExtra: { etiqueta: "\xC9ter bloqueado extra sobre el tope del efecto", manual: "\xA77.7", ambito: "carta", base: 0, min: 0 }
@@ -3298,10 +3301,14 @@ function afectaACarta(s, f, efecto, instId) {
       return false;
   }
 }
+var REGLAS_DE_KEYWORD = new Set(Object.values(KEYWORD_REGLAS).flatMap((ms) => ms.map((m) => m.regla)));
+function efectosNegados(s, instId) {
+  return !reglaBool(s, "efectosActivos", { instId });
+}
 function modificadoresReglaDe(s, regla, sujeto) {
   const def = REGLAS[regla];
   const mods = [];
-  if (sujeto && "instId" in sujeto) {
+  if (sujeto && "instId" in sujeto && REGLAS_DE_KEYWORD.has(regla)) {
     for (const kw of keywordsDe(s, sujeto.instId)) {
       for (const m of KEYWORD_REGLAS[kw] ?? []) if (m.regla === regla) mods.push({ ...m, orden: 0 });
     }
@@ -3311,6 +3318,7 @@ function modificadoresReglaDe(s, regla, sujeto) {
     for (const { efecto, indice } of efectosReglaDe(cardId)) {
       const m = reglaDeEfecto(efecto);
       if (!m || m.id !== regla || !efectoActivo(s, f, efecto, indice)) continue;
+      if (regla !== "efectosActivos" && f.origen === "campo" && efecto.tipo !== "comandante" && efectosNegados(s, f.inst.cardInstanceId)) continue;
       let alcanza = false;
       if (def.ambito === "partida") alcanza = true;
       else if (def.ambito === "jugador") alcanza = !!sujeto && "jugador" in sujeto && jugadoresAfectados(f, efecto).includes(sujeto.jugador);
@@ -3909,6 +3917,7 @@ function validarBloqueo(state, jugador, eterIds, targetInstanceId, efectoIdx) {
   if (!enCampo) return "la carta no est\xE1 en tu campo";
   const meta = inst.cardId ? getCardMeta(inst.cardId) : null;
   if (!meta) return "carta desconocida";
+  if (efectosNegados(state, targetInstanceId)) return "los efectos de esta carta est\xE1n negados";
   if (!p.campo.campeones.includes(targetInstanceId)) {
     if (!cartaNecesitaEterBloqueado(meta)) {
       return "esta carta no tiene efecto que use \xC9ter bloqueado";
@@ -4059,6 +4068,7 @@ function motivoNoResponde(state, jugador, id, origen) {
     return etersParaPagar(state, jugador, meta.id) === null ? "no puedes pagar su coste" : null;
   }
   if (meta.type === "Campe\xF3n" && "efectos" in meta && meta.efectos?.some((e) => e.tipo === "disparo")) {
+    if (efectosNegados(state, id)) return "los efectos de esta carta est\xE1n negados";
     if (!inst.agotado) return null;
     return meta.efectos.some((e) => e.tipo === "disparo" && esCostoBloqueo(e.costo)) ? null : "el Campe\xF3n est\xE1 agotado";
   }
@@ -4427,7 +4437,8 @@ function resolverOpener(s, ctx, opener) {
     sinReceptor(s, ctx, opener.cardInstanceId);
     return;
   }
-  if (!opener.negada) {
+  const habilidadNegada = opener.tipo === "habilidad" && efectosNegados(s, opener.cardInstanceId);
+  if (!opener.negada && !habilidadNegada) {
     if (opener.tipo === "habilidad") {
       const efecto = "efectos" in meta ? meta.efectos?.[opener.efectoIdx ?? -1] : void 0;
       const objetivoId = opener.objetivos?.[opener.efectoIdx ?? -1];
@@ -4831,7 +4842,7 @@ function interpretEffect(s, ctx, inst, efectoData, payload) {
   const mergedFiltros = efectoData.filtros ? { ...objetivo?.filtros, ...efectoData.filtros } : objetivo?.filtros;
   const hasAutoSelect = mergedFiltros?.seleccionar != null;
   const needsPending = isTriggered ? targetIds.length > 0 && !hasAutoSelect : targetIds.length > 1;
-  if (needsPlayerChoice(objetivo, efecto) && !autoResolver && needsPending) {
+  if (needsPlayerChoice(objetivo, efecto, efectoData.tipoNegacion) && !autoResolver && needsPending) {
     if (!canExecuteEffect(s, efecto, jugador)) {
       return;
     }
@@ -4867,8 +4878,9 @@ function objetivoCompleto(efectoData) {
   }
   return mergedObjetivo;
 }
-function needsPlayerChoice(objetivo, efecto) {
+function needsPlayerChoice(objetivo, efecto, tipoNegacion) {
   if (!objetivo) return false;
+  if (efecto === "negar" && tipoNegacion === "efecto_activo") return true;
   if (objetivo.tipo === "self" || objetivo.tipo === "todos_campeones_propios" || objetivo.tipo === "todos_campeones_rivales" || objetivo.tipo === "rival_hand" || objetivo.tipo === "equipped_champion") {
     return false;
   }
@@ -4985,6 +4997,10 @@ function executeEffect(s, ctx, inst, efecto, targetIds, jugador, efectoData) {
       executeModificarRegla(s, targetIds, jugador, efectoData);
       break;
     case "negar": {
+      if (efectoData.tipoNegacion === "efecto_activo") {
+        executeNegarEfectosActivos(s, ctx, inst, targetIds, jugador, efectoData);
+        break;
+      }
       const cadenaNeg = cadenaActiva(s);
       const pend = cadenaNeg?.opener;
       if (pend && !pend.negada && pend.jugador !== jugador && reglaBool(s, "puedeSerNegada", { instId: pend.cardInstanceId })) {
@@ -5125,6 +5141,7 @@ function dispararUmbralBloqueo(s, ctx, targetInstanceId) {
   if (!inst?.cardId) return;
   const meta = getCardMeta(inst.cardId);
   if (!meta || !("efectos" in meta) || !meta.efectos) return;
+  if (efectosNegados(s, targetInstanceId)) return;
   const bloqueadosEn = (idxEfecto) => eterDeEfecto(s, targetInstanceId, idxEfecto).length;
   for (const [idxEfecto, efecto] of meta.efectos.entries()) {
     if (efecto.tramos && efecto.tramos.length > 0) {
@@ -5406,6 +5423,17 @@ function executeModificarRegla(s, targetIds, jugador, efectoData) {
     for (const j of afectados) aplicarReglaTemporal(s, { ...comunes, sujeto: { tipo: "jugador", jugador: j } });
   } else {
     for (const instId of targetIds) aplicarReglaTemporal(s, { ...comunes, sujeto: { tipo: "carta", instId } });
+  }
+}
+function executeNegarEfectosActivos(s, ctx, inst, targetIds, jugador, efectoData) {
+  const duracion = duracionTemporal({ ...efectoData, duracion: efectoData.duracion ?? "turno" }, jugador);
+  for (const instId of targetIds) {
+    const objetivo = s.instances[instId];
+    const meta = objetivo?.cardId ? getCardMeta(objetivo.cardId) : null;
+    if (!objetivo || !meta || !esCampeon(meta)) continue;
+    if (!reglaBool(s, "puedeSerNegada", { instId })) continue;
+    aplicarReglaTemporal(s, { regla: "efectosActivos", operacion: "prohibir", ...duracion, sujeto: { tipo: "carta", instId } });
+    ctx.emit({ type: "efectos_negados", jugador, cardInstanceId: instId, fuente: inst.cardInstanceId });
   }
 }
 function executeCopiaCampeon(s, inst, objetivoId, jugador, efectoData) {
@@ -5938,6 +5966,7 @@ function validarActivarHabilidad(state, action) {
   if (!p.campo.campeones.includes(action.cardInstanceId)) return "la carta no est\xE1 en tu campo";
   const meta = inst.cardId ? getCardMeta(inst.cardId) : null;
   if (!meta) return "carta desconocida";
+  if (efectosNegados(state, action.cardInstanceId)) return "los efectos de esta carta est\xE1n negados";
   const efectoSel = efectoActivableDe(meta, !!action.objetivoId);
   if (!efectoSel) {
     return "esta carta se activa bloqueando \xC9ter (usa la acci\xF3n bloquear_eter)";
@@ -6402,6 +6431,7 @@ function modificadoresJSONDe(s, id) {
   const keywords = [];
   for (const c of candidatos) {
     const efectos = [];
+    const negada = c.origen === "campo" && efectosNegados(s, c.inst.cardInstanceId);
     if (c.esComandante && c.meta.type === "Campe\xF3n" && c.meta.efectoComandante) {
       efectos.push(c.meta.efectoComandante);
     }
@@ -6410,7 +6440,7 @@ function modificadoresJSONDe(s, id) {
         if (c.origen === "reserva" && e.tipo === "reserva" && esAuraZona(e)) efectos.push(e);
         else if (c.origen === "bloqueo" && e.tipo === "bloqueo" && esAuraZona(e)) efectos.push(e);
         else if (c.origen === "vinculo" && e.tipo === "vinculo" && esAuraVinculo(e)) efectos.push(e);
-        else if (c.origen === "campo" && (esAuraZona(e) || esAuraCondicionada(e) || esAuraEquipada(e))) efectos.push(e);
+        else if (c.origen === "campo" && !negada && (esAuraZona(e) || esAuraCondicionada(e) || esAuraEquipada(e))) efectos.push(e);
       }
     }
     for (const efecto of efectos) {
@@ -6553,9 +6583,12 @@ function triggersQueMatchean(s, trigger, jugador, ids, opts) {
     }
     const efectos = meta.efectos;
     if (!efectos || !Array.isArray(efectos)) continue;
+    const negada = efectosNegados(s, id);
     efectos.forEach((efecto, efectoIdx) => {
+      if (negada && efecto.tipo !== "comandante") return;
+      const triggerDelEfecto = efecto.trigger === "ninguno" ? void 0 : efecto.trigger;
       const esUmbral = trigger === "al-bloquear-eter";
-      const matchea = esUmbral ? !efecto.trigger && (efecto.costo?.tipo === "bloqueo_fijo" || efecto.costo?.tipo === "eter_bloqueado") && !!efecto.efecto : efecto.trigger === efectoTrigger && !!efecto.efecto;
+      const matchea = esUmbral ? !triggerDelEfecto && (efecto.costo?.tipo === "bloqueo_fijo" || efecto.costo?.tipo === "eter_bloqueado") && !!efecto.efecto : triggerDelEfecto === efectoTrigger && !!efecto.efecto;
       if (matchea) res.push({ inst, efecto, efectoIdx });
     });
   }
@@ -6573,6 +6606,7 @@ function dispararTrigger(s, ctx, trigger, jugador, instancias, payloadExtra) {
     let handled = false;
     const meta = getCardMeta(cardId);
     if (meta && meta.type === "V\xEDnculo" && inst.bocaArriba !== true) continue;
+    if (efectosNegados(s, id)) continue;
     const primero = triggersQueMatchean(s, trigger, payload.jugador, [id])[0];
     if (primero) {
       const { efecto, efectoIdx } = primero;
@@ -7744,6 +7778,7 @@ function accionesBloqueoEter(state, playerId, enCadena = false) {
   const p = state.players[playerId];
   const generarBloqueos = (targets) => {
     for (const t of targets) {
+      if (efectosNegados(state, t.id)) continue;
       if (!("efectos" in t.meta) || !t.meta.efectos) continue;
       const fuentes = t.meta.efectos.map((efecto, i) => ({ efecto, i })).filter(({ efecto }) => esCostoBloqueo(efecto.costo) && efecto.tipo !== "disparo");
       if (fuentes.length === 0) continue;
@@ -7929,6 +7964,7 @@ function getValidActions(state, playerId) {
       const inst = state.instances[champId];
       const meta = inst?.cardId ? getCardMeta(inst.cardId) : null;
       if (!meta) continue;
+      if (efectosNegados(state, champId)) continue;
       const efectoAct = efectoActivableDe(meta, false);
       if (efectoAct && inst) {
         const costoBloqueo = esCostoBloqueo(efectoAct.costo);
@@ -8212,6 +8248,8 @@ var CATALOGO_EVENTOS = [
   { type: "prioridad_pasada", jugador: "A" },
   { type: "carta_activada", cardInstanceId: "c1", jugador: "A", slot: 0 },
   { type: "activacion_negada", jugador: "B", cardInstanceId: "c1", fuente: "c4" },
+  // Negar un «efecto activo» (Thane): los efectos del Campeón quedan negados un tiempo
+  { type: "efectos_negados", jugador: "B", cardInstanceId: "c1", fuente: "c4" },
   // F5d-3 (decisión 10a): triggers apilados sobre la jugada que los provocó
   { type: "trigger_apilado", jugador: "A", cardInstanceId: "c1", trigger: "al-jugar-mistica", efectoIdx: 0 },
   // F9c: scry (mirar y ordenar el tope del mazo)
@@ -8294,6 +8332,8 @@ function validarExhaustividadEventos(tipo) {
     case "carta_activada":
       return;
     case "activacion_negada":
+      return;
+    case "efectos_negados":
       return;
     case "trigger_apilado":
       return;
