@@ -7830,7 +7830,9 @@ function validarAccion(state, action) {
   if (state.declaracionEnEleccion && action.type !== "elegir_objetivo" && action.type !== "rendirse" && action.type !== "responder_prevenicion") {
     return "hay un objetivo por elegir antes de abrir la ventana";
   }
-  if (electorAjeno(state) && action.type !== "elegir_objetivo" && action.type !== "rendirse" && action.type !== "responder_prevenicion") {
+  const equipar = state.equiparPendiente;
+  const equipando = !!equipar && !state.instances[equipar.artefactoId]?.equipadoA && action.type === "equipar_artefacto";
+  if (electorAjeno(state) && !equipando && action.type !== "elegir_objetivo" && action.type !== "rendirse" && action.type !== "responder_prevenicion") {
     return "el rival debe elegir un objetivo antes de continuar";
   }
   if (scryActual(state) && !state.declaracionEnEleccion && !electorAjeno(state) && action.type !== "ordenar_mazo" && action.type !== "rendirse") {
@@ -8012,6 +8014,8 @@ function actorActual(estado) {
   if (estado.fase === "terminada") return null;
   const preven = estado.preventivosPendientes?.[0];
   if (preven) return preven.jugador;
+  const equipar = estado.equiparPendiente;
+  if (equipar && !estado.instances[equipar.artefactoId]?.equipadoA) return equipar.jugador;
   if (estado.declaracionEnEleccion) {
     const pendiente = estado.objetivosPendientes?.[0];
     if (pendiente) return pendiente.jugador;
