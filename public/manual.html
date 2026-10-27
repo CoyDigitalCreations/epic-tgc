@@ -1064,7 +1064,7 @@
       <div class="destiny-table">
         <table>
           <tr><th style="width:70px">FASE</th><th style="width:100px">NOMBRE</th><th>QUÉ PASA</th></tr>
-          <tr><td><span class="highlight">1</span></td><td><strong>ALBA</strong></td><td>Enderezas Campeones. Reagrupas el Éter (todo vuelve a la Reserva salvo el de efectos continuos). Se resuelven efectos "Al inicio de tu turno". Robas 1 carta del Mazo Principal.</td></tr>
+          <tr><td><span class="highlight">1</span></td><td><strong>ALBA</strong></td><td>Enderezas Campeones. Reagrupas el Éter (todo vuelve a la Reserva salvo el de efectos continuos). Se resuelven efectos "Al inicio de tu turno". Robas 1 carta del Mazo Principal. Si un efecto de inicio de turno te deja <strong>mirar y ordenar</strong> el mazo (Scry), lo ordenas <strong>antes</strong> de robar.</td></tr>
           <tr><td><span class="highlight">2</span></td><td><strong>FORJA</strong></td><td>Jugar Campeones, Místicas, Arcanas. Activar efectos.</td></tr>
           <tr><td><span class="highlight">3</span></td><td><strong>CHOQUE</strong></td><td>Combate (ver sección 9). Las Arcanas de combate se activan aquí — y en cualquier otra fase excepto Alba (sección 8.3a).</td></tr>
           <tr><td><span class="highlight">4</span></td><td><strong>OCASO</strong></td><td>Descartar al límite de mano (6). Efectos "hasta final del turno" expiran. Pasa el turno al otro jugador.</td></tr>
@@ -1075,7 +1075,7 @@
       <ol>
         <li><strong>Enderezas</strong> todos tus Campeones agotados (vuelven a estar disponibles).</li>
         <li><strong>Reagrupas el Éter:</strong> todo el Éter fuera de la Reserva (1A y bloqueado en Campeones o cartas de soporte) vuelve a la Reserva (2A). <span class="highlight-amber">EXCEPTO el Éter de efectos continuos</span> (habilidades continuas de Campeones y Místicas/Arcanas continuas), que permanece bloqueado.</li>
-        <li>Se resuelven efectos que dicen "Al inicio de tu turno...".</li>
+        <li>Se resuelven efectos que dicen "Al inicio de tu turno...". Si uno te deja <strong>mirar y ordenar</strong> el tope del mazo, lo ordenas <strong>antes</strong> de robar.</li>
         <li>Robas <strong>1 carta</strong> de tu Mazo PRINCIPAL (3G) a tu mano.</li>
         <li>Si tu Mazo Principal está vacío al intentar robar, pierdes la partida (sección 13).</li>
       </ol>
@@ -1313,7 +1313,7 @@
         <div class="cartas"><figure class="carta"><img src="/manual/cartas/FB-021.png" alt="Carta FB-021: Marcha de las Primeras" width="744" height="1038" decoding="sync"><figcaption><span class="rol">PRESTEZA</span><b>Marcha de las Primeras</b>FB-021</figcaption></figure></div>
         <div class="ex-cuerpo">
           <div class="ex-title">NEGAR LA ACTIVACIÓN DE UN EFECTO</div>
-          Negar la <strong>activación</strong> de un efecto no es lo mismo que negar un efecto que <strong>ya está activo</strong>. Cuando un efecto tiene coste, primero se <strong>paga el coste</strong> y luego se <strong>activa</strong> el efecto: en ese momento se puede responder para negar la activación (por ejemplo con <strong>Marcha de las Primeras</strong>, que niega la activación del efecto de un Campeón del rival).<br><br>→ Si la activación es negada, el efecto no ocurre, pero <strong>el coste ya pagado NO se devuelve</strong>: se niega la activación, no el pago.<br><br><strong>Negar los efectos activos de un Campeón</strong> (por ejemplo, con <strong>Thane</strong>) es distinto: el Campeón elegido tiene todos sus efectos <strong>negados hasta el final del turno</strong>. No puede activar sus habilidades (ni Disparo ni Continuo, aunque no las haya usado); los efectos Continuos que ya tenía activados dejan de aplicar (el Éter bloqueado se queda donde está), y sus efectos pasivos, auras y efectos disparados no hacen nada. <strong>No se niegan</strong> sus palabras clave (son parte de la identidad de la carta) ni su efecto de Comandante. Un Campeón con <strong>INEGABLE</strong> no puede ser negado.
+          Negar la <strong>activación</strong> de un efecto no es lo mismo que negar un efecto que <strong>ya está activo</strong>. Cuando un efecto tiene coste, primero se <strong>paga el coste</strong> y luego se <strong>activa</strong> el efecto: en ese momento se puede responder para negar la activación (por ejemplo con <strong>Marcha de las Primeras</strong>, que niega la activación del efecto de un Campeón del rival).<br><br>→ Si la activación es negada, el efecto no ocurre, pero <strong>el coste ya pagado NO se devuelve</strong>: se niega la activación, no el pago.<br><br><strong>Negar los efectos activos de un Campeón</strong> (por ejemplo, con <strong>Thane</strong>) es distinto: el Campeón elegido tiene todos sus efectos <strong>negados hasta el final del turno</strong>. No puede activar sus habilidades (ni Disparo ni Continuo, aunque no las haya usado); los efectos Continuos que ya tenía activados dejan de aplicar (el Éter bloqueado se queda donde está), y sus efectos pasivos, auras y efectos disparados no hacen nada. <strong>No se niegan</strong> sus palabras clave (son parte de la identidad de la carta) ni su efecto de Comandante. Un Campeón con <strong>INEGABLE</strong> no puede ser negado.<br><br>Negar los efectos activos <strong>cancela</strong> lo que sus efectos ya habían dejado en curso: un Campeón que robó con un efecto Continuo vuelve a su dueño y un agotamiento fijado por un tramo se suelta (no se reanudan al terminar el turno; el Éter bloqueado se queda donde está). Un robo permanente ya está hecho y no se deshace. Si se alcanza un umbral de Éter bloqueado mientras el Campeón está negado, ese efecto <strong>se pierde</strong>.
         </div>
       </div>
     </div>
@@ -1494,6 +1494,7 @@
           <tr><td>CAMBIAR DE TIPO</td><td>Un Campeón pasa a tener otra Facción, Esencia o Rol, que sustituye a la impresa mientras dure el efecto</td></tr>
           <tr><td>VALOR ORIGINAL / ACTUAL</td><td>El ATQ y la RES <strong>originales</strong> son los impresos en la carta; los <strong>actuales</strong> incluyen los bonos y penalizaciones vigentes. Cada carta dice cuál compara</td></tr>
           <tr><td>FORJA</td><td>Segunda fase del turno (jugar cartas)</td></tr>
+          <tr><td>CAMBIAR DE ZONA</td><td>Una carta que cambia de zona es una carta nueva: al llegar al Cementerio y al volver al campo pierde cualquier bonus, palabra clave concedida, copia, cambio de Facción/Esencia/Rol o negación que tuviera, y vuelve enderezada</td></tr>
           <tr><td>INVOCACIÓN CANSADA</td><td>Los Campeones no atacan el turno en que fueron invocados (sí pueden defender)</td></tr>
           <tr><td>MANO</td><td>Cartas que tienes disponibles para jugar (límite 6)</td></tr>
           <tr><td>MULLIGAN</td><td>Acción opcional al inicio de la partida, 1 sola vez por jugador: barajar la mano inicial de vuelta al Mazo Principal y robar 5 cartas nuevas, sin penalización</td></tr>

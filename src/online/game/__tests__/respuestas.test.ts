@@ -185,7 +185,10 @@ describe('respuesta con objetivo: se elige al responder (F5e)', () => {
     expect(s.cadena?.respuestas).toMatchObject({ resp: { objetivos: { 0: 'a0' } }, resA: { objetivos: { 0: 'b0' } } })
     s = cerrar(s, ctx)
     expect(statsDe(s, 'a0').poder).toBe(0)
-    expect(statsDe(s, 'b0').poder).toBe(0)
+    // b0 murió por el Rayo (la jugada que abrió la cadena, la última en resolver). Al llegar al Cementerio vuelve a ser una
+    // carta nueva: ya no arrastra el debuff de resA (antes se leía el 0 de una carta muerta)
+    expect(s.players.B.cementerio).toContain('b0')
+    expect(statsDe(s, 'b0').poder).toBe(2)
     expect(s.players.A.cementerio).toEqual(expect.arrayContaining(['resA', 'rayo']))
     expect(s.players.B.cementerio).toContain('resp')
   })

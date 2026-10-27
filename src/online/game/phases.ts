@@ -4,6 +4,7 @@ import { purgarEfectosTemporales, purgarHastaFase, dispararTrigger, evaluarCanda
 import { resolverFaseEfectos } from './effectRegistry'
 import { reagruparEfectosBloqueoAlba, exhaustFijado } from './effectInterpreter'
 import { confirmarFinDePartida } from './finPartida'
+import { scryActual } from './scry'
 import type { Ctx, GameState, PlayerId } from './types'
 
 /**
@@ -80,11 +81,33 @@ export function resolverAlba(s: GameState, ctx: Ctx, jugador: PlayerId): void {
     dispararTrigger(s, ctx, 'al-inicio-alba', jugador, albaInstances)
   }
 
-  // 4. Robar 1 (no consume RNG: toma del tope)
+  // 3b. Un efecto de inicio de Alba pudo MIRAR el mazo (Scry): el jugador ordena ANTES de robar. El Alba espera (es el único
+  //     caso en que el Alba es observable, ADR-3); el robo ocurre en reanudarAlba al resolverse el Scry.
+  if (scryActual(s)) {
+    s.albaPendiente = jugador
+    return
+  }
+
+  robarDelAlba(s, ctx, jugador)
+}
+
+/** 4. Robar 1 (no consume RNG: toma del tope) y comprobar el fin de partida. */
+function robarDelAlba(s: GameState, ctx: Ctx, jugador: PlayerId): void {
   robarCarta(s, ctx, jugador)
   // F6: si el robo falló y no queda nada obligatorio por resolver, la derrota se confirma YA (la partida no pasa a la
   // Forja); el punto de control también cubre una derrota de Vínculos del rival que estuviera esperando
   confirmarFinDePartida(s, ctx)
+}
+
+/**
+ * Termina un Alba que esperaba un Scry: cuando ya no hay mazo por ordenar (se ordenó, o las cartas miradas se
+ * robaron/movieron y la pendiente murió) roba la carta del Alba. Se llama tras cada acción (core.applyAction).
+ */
+export function reanudarAlba(s: GameState, ctx: Ctx): void {
+  const jugador = s.albaPendiente
+  if (jugador === undefined || scryActual(s)) return
+  delete s.albaPendiente
+  robarDelAlba(s, ctx, jugador)
 }
 
 /** Roba la carta del tope del mazo; mazo vacío → mazo_agotado + partida_terminada. */

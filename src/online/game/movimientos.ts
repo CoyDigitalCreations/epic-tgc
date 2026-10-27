@@ -10,6 +10,7 @@ import { aplicarPago, validarPago, etersParaPagar, type ContextoUso } from './pa
 import { SLOTS_CAMPEONES, SLOTS_MISTICAS_TACTICAS, SLOTS_ARCANAS_COMBATE, slotAZona } from './zones'
 import { dispararTrigger, condicionCumple } from './efectos'
 import { armarTriggers, construirTriggers } from './triggers'
+import { reiniciarCampeon } from './reglasTemporales'
 import { liberarEterBloqueado, enviarAlCementerio } from './replacements'
 import { declararOpener, declararVentana, marcarInicioAccion } from './chain'
 import type { Action } from './core'
@@ -150,6 +151,9 @@ export function ejecutarJugarCampeon(s: GameState, action: Extract<Action, { typ
   const p = s.players[s.turno]
   const id = action.cardInstanceId
   const cardId = s.instances[id]!.cardId!
+  // Una carta que entra al campo es una carta nueva (sin buffs, copias ni negaciones de una vida anterior). Va ANTES del
+  // pago: un gatillo de «al pagar Éter» puede darle un bonus a este Campeón y ese sí debe quedarse.
+  reiniciarCampeon(s, id)
   // F5d-1: marcador de la acción — las elecciones que arme (al-pagar-eter, sacrificios
   // con tutor, al-invocar) se resuelven ANTES de abrir la ventana de la invocación
   const previos = marcarInicioAccion(s)

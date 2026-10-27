@@ -23,7 +23,7 @@
  * 0 extracciones RNG (contrato 89 intacto). CICLO de import deliberado con
  * combat.ts: ambos módulos se usan mutuamente SOLO en runtime (ESM, seguro).
  */
-import { esArcana, esArtefactoEquipable, esCostoBloqueo, esMistica, esPermanenteEnMesa, getCardMeta } from './cards'
+import { esArcana, esArtefactoEquipable, esCostoBloqueo, esMistica, esPermanenteEnMesa, getCardMeta, type AnyCard } from './cards'
 import { abrirVentanaAtaque, continuarCombateTrasCadena, rivalDe } from './combat'
 import {
   abrirVentanaTriggers, armarTriggers, asentarTriggers, enResolucion, ordenResolucion, registrarObjetivoTrigger, resolverTrigger,

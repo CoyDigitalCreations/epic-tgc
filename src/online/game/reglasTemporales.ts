@@ -24,6 +24,37 @@ export function aplicarReglaTemporal(s: GameState, regla: Omit<ReglaTemporal, 'o
   s.reglasTemporales = [...(s.reglasTemporales ?? []), { ...regla, orden }]
 }
 
+/** Todo lo que un Campeón acumula MIENTRAS está en el campo y que no sobrevive a cambiar de zona. */
+const ESTADO_DE_CAMPO = [
+  'poder', 'resistencia', 'modificadores', 'keywords', 'keywordsTemporales', 'keywordsHastaFase', 'copyTargetId',
+  'copyOneShotDisparado', 'efectoUmbralDisparado', 'tramosDisparados', 'fijadoExhaustTargetId', 'stolenBy',
+  'agotado', 'bloqueosEsteTurno', 'opcionUsadaEsteTurno', 'destruccionPendiente',
+] as const
+
+/**
+ * Una carta que cambia de zona es una carta NUEVA (decisión del usuario, 2026-10-27): al volver pierde buffs, debuffs,
+ * keywords concedidas, copias, cambios de Facción/Esencia/Rol, reglas temporales sobre ella (p. ej. efectos negados),
+ * el agotamiento y los contadores del turno. Se llama al ENTRAR al campo (todas las vías) y, para que no queden
+ * valores viejos en el Cementerio, al llegar a él DESPUÉS de disparar «al ser enviado al Cementerio» (que aún necesita
+ * ver el estado, p. ej. si sus efectos estaban negados). No toca el Éter bloqueado (se libera aparte, por pagador).
+ * Hoy ningún efecto da modificadores a cartas fuera del campo; si aparece uno, hay que aplicarlo después de entrar.
+ */
+export function reiniciarCampeon(s: GameState, instId: string): void {
+  const inst = s.instances[instId]
+  if (!inst) return
+  for (const campo of ESTADO_DE_CAMPO) delete inst[campo]
+  if (s.reglasTemporales?.length) {
+    const quedan = s.reglasTemporales.filter((r) => !(r.sujeto.tipo === 'carta' && r.sujeto.instId === instId))
+    if (quedan.length === 0) delete s.reglasTemporales
+    else if (quedan.length !== s.reglasTemporales.length) s.reglasTemporales = quedan
+  }
+  if (s.cambiosAtributo?.length) {
+    const quedan = s.cambiosAtributo.filter((c) => c.instId !== instId)
+    if (quedan.length === 0) delete s.cambiosAtributo
+    else if (quedan.length !== s.cambiosAtributo.length) s.cambiosAtributo = quedan
+  }
+}
+
 /** Registra un cambio de Esencia/Rol/Facción (F9e); el más reciente de cada atributo gana. */
 export function aplicarCambioAtributo(s: GameState, cambio: CambioAtributo): void {
   s.cambiosAtributo = [...(s.cambiosAtributo ?? []), cambio]

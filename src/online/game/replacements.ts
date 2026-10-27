@@ -10,6 +10,7 @@
  * compartidos `moverAlCementerio` + `liberarEterBloqueado('2A')`.
  */
 import { esCampeon, esVinculo, getCardMeta } from './cards'
+import { reiniciarCampeon } from './reglasTemporales'
 import { dispararTrigger, keywordsDe } from './efectos'
 import { liberarEterA, evaluarFinSteal } from './eter'
 import { esExiliable, permitirExilio } from './exilio'
@@ -93,6 +94,19 @@ export function enviarAlCementerio(s: GameState, ctx: Ctx, cardInstanceId: strin
   // Los sacrificios ya liberaron a '2A' antes de llegar aquí — segundo call es no-op.
   liberarEterBloqueado(s, ctx, cardInstanceId, '1A')
   dispararTrigger(s, ctx, 'al-ser-enviado-al-cementerio', inst.owner, [cardInstanceId])
+  reiniciarEnCementerio(s, cardInstanceId)
+}
+
+/**
+ * Un Campeón que llega al Cementerio deja allí su estado de campo (buffs, negaciones...): una carta que cambia de zona es
+ * nueva. Va DESPUÉS de «al ser enviado al Cementerio», que aún necesita ver ese estado (p. ej. si sus efectos estaban
+ * negados). Si el trigger la sacó del Cementerio (se revivió), no se toca: lo que el efecto le dio es de su nueva vida.
+ */
+function reiniciarEnCementerio(s: GameState, cardInstanceId: string): void {
+  const inst = s.instances[cardInstanceId]
+  const meta = inst?.cardId ? getCardMeta(inst.cardId) : null
+  if (!inst || !meta || !esCampeon(meta)) return
+  if (s.players[inst.owner].cementerio.includes(cardInstanceId)) reiniciarCampeon(s, cardInstanceId)
 }
 
 /**
@@ -328,5 +342,6 @@ export function destruirCarta(s: GameState, ctx: Ctx, cardInstanceId: string, ca
   dispararTrigger(s, ctx, 'al-ser-enviado-al-cementerio', inst.owner, [cardInstanceId])
   ctx.emit({ type: 'carta_muerta', cardInstanceId, jugador: inst.owner, causa })
   ctx.emit({ type: 'destruccion', cardInstanceId, jugador: inst.owner, causa })
+  reiniciarEnCementerio(s, cardInstanceId)
   return true
 }

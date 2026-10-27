@@ -12,7 +12,7 @@ import { dispararTrigger, pasivosBloqueo1A, type TriggerEfecto } from './efectos
 import { interpretEffect, ejecutarTramo } from './effectInterpreter'
 import { electorAjeno, opcionesVigentes } from './pendientes'
 import { tieneKeyword } from './combat'
-import { efectosNegados, reglaBool } from './reglas'
+import { efectosNegados } from './reglas'
 import { liberarEterBloqueado, enviarAlCementerio } from './replacements'
 import { slotAZona } from './zones'
 import { validarBloqueo } from './payments'

@@ -433,6 +433,12 @@ export interface GameState {
   /** Scry (F9c): mazos por ordenar, cola FIFO. Ver scry.ts. */
   scryPendientes?: ScryPendiente[]
   /**
+   * Alba EN ESPERA de un Scry (decisión del usuario, 2026-10-27): un efecto «al inicio del Alba» que mira y ordena el
+   * mazo debe resolverse ANTES de robar. El Alba se detiene tras sus efectos de inicio y el robo (con la comprobación de
+   * fin de partida) ocurre al ordenar. Guarda el jugador cuyo Alba espera. Ver phases.reanudarAlba.
+   */
+  albaPendiente?: PlayerId
+  /**
    * Declaración (F5d-1) que espera la elección de sus objetivos ANTES de abrir
    * la ventana (Yugioh: se elige al declarar, luego empiezan las respuestas). Sus
    * `pendientes` son las primeras entradas de objetivosPendientes (van al FRENTE;

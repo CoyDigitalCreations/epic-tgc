@@ -9,7 +9,7 @@ import { robarCarta } from './draw'
 import { shuffleFisherYates } from './rng'
 import { aplicarMod, otorgarKeyword, crearOpcionBloqueo, statsDe, keywordsDe, dispararTrigger } from './efectos'
 import { construirTriggers, resolverTriggersDeEfecto } from './triggers'
-import { aplicarCambioAtributo, aplicarReglaTemporal } from './reglasTemporales'
+import { aplicarCambioAtributo, aplicarReglaTemporal, reiniciarCampeon } from './reglasTemporales'
 import { efectosNegados, reglaBool, reglaDeEfecto } from './reglas'
 import { iniciarScry } from './scry'
 import { ejecutarRedirect } from './redirect'
@@ -17,8 +17,8 @@ import { REGLAS } from '../../shared/rules/reglas'
 import { aplicarPago } from './payments'
 import { enviarAlCementerio, destruirCarta, liberarEterBloqueado, liberarArtefactosEquipados } from './replacements'
 import { esExiliable, permitirExilio } from './exilio'
-import { eterDeEfecto, quitarEteres, liberarEterA, limpiarFlagsUmbralSiVacia, evaluarFinSteal } from './eter'
-import { esCampeon, getCardMeta } from './cards'
+import { eterDeEfecto, quitarEteres, liberarEterA, limpiarFlagsUmbralSiVacia, evaluarFinSteal, retornarCampeonesRobados } from './eter'
+import { esCampeon, getCardMeta, type AnyCard } from './cards'
 import type { EfectoData } from '../../shared/types'
 import type { CardInstance, Ctx, ExpiraModificador, GameState, PlayerId } from './types'
 import type { PayloadEfecto } from './efectos'
@@ -474,6 +474,7 @@ function invocarAlCampo(s: GameState, ctx: Ctx, jugador: PlayerId, campeonId: st
     if (idx !== -1) {
       arr.splice(idx, 1)
       campo.campeones[slotLibre] = campeonId
+      reiniciarCampeon(s, campeonId) // carta nueva: sin buffs, copias ni negaciones de su vida anterior
       inst.entradaEsteTurno = true
       ctx.emit({ type: 'carta_invocada', cardInstanceId: campeonId, tipo: 'Campeón', slot: slotLibre })
       return true
@@ -925,9 +926,12 @@ function executeTutor(
         p.campo.campeones[slotLibre] = targetId
         const instT = s.instances[targetId]
         const metaT = instT?.cardId ? getCardMeta(instT.cardId) : null
-        // Entrar al campo por tutor es una invocación más: invocación cansada (no ataca) y no responde en cadena
-        // el turno que entra (§5.2, §5.5), igual que invocarAlCampo
-        if (instT) instT.entradaEsteTurno = true
+        // Entrar al campo por tutor es una invocación más: carta nueva, invocación cansada (no ataca) y no responde en
+        // cadena el turno que entra (§5.2, §5.5), igual que invocarAlCampo
+        if (instT) {
+          reiniciarCampeon(s, targetId)
+          instT.entradaEsteTurno = true
+        }
         ctx.emit({ type: 'carta_invocada', cardInstanceId: targetId, tipo: 'Campeón', slot: slotLibre })
         if (metaT && esCampeon(metaT)) dispararAlInvocar(s, ctx, jugador, targetId)
       }
@@ -1058,6 +1062,24 @@ function executeModificarRegla(s: GameState, targetIds: string[], jugador: Playe
 }
 
 /**
+ * Negar los efectos de una carta CANCELA el estado que sus efectos continuos ya habían dejado en curso (decisión del
+ * usuario, 2026-10-27: «las apaga, las cancela»): el Campeón que robó con un robo continuo (`mientras_ester_bloqueado`)
+ * vuelve a su dueño y el agotamiento fijado por un tramo se suelta. NO se reanudan al terminar la negación (las auras,
+ * que son derivadas, sí vuelven solas). El Éter bloqueado se queda donde está. Un robo permanente (sin duración) es un
+ * hecho ya consumado y no se toca.
+ */
+function cancelarEstadoEnCurso(s: GameState, ctx: Ctx, instId: string, meta: AnyCard): void {
+  const inst = s.instances[instId]
+  if (!inst) return
+  delete inst.fijadoExhaustTargetId
+  const roboContinuo = 'efectos' in meta && !!meta.efectos?.some((e) => e.efecto === 'steal_champion' && e.duracion === 'mientras_ester_bloqueado')
+  if (roboContinuo) {
+    const ladron: PlayerId = s.players.A.campo.campeones.includes(instId) ? 'A' : 'B'
+    retornarCampeonesRobados(s, ctx, instId, ladron)
+  }
+}
+
+/**
  * Execute negar con `tipoNegacion` «efecto_activo» (Thane): los Campeones objetivo tienen sus efectos negados durante la
  * duración del efecto (por omisión, hasta el final del turno). No pueden ACTIVAR sus Disparos ni Continuos, los Continuos ya
  * activados dejan de aplicar (el Éter bloqueado se queda donde está), y sus pasivos, auras y triggers no hacen nada. NO se
@@ -1079,6 +1101,7 @@ function executeNegarEfectosActivos(
     if (!objetivo || !meta || !esCampeon(meta)) continue
     if (!reglaBool(s, 'puedeSerNegada', { instId })) continue // INEGABLE
     aplicarReglaTemporal(s, { regla: 'efectosActivos', operacion: 'prohibir', ...duracion, sujeto: { tipo: 'carta', instId } })
+    cancelarEstadoEnCurso(s, ctx, instId, meta)
     ctx.emit({ type: 'efectos_negados', jugador, cardInstanceId: instId, fuente: inst.cardInstanceId })
   }
 }
