@@ -30,6 +30,17 @@ describe('limpiarCamposAjenos', () => {
     expect(limpiarCamposAjenos({ tipo: 'disparo', efecto: 'change_type', cambioTipo: { rol: 'Normal' } as never }).cambioTipo).toBeDefined()
     expect(limpiarCamposAjenos({ tipo: 'pasivo', efecto: 'modificar_regla', regla: { id: 'limiteMano', operacion: 'sumar', valor: 1 } as never }).regla).toBeDefined()
   })
+  it('quita el `stats` escondido de Thane (negar) y de un grant_keyword (Ragnar), pero no el de un buff', () => {
+    expect(limpiarCamposAjenos({ ...THANE, stats: { ATQ: 1 } }).stats).toBeUndefined()
+    expect(limpiarCamposAjenos({ tipo: 'pasivo', efecto: 'grant_keyword', keyword: 'Indestructible', stats: { ATQ: 3 } }).stats).toBeUndefined()
+    const buff: EfectoData = { tipo: 'disparo', efecto: 'buff', stats: { ATQ: 2 }, buffPerBlockedEther: true }
+    expect(limpiarCamposAjenos(buff)).toBe(buff)
+  })
+  it('el buffPerBlockedEther escondido de un copy (Marek) se va; la keyword de un grant_keyword se queda', () => {
+    expect(limpiarCamposAjenos({ tipo: 'pasivo', efecto: 'copy', copyAttributes: ['atq'], buffPerBlockedEther: true }).buffPerBlockedEther).toBeUndefined()
+    const kw: EfectoData = { tipo: 'pasivo', efecto: 'grant_keyword', keyword: 'Carga' }
+    expect(limpiarCamposAjenos(kw)).toBe(kw)
+  })
   it('un efecto sin `efecto` raíz (los tramos definen los suyos) no se toca', () => {
     const tramos: EfectoData = { tipo: 'continuo', copyAttributes: ['atq'], tramos: [{ umbral: 1, efecto: 'toggle_exhaust' }] } as never
     expect(limpiarCamposAjenos(tramos)).toBe(tramos)
@@ -37,16 +48,28 @@ describe('limpiarCamposAjenos', () => {
 })
 
 describe('camposAjenosVacios (el parche del formulario al cambiar de efecto)', () => {
-  it('al pasar a negar vacía copyAttributes, cambioTipo y regla, pero NO tipoNegacion', () => {
+  it('al pasar a negar vacía todo lo ajeno, pero NO tipoNegacion', () => {
     const parche = camposAjenosVacios('negar')
-    expect(Object.keys(parche).sort()).toEqual(['cambioTipo', 'copyAttributes', 'regla'])
+    expect(Object.keys(parche).sort()).toEqual(['buffPerBlockedEther', 'cambioTipo', 'copyAttributes', 'keyword', 'regla', 'stats'])
     expect(Object.values(parche).every((v) => v === undefined)).toBe(true)
   })
   it('al pasar a copy conserva copyAttributes y vacía el resto', () => {
-    expect(Object.keys(camposAjenosVacios('copy')).sort()).toEqual(['cambioTipo', 'regla', 'tipoNegacion'])
+    expect(Object.keys(camposAjenosVacios('copy')).sort()).toEqual(['buffPerBlockedEther', 'cambioTipo', 'keyword', 'regla', 'stats', 'tipoNegacion'])
+  })
+  it('buff y debuff comparten stats y buffPerBlockedEther: pasar de uno a otro NO los borra', () => {
+    for (const efecto of ['buff', 'debuff'] as const) {
+      const claves = Object.keys(camposAjenosVacios(efecto))
+      expect(claves).not.toContain('stats')
+      expect(claves).not.toContain('buffPerBlockedEther')
+    }
+  })
+  it('grant_keyword conserva su keyword pero vacía los stats', () => {
+    const claves = Object.keys(camposAjenosVacios('grant_keyword'))
+    expect(claves).not.toContain('keyword')
+    expect(claves).toContain('stats')
   })
   it('sin efecto vacía todos', () => {
-    expect(Object.keys(camposAjenosVacios(undefined)).sort()).toEqual(['cambioTipo', 'copyAttributes', 'regla', 'tipoNegacion'])
+    expect(Object.keys(camposAjenosVacios(undefined)).sort()).toEqual(['buffPerBlockedEther', 'cambioTipo', 'copyAttributes', 'keyword', 'regla', 'stats', 'tipoNegacion'])
   })
 })
 

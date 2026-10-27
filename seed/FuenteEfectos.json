@@ -55,10 +55,6 @@
           "controlador": "propio",
           "zona": "campo"
         },
-        "stats": {
-          "ATQ": 0,
-          "RES": 0
-        },
         "texto": "Cuando pagues esta carta, un Campeón que controles gana Vigor, hasta el final del turno.",
         "keyword": "Vigor",
         "duracion": "turno",
@@ -89,10 +85,6 @@
           "tipo": "carta",
           "controlador": "propio",
           "zona": "mazo"
-        },
-        "stats": {
-          "ATQ": 0,
-          "RES": 0
         },
         "texto": "Cuando pagues esta carta, roba 1 carta de tu mazo.",
         "trigger": "al_pagar_eter",
@@ -160,10 +152,6 @@
           "filtros": {
             "puedeBloquearEter": true
           }
-        },
-        "stats": {
-          "ATQ": 0,
-          "RES": 0
         },
         "texto": "Bloquea 1 Éter de tu Reserva sobre un Campeón que pueda recibir éter bloqueado que controles, una vez por turno.",
         "duracion": "1_por_turno"
@@ -255,10 +243,6 @@
           "controlador": "propio",
           "zona": "campo"
         },
-        "stats": {
-          "ATQ": 0,
-          "RES": 0
-        },
         "texto": "Mientras esté bloqueado, el Campeón que tenga este Éter gana Inmortal.",
         "keyword": "Inmortal"
       }
@@ -335,10 +319,6 @@
           "controlador": "rival",
           "zona": "campo"
         },
-        "stats": {
-          "ATQ": 0,
-          "RES": 0
-        },
         "texto": "Puedes pagar 2 Éter, destruye 1 Mística o Arcana que controla el rival.",
         "costo": {
           "tipo": "eter",
@@ -352,10 +332,6 @@
           "tipo": "campeon",
           "controlador": "rival",
           "zona": "campo"
-        },
-        "stats": {
-          "ATQ": 0,
-          "RES": 0
         },
         "texto": "Bloquea 4 Éter, toma control de 1 un Campeón que controla el rival, mientras ese Éter esté bloqueado, Al inicio de tu Alba reagrupa el Éter usado por este efecto.",
         "duracion": "mientras_ester_bloqueado",
@@ -424,10 +400,6 @@
           "zonaDestino": "pagado",
           "controladorDestino": "rival"
         },
-        "stats": {
-          "ATQ": 0,
-          "RES": 0
-        },
         "texto": "Al matar en combate, puedes mover 1 Éter que controla el rival de la Reserva a la zona de pago del rival.",
         "trigger": "al_matar_en_combate"
       }
@@ -473,10 +445,6 @@
             "esencia": "Céleste"
           }
         },
-        "stats": {
-          "ATQ": 0,
-          "RES": 0
-        },
         "texto": "Al ser enviada al Cementerio desde cualquier zona, puedes buscar 1 Campeón de facción Orden de esencia Céleste de tu Cementerio y agregalo a tu mano.",
         "trigger": "al_ser_enviado_al_cementerio",
         "triggerZona": "cualquier_zona"
@@ -519,10 +487,6 @@
           "tipo": "campeon",
           "controlador": "propio",
           "zona": "campo"
-        },
-        "stats": {
-          "ATQ": 0,
-          "RES": 0
         },
         "texto": "Puedes pagar 3 Éter, cambia el agotamiento de un Campeón que controles.",
         "costo": {
@@ -571,10 +535,6 @@
           "controlador": "rival",
           "zona": "campo"
         },
-        "stats": {
-          "ATQ": 0,
-          "RES": 0
-        },
         "texto": "Puedes pagar 2 Éter, destruye 1 Mística o Arcana que controla el rival.",
         "costo": {
           "tipo": "eter",
@@ -617,10 +577,6 @@
         "efecto": "double_attack",
         "objetivo": {
           "tipo": "self"
-        },
-        "stats": {
-          "ATQ": 0,
-          "RES": 0
         },
         "texto": "Bloquea 3 Éter, esta carta puede declarar 2 veces ataque, mientras ese Éter esté bloqueado.",
         "costo": {
@@ -733,10 +689,6 @@
           "zona": "bloqueado",
           "zonaDestino": "pagado"
         },
-        "stats": {
-          "ATQ": 0,
-          "RES": 0
-        },
         "texto": "Puedes pagar 2 Éter, mueve 1 Éter que controla el rival bloqueado a su zona de pago, hasta la próxima Alba del oponente, negando su efecto.",
         "costo": {
           "tipo": "eter",
@@ -783,10 +735,6 @@
           "controlador": "propio",
           "zona": "campo"
         },
-        "stats": {
-          "ATQ": 0,
-          "RES": 0
-        },
         "texto": "Cuando un Vínculo que controles fuera a ser destruido, puedes enviar esta carta a tu exilio, previniendo la destrucción de ese vínculo.",
         "trigger": "cuando_vinculo_seria_destruido",
         "costo": {
@@ -820,10 +768,6 @@
           "filtros": {
             "atqMax": 5
           }
-        },
-        "stats": {
-          "ATQ": 0,
-          "RES": 0
         },
         "texto": "Devuelve a la mano de su dueño 1 un Campeón ATQ 5 o menos que controla el rival."
       }
@@ -892,10 +836,6 @@
           "controlador": "rival",
           "zona": "campo"
         },
-        "stats": {
-          "ATQ": 0,
-          "RES": 0
-        },
         "texto": "Niega la activación del efecto de un Campeón que controla el rival.",
         "tipoNegacion": "activacion"
       }
@@ -925,10 +865,6 @@
           "tipo": "mistica_arcana",
           "controlador": "rival",
           "zona": "campo"
-        },
-        "stats": {
-          "ATQ": 0,
-          "RES": 0
         },
         "texto": "Bloquea 3 Éter, copia el efecto de hechizo, el efecto continuo y la recompensa de una Mística o Arcana que controla el rival, mientras ese Éter esté bloqueado.",
         "duracion": "mientras_ester_bloqueado",
@@ -984,10 +920,6 @@
           "controlador": "propio",
           "zona": "mazo",
           "filtros": {}
-        },
-        "stats": {
-          "ATQ": 0,
-          "RES": 0
         },
         "texto": "Roba 2 carta de tu mazo.",
         "cantidad": 2
@@ -1074,10 +1006,6 @@
             "puedeBloquearEter": true
           }
         },
-        "stats": {
-          "ATQ": 0,
-          "RES": 0
-        },
         "texto": "Al inicio de tu Alba, puedes bloquear hasta un máximo de 1 Éter (Max. 1), sobre un Campeón que pueda recibir éter bloqueado que controles, una vez por turno.",
         "trigger": "inicio_alba",
         "duracion": "1_por_turno",
@@ -1111,10 +1039,6 @@
           "controlador": "rival",
           "zona": "campo"
         },
-        "stats": {
-          "ATQ": 0,
-          "RES": 0
-        },
         "texto": "Al inicio del Choque del rival, cambia el agotamiento de un Campeón que controla el rival.",
         "trigger": "inicio_choque",
         "controladorTrigger": "rival"
@@ -1144,10 +1068,6 @@
           "controlador": "ambos",
           "zona": "campo",
           "zonaDestino": "pagado"
-        },
-        "stats": {
-          "ATQ": 0,
-          "RES": 0
         },
         "texto": "Al inicio de tu Alba, mueve hasta 3 Éter en juego a la zona de pago de su dueño, una vez por turno.",
         "esHasta": true,
@@ -1179,10 +1099,6 @@
           "tipo": "campeon",
           "controlador": "propio",
           "zona": "campo"
-        },
-        "stats": {
-          "ATQ": 0,
-          "RES": 0
         },
         "texto": "Al inicio de la Alba del rival, un Campeón que controles gana Inmortal, una vez por turno.",
         "duracion": "1_por_turno",
@@ -1217,10 +1133,6 @@
           "filtros": {
             "costeMax": 3
           }
-        },
-        "stats": {
-          "ATQ": 0,
-          "RES": 0
         },
         "texto": "Al inicio de tu Alba, puedes devolver a la mano de su dueño 1 un Campeón coste 3 o menos de tu Cementerio, una vez por turno.",
         "trigger": "inicio_alba",
@@ -1305,10 +1217,6 @@
             "costeMax": 4
           }
         },
-        "stats": {
-          "ATQ": 0,
-          "RES": 0
-        },
         "texto": "Al ser enviada al Cementerio desde el campo, puedes buscar 1 Campeón de facción Orden coste 4 o menos de esencia Céleste de tu mazo y agregalo a tu mano.",
         "trigger": "al_ser_enviado_al_cementerio",
         "triggerZona": "campo",
@@ -1340,10 +1248,6 @@
           "tipo": "campeon",
           "controlador": "propio",
           "zona": "campo"
-        },
-        "stats": {
-          "ATQ": 0,
-          "RES": 0
         },
         "texto": "Bloquea 4 Éter, invoca un Campeón del Exilio de su dueño y equipa esta carta a ese Campeón, mientras ese Éter esté bloqueado.",
         "zonaOrigen": "exilio",
@@ -1393,10 +1297,6 @@
           "controlador": "rival",
           "zona": "campo"
         },
-        "stats": {
-          "ATQ": 0,
-          "RES": 0
-        },
         "texto": "Puedes pagar 4 Éter, destruye 1 Campeón que controla el rival.",
         "costo": {
           "tipo": "eter",
@@ -1411,10 +1311,6 @@
           "tipo": "campeon",
           "controlador": "propio",
           "zona": "campo"
-        },
-        "stats": {
-          "ATQ": 4,
-          "RES": 0
         },
         "texto": "Bloquea 2 Éter, un Campeón que controles gana Indestructible, mientras ese Éter esté bloqueado, Al inicio de tu Alba reagrupa el Éter usado por este efecto.",
         "keyword": "Indestructible",
@@ -1432,9 +1328,6 @@
     "efectoComandante": {
       "tipo": "pasivo",
       "efecto": "grant_keyword",
-      "stats": {
-        "ATQ": 3
-      },
       "objetivo": {
         "tipo": "todos_campeones_propios",
         "controlador": "propio",
@@ -1593,10 +1486,6 @@
             "puedeBloquearEter": true
           }
         },
-        "stats": {
-          "ATQ": 0,
-          "RES": 0
-        },
         "texto": "Bloquea 1 Éter de tu Reserva sobre un Campeón que pueda recibir éter bloqueado que controles, una vez por turno.",
         "duracion": "1_por_turno"
       }
@@ -1626,10 +1515,6 @@
           "zona": "reserva",
           "zonaDestino": "pagado",
           "controladorDestino": "rival"
-        },
-        "stats": {
-          "ATQ": 0,
-          "RES": 0
         },
         "texto": "Cuando pagues esta carta, mueve 1 Éter de la Reserva a la zona de pago del rival.",
         "trigger": "al_pagar_eter"
@@ -1688,10 +1573,6 @@
           "tipo": "campeon",
           "controlador": "propio",
           "zona": "campo"
-        },
-        "stats": {
-          "ATQ": 0,
-          "RES": 0
         },
         "texto": "Mientras esté bloqueado, el Campeón que tenga este Éter gana Indestructible.",
         "keyword": "Indestructible"
@@ -1912,9 +1793,6 @@
         "tipo": "disparo",
         "trigger": "ninguno",
         "efecto": "negar",
-        "stats": {
-          "ATQ": 1
-        },
         "objetivo": {
           "tipo": "campeon",
           "controlador": "rival",
@@ -1963,10 +1841,6 @@
         "tipo": "pasivo",
         "trigger": "al_invocar",
         "efecto": "copy",
-        "buffPerBlockedEther": true,
-        "stats": {
-          "ATQ": 1
-        },
         "objetivo": {
           "tipo": "campeon",
           "controlador": "rival",
@@ -2060,10 +1934,6 @@
           "controlador": "rival",
           "zona": "pagado",
           "zonaDestino": "reserva"
-        },
-        "stats": {
-          "ATQ": 0,
-          "RES": 0
         },
         "texto": "Puedes pagar 2 Éter, mueve 1 Éter que controla el rival de la zona de pago a la Reserva de su dueño.",
         "costo": {
@@ -2242,10 +2112,6 @@
             "costeMax": 3
           }
         },
-        "stats": {
-          "ATQ": 0,
-          "RES": 0
-        },
         "texto": "Puedes pagar 3 Éter, invoca un Campeón de facción Caos de coste 3 éter o menos del Exilio de su dueño y equipa esta carta a ese Campeón.",
         "zonaOrigen": "exilio",
         "costo": {
@@ -2416,10 +2282,6 @@
           "controlador": "rival",
           "zona": "mano"
         },
-        "stats": {
-          "ATQ": 0,
-          "RES": 0
-        },
         "texto": "Al inicio de tu Alba, puedes descartar una carta de la mano del rival, una vez por turno.",
         "duracion": "1_por_turno",
         "trigger": "inicio_alba"
@@ -2484,10 +2346,6 @@
           "controlador": "propio",
           "zona": "campo"
         },
-        "stats": {
-          "ATQ": 0,
-          "RES": 0
-        },
         "texto": "Al inicio de tu Alba, un Campeón que controles puedes ganar Indestructible, hasta la próxima Forja del rival.",
         "duracion": "hasta_fase",
         "duracionFase": "forja",
@@ -2519,10 +2377,6 @@
           "tipo": "campeon",
           "controlador": "ambos",
           "zona": "cementerio"
-        },
-        "stats": {
-          "ATQ": 0,
-          "RES": 0
         },
         "texto": "Al inicio de tu Alba, puedes exiliar 1 Campeón de cualquier Cementerio, una vez por turno.",
         "trigger": "inicio_alba",

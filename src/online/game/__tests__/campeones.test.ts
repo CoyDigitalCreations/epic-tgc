@@ -551,9 +551,10 @@ describe('C3b: modificadores continuos desde el JSON (Fase 1) + Protector (D3)',
     expect(keywordsDe(s, otro)).toContain('Indestructible')
     // Rival NO la tiene
     expect(keywordsDe(s, rival)).not.toContain('Indestructible')
-    // Stats: +3 ATQ del comandante también aplica
-    expect(statsDe(s, otro).poder).toBe(8) // base 5 + 3
-    expect(statsDe(s, comandante).poder).toBe(12) // base 9 + 3
+    // Un `stats` escondido en un grant_keyword NO es un bono (el Card-Maker solo lo muestra con buff/debuff): la carta dice
+    // «ganan Indestructible» y nada más. (Antes este test fijaba un +3 ATQ que el texto de Ragnar no dice.)
+    expect(statsDe(s, otro).poder).toBe(5)
+    expect(statsDe(s, comandante).poder).toBe(9)
   })
 
   it('aura reserva debuff: Éter en Reserva debuffa -1 ATQ a campeones RIVALES al dueño del Éter', () => {

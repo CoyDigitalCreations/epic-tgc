@@ -10,7 +10,7 @@
  * Cartas SINTÉTICAS (más Ragnar real).
  */
 import { beforeAll, describe, expect, it } from 'vitest'
-import { registrarCartas } from '../cards'
+import { getCardMeta, registrarCartas } from '../cards'
 import { exhaustFijado } from '../effectInterpreter'
 import { keywordsDe, statsDe } from '../efectos'
 import { aplicarReglaTemporal } from '../reglasTemporales'
@@ -191,6 +191,15 @@ describe('Ragnar, Voz del Nudo (DS-001) — la carta REAL que tenía este efecto
     expect(keywordsDe(s, 'amigo')).toContain('Indestructible')
     liberarEterBloqueado(s, ctx, 'src', '2A')
     expect(keywordsDe(s, 'amigo')).not.toContain('Indestructible')
+  })
+  it('solo concede la keyword: NADA de ATQ (ni por su Comandante ni por el 2.º efecto; eran `stats` escondidos de otro diseño)', () => {
+    const { s: s0, ctx } = escena('DS-001'); conCampeon(s0, 'A', 'amigo', PR.PEON, 1)
+    const impreso = getCardMeta(PR.PEON)!
+    const poderImpreso = 'stats' in impreso && impreso.stats && 'poder' in impreso.stats ? (impreso.stats.poder as number) : -1
+    expect(statsDe(s0, 'amigo').poder).toBe(poderImpreso) // el Comandante de Ragnar ya NO da +3
+    const s = elegir(bloquear(s0, ctx, 'src'), ctx, 'amigo')
+    expect(keywordsDe(s, 'amigo')).toContain('Indestructible')
+    expect(statsDe(s, 'amigo').poder).toBe(poderImpreso) // ni el 2.º efecto da +4
   })
 })
 

@@ -378,8 +378,13 @@ function contribucionDeEfecto(efecto: EfectoData, escala = 1): { poder?: number;
   const signo = efecto.efecto === 'debuff' && !statsDebuffYaNegativos(efecto) ? -1 : 1
   const resultado: { poder?: number; resistencia?: number; keywords?: string[] } = {}
 
-  if (efecto.stats?.ATQ) resultado.poder = efecto.stats.ATQ * signo * escala
-  if (efecto.stats?.RES) resultado.resistencia = efecto.stats.RES * signo * escala
+  // Cada efecto aporta SOLO lo suyo: ATQ/RES un buff o debuff, la keyword un grant_keyword. Un `stats` que quedó en un
+  // grant_keyword (el Card-Maker lo esconde: solo lo muestra con buff/debuff) NO es un bono: así el Comandante de Ragnar, que
+  // dice «ganan Indestructible», dejó de dar +3 ATQ que la carta no dice.
+  if (efecto.efecto === 'buff' || efecto.efecto === 'debuff') {
+    if (efecto.stats?.ATQ) resultado.poder = efecto.stats.ATQ * signo * escala
+    if (efecto.stats?.RES) resultado.resistencia = efecto.stats.RES * signo * escala
+  }
   if (efecto.efecto === 'grant_keyword' && efecto.keyword) {
     resultado.keywords = [efecto.keyword]
   }

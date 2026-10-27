@@ -11,6 +11,11 @@ const CAMPO_DE_EFECTO: ReadonlyArray<readonly [keyof EfectoData, readonly string
   ['tipoNegacion', ['negar']],
   ['cambioTipo', ['change_type']],
   ['regla', ['modificar_regla']],
+  // El formulario los muestra solo con estos efectos (`showStats` / `showKeyword` en EffectField.tsx): con cualquier otro
+  // quedan escondidos y no se pueden borrar desde la UI (así quedaron el ATQ de Thane y el de Ragnar)
+  ['stats', ['buff', 'debuff']],
+  ['buffPerBlockedEther', ['buff', 'debuff']],
+  ['keyword', ['grant_keyword']],
 ]
 
 /** Parche (`undefined`) que quita los campos que NO pertenecen a `efecto`, para pasarlo al `update` del formulario. */
