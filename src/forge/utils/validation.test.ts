@@ -109,6 +109,34 @@ describe('validateCard — efectos a medio configurar (se jugarían sin hacer na
     expect(mensajes({ efecto: 'invocar_y_equipar' })).toHaveLength(1)
     expect(mensajes({ efecto: 'grant_keyword', keyword: 'Carga' })).toEqual([])
   })
+  it('negar solo acepta los tipos de negación que el motor ejecuta', () => {
+    for (const tipoNegacion of ['activacion', 'efecto_activo']) expect(mensajes({ efecto: 'negar', tipoNegacion })).toEqual([])
+    for (const tipoNegacion of ['invocacion', 'resolucion', 'pago', 'ataque', 'bloqueo', 'robo']) {
+      expect(mensajes({ efecto: 'negar', tipoNegacion })).toEqual([`Efecto 1: negar «${tipoNegacion}» todavía no está implementado: usa «activacion» o «efecto_activo»`])
+    }
+  })
+  describe('prevent_destroy y su trigger (Rowena): solo funcionan juntos', () => {
+    const campeon = (efecto: object) => ({
+      id: 'T-2', name: 'Rowena', type: 'Campeón', rarity: 'Común', keywords: [], flavorText: '', paqueteId: 'test', limiteCopias: '1',
+      createdAt: '', updatedAt: '', facciones: ['Orden'], esencia: 'Constructo', roles: ['Normal'], catHabilidad: ['Efecto'],
+      stats: { cost: 2, poder: 2, resistencia: 2 }, efectos: [{ tipo: 'pasivo', ...efecto }],
+    }) as never
+    const msj = (efecto: object) => validateCard(campeon(efecto)).filter((e) => e.field === 'efectos').map((e) => e.message)
+    const BIEN = { efecto: 'prevent_destroy', trigger: 'cuando_vinculo_seria_destruido', costo: { tipo: 'exile_self' } }
+
+    it('completo, como Rowena, es válido', () => expect(msj(BIEN)).toEqual([]))
+    it('sin el trigger, o sin pagar exiliando la carta, no hace nada y se rechaza', () => {
+      expect(msj({ ...BIEN, trigger: undefined })).toHaveLength(1)
+      expect(msj({ ...BIEN, costo: undefined })).toHaveLength(1)
+      expect(msj({ ...BIEN, costo: { tipo: 'eter', cantidad: 1 } })).toHaveLength(1)
+    })
+    it('el trigger con otro efecto tampoco sirve', () => {
+      expect(msj({ efecto: 'draw', trigger: 'cuando_vinculo_seria_destruido' })).toEqual(['Efecto 1: el trigger «Cuando Vínculo sería destruido» solo sirve con el efecto «Prevenir destrucción»'])
+    })
+    it('solo un Campeón puede tenerlo', () => {
+      expect(validateCard(mistica(BIEN)).filter((e) => e.field === 'efectos')).toHaveLength(1)
+    })
+  })
   it('los efectos sin dato obligatorio (scry, redirect, direct_attack...) no dan error', () => {
     for (const efecto of ['scry', 'redirect', 'direct_attack', 'draw']) expect(mensajes({ efecto })).toEqual([])
   })

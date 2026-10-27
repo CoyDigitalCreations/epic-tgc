@@ -315,6 +315,10 @@ export function EffectField({ label, value, onChange, cardType }: EffectFieldPro
             if (v === 'fix_exhaust') {
               const obj = data.objetivo ?? { tipo: 'campeon' as const, controlador: 'rival' as const, zona: 'campo' as const }
               update({ ...ajenos, efecto: v as any, objetivo: { ...obj, tipo: 'campeon', controlador: obj.controlador === 'propio' ? 'rival' : obj.controlador, filtros: { ...obj.filtros, agotado: true } } })
+            } else if (v === 'prevent_destroy') {
+              // El motor solo previene la destrucción de un Vínculo con ESTE trigger y pagando «Exiliar esta carta» (que el
+              // selector de costo oculta): sin los dos la carta no hace nada. Se ponen solos al elegir el efecto.
+              update({ ...ajenos, efecto: v as any, trigger: 'cuando_vinculo_seria_destruido', costo: { tipo: 'exile_self' } })
             } else {
               update({ ...ajenos, efecto: v as any })
             }

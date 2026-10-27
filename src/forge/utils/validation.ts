@@ -3,6 +3,9 @@ import type { CardType, AnyCard } from '../../shared/types'
 import { FORM_CONFIGS } from '../types/form-config'
 import { REGLA_IDS, esReglaNumerica, operacionesDe } from '../../shared/rules/reglas'
 
+/** Tipos de negación que el motor ejecuta (el resto se jugaría como «activacion»). Ver executeEffect `negar`. */
+const TIPOS_NEGACION_IMPLEMENTADOS: readonly string[] = ['activacion', 'efecto_activo']
+
 /** Fields that live inside `stats` sub-object instead of flat on the card */
 const STATS_FIELDS = new Set(['cost', 'poder', 'resistencia', 'duracion'])
 
@@ -70,6 +73,10 @@ function validarEfectos(card: Partial<AnyCard>): ValidationError[] {
   efectos.forEach((e, i) => {
     const donde = `Efecto ${i + 1}`
     const falta = (message: string) => errors.push({ field: 'efectos', message: `${donde}: ${message}` })
+    // Ese trigger solo lo lee el sistema de prevención de destrucción: con cualquier otro efecto nunca se dispara
+    if (e.trigger === 'cuando_vinculo_seria_destruido' && e.efecto !== 'prevent_destroy') {
+      return falta('el trigger «Cuando Vínculo sería destruido» solo sirve con el efecto «Prevenir destrucción»')
+    }
     switch (e.efecto) {
       case 'modificar_regla': {
         const regla = e.regla
@@ -89,6 +96,17 @@ function validarEfectos(card: Partial<AnyCard>): ValidationError[] {
         return
       case 'negar':
         if (!e.tipoNegacion) return falta('elige qué niega')
+        // El motor solo implementa negar la activación pendiente y los efectos activos de un Campeón; los otros tipos se
+        // jugarían como «activacion» (no hacen lo que dicen)
+        if (!TIPOS_NEGACION_IMPLEMENTADOS.includes(e.tipoNegacion)) {
+          return falta(`negar «${e.tipoNegacion}» todavía no está implementado: usa «activacion» o «efecto_activo»`)
+        }
+        return
+      case 'prevent_destroy':
+        // Lo único que el motor sabe prevenir: la destrucción de un Vínculo, con ESTE trigger, pagando exiliar la carta
+        if (card.type !== 'Campeón') return falta('«Prevenir destrucción» solo funciona en un Campeón en el campo')
+        if (e.trigger !== 'cuando_vinculo_seria_destruido') return falta('«Prevenir destrucción» necesita el trigger «Cuando Vínculo sería destruido»')
+        if (e.costo?.tipo !== 'exile_self') return falta('«Prevenir destrucción» se paga exiliando esta carta (costo «Exiliar esta carta»)')
         return
       case 'invocar_y_equipar':
         if (!e.zonaOrigen) return falta('elige de qué zona invoca')
