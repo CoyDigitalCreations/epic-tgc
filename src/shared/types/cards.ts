@@ -231,6 +231,8 @@ export interface ObjetivoEfecto {
   tipo: 'self' | 'campeon' | 'mistica' | 'arcana' | 'mistica_arcana' | 'eter' | 'vinculo' | 'carta' | 'mano'
        | 'todos_campeones_propios' | 'todos_campeones_rivales' | 'rival_hand'
        | 'equipped_champion'
+       /** El Campeón que se está invocando (solo con `contextoUso: 'invocar'`, p. ej. «Cuando pagues esta carta para invocar un Campeón, ese Campeón…»). No se elige. */
+       | 'invocado'
   /** Who controls the target */
   controlador: 'propio' | 'rival' | 'ambos' | 'ninguno'
   /** Where the target is located */

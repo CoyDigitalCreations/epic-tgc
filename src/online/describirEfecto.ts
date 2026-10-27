@@ -27,6 +27,7 @@ function describirObjetivo(obj?: ObjetivoEfecto): string {
     todos_campeones_rivales: 'todos los Campeones rivales',
     rival_hand: 'mano del rival',
     equipped_champion: 'Campeón equipado',
+    invocado: 'el Campeón que se invoca',
   }
   let s = mapa[tipo] ?? tipo
   if (obj.zona && obj.zona !== 'campo' && tipo !== 'mano') {

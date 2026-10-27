@@ -3,10 +3,12 @@
  * Gatillos de los Éteres «al pagar» (FB-002/003/004/006, DS-004/005/007) y de los de Reserva «al inicio del Choque» (DS-003),
  * con las cartas REALES y lo que dicen HOY. Sustituye a 10 tests de `eteres.test.ts` que eran `expect(true).toBe(true)`
  * (pasaban siempre) y cuyos títulos describían diseños viejos (p. ej. FB-002 «en reserva», cuando hoy es un Éter de pago).
+ * DS-005 («para invocar… ese Campeón») usa el objetivo `invocado` y el contexto de pago `invocar`.
  */
 import { beforeAll, describe, expect, it } from 'vitest'
 import { aplicarPago } from '../payments'
 import { keywordsDe, statsDe, purgarEfectosTemporales, purgarKeywordsTemporales } from '../efectos'
+import { getCardMeta } from '../cards'
 import { getValidActions } from '../validActions'
 import type { Ctx, GameState } from '../types'
 import { PR, aplicar, cargarCartasPrueba, conCampeon, conEteres, conMano, conMazo, crearCtx, escenaVacia } from './helpers/cartasPrueba'
@@ -76,8 +78,8 @@ describe('Éteres «Cuando pagues esta carta» (tipo pago)', () => {
     expect(s.players.A.eterPagado).toHaveLength(1) // el pago sí se hizo
   })
   it('cross-facción: el gatillo dispara aunque el Éter sea de otra facción que la carta que se paga', () => {
-    // FB-003 es de Orden y aquí se paga una carta de Caos (DS-011, coste 2): a otra facción cada Éter aporta menos, así
-    // que se juntan dos hasta cubrir el coste exacto. El gatillo roba igual (uno por cada Éter con gatillo).
+    // FB-003 es de Orden y aquí se paga una carta de Caos (DS-011). Cada Éter aporta 1 sea cual sea su facción; DS-011 cuesta 2,
+    // así que se pagan dos (el coste es exacto, sin sobrepago). El gatillo roba igual (uno por cada Éter con gatillo).
     const s = escenaVacia('forja'); conMazo(s, 'A', 4)
     const eteres = conEteres(s, 'A', 2, 'FB-003')
     aplicarPago(s, crearCtx(), 'A', eteres, 'DS-011', { tipo: 'jugar' })
@@ -87,11 +89,39 @@ describe('Éteres «Cuando pagues esta carta» (tipo pago)', () => {
 })
 
 describe('DS-005 «Cuando pagues esta carta para invocar un Campeón, ese Campeón gana 1 de ATQ hasta el final del próximo turno»', () => {
-  // HALLAZGO conocido (pendiente de decisión de diseño): hoy el gatillo no distingue «para invocar» de cualquier pago, y deja
-  // ELEGIR a un Campeón del campo en vez de dar el bono al Campeón que se está invocando. `it.fails`: pasa mientras siga así.
-  it.fails('solo dispara al pagar para INVOCAR un Campeón (no al jugar una Mística)', () => {
-    const { s } = pagarCon('DS-005', (e) => { conCampeon(e, 'A', 'c', PR.PEON, 0) }) // se paga para JUGAR una carta, no para invocar
+  // perezosos: las cartas de prueba se registran en el beforeAll, después de declarar el describe
+  const costePeon = () => getCardMeta(PR.PEON)!.stats.cost
+  const poderPeon = () => getCardMeta(PR.PEON)!.stats.poder
+
+  /** A invoca al Peón `nuevo` pagando con el Éter DS-005 + los Éteres genéricos que falten; `otro` es un Campeón propio ya en el campo. */
+  function invocarPagandoConDS005(): { s: GameState; ctx: Ctx } {
+    const s = escenaVacia('forja'); conMazo(s, 'A', 4); conMazo(s, 'B', 4)
+    conCampeon(s, 'A', 'otro', PR.PEON, 1)
+    conMano(s, 'A', 'nuevo', PR.PEON)
+    const [ds005] = conEteres(s, 'A', 1, 'DS-005')
+    const resto = conEteres(s, 'A', costePeon() - 1)
+    const ctx = crearCtx()
+    return { s: aplicar(s, { type: 'jugar_campeon', cardInstanceId: 'nuevo', slot: 0, eterIds: [ds005, ...resto], sacrificios: [] }, ctx), ctx }
+  }
+
+  it('al INVOCAR, ESE Campeón gana 1 de ATQ (sin elegir) y lo conserva al entrar al campo; otro Campeón propio no', () => {
+    const { s } = invocarPagandoConDS005()
+    expect(s.players.A.campo.campeones[0]).toBe('nuevo') // la invocación se hizo
+    expect(s.objetivosPendientes ?? []).toEqual([])      // no hay elección: el objetivo es implícito
+    expect(statsDe(s, 'nuevo').poder).toBe(poderPeon() + 1)
+    expect(statsDe(s, 'otro').poder).toBe(poderPeon())
+  })
+  it('dura «hasta el final del próximo turno»: sobrevive al primer Ocaso y se va en el segundo', () => {
+    const { s } = invocarPagandoConDS005()
+    purgarEfectosTemporales(s, 'ocaso')
+    expect(statsDe(s, 'nuevo').poder).toBe(poderPeon() + 1)
+    purgarEfectosTemporales(s, 'ocaso')
+    expect(statsDe(s, 'nuevo').poder).toBe(poderPeon())
+  })
+  it('al pagar para otra cosa (jugar una carta), NO dispara: ni elección ni bono', () => {
+    const { s } = pagarCon('DS-005', (e) => { conCampeon(e, 'A', 'c', PR.PEON, 0) })
     expect(s.objetivosPendientes ?? []).toEqual([])
+    expect(statsDe(s, 'c').poder).toBe(poderPeon())
   })
 })
 

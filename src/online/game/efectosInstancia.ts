@@ -66,7 +66,7 @@ export function eligeObjetivo(efecto: EfectoData): boolean {
   if (!efecto.efecto || SIN_ELECCION.has(efecto.efecto)) return false
   if (efecto.efecto === 'negar' && efecto.tipoNegacion !== 'efecto_activo') return false
   const tipo = efecto.objetivo?.tipo
-  return !!tipo && !['self', 'todos_campeones_propios', 'todos_campeones_rivales', 'equipped_champion', 'rival_hand'].includes(tipo)
+  return !!tipo && !['self', 'todos_campeones_propios', 'todos_campeones_rivales', 'equipped_champion', 'invocado', 'rival_hand'].includes(tipo)
 }
 
 /** Los efectos que `instId` tiene prestados ahora, en el orden en que los copió. */

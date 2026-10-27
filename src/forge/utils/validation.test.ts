@@ -145,6 +145,22 @@ describe('validateCard — efectos a medio configurar (se jugarían sin hacer na
       expect(validateCard(mistica(BIEN)).filter((e) => e.field === 'efectos')).toHaveLength(1)
     })
   })
+  describe('objetivo «El Campeón que se invoca» (DS-005): solo con «Al pagar Éter» + contexto «invocar»', () => {
+    const eter = (efecto: object) => ({
+      id: 'T-3', name: 'Éter', type: 'Éter', rarity: 'Común', keywords: [], flavorText: '', paqueteId: 'test', limiteCopias: '3',
+      createdAt: '', updatedAt: '', facciones: ['Caos'], stats: { cost: 1 }, efectos: [{ tipo: 'pago', ...efecto }],
+    }) as never
+    const msj = (efecto: object) => validateCard(eter(efecto)).filter((e) => e.field === 'efectos').map((e) => e.message)
+    const BIEN = { efecto: 'buff', stats: { ATQ: 1 }, trigger: 'al_pagar_eter', contextoUso: 'invocar', objetivo: { tipo: 'invocado', controlador: 'propio', zona: 'campo' } }
+
+    it('completo, como DS-005, es válido', () => expect(msj(BIEN)).toEqual([]))
+    it('sin el contexto «invocar» o con otro trigger se rechaza (daría el bono con cualquier pago, o no haría nada)', () => {
+      const error = ['Efecto 1: el objetivo «El Campeón que se invoca» necesita el trigger «Al pagar Éter» y el contexto «invocar»']
+      expect(msj({ ...BIEN, contextoUso: undefined })).toEqual(error)
+      expect(msj({ ...BIEN, contextoUso: 'habilidad' })).toEqual(error)
+      expect(msj({ ...BIEN, trigger: 'al_invocar' })).toEqual(error)
+    })
+  })
   it('los efectos sin dato obligatorio (scry, redirect, direct_attack...) no dan error', () => {
     for (const efecto of ['scry', 'redirect', 'direct_attack', 'draw']) expect(mensajes({ efecto })).toEqual([])
   })

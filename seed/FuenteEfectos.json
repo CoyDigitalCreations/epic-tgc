@@ -1445,13 +1445,14 @@
           "ATQ": 1
         },
         "objetivo": {
-          "tipo": "campeon",
+          "tipo": "invocado",
           "controlador": "propio",
           "zona": "campo"
         },
         "texto": "Cuando pagues esta carta para invocar un Campeón, ese Campeón gana 1 de ATQ hasta el final del próximo turno.",
         "duracion": "n_turnos",
-        "duracionTurnos": 2
+        "duracionTurnos": 2,
+        "contextoUso": "invocar"
       }
     ]
   },

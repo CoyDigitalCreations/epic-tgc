@@ -101,6 +101,10 @@ export function interpretEffect(
   if (objetivo) {
     if (objetivo.tipo === 'self') {
       targetIds = [inst.cardInstanceId]
+    } else if (objetivo.tipo === 'invocado') {
+      // El Campeón que se está invocando (aún en la mano: el pago ocurre antes de entrar al campo). Solo existe en el contexto
+      // 'invocar'; en cualquier otro (jugar una Mística, activar una habilidad) no hay a quién dárselo
+      targetIds = payload.contextoUso === 'invocar' && payload.objetivoId && s.instances[payload.objetivoId] ? [payload.objetivoId] : []
     } else {
       targetIds = resolveTargets(s, objetivoCompleto(efectoData), jugador, inst.cardInstanceId)
     }
@@ -195,7 +199,7 @@ function needsPlayerChoice(objetivo: EfectoData['objetivo'], efecto?: EfectoData
   // Self and auto-targets don't need choice
   if (objetivo.tipo === 'self' || objetivo.tipo === 'todos_campeones_propios' || 
       objetivo.tipo === 'todos_campeones_rivales' || objetivo.tipo === 'rival_hand' ||
-      objetivo.tipo === 'equipped_champion') { // F5g: el Campeón equipado es implícito, no se elige
+      objetivo.tipo === 'equipped_champion' || objetivo.tipo === 'invocado') { // F5g: el Campeón equipado / invocado es implícito, no se elige
     return false
   }
   // Effects that don't need player choice despite having a target

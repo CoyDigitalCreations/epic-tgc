@@ -77,6 +77,7 @@ function generateTargetText(objetivo: ObjetivoEfecto, sinArticulo = false, sinZo
   if (objetivo.tipo === 'todos_campeones_rivales') return 'todos los Campeones que controla el rival'
   if (objetivo.tipo === 'rival_hand') return 'el rival'
   if (objetivo.tipo === 'equipped_champion') return 'el Campeón equipado con esta carta'
+  if (objetivo.tipo === 'invocado') return 'el Campeón que se está invocando'
 
   // Ranking selection: "el Campeón con mayor ATQ", etc.
   if (objetivo.filtros?.seleccionar) {

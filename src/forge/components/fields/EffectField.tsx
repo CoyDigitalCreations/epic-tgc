@@ -140,6 +140,7 @@ const OBJETIVO_TIPO_OPTIONS = [
   { value: 'todos_campeones_rivales', label: 'Todos los rivales' },
   { value: 'rival_hand', label: 'Mano del rival' },
   { value: 'equipped_champion', label: 'Campeón equipado' },
+  { value: 'invocado', label: 'El Campeón que se invoca' },
 ]
 const CONTROLADOR_OPTIONS = [
   { value: 'propio', label: 'Propio' }, { value: 'rival', label: 'Rival' },
@@ -502,7 +503,13 @@ export function EffectField({ label, value, onChange, cardType }: EffectFieldPro
       {/* Capa 4: Objetivo */}
       {showObjetivo && (
         <div className="grid grid-cols-3 gap-2 mt-2">
-          <SelectField label="Tipo objetivo" value={data.objetivo?.tipo} options={OBJETIVO_TIPO_OPTIONS} onChange={(v) => updateObjetivo({ tipo: v as any })} />
+          <SelectField label="Tipo objetivo" value={data.objetivo?.tipo} options={OBJETIVO_TIPO_OPTIONS} onChange={(v) => {
+            // «Ese Campeón» solo existe al pagar un Éter PARA INVOCAR: el trigger y el contexto se ponen solos (sin ellos la
+            // carta no haría nada o daría el bono con cualquier pago). Al elegir otro tipo se suelta el contexto.
+            if (v === 'invocado') update({ trigger: 'al_pagar_eter', contextoUso: 'invocar', objetivo: { tipo: 'invocado', controlador: 'propio', zona: 'campo' } })
+            else if (data.objetivo?.tipo === 'invocado') update({ contextoUso: undefined, objetivo: { ...data.objetivo, tipo: v as any } })
+            else updateObjetivo({ tipo: v as any })
+          }} />
           <SelectField label="Controlador" value={data.objetivo?.controlador} options={CONTROLADOR_OPTIONS} onChange={(v) => updateObjetivo({ controlador: v as any })} />
           <SelectField label="Zona" value={data.objetivo?.zona} options={ZONA_OPTIONS} onChange={(v) => updateObjetivo({ zona: v as any })} />
         </div>
@@ -686,7 +693,7 @@ export function EffectField({ label, value, onChange, cardType }: EffectFieldPro
       )}
 
       {/* Filtros del objetivo — dynamic based on target type (no filters for Vínculo, equipped_champion) */}
-      {showObjetivo && data.objetivo?.tipo && !['self', 'todos_campeones_propios', 'todos_campeones_rivales', 'rival_hand', 'vinculo', 'equipped_champion'].includes(data.objetivo.tipo) && (
+      {showObjetivo && data.objetivo?.tipo && !['self', 'todos_campeones_propios', 'todos_campeones_rivales', 'rival_hand', 'vinculo', 'equipped_champion', 'invocado'].includes(data.objetivo.tipo) && (
         <div className="border border-gray-600/30 rounded p-2 mt-2">
           <p className="text-[10px] uppercase tracking-wider text-gray-400 mb-2">Filtros del objetivo</p>
           <div className="grid grid-cols-2 gap-2">

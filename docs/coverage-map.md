@@ -9,8 +9,8 @@ Cartas: **65** | Efectos clasificados: **76** | Combos únicos (tipo×trigger×e
 | Estado | Efectos | % |
 |---|---:|---:|
 | OK_INTERPRETER | 26 | 34.2% |
-| OK_ACTIVACION | 38 | 50% |
-| OK_AURA_JSON | 12 | 15.8% |
+| OK_ACTIVACION | 36 | 47.4% |
+| OK_AURA_JSON | 14 | 18.4% |
 
 ## Matriz de combos (tipo × trigger × efecto)
 

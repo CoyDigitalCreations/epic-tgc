@@ -83,6 +83,11 @@ function validarEfectos(card: Partial<AnyCard>): ValidationError[] {
     if (e.tipo === 'continuo' && bloquea && (e.efecto === 'redirect' || (e.efecto === 'negar' && e.tipoNegacion !== 'efecto_activo'))) {
       return falta(`un Continuo que bloquea Éter no puede ${e.efecto === 'redirect' ? 'redirigir' : 'negar una activación'}: eso necesita responder en la cadena (usa una Mística o un Disparo)`)
     }
+    // «El Campeón que se invoca» solo existe cuando se paga un Éter para invocar: con otro trigger o sin el contexto 'invocar'
+    // el efecto se salta (o el bono lo recibiría quien no debe)
+    if (e.objetivo?.tipo === 'invocado' && (e.trigger !== 'al_pagar_eter' || e.contextoUso !== 'invocar')) {
+      return falta('el objetivo «El Campeón que se invoca» necesita el trigger «Al pagar Éter» y el contexto «invocar»')
+    }
     switch (e.efecto) {
       case 'modificar_regla': {
         const regla = e.regla
