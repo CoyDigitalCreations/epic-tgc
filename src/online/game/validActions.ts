@@ -18,6 +18,7 @@ import type { GameState, PlayerId, CardInstance } from './types'
 /**
  * El actor de la jugada actual NO es siempre `estado.turno`:
  * - Checkpoint prevent_destroy (Fase 2c) → el jugador que debe elegir.
+ * - Equipar pendiente de un Artefacto → el jugador que lo jugó.
  * - Declaración en elección (F5d-1) → el dueño del pendiente de objetivo.
  * - Cadena 9.6 abierta → el actor es `cadena.prioridad` (el turno queda congelado).
  * - Paso bloqueo (9.3, ADR-11) → el actor es el DEFENSOR (rival del activo).
@@ -28,6 +29,10 @@ export function actorActual(estado: GameState): PlayerId | null {
   if (estado.fase === 'terminada') return null
   const preven = estado.preventivosPendientes?.[0]
   if (preven) return preven.jugador
+  // Equipar pendiente (Artefacto recién jugado): lo elige SU jugador, y va ANTES que cualquier pendiente ajeno. Es el mismo orden
+  // que getValidActions; si no, con un pendiente del rival a la vez el actor era el rival (que solo podía rendirse) y nadie jugaba.
+  const equipar = estado.equiparPendiente
+  if (equipar && !estado.instances[equipar.artefactoId]?.equipadoA) return equipar.jugador
   // F5d-1: declaración en elección → el actor es el DUEÑO del pendiente (puede ser el rival)
   if (estado.declaracionEnEleccion) {
     const pendiente = estado.objetivosPendientes?.[0]

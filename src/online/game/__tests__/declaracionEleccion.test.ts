@@ -13,6 +13,7 @@ import { describe, it, expect } from 'vitest'
 import { applyAction } from '../actions'
 import { getValidActions, actorActual } from '../validActions'
 import { botTonto, simularPartida } from '../bot'
+import { electorAjeno } from '../pendientes'
 import { statsDe } from '../efectos'
 import { createInitialState } from '../initialState'
 import { verificarInvariantes, verificarZonaUnica } from '../invariants'
@@ -458,6 +459,27 @@ describe('varias elecciones seguidas, pendientes obsoletos y al-pagar-eter', () 
     s0.equiparPendiente = { artefactoId: 'x', jugador: 'A', contexto: 'jugar_mistica' }
     expect(s0.declaracionEnEleccion).toBeUndefined()
     expect(actorActual(s0)).toBe('A')
+  })
+
+  it('equiparPendiente de A + pendiente del rival B a la vez: el actor es A (antes era B, que solo podía rendirse: deadlock)', () => {
+    // Caso real (arena, seed 96): A juega una Mística con Artefacto y, en la misma resolución, una carta de B va al Cementerio
+    const s0 = estadoMinimo()
+    conCampeon(s0, 'B', 'b1', CAMP, 0)
+    conCampeon(s0, 'A', 'a1', CAMP, 0)
+    inst(s0, 'art', 'DS-021', 'A') // el Artefacto del caso real
+    s0.players.A.campo.misticasTacticas[0] = 'art'
+    s0.equiparPendiente = { artefactoId: 'art', jugador: 'A', contexto: 'jugar_mistica' }
+    s0.objetivosPendientes = [{ jugador: 'B', instId: 'b1', trigger: 'al-ser-enviado-al-cementerio', opciones: ['b1'] }] as GameState['objetivosPendientes']
+    expect(electorAjeno(s0)).toBeDefined() // el pendiente de B existe y es «ajeno al turno»: el cruce que congelaba la partida
+
+    expect(actorActual(s0)).toBe('A')
+    expect(getValidActions(s0, 'B').map((a) => a.type)).toEqual(['rendirse']) // B no tiene nada que elegir hasta que A equipe
+    expect(getValidActions(s0, 'A').some((a) => a.type === 'equipar_artefacto')).toBe(true)
+
+    // Una vez equipado, el pendiente de B pasa a ser el actor (el flujo continúa)
+    const s1 = aplicar(s0, { type: 'equipar_artefacto', cardInstanceId: 'art', campeonInstanceId: 'a1' }, crearCtx())
+    expect(s1.equiparPendiente).toBeUndefined()
+    expect(actorActual(s1)).toBe('B')
   })
 })
 

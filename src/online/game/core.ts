@@ -132,8 +132,12 @@ function validarAccion(state: GameState, action: Action): string | null {
   if (state.declaracionEnEleccion && action.type !== 'elegir_objetivo' && action.type !== 'rendirse' && action.type !== 'responder_prevenicion') {
     return 'hay un objetivo por elegir antes de abrir la ventana'
   }
-  // H4: el dueño ajeno al turno debe elegir su objetivo (tutor del rival al morir, etc.) antes de que siga el juego
-  if (electorAjeno(state) && action.type !== 'elegir_objetivo' && action.type !== 'rendirse' && action.type !== 'responder_prevenicion') {
+  // H4: el dueño ajeno al turno debe elegir su objetivo (tutor del rival al morir, etc.) antes de que siga el juego.
+  // Excepción: un equipar pendiente (Artefacto recién jugado) va PRIMERO, igual que en actorActual y getValidActions; si no, el
+  // equipar de quien jugó la Mística se rechazaba mientras el rival, sin nada que elegir aún, solo podía rendirse (deadlock).
+  const equipar = state.equiparPendiente
+  const equipando = !!equipar && !state.instances[equipar.artefactoId]?.equipadoA && action.type === 'equipar_artefacto'
+  if (electorAjeno(state) && !equipando && action.type !== 'elegir_objetivo' && action.type !== 'rendirse' && action.type !== 'responder_prevenicion') {
     return 'el rival debe elegir un objetivo antes de continuar'
   }
   // F9c: un mazo por ordenar (scry) congela el resto del juego hasta que quien lo mira lo ordene
