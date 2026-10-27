@@ -287,8 +287,7 @@ var FuenteEfectos_default = [
         efecto: "buff",
         stats: {
           RES: 1
-        },
-        zonaActivacion: "bloqueo"
+        }
       }
     ]
   },
@@ -366,7 +365,6 @@ var FuenteEfectos_default = [
         ATQ: 2,
         RES: 2
       },
-      costo: {},
       objetivo: {
         tipo: "todos_campeones_propios",
         controlador: "propio",
@@ -986,10 +984,7 @@ var FuenteEfectos_default = [
           ATQ: 2,
           RES: 0
         },
-        texto: "El Campe\xF3n equipado con esta carta gana 2 de ATQ.",
-        costo: {
-          cantidad: 1
-        }
+        texto: "El Campe\xF3n equipado con esta carta gana 2 de ATQ."
       }
     ]
   },
@@ -1370,7 +1365,7 @@ var FuenteEfectos_default = [
         trigger: "ninguno",
         efecto: "debuff",
         stats: {
-          ATQ: -1
+          ATQ: 1
         },
         objetivo: {
           tipo: "campeon",
@@ -3406,18 +3401,23 @@ function slotAZona(grupo, slot) {
 // src/online/game/replacements.ts
 function moverAlCementerio(s, ctx, cardInstanceId) {
   const inst = s.instances[cardInstanceId];
-  if (!inst) return;
+  if (!inst) return "otra";
+  let origen = "otra";
   for (const j of ["A", "B"]) {
     const p2 = s.players[j];
     for (const grupo of ["campeones", "misticasTacticas", "arcanasCombate"]) {
       const idx = p2.campo[grupo].indexOf(cardInstanceId);
       if (idx !== -1) {
         p2.campo[grupo][idx] = null;
+        origen = "campo";
         break;
       }
     }
     const manoIdx = p2.mano.indexOf(cardInstanceId);
-    if (manoIdx !== -1) p2.mano.splice(manoIdx, 1);
+    if (manoIdx !== -1) {
+      p2.mano.splice(manoIdx, 1);
+      origen = "mano";
+    }
   }
   delete inst.condicionHabilitada;
   if (s.cadena?.pila.includes(cardInstanceId)) {
@@ -3426,8 +3426,9 @@ function moverAlCementerio(s, ctx, cardInstanceId) {
   liberarEterBloqueadoCore(s, ctx, cardInstanceId, "1A");
   const p = s.players[inst.owner];
   if (!p.cementerio.includes(cardInstanceId)) p.cementerio.push(cardInstanceId);
+  return origen;
 }
-function enviarAlCementerio(s, ctx, cardInstanceId) {
+function enviarAlCementerio(s, ctx, cardInstanceId, desde) {
   const inst = s.instances[cardInstanceId];
   if (!inst) return;
   if (inst.vinculadoA) {
@@ -3438,14 +3439,14 @@ function enviarAlCementerio(s, ctx, cardInstanceId) {
     if (slotIdx !== -1) {
       p.campo.campeones[slotIdx] = null;
       ctx.emit({ type: "carta_salida_de_zona", cardInstanceId: vinculadoId, zona: `2${String.fromCharCode(66 + slotIdx)}`, jugador: inst.owner });
-      enviarAlCementerio(s, ctx, vinculadoId);
+      enviarAlCementerio(s, ctx, vinculadoId, "campo");
       ctx.emit({ type: "carta_entrada_a_zona", cardInstanceId: vinculadoId, zona: "2G", jugador: inst.owner, bocaArriba: true });
     }
   }
   liberarArtefactosEquipados(s, ctx, cardInstanceId);
-  moverAlCementerio(s, ctx, cardInstanceId);
+  const origen = moverAlCementerio(s, ctx, cardInstanceId);
   liberarEterBloqueado(s, ctx, cardInstanceId, "1A");
-  dispararTrigger(s, ctx, "al-ser-enviado-al-cementerio", inst.owner, [cardInstanceId]);
+  dispararTrigger(s, ctx, "al-ser-enviado-al-cementerio", inst.owner, [cardInstanceId], { zonaOrigen: desde ?? origen });
   reiniciarEnCementerio(s, cardInstanceId);
 }
 function reiniciarEnCementerio(s, cardInstanceId) {
@@ -3579,10 +3580,10 @@ function destruirCarta(s, ctx, cardInstanceId, causa) {
   if (esVinculoCard) {
     return ejecutarDestruccionVinculo(s, ctx, cardInstanceId, causa);
   }
-  moverAlCementerio(s, ctx, cardInstanceId);
+  const origen = moverAlCementerio(s, ctx, cardInstanceId);
   liberarEterBloqueado(s, ctx, cardInstanceId, "1A");
   liberarArtefactosEquipados(s, ctx, cardInstanceId);
-  dispararTrigger(s, ctx, "al-ser-enviado-al-cementerio", inst.owner, [cardInstanceId]);
+  dispararTrigger(s, ctx, "al-ser-enviado-al-cementerio", inst.owner, [cardInstanceId], { zonaOrigen: origen });
   ctx.emit({ type: "carta_muerta", cardInstanceId, jugador: inst.owner, causa });
   ctx.emit({ type: "destruccion", cardInstanceId, jugador: inst.owner, causa });
   reiniciarEnCementerio(s, cardInstanceId);
@@ -4098,7 +4099,7 @@ function ejecutarAccionEfecto(s, ctx, ep) {
       if (slotIdx !== -1) {
         p.campo.campeones[slotIdx] = null;
         ctx.emit({ type: "carta_salida_de_zona", cardInstanceId: accion.objetivo, zona: `2${String.fromCharCode(66 + slotIdx)}`, jugador: inst.owner });
-        enviarAlCementerio(s, ctx, accion.objetivo);
+        enviarAlCementerio(s, ctx, accion.objetivo, "campo");
         ctx.emit({ type: "carta_entrada_a_zona", cardInstanceId: accion.objetivo, zona: "2G", jugador: inst.owner, bocaArriba: true });
       }
       break;
@@ -4151,7 +4152,7 @@ function ejecutarAccionEfecto(s, ctx, ep) {
         const zona = `2${String.fromCharCode(66 + slotCP)}`;
         ctx.emit({ type: "carta_salida_de_zona", cardInstanceId: accion.objetivo, zona, jugador: inst.owner });
         p.campo.campeones[slotCP] = null;
-        enviarAlCementerio(s, ctx, accion.objetivo);
+        enviarAlCementerio(s, ctx, accion.objetivo, "campo");
         ctx.emit({ type: "carta_entrada_a_zona", cardInstanceId: accion.objetivo, zona: "2G", jugador: inst.owner, bocaArriba: true });
       }
       break;
@@ -5193,6 +5194,7 @@ function executeEffect(s, ctx, inst, efecto, targetIds, jugador, efectoData) {
   switch (efecto) {
     case "buff":
     case "debuff":
+      if (esAuraEquipada(efectoData)) break;
       executeBuffDebuff(s, targetIds, stats, duracion, efectoData.buffPerBlockedEther, efecto, efectoData.duracionTurnos, jugador, efectoData.duracionFase, efectoData.duracionControlador);
       break;
     case "destroy":
@@ -6068,7 +6070,7 @@ function executeRivalDiscard(s, ctx, jugador, cantidad) {
     if (p.mano.length === 0) break;
     const idx = Math.floor(ctx.next() * p.mano.length);
     const cardId = p.mano.splice(idx, 1)[0];
-    enviarAlCementerio(s, ctx, cardId);
+    enviarAlCementerio(s, ctx, cardId, "mano");
     ctx.emit({ type: "carta_descartada", jugador: rival, cardInstanceIds: [cardId] });
   }
 }
@@ -6295,7 +6297,7 @@ function ejecutarUsarTransmutar(s, action, ctx) {
   ctx.emit({ type: "carta_salida_de_zona", cardInstanceId: id, zona, jugador: s.turno });
   p.campo.campeones[slotIdx] = null;
   liberarEterBloqueado(s, ctx, id, "1A");
-  enviarAlCementerio(s, ctx, id);
+  enviarAlCementerio(s, ctx, id, "campo");
   ctx.emit({ type: "carta_entrada_a_zona", cardInstanceId: id, zona: "2G", jugador: inst.owner, bocaArriba: true });
 }
 function ejecutarElegirOpcion(s, action, ctx) {
@@ -6373,9 +6375,9 @@ function exigeEterBloqueado(efecto) {
 }
 function esAuraEquipada(efecto) {
   if (efecto.efecto !== "buff" && efecto.efecto !== "debuff") return false;
-  if (!efecto.buffPerBlockedEther) return false;
-  if (efecto.costo?.tipo !== "eter_bloqueado" && efecto.costo?.tipo !== "bloqueo_fijo") return false;
-  return efecto.objetivo?.tipo === "equipped_champion";
+  if (efecto.objetivo?.tipo !== "equipped_champion") return false;
+  if (efecto.buffPerBlockedEther) return efecto.costo?.tipo === "eter_bloqueado" || efecto.costo?.tipo === "bloqueo_fijo";
+  return efecto.tipo === "hechizo";
 }
 function esAuraVinculo(efecto) {
   if (efecto.tipo !== "vinculo") return false;
@@ -6549,6 +6551,7 @@ function modificadoresJSONDe(s, id) {
     if (!fuenteInst?.cardId) continue;
     const fuenteMeta = metaDeInstancia(s, fuenteId);
     if (!fuenteMeta) continue;
+    if (fuenteMeta.type === "Arcana" && fuenteInst.bocaArriba !== true) continue;
     if (fuenteMeta.type === "Campe\xF3n" && fuenteMeta.efectoComandante) {
       candidatos.push({ inst: fuenteInst, meta: fuenteMeta, esComandante: true, origen: "campo" });
     }
@@ -6766,6 +6769,7 @@ function triggersQueMatchean(s, trigger, jugador, ids, opts) {
     const negada = efectosNegados(s, id);
     efectos.forEach((efecto, efectoIdx) => {
       if (negada && efecto.tipo !== "comandante") return;
+      if (trigger === "al-ser-enviado-al-cementerio" && !opts?.ignorarZonaOrigen && efecto.triggerZona && efecto.triggerZona !== "cualquier_zona" && efecto.triggerZona !== opts?.zonaOrigen) return;
       const triggerDelEfecto = efecto.trigger === "ninguno" ? void 0 : efecto.trigger;
       const esUmbral = trigger === "al-bloquear-eter";
       const matchea = esUmbral ? !triggerDelEfecto && (efecto.costo?.tipo === "bloqueo_fijo" || efecto.costo?.tipo === "eter_bloqueado") && !!efecto.efecto : triggerDelEfecto === efectoTrigger && !!efecto.efecto;
@@ -6787,7 +6791,11 @@ function dispararTrigger(s, ctx, trigger, jugador, instancias, payloadExtra) {
     const meta = getCardMeta(cardId);
     if (meta && meta.type === "V\xEDnculo" && inst.bocaArriba !== true) continue;
     if (efectosNegados(s, id)) continue;
-    const primero = triggersQueMatchean(s, trigger, payload.jugador, [id])[0];
+    const primero = triggersQueMatchean(s, trigger, payload.jugador, [id], {
+      zonaOrigen: payload.zonaOrigen,
+      ignorarZonaOrigen: payload.contextoUso === "objetivo-elegido"
+      // resolución de una elección ya armada
+    })[0];
     if (primero) {
       const { efecto, efectoIdx } = primero;
       const pendientesAntes = s.objetivosPendientes?.length ?? 0;
@@ -7467,7 +7475,7 @@ function ejecutarJugarCampeon(s, action, ctx) {
     ctx.emit({ type: "carta_salida_de_zona", cardInstanceId: sacId, zona: zona2, jugador: s.turno });
     p.campo.campeones[slotIdx] = null;
     liberarEterBloqueado(s, ctx, sacId, "2A");
-    enviarAlCementerio(s, ctx, sacId);
+    enviarAlCementerio(s, ctx, sacId, "campo");
     ctx.emit({ type: "carta_entrada_a_zona", cardInstanceId: sacId, zona: "2G", jugador: s.turno, bocaArriba: true });
   }
   const manoIdx = p.mano.indexOf(id);
@@ -7738,7 +7746,7 @@ function ejecutarDescartarCarta(s, action, ctx) {
     const idx = p.mano.indexOf(id);
     if (idx === -1) continue;
     p.mano.splice(idx, 1);
-    enviarAlCementerio(s, ctx, id);
+    enviarAlCementerio(s, ctx, id, "mano");
     descartadas.push(id);
   }
   if (descartadas.length > 0) {
