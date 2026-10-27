@@ -33,6 +33,8 @@ export const INTERPRETER_EXEC = new Set<string>([
   'recuperar_mazo_top', 'recuperar_mazo_bottom', 'recuperar_exilio', 'direct_attack', 'scry', 'redirect', 'change_type',
   // tienen case en executeEffect (copy de un Campeón a un solo uso, F9; modificar_regla temporal) — el mapa los ignoraba
   'copy', 'modificar_regla',
+  // negar: `case 'negar'` en executeEffect (ventana de negación de la cadena) — antes se colaba al «sin case» al vaciarse EXTERNOS_NOP
+  'negar',
 ])
 
 /** No-ops explícitos SIN implementación verificada desde JSON.
@@ -73,11 +75,6 @@ export const DISPATCH: Record<string, {
   al_ser_enviado_al_cementerio: { llamado: true, nota: 'replacements.ts:94,195', instanciasOk: true },
   al_ser_destruido_vinculo: { llamado: true, nota: 'replacements.ts:185 — vínculo', instanciasOk: true },
   al_resolver_cadena: { llamado: true, nota: 'chain.ts:228,257,260', instanciasOk: true },
-  al_activar_habilidad: {
-    llamado: false,
-    nota: 'SIN dispararTrigger — solo vía ejecutarEfectoDesdeJSON (habilidades.ts:227)',
-    instanciasOk: true,
-  },
   inicio_alba: {
     llamado: true,
     nota: 'phases.ts:40-42 — instancias = eterPagado + vínculos (NO eterReserva ni campo)',
@@ -210,6 +207,39 @@ export function clasificarEfecto(
   const h = HANDLERS[cardId]
   if (h?.drift && (tipo === 'pasivo' || tipo === 'reserva' || tipo === 'bloqueo' || tipo === 'comandante')) {
     notas.push(h.drift)
+  }
+
+  // ── negar: el motor solo implementa la negación de la ACTIVACIÓN pendiente; no lee el resto de `tipoNegacion` (B3) ──
+  if (accion === 'negar' && efecto.tipoNegacion && efecto.tipoNegacion !== 'activacion') {
+    return {
+      ...base,
+      estado: 'HUECO_NOOP',
+      ruta: `negar → executeEffect solo niega la activación pendiente de la ventana; tipoNegacion '${efecto.tipoNegacion}' no se lee`,
+      notas: [...notas, `Falta implementar tipoNegacion '${efecto.tipoNegacion}' (hoy actúa como 'activacion'). Requiere decisión de diseño.`],
+    }
+  }
+
+  // ── Efecto solo de tramos (umbral de Éter bloqueado): el costo y el objetivo van arriba, cada tramo aporta su efecto ──
+  if (!efecto.efecto && efecto.tramos && efecto.tramos.length > 0) {
+    const accionesTramo = efecto.tramos.map((t) => t.efecto)
+    const sinCase = accionesTramo.filter((a) => !INTERPRETER_EXEC.has(a) && a !== 'fix_exhaust')
+    const etiqueta = accionesTramo.join('+')
+    if (sinCase.length === 0) {
+      return {
+        ...base,
+        efecto: etiqueta,
+        estado: 'OK_ACTIVACION',
+        ruta: 'dispararUmbralBloqueo (effectInterpreter) — cada tramo se ejecuta al alcanzar su umbral de Éter bloqueado',
+        notas: [...notas, 'fix_exhaust solo existe como tramo de otro efecto.'],
+      }
+    }
+    return {
+      ...base,
+      efecto: etiqueta,
+      estado: 'HUECO_NOOP',
+      ruta: 'tramos → interpretEffect → sin case',
+      notas: [...notas, `Fase 2: implementar case ${sinCase.map((a) => `'${a}'`).join(', ')}.`],
+    }
   }
 
   // ── Sin trigger / trigger ninguno → modificador continuo u otros ──
@@ -360,14 +390,6 @@ export function clasificarEfecto(
   // ── Con trigger ──
   const disp = DISPATCH[trigger]
   if (!disp || !disp.llamado) {
-    // al_activar_habilidad: sin dispatch pero con ruta de activación
-    if (trigger === 'al_activar_habilidad') {
-      if (card.type !== 'Campeón') {
-        notas.push('al_activar_habilidad sin dispatch; ruta de activación es solo para Campeones en campo.')
-        return { ...base, estado: 'HUECO_TRIGGER', ruta: 'sin dispatch y sin activación posible', notas }
-      }
-      return clasificarActivacion(base, accion, notas, 'habilidades.ts ejecutarEfectoDesdeJSON (sin dispararTrigger)')
-    }
     // prevent_destroy (Fase 2c): scan data-driven en destruirCarta, sin dispatch
     if (SISTEMAS_EXTERNOS_JSON.has(accion)) {
       return {

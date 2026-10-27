@@ -659,8 +659,7 @@
           "ATQ": 0,
           "RES": 0
         },
-        "texto": "Al activar esta habilidad, puedes pagar 2 Éter, destruye 1 Mística que controla el rival.",
-        "trigger": "al_activar_habilidad",
+        "texto": "Puedes pagar 2 Éter, destruye 1 Mística que controla el rival.",
         "costo": {
           "tipo": "eter",
           "cantidad": 2

@@ -52,7 +52,10 @@ beforeAll(() => {
     }],
   }
   const arcanaDebuff = { ...arcanaRoba, id: 'TEST-ARC2', efectos: [{ ...arcanaRoba.efectos[0], efecto: 'debuff', objetivo: { tipo: 'campeon', controlador: 'rival', zona: 'campo' }, stats: { ATQ: 1, RES: 0 }, duracion: 'turno' }] }
-  registrarCartas([condicionada, arcanaRoba, arcanaDebuff] as unknown as AnyCard[])
+  // Rompecadenas con un trigger apilable: Disparo con costo de Éter y objetivo, para probar el cobro al resolver y el fizzle
+  const rompecadenas = CARTAS_PRUEBA.find((c) => c.id === PR.ROMPECADENAS)! as unknown as { efectos: Record<string, unknown>[] }
+  const rompecadenasAlAtacar = { ...rompecadenas, id: 'TEST-RC', efectos: [{ ...rompecadenas.efectos[0], trigger: 'al_atacar' }] }
+  registrarCartas([condicionada, arcanaRoba, arcanaDebuff, rompecadenasAlAtacar] as unknown as AnyCard[])
 })
 
 /* ───────────────────────── Utilidades ───────────────────────── */
@@ -175,7 +178,7 @@ describe('triggersQueMatchean: el filtro de dispararTrigger, extraído y puro', 
 
 describe('triggers apilables', () => {
   it('lista central: los que nacen de una acción de jugador', () => {
-    expect([...TRIGGERS_APILABLES]).toEqual(['al-invocar', 'al-atacar', 'al-jugar-mistica', 'al-activar-habilidad'])
+    expect([...TRIGGERS_APILABLES]).toEqual(['al-invocar', 'al-atacar', 'al-jugar-mistica'])
     for (const t of ['al-matar-en-combate', 'al-inicio-alba', 'al-inicio-choque', 'al-pagar-eter', 'al-ser-enviado-al-cementerio',
       'al-ser-destruido-vinculo', 'al-resolver-cadena', 'al-bloquear-eter'] as const) {
       expect(esTriggerApilable(t), t).toBe(false)
@@ -487,16 +490,16 @@ describe('reglas de resolución: fuente, objetivo y costo', () => {
     expect(verificarZonaUnica(s)).toEqual([])
   })
 
-  /** A (Rompecadenas al activar habilidad: paga 2 Éter, destruye una Mística rival) vs B con una Mística en el campo (el objetivo) y una Presteza en la mano (la respuesta). */
+  /** A (Rompecadenas sintético al atacar: paga 2 Éter, destruye una Mística rival) vs B con una Mística en el campo (el objetivo) y una Presteza en la mano (la respuesta). */
   function rompecadenas(): { s: GameState; ctx: Ctx } {
     const s0 = escena()
-    conCampeon(s0, 'A', 'rc', PR.ROMPECADENAS, 0)
+    conCampeon(s0, 'A', 'rc', 'TEST-RC', 0)
     conEteres(s0, 'A', 2)
     conMistica(s0, 'B', 'bm', PR.AVISO, 0)
     conRespuestaDeMano(s0, 'B')
     const ctx = crearCtx()
     let s = structuredClone(s0)
-    apilarTriggers(s, ctx, construirTriggers(s, 'al-activar-habilidad', 'A', ['rc']))
+    apilarTriggers(s, ctx, construirTriggers(s, 'al-atacar', 'A', ['rc']))
     expect(s.declaracionEnEleccion).toBeDefined() // la Mística de B es la única opción pero se elige igual
     s = aplicar(s, elegir('bm'), ctx)
     expect(s.cadena!.triggers).toHaveLength(1)

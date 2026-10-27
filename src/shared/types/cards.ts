@@ -28,7 +28,7 @@ export interface EfectoData {
   /** When this effect activates */
   trigger?: 'al_invocar' | 'al_atacar' | 'al_matar_en_combate' | 'al_pagar_eter'
           | 'inicio_choque' | 'inicio_alba' | 'al_jugar_mistica'
-          | 'al_resolver_cadena' | 'al_activar_habilidad' | 'al_ser_enviado_al_cementerio'
+          | 'al_resolver_cadena' | 'al_ser_enviado_al_cementerio'
           | 'al_ser_destruido_vinculo' | 'cuando_vinculo_seria_destruido' | 'ninguno'
 
   // ── Capa 2b: TRIGGER ZONA (opcional) ──
@@ -304,7 +304,7 @@ export interface FiltroObjetivo {
 /** Structured condition for Arcanas */
 export interface CondicionEfecto {
   /** When this condition is checked */
-  trigger: 'inicio_choque' | 'inicio_alba' | 'al_atacar' | 'al_invocar' | 'al_resolver_cadena' | 'al_activar_habilidad' | 'activacion'
+  trigger: 'inicio_choque' | 'inicio_alba' | 'al_atacar' | 'al_invocar' | 'al_resolver_cadena' | 'activacion'
   /** Whose turn the trigger applies to */
   controladorTrigger?: 'propio' | 'rival'
   /** Array of conditions that must ALL be true */

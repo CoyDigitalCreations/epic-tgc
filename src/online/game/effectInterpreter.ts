@@ -244,7 +244,6 @@ export function toHyphenTrigger(trigger?: string): string | undefined {
     'al_ser_enviado_al_cementerio': 'al-ser-enviado-al-cementerio',
     'al_ser_destruido_vinculo': 'al-ser-destruido-vinculo',
     'al_resolver_cadena': 'al-resolver-cadena',
-    'al_activar_habilidad': 'al-activar-habilidad',
   }
   return triggerMap[trigger] ?? trigger.replace(/_/g, '-')
 }

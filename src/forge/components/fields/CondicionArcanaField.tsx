@@ -18,7 +18,6 @@ const TRIGGER_OPTIONS = [
   { value: 'al_atacar', label: 'Al atacar' },
   { value: 'al_invocar', label: 'Al invocar' },
   { value: 'al_resolver_cadena', label: 'Al resolver cadena' },
-  { value: 'al_activar_habilidad', label: 'Al activar habilidad' },
   { value: 'activacion', label: 'Al activar (guard)' },
 ]
 
@@ -89,7 +88,6 @@ export function condicionArcanaTexto(condicion: CondicionEfecto): string {
     'al_atacar': { propio: 'Al atacar', rival: 'Al atacar el rival' },
     'al_invocar': { propio: 'Al invocar', rival: 'Al invocar el rival' },
     'al_resolver_cadena': { propio: 'Al resolver la cadena', rival: 'Al resolver la cadena el rival' },
-    'al_activar_habilidad': { propio: 'Al activar esta habilidad', rival: 'Al activar esta habilidad el rival' },
     'activacion': { propio: 'Mientras', rival: 'Mientras el rival' },
   }
   const trigger = triggerTexts[condicion.trigger]?.[esRival ? 'rival' : 'propio'] ?? condicion.trigger

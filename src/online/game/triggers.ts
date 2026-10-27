@@ -7,7 +7,8 @@
  * F5d-3 al-jugar-mistica (movimientos.ts), F5d-4 al-invocar (movimientos.ts), F5d-5 al-atacar (combat.ts).
  * También al-invocar cuando un EFECTO mete al Campeón al campo (invocar, recuperar_campo, invocar_y_equipar, tutor):
  * ahí no hay jugada que abra ventana, así que va por `resolverTriggersDeEfecto` (inmediato, sin ventana).
- * `al-activar-habilidad` sigue sin disparador (pendiente de decisión del usuario).
+ * No existe `al-activar-habilidad`: se eliminó (2026-10-26). Activar una habilidad es una acción del jugador, no un
+ * trigger; las cartas la declaran como Disparo/Continuo sin trigger.
  *
  * Modelo (genérico: lee el efecto de la carta fuente, nada atado a cartas concretas):
  * - Un `TriggerApilado` (types.ts) es serializable: (controlador, carta fuente, trigger, efectoIdx, objetivo
@@ -22,7 +23,7 @@
  *   no serializables: NO se apilan; los sitios de llamada los siguen disparando con `dispararTrigger`.
  *
  * APILABLES ("nacen de una acción de jugador"), lista central TRIGGERS_APILABLES: al-invocar, al-atacar,
- * al-jugar-mistica, al-activar-habilidad. INMEDIATOS (no nacen de una acción de jugador, o por decisión):
+ * al-jugar-mistica. INMEDIATOS (no nacen de una acción de jugador, o por decisión):
  * al-matar-en-combate, al-ser-enviado-al-cementerio, al-ser-destruido-vinculo (muertes/daño), al-inicio-alba,
  * al-inicio-choque (fases), al-resolver-cadena (resolución de la cadena), al-pagar-eter (decisión del usuario:
  * sigue inmediato) y al-bloquear-eter (umbral, re-dispatch).
@@ -65,7 +66,7 @@ import { abrirCadenaGlobal, declararVentana, marcarInicioAccion, type MarcadorAc
 import type { CadenaState, Ctx, DeclaracionCadena, GameState, TriggerApilado } from './types'
 
 /** Triggers que nacen de una acción de jugador y por tanto se apilan (ver cabecera). */
-export const TRIGGERS_APILABLES: readonly TriggerEfecto[] = ['al-invocar', 'al-atacar', 'al-jugar-mistica', 'al-activar-habilidad']
+export const TRIGGERS_APILABLES: readonly TriggerEfecto[] = ['al-invocar', 'al-atacar', 'al-jugar-mistica']
 
 /** Niveles de resolución anidados que se toleran; más allá el trigger se descarta (decisión g). */
 export const MAX_PROFUNDIDAD_TRIGGERS = 8

@@ -66,7 +66,6 @@ function describirTrigger(e: EfectoData): string {
     inicio_alba: 'Al inicio de Alba',
     al_jugar_mistica: 'Al jugar Mística',
     al_resolver_cadena: 'Al resolver cadena',
-    al_activar_habilidad: 'Al activar habilidad',
     al_ser_enviado_al_cementerio: 'Al ir al Cementerio',
     al_ser_destruido_vinculo: 'Al destruir Vínculo',
     cuando_vinculo_seria_destruido: 'Cuando un Vínculo sería destruido',

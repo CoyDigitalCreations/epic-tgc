@@ -30,7 +30,7 @@ const TRIGGER_OPTIONS = [
   { value: 'al_atacar', label: 'Al atacar' }, { value: 'al_matar_en_combate', label: 'Al matar en combate' },
   { value: 'al_pagar_eter', label: 'Al pagar éter' }, { value: 'inicio_choque', label: 'Inicio de Choque' },
   { value: 'inicio_alba', label: 'Inicio de Alba' }, { value: 'al_jugar_mistica', label: 'Al jugar Mística' },
-  { value: 'al_resolver_cadena', label: 'Al resolver cadena' }, { value: 'al_activar_habilidad', label: 'Al activar habilidad' },
+  { value: 'al_resolver_cadena', label: 'Al resolver cadena' },
   { value: 'al_ser_enviado_al_cementerio', label: 'Al ir al cementerio' }, { value: 'al_ser_destruido_vinculo', label: 'Al destruir Vínculo' },
   { value: 'cuando_vinculo_seria_destruido', label: 'Cuando Vínculo sería destruido' },
 ]

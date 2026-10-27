@@ -294,7 +294,7 @@ export interface TriggerApiladoEvent {
   jugador: PlayerId
   /** Carta fuente del efecto (ya volteada si era oculta). */
   cardInstanceId: string
-  /** Trigger interno que se disparó (al-invocar, al-atacar, al-jugar-mistica, al-activar-habilidad). */
+  /** Trigger interno que se disparó (al-invocar, al-atacar, al-jugar-mistica). */
   trigger: string
   /** Índice del efecto en efectos[] de la carta (una carta puede tener varios con el mismo trigger). */
   efectoIdx: number

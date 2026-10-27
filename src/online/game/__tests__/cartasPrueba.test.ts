@@ -61,7 +61,7 @@ const TIPOS_PERMITIDOS: Record<AnyCard['type'], EfectoData['tipo'][]> = {
 /** Triggers que ofrece el desplegable del Card-Maker (TRIGGER_OPTIONS en EffectField.tsx, no exportada). */
 const TRIGGERS_CARD_MAKER = new Set([
   'ninguno', 'al_invocar', 'al_atacar', 'al_matar_en_combate', 'al_pagar_eter', 'inicio_choque', 'inicio_alba',
-  'al_jugar_mistica', 'al_resolver_cadena', 'al_activar_habilidad', 'al_ser_enviado_al_cementerio',
+  'al_jugar_mistica', 'al_resolver_cadena', 'al_ser_enviado_al_cementerio',
   'al_ser_destruido_vinculo', 'cuando_vinculo_seria_destruido',
 ])
 
@@ -187,8 +187,7 @@ describe('(a) auditoría — validateCard y reglas de configuración del Card-Ma
  * aparece un hueco NUEVO (algo del set sin ejecutor que nadie anotó aquí).
  */
 const HUECOS_CONOCIDOS: Record<string, string> = {
-  'PR-021': 'negar en disparo trigger "ninguno" (Thane DS-014): executeEffect solo anula una activación pendiente de la cadena; el Disparo no apila nada que negar → no-op',
-  'PR-024': 'tramos (Cassandra FB-016): el mapa no modela efectos sin `efecto` raíz (HUECO_NOOP del mapa); el motor SÍ los ejecuta vía dispararUmbralBloqueo/ejecutarTramo (ver humo)',
+  'PR-021': 'negar en disparo trigger "ninguno" (Thane DS-014): executeEffect solo anula una activación pendiente de la cadena y no lee el resto de `tipoNegacion` (efecto_activo...); el Disparo no apila nada que negar → no-op',
 }
 
 describe('(b) cobertura — coverageMap sobre el set', () => {
@@ -835,7 +834,7 @@ describe('(c) humo — habilidades, Disparos y Éter bloqueado', () => {
     expect(s.players.B.campo.campeones[0]).toBe('b0')
   })
 
-  it('PR-018 al_activar_habilidad: aunque el motor no dispara el trigger, el Disparo se activa y destruye la Mística rival', () => {
+  it('PR-018 Rompecadenas: el Disparo sin trigger se activa pagando 2 Éter y destruye la Mística rival', () => {
     const s0 = base()
     conCampeon(s0, 'A', 'rom', PR.ROMPECADENAS, 0)
     const eteres = conEteres(s0, 'A', 2)

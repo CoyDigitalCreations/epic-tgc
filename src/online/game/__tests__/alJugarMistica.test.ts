@@ -192,7 +192,7 @@ describe('decisión 2: la fuente fuera del campo pierde el trigger', () => {
 
 /* ───────────────────────── Simulaciones con el cableado real ───────────────────────── */
 
-/** Triggers que producción apila hoy (F5d-3, F5d-4, F5d-5); al-activar-habilidad sigue sin disparador. */
+/** Triggers que producción apila hoy (F5d-3, F5d-4, F5d-5): son todos los apilables. */
 const CABLEADOS = ['al-jugar-mistica', 'al-invocar', 'al-atacar']
 
 /** Juega una partida real con bots (mazos PR) y devuelve cuántos triggers apiló el cableado de producción. */
@@ -213,7 +213,6 @@ function simularConCableado(seed: number, maxIter = 700): { apilados: number; it
     expect(verificarZonaUnica(s), `seed ${seed} iter ${i} (${accion.type})`).toEqual([])
     expect(s.profundidadTriggers, `seed ${seed} iter ${i}`).toBeUndefined()
     // F5d-3/4/5 son las fases cableadas: en producción solo se apilan al-jugar-mistica, al-invocar y al-atacar
-    // (al-activar-habilidad sigue sin disparador)
     for (const t of s.cadena?.triggers ?? []) expect(CABLEADOS, `seed ${seed} iter ${i}`).toContain(t.trigger)
     for (const t of s.declaracionEnEleccion?.triggers ?? []) expect(CABLEADOS, `seed ${seed} iter ${i}`).toContain(t.trigger)
     if (i % 25 === 0) expect(JSON.parse(JSON.stringify(s))).toEqual(s)

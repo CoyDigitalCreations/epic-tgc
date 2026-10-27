@@ -507,7 +507,6 @@ export function EffectManualModal({ isOpen, onClose }: EffectManualModalProps) {
                 ['al_invocar', 'Propio', 'Al ser invocada'],
                 ['al_invocar', 'Rival', 'Al ser invocada por el rival'],
                 ['al_resolver_cadena', '—', 'Al resolver la cadena'],
-                ['al_activar_habilidad', '—', 'Al activar esta habilidad'],
                 ['activacion', '—', '(activación directa sin trigger)'],
               ]}
             />

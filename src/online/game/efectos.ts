@@ -42,7 +42,6 @@ export type TriggerEfecto =
   | 'al-ser-enviado-al-cementerio'
   | 'al-ser-destruido-vinculo'
   | 'al-resolver-cadena'
-  | 'al-activar-habilidad'
   | 'al-bloquear-eter'
   | 'activable'
 
@@ -682,7 +681,6 @@ const TRIGGER_A_JSON: Readonly<Record<string, string>> = {
   'al-ser-enviado-al-cementerio': 'al_ser_enviado_al_cementerio',
   'al-ser-destruido-vinculo': 'al_ser_destruido_vinculo',
   'al-resolver-cadena': 'al_resolver_cadena',
-  'al-activar-habilidad': 'al_activar_habilidad',
 }
 
 /** Efecto de efectos[] que matchea un trigger interno (con su índice), tal como lo ven dispararTrigger y el apilado. */

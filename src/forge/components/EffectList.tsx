@@ -244,7 +244,6 @@ export function generateEffectText(data: EfectoData): string {
       'inicio_alba': { propio: 'Al inicio de tu Alba', rival: 'Al inicio de la Alba del rival' },
       'al_jugar_mistica': { propio: 'Al jugar esta Mística', rival: 'Al jugar esta Mística el rival' },
       'al_resolver_cadena': { propio: 'Al resolver la cadena', rival: 'Al resolver la cadena el rival' },
-      'al_activar_habilidad': { propio: 'Al activar esta habilidad', rival: 'Al activar esta habilidad el rival' },
       'al_ser_enviado_al_cementerio': { propio: 'Al ser enviada al Cementerio', rival: 'Al ser enviada al Cementerio por el rival' },
       'al_ser_destruido_vinculo': { propio: 'Al ser destruido este Vínculo', rival: 'Al ser destruido este Vínculo por el rival' },
       'cuando_vinculo_seria_destruido': { propio: 'Cuando un Vínculo que controles fuera a ser destruido', rival: 'Cuando un Vínculo del rival fuera a ser destruido' },
