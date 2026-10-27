@@ -1458,13 +1458,14 @@ var FuenteEfectos_default = [
           ATQ: 1
         },
         objetivo: {
-          tipo: "campeon",
+          tipo: "invocado",
           controlador: "propio",
           zona: "campo"
         },
         texto: "Cuando pagues esta carta para invocar un Campe\xF3n, ese Campe\xF3n gana 1 de ATQ hasta el final del pr\xF3ximo turno.",
         duracion: "n_turnos",
-        duracionTurnos: 2
+        duracionTurnos: 2,
+        contextoUso: "invocar"
       }
     ]
   },
@@ -3187,7 +3188,7 @@ function eligeObjetivo(efecto) {
   if (!efecto.efecto || SIN_ELECCION.has(efecto.efecto)) return false;
   if (efecto.efecto === "negar" && efecto.tipoNegacion !== "efecto_activo") return false;
   const tipo = efecto.objetivo?.tipo;
-  return !!tipo && !["self", "todos_campeones_propios", "todos_campeones_rivales", "equipped_champion", "rival_hand"].includes(tipo);
+  return !!tipo && !["self", "todos_campeones_propios", "todos_campeones_rivales", "equipped_champion", "invocado", "rival_hand"].includes(tipo);
 }
 function efectosPrestadosDe(s, instId) {
   const lista = s.efectosPrestados;
@@ -5103,6 +5104,8 @@ function interpretEffect(s, ctx, inst, efectoData, payload) {
   if (objetivo) {
     if (objetivo.tipo === "self") {
       targetIds = [inst.cardInstanceId];
+    } else if (objetivo.tipo === "invocado") {
+      targetIds = payload.contextoUso === "invocar" && payload.objetivoId && s.instances[payload.objetivoId] ? [payload.objetivoId] : [];
     } else {
       targetIds = resolveTargets(s, objetivoCompleto(efectoData), jugador, inst.cardInstanceId);
     }
@@ -5151,7 +5154,7 @@ function objetivoCompleto(efectoData) {
 function needsPlayerChoice(objetivo, efecto, tipoNegacion) {
   if (!objetivo) return false;
   if (efecto === "negar" && tipoNegacion === "efecto_activo") return true;
-  if (objetivo.tipo === "self" || objetivo.tipo === "todos_campeones_propios" || objetivo.tipo === "todos_campeones_rivales" || objetivo.tipo === "rival_hand" || objetivo.tipo === "equipped_champion") {
+  if (objetivo.tipo === "self" || objetivo.tipo === "todos_campeones_propios" || objetivo.tipo === "todos_campeones_rivales" || objetivo.tipo === "rival_hand" || objetivo.tipo === "equipped_champion" || objetivo.tipo === "invocado") {
     return false;
   }
   if (efecto === "draw" || efecto === "scry" || efecto === "rival_discard" || efecto === "block_ether" || efecto === "double_attack" || efecto === "negar") {
