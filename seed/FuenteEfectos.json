@@ -1922,9 +1922,6 @@
         },
         "texto": "Puedes pagar 3 Éter, Niega el efecto activo de un Campeón que controla el rival, hasta el final del turno.",
         "duracion": "turno",
-        "copyAttributes": [
-          "atq"
-        ],
         "tipoNegacion": "efecto_activo",
         "costo": {
           "tipo": "eter",

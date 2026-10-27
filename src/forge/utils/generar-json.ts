@@ -1,5 +1,6 @@
 import { ESTASIS_CARDS, DISONANCIA_CARDS } from '../../shared/data/paquetes'
 import type { AnyCard } from '../../shared/types'
+import { limpiarEfectosDeCarta } from './limpiar-efecto'
 
 /** Quita el arte embebido (imageUrl + hasImage). El resto de la carta queda intacto. */
 function sinArte(card: AnyCard): AnyCard {
@@ -32,7 +33,7 @@ export function generarJSONActualizado(): void {
  * Útil para compartir/editar cartas sin peso de imágenes.
  */
 export function exportarSinArte(cards: AnyCard[], nombreArchivo = 'cartas-sin-arte'): void {
-  const exportadas = cards.map(sinArte)
+  const exportadas = cards.map(sinArte).map(limpiarEfectosDeCarta)
   const json = JSON.stringify(exportadas, null, 2)
   const blob = new Blob([json], { type: 'application/json' })
   const url = URL.createObjectURL(blob)

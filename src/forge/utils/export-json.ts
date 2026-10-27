@@ -1,6 +1,7 @@
 import type { AnyCard } from '../../shared/types'
 import { getCardImage } from './image-store'
 import { cardArtPath } from '../../shared/data/paquetes'
+import { limpiarEfectosDeCarta } from './limpiar-efecto'
 
 /**
  * Nombres de los archivos que se cargan como FUENTE DE VERDAD en seed/ (el nombre se escribe tal
@@ -53,7 +54,7 @@ export async function exportCollectionToJson(
   // into the exported JSON so a backup keeps the art. Cards with a static
   // path (/cartas/*.png) keep their path as-is: the art is versioned in
   // public/ and the path stays valid everywhere.
-  const exported = await conArteEmbebido(cards)
+  const exported = (await conArteEmbebido(cards)).map(limpiarEfectosDeCarta)
   const json = JSON.stringify(exported, null, 2)
   const blob = new Blob([json], { type: 'application/json' })
   const url = URL.createObjectURL(blob)
@@ -122,7 +123,7 @@ export function exportCollectionSinArte(
   cards: AnyCard[],
   nombreArchivo = 'cartas-sin-arte',
 ): void {
-  const exported = cards.map(sinArte)
+  const exported = cards.map(sinArte).map(limpiarEfectosDeCarta)
   const json = JSON.stringify(exported, null, 2)
   const blob = new Blob([json], { type: 'application/json' })
   const url = URL.createObjectURL(blob)

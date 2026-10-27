@@ -27,6 +27,8 @@
 import { readFileSync, writeFileSync } from 'node:fs'
 import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import type { AnyCard } from '../src/shared/types'
+import { limpiarEfectosDeCarta } from '../src/forge/utils/limpiar-efecto'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ENGINE_PATH = resolve(__dirname, '../seed/FuenteEfectos.json')
@@ -252,7 +254,9 @@ function main(): void {
     process.exit(1)
   }
 
-  const exportCards = (raw as Json[]).map(sinArte)
+  // Además del arte, se quitan los campos escondidos de OTROS efectos (p. ej. el copyAttributes que quedó en Thane): un export
+  // hecho antes de que el Card-Maker los limpiara no debe reintroducirlos en el seed
+  const exportCards = (raw as Json[]).map(sinArte).map((c) => limpiarEfectosDeCarta(c as unknown as AnyCard) as unknown as Json)
   console.log(`\nCartas en el export: ${exportCards.length}`)
 
   // 2. Validar

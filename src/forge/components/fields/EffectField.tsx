@@ -5,6 +5,7 @@
 import type { EfectoData, TramoEfecto, CardType, CostoEfecto, ObjetivoEfecto, FiltroObjetivo, CopyAttribute } from '../../../shared/types/cards'
 import { FACCIONES, ESENCIAS, ROLES, KEYWORDS, CAT_HABILIDAD } from '../../../shared/types/enums'
 import { REGLAS, REGLA_IDS, esReglaNumerica, operacionesDe, type OperacionRegla, type ReglaId } from '../../../shared/rules/reglas'
+import { camposAjenosVacios } from '../../utils/limpiar-efecto'
 
 const OPERACION_LABELS: Record<OperacionRegla, string> = {
   fijar: 'Fijar a', sumar: 'Sumar', permitir: 'Permitir', prohibir: 'Prohibir',
@@ -308,11 +309,14 @@ export function EffectField({ label, value, onChange, cardType }: EffectFieldPro
           <GroupedSelectField label="Efecto" value={data.efecto} categories={EFFECT_CATEGORIES} onChange={(v) => {
             // fix_exhaust solo aplica a campeones agotados — forzar el filtro
             // para que el JSON siempre salga con el requisito correcto
+            // Al cambiar de efecto se limpian los campos que solo son de OTRO efecto (copyAttributes, tipoNegacion...): si no,
+            // quedan escondidos en los datos (el formulario ya no los muestra) y se exportan (así quedó Thane)
+            const ajenos = camposAjenosVacios(v as EfectoData['efecto'])
             if (v === 'fix_exhaust') {
               const obj = data.objetivo ?? { tipo: 'campeon' as const, controlador: 'rival' as const, zona: 'campo' as const }
-              update({ efecto: v as any, objetivo: { ...obj, tipo: 'campeon', controlador: obj.controlador === 'propio' ? 'rival' : obj.controlador, filtros: { ...obj.filtros, agotado: true } } })
+              update({ ...ajenos, efecto: v as any, objetivo: { ...obj, tipo: 'campeon', controlador: obj.controlador === 'propio' ? 'rival' : obj.controlador, filtros: { ...obj.filtros, agotado: true } } })
             } else {
-              update({ efecto: v as any })
+              update({ ...ajenos, efecto: v as any })
             }
           }} />
         ) : (
