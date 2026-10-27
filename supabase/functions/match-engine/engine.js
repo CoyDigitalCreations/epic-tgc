@@ -1798,7 +1798,7 @@ var FuenteEfectos_default = [
     paqueteId: "disonancia",
     limiteCopias: "3",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-10-24T18:16:00.977Z",
+    updatedAt: "2026-10-27T00:26:09.195Z",
     facciones: [
       "Caos"
     ],
@@ -1832,7 +1832,6 @@ var FuenteEfectos_default = [
       },
       {
         tipo: "disparo",
-        trigger: "al_activar_habilidad",
         costo: {
           tipo: "eter",
           cantidad: 2
@@ -1843,7 +1842,7 @@ var FuenteEfectos_default = [
           controlador: "rival",
           zona: "campo"
         },
-        texto: "Al activar esta habilidad, puedes pagar 2 \xC9ter, destruye 1 M\xEDstica que controla el rival."
+        texto: "Puedes pagar 2 \xC9ter, destruye 1 M\xEDstica que controla el rival."
       }
     ]
   },
@@ -2007,7 +2006,7 @@ var FuenteEfectos_default = [
     paqueteId: "disonancia",
     limiteCopias: "3",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-10-08T05:20:29.945Z",
+    updatedAt: "2026-10-27T00:26:22.051Z",
     facciones: [
       "Caos"
     ],
@@ -2026,7 +2025,6 @@ var FuenteEfectos_default = [
     efectos: [
       {
         tipo: "disparo",
-        trigger: "al_activar_habilidad",
         costo: {
           tipo: "eter",
           cantidad: 2
@@ -2038,7 +2036,7 @@ var FuenteEfectos_default = [
         objetivo: {
           tipo: "todos_campeones_propios"
         },
-        texto: "Al activar esta habilidad, puedes pagar 2 \xC9ter, todos tus Campeones ganan 1 de ATQ, hasta el final del turno.",
+        texto: "Puedes pagar 2 \xC9ter, todos tus Campeones ganan 1 de ATQ, hasta el final del turno.",
         duracion: "turno"
       }
     ]
@@ -4465,7 +4463,7 @@ function resolverOpener(s, ctx, opener) {
 }
 
 // src/online/game/triggers.ts
-var TRIGGERS_APILABLES = ["al-invocar", "al-atacar", "al-jugar-mistica", "al-activar-habilidad"];
+var TRIGGERS_APILABLES = ["al-invocar", "al-atacar", "al-jugar-mistica"];
 var MAX_PROFUNDIDAD_TRIGGERS = 8;
 function esTriggerApilable(trigger) {
   return TRIGGERS_APILABLES.includes(trigger);
@@ -4898,8 +4896,7 @@ function toHyphenTrigger(trigger) {
     "al_jugar_mistica": "al-jugar-mistica",
     "al_ser_enviado_al_cementerio": "al-ser-enviado-al-cementerio",
     "al_ser_destruido_vinculo": "al-ser-destruido-vinculo",
-    "al_resolver_cadena": "al-resolver-cadena",
-    "al_activar_habilidad": "al-activar-habilidad"
+    "al_resolver_cadena": "al-resolver-cadena"
   };
   return triggerMap[trigger] ?? trigger.replace(/_/g, "-");
 }
@@ -6536,8 +6533,7 @@ var TRIGGER_A_JSON = {
   "al-jugar-mistica": "al_jugar_mistica",
   "al-ser-enviado-al-cementerio": "al_ser_enviado_al_cementerio",
   "al-ser-destruido-vinculo": "al_ser_destruido_vinculo",
-  "al-resolver-cadena": "al_resolver_cadena",
-  "al-activar-habilidad": "al_activar_habilidad"
+  "al-resolver-cadena": "al_resolver_cadena"
 };
 function triggersQueMatchean(s, trigger, jugador, ids, opts) {
   const res = [];
