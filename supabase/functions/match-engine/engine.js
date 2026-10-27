@@ -3036,6 +3036,84 @@ function robarCarta(s, ctx, jugador) {
   return true;
 }
 
+// src/online/game/reglasTemporales.ts
+function aplicarReglaTemporal(s, regla) {
+  const orden = (s.ordenReglas ?? 0) + 1;
+  s.ordenReglas = orden;
+  s.reglasTemporales = [...s.reglasTemporales ?? [], { ...regla, orden }];
+}
+var ESTADO_DE_CAMPO = [
+  "poder",
+  "resistencia",
+  "modificadores",
+  "keywords",
+  "keywordsTemporales",
+  "keywordsHastaFase",
+  "copyTargetId",
+  "copyOneShotDisparado",
+  "efectoUmbralDisparado",
+  "tramosDisparados",
+  "fijadoExhaustTargetId",
+  "stolenBy",
+  "agotado",
+  "bloqueosEsteTurno",
+  "opcionUsadaEsteTurno",
+  "destruccionPendiente"
+];
+function reiniciarCampeon(s, instId) {
+  const inst = s.instances[instId];
+  if (!inst) return;
+  for (const campo of ESTADO_DE_CAMPO) delete inst[campo];
+  if (s.reglasTemporales?.length) {
+    const quedan = s.reglasTemporales.filter((r) => !(r.sujeto.tipo === "carta" && r.sujeto.instId === instId));
+    if (quedan.length === 0) delete s.reglasTemporales;
+    else if (quedan.length !== s.reglasTemporales.length) s.reglasTemporales = quedan;
+  }
+  if (s.cambiosAtributo?.length) {
+    const quedan = s.cambiosAtributo.filter((c) => c.instId !== instId);
+    if (quedan.length === 0) delete s.cambiosAtributo;
+    else if (quedan.length !== s.cambiosAtributo.length) s.cambiosAtributo = quedan;
+  }
+}
+function aplicarCambioAtributo(s, cambio) {
+  s.cambiosAtributo = [...s.cambiosAtributo ?? [], cambio];
+}
+function sinVencidas(lista, expira, jugador) {
+  return lista.map((r) => expira === "ocaso" && r.turnosRestantes !== void 0 ? { ...r, turnosRestantes: r.turnosRestantes - 1 } : r).filter((r) => {
+    if (expira === "ocaso") {
+      if (r.turnosRestantes !== void 0) return r.turnosRestantes > 0;
+      return r.expira !== "ocaso";
+    }
+    if (jugador !== void 0 && r.duenio !== jugador) return true;
+    return r.expira !== expira;
+  });
+}
+function purgarReglasTemporales(s, expira, jugador) {
+  if (s.reglasTemporales?.length) {
+    const quedan = sinVencidas(s.reglasTemporales, expira, jugador);
+    if (quedan.length === 0) delete s.reglasTemporales;
+    else s.reglasTemporales = quedan;
+  }
+  if (s.cambiosAtributo?.length) {
+    const quedan = sinVencidas(s.cambiosAtributo, expira, jugador);
+    if (quedan.length === 0) delete s.cambiosAtributo;
+    else s.cambiosAtributo = quedan;
+  }
+}
+function purgarReglasHastaFase(s, fase, turno) {
+  const vence = (r) => r.expira === "hasta-fase" && r.expiraFase === fase && r.expiraFaseJugador === turno;
+  if (s.reglasTemporales?.length) {
+    const quedan = s.reglasTemporales.filter((r) => !vence(r));
+    if (quedan.length === 0) delete s.reglasTemporales;
+    else if (quedan.length !== s.reglasTemporales.length) s.reglasTemporales = quedan;
+  }
+  if (s.cambiosAtributo?.length) {
+    const quedan = s.cambiosAtributo.filter((r) => !vence(r));
+    if (quedan.length === 0) delete s.cambiosAtributo;
+    else if (quedan.length !== s.cambiosAtributo.length) s.cambiosAtributo = quedan;
+  }
+}
+
 // src/online/game/eter.ts
 function claveEfecto(fuenteId, indiceEfecto) {
   return `${fuenteId}#${indiceEfecto}`;
@@ -3432,6 +3510,13 @@ function enviarAlCementerio(s, ctx, cardInstanceId) {
   moverAlCementerio(s, ctx, cardInstanceId);
   liberarEterBloqueado(s, ctx, cardInstanceId, "1A");
   dispararTrigger(s, ctx, "al-ser-enviado-al-cementerio", inst.owner, [cardInstanceId]);
+  reiniciarEnCementerio(s, cardInstanceId);
+}
+function reiniciarEnCementerio(s, cardInstanceId) {
+  const inst = s.instances[cardInstanceId];
+  const meta = inst?.cardId ? getCardMeta(inst.cardId) : null;
+  if (!inst || !meta || !esCampeon(meta)) return;
+  if (s.players[inst.owner].cementerio.includes(cardInstanceId)) reiniciarCampeon(s, cardInstanceId);
 }
 function liberarArtefactosEquipados(s, ctx, campeonId) {
   const inst = s.instances[campeonId];
@@ -3562,6 +3647,7 @@ function destruirCarta(s, ctx, cardInstanceId, causa) {
   dispararTrigger(s, ctx, "al-ser-enviado-al-cementerio", inst.owner, [cardInstanceId]);
   ctx.emit({ type: "carta_muerta", cardInstanceId, jugador: inst.owner, causa });
   ctx.emit({ type: "destruccion", cardInstanceId, jugador: inst.owner, causa });
+  reiniciarEnCementerio(s, cardInstanceId);
   return true;
 }
 
@@ -4896,51 +4982,6 @@ function resolverTrigger(s, ctx, t, modo = "elegido") {
   });
 }
 
-// src/online/game/reglasTemporales.ts
-function aplicarReglaTemporal(s, regla) {
-  const orden = (s.ordenReglas ?? 0) + 1;
-  s.ordenReglas = orden;
-  s.reglasTemporales = [...s.reglasTemporales ?? [], { ...regla, orden }];
-}
-function aplicarCambioAtributo(s, cambio) {
-  s.cambiosAtributo = [...s.cambiosAtributo ?? [], cambio];
-}
-function sinVencidas(lista, expira, jugador) {
-  return lista.map((r) => expira === "ocaso" && r.turnosRestantes !== void 0 ? { ...r, turnosRestantes: r.turnosRestantes - 1 } : r).filter((r) => {
-    if (expira === "ocaso") {
-      if (r.turnosRestantes !== void 0) return r.turnosRestantes > 0;
-      return r.expira !== "ocaso";
-    }
-    if (jugador !== void 0 && r.duenio !== jugador) return true;
-    return r.expira !== expira;
-  });
-}
-function purgarReglasTemporales(s, expira, jugador) {
-  if (s.reglasTemporales?.length) {
-    const quedan = sinVencidas(s.reglasTemporales, expira, jugador);
-    if (quedan.length === 0) delete s.reglasTemporales;
-    else s.reglasTemporales = quedan;
-  }
-  if (s.cambiosAtributo?.length) {
-    const quedan = sinVencidas(s.cambiosAtributo, expira, jugador);
-    if (quedan.length === 0) delete s.cambiosAtributo;
-    else s.cambiosAtributo = quedan;
-  }
-}
-function purgarReglasHastaFase(s, fase, turno) {
-  const vence = (r) => r.expira === "hasta-fase" && r.expiraFase === fase && r.expiraFaseJugador === turno;
-  if (s.reglasTemporales?.length) {
-    const quedan = s.reglasTemporales.filter((r) => !vence(r));
-    if (quedan.length === 0) delete s.reglasTemporales;
-    else if (quedan.length !== s.reglasTemporales.length) s.reglasTemporales = quedan;
-  }
-  if (s.cambiosAtributo?.length) {
-    const quedan = s.cambiosAtributo.filter((r) => !vence(r));
-    if (quedan.length === 0) delete s.cambiosAtributo;
-    else if (quedan.length !== s.cambiosAtributo.length) s.cambiosAtributo = quedan;
-  }
-}
-
 // src/online/game/scry.ts
 function cartasVigentesScry(s, p) {
   const mazo = s.players[p.mazoDe].mazo;
@@ -5305,6 +5346,7 @@ function invocarAlCampo(s, ctx, jugador, campeonId) {
     if (idx !== -1) {
       arr.splice(idx, 1);
       campo.campeones[slotLibre] = campeonId;
+      reiniciarCampeon(s, campeonId);
       inst.entradaEsteTurno = true;
       ctx.emit({ type: "carta_invocada", cardInstanceId: campeonId, tipo: "Campe\xF3n", slot: slotLibre });
       return true;
@@ -5600,7 +5642,10 @@ function executeTutor(s, ctx, targetIds, jugador, efectoData) {
         p.campo.campeones[slotLibre] = targetId;
         const instT = s.instances[targetId];
         const metaT = instT?.cardId ? getCardMeta(instT.cardId) : null;
-        if (instT) instT.entradaEsteTurno = true;
+        if (instT) {
+          reiniciarCampeon(s, targetId);
+          instT.entradaEsteTurno = true;
+        }
         ctx.emit({ type: "carta_invocada", cardInstanceId: targetId, tipo: "Campe\xF3n", slot: slotLibre });
         if (metaT && esCampeon(metaT)) dispararAlInvocar(s, ctx, jugador, targetId);
       }
@@ -5683,6 +5728,16 @@ function executeModificarRegla(s, targetIds, jugador, efectoData) {
     for (const instId of targetIds) aplicarReglaTemporal(s, { ...comunes, sujeto: { tipo: "carta", instId } });
   }
 }
+function cancelarEstadoEnCurso(s, ctx, instId, meta) {
+  const inst = s.instances[instId];
+  if (!inst) return;
+  delete inst.fijadoExhaustTargetId;
+  const roboContinuo = "efectos" in meta && !!meta.efectos?.some((e) => e.efecto === "steal_champion" && e.duracion === "mientras_ester_bloqueado");
+  if (roboContinuo) {
+    const ladron = s.players.A.campo.campeones.includes(instId) ? "A" : "B";
+    retornarCampeonesRobados(s, ctx, instId, ladron);
+  }
+}
 function executeNegarEfectosActivos(s, ctx, inst, targetIds, jugador, efectoData) {
   const duracion = duracionTemporal({ ...efectoData, duracion: efectoData.duracion ?? "turno" }, jugador);
   for (const instId of targetIds) {
@@ -5691,6 +5746,7 @@ function executeNegarEfectosActivos(s, ctx, inst, targetIds, jugador, efectoData
     if (!objetivo || !meta || !esCampeon(meta)) continue;
     if (!reglaBool(s, "puedeSerNegada", { instId })) continue;
     aplicarReglaTemporal(s, { regla: "efectosActivos", operacion: "prohibir", ...duracion, sujeto: { tipo: "carta", instId } });
+    cancelarEstadoEnCurso(s, ctx, instId, meta);
     ctx.emit({ type: "efectos_negados", jugador, cardInstanceId: instId, fuente: inst.cardInstanceId });
   }
 }
@@ -7133,6 +7189,59 @@ function confirmarFinDePartida(s, ctx) {
   ctx.emit({ type: "partida_terminada", ganador, motivo: m });
 }
 
+// src/online/game/phases.ts
+function resolverAlba(s, ctx, jugador) {
+  const p = s.players[jugador];
+  resolverFaseEfectos(s, ctx, "alba", jugador);
+  purgarHastaFase(s, "alba", jugador);
+  purgarEfectosTemporales(s, "alba-due\xF1o", jugador, ctx);
+  for (const slot of p.campo.campeones) {
+    if (slot) {
+      const inst = s.instances[slot];
+      if (inst.agotado && !exhaustFijado(s, slot)) delete inst.agotado;
+      if (inst.atacoEsteTurno) delete inst.atacoEsteTurno;
+      if (inst.opcionUsadaEsteTurno) delete inst.opcionUsadaEsteTurno;
+    }
+  }
+  for (const id of [...p.campo.misticasTacticas, ...p.campo.arcanasCombate]) {
+    if (id && s.instances[id]?.entradaEsteTurno) delete s.instances[id].entradaEsteTurno;
+  }
+  reagruparEter(s, ctx, jugador);
+  reagruparEfectosBloqueoAlba(s, ctx, jugador);
+  evaluarCandadosArcanas(s, "inicio_alba", jugador);
+  const vinculosSnapshot = p.vinculos.filter((id) => {
+    if (!id) return false;
+    return s.instances[id]?.bocaArriba === true;
+  });
+  const enCampoJugador = [
+    ...p.campo.campeones,
+    ...p.campo.misticasTacticas,
+    ...p.campo.arcanasCombate
+  ].filter((id) => id !== null);
+  const albaInstances = [...vinculosSnapshot, ...enCampoJugador];
+  if (albaInstances.length > 0) {
+    dispararTrigger(s, ctx, "al-inicio-alba", jugador, albaInstances);
+  }
+  if (scryActual(s)) {
+    s.albaPendiente = jugador;
+    return;
+  }
+  robarDelAlba(s, ctx, jugador);
+}
+function robarDelAlba(s, ctx, jugador) {
+  robarCarta(s, ctx, jugador);
+  confirmarFinDePartida(s, ctx);
+}
+function reanudarAlba(s, ctx) {
+  const jugador = s.albaPendiente;
+  if (jugador === void 0 || scryActual(s)) return;
+  delete s.albaPendiente;
+  robarDelAlba(s, ctx, jugador);
+}
+function limpiarCombate(s) {
+  s.combate = void 0;
+}
+
 // src/online/game/campo.ts
 function sacrificiosRequeridos(roles) {
   if (!roles) return 0;
@@ -7267,6 +7376,7 @@ function ejecutarJugarCampeon(s, action, ctx) {
   const p = s.players[s.turno];
   const id = action.cardInstanceId;
   const cardId = s.instances[id].cardId;
+  reiniciarCampeon(s, id);
   const previos = marcarInicioAccion(s);
   const contextoUso = { tipo: "invocar", cardInstanceId: id };
   aplicarPago(s, ctx, s.turno, action.eterIds, cardId, contextoUso);
@@ -7429,46 +7539,6 @@ function ejecutarBloquearEter(s, action, ctx) {
   dispararUmbralBloqueo(s, ctx, action.targetInstanceId);
 }
 
-// src/online/game/phases.ts
-function resolverAlba(s, ctx, jugador) {
-  const p = s.players[jugador];
-  resolverFaseEfectos(s, ctx, "alba", jugador);
-  purgarHastaFase(s, "alba", jugador);
-  purgarEfectosTemporales(s, "alba-due\xF1o", jugador, ctx);
-  for (const slot of p.campo.campeones) {
-    if (slot) {
-      const inst = s.instances[slot];
-      if (inst.agotado && !exhaustFijado(s, slot)) delete inst.agotado;
-      if (inst.atacoEsteTurno) delete inst.atacoEsteTurno;
-      if (inst.opcionUsadaEsteTurno) delete inst.opcionUsadaEsteTurno;
-    }
-  }
-  for (const id of [...p.campo.misticasTacticas, ...p.campo.arcanasCombate]) {
-    if (id && s.instances[id]?.entradaEsteTurno) delete s.instances[id].entradaEsteTurno;
-  }
-  reagruparEter(s, ctx, jugador);
-  reagruparEfectosBloqueoAlba(s, ctx, jugador);
-  evaluarCandadosArcanas(s, "inicio_alba", jugador);
-  const vinculosSnapshot = p.vinculos.filter((id) => {
-    if (!id) return false;
-    return s.instances[id]?.bocaArriba === true;
-  });
-  const enCampoJugador = [
-    ...p.campo.campeones,
-    ...p.campo.misticasTacticas,
-    ...p.campo.arcanasCombate
-  ].filter((id) => id !== null);
-  const albaInstances = [...vinculosSnapshot, ...enCampoJugador];
-  if (albaInstances.length > 0) {
-    dispararTrigger(s, ctx, "al-inicio-alba", jugador, albaInstances);
-  }
-  robarCarta(s, ctx, jugador);
-  confirmarFinDePartida(s, ctx);
-}
-function limpiarCombate(s) {
-  s.combate = void 0;
-}
-
 // src/online/game/partida.ts
 function validarMulligan(state) {
   if (state.fase !== "pre_partida") return "mulligan solo en pre_partida";
@@ -7604,6 +7674,7 @@ function applyAction(state, action, ctx) {
   ejecutarAccion(s, action, ctx);
   descartarFrentesMuertos(s);
   descartarScryMuertos(s);
+  reanudarAlba(s, ctx);
   confirmarFinDePartida(s, ctx);
   return { ok: true, state: s, events: [...ctx.events] };
 }
