@@ -22,6 +22,7 @@
  */
 import type { AnyCard, EfectoData } from '../../shared/types'
 import { esCostoBloqueo } from './cards'
+import { esAuraEquipada } from './efectos'
 
 /* ─────────────────────────── Capability map ─────────────────────────── */
 
@@ -205,8 +206,18 @@ export function clasificarEfecto(
     }
   }
 
+  // El bono estático de un Artefacto («el Campeón equipado gana X») es un aura derivada mientras esté equipado
+  if (esAuraEquipada(efecto)) {
+    return {
+      ...base,
+      estado: 'OK_AURA_JSON',
+      ruta: 'esAuraEquipada + evaluarAura (efectos.ts) — aura derivada mientras el Artefacto esté equipado y en juego',
+      notas: [...notas, 'No se aplica al resolverse (expiraría con el turno): vale mientras la fuente siga equipada.'],
+    }
+  }
+
   const h = HANDLERS[cardId]
-  if (h?.drift && (tipo === 'pasivo' || tipo === 'reserva' || tipo === 'bloqueo' || tipo === 'comandante')) {
+  if (h?.drift &&(tipo === 'pasivo' || tipo === 'reserva' || tipo === 'bloqueo' || tipo === 'comandante')) {
     notas.push(h.drift)
   }
 

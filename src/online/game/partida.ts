@@ -188,7 +188,7 @@ export function ejecutarDescartarCarta(s: GameState, action: Extract<Action, { t
     if (idx === -1) continue // validado antes (defensivo)
     p.mano.splice(idx, 1)
     // C5 (change 4): 2G con trigger al-ser-enviado-al-cementerio
-    enviarAlCementerio(s, ctx, id)
+    enviarAlCementerio(s, ctx, id, 'mano') // ya la sacamos de la mano: aquí no se puede ver de dónde venía
     descartadas.push(id)
   }
   if (descartadas.length > 0) {

@@ -7,7 +7,7 @@
 import { resolveTargets } from './targetResolver'
 import { robarCarta } from './draw'
 import { shuffleFisherYates } from './rng'
-import { aplicarMod, otorgarKeyword, crearOpcionBloqueo, statsDe, keywordsDe, dispararTrigger } from './efectos'
+import { aplicarMod, otorgarKeyword, crearOpcionBloqueo, statsDe, keywordsDe, dispararTrigger, esAuraEquipada } from './efectos'
 import { construirTriggers, resolverTriggersDeEfecto } from './triggers'
 import { aplicarCambioAtributo, aplicarEfectosPrestados, aplicarReglaTemporal, reiniciarCampeon } from './reglasTemporales'
 import { faccionesDe } from './atributos'
@@ -278,6 +278,9 @@ function executeEffect(
   switch (efecto) {
     case 'buff':
     case 'debuff':
+      // El bono de un Artefacto sobre «el Campeón equipado» es un aura DERIVADA (esAuraEquipada / evaluarAura): aplicarlo
+      // también aquí lo contaría dos veces, y como modificador expiraría con el turno
+      if (esAuraEquipada(efectoData)) break
       executeBuffDebuff(s, targetIds, stats, duracion, efectoData.buffPerBlockedEther, efecto, efectoData.duracionTurnos, jugador, efectoData.duracionFase, efectoData.duracionControlador)
       break
 
@@ -1749,7 +1752,7 @@ function executeRivalDiscard(
     const idx = Math.floor(ctx.next() * p.mano.length)
     const cardId = p.mano.splice(idx, 1)[0]
     // Use enviarAlCementerio so al-ser-enviado-al-cementerio triggers fire
-    enviarAlCementerio(s, ctx, cardId)
+    enviarAlCementerio(s, ctx, cardId, 'mano')
     ctx.emit({ type: 'carta_descartada', jugador: rival, cardInstanceIds: [cardId] })
   }
 }

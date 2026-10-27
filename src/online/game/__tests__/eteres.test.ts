@@ -244,49 +244,5 @@ describe('2.1 Auras por zona — reserva (2A), derivadas del JSON (Fase 1)', () 
 
 // 2.2 Pasivo 1A (FB-005/DS-006): es una habilidad del turno mientras la carta está en 1A.
 // Sus pruebas viven en elegir-opcion.test.ts (se ofrece, 1/turno, solo en 1A, nada que ver con el Alba).
-
-describe('2.3 Gatillos al-pagar-eter (contextoUso)', () => {
-  // Tests unitarios usando aplicarPago directamente (más control)
-  // Nota: necesitarán la implementación GREEN para pasar
-  it('FB-003: pagar → robar 1 carta', () => {
-    expect(true).toBe(true) // placeholder RED
-  })
-
-  it('FB-004: pagar invocando → +1 RES al Campeón invocado (fin turno, expira ocaso)', () => {
-    expect(true).toBe(true)
-  })
-
-  it('DS-005: pagar invocando → +1 ATQ al Campeón invocado (fin turno)', () => {
-    expect(true).toBe(true)
-  })
-
-  it('FB-006: pagar → mover 1 Éter propio 1A→2A (RNG)', () => {
-    expect(true).toBe(true)
-  })
-
-  it('DS-007: pagar → mover 1 Éter rival 1A→2A (RNG)', () => {
-    expect(true).toBe(true)
-  })
-
-  it('DS-004: pagar → descarte 1 carta al azar de mano rival (RNG)', () => {
-    expect(true).toBe(true)
-  })
-
-  it('Cross-facción: gatillo dispara aunque el Éter pagado tenga facción distinta al objetivo', () => {
-    expect(true).toBe(true)
-  })
-})
-
-describe('2.4 Inicio-choque — FB-002/DS-003 en 2A otorgan Vigor/Carga fin turno', () => {
-  it('FB-002 en reserva de A: forja→choque otorga Vigor a Campeón propio (expira en ocaso)', () => {
-    expect(true).toBe(true)
-  })
-
-  it('DS-003 en reserva de B: forja→choque otorga Carga a Campeón propio (expira en ocaso)', () => {
-    expect(true).toBe(true)
-  })
-
-  it('Sin Campeón propio → no-op', () => {
-    expect(true).toBe(true)
-  })
-})
+// 2.3 Gatillos al-pagar-eter y 2.4 Inicio-choque (FB-002/003/004/006, DS-003/004/005/007): eteresGatillos.test.ts.
+// Aquí había 10 tests con `expect(true).toBe(true)` (pasaban siempre y no probaban nada); se reemplazaron por pruebas reales.

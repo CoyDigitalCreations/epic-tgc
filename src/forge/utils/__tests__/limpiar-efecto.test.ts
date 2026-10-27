@@ -41,6 +41,27 @@ describe('limpiarCamposAjenos', () => {
     const kw: EfectoData = { tipo: 'pasivo', efecto: 'grant_keyword', keyword: 'Carga' }
     expect(limpiarCamposAjenos(kw)).toBe(kw)
   })
+  it('quita la clave obsoleta zonaActivacion (FB-009), aunque el efecto no tenga `efecto` raíz', () => {
+    const e = { tipo: 'bloqueo', efecto: 'buff', stats: { ATQ: 1 }, zonaActivacion: 'bloqueo' } as unknown as EfectoData
+    expect('zonaActivacion' in limpiarCamposAjenos(e)).toBe(false)
+    expect(limpiarCamposAjenos(e).stats).toEqual({ ATQ: 1 })
+  })
+  it('un costo SIN tipo (vacío o a medias: Aurora, FB-024) se quita; uno con tipo se queda', () => {
+    expect(limpiarCamposAjenos({ tipo: 'pasivo', efecto: 'buff', costo: {} as never }).costo).toBeUndefined()
+    expect(limpiarCamposAjenos({ tipo: 'hechizo', efecto: 'buff', costo: { cantidad: 1 } as never }).costo).toBeUndefined()
+    const bien: EfectoData = { tipo: 'disparo', efecto: 'destroy', costo: { tipo: 'eter', cantidad: 2 } }
+    expect(limpiarCamposAjenos(bien)).toBe(bien)
+  })
+  it('un debuff con magnitudes negativas (DS-002) se normaliza a positivas; uno mixto o ya positivo no', () => {
+    expect(limpiarCamposAjenos({ tipo: 'reserva', efecto: 'debuff', stats: { ATQ: -1 } }).stats).toEqual({ ATQ: 1 })
+    expect(limpiarCamposAjenos({ tipo: 'reserva', efecto: 'debuff', stats: { ATQ: -2, RES: -1 } }).stats).toEqual({ ATQ: 2, RES: 1 })
+    const positivo: EfectoData = { tipo: 'reserva', efecto: 'debuff', stats: { ATQ: 1 } }
+    expect(limpiarCamposAjenos(positivo)).toBe(positivo)
+    const mixto: EfectoData = { tipo: 'reserva', efecto: 'debuff', stats: { ATQ: -1, RES: 1 } }
+    expect(limpiarCamposAjenos(mixto)).toBe(mixto)
+    const buff: EfectoData = { tipo: 'pasivo', efecto: 'buff', stats: { ATQ: -1 } } // un buff negativo es otra cosa: no se toca
+    expect(limpiarCamposAjenos(buff)).toBe(buff)
+  })
   it('un efecto sin `efecto` raíz (los tramos definen los suyos) no se toca', () => {
     const tramos: EfectoData = { tipo: 'continuo', copyAttributes: ['atq'], tramos: [{ umbral: 1, efecto: 'toggle_exhaust' }] } as never
     expect(limpiarCamposAjenos(tramos)).toBe(tramos)

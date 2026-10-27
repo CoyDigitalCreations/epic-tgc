@@ -274,8 +274,7 @@
         "efecto": "buff",
         "stats": {
           "RES": 1
-        },
-        "zonaActivacion": "bloqueo"
+        }
       }
     ]
   },
@@ -353,7 +352,6 @@
         "ATQ": 2,
         "RES": 2
       },
-      "costo": {},
       "objetivo": {
         "tipo": "todos_campeones_propios",
         "controlador": "propio",
@@ -973,10 +971,7 @@
           "ATQ": 2,
           "RES": 0
         },
-        "texto": "El Campeón equipado con esta carta gana 2 de ATQ.",
-        "costo": {
-          "cantidad": 1
-        }
+        "texto": "El Campeón equipado con esta carta gana 2 de ATQ."
       }
     ]
   },
@@ -1357,7 +1352,7 @@
         "trigger": "ninguno",
         "efecto": "debuff",
         "stats": {
-          "ATQ": -1
+          "ATQ": 1
         },
         "objetivo": {
           "tipo": "campeon",

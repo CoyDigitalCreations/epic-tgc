@@ -171,7 +171,7 @@ export function ejecutarJugarCampeon(s: GameState, action: Extract<Action, { typ
     // Fix del gap #1223: antes quedaba atascado en la instancia que iba a 2G.
     liberarEterBloqueado(s, ctx, sacId, '2A')
     // C5 (change 4): sacrificio → 2G con trigger al-ser-enviado-al-cementerio
-    enviarAlCementerio(s, ctx, sacId)
+    enviarAlCementerio(s, ctx, sacId, 'campo')
     ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: sacId, zona: '2G', jugador: s.turno, bocaArriba: true })
   }
   // 3. Invocar: mano → slot, ENDEREZADO con invocación cansada (§5.2): no ataca este turno

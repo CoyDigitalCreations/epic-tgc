@@ -18,6 +18,9 @@ const CAMPO_DE_EFECTO: ReadonlyArray<readonly [keyof EfectoData, readonly string
   ['keyword', ['grant_keyword']],
 ]
 
+/** Claves que YA NO EXISTEN en el esquema (restos de diseños anteriores): no las lee ni el motor ni el formulario. */
+const CLAVES_OBSOLETAS = ['zonaActivacion'] as const
+
 /** Parche (`undefined`) que quita los campos que NO pertenecen a `efecto`, para pasarlo al `update` del formulario. */
 export function camposAjenosVacios(efecto: EfectoData['efecto']): Partial<EfectoData> {
   const parche: Record<string, undefined> = {}
@@ -28,19 +31,47 @@ export function camposAjenosVacios(efecto: EfectoData['efecto']): Partial<Efecto
 }
 
 /**
- * El efecto sin los campos de OTROS efectos. Un efecto sin `efecto` raíz (los tramos definen los suyos) no se toca.
- * Devuelve el MISMO objeto si no hay nada que limpiar.
+ * El efecto sin sus restos: campos de OTROS efectos, claves que ya no existen, un `costo` sin `tipo` (a medias o vacío:
+ * el motor lo ignora, pero estorba) y un debuff con magnitudes negativas (la convención es positiva: «pierde 1 de ATQ» →
+ * ATQ: 1; el motor trata ambos signos igual). Un efecto sin `efecto` raíz (los tramos definen los suyos) conserva sus
+ * campos de efecto. Devuelve el MISMO objeto si no hay nada que limpiar.
  */
 export function limpiarCamposAjenos(efecto: EfectoData): EfectoData {
-  if (!efecto.efecto) return efecto
-  const sobrantes = CAMPO_DE_EFECTO.filter(([campo, duenos]) => efecto[campo] !== undefined && !duenos.includes(efecto.efecto as string))
-  if (sobrantes.length === 0) return efecto
-  const limpio = { ...efecto }
-  for (const [campo] of sobrantes) delete limpio[campo]
-  return limpio
+  const limpio = { ...efecto } as EfectoData & Record<string, unknown>
+  let cambio = false
+
+  if (efecto.efecto) {
+    for (const [campo, duenos] of CAMPO_DE_EFECTO) {
+      if (efecto[campo] !== undefined && !duenos.includes(efecto.efecto)) {
+        delete limpio[campo]
+        cambio = true
+      }
+    }
+  }
+  for (const clave of CLAVES_OBSOLETAS) {
+    if (clave in efecto) {
+      delete limpio[clave]
+      cambio = true
+    }
+  }
+  if (efecto.costo && !efecto.costo.tipo) {
+    delete limpio.costo
+    cambio = true
+  }
+  if (efecto.efecto === 'debuff' && limpio.stats) {
+    const valores = [limpio.stats.ATQ, limpio.stats.RES].filter((v): v is number => !!v)
+    if (valores.length > 0 && valores.every((v) => v < 0)) {
+      limpio.stats = {
+        ...(limpio.stats.ATQ ? { ATQ: Math.abs(limpio.stats.ATQ) } : {}),
+        ...(limpio.stats.RES ? { RES: Math.abs(limpio.stats.RES) } : {}),
+      }
+      cambio = true
+    }
+  }
+  return cambio ? limpio : efecto
 }
 
-/** La carta con todos sus efectos (y el de Comandante) sin campos de otros efectos. Mismo objeto si no hay nada que limpiar. */
+/** La carta con todos sus efectos (y el de Comandante) sin restos. Mismo objeto si no hay nada que limpiar. */
 export function limpiarEfectosDeCarta(card: AnyCard): AnyCard {
   const conEfectos = card as AnyCard & { efectos?: EfectoData[]; efectoComandante?: EfectoData }
   let cambio = false

@@ -55,6 +55,8 @@ export interface PayloadEfecto {
   contextoUso?: string
   killerId?: string
   victimaId?: string
+  /** «Al ser enviada al Cementerio»: de dónde venía la carta (ver `triggerZona` de EfectoData y replacements.moverAlCementerio). */
+  zonaOrigen?: 'mano' | 'campo' | 'otra'
   fromTrigger?: boolean
   /** B8: el dispatch viene de dispararTrigger → si el efecto tiene costo
    * tipo 'eter', se COBRA al resolverse (Reserva → 1A). Sin fondos → fizzled.
@@ -135,16 +137,19 @@ function exigeEterBloqueado(efecto: EfectoData): boolean {
 }
 
 /**
- * Aura de artefacto equipado (Fase 3a — FB-020): hechizo buff/debuff con
- * buffPerBlockedEther + costo-bloqueado + objetivo equipped_champion.
- * "el Campeón equipado con esta carta gana X por cada Éter bloqueado [en esta carta]".
- * El buff es DERIVADO: escala con fuente.eterBloqueado, sin evento de activación.
+ * Aura de artefacto equipado: hechizo buff/debuff sobre `equipped_champion`.
+ *  - FB-020: con buffPerBlockedEther + costo-bloqueado — «el Campeón equipado gana X por cada Éter bloqueado [en esta
+ *    carta]» (escala con fuente.eterBloqueado).
+ *  - DS-021, FB-024: sin nada de eso — «el Campeón equipado gana X de ATQ». Antes se aplicaba UNA vez al resolverse y
+ *    expiraba con el turno (el texto no pone duración y un Artefacto dura mientras está equipado).
+ * El bono es DERIVADO: sin evento de activación, vale mientras la fuente siga equipada y en juego, y se va sola con ella.
  */
 export function esAuraEquipada(efecto: EfectoData): boolean {
   if (efecto.efecto !== 'buff' && efecto.efecto !== 'debuff') return false
-  if (!efecto.buffPerBlockedEther) return false
-  if (efecto.costo?.tipo !== 'eter_bloqueado' && efecto.costo?.tipo !== 'bloqueo_fijo') return false
-  return efecto.objetivo?.tipo === 'equipped_champion'
+  if (efecto.objetivo?.tipo !== 'equipped_champion') return false
+  // Escalado por Éter bloqueado (FB-020): exige además su coste de bloqueo. Sin escalado, cualquier bono estático.
+  if (efecto.buffPerBlockedEther) return efecto.costo?.tipo === 'eter_bloqueado' || efecto.costo?.tipo === 'bloqueo_fijo'
+  return efecto.tipo === 'hechizo'
 }
 
 /**
@@ -460,6 +465,8 @@ export function modificadoresJSONDe(s: GameState, id: string): ModificadoresJSON
     if (!fuenteInst?.cardId) continue
     const fuenteMeta = metaDeInstancia(s, fuenteId) // sus auras incluyen las que copió de otro Campeón
     if (!fuenteMeta) continue
+    // Una Arcana boca abajo no tiene efectos vigentes hasta revelarse (un Artefacto Arcana no da su bono antes)
+    if (fuenteMeta.type === 'Arcana' && fuenteInst.bocaArriba !== true) continue
 
     if (fuenteMeta.type === 'Campeón' && fuenteMeta.efectoComandante) {
       candidatos.push({ inst: fuenteInst, meta: fuenteMeta, esComandante: true, origen: 'campo' })
@@ -795,7 +802,7 @@ export function triggersQueMatchean(
   trigger: TriggerEfecto,
   jugador: PlayerId,
   ids: readonly string[],
-  opts?: { evaluarCondicion?: boolean },
+  opts?: { evaluarCondicion?: boolean; zonaOrigen?: 'mano' | 'campo' | 'otra'; ignorarZonaOrigen?: boolean },
 ): TriggerMatch[] {
   const res: TriggerMatch[] = []
   const efectoTrigger = TRIGGER_A_JSON[trigger]
@@ -822,6 +829,10 @@ export function triggersQueMatchean(
     const negada = efectosNegados(s, id)
     efectos.forEach((efecto, efectoIdx) => {
       if (negada && efecto.tipo !== 'comandante') return
+      // «Al ser enviada al Cementerio DESDE el campo / la mano»: solo si venía de esa zona (antes se ignoraba y Titania
+      // —«desde el campo»— también disparaba al descartarla de la mano). Sin `triggerZona` o «desde cualquier zona»: siempre.
+      // La zona se decide al ARMAR el gatillo (como la `condicion`); al resolver una elección ya armada no se vuelve a filtrar.
+      if (trigger === 'al-ser-enviado-al-cementerio' && !opts?.ignorarZonaOrigen && efecto.triggerZona && efecto.triggerZona !== 'cualquier_zona' && efecto.triggerZona !== opts?.zonaOrigen) return
       // Match por trigger JSON. 'al-bloquear-eter' (re-dispatch de umbral
       // Aurora steal_champion) SOLO matchea efectos sin trigger propios
       // con costo de bloqueo — nunca otros efectos triggerless (destroy, etc.).
@@ -881,7 +892,10 @@ export function dispararTrigger(
     // F5d-2: el filtro (condición, trigger, Vínculo boca abajo) vive en triggersQueMatchean, evaluado
     // POR instancia y en el momento (un efecto anterior pudo cambiar el estado). Camino inmediato:
     // solo el PRIMER efecto con match de la carta (el apilado las separa en entradas por efectoIdx).
-    const primero = triggersQueMatchean(s, trigger, payload.jugador, [id])[0]
+    const primero = triggersQueMatchean(s, trigger, payload.jugador, [id], {
+      zonaOrigen: payload.zonaOrigen,
+      ignorarZonaOrigen: payload.contextoUso === 'objetivo-elegido', // resolución de una elección ya armada
+    })[0]
     if (primero) {
       const { efecto, efectoIdx } = primero
       // D1 pattern: snapshot pending objectives before interpreter

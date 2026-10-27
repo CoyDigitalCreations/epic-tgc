@@ -30,22 +30,28 @@ import { slotAZona } from './zones'
  * de un steal 'mientras_ester_bloqueado' sin Éter, los campeones robados
  * retornan (antes era un bloque inline SIN eventos, hoy unificado).
  */
-export function moverAlCementerio(s: GameState, ctx: Ctx, cardInstanceId: string): void {
+export function moverAlCementerio(s: GameState, ctx: Ctx, cardInstanceId: string): ZonaOrigenCementerio {
   const inst = s.instances[cardInstanceId]
-  if (!inst) return
+  if (!inst) return 'otra'
+  // De dónde la saca ESTA llamada (si el llamador ya la había sacado de su zona, no hay forma de saberlo aquí: 'otra')
+  let origen: ZonaOrigenCementerio = 'otra'
   for (const j of ['A', 'B'] as PlayerId[]) {
     const p = s.players[j]
     for (const grupo of ['campeones', 'misticasTacticas', 'arcanasCombate'] as const) {
       const idx = p.campo[grupo].indexOf(cardInstanceId)
       if (idx !== -1) {
         p.campo[grupo][idx] = null
+        origen = 'campo'
         break
       }
     }
     // También remover de mano (bug: tutor retornaba carta a mano mientras
     // otro efecto la enviaba al cementerio — quedaba en ambas zonas)
     const manoIdx = p.mano.indexOf(cardInstanceId)
-    if (manoIdx !== -1) p.mano.splice(manoIdx, 1)
+    if (manoIdx !== -1) {
+      p.mano.splice(manoIdx, 1)
+      origen = 'mano'
+    }
   }
   // F5g: sale del campo → el candado de la condición de Arcana se pierde
   delete inst.condicionHabilitada
@@ -59,7 +65,15 @@ export function moverAlCementerio(s: GameState, ctx: Ctx, cardInstanceId: string
   liberarEterBloqueadoCore(s, ctx, cardInstanceId, '1A')
   const p = s.players[inst.owner]
   if (!p.cementerio.includes(cardInstanceId)) p.cementerio.push(cardInstanceId)
+  return origen
 }
+
+/**
+ * Zona de la que viene una carta al llegar al Cementerio (para «Al ser enviada al Cementerio DESDE el campo / la mano»,
+ * `triggerZona`). 'otra' = ninguna de esas (mazo, Exilio...) o desconocida; esas cartas solo disparan los gatillos «desde
+ * cualquier zona».
+ */
+export type ZonaOrigenCementerio = 'mano' | 'campo' | 'otra'
 
 /**
  * Primitiva C5 (change 4): envía una instancia a 2G (cementerio de su dueño)
@@ -67,8 +81,9 @@ export function moverAlCementerio(s: GameState, ctx: Ctx, cardInstanceId: string
  * trigger. NO consulta overrides (Inmortal/Indestructible): eso es
  * responsabilidad del caller (destruirCarta lo hace ANTES; el sacrificio y el
  * coste no son evitables por diseño, campeones.test.ts).
+ * `desde`: de dónde viene, cuando el llamador YA la sacó de su zona (descarte, sacrificio...) y aquí ya no se puede ver.
  */
-export function enviarAlCementerio(s: GameState, ctx: Ctx, cardInstanceId: string): void {
+export function enviarAlCementerio(s: GameState, ctx: Ctx, cardInstanceId: string, desde?: ZonaOrigenCementerio): void {
   const inst = s.instances[cardInstanceId]
   if (!inst) return
   // VÍNCULO INVERTIDO (invocar_y_equipar): si esta carta tiene un campeón vinculado,
@@ -82,18 +97,18 @@ export function enviarAlCementerio(s: GameState, ctx: Ctx, cardInstanceId: strin
     if (slotIdx !== -1) {
       p.campo.campeones[slotIdx] = null
       ctx.emit({ type: 'carta_salida_de_zona', cardInstanceId: vinculadoId, zona: `2${String.fromCharCode(66 + slotIdx)}` as any, jugador: inst.owner })
-      enviarAlCementerio(s, ctx, vinculadoId)
+      enviarAlCementerio(s, ctx, vinculadoId, 'campo')
       ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: vinculadoId, zona: '2G', jugador: inst.owner, bocaArriba: true })
     }
   }
   // ARTEFACTO: si esta carta es un Campeón, los artefactos equipados van con él (§10)
   liberarArtefactosEquipados(s, ctx, cardInstanceId)
-  moverAlCementerio(s, ctx, cardInstanceId)
+  const origen = moverAlCementerio(s, ctx, cardInstanceId)
   // Fase 3a: carta va a 2G → Éter bloqueado liberado a 1A (reagrupa próximo Alba).
   // No-op si no tiene eterBloqueado (liberarEterBloqueado lo chequea).
   // Los sacrificios ya liberaron a '2A' antes de llegar aquí — segundo call es no-op.
   liberarEterBloqueado(s, ctx, cardInstanceId, '1A')
-  dispararTrigger(s, ctx, 'al-ser-enviado-al-cementerio', inst.owner, [cardInstanceId])
+  dispararTrigger(s, ctx, 'al-ser-enviado-al-cementerio', inst.owner, [cardInstanceId], { zonaOrigen: desde ?? origen })
   reiniciarEnCementerio(s, cardInstanceId)
 }
 
@@ -335,13 +350,13 @@ export function destruirCarta(s: GameState, ctx: Ctx, cardInstanceId: string, ca
   }
 
   // Campeón: → 2G + Éter 1A + carta_muerta + destruccion (ADR-14)
-  moverAlCementerio(s, ctx, cardInstanceId)
+  const origen = moverAlCementerio(s, ctx, cardInstanceId)
   liberarEterBloqueado(s, ctx, cardInstanceId, '1A')
   // §10: los artefactos equipados van con el Campeón que sale (antes del trigger
   // del Campeón para que sus eventos queden en orden — cleanup sin trigger propio)
   liberarArtefactosEquipados(s, ctx, cardInstanceId)
   // C5 (change 4): trigger al-ser-enviado-al-cementerio (carta YA en 2G)
-  dispararTrigger(s, ctx, 'al-ser-enviado-al-cementerio', inst.owner, [cardInstanceId])
+  dispararTrigger(s, ctx, 'al-ser-enviado-al-cementerio', inst.owner, [cardInstanceId], { zonaOrigen: origen })
   ctx.emit({ type: 'carta_muerta', cardInstanceId, jugador: inst.owner, causa })
   ctx.emit({ type: 'destruccion', cardInstanceId, jugador: inst.owner, causa })
   reiniciarEnCementerio(s, cardInstanceId)

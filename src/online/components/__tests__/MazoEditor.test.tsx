@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, within } from '@testing-library/react'
+import { render, screen, fireEvent, within, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import 'fake-indexeddb/auto'
@@ -85,11 +85,14 @@ describe('MazoEditor', () => {
     const addBtn = screen.getByRole('button', { name: 'Agregar copia de Guardián Estelar' })
     fireEvent.click(addBtn.closest('.group')!)
 
-    // El arte llega async desde IndexedDB: con la máquina cargada el timeout por defecto (1 s) se quedaba corto y el test
-    // fallaba de forma intermitente solo dentro de la suite completa
-    const img = await screen.findByRole('img', { name: 'Guardián Estelar' }, { timeout: 5000 })
-    expect(img).toHaveAttribute('src', 'data:image/png;base64,ARTECUSTOM')
-  }, 15000)
+    // El componente pinta primero la imagen ESTÁTICA (/cartas/...) y sustituye el `src` cuando llega el arte async desde
+    // IndexedDB. Esperar solo a que el <img> exista y leer el `src` en el acto fallaba a veces (la carga iba por detrás);
+    // se espera al ATRIBUTO.
+    await waitFor(
+      () => expect(screen.getByRole('img', { name: 'Guardián Estelar' })).toHaveAttribute('src', 'data:image/png;base64,ARTECUSTOM'),
+      { timeout: 5000 },
+    )
+  })
 
   it('las custom sin arte se muestran en el catálogo', () => {
     useCardStore.getState().loadCards([campeonCustom()])

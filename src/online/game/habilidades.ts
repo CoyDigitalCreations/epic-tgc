@@ -341,7 +341,7 @@ export function ejecutarUsarTransmutar(s: GameState, action: Extract<Action, { t
   p.campo.campeones[slotIdx] = null
   liberarEterBloqueado(s, ctx, id, '1A')
   // C5 (change 4): auto-sacrificio → 2G del dueño con trigger
-  enviarAlCementerio(s, ctx, id)
+  enviarAlCementerio(s, ctx, id, 'campo')
   ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: id, zona: '2G', jugador: inst.owner, bocaArriba: true })
 }
 

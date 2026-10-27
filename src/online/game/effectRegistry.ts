@@ -199,7 +199,7 @@ function ejecutarAccionEfecto(s: GameState, ctx: Ctx, ep: EfectoPendiente): void
       if (slotIdx !== -1) {
         p.campo.campeones[slotIdx] = null
         ctx.emit({ type: 'carta_salida_de_zona', cardInstanceId: accion.objetivo, zona: `2${String.fromCharCode(66 + slotIdx)}` as Zona, jugador: inst.owner })
-        enviarAlCementerio(s, ctx, accion.objetivo)
+        enviarAlCementerio(s, ctx, accion.objetivo, 'campo')
         ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: accion.objetivo, zona: '2G', jugador: inst.owner, bocaArriba: true })
       }
       break
@@ -260,7 +260,7 @@ function ejecutarAccionEfecto(s: GameState, ctx: Ctx, ep: EfectoPendiente): void
         const zona = `2${String.fromCharCode(66 + slotCP)}` as Zona
         ctx.emit({ type: 'carta_salida_de_zona', cardInstanceId: accion.objetivo, zona, jugador: inst.owner })
         p.campo.campeones[slotCP] = null
-        enviarAlCementerio(s, ctx, accion.objetivo)
+        enviarAlCementerio(s, ctx, accion.objetivo, 'campo')
         ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: accion.objetivo, zona: '2G', jugador: inst.owner, bocaArriba: true })
       }
       break
