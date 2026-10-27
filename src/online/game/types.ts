@@ -2,6 +2,7 @@ import type { GameEvent } from './events'
 import type { EfectoPendiente } from './effectRegistry'
 import type { TriggerEfecto } from './efectos'
 import type { OperacionRegla, ReglaId } from '../../shared/rules/reglas'
+import type { EfectoData } from '../../shared/types'
 
 export type PlayerId = 'A' | 'B'
 
@@ -69,6 +70,24 @@ export interface CambioAtributo {
   instId: string
   atributo: 'esencia' | 'rol' | 'faccion'
   valor: string
+  /** Solo `faccion`: la lista COMPLETA cuando el cambio es una copia de un Campeón con varias Facciones (`valor` es la primera). */
+  valores?: string[]
+  duenio: PlayerId
+  expira: ExpiraModificador
+  turnosRestantes?: number
+  expiraFase?: 'alba' | 'forja' | 'choque' | 'ocaso'
+  expiraFaseJugador?: PlayerId
+}
+
+/**
+ * Efectos COPIADOS de otro Campeón (`copy` con `copyAttributes` «efecto»): instantánea de sus efectos pasivos, continuos
+ * y Disparos que `instId` tiene además de los suyos mientras dure la copia. Ver efectosInstancia.ts.
+ */
+export interface EfectoPrestado {
+  instId: string
+  /** De quién se copiaron. */
+  origenId: string
+  efectos: EfectoData[]
   duenio: PlayerId
   expira: ExpiraModificador
   turnosRestantes?: number
@@ -415,6 +434,8 @@ export interface GameState {
   reglasTemporales?: ReglaTemporal[]
   /** Cambios de Esencia/Rol/Facción de Campeones (F9e). Ver atributos.ts. */
   cambiosAtributo?: CambioAtributo[]
+  /** Efectos copiados de otro Campeón, con duración. Ver efectosInstancia.ts. */
+  efectosPrestados?: EfectoPrestado[]
   /** Contador monotónico para ordenar las reglasTemporales. */
   ordenReglas?: number
   /** Flag anti-bucle del sexto Vínculo (5.7/13, ADR-16): el hook NO-OP se resuelve UNA vez. */

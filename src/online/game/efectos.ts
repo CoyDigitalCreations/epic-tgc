@@ -6,6 +6,7 @@ import { resolveTargets } from './targetResolver'
 import { purgarReglasHastaFase, purgarReglasTemporales } from './reglasTemporales'
 import { faccionesDe } from './atributos'
 import { efectosNegados } from './reglas'
+import { metaDeInstancia } from './efectosInstancia'
 import type { CondicionEfecto, EfectoData } from '../../shared/types'
 
 /**
@@ -397,7 +398,7 @@ export function modificadoresJSONDe(s: GameState, id: string): ModificadoresJSON
   for (const fuenteId of fuentesCampo) {
     const fuenteInst = s.instances[fuenteId]
     if (!fuenteInst?.cardId) continue
-    const fuenteMeta = getCardMeta(fuenteInst.cardId)
+    const fuenteMeta = metaDeInstancia(s, fuenteId) // sus auras incluyen las que copió de otro Campeón
     if (!fuenteMeta) continue
 
     if (fuenteMeta.type === 'Campeón' && fuenteMeta.efectoComandante) {
@@ -721,7 +722,7 @@ export function triggersQueMatchean(
     const inst = s.instances[id]
     const cardId = inst?.cardId
     if (!inst || !cardId) continue
-    const meta = getCardMeta(cardId)
+    const meta = metaDeInstancia(s, id) // impresos + copiados de otro Campeón (efectosInstancia.ts)
     if (!meta || !('efectos' in meta)) continue
     if (meta.type === 'Vínculo' && inst.bocaArriba !== true) continue
     // CONDITION CHECK: si la carta tiene condicion JSON cuyo trigger matchea

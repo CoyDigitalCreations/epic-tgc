@@ -85,9 +85,11 @@ describe('MazoEditor', () => {
     const addBtn = screen.getByRole('button', { name: 'Agregar copia de Guardián Estelar' })
     fireEvent.click(addBtn.closest('.group')!)
 
-    const img = await screen.findByRole('img', { name: 'Guardián Estelar' })
+    // El arte llega async desde IndexedDB: con la máquina cargada el timeout por defecto (1 s) se quedaba corto y el test
+    // fallaba de forma intermitente solo dentro de la suite completa
+    const img = await screen.findByRole('img', { name: 'Guardián Estelar' }, { timeout: 5000 })
     expect(img).toHaveAttribute('src', 'data:image/png;base64,ARTECUSTOM')
-  })
+  }, 15000)
 
   it('las custom sin arte se muestran en el catálogo', () => {
     useCardStore.getState().loadCards([campeonCustom()])

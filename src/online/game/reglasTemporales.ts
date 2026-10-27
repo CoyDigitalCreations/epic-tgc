@@ -6,7 +6,7 @@
  * fase, mismo ciclo de vida que `modificadores`) y reglas.ts (para leerlas). Si importara
  * efectos.ts crearía un ciclo.
  */
-import type { CambioAtributo, ExpiraModificador, GameState, PlayerId, ReglaTemporal } from './types'
+import type { CambioAtributo, EfectoPrestado, ExpiraModificador, GameState, PlayerId, ReglaTemporal } from './types'
 
 /** Lo que comparten las listas con duración: quién las creó y cuándo vencen. */
 interface Caducable {
@@ -53,11 +53,21 @@ export function reiniciarCampeon(s: GameState, instId: string): void {
     if (quedan.length === 0) delete s.cambiosAtributo
     else if (quedan.length !== s.cambiosAtributo.length) s.cambiosAtributo = quedan
   }
+  if (s.efectosPrestados?.length) {
+    const quedan = s.efectosPrestados.filter((p) => p.instId !== instId)
+    if (quedan.length === 0) delete s.efectosPrestados
+    else if (quedan.length !== s.efectosPrestados.length) s.efectosPrestados = quedan
+  }
 }
 
 /** Registra un cambio de Esencia/Rol/Facción (F9e); el más reciente de cada atributo gana. */
 export function aplicarCambioAtributo(s: GameState, cambio: CambioAtributo): void {
   s.cambiosAtributo = [...(s.cambiosAtributo ?? []), cambio]
+}
+
+/** Registra efectos copiados de otro Campeón (instantánea): `prestado.instId` los tiene mientras dure la copia. */
+export function aplicarEfectosPrestados(s: GameState, prestado: EfectoPrestado): void {
+  s.efectosPrestados = [...(s.efectosPrestados ?? []), prestado]
 }
 
 /** 'ocaso': decrementa `turnosRestantes` y quita las que llegan a 0 o expiran en 'ocaso'; 'alba-dueño': las de ese jugador. */
@@ -91,6 +101,11 @@ export function purgarReglasTemporales(s: GameState, expira: ExpiraModificador, 
     if (quedan.length === 0) delete s.cambiosAtributo
     else s.cambiosAtributo = quedan
   }
+  if (s.efectosPrestados?.length) {
+    const quedan = sinVencidas(s.efectosPrestados, expira, jugador)
+    if (quedan.length === 0) delete s.efectosPrestados
+    else s.efectosPrestados = quedan
+  }
 }
 
 /** Al ENTRAR `fase` con `turno` en curso: purga las de duración 'hasta_fase' que vencen ahí. */
@@ -105,5 +120,10 @@ export function purgarReglasHastaFase(s: GameState, fase: 'alba' | 'forja' | 'ch
     const quedan = s.cambiosAtributo.filter((r) => !vence(r))
     if (quedan.length === 0) delete s.cambiosAtributo
     else if (quedan.length !== s.cambiosAtributo.length) s.cambiosAtributo = quedan
+  }
+  if (s.efectosPrestados?.length) {
+    const quedan = s.efectosPrestados.filter((r) => !vence(r))
+    if (quedan.length === 0) delete s.efectosPrestados
+    else if (quedan.length !== s.efectosPrestados.length) s.efectosPrestados = quedan
   }
 }

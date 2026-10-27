@@ -35,6 +35,7 @@ import { aplicarPago, etersParaPagar, validarPago, type ContextoUso } from './pa
 import { enviarAlCementerio } from './replacements'
 import { efectosNegados } from './reglas'
 import { eterIdsParaHabilidad, pagarHabilidad } from './habilidadPago'
+import { metaDeInstancia } from './efectosInstancia'
 import type { CondicionEfecto, EfectoData } from '../../shared/types'
 import type {
   Ctx, CadenaState, DeclaracionCadena, GameState, OpenerCadena, PlayerId, RespuestaApilada, RespuestaCadena, TriggerApilado,
@@ -114,7 +115,7 @@ export function disparoDeRespuesta(meta: AnyCard | null | undefined): { efecto: 
 export function motivoNoResponde(state: GameState, jugador: PlayerId, id: string, origen: 'campo' | 'mano'): string | null {
   const cadena = cadenaActiva(state)
   const inst = state.instances[id]
-  const meta = inst?.cardId ? getCardMeta(inst.cardId) : null
+  const meta = metaDeInstancia(state, id) // su Disparo incluye los copiados de otro Campeón
   if (!inst || !meta) return 'carta desconocida'
   // ya está en la pila (no responde dos veces) o es el opener (fondo de la pila, F5b)
   if (cadena && (cadena.pila.includes(id) || cadena.opener?.cardInstanceId === id)) return 'la carta ya está en la pila'
@@ -261,8 +262,7 @@ export function validarResponderCadena(state: GameState, cardInstanceId: string,
     return 'esa carta no puede responder ahora'
   }
   // F5e: una Arcana respondida paga su coste (eterIds; sin ellos el motor elige los de la Reserva)
-  const inst = state.instances[cardInstanceId]
-  const meta = inst?.cardId ? getCardMeta(inst.cardId) : null
+  const meta = metaDeInstancia(state, cardInstanceId)
   if (meta && esArcana(meta) && eterIds !== undefined && meta.stats.cost > 0) {
     const pago = validarPago(state, cadena.prioridad, eterIds, meta.id)
     if (!pago.ok) return pago.error ?? 'pago inválido'
@@ -356,7 +356,7 @@ export function ejecutarResponderCadena(s: GameState, cardInstanceId: string, ct
   const jugador = cadena.prioridad
   const previos = marcarInicioAccion(s)
   const inst = s.instances[cardInstanceId]
-  const meta = inst?.cardId ? getCardMeta(inst.cardId) : null
+  const meta = metaDeInstancia(s, cardInstanceId)
   if (inst && meta && esArcana(meta)) {
     const pagos = eterIds ?? etersParaPagar(s, jugador, meta.id) ?? []
     if (pagos.length > 0) aplicarPago(s, ctx, jugador, pagos, meta.id, { tipo: 'habilidad', cardInstanceId })
@@ -405,7 +405,7 @@ export function ejecutarPasarPrioridad(s: GameState, ctx: Ctx): void {
  * 'al_resolver_cadena' (cualquier tipo de carta) los despacha dispararTrigger.
  */
 function hechizosDeRespuesta(s: GameState, id: string, origen: RespuestaApilada['origen']) {
-  const meta = s.instances[id]?.cardId ? getCardMeta(s.instances[id]!.cardId!) : null
+  const meta = metaDeInstancia(s, id)
   // Un Campeón que responde aporta su Disparo (ya pagado al responder); Mística/Arcana, sus hechizos
   if (meta && meta.type === 'Campeón' && origen === 'campo') {
     const disparo = disparoDeRespuesta(meta)
@@ -780,7 +780,7 @@ function abrirOpener(s: GameState, ctx: Ctx, opener: OpenerCadena, triggers?: re
  */
 function resolverOpener(s: GameState, ctx: Ctx, opener: OpenerCadena): void {
   const inst = s.instances[opener.cardInstanceId]
-  const meta = inst?.cardId ? getCardMeta(inst.cardId) : null
+  const meta = metaDeInstancia(s, opener.cardInstanceId) // una habilidad copiada también se resuelve desde aquí
   if (!inst || !meta) return
   // F5g: el opener Artefacto cuyo Campeón desapareció antes de resolver pierde su efecto (la carta ya salió)
   const sinReceptorOpener = opener.tipo !== 'habilidad' && esArtefactoEquipable(meta) && !inst.equipadoA

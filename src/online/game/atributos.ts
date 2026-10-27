@@ -8,16 +8,20 @@
  */
 import type { Esencia, Faccion, Rol } from '../../shared/types'
 import { getCardMeta } from './cards'
-import type { GameState } from './types'
+import type { CambioAtributo, GameState } from './types'
 
 /** Último cambio vigente del atributo para esa instancia (el más reciente gana), o undefined si nadie lo cambió. */
-function cambioDe(s: GameState, instId: string, atributo: 'esencia' | 'rol' | 'faccion'): string | undefined {
+function ultimoCambio(s: GameState, instId: string, atributo: 'esencia' | 'rol' | 'faccion'): CambioAtributo | undefined {
   const lista = s.cambiosAtributo
   if (!lista?.length) return undefined
   for (let i = lista.length - 1; i >= 0; i--) {
-    if (lista[i].instId === instId && lista[i].atributo === atributo) return lista[i].valor
+    if (lista[i].instId === instId && lista[i].atributo === atributo) return lista[i]
   }
   return undefined
+}
+
+function cambioDe(s: GameState, instId: string, atributo: 'esencia' | 'rol' | 'faccion'): string | undefined {
+  return ultimoCambio(s, instId, atributo)?.valor
 }
 
 function metaDe(s: GameState, instId: string) {
@@ -40,8 +44,9 @@ export function rolesDe(s: GameState, instId: string): Rol[] | undefined {
 }
 
 export function faccionesDe(s: GameState, instId: string): Faccion[] | undefined {
-  const cambio = cambioDe(s, instId, 'faccion')
-  if (cambio) return [cambio as Faccion]
+  const cambio = ultimoCambio(s, instId, 'faccion')
+  // Una copia de un Campeón con varias Facciones trae la lista completa (`valores`); change_type, una sola
+  if (cambio) return (cambio.valores ?? [cambio.valor]) as Faccion[]
   const meta = metaDe(s, instId)
   return meta && 'facciones' in meta ? meta.facciones : undefined
 }

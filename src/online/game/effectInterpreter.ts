@@ -9,7 +9,9 @@ import { robarCarta } from './draw'
 import { shuffleFisherYates } from './rng'
 import { aplicarMod, otorgarKeyword, crearOpcionBloqueo, statsDe, keywordsDe, dispararTrigger } from './efectos'
 import { construirTriggers, resolverTriggersDeEfecto } from './triggers'
-import { aplicarCambioAtributo, aplicarReglaTemporal, reiniciarCampeon } from './reglasTemporales'
+import { aplicarCambioAtributo, aplicarEfectosPrestados, aplicarReglaTemporal, reiniciarCampeon } from './reglasTemporales'
+import { faccionesDe } from './atributos'
+import { esEfectoCopiable } from './efectosInstancia'
 import { efectosNegados, reglaBool, reglaDeEfecto } from './reglas'
 import { iniciarScry } from './scry'
 import { ejecutarRedirect } from './redirect'
@@ -1129,6 +1131,26 @@ function executeCopiaCampeon(s: GameState, inst: CardInstance, objetivoId: strin
   if (atributos.includes('keyword')) {
     for (const keyword of keywordsDe(s, objetivoId)) {
       executeGrantKeyword(s, [inst.cardInstanceId], keyword, duracion, jugador, duracionFase, duracionControlador)
+    }
+  }
+  // Facción: pasa a ser la del objetivo (todas las que tenga ahora), con la duración de la copia. Mismo mecanismo que change_type
+  if (atributos.includes('faccion')) {
+    const facciones = faccionesDe(s, objetivoId)
+    if (facciones && facciones.length > 0) {
+      aplicarCambioAtributo(s, {
+        instId: inst.cardInstanceId, atributo: 'faccion', valor: facciones[0],
+        ...(facciones.length > 1 ? { valores: [...facciones] } : {}), ...duracionTemporal(efectoData, jugador),
+      })
+    }
+  }
+  // Efecto: una instantánea de los efectos copiables del objetivo (pasivos, continuos y Disparos; no Comandante ni los que
+  // bloquean Éter) que esta carta tiene ADEMÁS de los suyos durante la copia (ver efectosInstancia.ts)
+  if (atributos.includes('efecto')) {
+    const copiables = (meta.efectos ?? []).filter(esEfectoCopiable)
+    if (copiables.length > 0) {
+      aplicarEfectosPrestados(s, {
+        instId: inst.cardInstanceId, origenId: objetivoId, efectos: structuredClone(copiables), ...duracionTemporal(efectoData, jugador),
+      })
     }
   }
 }

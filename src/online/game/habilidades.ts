@@ -13,6 +13,7 @@ import { interpretEffect, ejecutarTramo } from './effectInterpreter'
 import { electorAjeno, opcionesVigentes } from './pendientes'
 import { tieneKeyword } from './combat'
 import { efectosNegados } from './reglas'
+import { metaDeInstancia } from './efectosInstancia'
 import { liberarEterBloqueado, enviarAlCementerio } from './replacements'
 import { slotAZona } from './zones'
 import { validarBloqueo } from './payments'
@@ -60,7 +61,7 @@ export function validarActivarHabilidad(state: GameState, action: Extract<Action
   const inst = state.instances[action.cardInstanceId]
   if (!inst) return 'la carta no existe'
   if (!p.campo.campeones.includes(action.cardInstanceId)) return 'la carta no está en tu campo'
-  const meta = inst.cardId ? getCardMeta(inst.cardId) : null
+  const meta = metaDeInstancia(state, action.cardInstanceId) // sus habilidades incluyen las copiadas de otro Campeón
   if (!meta) return 'carta desconocida'
   if (efectosNegados(state, action.cardInstanceId)) return 'los efectos de esta carta están negados'
 
@@ -261,7 +262,7 @@ export function ejecutarActivarArcana(s: GameState, action: Extract<Action, { ty
  */
 export function ejecutarActivarHabilidad(s: GameState, action: Extract<Action, { type: 'activar_habilidad' }>, ctx: Ctx): void {
   const inst = s.instances[action.cardInstanceId]!
-  const meta = inst.cardId ? getCardMeta(inst.cardId) : null
+  const meta = metaDeInstancia(s, action.cardInstanceId)
   if (!meta) return
 
   // Mismo selector que el validador y validActions — el costo DEL EFECTO

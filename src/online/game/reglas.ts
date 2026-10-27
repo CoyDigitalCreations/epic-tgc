@@ -22,6 +22,7 @@ import {
 import type { EfectoData } from '../../shared/types'
 import { getCardMeta } from './cards'
 import { keywordsDe } from './efectos'
+import { efectosPrestadosDe } from './efectosInstancia'
 import { eterDeEfecto } from './eter'
 import type { CardInstance, GameState, PlayerId } from './types'
 
@@ -57,6 +58,16 @@ function efectosReglaDe(cardId: string): { efecto: EfectoData; indice: number }[
   return lista
 }
 
+/** Los `modificar_regla` de una INSTANCIA: los impresos (memo) más los que copió de otro Campeón (sus índices siguen a los impresos). */
+function efectosReglaDeInst(s: GameState, inst: CardInstance): { efecto: EfectoData; indice: number }[] {
+  const impresos = efectosReglaDe(inst.cardId as string)
+  const prestados = efectosPrestadosDe(s, inst.cardInstanceId)
+  if (prestados.length === 0) return impresos
+  const meta = getCardMeta(inst.cardId as string)
+  const n = meta && 'efectos' in meta ? (meta.efectos?.length ?? 0) : 0
+  return [...impresos, ...prestados.map((efecto, k) => ({ efecto, indice: n + k })).filter(({ efecto }) => !!reglaDeEfecto(efecto))]
+}
+
 /** SOLO PARA TESTS: el catálogo de cartas puede cambiar (registrarCartas). */
 export function limpiarMemoReglas(): void {
   memoEfectosRegla.clear()
@@ -77,7 +88,7 @@ interface FuenteRegla {
 function fuentesDeReglas(s: GameState): FuenteRegla[] {
   const fuentes: FuenteRegla[] = []
   const tiene = (inst: CardInstance | undefined): inst is CardInstance =>
-    !!inst?.cardId && efectosReglaDe(inst.cardId).length > 0
+    !!inst?.cardId && efectosReglaDeInst(s, inst).length > 0
 
   for (const j of ['A', 'B'] as PlayerId[]) {
     const p = s.players[j]
@@ -198,8 +209,7 @@ export function modificadoresReglaDe(s: GameState, regla: ReglaId, sujeto: Sujet
 
   // 2. Efectos `modificar_regla` de cartas en juego
   for (const f of fuentesDeReglas(s)) {
-    const cardId = f.inst.cardId as string
-    for (const { efecto, indice } of efectosReglaDe(cardId)) {
+    for (const { efecto, indice } of efectosReglaDeInst(s, f.inst)) {
       const m = reglaDeEfecto(efecto)
       if (!m || m.id !== regla || !efectoActivo(s, f, efecto, indice)) continue
       // Un Campeón con sus efectos negados no modifica reglas (salvo su efecto de Comandante). `efectosActivos` no se
