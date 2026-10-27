@@ -7486,7 +7486,8 @@ function validarColocarVinculo(state, action) {
   return null;
 }
 function validarEquiparArtefacto(state, action) {
-  if (state.fase !== "forja") return "equipar_artefacto solo en Forja";
+  const pendiente = state.equiparPendiente?.artefactoId === action.cardInstanceId;
+  if (state.fase !== "forja" && !pendiente) return "equipar_artefacto solo en Forja";
   const inst = state.instances[action.cardInstanceId];
   if (!inst) return "carta no encontrada";
   const meta = inst.cardId ? getCardMeta(inst.cardId) : null;
