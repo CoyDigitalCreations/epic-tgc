@@ -4003,6 +4003,229 @@ function reagruparEter(s, ctx, jugador) {
   ctx.emit({ type: "eter_reagrupado", jugador, eterIds: reagrupados });
 }
 
+// src/online/game/effectRegistry.ts
+function generarId(s) {
+  const count = s.efectosPendientes?.length ?? 0;
+  return `ep-${count + 1}`;
+}
+function registrarEfectoPendiente(s, params) {
+  if (!s.efectosPendientes) s.efectosPendientes = [];
+  const id = generarId(s);
+  const efecto = {
+    id,
+    fuente: params.fuente,
+    owner: params.owner,
+    triggerFase: params.triggerFase,
+    triggerOwner: params.triggerOwner ?? "due\xF1o",
+    accion: params.accion,
+    duracion: params.duracion
+  };
+  s.efectosPendientes.push(efecto);
+  return id;
+}
+function resolverFaseEfectos(s, ctx, fase, jugadorActual) {
+  if (!s.efectosPendientes || s.efectosPendientes.length === 0) return;
+  const aResolver = s.efectosPendientes.filter((ep) => {
+    if (ep.triggerFase !== fase) return false;
+    if (ep.triggerOwner === "due\xF1o" && ep.owner !== jugadorActual) return false;
+    if (ep.triggerOwner === "rival" && ep.owner === jugadorActual) return false;
+    if (ep.resuelto) return false;
+    return true;
+  });
+  for (const ep of aResolver) {
+    ejecutarAccionEfecto(s, ctx, ep);
+    ep.resuelto = true;
+  }
+  purgarEfectosPendientes(s, fase, jugadorActual);
+}
+function ejecutarAccionEfecto(s, ctx, ep) {
+  const accion = ep.accion;
+  switch (accion.tipo) {
+    case "modificar": {
+      const inst = s.instances[accion.objetivo];
+      if (!inst) return;
+      if (!inst.modificadores) inst.modificadores = [];
+      inst.modificadores.push({
+        stat: accion.stat,
+        valor: accion.delta,
+        expira: duracionAExpira(ep.duracion),
+        turnosRestantes: ep.duracion.tipo === "turnos" ? ep.duracion.restantes : void 0
+      });
+      break;
+    }
+    case "liberar-eter": {
+      const inst = s.instances[ep.fuente];
+      if (!inst?.eterBloqueado || inst.eterBloqueado.length === 0) break;
+      const eteresVivos = accion.eterIds.filter((id) => inst.eterBloqueado.includes(id));
+      if (eteresVivos.length === 0) break;
+      quitarEteres(s, ep.fuente, eteresVivos);
+      const grupos = liberarEterA(s, eteresVivos, "2A", ep.owner);
+      for (const [pagador, ids] of Object.entries(grupos)) {
+        ctx.emit({ type: "eter_reagrupado", jugador: pagador, eterIds: ids });
+      }
+      evaluarFinSteal(s, ctx, ep.fuente);
+      break;
+    }
+    case "destruir": {
+      const inst = s.instances[accion.objetivo];
+      if (!inst) return;
+      const p = s.players[inst.owner];
+      const slotIdx = p.campo.campeones.indexOf(accion.objetivo);
+      if (slotIdx !== -1) {
+        p.campo.campeones[slotIdx] = null;
+        ctx.emit({ type: "carta_salida_de_zona", cardInstanceId: accion.objetivo, zona: `2${String.fromCharCode(66 + slotIdx)}`, jugador: inst.owner });
+        enviarAlCementerio(s, ctx, accion.objetivo);
+        ctx.emit({ type: "carta_entrada_a_zona", cardInstanceId: accion.objetivo, zona: "2G", jugador: inst.owner, bocaArriba: true });
+      }
+      break;
+    }
+    case "agotar": {
+      const inst = s.instances[accion.objetivo];
+      if (inst) inst.agotado = true;
+      break;
+    }
+    case "robar-cartas": {
+      for (let i = 0; i < accion.cantidad; i++) {
+        if (s.fase === "terminada") break;
+        if (!robarCarta(s, ctx, ep.owner)) break;
+      }
+      break;
+    }
+    case "keyword-temporal": {
+      const inst = s.instances[accion.objetivo];
+      if (!inst) return;
+      if (!inst.keywordsTemporales) inst.keywordsTemporales = [];
+      if (!inst.keywordsTemporales.includes(accion.keyword)) {
+        inst.keywordsTemporales.push(accion.keyword);
+      }
+      break;
+    }
+    case "enviar-cementerio": {
+      const inst = s.instances[accion.objetivo];
+      if (!inst) break;
+      const p = s.players[inst.owner];
+      const slotMT = p.campo.misticasTacticas.indexOf(accion.objetivo);
+      if (slotMT !== -1) {
+        const zona = `3${String.fromCharCode(65 + slotMT)}`;
+        ctx.emit({ type: "carta_salida_de_zona", cardInstanceId: accion.objetivo, zona, jugador: inst.owner });
+        p.campo.misticasTacticas[slotMT] = null;
+        p.cementerio.push(accion.objetivo);
+        ctx.emit({ type: "carta_entrada_a_zona", cardInstanceId: accion.objetivo, zona: "2G", jugador: inst.owner, bocaArriba: true });
+        break;
+      }
+      const slotAC = p.campo.arcanasCombate.indexOf(accion.objetivo);
+      if (slotAC !== -1) {
+        const zona = `3${String.fromCharCode(68 + slotAC)}`;
+        ctx.emit({ type: "carta_salida_de_zona", cardInstanceId: accion.objetivo, zona, jugador: inst.owner });
+        p.campo.arcanasCombate[slotAC] = null;
+        p.cementerio.push(accion.objetivo);
+        ctx.emit({ type: "carta_entrada_a_zona", cardInstanceId: accion.objetivo, zona: "2G", jugador: inst.owner, bocaArriba: true });
+        break;
+      }
+      const slotCP = p.campo.campeones.indexOf(accion.objetivo);
+      if (slotCP !== -1) {
+        const zona = `2${String.fromCharCode(66 + slotCP)}`;
+        ctx.emit({ type: "carta_salida_de_zona", cardInstanceId: accion.objetivo, zona, jugador: inst.owner });
+        p.campo.campeones[slotCP] = null;
+        enviarAlCementerio(s, ctx, accion.objetivo);
+        ctx.emit({ type: "carta_entrada_a_zona", cardInstanceId: accion.objetivo, zona: "2G", jugador: inst.owner, bocaArriba: true });
+      }
+      break;
+    }
+  }
+}
+function purgarEfectosPendientes(s, fase, jugadorActual) {
+  if (!s.efectosPendientes) return;
+  s.efectosPendientes = s.efectosPendientes.filter((ep) => {
+    if (ep.resuelto && ep.duracion.tipo !== "permanente") {
+      if (ep.duracion.tipo === "turnos" && ep.duracion.restantes !== void 0 && ep.duracion.restantes > 0) {
+        return true;
+      }
+      return false;
+    }
+    if (ep.duracion.tipo === "turnos" && fase === "ocaso" && ep.owner === jugadorActual) {
+      if (ep.duracion.restantes !== void 0) {
+        ep.duracion.restantes -= 1;
+        if (ep.duracion.restantes <= 0) return false;
+      }
+      return true;
+    }
+    if (ep.duracion.tipo === "hasta-fase" && ep.duracion.hastaFase === fase) {
+      if (ep.duracion.ownerTrigger === "due\xF1o" && ep.owner === jugadorActual) return false;
+      if (ep.duracion.ownerTrigger === "rival" && ep.owner !== jugadorActual) return false;
+      if (ep.duracion.ownerTrigger === "cualquiera") return false;
+    }
+    return true;
+  });
+}
+function duracionAExpira(duracion) {
+  switch (duracion.tipo) {
+    case "turnos":
+      return "ocaso";
+    case "hasta-fase":
+      return duracion.hastaFase === "alba" ? "alba-due\xF1o" : "ocaso";
+    case "permanente":
+      return "permanente";
+  }
+}
+function hastaAlba() {
+  return { tipo: "hasta-fase", hastaFase: "alba", ownerTrigger: "due\xF1o" };
+}
+
+// src/online/game/habilidadPago.ts
+function eterIdsParaHabilidad(state, jugador, efecto) {
+  const p = state.players[jugador];
+  const costo = efecto.costo?.cantidad ?? 0;
+  if (esCostoBloqueo(efecto.costo)) {
+    const zona = efecto.costo?.origen === "pagado" ? p.eterPagado : p.eterReserva;
+    if (costo <= 0 || zona.length < costo) return null;
+    return zona.slice(0, costo);
+  }
+  const necesarios = costo > 0 ? costo : 1;
+  return p.eterReserva.length >= necesarios ? p.eterReserva.slice(0, necesarios) : null;
+}
+function pagarHabilidad(s, ctx, jugador, instId, efectoSel, eterIds) {
+  const p = s.players[jugador];
+  const inst = s.instances[instId];
+  const meta = inst.cardId ? getCardMeta(inst.cardId) : null;
+  if (!meta) return;
+  if (esCostoBloqueo(efectoSel.costo)) {
+    const zonaOrigen = efectoSel.costo?.origen === "pagado" ? p.eterPagado : p.eterReserva;
+    for (const eterId of eterIds) {
+      const idx = zonaOrigen.indexOf(eterId);
+      if (idx !== -1) zonaOrigen.splice(idx, 1);
+    }
+    inst.eterBloqueado = [...inst.eterBloqueado ?? [], ...eterIds];
+    const idxSel = meta.efectos?.indexOf(efectoSel) ?? -1;
+    etiquetarEter(s, [...eterIds], instId, idxSel, jugador);
+    const efectoConReagrupar = meta.efectos && "efectos" in meta ? meta.efectos.find((e) => e.reagrupar && esCostoBloqueo(e.costo)) : void 0;
+    if (efectoConReagrupar?.reagrupar) {
+      registrarEfectoPendiente(s, {
+        fuente: instId,
+        owner: jugador,
+        triggerFase: efectoConReagrupar.reagrupar.fase,
+        triggerOwner: efectoConReagrupar.reagrupar.turno === "propio" ? "due\xF1o" : "rival",
+        accion: { tipo: "liberar-eter", eterIds: [...eterIds], destino: "reserva" },
+        duracion: hastaAlba()
+      });
+    }
+    ctx.emit({ type: "eter_bloqueado", jugador, eterIds: [...eterIds], campeonId: instId });
+    inst.opcionUsadaEsteTurno = true;
+    if (efectoSel.tipo === "continuo") inst.agotado = true;
+    return;
+  }
+  for (const eterId of eterIds) {
+    const idx = p.eterReserva.indexOf(eterId);
+    if (idx !== -1) p.eterReserva.splice(idx, 1);
+    p.eterPagado.push(eterId);
+  }
+  if (eterIds.length > 0) {
+    ctx.emit({ type: "eter_pagado", jugador, eterIds: [...eterIds], costo: eterIds.length, aportado: eterIds.length });
+  }
+  if (efectoSel.tipo !== "disparo") inst.opcionUsadaEsteTurno = true;
+  if (efectoSel.tipo === "disparo" && reglaBool(s, "disparoAgota", { instId })) inst.agotado = true;
+}
+
 // src/online/game/chain.ts
 function velocidadRequeridaDe(state) {
   const cadena = cadenaActiva(state);
@@ -4035,6 +4258,11 @@ function motivoArcanaNoActivable(state, jugador, id) {
     return "no puedes activar un ARTEFACTO sin un Campe\xF3n en tu campo";
   }
   return null;
+}
+function disparoDeRespuesta(meta) {
+  if (!meta || !("efectos" in meta) || !meta.efectos) return null;
+  const efectoIdx = meta.efectos.findIndex((e) => e.tipo === "disparo" && !!e.efecto && (!e.trigger || e.trigger === "ninguno"));
+  return efectoIdx === -1 ? null : { efecto: meta.efectos[efectoIdx], efectoIdx };
 }
 function motivoNoResponde(state, jugador, id, origen) {
   const cadena = cadenaActiva(state);
@@ -4069,8 +4297,13 @@ function motivoNoResponde(state, jugador, id, origen) {
   }
   if (meta.type === "Campe\xF3n" && "efectos" in meta && meta.efectos?.some((e) => e.tipo === "disparo")) {
     if (efectosNegados(state, id)) return "los efectos de esta carta est\xE1n negados";
-    if (!inst.agotado) return null;
-    return meta.efectos.some((e) => e.tipo === "disparo" && esCostoBloqueo(e.costo)) ? null : "el Campe\xF3n est\xE1 agotado";
+    if (inst.agotado && !meta.efectos.some((e) => e.tipo === "disparo" && esCostoBloqueo(e.costo))) return "el Campe\xF3n est\xE1 agotado";
+    const disparo = disparoDeRespuesta(meta);
+    if (disparo) {
+      if (esCostoBloqueo(disparo.efecto.costo) && inst.opcionUsadaEsteTurno) return "ya usaste esta habilidad este turno";
+      if (eterIdsParaHabilidad(state, jugador, disparo.efecto) === null) return "no puedes pagar su coste";
+    }
+    return null;
   }
   return "esta carta no puede responder";
 }
@@ -4125,6 +4358,16 @@ function validarResponderCadena(state, cardInstanceId, eterIds) {
   if (meta && esArcana(meta) && eterIds !== void 0 && meta.stats.cost > 0) {
     const pago = validarPago(state, cadena.prioridad, eterIds, meta.id);
     if (!pago.ok) return pago.error ?? "pago inv\xE1lido";
+  }
+  const disparo = meta?.type === "Campe\xF3n" ? disparoDeRespuesta(meta) : null;
+  if (disparo && eterIds !== void 0) {
+    const esperado = eterIdsParaHabilidad(state, cadena.prioridad, disparo.efecto);
+    if (!esperado) return "no puedes pagar su coste";
+    if (eterIds.length !== esperado.length) return `${meta.name} requiere exactamente ${esperado.length} \xC9ter(es), indicaste ${eterIds.length}`;
+    const p = state.players[cadena.prioridad];
+    const zona = esCostoBloqueo(disparo.efecto.costo) && disparo.efecto.costo?.origen === "pagado" ? p.eterPagado : p.eterReserva;
+    if (new Set(eterIds).size !== eterIds.length) return "\xE9teres repetidos";
+    for (const id of eterIds) if (!zona.includes(id)) return `el \xC9ter ${id} no est\xE1 en la zona de pago`;
   }
   return null;
 }
@@ -4186,6 +4429,8 @@ function ejecutarResponderCadena(s, cardInstanceId, ctx, eterIds) {
   }
   if (meta && meta.type === "Campe\xF3n" && "efectos" in meta && meta.efectos?.some((e) => e.tipo === "disparo")) {
     inst.bocaArriba = true;
+    const disparo = disparoDeRespuesta(meta);
+    if (disparo) pagarHabilidad(s, ctx, jugador, cardInstanceId, disparo.efecto, eterIds ?? eterIdsParaHabilidad(s, jugador, disparo.efecto) ?? []);
   }
   declararRespuesta(s, ctx, { jugador, cardInstanceId, origen: "campo" }, previos);
 }
@@ -4203,6 +4448,10 @@ function ejecutarPasarPrioridad(s, ctx) {
 }
 function hechizosDeRespuesta(s, id, origen) {
   const meta = s.instances[id]?.cardId ? getCardMeta(s.instances[id].cardId) : null;
+  if (meta && meta.type === "Campe\xF3n" && origen === "campo") {
+    const disparo = disparoDeRespuesta(meta);
+    return disparo ? [disparo] : [];
+  }
   const aportaHechizos = !!meta && (esArcana(meta) || esMistica(meta) && origen === "mano");
   return aportaHechizos ? hechizosDelOpener(s, id).hechizos : [];
 }
@@ -4217,8 +4466,9 @@ function declararRespuesta(s, ctx, respuesta, previos) {
         s.objetivosPendientes = [...s.objetivosPendientes ?? [], { jugador, instId: cardInstanceId, trigger: "equipar", opciones, equipar: true }];
       }
     }
+    const costoPagado = meta?.type === "Campe\xF3n";
     for (const { efecto, efectoIdx } of hechizosDeRespuesta(s, cardInstanceId, origen)) {
-      interpretEffect(s, ctx, inst, efecto, { jugador, fromTrigger: true, declararOpener: { efectoIdx } });
+      interpretEffect(s, ctx, inst, efecto, { jugador, fromTrigger: true, declararOpener: { efectoIdx }, ...costoPagado ? { costoPagado } : {} });
     }
     dispararTrigger(s, ctx, "al-resolver-cadena", jugador, [cardInstanceId], { declarar: true, cobrarCosto: false });
   }
@@ -4305,6 +4555,12 @@ function resolverRespuesta(s, ctx, id, datos) {
     }
     trigger();
     return;
+  }
+  if (meta.type === "Campe\xF3n" && enCampo && !efectosNegados(s, id)) {
+    for (const { efecto, efectoIdx } of hechizosDeRespuesta(s, id, origen)) {
+      const objetivoId = objetivos?.[efectoIdx];
+      interpretEffect(s, ctx, inst, efecto, { ...opciones, costoPagado: true, contextoUso: objetivoId ? "objetivo-elegido" : void 0, objetivoId });
+    }
   }
   trigger();
 }
@@ -5342,8 +5598,10 @@ function executeTutor(s, ctx, targetIds, jugador, efectoData) {
       const slotLibre = p.campo.campeones.indexOf(null);
       if (slotLibre !== -1) {
         p.campo.campeones[slotLibre] = targetId;
+        const instT = s.instances[targetId];
+        const metaT = instT?.cardId ? getCardMeta(instT.cardId) : null;
+        if (instT) instT.entradaEsteTurno = true;
         ctx.emit({ type: "carta_invocada", cardInstanceId: targetId, tipo: "Campe\xF3n", slot: slotLibre });
-        const metaT = s.instances[targetId]?.cardId ? getCardMeta(s.instances[targetId].cardId) : null;
         if (metaT && esCampeon(metaT)) dispararAlInvocar(s, ctx, jugador, targetId);
       }
     } else if (zonaDestino === "cementerio") {
@@ -5772,175 +6030,6 @@ function faccionesDe(s, instId) {
   return meta && "facciones" in meta ? meta.facciones : void 0;
 }
 
-// src/online/game/effectRegistry.ts
-function generarId(s) {
-  const count = s.efectosPendientes?.length ?? 0;
-  return `ep-${count + 1}`;
-}
-function registrarEfectoPendiente(s, params) {
-  if (!s.efectosPendientes) s.efectosPendientes = [];
-  const id = generarId(s);
-  const efecto = {
-    id,
-    fuente: params.fuente,
-    owner: params.owner,
-    triggerFase: params.triggerFase,
-    triggerOwner: params.triggerOwner ?? "due\xF1o",
-    accion: params.accion,
-    duracion: params.duracion
-  };
-  s.efectosPendientes.push(efecto);
-  return id;
-}
-function resolverFaseEfectos(s, ctx, fase, jugadorActual) {
-  if (!s.efectosPendientes || s.efectosPendientes.length === 0) return;
-  const aResolver = s.efectosPendientes.filter((ep) => {
-    if (ep.triggerFase !== fase) return false;
-    if (ep.triggerOwner === "due\xF1o" && ep.owner !== jugadorActual) return false;
-    if (ep.triggerOwner === "rival" && ep.owner === jugadorActual) return false;
-    if (ep.resuelto) return false;
-    return true;
-  });
-  for (const ep of aResolver) {
-    ejecutarAccionEfecto(s, ctx, ep);
-    ep.resuelto = true;
-  }
-  purgarEfectosPendientes(s, fase, jugadorActual);
-}
-function ejecutarAccionEfecto(s, ctx, ep) {
-  const accion = ep.accion;
-  switch (accion.tipo) {
-    case "modificar": {
-      const inst = s.instances[accion.objetivo];
-      if (!inst) return;
-      if (!inst.modificadores) inst.modificadores = [];
-      inst.modificadores.push({
-        stat: accion.stat,
-        valor: accion.delta,
-        expira: duracionAExpira(ep.duracion),
-        turnosRestantes: ep.duracion.tipo === "turnos" ? ep.duracion.restantes : void 0
-      });
-      break;
-    }
-    case "liberar-eter": {
-      const inst = s.instances[ep.fuente];
-      if (!inst?.eterBloqueado || inst.eterBloqueado.length === 0) break;
-      const eteresVivos = accion.eterIds.filter((id) => inst.eterBloqueado.includes(id));
-      if (eteresVivos.length === 0) break;
-      quitarEteres(s, ep.fuente, eteresVivos);
-      const grupos = liberarEterA(s, eteresVivos, "2A", ep.owner);
-      for (const [pagador, ids] of Object.entries(grupos)) {
-        ctx.emit({ type: "eter_reagrupado", jugador: pagador, eterIds: ids });
-      }
-      evaluarFinSteal(s, ctx, ep.fuente);
-      break;
-    }
-    case "destruir": {
-      const inst = s.instances[accion.objetivo];
-      if (!inst) return;
-      const p = s.players[inst.owner];
-      const slotIdx = p.campo.campeones.indexOf(accion.objetivo);
-      if (slotIdx !== -1) {
-        p.campo.campeones[slotIdx] = null;
-        ctx.emit({ type: "carta_salida_de_zona", cardInstanceId: accion.objetivo, zona: `2${String.fromCharCode(66 + slotIdx)}`, jugador: inst.owner });
-        enviarAlCementerio(s, ctx, accion.objetivo);
-        ctx.emit({ type: "carta_entrada_a_zona", cardInstanceId: accion.objetivo, zona: "2G", jugador: inst.owner, bocaArriba: true });
-      }
-      break;
-    }
-    case "agotar": {
-      const inst = s.instances[accion.objetivo];
-      if (inst) inst.agotado = true;
-      break;
-    }
-    case "robar-cartas": {
-      for (let i = 0; i < accion.cantidad; i++) {
-        if (s.fase === "terminada") break;
-        if (!robarCarta(s, ctx, ep.owner)) break;
-      }
-      break;
-    }
-    case "keyword-temporal": {
-      const inst = s.instances[accion.objetivo];
-      if (!inst) return;
-      if (!inst.keywordsTemporales) inst.keywordsTemporales = [];
-      if (!inst.keywordsTemporales.includes(accion.keyword)) {
-        inst.keywordsTemporales.push(accion.keyword);
-      }
-      break;
-    }
-    case "enviar-cementerio": {
-      const inst = s.instances[accion.objetivo];
-      if (!inst) break;
-      const p = s.players[inst.owner];
-      const slotMT = p.campo.misticasTacticas.indexOf(accion.objetivo);
-      if (slotMT !== -1) {
-        const zona = `3${String.fromCharCode(65 + slotMT)}`;
-        ctx.emit({ type: "carta_salida_de_zona", cardInstanceId: accion.objetivo, zona, jugador: inst.owner });
-        p.campo.misticasTacticas[slotMT] = null;
-        p.cementerio.push(accion.objetivo);
-        ctx.emit({ type: "carta_entrada_a_zona", cardInstanceId: accion.objetivo, zona: "2G", jugador: inst.owner, bocaArriba: true });
-        break;
-      }
-      const slotAC = p.campo.arcanasCombate.indexOf(accion.objetivo);
-      if (slotAC !== -1) {
-        const zona = `3${String.fromCharCode(68 + slotAC)}`;
-        ctx.emit({ type: "carta_salida_de_zona", cardInstanceId: accion.objetivo, zona, jugador: inst.owner });
-        p.campo.arcanasCombate[slotAC] = null;
-        p.cementerio.push(accion.objetivo);
-        ctx.emit({ type: "carta_entrada_a_zona", cardInstanceId: accion.objetivo, zona: "2G", jugador: inst.owner, bocaArriba: true });
-        break;
-      }
-      const slotCP = p.campo.campeones.indexOf(accion.objetivo);
-      if (slotCP !== -1) {
-        const zona = `2${String.fromCharCode(66 + slotCP)}`;
-        ctx.emit({ type: "carta_salida_de_zona", cardInstanceId: accion.objetivo, zona, jugador: inst.owner });
-        p.campo.campeones[slotCP] = null;
-        enviarAlCementerio(s, ctx, accion.objetivo);
-        ctx.emit({ type: "carta_entrada_a_zona", cardInstanceId: accion.objetivo, zona: "2G", jugador: inst.owner, bocaArriba: true });
-      }
-      break;
-    }
-  }
-}
-function purgarEfectosPendientes(s, fase, jugadorActual) {
-  if (!s.efectosPendientes) return;
-  s.efectosPendientes = s.efectosPendientes.filter((ep) => {
-    if (ep.resuelto && ep.duracion.tipo !== "permanente") {
-      if (ep.duracion.tipo === "turnos" && ep.duracion.restantes !== void 0 && ep.duracion.restantes > 0) {
-        return true;
-      }
-      return false;
-    }
-    if (ep.duracion.tipo === "turnos" && fase === "ocaso" && ep.owner === jugadorActual) {
-      if (ep.duracion.restantes !== void 0) {
-        ep.duracion.restantes -= 1;
-        if (ep.duracion.restantes <= 0) return false;
-      }
-      return true;
-    }
-    if (ep.duracion.tipo === "hasta-fase" && ep.duracion.hastaFase === fase) {
-      if (ep.duracion.ownerTrigger === "due\xF1o" && ep.owner === jugadorActual) return false;
-      if (ep.duracion.ownerTrigger === "rival" && ep.owner !== jugadorActual) return false;
-      if (ep.duracion.ownerTrigger === "cualquiera") return false;
-    }
-    return true;
-  });
-}
-function duracionAExpira(duracion) {
-  switch (duracion.tipo) {
-    case "turnos":
-      return "ocaso";
-    case "hasta-fase":
-      return duracion.hastaFase === "alba" ? "alba-due\xF1o" : "ocaso";
-    case "permanente":
-      return "permanente";
-  }
-}
-function hastaAlba() {
-  return { tipo: "hasta-fase", hastaFase: "alba", ownerTrigger: "due\xF1o" };
-}
-
 // src/online/game/habilidades.ts
 function validarActivarArcana(state, action) {
   if (state.fase !== "forja" && state.fase !== "choque" && state.fase !== "ocaso") {
@@ -6089,54 +6178,14 @@ function ejecutarActivarArcana(s, action, ctx) {
   declararOpener(s, ctx, { tipo: "arcana", jugador: s.turno, cardInstanceId: id }, previos);
 }
 function ejecutarActivarHabilidad(s, action, ctx) {
-  const p = s.players[s.turno];
   const inst = s.instances[action.cardInstanceId];
   const meta = inst.cardId ? getCardMeta(inst.cardId) : null;
   if (!meta) return;
   const efectoSel = efectoActivableDe(meta, !!action.objetivoId);
   if (!efectoSel) return;
   const previos = marcarInicioAccion(s);
-  if (esCostoBloqueo(efectoSel.costo)) {
-    const zonaOrigen = efectoSel.costo?.origen === "pagado" ? p.eterPagado : p.eterReserva;
-    for (const eterId of action.eterIds) {
-      const idx = zonaOrigen.indexOf(eterId);
-      if (idx !== -1) zonaOrigen.splice(idx, 1);
-    }
-    inst.eterBloqueado = [...inst.eterBloqueado ?? [], ...action.eterIds];
-    const idxSel = meta.efectos?.indexOf(efectoSel) ?? -1;
-    etiquetarEter(s, action.eterIds, action.cardInstanceId, idxSel, s.turno);
-    const efectoConReagrupar = meta.efectos && "efectos" in meta ? meta.efectos.find((e) => e.reagrupar && esCostoBloqueo(e.costo)) : void 0;
-    if (efectoConReagrupar?.reagrupar) {
-      registrarEfectoPendiente(s, {
-        fuente: action.cardInstanceId,
-        owner: s.turno,
-        triggerFase: efectoConReagrupar.reagrupar.fase,
-        triggerOwner: efectoConReagrupar.reagrupar.turno === "propio" ? "due\xF1o" : "rival",
-        accion: { tipo: "liberar-eter", eterIds: [...action.eterIds], destino: "reserva" },
-        duracion: hastaAlba()
-      });
-    }
-    ctx.emit({ type: "eter_bloqueado", jugador: s.turno, eterIds: action.eterIds, campeonId: action.cardInstanceId });
-    inst.opcionUsadaEsteTurno = true;
-    if (efectoSel.tipo === "continuo") {
-      inst.agotado = true;
-    }
-    declararHabilidad(s, ctx, inst, meta, efectoSel, previos, action.objetivoId);
-  } else {
-    for (const eterId of action.eterIds) {
-      const idx = p.eterReserva.indexOf(eterId);
-      if (idx !== -1) p.eterReserva.splice(idx, 1);
-      p.eterPagado.push(eterId);
-    }
-    if (action.eterIds.length > 0) {
-      ctx.emit({ type: "eter_pagado", jugador: s.turno, eterIds: action.eterIds, costo: action.eterIds.length, aportado: action.eterIds.length });
-    }
-    if (efectoSel.tipo !== "disparo") inst.opcionUsadaEsteTurno = true;
-    if (efectoSel.tipo === "disparo" && reglaBool(s, "disparoAgota", { instId: action.cardInstanceId })) {
-      inst.agotado = true;
-    }
-    declararHabilidad(s, ctx, inst, meta, efectoSel, previos, action.objetivoId);
-  }
+  pagarHabilidad(s, ctx, s.turno, action.cardInstanceId, efectoSel, action.eterIds);
+  declararHabilidad(s, ctx, inst, meta, efectoSel, previos, action.objetivoId);
 }
 function declararHabilidad(s, ctx, inst, meta, efectoSel, previos, objetivoId) {
   const efectoIdx = "efectos" in meta && meta.efectos ? meta.efectos.indexOf(efectoSel) : -1;
@@ -7929,7 +7978,10 @@ function getValidActions(state, playerId) {
   if (cadena) {
     if (cadena.prioridad === playerId) {
       for (const id of respondiblesDe(state, playerId)) {
-        acciones.push({ type: "responder_cadena", cardInstanceId: id });
+        const metaR = state.instances[id]?.cardId ? getCardMeta(state.instances[id].cardId) : null;
+        const disparo = metaR?.type === "Campe\xF3n" ? disparoDeRespuesta(metaR) : null;
+        const eterIds = disparo ? eterIdsParaHabilidad(state, playerId, disparo.efecto) : null;
+        acciones.push(eterIds ? { type: "responder_cadena", cardInstanceId: id, eterIds } : { type: "responder_cadena", cardInstanceId: id });
       }
       for (const id of respuestasDeMano(state, playerId)) {
         const instR = state.instances[id];
