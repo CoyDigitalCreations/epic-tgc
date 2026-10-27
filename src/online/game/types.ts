@@ -157,6 +157,15 @@ export interface CardInstance {
     * este tramo. Estado derivado: el fijado vive mientras la fuente tenga
     * Éter bloqueado >= umbral del tramo (exhaustFijado scan). */
    fijadoExhaustTargetId?: string
+  /**
+   * Efectos SOSTENIDOS de un Continuo con coste de Éter bloqueado que apuntan a «un Campeón» elegido al bloquear (p. ej.
+   * Ragnar: «un Campeón que controles gana Indestructible mientras ese Éter esté bloqueado»). `efectoIdx` es la posición
+   * del efecto en la carta y `objetivoId` el elegido. Estado derivado: vale mientras la fuente tenga Éter bloqueado
+   * ≥ umbral de ese efecto, siga en el campo y sus efectos no estén negados. Se limpia al liberar el Éter.
+   */
+  sostenidos?: { efectoIdx: number; objetivoId: string }[]
+  /** Índices de los efectos RAÍZ de un Continuo de bloqueo que ya ocurrieron/se armaron en este ciclo de bloqueo (se rearma al liberar el Éter). */
+  efectosUmbralDisparados?: number[]
   /** REDISEÑO obs 1874: el candado championNegado se ELIMINÓ — la negación es
    * un CONTADOR de un solo uso sobre la activación pendiente
    * (cadena.opener), no un estado persistente en la mística. */
@@ -403,6 +412,11 @@ export interface PendienteObjetivo {
   trigger: string
   opciones: string[]
   tramoUmbral?: number
+  /**
+   * Elección de objetivo de un efecto RAÍZ de un Continuo con coste de Éter bloqueado (índice del efecto en la carta):
+   * al elegir se fija el efecto sostenido o se ejecuta el instantáneo. Ver effectInterpreter.dispararUmbralBloqueo.
+   */
+  efectoUmbralIdx?: number
   opener?: { efectoIdx: number }
   equipar?: boolean
 }

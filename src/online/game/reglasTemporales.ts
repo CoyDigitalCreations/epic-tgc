@@ -27,7 +27,7 @@ export function aplicarReglaTemporal(s: GameState, regla: Omit<ReglaTemporal, 'o
 /** Todo lo que un Campeón acumula MIENTRAS está en el campo y que no sobrevive a cambiar de zona. */
 const ESTADO_DE_CAMPO = [
   'poder', 'resistencia', 'modificadores', 'keywords', 'keywordsTemporales', 'keywordsHastaFase', 'copyTargetId',
-  'copyOneShotDisparado', 'efectoUmbralDisparado', 'tramosDisparados', 'fijadoExhaustTargetId', 'stolenBy',
+  'copyOneShotDisparado', 'efectoUmbralDisparado', 'tramosDisparados', 'fijadoExhaustTargetId', 'sostenidos', 'efectosUmbralDisparados', 'stolenBy',
   'agotado', 'bloqueosEsteTurno', 'opcionUsadaEsteTurno', 'destruccionPendiente',
 ] as const
 

@@ -77,6 +77,12 @@ function validarEfectos(card: Partial<AnyCard>): ValidationError[] {
     if (e.trigger === 'cuando_vinculo_seria_destruido' && e.efecto !== 'prevent_destroy') {
       return falta('el trigger «Cuando Vínculo sería destruido» solo sirve con el efecto «Prevenir destrucción»')
     }
+    // Un Continuo con coste de Éter bloqueado actúa solo, sin jugada: no puede redirigir ni negar una activación, que necesitan
+    // la cadena. Esos efectos van en una Mística o un Disparo que se responda.
+    const bloquea = e.costo?.tipo === 'eter_bloqueado' || e.costo?.tipo === 'bloqueo_fijo'
+    if (e.tipo === 'continuo' && bloquea && (e.efecto === 'redirect' || (e.efecto === 'negar' && e.tipoNegacion !== 'efecto_activo'))) {
+      return falta(`un Continuo que bloquea Éter no puede ${e.efecto === 'redirect' ? 'redirigir' : 'negar una activación'}: eso necesita responder en la cadena (usa una Mística o un Disparo)`)
+    }
     switch (e.efecto) {
       case 'modificar_regla': {
         const regla = e.regla

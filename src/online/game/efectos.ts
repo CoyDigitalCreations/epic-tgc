@@ -6,7 +6,8 @@ import { resolveTargets } from './targetResolver'
 import { purgarReglasHastaFase, purgarReglasTemporales } from './reglasTemporales'
 import { faccionesDe } from './atributos'
 import { efectosNegados } from './reglas'
-import { metaDeInstancia } from './efectosInstancia'
+import { claseDeContinuo, eligeObjetivo, esContinuoDeBloqueo, metaDeInstancia, umbralDeBloqueo } from './efectosInstancia'
+import { eterDeEfecto } from './eter'
 import type { CondicionEfecto, EfectoData } from '../../shared/types'
 
 /**
@@ -114,11 +115,23 @@ export function esAuraZona(efecto: EfectoData): boolean {
  * Korr disparo buff — para no duplicar el modificador).
  */
 export function esAuraCondicionada(efecto: EfectoData): boolean {
-  if (efecto.tipo === 'disparo' || efecto.tipo === 'continuo') return false
-  if (efecto.duracion !== 'mientras_ester_bloqueado') return false
+  if (efecto.tipo === 'disparo') return false
+  // Un Continuo cuyo coste bloquea Éter SÍ es un aura mientras ese Éter esté bloqueado (si no elige objetivo: «tú mismo / todos
+  // tus Campeones / todos los rivales»; con «un Campeón» se elige al bloquear y vive en `sostenidos`). Un Continuo de pago
+  // no: se activa por el intérprete.
+  if (efecto.tipo === 'continuo') {
+    if (!esContinuoDeBloqueo(efecto) || claseDeContinuo(efecto) !== 'sostenido' || eligeObjetivo(efecto)) return false
+  } else if (efecto.duracion !== 'mientras_ester_bloqueado') {
+    return false
+  }
   if (!esEfectoStat(efecto)) return false
   const t = efecto.objetivo?.tipo
-  return t === 'todos_campeones_propios' || t === 'self'
+  return t === 'todos_campeones_propios' || t === 'todos_campeones_rivales' || t === 'self'
+}
+
+/** ¿Este efecto solo vale mientras su fuente tenga Éter bloqueado? (duración explícita, o es un Continuo de bloqueo) */
+function exigeEterBloqueado(efecto: EfectoData): boolean {
+  return efecto.duracion === 'mientras_ester_bloqueado' || esContinuoDeBloqueo(efecto)
 }
 
 /**
@@ -207,6 +220,13 @@ interface CandidatoAura {
   meta: AnyCard
   esComandante: boolean
   origen: OrigenAura
+  /** La fuente está en el campo del RIVAL del objetivo: solo cuentan sus auras sobre «todos los Campeones rivales». */
+  soloRivales?: boolean
+}
+
+/** Un aura (de zona o condicionada) sobre «todos los Campeones rivales»: afecta a quien la controla el enemigo de su fuente. */
+function esAuraContraRivales(efecto: EfectoData): boolean {
+  return efecto.objetivo?.tipo === 'todos_campeones_rivales' && (esAuraZona(efecto) || esAuraCondicionada(efecto))
 }
 
 /**
@@ -263,6 +283,9 @@ function evaluarAura(
       // - aura de zona estática (pasivo/reserva/bloqueo sin trigger) → EXCLUYE self
       //   ("Los OTROS Campeones que controlas ganan…")
       excluirSelf = !esComandante && origen === 'campo' && esAuraZona(efecto) && !esAuraCondicionada(efecto)
+      break
+    case 'todos_campeones_rivales':
+      aplica = !mismoDueno
       break
     case 'campeon':
       if (objetivo.controlador === 'propio') aplica = mismoDueno
@@ -322,7 +345,7 @@ function evaluarAura(
     if (!(objetivoInst.eterBloqueado ?? []).includes(fuente.cardInstanceId)) return null
   }
 
-  if (efecto.duracion === 'mientras_ester_bloqueado' && origen !== 'bloqueo') {
+  if (exigeEterBloqueado(efecto) && origen !== 'bloqueo') {
     // Aura condicional: la FUENTE debe tener éter bloqueado actualmente
     if ((fuente.eterBloqueado?.length ?? 0) === 0) return null
   }
@@ -347,6 +370,11 @@ function evaluarAura(
     }
   }
 
+  return contribucionDeEfecto(efecto, escala)
+}
+
+/** Lo que un efecto stat (buff, debuff, grant_keyword) aporta a su objetivo: ATQ/RES con el signo del debuff, y la keyword. */
+function contribucionDeEfecto(efecto: EfectoData, escala = 1): { poder?: number; resistencia?: number; keywords?: string[] } {
   const signo = efecto.efecto === 'debuff' && !statsDebuffYaNegativos(efecto) ? -1 : 1
   const resultado: { poder?: number; resistencia?: number; keywords?: string[] } = {}
 
@@ -357,6 +385,33 @@ function evaluarAura(
   }
 
   return resultado
+}
+
+/**
+ * Lo que los efectos SOSTENIDOS sobre «un Campeón» (`sostenidos` de una fuente en el campo) aportan al Campeón `objetivoId`.
+ * Valen mientras la fuente tenga Éter bloqueado ≥ umbral de ESE efecto, siga en el campo y sus efectos no estén negados.
+ */
+function aportesSostenidos(s: GameState, objetivoId: string): { poder: number; resistencia: number; keywords: string[] } {
+  const total = { poder: 0, resistencia: 0, keywords: [] as string[] }
+  for (const j of ['A', 'B'] as PlayerId[]) {
+    for (const fuenteId of s.players[j].campo.campeones) {
+      const fuente = fuenteId ? s.instances[fuenteId] : undefined
+      if (!fuenteId || !fuente?.sostenidos?.length || !fuente.cardId) continue
+      const meta = getCardMeta(fuente.cardId)
+      if (!meta || !('efectos' in meta) || !meta.efectos) continue
+      for (const { efectoIdx, objetivoId: elegido } of fuente.sostenidos) {
+        const efecto = meta.efectos[efectoIdx]
+        if (elegido !== objetivoId || !efecto || !esEfectoStat(efecto)) continue
+        if (efectosNegados(s, fuenteId)) continue
+        if (eterDeEfecto(s, fuenteId, efectoIdx).length < umbralDeBloqueo(efecto)) continue
+        const aporte = contribucionDeEfecto(efecto)
+        total.poder += aporte.poder ?? 0
+        total.resistencia += aporte.resistencia ?? 0
+        if (aporte.keywords) total.keywords.push(...aporte.keywords)
+      }
+    }
+  }
+  return total
 }
 
 /**
@@ -406,6 +461,20 @@ export function modificadoresJSONDe(s: GameState, id: string): ModificadoresJSON
     }
     if ('efectos' in fuenteMeta && fuenteMeta.efectos?.some((e) => esAuraZona(e) || esAuraCondicionada(e) || esAuraEquipada(e))) {
       candidatos.push({ inst: fuenteInst, meta: fuenteMeta, esComandante: false, origen: 'campo' })
+    }
+  }
+
+  // 1b. Fuentes en el campo del RIVAL del objetivo con un aura sobre «todos los Campeones rivales»: para ellas el objetivo
+  //     es del enemigo. Solo se consideran ESOS efectos (el resto de auras de su campo no me afecta).
+  const rivalDelObjetivo: PlayerId = owner === 'A' ? 'B' : 'A'
+  const campoRival = s.players[rivalDelObjetivo].campo
+  for (const fuenteId of [...campoRival.campeones, ...campoRival.misticasTacticas, ...campoRival.arcanasCombate]) {
+    if (!fuenteId) continue
+    const fuenteInst = s.instances[fuenteId]
+    const fuenteMeta = fuenteInst?.cardId ? metaDeInstancia(s, fuenteId) : null
+    if (!fuenteInst || !fuenteMeta || !('efectos' in fuenteMeta)) continue
+    if (fuenteMeta.efectos?.some(esAuraContraRivales)) {
+      candidatos.push({ inst: fuenteInst, meta: fuenteMeta, esComandante: false, origen: 'campo', soloRivales: true })
     }
   }
 
@@ -467,6 +536,7 @@ export function modificadoresJSONDe(s: GameState, id: string): ModificadoresJSON
         if (c.origen === 'reserva' && e.tipo === 'reserva' && esAuraZona(e)) efectos.push(e)
         else if (c.origen === 'bloqueo' && e.tipo === 'bloqueo' && esAuraZona(e)) efectos.push(e)
         else if (c.origen === 'vinculo' && e.tipo === 'vinculo' && esAuraVinculo(e)) efectos.push(e)
+        else if (c.origen === 'campo' && !negada && c.soloRivales) { if (esAuraContraRivales(e)) efectos.push(e) }
         else if (c.origen === 'campo' && !negada && (esAuraZona(e) || esAuraCondicionada(e) || esAuraEquipada(e))) efectos.push(e)
       }
     }
@@ -479,6 +549,12 @@ export function modificadoresJSONDe(s: GameState, id: string): ModificadoresJSON
       if (resultado.keywords) keywords.push(...resultado.keywords)
     }
   }
+
+  // Efectos sostenidos sobre «un Campeón» elegido al bloquear (Ragnar): no son auras de zona, viven en la fuente
+  const sostenidos = aportesSostenidos(s, id)
+  poder += sostenidos.poder
+  resistencia += sostenidos.resistencia
+  keywords.push(...sostenidos.keywords)
 
   return { poder, resistencia, keywords: [...new Set(keywords)] }
 }

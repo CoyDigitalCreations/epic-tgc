@@ -9,7 +9,7 @@ import type { AnyCard, EfectoData } from '../../shared/types'
 import { validarPago, aplicarPago, type ContextoUso } from './payments'
 import { etiquetarEter } from './eter'
 import { dispararTrigger, pasivosBloqueo1A, type TriggerEfecto } from './efectos'
-import { interpretEffect, ejecutarTramo } from './effectInterpreter'
+import { interpretEffect, ejecutarTramo, resolverUmbralElegido } from './effectInterpreter'
 import { electorAjeno, opcionesVigentes } from './pendientes'
 import { tieneKeyword } from './combat'
 import { efectosNegados } from './reglas'
@@ -416,6 +416,9 @@ export function ejecutarElegirObjetivo(s: GameState, action: Extract<Action, { t
   } else if (pendiente.opener) {
     // F5b: objetivo de un hechizo del opener — solo se captura (resuelve al cierre de la ventana)
     registrarObjetivoOpener(s, pendiente, action.objetivoId)
+  } else if (pendiente.efectoUmbralIdx !== undefined) {
+    // Efecto raíz de un Continuo con coste de Éter bloqueado: se fija (sostenido) o se ejecuta (instantáneo) con el objetivo elegido
+    resolverUmbralElegido(s, ctx, pendiente.instId, pendiente.efectoUmbralIdx, action.objetivoId)
   } else if (pendiente.tramoUmbral !== undefined) {
     // Capa 3b: pendiente de un TRAMO escalonado — el trigger re-dispatch no
     // aplica (el tramo vive dentro de efecto.tramos, no como efecto.raíz).

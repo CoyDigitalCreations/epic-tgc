@@ -118,6 +118,8 @@ export function limpiarFlagsUmbralSiVacia(s: GameState, fuenteId: string): void 
   delete inst.copyOneShotDisparado
   delete inst.tramosDisparados
   delete inst.fijadoExhaustTargetId
+  delete inst.sostenidos
+  delete inst.efectosUmbralDisparados
 }
 
 /**
@@ -175,6 +177,8 @@ export function retornarCampeonesRobados(
         delete other.copyOneShotDisparado
         delete other.tramosDisparados
         delete other.fijadoExhaustTargetId
+        delete other.sostenidos
+        delete other.efectosUmbralDisparados
         const grupos = liberarEterA(s, eteres, '2A', ladron)
         for (const [jugador, ids] of Object.entries(grupos) as [PlayerId, string[]][]) {
           ctx.emit({ type: 'eter_reagrupado', jugador, eterIds: ids })

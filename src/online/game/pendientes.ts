@@ -57,6 +57,14 @@ export function opcionesVigentes(s: GameState, p: PendienteObjetivo): string[] {
     return vivas.filter((id) => candidatos.includes(id))
   }
 
+  // Efecto raíz de un Continuo de bloqueo: el efecto exacto por su índice
+  if (p.efectoUmbralIdx !== undefined) {
+    const raiz = efectos[p.efectoUmbralIdx]
+    if (!raiz?.objetivo) return vivas
+    const candidatos = resolveTargets(s, objetivoCompleto(raiz), fuente.owner, p.instId)
+    return vivas.filter((id) => candidatos.includes(id))
+  }
+
   // Efecto que armó el pendiente: el índice exacto si lo trae (opener/respuesta) o los efectos con
   // objetivo cuyo trigger coincide (varios del mismo trigger: se acepta lo que valga para cualquiera)
   const armadores = p.opener

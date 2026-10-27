@@ -21,6 +21,7 @@
  * OK_ACTIVACION via interpreter, sin handlers por cardId.
  */
 import type { AnyCard, EfectoData } from '../../shared/types'
+import { esCostoBloqueo } from './cards'
 
 /* ─────────────────────────── Capability map ─────────────────────────── */
 
@@ -207,6 +208,16 @@ export function clasificarEfecto(
   const h = HANDLERS[cardId]
   if (h?.drift && (tipo === 'pasivo' || tipo === 'reserva' || tipo === 'bloqueo' || tipo === 'comandante')) {
     notas.push(h.drift)
+  }
+
+  // ── Continuo que BLOQUEA Éter: actúa solo (sostenido o instantáneo, ver claseDeContinuo); lo que necesita la cadena no ──
+  if (efecto.tipo === 'continuo' && esCostoBloqueo(efecto.costo) && (accion === 'redirect' || (accion === 'negar' && efecto.tipoNegacion !== 'efecto_activo'))) {
+    return {
+      ...base,
+      estado: 'HUECO_NOOP',
+      ruta: `un Continuo que bloquea Éter actúa solo: '${accion}' necesita responder en la cadena`,
+      notas: [...notas, 'Va en una Mística o un Disparo que se responda (el Card-Maker ya lo rechaza).'],
+    }
   }
 
   // ── negar: el motor implementa la negación de la ACTIVACIÓN pendiente y la de EFECTOS ACTIVOS (regla `efectosActivos`);

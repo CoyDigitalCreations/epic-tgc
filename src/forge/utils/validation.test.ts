@@ -115,6 +115,14 @@ describe('validateCard — efectos a medio configurar (se jugarían sin hacer na
       expect(mensajes({ efecto: 'negar', tipoNegacion })).toEqual([`Efecto 1: negar «${tipoNegacion}» todavía no está implementado: usa «activacion» o «efecto_activo»`])
     }
   })
+  it('un Continuo que bloquea Éter no puede redirigir ni negar una activación (necesitan la cadena)', () => {
+    const cont = (efecto: object) => mensajes({ tipo: 'continuo', costo: { tipo: 'bloqueo_fijo', cantidad: 1 }, ...efecto })
+    expect(cont({ efecto: 'redirect' })).toHaveLength(1)
+    expect(cont({ efecto: 'negar', tipoNegacion: 'activacion' })).toHaveLength(1)
+    expect(cont({ efecto: 'negar', tipoNegacion: 'efecto_activo' })).toEqual([]) // este sí: es instantáneo
+    expect(cont({ efecto: 'destroy' })).toEqual([])
+    expect(mensajes({ efecto: 'redirect' })).toEqual([]) // un hechizo normal sí puede
+  })
   describe('prevent_destroy y su trigger (Rowena): solo funcionan juntos', () => {
     const campeon = (efecto: object) => ({
       id: 'T-2', name: 'Rowena', type: 'Campeón', rarity: 'Común', keywords: [], flavorText: '', paqueteId: 'test', limiteCopias: '1',

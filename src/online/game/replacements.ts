@@ -158,6 +158,8 @@ function liberarEterBloqueadoCore(s: GameState, ctx: Ctx, cardInstanceId: string
   // y el fijado de agotamiento se cae (estado derivado: sin Éter, sin fijado)
   delete inst.tramosDisparados
   delete inst.fijadoExhaustTargetId
+  delete inst.sostenidos
+  delete inst.efectosUmbralDisparados
   // §7.8 (fallback sin tag): si el Campeón está ROBADO, el Éter bloqueado lo
   // pagó el LADRÓN — stolenBy → instancia fuente → su owner. Con tag,
   // liberarEterA usa pagadoPor directamente.
