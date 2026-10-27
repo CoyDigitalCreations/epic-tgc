@@ -68,10 +68,6 @@ var FuenteEfectos_default = [
           controlador: "propio",
           zona: "campo"
         },
-        stats: {
-          ATQ: 0,
-          RES: 0
-        },
         texto: "Cuando pagues esta carta, un Campe\xF3n que controles gana Vigor, hasta el final del turno.",
         keyword: "Vigor",
         duracion: "turno",
@@ -102,10 +98,6 @@ var FuenteEfectos_default = [
           tipo: "carta",
           controlador: "propio",
           zona: "mazo"
-        },
-        stats: {
-          ATQ: 0,
-          RES: 0
         },
         texto: "Cuando pagues esta carta, roba 1 carta de tu mazo.",
         trigger: "al_pagar_eter",
@@ -173,10 +165,6 @@ var FuenteEfectos_default = [
           filtros: {
             puedeBloquearEter: true
           }
-        },
-        stats: {
-          ATQ: 0,
-          RES: 0
         },
         texto: "Bloquea 1 \xC9ter de tu Reserva sobre un Campe\xF3n que pueda recibir \xE9ter bloqueado que controles, una vez por turno.",
         duracion: "1_por_turno"
@@ -268,10 +256,6 @@ var FuenteEfectos_default = [
           controlador: "propio",
           zona: "campo"
         },
-        stats: {
-          ATQ: 0,
-          RES: 0
-        },
         texto: "Mientras est\xE9 bloqueado, el Campe\xF3n que tenga este \xC9ter gana Inmortal.",
         keyword: "Inmortal"
       }
@@ -348,10 +332,6 @@ var FuenteEfectos_default = [
           controlador: "rival",
           zona: "campo"
         },
-        stats: {
-          ATQ: 0,
-          RES: 0
-        },
         texto: "Puedes pagar 2 \xC9ter, destruye 1 M\xEDstica o Arcana que controla el rival.",
         costo: {
           tipo: "eter",
@@ -365,10 +345,6 @@ var FuenteEfectos_default = [
           tipo: "campeon",
           controlador: "rival",
           zona: "campo"
-        },
-        stats: {
-          ATQ: 0,
-          RES: 0
         },
         texto: "Bloquea 4 \xC9ter, toma control de 1 un Campe\xF3n que controla el rival, mientras ese \xC9ter est\xE9 bloqueado, Al inicio de tu Alba reagrupa el \xC9ter usado por este efecto.",
         duracion: "mientras_ester_bloqueado",
@@ -437,10 +413,6 @@ var FuenteEfectos_default = [
           zonaDestino: "pagado",
           controladorDestino: "rival"
         },
-        stats: {
-          ATQ: 0,
-          RES: 0
-        },
         texto: "Al matar en combate, puedes mover 1 \xC9ter que controla el rival de la Reserva a la zona de pago del rival.",
         trigger: "al_matar_en_combate"
       }
@@ -486,10 +458,6 @@ var FuenteEfectos_default = [
             esencia: "C\xE9leste"
           }
         },
-        stats: {
-          ATQ: 0,
-          RES: 0
-        },
         texto: "Al ser enviada al Cementerio desde cualquier zona, puedes buscar 1 Campe\xF3n de facci\xF3n Orden de esencia C\xE9leste de tu Cementerio y agregalo a tu mano.",
         trigger: "al_ser_enviado_al_cementerio",
         triggerZona: "cualquier_zona"
@@ -532,10 +500,6 @@ var FuenteEfectos_default = [
           tipo: "campeon",
           controlador: "propio",
           zona: "campo"
-        },
-        stats: {
-          ATQ: 0,
-          RES: 0
         },
         texto: "Puedes pagar 3 \xC9ter, cambia el agotamiento de un Campe\xF3n que controles.",
         costo: {
@@ -584,10 +548,6 @@ var FuenteEfectos_default = [
           controlador: "rival",
           zona: "campo"
         },
-        stats: {
-          ATQ: 0,
-          RES: 0
-        },
         texto: "Puedes pagar 2 \xC9ter, destruye 1 M\xEDstica o Arcana que controla el rival.",
         costo: {
           tipo: "eter",
@@ -630,10 +590,6 @@ var FuenteEfectos_default = [
         efecto: "double_attack",
         objetivo: {
           tipo: "self"
-        },
-        stats: {
-          ATQ: 0,
-          RES: 0
         },
         texto: "Bloquea 3 \xC9ter, esta carta puede declarar 2 veces ataque, mientras ese \xC9ter est\xE9 bloqueado.",
         costo: {
@@ -746,10 +702,6 @@ var FuenteEfectos_default = [
           zona: "bloqueado",
           zonaDestino: "pagado"
         },
-        stats: {
-          ATQ: 0,
-          RES: 0
-        },
         texto: "Puedes pagar 2 \xC9ter, mueve 1 \xC9ter que controla el rival bloqueado a su zona de pago, hasta la pr\xF3xima Alba del oponente, negando su efecto.",
         costo: {
           tipo: "eter",
@@ -796,10 +748,6 @@ var FuenteEfectos_default = [
           controlador: "propio",
           zona: "campo"
         },
-        stats: {
-          ATQ: 0,
-          RES: 0
-        },
         texto: "Cuando un V\xEDnculo que controles fuera a ser destruido, puedes enviar esta carta a tu exilio, previniendo la destrucci\xF3n de ese v\xEDnculo.",
         trigger: "cuando_vinculo_seria_destruido",
         costo: {
@@ -833,10 +781,6 @@ var FuenteEfectos_default = [
           filtros: {
             atqMax: 5
           }
-        },
-        stats: {
-          ATQ: 0,
-          RES: 0
         },
         texto: "Devuelve a la mano de su due\xF1o 1 un Campe\xF3n ATQ 5 o menos que controla el rival."
       }
@@ -905,10 +849,6 @@ var FuenteEfectos_default = [
           controlador: "rival",
           zona: "campo"
         },
-        stats: {
-          ATQ: 0,
-          RES: 0
-        },
         texto: "Niega la activaci\xF3n del efecto de un Campe\xF3n que controla el rival.",
         tipoNegacion: "activacion"
       }
@@ -938,10 +878,6 @@ var FuenteEfectos_default = [
           tipo: "mistica_arcana",
           controlador: "rival",
           zona: "campo"
-        },
-        stats: {
-          ATQ: 0,
-          RES: 0
         },
         texto: "Bloquea 3 \xC9ter, copia el efecto de hechizo, el efecto continuo y la recompensa de una M\xEDstica o Arcana que controla el rival, mientras ese \xC9ter est\xE9 bloqueado.",
         duracion: "mientras_ester_bloqueado",
@@ -997,10 +933,6 @@ var FuenteEfectos_default = [
           controlador: "propio",
           zona: "mazo",
           filtros: {}
-        },
-        stats: {
-          ATQ: 0,
-          RES: 0
         },
         texto: "Roba 2 carta de tu mazo.",
         cantidad: 2
@@ -1087,10 +1019,6 @@ var FuenteEfectos_default = [
             puedeBloquearEter: true
           }
         },
-        stats: {
-          ATQ: 0,
-          RES: 0
-        },
         texto: "Al inicio de tu Alba, puedes bloquear hasta un m\xE1ximo de 1 \xC9ter (Max. 1), sobre un Campe\xF3n que pueda recibir \xE9ter bloqueado que controles, una vez por turno.",
         trigger: "inicio_alba",
         duracion: "1_por_turno",
@@ -1124,10 +1052,6 @@ var FuenteEfectos_default = [
           controlador: "rival",
           zona: "campo"
         },
-        stats: {
-          ATQ: 0,
-          RES: 0
-        },
         texto: "Al inicio del Choque del rival, cambia el agotamiento de un Campe\xF3n que controla el rival.",
         trigger: "inicio_choque",
         controladorTrigger: "rival"
@@ -1157,10 +1081,6 @@ var FuenteEfectos_default = [
           controlador: "ambos",
           zona: "campo",
           zonaDestino: "pagado"
-        },
-        stats: {
-          ATQ: 0,
-          RES: 0
         },
         texto: "Al inicio de tu Alba, mueve hasta 3 \xC9ter en juego a la zona de pago de su due\xF1o, una vez por turno.",
         esHasta: true,
@@ -1192,10 +1112,6 @@ var FuenteEfectos_default = [
           tipo: "campeon",
           controlador: "propio",
           zona: "campo"
-        },
-        stats: {
-          ATQ: 0,
-          RES: 0
         },
         texto: "Al inicio de la Alba del rival, un Campe\xF3n que controles gana Inmortal, una vez por turno.",
         duracion: "1_por_turno",
@@ -1230,10 +1146,6 @@ var FuenteEfectos_default = [
           filtros: {
             costeMax: 3
           }
-        },
-        stats: {
-          ATQ: 0,
-          RES: 0
         },
         texto: "Al inicio de tu Alba, puedes devolver a la mano de su due\xF1o 1 un Campe\xF3n coste 3 o menos de tu Cementerio, una vez por turno.",
         trigger: "inicio_alba",
@@ -1318,10 +1230,6 @@ var FuenteEfectos_default = [
             costeMax: 4
           }
         },
-        stats: {
-          ATQ: 0,
-          RES: 0
-        },
         texto: "Al ser enviada al Cementerio desde el campo, puedes buscar 1 Campe\xF3n de facci\xF3n Orden coste 4 o menos de esencia C\xE9leste de tu mazo y agregalo a tu mano.",
         trigger: "al_ser_enviado_al_cementerio",
         triggerZona: "campo",
@@ -1353,10 +1261,6 @@ var FuenteEfectos_default = [
           tipo: "campeon",
           controlador: "propio",
           zona: "campo"
-        },
-        stats: {
-          ATQ: 0,
-          RES: 0
         },
         texto: "Bloquea 4 \xC9ter, invoca un Campe\xF3n del Exilio de su due\xF1o y equipa esta carta a ese Campe\xF3n, mientras ese \xC9ter est\xE9 bloqueado.",
         zonaOrigen: "exilio",
@@ -1406,10 +1310,6 @@ var FuenteEfectos_default = [
           controlador: "rival",
           zona: "campo"
         },
-        stats: {
-          ATQ: 0,
-          RES: 0
-        },
         texto: "Puedes pagar 4 \xC9ter, destruye 1 Campe\xF3n que controla el rival.",
         costo: {
           tipo: "eter",
@@ -1424,10 +1324,6 @@ var FuenteEfectos_default = [
           tipo: "campeon",
           controlador: "propio",
           zona: "campo"
-        },
-        stats: {
-          ATQ: 4,
-          RES: 0
         },
         texto: "Bloquea 2 \xC9ter, un Campe\xF3n que controles gana Indestructible, mientras ese \xC9ter est\xE9 bloqueado, Al inicio de tu Alba reagrupa el \xC9ter usado por este efecto.",
         keyword: "Indestructible",
@@ -1445,9 +1341,6 @@ var FuenteEfectos_default = [
     efectoComandante: {
       tipo: "pasivo",
       efecto: "grant_keyword",
-      stats: {
-        ATQ: 3
-      },
       objetivo: {
         tipo: "todos_campeones_propios",
         controlador: "propio",
@@ -1606,10 +1499,6 @@ var FuenteEfectos_default = [
             puedeBloquearEter: true
           }
         },
-        stats: {
-          ATQ: 0,
-          RES: 0
-        },
         texto: "Bloquea 1 \xC9ter de tu Reserva sobre un Campe\xF3n que pueda recibir \xE9ter bloqueado que controles, una vez por turno.",
         duracion: "1_por_turno"
       }
@@ -1639,10 +1528,6 @@ var FuenteEfectos_default = [
           zona: "reserva",
           zonaDestino: "pagado",
           controladorDestino: "rival"
-        },
-        stats: {
-          ATQ: 0,
-          RES: 0
         },
         texto: "Cuando pagues esta carta, mueve 1 \xC9ter de la Reserva a la zona de pago del rival.",
         trigger: "al_pagar_eter"
@@ -1701,10 +1586,6 @@ var FuenteEfectos_default = [
           tipo: "campeon",
           controlador: "propio",
           zona: "campo"
-        },
-        stats: {
-          ATQ: 0,
-          RES: 0
         },
         texto: "Mientras est\xE9 bloqueado, el Campe\xF3n que tenga este \xC9ter gana Indestructible.",
         keyword: "Indestructible"
@@ -1904,7 +1785,7 @@ var FuenteEfectos_default = [
     paqueteId: "disonancia",
     limiteCopias: "2",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-10-10T01:26:30.860Z",
+    updatedAt: "2026-10-27T03:39:56.365Z",
     facciones: [
       "Caos"
     ],
@@ -1925,9 +1806,6 @@ var FuenteEfectos_default = [
         tipo: "disparo",
         trigger: "ninguno",
         efecto: "negar",
-        stats: {
-          ATQ: 1
-        },
         objetivo: {
           tipo: "campeon",
           controlador: "rival",
@@ -1976,10 +1854,6 @@ var FuenteEfectos_default = [
         tipo: "pasivo",
         trigger: "al_invocar",
         efecto: "copy",
-        buffPerBlockedEther: true,
-        stats: {
-          ATQ: 1
-        },
         objetivo: {
           tipo: "campeon",
           controlador: "rival",
@@ -2073,10 +1947,6 @@ var FuenteEfectos_default = [
           controlador: "rival",
           zona: "pagado",
           zonaDestino: "reserva"
-        },
-        stats: {
-          ATQ: 0,
-          RES: 0
         },
         texto: "Puedes pagar 2 \xC9ter, mueve 1 \xC9ter que controla el rival de la zona de pago a la Reserva de su due\xF1o.",
         costo: {
@@ -2255,10 +2125,6 @@ var FuenteEfectos_default = [
             costeMax: 3
           }
         },
-        stats: {
-          ATQ: 0,
-          RES: 0
-        },
         texto: "Puedes pagar 3 \xC9ter, invoca un Campe\xF3n de facci\xF3n Caos de coste 3 \xE9ter o menos del Exilio de su due\xF1o y equipa esta carta a ese Campe\xF3n.",
         zonaOrigen: "exilio",
         costo: {
@@ -2429,10 +2295,6 @@ var FuenteEfectos_default = [
           controlador: "rival",
           zona: "mano"
         },
-        stats: {
-          ATQ: 0,
-          RES: 0
-        },
         texto: "Al inicio de tu Alba, puedes descartar una carta de la mano del rival, una vez por turno.",
         duracion: "1_por_turno",
         trigger: "inicio_alba"
@@ -2497,10 +2359,6 @@ var FuenteEfectos_default = [
           controlador: "propio",
           zona: "campo"
         },
-        stats: {
-          ATQ: 0,
-          RES: 0
-        },
         texto: "Al inicio de tu Alba, un Campe\xF3n que controles puedes ganar Indestructible, hasta la pr\xF3xima Forja del rival.",
         duracion: "hasta_fase",
         duracionFase: "forja",
@@ -2532,10 +2390,6 @@ var FuenteEfectos_default = [
           tipo: "campeon",
           controlador: "ambos",
           zona: "cementerio"
-        },
-        stats: {
-          ATQ: 0,
-          RES: 0
         },
         texto: "Al inicio de tu Alba, puedes exiliar 1 Campe\xF3n de cualquier Cementerio, una vez por turno.",
         trigger: "inicio_alba",
@@ -6640,8 +6494,10 @@ function evaluarAura(s, efecto, fuente, esComandante, objetivoId, objetivoInst, 
 function contribucionDeEfecto(efecto, escala = 1) {
   const signo = efecto.efecto === "debuff" && !statsDebuffYaNegativos(efecto) ? -1 : 1;
   const resultado = {};
-  if (efecto.stats?.ATQ) resultado.poder = efecto.stats.ATQ * signo * escala;
-  if (efecto.stats?.RES) resultado.resistencia = efecto.stats.RES * signo * escala;
+  if (efecto.efecto === "buff" || efecto.efecto === "debuff") {
+    if (efecto.stats?.ATQ) resultado.poder = efecto.stats.ATQ * signo * escala;
+    if (efecto.stats?.RES) resultado.resistencia = efecto.stats.RES * signo * escala;
+  }
   if (efecto.efecto === "grant_keyword" && efecto.keyword) {
     resultado.keywords = [efecto.keyword];
   }
