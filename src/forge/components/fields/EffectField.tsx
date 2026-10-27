@@ -282,10 +282,13 @@ export function EffectField({ label, value, onChange, cardType }: EffectFieldPro
   const showKeyword = data.efecto === 'grant_keyword'
   const showDuracion = data.tipo !== 'comandante'
   const showReagrupar = (data.costo?.tipo === 'eter_bloqueado' || data.costo?.tipo === 'bloqueo_fijo') && (cardType === 'Campeón' || cardType === 'Éter')
+  // Filtros del objetivo que tienen un valor puesto (el panel va plegado y lo muestra en su título)
+  const filtrosPuestos = Object.values(data.objetivo?.filtros ?? {}).filter((v) => v !== undefined && v !== '').length
+
   return (
-    <div className="border border-gray-600/50 rounded-lg p-3 bg-gray-900/50">
-      <p className="text-xs font-semibold text-gray-300 mb-2">{label}</p>
-      <div className="grid grid-cols-2 gap-2">
+    <div className="border border-gray-600/50 rounded-lg p-2 bg-gray-900/50">
+      {label && <p className="text-xs font-semibold text-gray-300 mb-2">{label}</p>}
+      <div className="grid grid-cols-3 gap-2">
         {/* Capa 1: Tipo */}
         <SelectField label="Tipo" value={data.tipo} options={tipoOptions} onChange={(v) => update({ tipo: v as any })} />
         {/* Capa 2: Trigger */}
@@ -356,7 +359,7 @@ export function EffectField({ label, value, onChange, cardType }: EffectFieldPro
         )}
         {/* Capa 7: Duración */}
         {showDuracion && (
-          <div className="col-span-2 flex flex-wrap gap-2 mt-2 items-end">
+          <div className="col-span-3 flex flex-wrap gap-2 items-end">
             <SelectField label="Duración" value={data.duracion} options={DURACION_OPTIONS} onChange={(v) => update({ duracion: v as any, duracionFase: undefined, duracionControlador: undefined })} />
             {data.duracion === 'n_turnos' && <NumberInput label="Turnos" value={data.duracionTurnos} onChange={(v) => update({ duracionTurnos: v })} min={1} max={10} />}
             {data.duracion === 'hasta_fase' && (
@@ -371,7 +374,7 @@ export function EffectField({ label, value, onChange, cardType }: EffectFieldPro
 
       {/* Capa 3: Costo (for disparo/continuo) */}
       {showCost && (
-        <div className="grid grid-cols-2 gap-2 mt-2">
+        <div className="grid grid-cols-3 gap-2 mt-2">
           <SelectField label="Costo" value={data.costo?.tipo} options={COSTO_OPTIONS.filter((o) => o.value !== 'exile_self' && o.value !== 'cemetery_self')} onChange={(v) => updateCosto({ tipo: v as any })} />
           {data.costo?.tipo && data.costo.tipo !== 'ninguno' && <NumberInput label="Cantidad" value={data.costo?.cantidad} onChange={(v) => updateCosto({ cantidad: v })} min={1} max={10} />}
           {/* Fase 2 (c): zona de ORIGEN del pago — solo costos de bloqueo
@@ -495,7 +498,7 @@ export function EffectField({ label, value, onChange, cardType }: EffectFieldPro
 
       {/* Capa 3b: Requisito (for pasivo - replacement effects) */}
       {showRequisito && (
-        <div className="grid grid-cols-2 gap-2 mt-2">
+        <div className="grid grid-cols-3 gap-2 mt-2">
           <SelectField label="Requisito" value={data.costo?.tipo} options={REQUISITO_OPTIONS} onChange={(v) => updateCosto({ tipo: v as any })} />
         </div>
       )}
@@ -552,26 +555,23 @@ export function EffectField({ label, value, onChange, cardType }: EffectFieldPro
       )}
 
       {/* Capa 6: Stats */}
+      {/* Capa 6 + 6b: Stats y «buff por éter bloqueado» (Artefactos), en una sola fila */}
       {showStats && (
-        <div className="grid grid-cols-2 gap-2 mt-2">
+        <div className="mt-2 flex flex-wrap items-end gap-3">
           <NumberInput label="ATQ" value={data.stats?.ATQ} onChange={(v) => update({ stats: { ...data.stats, ATQ: v } })} min={-10} max={10} />
           <NumberInput label="RES" value={data.stats?.RES} onChange={(v) => update({ stats: { ...data.stats, RES: v } })} min={-10} max={10} />
-        </div>
-      )}
-
-      {/* Capa 6b: Buff per blocked ether (for Artefacto effects) */}
-      {showStats && (
-        <div className="flex items-center gap-2 mt-2">
-          <input
-            type="checkbox"
-            id="buffPerBlockedEther"
-            checked={data.buffPerBlockedEther ?? false}
-            onChange={(e) => update({ buffPerBlockedEther: e.target.checked || undefined })}
-            className="rounded border-gray-600 bg-gray-800 text-ether-500 focus:ring-ether-500"
-          />
-          <label htmlFor="buffPerBlockedEther" className="text-[10px] uppercase tracking-wider text-gray-400">
-            Buff por éter bloqueado
-          </label>
+          <div className="flex items-center gap-2 pb-1">
+            <input
+              type="checkbox"
+              id="buffPerBlockedEther"
+              checked={data.buffPerBlockedEther ?? false}
+              onChange={(e) => update({ buffPerBlockedEther: e.target.checked || undefined })}
+              className="rounded border-gray-600 bg-gray-800 text-ether-500 focus:ring-ether-500"
+            />
+            <label htmlFor="buffPerBlockedEther" className="text-[10px] uppercase tracking-wider text-gray-400">
+              Buff por éter bloqueado
+            </label>
+          </div>
         </div>
       )}
 
@@ -660,7 +660,7 @@ export function EffectField({ label, value, onChange, cardType }: EffectFieldPro
           {Object.entries(groupCopyAttributes(COPY_ATTRIBUTE_OPTIONS)).map(([group, attrs]) => (
             <div key={group} className="mb-2 last:mb-0">
               <p className="text-[10px] text-gray-500 mb-1">{group}</p>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-3 gap-2">
                 {attrs.map((opt) => (
                   <label key={opt.value} className="flex items-center gap-2 cursor-pointer group" title={opt.description}>
                     <input
@@ -686,7 +686,7 @@ export function EffectField({ label, value, onChange, cardType }: EffectFieldPro
 
       {/* Capa 10: Reagrupar */}
       {showReagrupar && (
-        <div className="grid grid-cols-2 gap-2 mt-2">
+        <div className="grid grid-cols-3 gap-2 mt-2">
           <SelectField label="Reagrupar" value={data.reagrupar?.fase} options={[{ value: '', label: 'No' }, { value: 'alba', label: 'Alba' }, { value: 'choque', label: 'Choque' }]} onChange={(v) => update({ reagrupar: v ? { fase: v as any, turno: data.reagrupar?.turno ?? 'propio' } : undefined })} />
           {data.reagrupar?.fase && <SelectField label="Turno" value={data.reagrupar?.turno} options={[{ value: 'propio', label: 'Propio' }, { value: 'oponente', label: 'Oponente' }]} onChange={(v) => update({ reagrupar: { ...data.reagrupar!, turno: v as any } })} />}
         </div>
@@ -694,9 +694,12 @@ export function EffectField({ label, value, onChange, cardType }: EffectFieldPro
 
       {/* Filtros del objetivo — dynamic based on target type (no filters for Vínculo, equipped_champion) */}
       {showObjetivo && data.objetivo?.tipo && !['self', 'todos_campeones_propios', 'todos_campeones_rivales', 'rival_hand', 'vinculo', 'equipped_champion', 'invocado'].includes(data.objetivo.tipo) && (
-        <div className="border border-gray-600/30 rounded p-2 mt-2">
-          <p className="text-[10px] uppercase tracking-wider text-gray-400 mb-2">Filtros del objetivo</p>
-          <div className="grid grid-cols-2 gap-2">
+        <details className="mt-2 rounded border border-gray-600/30 p-2">
+          <summary className="cursor-pointer text-[10px] uppercase tracking-wider text-gray-400 hover:text-gray-200">
+            Filtros del objetivo
+            {filtrosPuestos > 0 && <span className="ml-2 rounded-full bg-ether-600/40 px-1.5 text-ether-100 normal-case tracking-normal">{filtrosPuestos}</span>}
+          </summary>
+          <div className="mt-2 grid grid-cols-3 gap-2">
             {/* Common filters - Facción (not for Éter) */}
             {data.objetivo?.tipo !== 'eter' && (
               <SelectField label="Facción" value={data.objetivo?.filtros?.faccion} options={[{ value: '', label: 'Cualquiera' }, ...FACCIONES.map((f) => ({ value: f, label: f }))]} onChange={(v) => updateFiltros({ faccion: v as any })} />
@@ -758,7 +761,7 @@ export function EffectField({ label, value, onChange, cardType }: EffectFieldPro
               <SelectField label="Estado" value={data.objetivo?.filtros?.bocaArriba?.toString()} options={[{ value: '', label: 'Cualquiera' }, { value: 'true', label: 'Boca arriba' }, { value: 'false', label: 'Boca abajo' }]} onChange={(v) => updateFiltros({ bocaArriba: v === '' ? undefined : v === 'true' })} />
             )}
           </div>
-        </div>
+        </details>
       )}
     </div>
   )

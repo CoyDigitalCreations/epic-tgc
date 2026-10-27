@@ -626,16 +626,16 @@ export function EffectList({ cardType, effects, onChange, maxEffects = 3 }: Effe
               </div>
             </div>
             {isExpanded && (
-              <div className="p-3 border-t border-gray-700">
-                <EffectField label="" value={effect}
-                  onChange={(v) => { if (v) updateEffect(idx, v) }}
-                  cardType={cardType} />
+              <div className="p-2 border-t border-gray-700">
                 {effect.texto && (
-                  <div className="mt-2 p-2 bg-gray-900/50 rounded border border-gray-700/50">
+                  <div className="mb-2 p-2 bg-gray-900/50 rounded border border-gray-700/50">
                     <p className="text-[10px] uppercase tracking-wider text-gray-500 mb-1">Texto generado</p>
                     <p className="text-xs text-gray-300 italic">{effect.texto}</p>
                   </div>
                 )}
+                <EffectField label="" value={effect}
+                  onChange={(v) => { if (v) updateEffect(idx, v) }}
+                  cardType={cardType} />
               </div>
             )}
           </div>
