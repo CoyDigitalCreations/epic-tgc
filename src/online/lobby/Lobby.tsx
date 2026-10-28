@@ -490,6 +490,7 @@ function PartidaOnline({
     <>
       <Tablero
         vista={vista}
+        yoId={player}
         acciones={partida.acciones}
         leTocaA={partida.leToca}
         log={[]}

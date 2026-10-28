@@ -43,8 +43,10 @@ import { ManoAbanico } from './ManoAbanico'
 import type { OpcionMano } from './ManoAbanico'
 
 interface TableroProps {
-  /** Proyección 6.2 del estado para el jugador A (cartas ocultas con cardId null). */
+  /** Proyección 6.2 del estado para el jugador `yoId` (cartas ocultas con cardId null). */
   vista: GameState
+  /** Quién mira el tablero. Contra el bot es siempre 'A'; en PvP el que se une es 'B' y su mano y su campo van abajo. */
+  yoId?: PlayerId
   /** Acciones válidas del humano (getValidActions(estado, 'A') cuando le toca). */
   acciones: Action[]
   leTocaA: boolean
@@ -527,6 +529,8 @@ function Pila({
 interface GrillaProps {
   vista: GameState
   jugador: 'A' | 'B'
+  /** Quién mira el tablero: su grilla es la «propia» (la que puede accionar). */
+  yoId: PlayerId
   leTocaA: boolean
   acciones: Action[]
   onAccion: (a: Action) => void
@@ -631,6 +635,7 @@ function LogDetallado({ lineas }: { lineas: string[] }) {
 function GrillaJugador({
   vista,
   jugador,
+  yoId,
   leTocaA,
   acciones,
   onAccion,
@@ -650,7 +655,7 @@ function GrillaJugador({
   onElegirVinculo,
 }: GrillaProps) {
   const p = vista.players[jugador]
-  const soy = jugador === 'A'
+  const soy = jugador === yoId
   /** Ancho de carta del tablero (responsivo) y de las cartas más chicas: fila de Éter y Vínculos. */
   const cw = useAnchoCarta()
   /** La etiqueta ATQ/RES + keywords que cuelga de cada Campeón: su espacio se reserva siempre (en compacto va en una línea chica). */
@@ -1106,6 +1111,7 @@ function GrillaJugador({
 
 export function Tablero({
   vista,
+  yoId = 'A',
   acciones,
   leTocaA,
   logDetallado = [],
@@ -1115,8 +1121,9 @@ export function Tablero({
   vistaPrevia,
   onCiclarVistaPrevia,
 }: TableroProps) {
-  const yo = vista.players.A
-  const rival = vista.players.B
+  const rivalId: PlayerId = yoId === 'A' ? 'B' : 'A'
+  const yo = vista.players[yoId]
+  const rival = vista.players[rivalId]
   const fase = vista.fase
   const terminada = fase === 'terminada'
 
@@ -1178,7 +1185,7 @@ export function Tablero({
       : yo.eterReserva
 
   // A6: paso de ataque propio (sin combate en curso) — habilita la selección multi
-  const esPasoAtaquePropio = vista.fase === 'choque' && !vista.combate && vista.turno === 'A'
+  const esPasoAtaquePropio = vista.fase === 'choque' && !vista.combate && vista.turno === yoId
   const toggleSelAtaque = (id: string) =>
     setSelAtaque((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
   const atacarSeleccionados = () => {
@@ -1201,8 +1208,8 @@ export function Tablero({
   const turnoActual = vista.turno
   useEffect(() => {
     if (faseActual === 'choque' && pasoCombate === 'bloqueo') {
-      const defensor = turnoActual === 'A' ? 'B' : 'A'
-      const soyElDefensor = defensor === 'A'
+      const defensor = turnoActual === yoId ? rivalId : yoId
+      const soyElDefensor = defensor === yoId
       if (soyElDefensor && !bloqueoAbierto) {
         const sinBloquear = vista.combate!.atacantes.filter((a) => !(a in vista.combate!.bloqueos))
         if (sinBloquear.length > 0) setBloqueoAbierto(true)
@@ -1213,7 +1220,7 @@ export function Tablero({
   // A6: la selección de atacantes vive solo en el paso de ataque propio —
   // si cambia la fase/combate/turno, se limpia (evita subsets obsoletos).
   useEffect(() => {
-    if (!(faseActual === 'choque' && !pasoCombate && turnoActual === 'A')) setSelAtaque([])
+    if (!(faseActual === 'choque' && !pasoCombate && turnoActual === yoId)) setSelAtaque([])
   }, [faseActual, pasoCombate, turnoActual])
 
   // Si deja de tocarte (el rival actuó, cambió la fase), un pago o una casilla a medio elegir ya no tiene sentido
@@ -1292,7 +1299,7 @@ export function Tablero({
     : 0
   /** Campeones propios en 2B-2F con facción compartida, elegibles como sacrificio. */
   const sacrificables =
-    seleccion?.tipo === 'pagar' && requeridos > 0 ? campeonesSacrificables(vista, 'A', seleccion.objetivoCardId) : []
+    seleccion?.tipo === 'pagar' && requeridos > 0 ? campeonesSacrificables(vista, yoId, seleccion.objetivoCardId) : []
 
   const toggleSacrificio = (id: string) => {
     setSacrificiosElegidos((prev) => {
@@ -1514,7 +1521,7 @@ export function Tablero({
   }
 
   /** Parejas Campeón + Éter que el motor acepta para el Pasivo 1A (vacío = la opción no tiene qué elegir). */
-  const parejasOpcion = opcionBloqueo && leTocaA ? parejasBloqueoOpcion(vista, 'A') : []
+  const parejasOpcion = opcionBloqueo && leTocaA ? parejasBloqueoOpcion(vista, yoId) : []
   // Acciones generales (no van sobre una carta ni son de la mano)
   const generales = acciones.filter((a) => {
     if (a.type === 'rendirse') return false // va en el header
@@ -1579,10 +1586,10 @@ export function Tablero({
   const faseTurno = terminada
     ? 'Partida terminada'
     : fase === 'pre_partida'
-      ? vista.turno === 'A'
+      ? vista.turno === yoId
         ? 'Tú decides el mulligan'
         : 'El rival decide el mulligan'
-      : `${FASE_LABEL[fase] ?? fase} — ${vista.turno === 'A' ? 'tu turno' : 'turno del rival'}`
+      : `${FASE_LABEL[fase] ?? fase} — ${vista.turno === yoId ? 'tu turno' : 'turno del rival'}`
 
   const objetivoSeleccion = seleccion
     ? seleccion.tipo === 'pagar' && 'cardInstanceId' in seleccion.accionBase
@@ -1631,7 +1638,7 @@ export function Tablero({
               className={`text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full ${
                 fase === 'pre_partida'
                   ? 'bg-amber-500/20 text-amber-300 ring-1 ring-amber-400/40'
-                  : vista.turno === 'A'
+                  : vista.turno === yoId
                     ? 'bg-ether-600/40 text-ether-100 ring-1 ring-ether-400/60'
                     : 'bg-red-600/30 text-red-200 ring-1 ring-red-400/50'
               }`}
@@ -1643,10 +1650,10 @@ export function Tablero({
             {terminada
               ? 'Partida terminada'
               : fase === 'pre_partida'
-                ? vista.turno === 'A'
+                ? vista.turno === yoId
                   ? 'Decides el mulligan'
                   : 'El rival decide el mulligan'
-                : vista.turno === 'A'
+                : vista.turno === yoId
                   ? 'Tu turno'
                   : 'Turno del rival'}
           </span>
@@ -1681,7 +1688,7 @@ export function Tablero({
                 aria-current={fase === f.id ? 'step' : undefined}
                 className={`text-[10px] font-semibold uppercase tracking-wider px-2.5 py-1 rounded-full transition-colors ${
                   fase === f.id
-                    ? vista.turno === 'A'
+                    ? vista.turno === yoId
                       ? 'bg-ether-600/40 text-ether-100 ring-1 ring-ether-400/60'
                       : 'bg-red-600/30 text-red-200 ring-1 ring-red-400/50'
                     : 'text-gray-600'
@@ -1784,11 +1791,12 @@ export function Tablero({
             <div className={`w-full flex items-center justify-center ${compacto ? 'gap-1' : 'gap-4'}`}>
             <div
               className={`${compacto ? 'py-0' : 'px-1.5 py-1'} rounded-xl transition-shadow`}
-              style={vista.turno === 'B' && !terminada ? { boxShadow: '0 0 0 1px rgba(248,113,113,0.30), 0 0 32px rgba(248,113,113,0.10)' } : undefined}
+              style={vista.turno === rivalId && !terminada ? { boxShadow: '0 0 0 1px rgba(248,113,113,0.30), 0 0 32px rgba(248,113,113,0.10)' } : undefined}
             >
               <GrillaJugador
                 vista={vista}
-                jugador="B"
+                jugador={rivalId}
+                yoId={yoId}
                 leTocaA={false}
                 acciones={[]}
                 onAccion={onAccion}
@@ -1807,10 +1815,10 @@ export function Tablero({
               nombre="Rival (B)"
               color="bg-red-400"
               jugador={rival}
-              activo={vista.turno === 'B'}
+              activo={vista.turno === rivalId}
               ancho={anchoFlanco}
               compacto={compacto}
-              onAbrirPanel={(zona) => setPanelAbierto({ jugador: 'B', zona })}
+              onAbrirPanel={(zona) => setPanelAbierto({ jugador: rivalId, zona })}
             >
               {/* Mano del rival: dorsos (sus cartas son información oculta) */}
               {rival.mano.length > 0 && (
@@ -1865,7 +1873,7 @@ export function Tablero({
                 </>
               ) : (
                 <span className="text-[10px] uppercase tracking-[0.2em] text-gray-600">
-                  {terminada ? 'Fin de la partida' : vista.turno === 'A' ? 'Tu turno' : 'Turno del rival'}
+                  {terminada ? 'Fin de la partida' : vista.turno === yoId ? 'Tu turno' : 'Turno del rival'}
                 </span>
               )}
             </div>
@@ -1873,11 +1881,12 @@ export function Tablero({
             <div className={`w-full flex items-center justify-center ${compacto ? 'gap-1' : 'gap-4'}`}>
             <div
               className={`${compacto ? 'py-0' : 'px-1.5 py-1'} rounded-xl transition-shadow`}
-              style={vista.turno === 'A' && !terminada ? { boxShadow: '0 0 0 1px rgba(112,112,255,0.35), 0 0 32px rgba(64,64,255,0.12)' } : undefined}
+              style={vista.turno === yoId && !terminada ? { boxShadow: '0 0 0 1px rgba(112,112,255,0.35), 0 0 32px rgba(64,64,255,0.12)' } : undefined}
             >
               <GrillaJugador
                 vista={vista}
-                jugador="A"
+                jugador={yoId}
+                yoId={yoId}
                 leTocaA={leTocaA}
                 acciones={acciones}
                 onAccion={onAccion}
@@ -1898,10 +1907,10 @@ export function Tablero({
               nombre="Tú (A)"
               color="bg-ether-400"
               jugador={yo}
-              activo={vista.turno === 'A'}
+              activo={vista.turno === yoId}
               ancho={anchoFlanco}
               compacto={compacto}
-              onAbrirPanel={(zona) => setPanelAbierto({ jugador: 'A', zona })}
+              onAbrirPanel={(zona) => setPanelAbierto({ jugador: yoId, zona })}
             />
             </div>
           </div>
@@ -1969,7 +1978,7 @@ export function Tablero({
           </section>
 
           {/* ── Habilidades activas: auras, keywords y Éter con efecto que están afectando el juego ── */}
-          <ActiveAbilitiesPanel s={vista} />
+          <ActiveAbilitiesPanel s={vista} yoId={yoId} />
 
           {/* ── Log Detallado (debugging) ─────────────────────── */}
           <LogDetallado lineas={logDetallado} />
@@ -2189,7 +2198,7 @@ export function Tablero({
                       ? `Éteres bloqueados — Campeón ${panelAbierto.campeonSlot + 1}`
                       : 'Éteres bloqueados'
         const posesivo =
-          panelAbierto.jugador === 'A'
+          panelAbierto.jugador === yoId
             ? panelAbierto.zona === 'pagado'
               ? 'tuyos'
               : 'tuyo'
@@ -2199,7 +2208,7 @@ export function Tablero({
         return (
           <Dock
             etiquetaAria={titulo}
-            tono={panelAbierto.jugador === 'A' ? 'ether' : 'rival'}
+            tono={panelAbierto.jugador === yoId ? 'ether' : 'rival'}
             titulo={
               <>
                 {titulo}
@@ -2293,7 +2302,7 @@ export function Tablero({
 
       {/* ── Interfaz de bloqueo manual ─────────────────────────── */}
       {bloqueoAbierto && vista.combate?.paso === 'bloqueo' && (() => {
-        const defensor = vista.turno === 'A' ? 'B' : 'A'
+        const defensor = vista.turno === yoId ? rivalId : yoId
         const sinBloquear = vista.combate.atacantes.filter((a) => !(a in vista.combate!.bloqueos))
         return (
           <BlockingInterface
@@ -2312,7 +2321,7 @@ export function Tablero({
       {/* ── Fin de la partida ───────────────────────────────────── */}
       {terminada && (() => {
         const empate = vista.motivo === 'empate' // F6: ambos jugadores derrotados a la vez; no hay ganador
-        const gane = vista.ganador === 'A'
+        const gane = vista.ganador === yoId
         const motivoTexto =
           empate
             ? 'Ambos jugadores cumplieron una condición de derrota al mismo tiempo.'
@@ -2359,9 +2368,9 @@ export function Tablero({
             }
           >
             <div className="grid grid-cols-2 gap-3 text-center">
-              {(['A', 'B'] as PlayerId[]).map((j) => (
+              {([yoId, rivalId] as PlayerId[]).map((j) => (
                 <div key={j} className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5">
-                  <p className="text-[10px] uppercase tracking-[0.18em] text-gray-500">{j === 'A' ? 'Tú' : 'Rival'}</p>
+                  <p className="text-[10px] uppercase tracking-[0.18em] text-gray-500">{j === yoId ? 'Tú' : 'Rival'}</p>
                   <p className="mt-1 font-display text-2xl font-bold text-gray-100">
                     {vinculosVivos(j)}
                     <span className="text-base text-gray-500">/{vista.players[j].vinculos.length}</span>

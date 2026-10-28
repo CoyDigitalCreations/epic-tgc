@@ -140,6 +140,8 @@ function getActiveEffects(s: GameState): ActiveEffect[] {
 
 interface ActiveAbilitiesPanelProps {
   s: GameState
+  /** Quién mira: sus efectos van en azul, los del rival en rojo. */
+  yoId?: PlayerId
 }
 
 /** Colores por tipo de efecto */
@@ -150,7 +152,7 @@ const TIPO_COLORS: Record<ActiveEffect['type'], string> = {
   keyword: 'bg-green-400',
 }
 
-export function ActiveAbilitiesPanel({ s }: ActiveAbilitiesPanelProps) {
+export function ActiveAbilitiesPanel({ s, yoId = 'A' }: ActiveAbilitiesPanelProps) {
   const effects = getActiveEffects(s)
 
   if (effects.length === 0) return null
@@ -170,7 +172,7 @@ export function ActiveAbilitiesPanel({ s }: ActiveAbilitiesPanelProps) {
             <div className="flex items-center gap-1.5">
               <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${TIPO_COLORS[ef.type]}`} />
               <span className="text-gray-300 font-medium">{ef.cardName}</span>
-              <span className={`text-[7px] ml-auto ${ef.owner === 'A' ? 'text-blue-400' : 'text-red-400'}`}>
+              <span className={`text-[7px] ml-auto ${ef.owner === yoId ? 'text-blue-400' : 'text-red-400'}`}>
                 {ef.owner}
               </span>
             </div>
