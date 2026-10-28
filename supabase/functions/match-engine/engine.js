@@ -8454,6 +8454,15 @@ function visibleState(state, playerId) {
   return v;
 }
 
+// src/online/game/inactividad.ts
+var LIMITE_INACTIVIDAD_MS = 3 * 60 * 1e3;
+function inactividadExpirada(ultimaActividad, ahora, limiteMs = LIMITE_INACTIVIDAD_MS) {
+  if (!ultimaActividad) return false;
+  const desde = Date.parse(ultimaActividad);
+  if (Number.isNaN(desde)) return false;
+  return ahora - desde > limiteMs;
+}
+
 // src/online/game/invariants.ts
 function verificarZonaUnica(estado) {
   const zonasDe = /* @__PURE__ */ new Map();
@@ -8988,6 +8997,7 @@ function registrarEfectos() {
 registrarEfectos();
 export {
   CATALOGO_EVENTOS,
+  LIMITE_INACTIVIDAD_MS,
   LIMITE_MANO,
   SLOTS_ARCANAS_COMBATE,
   SLOTS_CAMPEONES,
@@ -9030,6 +9040,7 @@ export {
   getCardMeta,
   getValidActions,
   hastaAlba,
+  inactividadExpirada,
   keywordsDe,
   limiteSlots,
   limpiarRegistroEfectos,

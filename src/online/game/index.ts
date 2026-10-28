@@ -18,6 +18,9 @@ export type { Action, ApplyActionResult } from './actions'
 export { getValidActions, actorActual } from './validActions'
 export { visibleState } from './visibleState'
 
+// Inactividad (PvP): abandono por no actuar a tiempo
+export { LIMITE_INACTIVIDAD_MS, inactividadExpirada } from './inactividad'
+
 // Economía de Éter
 export { aporteDe, validarPago, aplicarPago, bloquearEter, reagruparEter, maxEterBloqueado, esBloqueoFijo } from './payments'
 export type { ContextoUso } from './payments'

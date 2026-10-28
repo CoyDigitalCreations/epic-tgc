@@ -14,6 +14,9 @@
  *   state   — reconnect: devuelve visibleState del solicitante
  *   forfeit — rendirse
  *
+ * Inactividad: quien debe actuar y no mueve en LIMITE_INACTIVIDAD_MS (3 min) pierde por
+ * 'abandono'; se evalúa perezosamente en state/act contra games.updated_at.
+ *
  * Auth: JWT de Supabase (verify_jwt=true). Leemos `sub` y lo comparamos
  * con player_a_id/player_b_id.
  */
@@ -34,6 +37,7 @@ import {
   applyAction,
   createCtxFromDraws,
   createInitialState,
+  inactividadExpirada,
   registrarCartas,
   validarDeck,
   visibleState,
@@ -57,6 +61,8 @@ type EngineModule = {
     | { ok: false; state: never; error: string }
   visibleState: (state: never, playerId: 'A' | 'B') => never
   actorActual: (state: never) => 'A' | 'B' | null
+  /** ¿Pasó el límite de inactividad desde la última actividad (`updated_at`)? */
+  inactividadExpirada: (ultimaActividad: string | null | undefined, ahora: number) => boolean
   registrarCartas: (cartas: unknown[]) => void
   /** Lanza Error con el motivo si el mazo es ilegal (66 cartas, 15/45/6, cardIds conocidos, límite de copias). */
   validarDeck: (deck: string[], nombre: string) => void
@@ -68,6 +74,7 @@ const engine: EngineModule = {
   applyAction: applyAction as EngineModule['applyAction'],
   visibleState: visibleState as EngineModule['visibleState'],
   actorActual: actorActual as EngineModule['actorActual'],
+  inactividadExpirada: inactividadExpirada as EngineModule['inactividadExpirada'],
   registrarCartas: registrarCartas as EngineModule['registrarCartas'],
   validarDeck: validarDeck as EngineModule['validarDeck'],
 }
@@ -290,9 +297,47 @@ Deno.serve(async (req) => {
     return null
   }
 
+  /**
+   * Abandono por inactividad: si el jugador al que le toca actuar lleva más del límite sin mover (`updated_at` se toca con cada
+   * acción persistida), pierde. Se evalúa de forma perezosa en `state` y `act`, así el resultado no depende de quién consulte.
+   * Muta `game` y `persistObj` para que el resto del request ya vea la partida terminada. Devuelve el ganador, o null si no expiró.
+   */
+  async function cerrarPorInactividad(persistObj: MatchPersist | null): Promise<'A' | 'B' | null> {
+    if (game.status !== 'playing' || !persistObj?.state) return null
+    if (!engine.inactividadExpirada(game.updated_at, Date.now())) return null
+    const actor = engine.actorActual(persistObj.state as never)
+    if (!actor) return null
+    const winner = actor === 'A' ? 'B' : 'A'
+    const ctx = engine.createCtxFromDraws(Number(game.seed), persistObj.rngDraws)
+    const result = engine.applyAction(persistObj.state as never, { type: 'rendirse', jugador: actor }, ctx as never)
+    const nextState = (result.ok ? result.state : persistObj.state) as unknown as Record<string, unknown>
+    const finishedAt = new Date().toISOString()
+    const res = await sb(`games?id=eq.${encodeURIComponent(gameId)}&status=eq.playing`, {
+      method: 'PATCH',
+      headers: { Prefer: 'return=minimal' },
+      body: JSON.stringify({
+        state_json: { state: nextState, rngDraws: ctx.draws },
+        status: 'finished',
+        winner,
+        finish_reason: 'abandono',
+        finished_at: finishedAt,
+      }),
+    })
+    if (!res.ok) {
+      console.error('inactivity close failed', await res.text())
+      return null
+    }
+    game.status = 'finished'
+    game.winner = winner
+    game.finish_reason = 'abandono'
+    persistObj.state = nextState
+    return winner
+  }
+
   // ── state (reconnect / poll / sala de espera) ────────────────────────────
   if (action === 'state') {
     const persistObj = await loadPersist()
+    await cerrarPorInactividad(persistObj)
     // bothPlayers: el lobby necesita saber si el rival ya entró (sin leer
     // la tabla directamente — RLS prohíbe SELECT al cliente sobre games).
     const bothPlayers = Boolean(game.player_a_id && game.player_b_id)
@@ -374,6 +419,20 @@ Deno.serve(async (req) => {
     if (game.status !== 'playing') return err('game not in playing state', 409)
     const persistObj = await loadPersist()
     if (!persistObj) return err('no game state', 409)
+
+    // Si quien actúa llega tarde, la partida ya se perdió: su acción no se aplica
+    const ganadorPorTiempo = await cerrarPorInactividad(persistObj)
+    if (ganadorPorTiempo) {
+      return json({
+        ok: false,
+        error: 'tiempo agotado: la partida terminó por inactividad',
+        state: engine.visibleState(persistObj.state as never, playerId),
+        finished: true,
+        winner: ganadorPorTiempo,
+        finishReason: 'abandono',
+        status: 'finished',
+      })
+    }
 
     const state = persistObj.state as never
     const actor = engine.actorActual(state)

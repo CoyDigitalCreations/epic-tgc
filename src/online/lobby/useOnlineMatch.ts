@@ -116,7 +116,8 @@ export function useOnlineMatch(gameId: string, player: PlayerId, code: string): 
         const resp = await enviarAccion(gameId, accion)
         if (!resp.ok) {
           setError(resp.error ?? 'Acción rechazada')
-          if (resp.state) setEstado(resp.state)
+          if (resp.status === 'finished') aplicarRespuesta(resp) // p. ej. se agotó el tiempo: la partida ya terminó
+          else if (resp.state) setEstado(resp.state)
           return
         }
         setError(null)
