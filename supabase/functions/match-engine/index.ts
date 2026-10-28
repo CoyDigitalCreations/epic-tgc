@@ -188,6 +188,8 @@ Deno.serve(async (req) => {
     code?: string
     deck?: string[]
     playerAction?: unknown
+    /** state: cursor del log (último id de game_events ya visto). Ausente = historial completo (carga inicial o reconexión). */
+    desdeEventoId?: number
   }
   try {
     body = await req.json()
@@ -195,7 +197,7 @@ Deno.serve(async (req) => {
     return err('invalid JSON')
   }
 
-  const { action, gameId, code, deck, playerAction } = body
+  const { action, gameId, code, deck, playerAction, desdeEventoId } = body
   if (!action) return err('action required')
 
   // ── create: genera sala lobby con código + deck del creador ──────────────
@@ -335,6 +337,32 @@ Deno.serve(async (req) => {
     return winner
   }
 
+  /**
+   * Eventos del motor para el log del solicitante. Con cursor (`desdeEventoId`) devuelve solo los de los ACTOS DEL RIVAL posteriores
+   * a él: los propios ya le llegaron en la respuesta de `act`. Sin cursor devuelve el final del historial completo (reconexión).
+   * El cursor avanza por TODOS los eventos leídos (también los propios), de una sola consulta, para no saltarse ni repetir ninguno.
+   * Los payloads solo llevan ids de instancia: el cliente los nombra con SU visibleState, así que lo oculto del rival sigue oculto.
+   */
+  async function eventosParaLog(): Promise<{ eventos: unknown[]; ultimoEventoId: number } | null> {
+    const cursor = typeof desdeEventoId === 'number' && Number.isFinite(desdeEventoId) ? desdeEventoId : null
+    const consulta =
+      cursor === null
+        ? `game_events?game_id=eq.${encodeURIComponent(gameId)}&select=id,player_id,payload&order=id.desc&limit=1000`
+        : `game_events?game_id=eq.${encodeURIComponent(gameId)}&id=gt.${cursor}&select=id,player_id,payload&order=id.asc&limit=1000`
+    const res = await sb(consulta)
+    if (!res.ok) {
+      console.error('events read failed', await res.text())
+      return null
+    }
+    const rows = (await res.json()) as { id: number; player_id: string | null; payload: unknown }[]
+    if (cursor === null) rows.reverse()
+    const propios = (r: { player_id: string | null }) => r.player_id === userId
+    return {
+      eventos: rows.filter((r) => cursor === null || !propios(r)).map((r) => r.payload),
+      ultimoEventoId: rows.length > 0 ? rows[rows.length - 1].id : (cursor ?? 0),
+    }
+  }
+
   // ── state (reconnect / poll / sala de espera) ────────────────────────────
   if (action === 'state') {
     const persistObj = await loadPersist()
@@ -353,6 +381,8 @@ Deno.serve(async (req) => {
       })
     }
     const st = persistObj.state as never
+    // Si la lectura falla el log simplemente no avanza (sin eventos ni cursor): el siguiente poll reintenta
+    const log = await eventosParaLog()
     return json({
       status: game.status,
       state: engine.visibleState(st, playerId),
@@ -362,6 +392,7 @@ Deno.serve(async (req) => {
       winner: game.winner ?? null,
       finishReason: game.finish_reason ?? null,
       code: game.code,
+      ...(log ?? {}),
     })
   }
 
@@ -503,11 +534,13 @@ Deno.serve(async (req) => {
         payload: e,
       }))
       if (events.length > 0) {
-        await sb('game_events', {
+        const evRes = await sb('game_events', {
           method: 'POST',
           headers: { Prefer: 'return=minimal' },
           body: JSON.stringify(events),
         })
+        // sb() no lanza con un status de error: sin esto un insert rechazado dejaba el log del rival vacío en silencio
+        if (!evRes.ok) console.error('events append rejected', evRes.status, await evRes.text())
       }
     } catch (e) {
       console.error('events append failed', e)

@@ -10,7 +10,7 @@
  *   forfeit→ rendirse
  */
 import { getSupabase } from './supabase'
-import type { Action, GameState, PlayerId } from '../game'
+import type { Action, GameEvent, GameState, PlayerId } from '../game'
 import type { EterGame } from '../../shared/types/eter-db'
 
 const FN = 'match-engine'
@@ -31,6 +31,10 @@ export interface MatchStateResponse {
   winner?: PlayerId | null
   finishReason?: string | null
   code?: string
+  /** Log: eventos nuevos desde el cursor (solo los del rival; sin cursor, el final del historial completo) */
+  eventos?: GameEvent[]
+  /** Cursor para pedir el siguiente tramo del log (`desdeEventoId`) */
+  ultimoEventoId?: number
 }
 
 export interface ActResponse {
@@ -90,8 +94,9 @@ export async function enviarAccion(
   return callMatchEngine<ActResponse>({ action: 'act', gameId, playerAction })
 }
 
-export async function obtenerEstado(gameId: string): Promise<MatchStateResponse> {
-  return callMatchEngine<MatchStateResponse>({ action: 'state', gameId })
+/** `desdeEventoId`: cursor del log (`ultimoEventoId` de la respuesta anterior); sin él llega el historial completo. */
+export async function obtenerEstado(gameId: string, desdeEventoId?: number): Promise<MatchStateResponse> {
+  return callMatchEngine<MatchStateResponse>({ action: 'state', gameId, ...(desdeEventoId !== undefined && { desdeEventoId }) })
 }
 
 export async function rendirse(gameId: string): Promise<{ ok: boolean; winner?: PlayerId | null }> {

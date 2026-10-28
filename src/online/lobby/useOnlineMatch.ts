@@ -48,12 +48,20 @@ export function useOnlineMatch(gameId: string, player: PlayerId, code: string): 
   const [finishReason, setFinishReason] = useState<string | null>(null)
   const [cargando, setCargando] = useState(false)
   const ocupadoRef = useRef(false)
+  // Cursor del log del servidor: último evento ya visto. Sin él (carga inicial/reconexión) llega el historial completo.
+  const cursorLogRef = useRef<number | undefined>(undefined)
 
-  const aplicarRespuesta = useCallback((resp: MatchStateResponse | ActResponse, eventos?: GameEvent[]) => {
+  const aplicarRespuesta = useCallback((resp: MatchStateResponse | ActResponse, eventosAct?: GameEvent[]) => {
     if (resp.state) setEstado(resp.state)
     if ('status' in resp && resp.status) setStatus(resp.status as OnlineMatch['status'])
     if ('winner' in resp) setWinner(resp.winner ?? null)
     if ('finishReason' in resp) setFinishReason(resp.finishReason ?? null)
+    // `state` trae los eventos del rival (log); `act` trae los propios
+    let eventos = eventosAct
+    if ('ultimoEventoId' in resp && resp.ultimoEventoId !== undefined) {
+      cursorLogRef.current = resp.ultimoEventoId
+      eventos = resp.eventos
+    }
     if (eventos && eventos.length > 0 && resp.state) {
       const lineas = eventosDetalladosParaLog(resp.state, eventos)
       setLogDetallado((prev) => [...prev, ...lineas])
@@ -63,7 +71,7 @@ export function useOnlineMatch(gameId: string, player: PlayerId, code: string): 
   const refrescar = useCallback(async () => {
     if (ocupadoRef.current) return
     try {
-      const resp = await obtenerEstado(gameId)
+      const resp = await obtenerEstado(gameId, cursorLogRef.current)
       aplicarRespuesta(resp)
       setError(null)
     } catch (e) {
@@ -76,7 +84,7 @@ export function useOnlineMatch(gameId: string, player: PlayerId, code: string): 
     let vivo = true
     ;(async () => {
       try {
-        const resp = await obtenerEstado(gameId)
+        const resp = await obtenerEstado(gameId, cursorLogRef.current)
         if (!vivo) return
         aplicarRespuesta(resp)
       } catch (e) {
