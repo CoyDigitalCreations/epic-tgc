@@ -132,7 +132,7 @@ export interface CardInstance {
   /** Bloqueos que este Campeón ya hizo en el turno en curso (regla `bloqueosPorTurno`, §9.3). Se borra al terminar el turno. */
   bloqueosEsteTurno?: number
   /**
-   * Fase B: índices (en `efectos[]`) de los efectos `bloqueo_fijo` con `unaVezPorTurno` que ya
+   * Fase B: índices (en `efectos[]`) de los efectos `bloqueo_fijo` con `activacion: 'una_por_turno'` que ya
    * se activaron este turno. Se gasta al pagar; se borra al terminar el turno (partida.ts) y al
    * cambiar de zona (ESTADO_DE_CAMPO).
    */

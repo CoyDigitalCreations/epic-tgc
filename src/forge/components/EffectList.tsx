@@ -279,9 +279,10 @@ export function generateEffectText(data: EfectoData): string {
       }
     } else if (data.costo.tipo === 'bloqueo_fijo' && data.costo.cantidad) {
       const origenTxt = data.costo.origen === 'pagado' ? ' desde la zona de éter pagado' : ''
-      // «Una vez por turno» es del bloqueo fijo: se dice en la misma cláusula que el coste
-      const unaVez = data.unaVezPorTurno ? 'una vez por turno, ' : ''
-      addPart(`${unaVez}bloquea ${data.costo.cantidad} Éter${origenTxt},`)
+      // La «Activación» es del bloqueo fijo: se dice en la misma cláusula que el coste
+      const unaVez = data.activacion === 'una_por_turno' ? 'una vez por turno, ' : ''
+      const soloUna = data.activacion === 'una_mientras_bloqueado' ? ' (solo una vez mientras siga bloqueado)' : ''
+      addPart(`${unaVez}bloquea ${data.costo.cantidad} Éter${origenTxt}${soloUna},`)
     } else if (data.costo.tipo === 'exhaust') {
       addPart('puedes agotar esta carta,')
     } else if (data.costo.tipo === 'exile_self') {

@@ -40,24 +40,28 @@ describe('EffectField — filtros del objetivo plegables', () => {
   })
 })
 
-describe('EffectField — «Una vez por turno» (bloqueo fijo)', () => {
+describe('EffectField — «Activación» (bloqueo fijo)', () => {
   const FIJO: EfectoData = { tipo: 'continuo', efecto: 'steal_champion', costo: { tipo: 'bloqueo_fijo', cantidad: 4 }, objetivo: { tipo: 'campeon', controlador: 'rival', zona: 'campo' } }
+
+  /** El selector de «Activación» (su etiqueta no está ligada al control: se busca dentro del mismo bloque). */
+  const selector = () => screen.getByText('Activación').parentElement!.querySelector('select') as HTMLSelectElement
 
   it('solo aparece con el coste «Bloqueo fijo»', () => {
     const { rerender } = render(<EffectField label="" value={FIJO} onChange={() => {}} cardType="Campeón" />)
-    expect(screen.getByLabelText('Una vez por turno')).toBeInTheDocument()
+    expect(selector()).toBeInTheDocument()
+    expect(Array.from(selector().options).map((o) => o.value)).toEqual(['', 'repetible', 'una_por_turno', 'una_mientras_bloqueado'])
     rerender(<EffectField label="" value={{ ...FIJO, costo: { tipo: 'eter_bloqueado', cantidad: 4 } }} onChange={() => {}} cardType="Campeón" />)
-    expect(screen.queryByLabelText('Una vez por turno')).toBeNull()
+    expect(screen.queryByText('Activación')).toBeNull()
   })
 
-  it('marcarla la guarda; desmarcarla quita la clave (undefined)', () => {
+  it('elegir un modo lo guarda; volver a «Repetible» quita la clave (undefined)', () => {
     const onChange = vi.fn()
     const { rerender } = render(<EffectField label="" value={FIJO} onChange={onChange} cardType="Campeón" />)
-    fireEvent.click(screen.getByLabelText('Una vez por turno'))
-    expect(onChange).toHaveBeenLastCalledWith(expect.objectContaining({ unaVezPorTurno: true }))
-    rerender(<EffectField label="" value={{ ...FIJO, unaVezPorTurno: true }} onChange={onChange} cardType="Campeón" />)
-    fireEvent.click(screen.getByLabelText('Una vez por turno'))
-    expect(onChange).toHaveBeenLastCalledWith(expect.objectContaining({ unaVezPorTurno: undefined }))
+    fireEvent.change(selector(), { target: { value: 'una_mientras_bloqueado' } })
+    expect(onChange).toHaveBeenLastCalledWith(expect.objectContaining({ activacion: 'una_mientras_bloqueado' }))
+    rerender(<EffectField label="" value={{ ...FIJO, activacion: 'una_por_turno' }} onChange={onChange} cardType="Campeón" />)
+    fireEvent.change(selector(), { target: { value: 'repetible' } })
+    expect(onChange).toHaveBeenLastCalledWith(expect.objectContaining({ activacion: undefined }))
   })
 })
 

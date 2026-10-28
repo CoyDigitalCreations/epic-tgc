@@ -77,9 +77,9 @@ function validarEfectos(card: Partial<AnyCard>): ValidationError[] {
     if (e.trigger === 'cuando_vinculo_seria_destruido' && e.efecto !== 'prevent_destroy') {
       return falta('el trigger «Cuando Vínculo sería destruido» solo sirve con el efecto «Prevenir destrucción»')
     }
-    // El motor solo lleva la cuenta de «una vez por turno» en los bloqueos fijos: en cualquier otro coste no hace nada
-    if (e.unaVezPorTurno && e.costo?.tipo !== 'bloqueo_fijo') {
-      return falta('«Una vez por turno» solo sirve con el coste «Bloqueo fijo»')
+    // El motor solo limita las activaciones de los bloqueos fijos: en cualquier otro coste la «Activación» no hace nada
+    if (e.activacion && e.costo?.tipo !== 'bloqueo_fijo') {
+      return falta('la «Activación» (una vez por turno / una vez mientras siga bloqueado) solo sirve con el coste «Bloqueo fijo»')
     }
     // Un Continuo con coste de Éter bloqueado actúa solo, sin jugada: no puede redirigir ni negar una activación, que necesitan
     // la cadena. Esos efectos van en una Mística o un Disparo que se responda.

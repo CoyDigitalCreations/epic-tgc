@@ -342,7 +342,7 @@
           "fase": "alba",
           "turno": "propio"
         },
-        "unaVezPorTurno": true
+        "activacion": "una_por_turno"
       }
     ],
     "efectoComandante": {
@@ -577,13 +577,13 @@
         "objetivo": {
           "tipo": "self"
         },
-        "texto": "Una vez por turno, bloquea 3 Éter, esta carta puede declarar 2 veces ataque, mientras ese Éter esté bloqueado.",
+        "texto": "Bloquea 3 Éter (solo una vez mientras siga bloqueado), esta carta puede declarar 2 veces ataque, mientras ese Éter esté bloqueado.",
         "costo": {
           "tipo": "bloqueo_fijo",
           "cantidad": 3
         },
         "duracion": "mientras_ester_bloqueado",
-        "unaVezPorTurno": true
+        "activacion": "una_mientras_bloqueado"
       }
     ],
     "variante": "normal"
@@ -866,7 +866,7 @@
           "controlador": "rival",
           "zona": "campo"
         },
-        "texto": "Una vez por turno, bloquea 3 Éter, copia el efecto de hechizo, el efecto continuo y la recompensa de una Mística o Arcana que controla el rival, mientras ese Éter esté bloqueado.",
+        "texto": "Bloquea 3 Éter (solo una vez mientras siga bloqueado), copia el efecto de hechizo, el efecto continuo y la recompensa de una Mística o Arcana que controla el rival, mientras ese Éter esté bloqueado.",
         "duracion": "mientras_ester_bloqueado",
         "costo": {
           "tipo": "bloqueo_fijo",
@@ -877,7 +877,7 @@
           "mistica_continuo",
           "arcana_recompensa"
         ],
-        "unaVezPorTurno": true
+        "activacion": "una_mientras_bloqueado"
       }
     ]
   },
@@ -1247,14 +1247,13 @@
           "controlador": "propio",
           "zona": "campo"
         },
-        "texto": "Una vez por turno, bloquea 4 Éter, invoca un Campeón del Exilio de su dueño y equipa esta carta a ese Campeón, mientras ese Éter esté bloqueado.",
+        "texto": "Bloquea 4 Éter, invoca un Campeón del Exilio de su dueño y equipa esta carta a ese Campeón, mientras ese Éter esté bloqueado.",
         "zonaOrigen": "exilio",
         "duracion": "mientras_ester_bloqueado",
         "costo": {
           "tipo": "bloqueo_fijo",
           "cantidad": 4
-        },
-        "unaVezPorTurno": true
+        }
       }
     ]
   },
@@ -1322,7 +1321,7 @@
           "fase": "alba",
           "turno": "propio"
         },
-        "unaVezPorTurno": true
+        "activacion": "una_por_turno"
       }
     ],
     "efectoComandante": {

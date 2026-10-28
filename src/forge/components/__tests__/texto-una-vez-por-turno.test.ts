@@ -16,8 +16,13 @@ const aurora: EfectoData = {
 
 describe('«Una vez por turno» en el texto del Bloqueo fijo', () => {
   it('con la marca, la cláusula del coste la incluye', () => {
-    const texto = generateEffectText({ ...aurora, unaVezPorTurno: true })
+    const texto = generateEffectText({ ...aurora, activacion: 'una_por_turno' })
     expect(texto).toMatch(/^Una vez por turno, bloquea 4 Éter,/)
+  })
+
+  it('«Una vez mientras siga bloqueado» se dice entre paréntesis junto al coste', () => {
+    const texto = generateEffectText({ ...aurora, activacion: 'una_mientras_bloqueado' })
+    expect(texto).toMatch(/^Bloquea 4 Éter \(solo una vez mientras siga bloqueado\),/)
   })
 
   it('sin la marca, el texto queda como siempre', () => {
@@ -27,12 +32,12 @@ describe('«Una vez por turno» en el texto del Bloqueo fijo', () => {
   })
 
   it('con un trigger, la marca va dentro de la cláusula del coste', () => {
-    const texto = generateEffectText({ ...aurora, trigger: 'al_invocar', unaVezPorTurno: true })
+    const texto = generateEffectText({ ...aurora, trigger: 'al_invocar', activacion: 'una_por_turno' })
     expect(texto).toContain('una vez por turno, bloquea 4 Éter,')
   })
 
   it('con el origen en Éter pagado, la zona se dice igual', () => {
-    const texto = generateEffectText({ ...aurora, costo: { tipo: 'bloqueo_fijo', cantidad: 2, origen: 'pagado' }, unaVezPorTurno: true })
+    const texto = generateEffectText({ ...aurora, costo: { tipo: 'bloqueo_fijo', cantidad: 2, origen: 'pagado' }, activacion: 'una_por_turno' })
     expect(texto).toContain('Una vez por turno, bloquea 2 Éter desde la zona de éter pagado,')
   })
 })

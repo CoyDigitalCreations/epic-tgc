@@ -59,8 +59,8 @@ export function limpiarCamposAjenos(efecto: EfectoData): EfectoData {
     cambio = true
   }
   // «Una vez por turno» se decide por el COSTE (no por el efecto): solo tiene sentido con un bloqueo fijo
-  if (efecto.unaVezPorTurno !== undefined && efecto.costo?.tipo !== 'bloqueo_fijo') {
-    delete limpio.unaVezPorTurno
+  if (efecto.activacion !== undefined && efecto.costo?.tipo !== 'bloqueo_fijo') {
+    delete limpio.activacion
     cambio = true
   }
   if (efecto.efecto === 'debuff' && limpio.stats) {

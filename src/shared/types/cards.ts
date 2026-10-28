@@ -47,12 +47,14 @@ export interface EfectoData {
   /** What the player must pay to activate */
   costo?: CostoEfecto
   /**
-   * Fase B: restricción «una vez por turno» de la activación. SOLO tiene sentido con
-   * `costo.tipo === 'bloqueo_fijo'` (el Card-Maker lo limpia/valida en Fase C). Se cuenta
-   * por carta (instancia) y por efecto (índice); se gasta al pagar y se reinicia al terminar el turno.
-   * Ausente o `false` = sin restricción (bloqueo fijo repetible).
+   * Cuántas veces se puede activar un `bloqueo_fijo` (el Card-Maker lo limpia/valida si el coste es otro):
+   * - ausente = repetible: cada activación bloquea N Éter exactos (8 Éter = 2 activaciones);
+   * - `'una_por_turno'`: una activación de ESE efecto por turno (por carta y por índice; se gasta al pagar y se reinicia al
+   *   terminar el turno). Para los efectos que reagrupan su Éter (Aurora, Ragnar);
+   * - `'una_mientras_bloqueado'`: solo se activa si el efecto NO tiene ya Éter propio bloqueado (el externo no cuenta);
+   *   al liberarse ese Éter puede activarse otra vez (Elena, Último Refugio).
    */
-  unaVezPorTurno?: boolean
+  activacion?: 'una_por_turno' | 'una_mientras_bloqueado'
 
   // ── Capa 3b: TRAMOS de Éter bloqueado (opcional) ──
   /** Recompensas por umbrales dentro de UN bloqueo "hasta" (CostoEfecto.cantidad).

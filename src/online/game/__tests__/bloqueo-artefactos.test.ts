@@ -569,9 +569,8 @@ describe('FB-032 Rito del Alba — one-shot invocar_y_equipar (Fase 3a Phase D)'
     }
     const fb032Id = conMist.id
     s = aplicar(s, { type: 'bloquear_eter', eterIds: ids.slice(0, 4), targetInstanceId: fb032Id }, ctx)
-    // La segunda activación en el MISMO turno la rechaza «una vez por turno»; en el siguiente turno ya se puede
-    expect(validarBloqueo(s, 'A', ids.slice(4, 8), fb032Id)).toMatch(/una vez por turno/)
-    s.instances[fb032Id].efectosUsadosEsteTurno = undefined
+    // El Rito del Alba es repetible (sin «Activación»): la segunda activación, aun en el mismo turno, es válida
+    expect(validarBloqueo(s, 'A', ids.slice(4, 8), fb032Id)).toBeNull()
     s = aplicar(s, { type: 'bloquear_eter', eterIds: ids.slice(4, 8), targetInstanceId: fb032Id }, ctx)
     expect(s.instances[fb032Id].vinculadoA).toEqual([champ1, champ2])
     expect(s.players.A.campo.campeones).toEqual(expect.arrayContaining([champ1, champ2]))

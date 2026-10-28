@@ -96,7 +96,9 @@ function accionesBloqueoEter(state: GameState, playerId: PlayerId, enCadena = fa
         if (fijo) {
           // Fase B: bloqueo_fijo = N EXACTOS por activación, repetible. Una vez por turno si el efecto
           // lo declara y ya se activó (mismo criterio que validarBloqueo — paridad).
-          const usado = efecto.unaVezPorTurno === true && (t.inst.efectosUsadosEsteTurno ?? []).includes(i)
+          const usado =
+            (efecto.activacion === 'una_por_turno' && (t.inst.efectosUsadosEsteTurno ?? []).includes(i)) ||
+            (efecto.activacion === 'una_mientras_bloqueado' && actuales > 0)
           if (!usado && disponibles.length >= maxEter) {
             acciones.push({
               type: 'bloquear_eter',

@@ -123,12 +123,15 @@ describe('validateCard — efectos a medio configurar (se jugarían sin hacer na
     expect(cont({ efecto: 'destroy' })).toEqual([])
     expect(mensajes({ efecto: 'redirect' })).toEqual([]) // un hechizo normal sí puede
   })
-  it('«Una vez por turno» solo se acepta con el coste «Bloqueo fijo»', () => {
+  it('la «Activación» solo se acepta con el coste «Bloqueo fijo»', () => {
     const fijo = { tipo: 'continuo', efecto: 'destroy', costo: { tipo: 'bloqueo_fijo', cantidad: 4 } }
-    expect(mensajes({ ...fijo, unaVezPorTurno: true })).toEqual([])
-    expect(mensajes({ ...fijo, costo: { tipo: 'eter_bloqueado', cantidad: 4 }, unaVezPorTurno: true })).toEqual(['Efecto 1: «Una vez por turno» solo sirve con el coste «Bloqueo fijo»'])
-    expect(mensajes({ ...fijo, costo: undefined, unaVezPorTurno: true })).toHaveLength(1)
-    expect(mensajes({ ...fijo, costo: { tipo: 'eter_bloqueado', cantidad: 4 } })).toEqual([]) // sin el flag no hay nada que decir
+    const msg = 'Efecto 1: la «Activación» (una vez por turno / una vez mientras siga bloqueado) solo sirve con el coste «Bloqueo fijo»'
+    for (const activacion of ['una_por_turno', 'una_mientras_bloqueado']) {
+      expect(mensajes({ ...fijo, activacion })).toEqual([])
+      expect(mensajes({ ...fijo, costo: { tipo: 'eter_bloqueado', cantidad: 4 }, activacion })).toEqual([msg])
+      expect(mensajes({ ...fijo, costo: undefined, activacion })).toHaveLength(1)
+    }
+    expect(mensajes({ ...fijo, costo: { tipo: 'eter_bloqueado', cantidad: 4 } })).toEqual([]) // sin activación no hay nada que decir
   })
   it('un Disparo no puede bloquear Éter (se paga), pero un Continuo sí', () => {
     const msg = 'Efecto 1: un Disparo no puede bloquear Éter: se paga con Éter (usa un Continuo si el efecto debe bloquearlo)'

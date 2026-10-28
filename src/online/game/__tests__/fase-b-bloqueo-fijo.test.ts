@@ -7,8 +7,8 @@
  *  - Con `unaVezPorTurno: true`: solo una activación de ESE efecto por turno (por carta y por índice).
  *    Se gasta al pagar y se reinicia al terminar el turno.
  *
- * Cartas reales: Aurora FB-010 (sin restricción), Elena FB-015 (sostenido, sin elección).
- * La restricción se prueba con un Dummy sintético: las cartas reales aún NO tienen el flag (Fase C).
+ * Cartas reales: Aurora FB-010 (una vez por turno), Elena FB-015 (una sola vez mientras siga bloqueado).
+ * La restricción por turno se prueba con un Dummy sintético; las cartas reales se prueban sin ella con copias.
  */
 import { describe, it, expect } from 'vitest'
 import { applyAction } from '../actions'
@@ -48,7 +48,7 @@ registrarCartas([{
     objetivo: { tipo: 'campeon', controlador: 'rival', zona: 'campo' },
     duracion: 'mientras_ester_bloqueado',
     costo: { tipo: 'bloqueo_fijo', cantidad: 4 },
-    unaVezPorTurno: true,
+    activacion: 'una_por_turno',
     texto: 'Bloquea 4 Éter, una vez por turno, toma control de 1 Campeón rival, mientras tenga esta carta Éter bloqueado.',
   }],
 } as unknown as AnyCard])
@@ -57,7 +57,7 @@ registrarCartas([{
 // exactas de Aurora y Elena (mismo JSON, sin el flag).
 function copiaSinRestriccion(id: string, de: string): void {
   const meta = getCardMeta(de) as unknown as { efectos: Record<string, unknown>[] }
-  registrarCartas([{ ...meta, id, efectos: meta.efectos.map(({ unaVezPorTurno: _u, ...e }) => e) } as unknown as AnyCard])
+  registrarCartas([{ ...meta, id, efectos: meta.efectos.map(({ activacion: _a, ...e }) => e) } as unknown as AnyCard])
 }
 const AURORA_LIBRE = 'TEST-AURORA-LIBRE'
 const ELENA_LIBRE = 'TEST-ELENA-LIBRE'
@@ -179,6 +179,54 @@ describe('(a) bloqueo_fijo repetible — Aurora (copia exacta) sin restricción'
   it('bloquear 5 Éter en una acción se rechaza (exactamente N por activación)', () => {
     const s = escenarioAurora()
     expect(validarBloqueo(s, 'A', ids(0, 5), 'aur')).toMatch(/exactamente 4/)
+  })
+})
+
+describe('«Una sola vez mientras siga bloqueado» — Elena real (FB-015) y Último Refugio (FB-022)', () => {
+  /** Elena (A, slot 0) con `n` Éter en la Reserva. */
+  function escenarioElena(n = 8): GameState {
+    let s = base()
+    s = poner(s, 'ele', ELENA)
+    s = enCampo(s, 'A', 0, 'ele')
+    const ids = Array.from({ length: n }, (_, i) => `y${i}`)
+    for (const id of ids) s = poner(s, id, ETER)
+    return conReserva(s, ids)
+  }
+  const idsY = (a: number, b: number) => Array.from({ length: b - a }, (_, i) => `y${a + i}`)
+
+  it('la primera activación bloquea 3 y la segunda se rechaza mientras ese Éter siga bloqueado', () => {
+    let s = escenarioElena()
+    expect(validarBloqueo(s, 'A', idsY(0, 3), 'ele')).toBeNull()
+    s = aplicar(s, { type: 'bloquear_eter', eterIds: idsY(0, 3), targetInstanceId: 'ele' })
+    expect(s.instances['ele'].eterBloqueado).toHaveLength(3)
+    expect(validarBloqueo(s, 'A', idsY(3, 6), 'ele')).toMatch(/solo una vez mientras siga bloqueado/)
+  })
+
+  it('no se ofrece de nuevo mientras está activo, y vuelve a ofrecerse al liberarse su Éter', () => {
+    let s = escenarioElena()
+    const hayBloqueo = (st: GameState) => getValidActions(st, 'A').some((a) => a.type === 'bloquear_eter' && a.targetInstanceId === 'ele')
+    expect(hayBloqueo(s)).toBe(true)
+    s = aplicar(s, { type: 'bloquear_eter', eterIds: idsY(0, 3), targetInstanceId: 'ele' })
+    expect(hayBloqueo(s)).toBe(false)
+    const ctx = crearCtx()
+    liberarEterBloqueado(s, ctx, 'ele', '2A')
+    expect(hayBloqueo(s)).toBe(true)
+    expect(validarBloqueo(s, 'A', idsY(3, 6), 'ele')).toBeNull()
+  })
+
+  it('el Éter externo (Pasivo 1A) no cuenta: con 1 externo encima, Elena aún se activa con sus 3 propios', () => {
+    let s = escenarioElena()
+    s = poner(s, 'ext', ETER)
+    s = { ...s, instances: { ...s.instances, ele: { ...s.instances['ele'], eterBloqueado: ['ext'] } } as GameState['instances'] }
+    s.instances['ext'].bloqueadoPorEfecto = claveExterno('ele')
+    expect(validarBloqueo(s, 'A', idsY(0, 3), 'ele')).toBeNull()
+  })
+
+  it('con Éter propio bloqueado, tampoco acepta el externo como segunda activación propia', () => {
+    let s = escenarioElena()
+    s = aplicar(s, { type: 'bloquear_eter', eterIds: idsY(0, 3), targetInstanceId: 'ele' })
+    // el externo sí entra por su camino (no es una activación), pero otra activación propia no
+    expect(validarBloqueo(s, 'A', idsY(3, 6), 'ele')).not.toBeNull()
   })
 })
 

@@ -375,7 +375,7 @@ export function EffectField({ label, value, onChange, cardType }: EffectFieldPro
       {/* Capa 3: Costo (for disparo/continuo) */}
       {showCost && (
         <div className="grid grid-cols-3 gap-2 mt-2">
-          <SelectField label="Costo" value={data.costo?.tipo} options={COSTO_OPTIONS.filter((o) => o.value !== 'exile_self' && o.value !== 'cemetery_self')} onChange={(v) => update({ costo: { ...data.costo, tipo: v as any }, ...(v !== 'bloqueo_fijo' ? { unaVezPorTurno: undefined } : {}) })} />
+          <SelectField label="Costo" value={data.costo?.tipo} options={COSTO_OPTIONS.filter((o) => o.value !== 'exile_self' && o.value !== 'cemetery_self')} onChange={(v) => update({ costo: { ...data.costo, tipo: v as any }, ...(v !== 'bloqueo_fijo' ? { activacion: undefined } : {}) })} />
           {data.costo?.tipo && data.costo.tipo !== 'ninguno' && <NumberInput label="Cantidad" value={data.costo?.cantidad} onChange={(v) => updateCosto({ cantidad: v })} min={1} max={10} />}
           {/* Fase 2 (c): zona de ORIGEN del pago — solo costos de bloqueo
               ('reserva' 2A default / 'pagado' 1A — FB-025 "desde la zona de
@@ -391,17 +391,18 @@ export function EffectField({ label, value, onChange, cardType }: EffectFieldPro
               onChange={(v) => updateCosto({ origen: v as 'reserva' | 'pagado' })}
             />
           )}
-          {/* Solo un bloqueo fijo (N exactos por activación) se puede limitar: cada carta y efecto, una activación por turno */}
+          {/* Solo un bloqueo fijo (N exactos por activación) se puede limitar: cuántas veces se activa cada efecto de cada carta */}
           {data.costo?.tipo === 'bloqueo_fijo' && (
-            <label className="flex items-center gap-2 pb-1 self-end text-[10px] uppercase tracking-wider text-gray-400">
-              <input
-                type="checkbox"
-                checked={data.unaVezPorTurno ?? false}
-                onChange={(e) => update({ unaVezPorTurno: e.target.checked || undefined })}
-                className="rounded border-gray-600 bg-gray-800 text-ether-500 focus:ring-ether-500"
-              />
-              Una vez por turno
-            </label>
+            <SelectField
+              label="Activación"
+              value={data.activacion ?? 'repetible'}
+              options={[
+                { value: 'repetible', label: 'Repetible' },
+                { value: 'una_por_turno', label: 'Una vez por turno' },
+                { value: 'una_mientras_bloqueado', label: 'Una vez mientras siga bloqueado' },
+              ]}
+              onChange={(v) => update({ activacion: v === 'repetible' ? undefined : (v as 'una_por_turno' | 'una_mientras_bloqueado') })}
+            />
           )}
           {/* Umbral simple (solo "hasta" SIN tramos) — con tramos, la lista
               de tramos define los umbrales */}

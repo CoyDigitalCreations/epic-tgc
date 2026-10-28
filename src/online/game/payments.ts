@@ -224,8 +224,13 @@ export function validarBloqueo(
         return `bloqueo fijo: debes bloquear exactamente ${maxEter} Éter(es) por activación (seleccionaste ${eterIds.length})`
       }
       // «Una vez por turno» (opcional, Fase B): la misma activación del mismo efecto no se repite este turno
-      if (fuente && fuente.efecto.unaVezPorTurno && (inst.efectosUsadosEsteTurno ?? []).includes(fuente.indice)) {
+      if (fuente && fuente.efecto.activacion === 'una_por_turno' && (inst.efectosUsadosEsteTurno ?? []).includes(fuente.indice)) {
         return 'ya usaste este efecto este turno (una vez por turno)'
+      }
+      // «Una sola vez mientras siga bloqueado»: mientras el efecto tenga Éter PROPIO bloqueado no se activa otra vez
+      // (`actuales` ya excluye el externo, que no cuenta para el efecto)
+      if (fuente && fuente.efecto.activacion === 'una_mientras_bloqueado' && actuales > 0) {
+        return 'este efecto ya está activo: su Éter sigue bloqueado (solo una vez mientras siga bloqueado)'
       }
     } else if (total > maxEter) {
       return `máximo ${maxEter} Éter(es) bloqueado(s) en esta carta (ya tiene ${actuales})`
@@ -317,7 +322,7 @@ export function bloquearEter(
   }
   etiquetarEter(s, eterIds, targetInstanceId, fuente?.indice ?? -1, jugador)
   // Fase B: «una vez por turno» se GASTA al pagar (aunque la activación luego sea negada)
-  if (fuente?.efecto.costo?.tipo === 'bloqueo_fijo' && fuente.efecto.unaVezPorTurno) {
+  if (fuente?.efecto.costo?.tipo === 'bloqueo_fijo' && fuente.efecto.activacion === 'una_por_turno') {
     instTarget.efectosUsadosEsteTurno = [...(instTarget.efectosUsadosEsteTurno ?? []), fuente.indice]
   }
   // campeonId = id de instancia target (Campeón o Artefacto) — ver events.ts
