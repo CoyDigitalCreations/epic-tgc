@@ -3,7 +3,6 @@ import type { ReactNode } from 'react'
 import { aporteDe, atacantesElegibles, campeonesSacrificables, costeEterHabilidad, faccionesCompartidas, getCardMeta, sacrificiosRequeridos, esBloqueoFijo, maxEterBloqueado, efectoBloqueoAccion, parejasBloqueoOpcion, cadenaActiva, ordenResolucion } from '../game'
 import type { Action, CardInstance, GameState, PlayerId } from '../game'
 import { disparoDeRespuesta } from '../game/chain'
-import { esCostoBloqueo } from '../game/cards'
 import { Boton as BotonUI } from '../../shared/ui/Boton'
 import { Dock } from '../../shared/ui/Dock'
 import { Modal } from '../../shared/ui/Modal'
@@ -1240,8 +1239,7 @@ export function Tablero({
 
   /**
    * Responder en cadena: el pago lo elige el jugador (el motor manda una combinación precalculada que aquí no se usa).
-   * Aplica a la Presteza desde la mano, a la Arcana y al Disparo de un Campeón que se paga con Éter de la Reserva.
-   * Un Disparo que BLOQUEA Éter conserva el pago automático.
+   * Aplica a la Presteza desde la mano, a la Arcana y al Disparo de un Campeón (que siempre se paga con Éter: ningún Disparo bloquea).
    */
   const pagarRespuesta = (accion: Action) => {
     if (accion.type !== 'jugar_respuesta' && accion.type !== 'responder_cadena') return onAccion(accion)
@@ -1251,7 +1249,7 @@ export function Tablero({
       ? false
       : accion.type === 'jugar_respuesta' || meta.type === 'Arcana'
         ? meta.stats.cost > 0
-        : !!disparo && !esCostoBloqueo(disparo.efecto.costo) && (disparo.efecto.costo?.cantidad ?? 1) > 0
+        : !!disparo && (disparo.efecto.costo?.cantidad ?? 1) > 0
     if (meta && hayQuePagar) abrirSelector(accion, meta.id)
     else onAccion(accion)
   }

@@ -84,6 +84,10 @@ function validarEfectos(card: Partial<AnyCard>): ValidationError[] {
     // Un Continuo con coste de Éter bloqueado actúa solo, sin jugada: no puede redirigir ni negar una activación, que necesitan
     // la cadena. Esos efectos van en una Mística o un Disparo que se responda.
     const bloquea = e.costo?.tipo === 'eter_bloqueado' || e.costo?.tipo === 'bloqueo_fijo'
+    // Regla del diseño: un Disparo se paga con Éter (pasa a Éter Pagado y agota), nunca bloqueándolo; el bloqueo es de los Continuos
+    if (e.tipo === 'disparo' && bloquea) {
+      return falta('un Disparo no puede bloquear Éter: se paga con Éter (usa un Continuo si el efecto debe bloquearlo)')
+    }
     if (e.tipo === 'continuo' && bloquea && (e.efecto === 'redirect' || (e.efecto === 'negar' && e.tipoNegacion !== 'efecto_activo'))) {
       return falta(`un Continuo que bloquea Éter no puede ${e.efecto === 'redirect' ? 'redirigir' : 'negar una activación'}: eso necesita responder en la cadena (usa una Mística o un Disparo)`)
     }

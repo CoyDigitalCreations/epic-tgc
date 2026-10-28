@@ -130,6 +130,13 @@ describe('validateCard — efectos a medio configurar (se jugarían sin hacer na
     expect(mensajes({ ...fijo, costo: undefined, unaVezPorTurno: true })).toHaveLength(1)
     expect(mensajes({ ...fijo, costo: { tipo: 'eter_bloqueado', cantidad: 4 } })).toEqual([]) // sin el flag no hay nada que decir
   })
+  it('un Disparo no puede bloquear Éter (se paga), pero un Continuo sí', () => {
+    const msg = 'Efecto 1: un Disparo no puede bloquear Éter: se paga con Éter (usa un Continuo si el efecto debe bloquearlo)'
+    expect(mensajes({ tipo: 'disparo', efecto: 'destroy', costo: { tipo: 'bloqueo_fijo', cantidad: 2 } })).toEqual([msg])
+    expect(mensajes({ tipo: 'disparo', efecto: 'destroy', costo: { tipo: 'eter_bloqueado', cantidad: 2 } })).toEqual([msg])
+    expect(mensajes({ tipo: 'disparo', efecto: 'destroy', costo: { tipo: 'eter', cantidad: 2 } })).toEqual([])
+    expect(mensajes({ tipo: 'continuo', efecto: 'destroy', costo: { tipo: 'bloqueo_fijo', cantidad: 2 } })).toEqual([])
+  })
   describe('prevent_destroy y su trigger (Rowena): solo funcionan juntos', () => {
     const campeon = (efecto: object) => ({
       id: 'T-2', name: 'Rowena', type: 'Campeón', rarity: 'Común', keywords: [], flavorText: '', paqueteId: 'test', limiteCopias: '1',
