@@ -91,10 +91,18 @@ interface MatchPersist {
   rngDraws: number
 }
 
+// CORS: el cliente (Vercel, localhost) llama desde el navegador con supabase-js, que manda un preflight OPTIONS por sus cabeceras
+// propias. La autenticación va en el header Authorization (JWT), no en cookies, así que un origen abierto no abre nada nuevo.
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+}
+
 function json(res: unknown, status = 200): Response {
   return new Response(JSON.stringify(res), {
     status,
-    headers: { 'Content-Type': 'application/json' },
+    headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
   })
 }
 
@@ -177,6 +185,8 @@ async function rechazarMazoIlegal(deck: string[], jugador: 'A' | 'B'): Promise<R
 }
 
 Deno.serve(async (req) => {
+  // El preflight va ANTES de todo (sin JWT ni método): si no responde con las cabeceras CORS el navegador ni envía el POST
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS_HEADERS })
   if (req.method !== 'POST') return err('POST only', 405)
 
   const userId = userIdFromJwt(req)
