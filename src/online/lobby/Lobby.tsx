@@ -17,6 +17,7 @@ import {
   type RoomInfo,
 } from '../backend/matchApi'
 import { useOnlineMatch } from './useOnlineMatch'
+import { guardarPartida, leerPartidaGuardada, olvidarPartida } from './partidaGuardada'
 import { useMazosStore } from '../useMazosStore'
 
 type Vista = 'auth' | 'menu' | 'espera' | 'partida'
@@ -49,6 +50,30 @@ export default function Lobby() {
     return custom?.cardIds ?? MAZOS[0].cardIds
   }, [mazoId, mazosPersonalizados])
 
+  // Reconexión: si quedó una partida guardada (refresco o pestaña cerrada), el servidor dice si sigue viva. Cualquier otra
+  // respuesta (terminada, sala ajena, inexistente, error) la olvida y se queda en el menú.
+  const reconectar = useCallback(async () => {
+    const guardada = leerPartidaGuardada()
+    if (!guardada) return
+    try {
+      const resp = await obtenerEstado(guardada.gameId)
+      if (resp.status === 'playing') {
+        setSala(guardada)
+        setAmbosListos(true)
+        setEnPartida(true)
+        return
+      }
+      if (resp.status === 'lobby') {
+        setSala(guardada)
+        setVista('espera')
+        return
+      }
+    } catch {
+      // la sala ya no existe o no es nuestra
+    }
+    olvidarPartida()
+  }, [])
+
   const entrar = useCallback(async () => {
     setCargandoAuth(true)
     setErrorAuth(null)
@@ -56,12 +81,13 @@ export default function Lobby() {
       const id = await asegurarSesion()
       setUserId(id)
       setVista('menu')
+      await reconectar()
     } catch (e) {
       setErrorAuth(e instanceof Error ? e.message : String(e))
     } finally {
       setCargandoAuth(false)
     }
-  }, [])
+  }, [reconectar])
 
   // Poll de sala: cuando ambos jugadores están → start → partida.
   // Server-authoritative: NO query-eamos eter.games (RLS prohíbe SELECT al
@@ -100,6 +126,7 @@ export default function Lobby() {
     setErrorSala(null)
     try {
       const info = await crearSala(deck)
+      guardarPartida(info)
       setSala(info)
       setVista('espera')
     } catch (e) {
@@ -118,6 +145,7 @@ export default function Lobby() {
     setErrorSala(null)
     try {
       const info = await unirseASala(codigoInput, deck)
+      guardarPartida(info)
       setSala(info)
       setVista('espera')
       setAmbosListos(true)
@@ -136,6 +164,7 @@ export default function Lobby() {
   }, [codigoInput, deck])
 
   const volverMenu = () => {
+    olvidarPartida()
     setSala(null)
     setEnPartida(false)
     setAmbosListos(false)
