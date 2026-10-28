@@ -332,7 +332,7 @@
           "controlador": "rival",
           "zona": "campo"
         },
-        "texto": "Bloquea 4 Éter, toma control de 1 un Campeón que controla el rival, mientras ese Éter esté bloqueado, Al inicio de tu Alba reagrupa el Éter usado por este efecto.",
+        "texto": "Una vez por turno, bloquea 4 Éter, toma control de 1 un Campeón que controla el rival, mientras ese Éter esté bloqueado, Al inicio de tu Alba reagrupa el Éter usado por este efecto.",
         "duracion": "mientras_ester_bloqueado",
         "costo": {
           "tipo": "bloqueo_fijo",
@@ -577,7 +577,7 @@
         "objetivo": {
           "tipo": "self"
         },
-        "texto": "Bloquea 3 Éter, esta carta puede declarar 2 veces ataque, mientras ese Éter esté bloqueado.",
+        "texto": "Una vez por turno, bloquea 3 Éter, esta carta puede declarar 2 veces ataque, mientras ese Éter esté bloqueado.",
         "costo": {
           "tipo": "bloqueo_fijo",
           "cantidad": 3
@@ -866,7 +866,7 @@
           "controlador": "rival",
           "zona": "campo"
         },
-        "texto": "Bloquea 3 Éter, copia el efecto de hechizo, el efecto continuo y la recompensa de una Mística o Arcana que controla el rival, mientras ese Éter esté bloqueado.",
+        "texto": "Una vez por turno, bloquea 3 Éter, copia el efecto de hechizo, el efecto continuo y la recompensa de una Mística o Arcana que controla el rival, mientras ese Éter esté bloqueado.",
         "duracion": "mientras_ester_bloqueado",
         "costo": {
           "tipo": "bloqueo_fijo",
@@ -1247,7 +1247,7 @@
           "controlador": "propio",
           "zona": "campo"
         },
-        "texto": "Bloquea 4 Éter, invoca un Campeón del Exilio de su dueño y equipa esta carta a ese Campeón, mientras ese Éter esté bloqueado.",
+        "texto": "Una vez por turno, bloquea 4 Éter, invoca un Campeón del Exilio de su dueño y equipa esta carta a ese Campeón, mientras ese Éter esté bloqueado.",
         "zonaOrigen": "exilio",
         "duracion": "mientras_ester_bloqueado",
         "costo": {
@@ -1311,7 +1311,7 @@
           "controlador": "propio",
           "zona": "campo"
         },
-        "texto": "Bloquea 2 Éter, un Campeón que controles gana Indestructible, mientras ese Éter esté bloqueado, Al inicio de tu Alba reagrupa el Éter usado por este efecto.",
+        "texto": "Una vez por turno, bloquea 2 Éter, un Campeón que controles gana Indestructible, mientras ese Éter esté bloqueado, Al inicio de tu Alba reagrupa el Éter usado por este efecto.",
         "keyword": "Indestructible",
         "costo": {
           "tipo": "bloqueo_fijo",

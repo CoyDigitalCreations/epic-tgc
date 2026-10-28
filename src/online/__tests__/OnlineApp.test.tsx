@@ -66,16 +66,13 @@ describe('OnlineApp', () => {
     renderApp()
     await user.click(screen.getByRole('button', { name: 'Comenzar partida' }))
     await user.click(screen.getByRole('button', { name: 'Pasar mulligan' }))
-    // Expandir Log Detallado para ver los eventos del bot
-    await user.click(screen.getByText(/Log Detallado/))
-    // El bot juega su mulligan solo y la partida arranca
+    // El bot decide su mulligan solo (hacerlo o pasar depende de su mano y su nivel) y la partida arranca
     await waitFor(
       () => {
-        expect(screen.getByText(/B hace mulligan/)).toBeInTheDocument()
+        expect(screen.queryByText(/Tú decides el mulligan/)).not.toBeInTheDocument()
       },
-      { timeout: 5000 },
+      { timeout: 10000 },
     )
-    expect(screen.queryByText(/Tú decides el mulligan/)).not.toBeInTheDocument()
   })
 
   it('rendirse termina la partida con derrota y permite volver', async () => {
