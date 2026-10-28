@@ -345,7 +345,7 @@ var FuenteEfectos_default = [
           controlador: "rival",
           zona: "campo"
         },
-        texto: "Bloquea 4 \xC9ter, toma control de 1 un Campe\xF3n que controla el rival, mientras ese \xC9ter est\xE9 bloqueado, Al inicio de tu Alba reagrupa el \xC9ter usado por este efecto.",
+        texto: "Una vez por turno, bloquea 4 \xC9ter, toma control de 1 un Campe\xF3n que controla el rival, mientras ese \xC9ter est\xE9 bloqueado, Al inicio de tu Alba reagrupa el \xC9ter usado por este efecto.",
         duracion: "mientras_ester_bloqueado",
         costo: {
           tipo: "bloqueo_fijo",
@@ -355,7 +355,7 @@ var FuenteEfectos_default = [
           fase: "alba",
           turno: "propio"
         },
-        unaVezPorTurno: true
+        activacion: "una_por_turno"
       }
     ],
     efectoComandante: {
@@ -590,13 +590,13 @@ var FuenteEfectos_default = [
         objetivo: {
           tipo: "self"
         },
-        texto: "Bloquea 3 \xC9ter, esta carta puede declarar 2 veces ataque, mientras ese \xC9ter est\xE9 bloqueado.",
+        texto: "Bloquea 3 \xC9ter (solo una vez mientras siga bloqueado), esta carta puede declarar 2 veces ataque, mientras ese \xC9ter est\xE9 bloqueado.",
         costo: {
           tipo: "bloqueo_fijo",
           cantidad: 3
         },
         duracion: "mientras_ester_bloqueado",
-        unaVezPorTurno: true
+        activacion: "una_mientras_bloqueado"
       }
     ],
     variante: "normal"
@@ -879,7 +879,7 @@ var FuenteEfectos_default = [
           controlador: "rival",
           zona: "campo"
         },
-        texto: "Bloquea 3 \xC9ter, copia el efecto de hechizo, el efecto continuo y la recompensa de una M\xEDstica o Arcana que controla el rival, mientras ese \xC9ter est\xE9 bloqueado.",
+        texto: "Bloquea 3 \xC9ter (solo una vez mientras siga bloqueado), copia el efecto de hechizo, el efecto continuo y la recompensa de una M\xEDstica o Arcana que controla el rival, mientras ese \xC9ter est\xE9 bloqueado.",
         duracion: "mientras_ester_bloqueado",
         costo: {
           tipo: "bloqueo_fijo",
@@ -890,7 +890,7 @@ var FuenteEfectos_default = [
           "mistica_continuo",
           "arcana_recompensa"
         ],
-        unaVezPorTurno: true
+        activacion: "una_mientras_bloqueado"
       }
     ]
   },
@@ -1266,8 +1266,7 @@ var FuenteEfectos_default = [
         costo: {
           tipo: "bloqueo_fijo",
           cantidad: 4
-        },
-        unaVezPorTurno: true
+        }
       }
     ]
   },
@@ -1324,7 +1323,7 @@ var FuenteEfectos_default = [
           controlador: "propio",
           zona: "campo"
         },
-        texto: "Bloquea 2 \xC9ter, un Campe\xF3n que controles gana Indestructible, mientras ese \xC9ter est\xE9 bloqueado, Al inicio de tu Alba reagrupa el \xC9ter usado por este efecto.",
+        texto: "Una vez por turno, bloquea 2 \xC9ter, un Campe\xF3n que controles gana Indestructible, mientras ese \xC9ter est\xE9 bloqueado, Al inicio de tu Alba reagrupa el \xC9ter usado por este efecto.",
         keyword: "Indestructible",
         costo: {
           tipo: "bloqueo_fijo",
@@ -1335,7 +1334,7 @@ var FuenteEfectos_default = [
           fase: "alba",
           turno: "propio"
         },
-        unaVezPorTurno: true
+        activacion: "una_por_turno"
       }
     ],
     efectoComandante: {
@@ -3992,8 +3991,11 @@ function validarBloqueo(state, jugador, eterIds, targetInstanceId, efectoIdx, op
       if (eterIds.length !== maxEter) {
         return `bloqueo fijo: debes bloquear exactamente ${maxEter} \xC9ter(es) por activaci\xF3n (seleccionaste ${eterIds.length})`;
       }
-      if (fuente && fuente.efecto.unaVezPorTurno && (inst.efectosUsadosEsteTurno ?? []).includes(fuente.indice)) {
+      if (fuente && fuente.efecto.activacion === "una_por_turno" && (inst.efectosUsadosEsteTurno ?? []).includes(fuente.indice)) {
         return "ya usaste este efecto este turno (una vez por turno)";
+      }
+      if (fuente && fuente.efecto.activacion === "una_mientras_bloqueado" && actuales > 0) {
+        return "este efecto ya est\xE1 activo: su \xC9ter sigue bloqueado (solo una vez mientras siga bloqueado)";
       }
     } else if (total > maxEter) {
       return `m\xE1ximo ${maxEter} \xC9ter(es) bloqueado(s) en esta carta (ya tiene ${actuales})`;
@@ -4053,7 +4055,7 @@ function bloquearEter(s, ctx, jugador, eterIds, targetInstanceId, efectoIdx) {
     if (idx !== -1) zonaOrigen.splice(idx, 1);
   }
   etiquetarEter(s, eterIds, targetInstanceId, fuente?.indice ?? -1, jugador);
-  if (fuente?.efecto.costo?.tipo === "bloqueo_fijo" && fuente.efecto.unaVezPorTurno) {
+  if (fuente?.efecto.costo?.tipo === "bloqueo_fijo" && fuente.efecto.activacion === "una_por_turno") {
     instTarget.efectosUsadosEsteTurno = [...instTarget.efectosUsadosEsteTurno ?? [], fuente.indice];
   }
   ctx.emit({ type: "eter_bloqueado", jugador, eterIds, campeonId: targetInstanceId });
@@ -8099,7 +8101,7 @@ function accionesBloqueoEter(state, playerId, enCadena = false) {
         const fijo = efecto.costo?.tipo === "bloqueo_fijo";
         const multi = fuentes.length > 1 ? { efectoIdx: i } : {};
         if (fijo) {
-          const usado = efecto.unaVezPorTurno === true && (t.inst.efectosUsadosEsteTurno ?? []).includes(i);
+          const usado = efecto.activacion === "una_por_turno" && (t.inst.efectosUsadosEsteTurno ?? []).includes(i) || efecto.activacion === "una_mientras_bloqueado" && actuales > 0;
           if (!usado && disponibles.length >= maxEter) {
             acciones.push({
               type: "bloquear_eter",
