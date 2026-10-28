@@ -290,7 +290,8 @@ Deno.serve(async (req) => {
   async function loadPersist(): Promise<MatchPersist | null> {
     const raw = game.state_json
     if (!raw || typeof raw !== 'object') return null
-    if ('state' in raw && 'rngDraws' in raw) return raw as MatchPersist
+    // Filas viejas de un forfeit en sala dejaron { state: null }: sin estado no hay partida que cargar
+    if ('state' in raw && 'rngDraws' in raw) return raw.state ? (raw as MatchPersist) : null
     if ('version' in raw && 'seed' in raw) {
       return { state: raw, rngDraws: 0 }
     }
@@ -369,9 +370,22 @@ Deno.serve(async (req) => {
     if (game.status !== 'playing' && game.status !== 'lobby') {
       return err('game already finished', 409)
     }
-    const winner = playerId === 'A' ? 'B' : 'A'
     const persistObj = await loadPersist()
-    await persist(persistObj ?? { state: null as never, rngDraws: 0 }, {
+    // Sala que nunca arrancó (cancelar o rendirse en la espera): no hay estado ni ganador, y state_json no se toca
+    if (!persistObj) {
+      const res = await sb(`games?id=eq.${encodeURIComponent(gameId)}&status=in.(lobby,playing)`, {
+        method: 'PATCH',
+        headers: { Prefer: 'return=minimal' },
+        body: JSON.stringify({ status: 'finished', winner: null, finish_reason: 'abandono', finished_at: new Date().toISOString() }),
+      })
+      if (!res.ok) {
+        console.error('forfeit (sin estado) failed', await res.text())
+        return err('failed to close room', 500)
+      }
+      return json({ ok: true, winner: null, finishReason: 'abandono' })
+    }
+    const winner = playerId === 'A' ? 'B' : 'A'
+    await persist(persistObj, {
       status: 'finished',
       winner,
       finish_reason: 'rendicion',

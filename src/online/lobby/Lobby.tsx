@@ -13,6 +13,7 @@ import {
   crearSala,
   iniciarPartida,
   obtenerEstado,
+  rendirse,
   unirseASala,
   type RoomInfo,
 } from '../backend/matchApi'
@@ -173,6 +174,19 @@ export default function Lobby() {
     setVista('menu')
   }
 
+  // Cancelar la sala de espera: se cierra en el servidor (si no, seguiría abierta para que otro se una con el código).
+  // Best-effort: si falla, igual se sale; el servidor la limpia al consultarla.
+  const cancelarSala = async () => {
+    const gameId = sala?.gameId
+    volverMenu()
+    if (!gameId) return
+    try {
+      await rendirse(gameId)
+    } catch {
+      // sin red o sala ya cerrada: nada más que hacer
+    }
+  }
+
   if (!supabaseConfigurado()) {
     return (
       <Shell titulo="Jugar con amigos" sub="Falta un paso de configuración" ancho="md">
@@ -276,7 +290,7 @@ VITE_SUPABASE_ANON_KEY=sb_publishable_...`}
               <Aviso>{errorSala}</Aviso>
             </div>
           )}
-          <Boton variante="fantasma" tam="sm" className="mt-5" onClick={volverMenu}>
+          <Boton variante="fantasma" tam="sm" className="mt-5" onClick={() => void cancelarSala()}>
             Cancelar sala
           </Boton>
         </Panel>

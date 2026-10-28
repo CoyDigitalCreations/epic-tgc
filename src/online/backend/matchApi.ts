@@ -94,7 +94,7 @@ export async function obtenerEstado(gameId: string): Promise<MatchStateResponse>
   return callMatchEngine<MatchStateResponse>({ action: 'state', gameId })
 }
 
-export async function rendirse(gameId: string): Promise<{ ok: boolean; winner?: PlayerId }> {
+export async function rendirse(gameId: string): Promise<{ ok: boolean; winner?: PlayerId | null }> {
   return callMatchEngine({ action: 'forfeit', gameId })
 }
 

@@ -33,7 +33,7 @@ vi.mock('../../backend/matchApi', () => ({
 }))
 
 import Lobby from '../Lobby'
-import { asegurarSesion, obtenerEstado } from '../../backend/matchApi'
+import { asegurarSesion, obtenerEstado, rendirse } from '../../backend/matchApi'
 
 describe('Lobby online', () => {
   it('sin env vars muestra instrucciones de configuración', () => {
@@ -85,6 +85,17 @@ describe('Lobby online: reconexión tras refrescar', () => {
     await entrarAlLobby()
     await userEvent.setup().click(await screen.findByRole('button', { name: /^crear sala$/i }))
     expect(JSON.parse(window.localStorage.getItem('eter-online:partida')!)).toMatchObject({ gameId: 'g1', player: 'A' })
+  })
+
+  it('cancelar la sala de espera la cierra en el servidor y olvida la partida', async () => {
+    vi.mocked(rendirse).mockClear()
+    await entrarAlLobby()
+    const user = userEvent.setup()
+    await user.click(await screen.findByRole('button', { name: /^crear sala$/i }))
+    await user.click(await screen.findByRole('button', { name: /cancelar sala/i }))
+    expect(rendirse).toHaveBeenCalledWith('g1')
+    expect(window.localStorage.getItem('eter-online:partida')).toBeNull()
+    expect(await screen.findByRole('button', { name: /^crear sala$/i })).toBeInTheDocument()
   })
 
   it('con una partida viva guardada, entrar vuelve directo a ella (no al menú)', async () => {
