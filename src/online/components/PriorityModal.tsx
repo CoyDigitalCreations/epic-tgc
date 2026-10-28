@@ -25,7 +25,7 @@ interface PriorityModalProps {
   playerId: PlayerId
   acciones: Action[]
   onAccion: (a: Action) => void
-  /** Jugar desde la mano exige elegir el pago: si se pasa, «Jugar» abre ese selector en vez de mandar la combinación del motor. */
+  /** Responder paga con Éter: si se pasa, «Jugar» y «Responder» pasan por aquí para que el jugador elija el pago en vez de mandar la combinación del motor. */
   onElegirPago?: (a: Action) => void
   onZoom: (inst: CardInstance) => void
 }
@@ -163,7 +163,7 @@ export function PriorityModal({ state, playerId, acciones, onAccion, onElegirPag
                   <div key={id} className="flex flex-col items-center gap-1.5">
                     <MiniCard inst={inst} anchoPx={76} sinTooltip onZoom={() => onZoom(inst)} />
                     {accion && (
-                      <Boton variante="primario" tam="sm" onClick={() => onAccion(accion)}>
+                      <Boton variante="primario" tam="sm" onClick={() => (onElegirPago ?? onAccion)(accion)}>
                         Responder
                       </Boton>
                     )}

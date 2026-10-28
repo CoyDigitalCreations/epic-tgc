@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { aporteDe, atacantesElegibles, campeonesSacrificables, costeEterHabilidad, faccionesCompartidas, getCardMeta, sacrificiosRequeridos, esBloqueoFijo, maxEterBloqueado, efectoBloqueoAccion, parejasBloqueoOpcion, cadenaActiva, ordenResolucion } from '../game'
 import type { Action, CardInstance, GameState, PlayerId } from '../game'
+import { disparoDeRespuesta } from '../game/chain'
+import { esCostoBloqueo } from '../game/cards'
 import { Boton as BotonUI } from '../../shared/ui/Boton'
 import { Dock } from '../../shared/ui/Dock'
 import { Modal } from '../../shared/ui/Modal'
@@ -1222,9 +1224,13 @@ export function Tablero({
     if (accionBase.type === 'bloquear_eter') {
       setSeleccion({ tipo: 'bloquear', accionBase, objetivoCardId, targetInstanceId: accionBase.targetInstanceId })
     } else {
+      // Habilidad y Disparo (Campeón que responde) cuestan lo que dice su efecto; el resto, el coste de la carta
+      const disparoResp = accionBase.type === 'responder_cadena' && meta.type === 'Campeón' ? disparoDeRespuesta(meta) : null
       const costo = accionBase.type === 'activar_habilidad'
         ? (costeEterHabilidad(meta) || 1)
-        : meta.stats.cost
+        : disparoResp
+          ? (disparoResp.efecto.costo?.cantidad || 1)
+          : meta.stats.cost
       setSeleccion({ tipo: 'pagar', accionBase, objetivoCardId, coste: costo })
     }
     setElegidos(new Set())
@@ -1232,10 +1238,21 @@ export function Tablero({
     setPanelAbierto(null)
   }
 
-  /** Presteza desde la mano: el pago lo elige el jugador (el motor manda una combinación precalculada que aquí no se usa). */
+  /**
+   * Responder en cadena: el pago lo elige el jugador (el motor manda una combinación precalculada que aquí no se usa).
+   * Aplica a la Presteza desde la mano, a la Arcana y al Disparo de un Campeón que se paga con Éter de la Reserva.
+   * Un Disparo que BLOQUEA Éter conserva el pago automático.
+   */
   const pagarRespuesta = (accion: Action) => {
-    const meta = accion.type === 'jugar_respuesta' ? getCardMeta(vista.instances[accion.cardInstanceId]?.cardId ?? '') : null
-    if (meta && meta.stats.cost > 0) abrirSelector(accion, meta.id)
+    if (accion.type !== 'jugar_respuesta' && accion.type !== 'responder_cadena') return onAccion(accion)
+    const meta = getCardMeta(vista.instances[accion.cardInstanceId]?.cardId ?? '')
+    const disparo = meta?.type === 'Campeón' ? disparoDeRespuesta(meta) : null
+    const hayQuePagar = !meta
+      ? false
+      : accion.type === 'jugar_respuesta' || meta.type === 'Arcana'
+        ? meta.stats.cost > 0
+        : !!disparo && !esCostoBloqueo(disparo.efecto.costo) && (disparo.efecto.costo?.cantidad ?? 1) > 0
+    if (meta && hayQuePagar) abrirSelector(accion, meta.id)
     else onAccion(accion)
   }
 
@@ -1434,7 +1451,7 @@ export function Tablero({
     const accionConPago = {
       ...accionBase,
       eterIds: [...elegidos],
-      ...(accionBase.type === 'jugar_respuesta' ? {} : { sacrificios: [...sacrificiosElegidos] }),
+      ...(accionBase.type === 'jugar_respuesta' || accionBase.type === 'responder_cadena' ? {} : { sacrificios: [...sacrificiosElegidos] }),
     } as Action
 
     // ¿Necesita selección de casilla?

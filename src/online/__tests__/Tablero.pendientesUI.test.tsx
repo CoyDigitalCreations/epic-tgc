@@ -106,4 +106,35 @@ describe('Presteza desde la mano: el jugador elige con qué Éter paga', () => {
     expect(onAccion).not.toHaveBeenCalled()
     expect(screen.getByText('Pagar con Éter')).toBeInTheDocument()
   })
+
+  it('«Responder» con una Arcana también deja elegir el Éter', async () => {
+    const user = userEvent.setup()
+    const s = conCadena()
+    s.players.A.mano = []
+    // El Reino Perdido (coste 2) boca abajo con su candado abierto: puede activarse como respuesta
+    s.instances.arc = { cardInstanceId: 'arc', cardId: 'FB-023', owner: 'A', bocaArriba: false, condicionHabilitada: true }
+    s.players.A.campo.arcanasCombate[0] = 'arc'
+    expect(getValidActions(s, 'A').some((a) => a.type === 'responder_cadena' && a.cardInstanceId === 'arc')).toBe(true)
+    const onAccion = montar(s)
+
+    await user.click(screen.getByRole('button', { name: 'Responder' }))
+
+    expect(onAccion).not.toHaveBeenCalled()
+    expect(screen.getByText('Pagar con Éter')).toBeInTheDocument()
+  })
+
+  it('«Responder» con el Disparo de un Campeón (Aurora, paga 2 Éter) también deja elegir el Éter', async () => {
+    const user = userEvent.setup()
+    const s = conCadena()
+    s.players.A.mano = []
+    s.instances.aurora = { cardInstanceId: 'aurora', cardId: 'FB-010', owner: 'A' }
+    s.players.A.campo.campeones[1] = 'aurora'
+    expect(getValidActions(s, 'A').some((a) => a.type === 'responder_cadena' && a.cardInstanceId === 'aurora')).toBe(true)
+    const onAccion = montar(s)
+
+    await user.click(screen.getByRole('button', { name: 'Responder' }))
+
+    expect(onAccion).not.toHaveBeenCalled()
+    expect(screen.getByText('Pagar con Éter')).toBeInTheDocument()
+  })
 })
