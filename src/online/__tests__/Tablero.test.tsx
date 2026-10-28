@@ -202,6 +202,26 @@ describe('Selección de Éter en el tablero 4×7', () => {
     expect(accion.targetInstanceId).toBe('inst-camp')
     expect(accion.eterIds.length).toBe(4)
   })
+
+  it('el bloqueo fijo pide N exactos aunque la carta ya tenga Éter bloqueado (externo del Pasivo 1A u otra activación)', async () => {
+    const user = userEvent.setup()
+    const estado = forjaDeA()
+    estado.instances['inst-camp'] = { cardInstanceId: 'inst-camp', cardId: 'FB-010', owner: 'A', eterBloqueado: ['eter-previo'] }
+    estado.instances['eter-previo'] = { cardInstanceId: 'eter-previo', cardId: 'FB-001', owner: 'A' }
+    estado.players.A.campo.campeones[0] = 'inst-camp'
+    while (estado.players.A.eterReserva.length < 5) {
+      const id = `eter-extra-${estado.players.A.eterReserva.length}`
+      estado.instances[id] = { cardInstanceId: id, cardId: 'FB-001', owner: 'A' }
+      estado.players.A.eterReserva.push(id)
+    }
+
+    render(
+      <Tablero vista={visibleState(estado, 'A')} acciones={getValidActions(estado, 'A')} leTocaA={true} log={[]} onAccion={vi.fn()} onAbandonar={vi.fn()} />,
+    )
+    await user.click(screen.getAllByRole('button', { name: 'Bloquear' })[0])
+    // Antes pedía 3 (4 − 1 ya bloqueado) y el motor rechazaba: «debes bloquear exactamente 4»
+    expect(screen.getByText(/Bloquea exactamente 4 Éter/)).toBeInTheDocument()
+  })
 })
 
 describe('Zoom de carta (CartaZoom)', () => {

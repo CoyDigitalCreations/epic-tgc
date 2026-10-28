@@ -60,9 +60,13 @@ function montar(estado: GameState) {
 }
 
 describe('Pasivo 1A: modal para elegir Campeón y Éter', () => {
-  it('se abre solo, pide primero el Campeón y después el Éter, y manda la pareja elegida', async () => {
+  it('no se abre solo: ofrece «Puedes bloquear Éter» y, al pulsarlo, pide el Campeón y después el Éter', async () => {
     const user = userEvent.setup()
     const onAccion = montar(escenario())
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(onAccion).not.toHaveBeenCalled()
+    await user.click(screen.getByRole('button', { name: 'Puedes bloquear Éter (Pasivo)' }))
 
     const modal = screen.getByRole('dialog')
     expect(within(modal).getByText('Éter de la Voz de las Casas')).toBeInTheDocument()
@@ -76,8 +80,10 @@ describe('Pasivo 1A: modal para elegir Campeón y Éter', () => {
     expect(onAccion).toHaveBeenCalledWith({ type: 'elegir_opcion', opcionId: 'pasivo', campeonId: 'cass2', eterId: 'e2' })
   })
 
-  it('con un solo Campeón elegible salta directo a elegir el Éter', () => {
+  it('con un solo Campeón elegible salta directo a elegir el Éter', async () => {
+    const user = userEvent.setup()
     montar(escenario(true))
+    await user.click(screen.getByRole('button', { name: 'Puedes bloquear Éter (Pasivo)' }))
     expect(screen.getByText(/Elige el Éter de tu Reserva que se bloquea sobre Cassandra/)).toBeInTheDocument()
   })
 
@@ -85,11 +91,12 @@ describe('Pasivo 1A: modal para elegir Campeón y Éter', () => {
     const user = userEvent.setup()
     const onAccion = montar(escenario())
 
+    await user.click(screen.getByRole('button', { name: 'Puedes bloquear Éter (Pasivo)' }))
     await user.click(screen.getByRole('button', { name: 'Ahora no' }))
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     expect(onAccion).not.toHaveBeenCalled()
 
-    await user.click(screen.getByRole('button', { name: 'Bloquear Éter (Pasivo)' }))
+    await user.click(screen.getByRole('button', { name: 'Puedes bloquear Éter (Pasivo)' }))
     expect(screen.getByRole('dialog')).toBeInTheDocument()
   })
 

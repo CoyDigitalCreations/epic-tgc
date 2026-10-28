@@ -1129,12 +1129,12 @@ export function Tablero({
   const [bloqueoAbierto, setBloqueoAbierto] = useState(false)
   /** A6 (2026-10-22): subconjunto de atacantes elegidos para declarar un único ataque múltiple */
   const [selAtaque, setSelAtaque] = useState<string[]>([])
-  /** Pasivo 1A (FB-005/DS-006): opción de bloqueo pendiente y la que el jugador dejó "para después" (el botón de Acciones la reabre). */
+  /** Pasivo 1A (FB-005/DS-006): opción de bloqueo disponible. Es VOLUNTARIA: no se abre sola, solo cuando el jugador pulsa «Puedes bloquear Éter». */
   const opcionBloqueo = acciones.find((a): a is Extract<Action, { type: 'elegir_opcion' }> => a.type === 'elegir_opcion')
   const opcionBloqueoId = opcionBloqueo?.opcionId ?? null
-  const [opcionCerrada, setOpcionCerrada] = useState<string | null>(null)
+  const [opcionAbierta, setOpcionAbierta] = useState<string | null>(null)
   useEffect(() => {
-    if (opcionBloqueoId === null) setOpcionCerrada(null)
+    if (opcionBloqueoId === null) setOpcionAbierta(null)
   }, [opcionBloqueoId])
   const abrirZoom = (inst: CardInstance) => setZoom(inst)
   /** Contenedor donde se miden las cartas para animar su movimiento (los modales quedan fuera). */
@@ -1258,10 +1258,8 @@ export function Tablero({
         if (seleccion?.tipo === 'bloquear') {
           const meta = getCardMeta(seleccion.objetivoCardId)
           if (meta && esBloqueoFijo(meta)) {
-            const inst = vista.instances[seleccion.targetInstanceId]
-            const actuales = inst?.eterBloqueado?.length ?? 0
-            const requerido = maxEterBloqueado(meta) - actuales
-            if (next.size >= requerido) return prev
+            // N exactos POR ACTIVACIÓN: el Éter que ya tiene la carta (otras activaciones o el externo del Pasivo 1A) no cuenta
+            if (next.size >= maxEterBloqueado(meta)) return prev
           }
         }
         next.add(instanceId)
@@ -1361,11 +1359,8 @@ export function Tablero({
     if (seleccion.tipo === 'bloquear') {
       const meta = getCardMeta(seleccion.objetivoCardId)
       if (meta && esBloqueoFijo(meta)) {
-        // "Bloquea X Éter" → pago EXACTO
-        const inst = vista.instances[seleccion.targetInstanceId]
-        const actuales = inst?.eterBloqueado?.length ?? 0
-        const requerido = maxEterBloqueado(meta) - actuales
-        return elegidos.size === requerido
+        // "Bloquea X Éter" → pago EXACTO por activación (lo ya bloqueado en la carta no se descuenta)
+        return elegidos.size === maxEterBloqueado(meta)
       }
       // "hasta X" → al menos 1 (el validador del motor corta el exceso)
       return elegidos.size > 0
@@ -1779,10 +1774,10 @@ export function Tablero({
                   ))}
                   {parejasOpcion.length > 0 && (
                     <button
-                      onClick={() => setOpcionCerrada(null)}
+                      onClick={() => setOpcionAbierta(opcionBloqueoId)}
                       className="text-xs font-bold bg-amber-400 hover:bg-amber-300 text-gray-950 px-3 py-1 rounded-md shadow-[0_0_0_1px_rgba(253,230,138,0.6)] transition-colors cursor-pointer whitespace-nowrap"
                     >
-                      Bloquear Éter (Pasivo)
+                      Puedes bloquear Éter (Pasivo)
                     </button>
                   )}
                   {opcionesRuptura.length > 0 && (
@@ -1941,10 +1936,7 @@ export function Tablero({
                     const meta = getCardMeta(seleccion.objetivoCardId)
                     const zonaTxt = origenPagadoBloqueo ? ' de tu Éter Pagado (1A)' : ''
                     if (meta && esBloqueoFijo(meta)) {
-                      const inst = vista.instances[seleccion.targetInstanceId]
-                      const actuales = inst?.eterBloqueado?.length ?? 0
-                      const requerido = maxEterBloqueado(meta) - actuales
-                      return `Bloquea exactamente ${requerido} Éter(es) sobre ${meta.name}${zonaTxt}:`
+                      return `Bloquea exactamente ${maxEterBloqueado(meta)} Éter(es) sobre ${meta.name}${zonaTxt}:`
                     }
                     return `Elige los Éteres a bloquear${zonaTxt} (hasta el máximo):`
                   })()
@@ -2191,13 +2183,13 @@ export function Tablero({
       )}
 
       {/* ── Pasivo 1A (FB-005/DS-006): elegir Campeón + Éter a bloquear. Voluntario: "Ahora no" lo deja para después ── */}
-      {leTocaA && tutores.length === 0 && opcionBloqueo && parejasOpcion.length > 0 && opcionCerrada !== opcionBloqueo.opcionId && (
+      {leTocaA && tutores.length === 0 && opcionBloqueo && parejasOpcion.length > 0 && opcionAbierta === opcionBloqueo.opcionId && (
         <ElegirBloqueoModal
           vista={vista}
           parejas={parejasOpcion}
           fuenteNombre={getCardMeta(vista.instances[opcionBloqueo.opcionId]?.cardId ?? '')?.name ?? 'Bloquear Éter'}
           onElegir={(pareja) => onAccion({ type: 'elegir_opcion', opcionId: opcionBloqueo.opcionId, ...pareja })}
-          onCerrar={() => setOpcionCerrada(opcionBloqueo.opcionId)}
+          onCerrar={() => setOpcionAbierta(null)}
         />
       )}
 
