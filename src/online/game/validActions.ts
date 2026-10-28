@@ -466,7 +466,7 @@ export function getValidActions(state: GameState, playerId: PlayerId): Action[] 
       for (const id of [...p.campo.misticasTacticas, ...p.campo.arcanasCombate]) {
         if (!id) continue
         const inst = state.instances[id]
-        if (!inst || inst.equipadoA) continue // ya equipada
+        if (!inst || inst.equipadoA || inst.bocaArriba === false) continue // ya equipada o Arcana sin activar
         const meta = inst.cardId ? getCardMeta(inst.cardId) : null
         if (!meta || !('keywords' in meta) || !meta.keywords?.includes('Artefacto')) continue
         // Generar una acción por cada campeón propio elegible

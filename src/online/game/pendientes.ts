@@ -97,6 +97,19 @@ export function electorAjeno(s: GameState): PendienteObjetivo | undefined {
 }
 
 /**
+ * Quita un `equiparPendiente` obsoleto: el Artefacto ya no existe, ya está equipado o salió del campo de quien debía equiparlo.
+ * Sin esto el jugador queda sin acciones (solo «rendirse») y, en PvP, nadie lo limpia porque el servidor no llama getValidActions.
+ */
+export function descartarEquiparMuerto(s: GameState): void {
+  const pend = s.equiparPendiente
+  if (!pend) return
+  const inst = s.instances[pend.artefactoId]
+  const campo = s.players[pend.jugador].campo
+  const enCampo = campo.misticasTacticas.includes(pend.artefactoId) || campo.arcanasCombate.includes(pend.artefactoId)
+  if (!inst || inst.equipadoA || !enCampo) delete s.equiparPendiente
+}
+
+/**
  * Fuera de una declaración en elección, quita del FRENTE de la cola los pendientes que ya no tienen
  * qué elegir (todas sus opciones dejaron de ser vigentes; criterio 2 de la cabecera), para que no
  * atasquen a los que van detrás. Devuelve cuántos quitó. Se llama tras cada acción (core.applyAction) y al ofrecer acciones.

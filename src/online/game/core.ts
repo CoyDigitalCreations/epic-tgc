@@ -5,7 +5,7 @@
 import type { GameEvent } from './events'
 import type { Ctx, GameState, PlayerId } from './types'
 import { shuffleFisherYates } from './rng'
-import { descartarFrentesMuertos, electorAjeno } from './pendientes'
+import { descartarEquiparMuerto, descartarFrentesMuertos, electorAjeno } from './pendientes'
 import { confirmarFinDePartida } from './finPartida'
 import { descartarScryMuertos, ejecutarOrdenarMazo, scryActual, validarOrdenarMazo } from './scry'
 import { reanudarAlba } from './phases'
@@ -101,6 +101,7 @@ export function applyAction(state: GameState, action: Action, ctx: Ctx): ApplyAc
   if (error) return { ok: false, state, error }
   const s = structuredClone(state)
   ejecutarAccion(s, action, ctx)
+  descartarEquiparMuerto(s)
   // F5h: un pendiente sin quién ni qué elegir no se queda al frente de la cola (pendientes.ts)
   descartarFrentesMuertos(s)
   descartarScryMuertos(s)

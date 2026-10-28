@@ -10,6 +10,8 @@ import { buildReporte } from '../coverageMap'
 import { statsDe, purgarEfectosTemporales } from '../efectos'
 import { getCardMeta } from '../cards'
 import { getValidActions } from '../validActions'
+import { applyAction } from '../actions'
+import { descartarEquiparMuerto } from '../pendientes'
 import type { AnyCard } from '../../../shared/types'
 import type { GameState } from '../types'
 import { PR, aplicar, cargarCartasPrueba, conArcana, conCampeon, conEteres, conMano, conMazo, conMistica, crearCtx, escenaVacia } from './helpers/cartasPrueba'
@@ -75,6 +77,44 @@ describe('FB-024 «Filo del Éter Primigenio» (Arcana Artefacto, +2 ATQ al equi
     expect(base(s)).toBe(4)
     purgarEfectosTemporales(s, 'ocaso')
     expect(base(s)).toBe(4)
+  })
+})
+
+describe('Arcana Artefacto boca abajo: no se equipa de forma voluntaria (PvP: pendiente obsoleto de nacimiento)', () => {
+  it('ni se ofrece ni se acepta equipar la Arcana sin activar', () => {
+    const s = escena(); conArcana(s, 'A', 'filo', 'FB-024', 0)
+    const equipar = { type: 'equipar_artefacto', cardInstanceId: 'filo', campeonInstanceId: 'c' } as const
+    expect(getValidActions(s, 'A').some((a) => a.type === 'equipar_artefacto')).toBe(false)
+    expect(applyAction(s, equipar, crearCtx())).toMatchObject({ ok: false })
+  })
+  it('revelada y sin equipar sí se ofrece (queda como equipar voluntario normal)', () => {
+    const s = escena(); conArcana(s, 'A', 'filo', 'FB-024', 0, { bocaArriba: true })
+    expect(getValidActions(s, 'A').some((a) => a.type === 'equipar_artefacto' && a.cardInstanceId === 'filo')).toBe(true)
+  })
+  it('activar una Arcana-Artefacto que ya está equipada no deja equiparPendiente', () => {
+    const s0 = escena(); s0.fase = 'choque'; conEteres(s0, 'A', 6); conArcana(s0, 'A', 'filo', 'FB-024', 0, { equipadoA: 'c', condicionHabilitada: true })
+    const activar = getValidActions(s0, 'A').find((a) => a.type === 'activar_arcana' && a.cardInstanceId === 'filo')
+    expect(activar, 'la Arcana debe poder activarse').toBeDefined()
+    const r = applyAction(s0, activar!, crearCtx())
+    expect(r.ok).toBe(true)
+    if (r.ok) expect(r.state.equiparPendiente).toBeUndefined()
+  })
+  it('descartarEquiparMuerto limpia el pendiente de un Artefacto ya equipado o fuera del campo, y respeta el vigente', () => {
+    const vigente = escena(); conArcana(vigente, 'A', 'filo', 'FB-024', 0, { bocaArriba: true })
+    vigente.equiparPendiente = { artefactoId: 'filo', jugador: 'A', contexto: 'activar_arcana' }
+    descartarEquiparMuerto(vigente)
+    expect(vigente.equiparPendiente).toBeDefined()
+
+    const equipado = escena(); conArcana(equipado, 'A', 'filo', 'FB-024', 0, { bocaArriba: true, equipadoA: 'c' })
+    equipado.equiparPendiente = { artefactoId: 'filo', jugador: 'A', contexto: 'activar_arcana' }
+    descartarEquiparMuerto(equipado)
+    expect(equipado.equiparPendiente).toBeUndefined()
+
+    const fuera = escena(); conArcana(fuera, 'A', 'filo', 'FB-024', 0, { bocaArriba: true })
+    fuera.players.A.campo.arcanasCombate[0] = null
+    fuera.equiparPendiente = { artefactoId: 'filo', jugador: 'A', contexto: 'activar_arcana' }
+    descartarEquiparMuerto(fuera)
+    expect(fuera.equiparPendiente).toBeUndefined()
   })
 })
 

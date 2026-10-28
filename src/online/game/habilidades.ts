@@ -237,8 +237,8 @@ export function ejecutarActivarArcana(s: GameState, action: Extract<Action, { ty
   inst.bocaArriba = true
   ctx.emit({ type: 'carta_activada', cardInstanceId: id, jugador: s.turno, slot: action.slot })
   const meta = getCardMeta(inst.cardId!)
-  // ARTEFACTO equipable: crear pendiente — efectos diferidos hasta equipar
-  if (meta && esArtefactoEquipable(meta)) {
+  // ARTEFACTO equipable: crear pendiente — efectos diferidos hasta equipar (si ya está equipada no hay nada que esperar)
+  if (meta && esArtefactoEquipable(meta) && !inst.equipadoA) {
     s.equiparPendiente = { artefactoId: id, jugador: s.turno, contexto: 'activar_arcana' }
     return
   }

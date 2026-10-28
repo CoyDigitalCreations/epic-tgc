@@ -135,6 +135,9 @@ export function validarEquiparArtefacto(state: GameState, action: Extract<Action
   if (!inst) return 'carta no encontrada'
   const meta = inst.cardId ? getCardMeta(inst.cardId) : null
   if (!meta) return 'carta desconocida'
+  // Una Arcana boca abajo se equipa al ACTIVARla (equiparPendiente), nunca de forma voluntaria: equiparla antes dejaba un pendiente
+  // obsoleto de nacimiento y sus efectos no se resolvían nunca.
+  if (!pendiente && inst.bocaArriba === false) return 'la Arcana debe activarse antes de equiparse'
   if (!('keywords' in meta) || !meta.keywords?.includes('Artefacto')) return 'esta carta no tiene ARTEFACTO'
   // La carta debe estar en el campo (místicasTacticas o arcanasCombate)
   const p = state.players[state.turno]
