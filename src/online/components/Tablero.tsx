@@ -1232,6 +1232,36 @@ export function Tablero({
     setPanelAbierto(null)
   }
 
+  /** Presteza desde la mano: el pago lo elige el jugador (el motor manda una combinación precalculada que aquí no se usa). */
+  const pagarRespuesta = (accion: Action) => {
+    const meta = accion.type === 'jugar_respuesta' ? getCardMeta(vista.instances[accion.cardInstanceId]?.cardId ?? '') : null
+    if (meta && meta.stats.cost > 0) abrirSelector(accion, meta.id)
+    else onAccion(accion)
+  }
+
+  // Equipar un Artefacto recién llegado: el motor ya congela todo hasta equiparlo (pendiente), así que el selector
+  // de Campeón se abre solo, una vez por Artefacto. No equipa por su cuenta: el jugador elige (o cierra y usa «Equipar»).
+  const opcionesEquipar = acciones.filter((a): a is Extract<Action, { type: 'equipar_artefacto' }> => a.type === 'equipar_artefacto')
+  const equiparPendienteId =
+    leTocaA && opcionesEquipar.length > 0 && acciones.every((a) => a.type === 'rendirse' || a.type === 'equipar_artefacto')
+      ? opcionesEquipar[0].cardInstanceId
+      : null
+  const [equipAutoId, setEquipAutoId] = useState<string | null>(null)
+  useEffect(() => {
+    if (equiparPendienteId === null) {
+      setEquipAutoId(null)
+      return
+    }
+    if (equipAutoId === equiparPendienteId) return
+    setEquipAutoId(equiparPendienteId)
+    const meta = getCardMeta(vista.instances[equiparPendienteId]?.cardId ?? '')
+    setSeleccion({ tipo: 'equipar', artefactoCardId: meta?.id ?? '', opciones: opcionesEquipar })
+    setElegidos(new Set())
+    setSacrificiosElegidos([])
+    setPanelAbierto(null)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [equiparPendienteId])
+
   /** Sacrificios exigidos por el rol del Campeón — SOLO al invocar (jugar_campeon).
    *  Activar habilidad NO requiere sacrificio (el costo es solo Éter). */
   const requeridos = seleccion?.tipo === 'pagar' && seleccion.accionBase.type === 'jugar_campeon'
@@ -1400,10 +1430,11 @@ export function Tablero({
     }
 
     const accionBase = seleccion.accionBase
+    // Los sacrificios son del Campeón que se invoca; el resto de acciones de pago no los llevan
     const accionConPago = {
       ...accionBase,
       eterIds: [...elegidos],
-      sacrificios: [...sacrificiosElegidos],
+      ...(accionBase.type === 'jugar_respuesta' ? {} : { sacrificios: [...sacrificiosElegidos] }),
     } as Action
 
     // ¿Necesita selección de casilla?
@@ -2206,13 +2237,15 @@ export function Tablero({
 
       {/* ── Modal de prioridad (cadena abierta) ───────────────────── */}
       {leTocaA && (() => {
-        if (!cadenaActiva(vista)) return null
+        // Mientras eliges con qué Éter pagar una respuesta, el selector va solo; al cancelar vuelve la cadena
+        if (!cadenaActiva(vista) || seleccion) return null
         return (
           <PriorityModal
             state={vista}
             playerId="A"
             acciones={acciones}
             onAccion={onAccion}
+            onElegirPago={pagarRespuesta}
             onZoom={abrirZoom}
           />
         )
