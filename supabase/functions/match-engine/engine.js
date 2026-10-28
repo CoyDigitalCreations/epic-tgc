@@ -6333,7 +6333,7 @@ function ejecutarActivarArcana(s, action, ctx) {
   inst.bocaArriba = true;
   ctx.emit({ type: "carta_activada", cardInstanceId: id, jugador: s.turno, slot: action.slot });
   const meta = getCardMeta(inst.cardId);
-  if (meta && esArtefactoEquipable(meta)) {
+  if (meta && esArtefactoEquipable(meta) && !inst.equipadoA) {
     s.equiparPendiente = { artefactoId: id, jugador: s.turno, contexto: "activar_arcana" };
     return;
   }
@@ -7308,6 +7308,14 @@ function electorAjeno(s) {
   if (!frente || frente.jugador === s.turno || esDeUmbral(frente)) return void 0;
   return opcionesVigentes(s, frente).length > 0 ? frente : void 0;
 }
+function descartarEquiparMuerto(s) {
+  const pend = s.equiparPendiente;
+  if (!pend) return;
+  const inst = s.instances[pend.artefactoId];
+  const campo = s.players[pend.jugador].campo;
+  const enCampo = campo.misticasTacticas.includes(pend.artefactoId) || campo.arcanasCombate.includes(pend.artefactoId);
+  if (!inst || inst.equipadoA || !enCampo) delete s.equiparPendiente;
+}
 function descartarFrentesMuertos(s) {
   if (s.declaracionEnEleccion) return 0;
   let quitados = 0;
@@ -7537,6 +7545,7 @@ function validarEquiparArtefacto(state, action) {
   if (!inst) return "carta no encontrada";
   const meta = inst.cardId ? getCardMeta(inst.cardId) : null;
   if (!meta) return "carta desconocida";
+  if (!pendiente && inst.bocaArriba === false) return "la Arcana debe activarse antes de equiparse";
   if (!("keywords" in meta) || !meta.keywords?.includes("Artefacto")) return "esta carta no tiene ARTEFACTO";
   const p = state.players[state.turno];
   const enMT = p.campo.misticasTacticas.includes(action.cardInstanceId);
@@ -7856,6 +7865,7 @@ function applyAction(state, action, ctx) {
   if (error) return { ok: false, state, error };
   const s = structuredClone(state);
   ejecutarAccion(s, action, ctx);
+  descartarEquiparMuerto(s);
   descartarFrentesMuertos(s);
   descartarScryMuertos(s);
   reanudarAlba(s, ctx);
@@ -8343,7 +8353,7 @@ function getValidActions(state, playerId) {
       for (const id of [...p.campo.misticasTacticas, ...p.campo.arcanasCombate]) {
         if (!id) continue;
         const inst = state.instances[id];
-        if (!inst || inst.equipadoA) continue;
+        if (!inst || inst.equipadoA || inst.bocaArriba === false) continue;
         const meta = inst.cardId ? getCardMeta(inst.cardId) : null;
         if (!meta || !("keywords" in meta) || !meta.keywords?.includes("Artefacto")) continue;
         for (const campeonId of p.campo.campeones) {
