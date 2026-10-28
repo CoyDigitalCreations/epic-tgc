@@ -4292,6 +4292,44 @@ function pagarHabilidad(s, ctx, jugador, instId, efectoSel, eterIds) {
   if (efectoSel.tipo === "disparo" && reglaBool(s, "disparoAgota", { instId })) inst.agotado = true;
 }
 
+// src/online/game/bloqueoAlJugar.ts
+function bloqueoAlJugar(meta) {
+  if (!meta || !esMistica(meta) || esArtefactoEquipable(meta) || !("efectos" in meta) || !meta.efectos) return null;
+  const efecto = meta.efectos.find((e) => e.tipo === "hechizo" && e.efecto === "copy" && e.costo?.tipo === "bloqueo_fijo" && (e.costo.cantidad ?? 0) > 0);
+  return efecto ? { cantidad: efecto.costo.cantidad } : null;
+}
+function hayCartaQueCopiar(state, jugador) {
+  const rival = state.players[jugador === "A" ? "B" : "A"];
+  return [...rival.campo.misticasTacticas, ...rival.campo.arcanasCombate].some((id) => id !== null);
+}
+function bloqueoParaJugar(state, jugador, meta, eterIdsPago) {
+  const requisito = bloqueoAlJugar(meta);
+  if (!requisito) return void 0;
+  if (!hayCartaQueCopiar(state, jugador)) return null;
+  const libres = state.players[jugador].eterReserva.filter((id) => !eterIdsPago.includes(id));
+  return libres.length >= requisito.cantidad ? libres.slice(0, requisito.cantidad) : null;
+}
+function motivoBloqueoAlJugar(state, jugador, meta, eterIdsPago, bloqueoEterIds) {
+  const requisito = bloqueoAlJugar(meta);
+  const ids = bloqueoEterIds ?? [];
+  if (!requisito) return ids.length > 0 ? `${meta.name} no bloquea \xC9ter al jugarse` : null;
+  if (!hayCartaQueCopiar(state, jugador)) return `${meta.name} solo se juega si el rival controla una M\xEDstica o Arcana que copiar`;
+  if (ids.length !== requisito.cantidad) {
+    return `${meta.name} bloquea exactamente ${requisito.cantidad} \xC9ter(es) al jugarse (indicaste ${ids.length})`;
+  }
+  const reserva = state.players[jugador].eterReserva;
+  if (new Set(ids).size !== ids.length) return "\xE9teres repetidos en el bloqueo";
+  for (const id of ids) {
+    if (!reserva.includes(id)) return `el \xC9ter ${id} a bloquear no est\xE1 en tu Reserva`;
+    if (eterIdsPago.includes(id)) return "un \xC9ter no puede pagar y bloquear a la vez";
+  }
+  return null;
+}
+function aplicarBloqueoAlJugar(s, ctx, jugador, cardInstanceId, bloqueoEterIds) {
+  if (!bloqueoEterIds || bloqueoEterIds.length === 0) return;
+  bloquearEter(s, ctx, jugador, [...bloqueoEterIds], cardInstanceId);
+}
+
 // src/online/game/chain.ts
 function velocidadRequeridaDe(state) {
   const cadena = cadenaActiva(state);
@@ -4352,7 +4390,9 @@ function motivoNoResponde(state, jugador, id, origen) {
         return "no puedes jugar un ARTEFACTO sin un Campe\xF3n en tu campo";
       }
     }
-    if (etersParaPagar(state, jugador, meta.id) === null) return "no puedes pagar su coste";
+    const pagoIds = etersParaPagar(state, jugador, meta.id);
+    if (pagoIds === null) return "no puedes pagar su coste";
+    if (bloqueoParaJugar(state, jugador, meta, pagoIds) === null) return "no hay una M\xEDstica o Arcana rival que copiar, o no te alcanza el \xC9ter para pagar y bloquear";
     return null;
   }
   if (esMistica(meta)) return "las M\xEDsticas solo se juegan desde la mano: una M\xEDstica en el campo no responde (\xA75.3)";
@@ -4440,7 +4480,7 @@ function validarPasarPrioridad(state) {
   if (!cadenaActiva(state)) return "no hay cadena abierta";
   return null;
 }
-function validarJugarRespuesta(state, cardInstanceId, eterIds) {
+function validarJugarRespuesta(state, cardInstanceId, eterIds, bloqueoEterIds) {
   const cadena = cadenaActiva(state);
   if (!cadena) return "no hay cadena abierta";
   const jugador = cadena.prioridad;
@@ -4451,9 +4491,9 @@ function validarJugarRespuesta(state, cardInstanceId, eterIds) {
     const pago = validarPago(state, jugador, eterIds, meta.id);
     if (!pago.ok) return pago.error ?? "pago inv\xE1lido";
   }
-  return null;
+  return motivoBloqueoAlJugar(state, jugador, meta, eterIds, bloqueoEterIds);
 }
-function ejecutarJugarRespuesta(s, cardInstanceId, eterIds, ctx) {
+function ejecutarJugarRespuesta(s, cardInstanceId, eterIds, ctx, bloqueoEterIds) {
   const cadena = cadenaActiva(s);
   if (!cadena) return;
   const jugador = cadena.prioridad;
@@ -4473,6 +4513,7 @@ function ejecutarJugarRespuesta(s, cardInstanceId, eterIds, ctx) {
     inst.entradaEsteTurno = true;
     ctx.emit({ type: "carta_entrada_a_zona", cardInstanceId, zona: slotAZona("misticasTacticas", slot) ?? "3A", jugador, bocaArriba: true });
     ctx.emit({ type: "carta_invocada", cardInstanceId, tipo: "M\xEDstica", slot });
+    aplicarBloqueoAlJugar(s, ctx, jugador, cardInstanceId, bloqueoEterIds);
   }
   declararRespuesta(s, ctx, { jugador, cardInstanceId, origen: "mano" }, previos);
 }
@@ -7455,6 +7496,8 @@ function validarJugarMistica(state, action) {
   if (state.players[state.turno].campo.misticasTacticas[action.slot] !== null) return "slot ocupado";
   const pago = validarPago(state, state.turno, action.eterIds, meta.id);
   if (!pago.ok) return pago.error ?? "pago inv\xE1lido";
+  const bloqueo = motivoBloqueoAlJugar(state, state.turno, meta, action.eterIds, action.bloqueoEterIds);
+  if (bloqueo) return bloqueo;
   if (esArtefactoEquipable(meta)) {
     const p = state.players[state.turno];
     if (!p.campo.campeones.some((id) => id !== null)) {
@@ -7549,6 +7592,7 @@ function ejecutarJugarMistica(s, action, ctx) {
   s.instances[id].entradaEsteTurno = true;
   ctx.emit({ type: "carta_entrada_a_zona", cardInstanceId: id, zona, jugador: s.turno, bocaArriba: true });
   ctx.emit({ type: "carta_invocada", cardInstanceId: id, tipo: "M\xEDstica", slot: action.slot });
+  aplicarBloqueoAlJugar(s, ctx, s.turno, id, action.bloqueoEterIds);
   const inst = s.instances[id];
   const meta = inst.cardId ? getCardMeta(inst.cardId) : null;
   if (meta && esArtefactoEquipable(meta)) {
@@ -7638,7 +7682,9 @@ function generarAccionesForja(state, playerId, cardInstanceId) {
       if (!eterIds) return null;
       const slot = p.campo.misticasTacticas.findIndex((c) => c === null);
       if (slot === -1) return null;
-      const accion = { type: "jugar_mistica", cardInstanceId, slot, eterIds };
+      const bloqueoEterIds = bloqueoParaJugar(state, playerId, meta, eterIds);
+      if (bloqueoEterIds === null) return null;
+      const accion = { type: "jugar_mistica", cardInstanceId, slot, eterIds, ...bloqueoEterIds ? { bloqueoEterIds } : {} };
       if (validarJugarMistica(state, accion) !== null) return null;
       if (requisitoDeMeta(state, meta, playerId) !== null) return null;
       return accion;
@@ -7860,7 +7906,7 @@ function validarAccion(state, action) {
     case "jugar_mistica":
       return validarJugarMistica(state, action);
     case "jugar_respuesta":
-      return validarJugarRespuesta(state, action.cardInstanceId, action.eterIds);
+      return validarJugarRespuesta(state, action.cardInstanceId, action.eterIds, action.bloqueoEterIds);
     case "colocar_arcana":
       return validarColocarArcana(state, action);
     case "colocar_vinculo":
@@ -7939,7 +7985,7 @@ function ejecutarAccion(s, action, ctx) {
       return;
     }
     case "jugar_respuesta": {
-      ejecutarJugarRespuesta(s, action.cardInstanceId, action.eterIds, ctx);
+      ejecutarJugarRespuesta(s, action.cardInstanceId, action.eterIds, ctx, action.bloqueoEterIds);
       return;
     }
     case "colocar_arcana": {
@@ -8199,7 +8245,9 @@ function getValidActions(state, playerId) {
         if (!instR?.cardId) continue;
         const eterIds = etersParaPagar(state, playerId, instR.cardId);
         if (eterIds !== null) {
-          acciones.push({ type: "jugar_respuesta", cardInstanceId: id, eterIds });
+          const metaR = getCardMeta(instR.cardId);
+          const bloqueoEterIds = metaR ? bloqueoParaJugar(state, playerId, metaR, eterIds) : void 0;
+          acciones.push({ type: "jugar_respuesta", cardInstanceId: id, eterIds, ...bloqueoEterIds ? { bloqueoEterIds } : {} });
         }
       }
       if (state.fase === "forja") acciones.push(...accionesBloqueoEter(state, playerId, true));
