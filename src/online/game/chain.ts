@@ -35,6 +35,7 @@ import { aplicarPago, etersParaPagar, validarPago, type ContextoUso } from './pa
 import { enviarAlCementerio } from './replacements'
 import { efectosNegados } from './reglas'
 import { eterIdsParaHabilidad, pagarHabilidad } from './habilidadPago'
+import { aplicarBloqueoAlJugar, bloqueoParaJugar, motivoBloqueoAlJugar } from './bloqueoAlJugar'
 import { metaDeInstancia } from './efectosInstancia'
 import type { CondicionEfecto, EfectoData } from '../../shared/types'
 import type {
@@ -136,7 +137,10 @@ export function motivoNoResponde(state: GameState, jugador: PlayerId, id: string
         return 'no puedes jugar un ARTEFACTO sin un Campeón en tu campo'
       }
     }
-    if (etersParaPagar(state, jugador, meta.id) === null) return 'no puedes pagar su coste'
+    const pagoIds = etersParaPagar(state, jugador, meta.id)
+    if (pagoIds === null) return 'no puedes pagar su coste'
+    // «Bloquea N Éter» al jugar (Último Refugio): hace falta una Mística o Arcana rival que copiar y Éter para pagar Y bloquear
+    if (bloqueoParaJugar(state, jugador, meta, pagoIds) === null) return 'no hay una Mística o Arcana rival que copiar, o no te alcanza el Éter para pagar y bloquear'
     return null
   }
   // Decisión del usuario (2026-10-26, manual §5.3): las Místicas SOLO se juegan desde la mano. Una que ya está en el
@@ -292,7 +296,7 @@ export function validarPasarPrioridad(state: GameState): string | null {
  * abierta (F5f: regla única motivoNoResponde). Paga su coste; una carta de un solo uso va
  * mano → pila → Cementerio; una permanente (Artefacto) toma un slot libre al jugarse y se queda.
  */
-export function validarJugarRespuesta(state: GameState, cardInstanceId: string, eterIds: string[]): string | null {
+export function validarJugarRespuesta(state: GameState, cardInstanceId: string, eterIds: string[], bloqueoEterIds?: string[]): string | null {
   const cadena = cadenaActiva(state)
   if (!cadena) return 'no hay cadena abierta'
   const jugador = cadena.prioridad
@@ -303,7 +307,7 @@ export function validarJugarRespuesta(state: GameState, cardInstanceId: string, 
     const pago = validarPago(state, jugador, eterIds, meta.id)
     if (!pago.ok) return pago.error ?? 'pago inválido'
   }
-  return null
+  return motivoBloqueoAlJugar(state, jugador, meta, eterIds, bloqueoEterIds)
 }
 
 /**
@@ -318,6 +322,7 @@ export function ejecutarJugarRespuesta(
   cardInstanceId: string,
   eterIds: string[],
   ctx: Ctx,
+  bloqueoEterIds?: string[],
 ): void {
   const cadena = cadenaActiva(s)
   if (!cadena) return
@@ -341,6 +346,8 @@ export function ejecutarJugarRespuesta(
     inst.entradaEsteTurno = true
     ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId, zona: slotAZona('misticasTacticas', slot) ?? '3A', jugador, bocaArriba: true })
     ctx.emit({ type: 'carta_invocada', cardInstanceId, tipo: 'Mística', slot })
+    // «Bloquea N Éter» al jugar: ya en mesa, antes de elegir objetivo y entrar a la pila
+    aplicarBloqueoAlJugar(s, ctx, jugador, cardInstanceId, bloqueoEterIds)
   }
   declararRespuesta(s, ctx, { jugador, cardInstanceId, origen: 'mano' }, previos)
 }

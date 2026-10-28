@@ -1,6 +1,7 @@
 import { getCardMeta, esArcana, efectoActivableDe, esCostoBloqueo } from './cards'
 import { eterDeEfecto } from './eter'
 import { hayParejaBloqueo, pasivosBloqueo1A } from './efectos'
+import { bloqueoParaJugar } from './bloqueoAlJugar'
 import type { AnyCard } from '../../shared/types'
 import type { Action } from './actions'
 import { generarAccionesForja, validarActivarArcana } from './actions'
@@ -311,7 +312,10 @@ export function getValidActions(state: GameState, playerId: PlayerId): Action[] 
         if (!instR?.cardId) continue
         const eterIds = etersParaPagar(state, playerId, instR.cardId)
         if (eterIds !== null) {
-          acciones.push({ type: 'jugar_respuesta', cardInstanceId: id, eterIds })
+          // «Bloquea N Éter» al jugar: los primeros que no pagan (motivoNoResponde ya comprobó que se puede)
+          const metaR = getCardMeta(instR.cardId)
+          const bloqueoEterIds = metaR ? bloqueoParaJugar(state, playerId, metaR, eterIds) : undefined
+          acciones.push({ type: 'jugar_respuesta', cardInstanceId: id, eterIds, ...(bloqueoEterIds ? { bloqueoEterIds } : {}) })
         }
       }
       // A9 (§8.3a): el bloqueo de Éter es una activación de continuo válida

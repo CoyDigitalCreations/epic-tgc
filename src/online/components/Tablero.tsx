@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import { aporteDe, atacantesElegibles, campeonesSacrificables, costeEterHabilidad, faccionesCompartidas, getCardMeta, sacrificiosRequeridos, esBloqueoFijo, maxEterBloqueado, efectoBloqueoAccion, parejasBloqueoOpcion, cadenaActiva, ordenResolucion } from '../game'
 import type { Action, CardInstance, GameState, PlayerId } from '../game'
 import { disparoDeRespuesta } from '../game/chain'
+import { bloqueoAlJugar } from '../game/bloqueoAlJugar'
 import { Boton as BotonUI } from '../../shared/ui/Boton'
 import { Dock } from '../../shared/ui/Dock'
 import { Modal } from '../../shared/ui/Modal'
@@ -1167,7 +1168,14 @@ export function Tablero({
     ? efectoBloqueoAccion(metaSelBloqueo)?.efecto.costo?.origen === 'pagado'
     : false
   /** Zona de la que salen los Éteres del selector (2A Reserva / 1A Éter Pagado). */
-  const eteresSelector = origenPagadoBloqueo ? yo.eterPagado : yo.eterReserva
+  /** El bloqueo que forma parte de JUGAR una carta (Último Refugio): va después del pago, con los Éteres que no se usaron para pagar. */
+  const bloqueandoAlJugar =
+    seleccion?.tipo === 'bloquear' && (seleccion.accionBase.type === 'jugar_mistica' || seleccion.accionBase.type === 'jugar_respuesta')
+  const eteresSelector = bloqueandoAlJugar
+    ? yo.eterReserva.filter((id) => !(seleccion?.tipo === 'bloquear' && 'eterIds' in seleccion.accionBase && !!seleccion.accionBase.eterIds?.includes(id)))
+    : origenPagadoBloqueo
+      ? yo.eterPagado
+      : yo.eterReserva
 
   // A6: paso de ataque propio (sin combate en curso) — habilita la selección multi
   const esPasoAtaquePropio = vista.fase === 'choque' && !vista.combate && vista.turno === 'A'
@@ -1446,11 +1454,25 @@ export function Tablero({
 
     const accionBase = seleccion.accionBase
     // Los sacrificios son del Campeón que se invoca; el resto de acciones de pago no los llevan
-    const accionConPago = {
-      ...accionBase,
-      eterIds: [...elegidos],
-      ...(accionBase.type === 'jugar_respuesta' || accionBase.type === 'responder_cadena' ? {} : { sacrificios: [...sacrificiosElegidos] }),
-    } as Action
+    const accionConPago = (bloqueandoAlJugar
+      // Segundo paso de jugar una carta que bloquea al jugarse: el pago ya está elegido, ahora el bloqueo
+      ? { ...accionBase, bloqueoEterIds: [...elegidos] }
+      : {
+          ...accionBase,
+          eterIds: [...elegidos],
+          ...(accionBase.type === 'jugar_respuesta' || accionBase.type === 'responder_cadena' ? {} : { sacrificios: [...sacrificiosElegidos] }),
+        }) as Action
+
+    // Último Refugio: tras elegir el pago, pide qué Éter se bloquea (es parte de jugarla, no algo para después)
+    if (
+      seleccion.tipo === 'pagar' &&
+      (accionConPago.type === 'jugar_mistica' || accionConPago.type === 'jugar_respuesta') &&
+      bloqueoAlJugar(getCardMeta(seleccion.objetivoCardId))
+    ) {
+      setSeleccion({ tipo: 'bloquear', accionBase: accionConPago, objetivoCardId: seleccion.objetivoCardId, targetInstanceId: accionConPago.cardInstanceId })
+      setElegidos(new Set())
+      return
+    }
 
     // ¿Necesita selección de casilla?
     const necesitaSlot = accionConPago.type === 'jugar_campeon' ||
@@ -2012,7 +2034,7 @@ export function Tablero({
               <div className="ml-auto flex gap-2">
                 <BotonUI onClick={cancelar}>Cancelar</BotonUI>
                 <BotonUI variante="primario" onClick={confirmar} disabled={!puedeConfirmar}>
-                  {seleccion.tipo === 'pagar' ? 'Pagar y jugar' : seleccion.tipo === 'equipar' ? 'Equipar' : 'Bloquear'}
+                  {seleccion.tipo === 'pagar' ? 'Pagar y jugar' : seleccion.tipo === 'equipar' ? 'Equipar' : bloqueandoAlJugar ? 'Bloquear y jugar' : 'Bloquear'}
                 </BotonUI>
               </div>
             </>

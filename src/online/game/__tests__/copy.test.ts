@@ -19,6 +19,7 @@ import { describe, it, expect } from 'vitest'
 import { applyAction } from '../actions'
 import type { Action } from '../actions'
 import { copyActivo } from '../efectos'
+import { getValidActions } from '../validActions'
 import { statsDe } from '../efectos'
 import { bloquearEter } from '../payments'
 import { liberarEterBloqueado } from '../replacements'
@@ -207,10 +208,11 @@ describe('flujo integral jugar FB-022 (Fase 3c)', () => {
     const ctx = crearCtx()
     const conTarget = conMistica(estadoMinimo(), DS021, 'B', 0)
     let s = conMano(conTarget.s, 'A', { fb022: FB022 })
-    const { s: sEteres, ids } = conEteres(s, 'A', ETER_ORDEN, 3)
+    const { s: sEteres, ids } = conEteres(s, 'A', ETER_ORDEN, 6)
     s = sEteres
 
-    s = aplicar(s, { type: 'jugar_mistica', cardInstanceId: 'fb022', slot: 0, eterIds: ids }, ctx)
+    // Jugarla incluye bloquear 3 Éter (no queda para después): 3 pagan, 3 se bloquean
+    s = aplicar(s, { type: 'jugar_mistica', cardInstanceId: 'fb022', slot: 0, eterIds: ids.slice(0, 3), bloqueoEterIds: ids.slice(3) }, ctx)
 
     // D1 pendiente (fromTrigger=true fuerza elección)
     expect(s.objetivosPendientes?.length).toBe(1)
@@ -223,8 +225,72 @@ describe('flujo integral jugar FB-022 (Fase 3c)', () => {
 
     const fb022Inst = Object.values(s.instances).find((i) => i?.cardId === FB022)
     expect(fb022Inst?.copyTargetId).toBe(conTarget.id)
-    // Sin éter bloqueado todavía → copy NO activo
-    expect(copyActivo(s, fb022Inst!.cardInstanceId)).toBe(false)
+    // El Éter se bloqueó al jugarla, así que la copia ya está activa
+    expect(fb022Inst?.eterBloqueado).toHaveLength(3)
+    expect(copyActivo(s, fb022Inst!.cardInstanceId)).toBe(true)
+  })
+
+  describe('«Bloquea 3 Éter» es parte de jugarla (Último Refugio)', () => {
+    const jugar = (s: GameState, extra: object) =>
+      applyAction(s, { type: 'jugar_mistica', cardInstanceId: 'fb022', slot: 0, ...extra } as never, crearCtx())
+
+    function escenario(conRival = true, eteres = 6) {
+      const base = conRival ? conMistica(estadoMinimo(), DS021, 'B', 0).s : estadoMinimo()
+      const { s, ids } = conEteres(conMano(base, 'A', { fb022: FB022 }), 'A', ETER_ORDEN, eteres)
+      return { s, ids }
+    }
+
+    it('sin el bloqueo en la acción se rechaza', () => {
+      const { s, ids } = escenario()
+      const r = jugar(s, { eterIds: ids.slice(0, 3) })
+      expect(r.ok).toBe(false)
+      expect(r.error).toMatch(/bloquea exactamente 3/)
+    })
+
+    it('el rival debe controlar una Mística o Arcana que copiar', () => {
+      const { s, ids } = escenario(false)
+      const r = jugar(s, { eterIds: ids.slice(0, 3), bloqueoEterIds: ids.slice(3) })
+      expect(r.ok).toBe(false)
+      expect(r.error).toMatch(/Mística o Arcana que copiar/)
+      expect(getValidActions(s, 'A').some((a) => a.type === 'jugar_mistica')).toBe(false)
+    })
+
+    it('un Éter no puede pagar y bloquear a la vez, y los bloqueados deben estar en la Reserva', () => {
+      const { s, ids } = escenario()
+      expect(jugar(s, { eterIds: ids.slice(0, 3), bloqueoEterIds: [ids[2], ids[3], ids[4]] }).ok).toBe(false)
+      expect(jugar(s, { eterIds: ids.slice(0, 3), bloqueoEterIds: [ids[3], ids[4], 'no-existe'] }).ok).toBe(false)
+    })
+
+    it('con menos de 6 Éter (3 para pagar + 3 para bloquear) no se ofrece', () => {
+      const { s } = escenario(true, 5)
+      expect(getValidActions(s, 'A').some((a) => a.type === 'jugar_mistica' && a.cardInstanceId === 'fb022')).toBe(false)
+    })
+
+    it('como respuesta (Fugaz desde la mano) también bloquea al jugarla, y sin el bloqueo se rechaza', () => {
+      const { s, ids } = escenario()
+      s.cadena = { origen: 'global', pila: [], prioridad: 'A', pasesConsecutivos: 0, faseAbierta: 'forja' }
+      const accion = getValidActions(s, 'A').find((a) => a.type === 'jugar_respuesta' && a.cardInstanceId === 'fb022')
+      expect(accion).toBeDefined()
+      if (accion?.type !== 'jugar_respuesta') return
+      expect(accion.bloqueoEterIds).toHaveLength(3)
+      expect(applyAction(s, { ...accion, bloqueoEterIds: undefined }, crearCtx()).ok).toBe(false)
+      const r = applyAction(s, accion, crearCtx())
+      expect(r.ok).toBe(true)
+      const inst = Object.values(r.state.instances).find((i) => i?.cardId === FB022)
+      expect(inst?.eterBloqueado).toHaveLength(3)
+      expect(ids.length).toBe(6)
+    })
+
+    it('el motor propone la acción completa: pago y bloqueo con Éteres distintos', () => {
+      const { s } = escenario()
+      const accion = getValidActions(s, 'A').find((a) => a.type === 'jugar_mistica' && a.cardInstanceId === 'fb022')
+      expect(accion).toBeDefined()
+      if (accion?.type !== 'jugar_mistica') return
+      expect(accion.eterIds).toHaveLength(3)
+      expect(accion.bloqueoEterIds).toHaveLength(3)
+      expect(accion.bloqueoEterIds!.some((id) => accion.eterIds.includes(id))).toBe(false)
+      expect(applyAction(s, accion, crearCtx()).ok).toBe(true)
+    })
   })
 
   it('bloquear éter en FB-022 con target → copyActivo true', () => {

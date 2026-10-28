@@ -57,8 +57,8 @@ export type Action =
       eterIds: string[]
       sacrificios?: string[]
     }
-  | { type: 'jugar_mistica'; cardInstanceId: string; slot: number; eterIds: string[] }
-  | { type: 'jugar_respuesta'; cardInstanceId: string; eterIds: string[] }
+  | { type: 'jugar_mistica'; cardInstanceId: string; slot: number; eterIds: string[]; bloqueoEterIds?: string[] }
+  | { type: 'jugar_respuesta'; cardInstanceId: string; eterIds: string[]; bloqueoEterIds?: string[] }
   | { type: 'colocar_arcana'; cardInstanceId: string; slot: number }
   | { type: 'activar_arcana'; cardInstanceId: string; slot: number; eterIds: string[] }
   | { type: 'equipar_artefacto'; cardInstanceId: string; campeonInstanceId: string }
@@ -170,7 +170,7 @@ function validarAccion(state: GameState, action: Action): string | null {
     case 'jugar_mistica':
       return validarJugarMistica(state, action)
     case 'jugar_respuesta':
-      return validarJugarRespuesta(state, action.cardInstanceId, action.eterIds)
+      return validarJugarRespuesta(state, action.cardInstanceId, action.eterIds, action.bloqueoEterIds)
     case 'colocar_arcana':
       return validarColocarArcana(state, action)
     case 'colocar_vinculo':
@@ -252,7 +252,7 @@ function ejecutarAccion(s: GameState, action: Action, ctx: Ctx): void {
       return
     }
     case 'jugar_respuesta': {
-      ejecutarJugarRespuesta(s, action.cardInstanceId, action.eterIds, ctx)
+      ejecutarJugarRespuesta(s, action.cardInstanceId, action.eterIds, ctx, action.bloqueoEterIds)
       return
     }
     case 'colocar_arcana': {

@@ -138,3 +138,56 @@ describe('Presteza desde la mano: el jugador elige con qué Éter paga', () => {
     expect(screen.getByText('Pagar con Éter')).toBeInTheDocument()
   })
 })
+
+describe('Último Refugio: bloquear el Éter es parte de jugarla', () => {
+  it('tras elegir el pago pide el bloqueo (sin los Éteres ya elegidos) y manda ambos en la misma acción', async () => {
+    const user = userEvent.setup()
+    const s = base()
+    // 6 Éteres en total: 3 pagan, 3 se bloquean; el rival tiene una Mística que copiar
+    for (const n of [4, 5]) {
+      s.instances[`e${n}`] = { cardInstanceId: `e${n}`, cardId: 'FB-001', owner: 'A' }
+      s.players.A.eterReserva.push(`e${n}`)
+    }
+    s.instances.fb022 = { cardInstanceId: 'fb022', cardId: 'FB-022', owner: 'A' }
+    s.players.A.mano = ['fb022']
+    s.instances.rival = { cardInstanceId: 'rival', cardId: 'FB-020', owner: 'B' }
+    s.players.B.campo.misticasTacticas[0] = 'rival'
+
+    const acciones = getValidActions(s, 'A')
+    const jugar = acciones.find((a) => a.type === 'jugar_mistica' && a.cardInstanceId === 'fb022')
+    expect(jugar).toBeDefined()
+    const onAccion = vi.fn()
+    render(<Tablero vista={visibleState(s, 'A')} acciones={acciones} leTocaA={true} log={[]} onAccion={onAccion} onAbandonar={vi.fn()} />)
+
+    await user.click(document.querySelector<HTMLElement>('[data-testid="mano"] [data-inst="fb022"]')!)
+    await user.click(screen.getByRole('button', { name: 'Jugar' }))
+
+    // 1. pago: 3 Éteres
+    const eteres = () => screen.getAllByRole('button').filter((b) => b.textContent?.includes('aporte'))
+    expect(eteres()).toHaveLength(6)
+    const pagados = eteres().slice(0, 3).map((b) => b.getAttribute('title'))
+    for (const b of eteres().slice(0, 3)) await user.click(b)
+    await user.click(screen.getByRole('button', { name: 'Pagar y jugar' }))
+    expect(onAccion).not.toHaveBeenCalled()
+
+    // 2. bloqueo: pide exactamente 3 y el selector ya no ofrece los que pagaron
+    expect(screen.getByText(/Bloquea exactamente 3 Éter\(es\) sobre Último Refugio/)).toBeInTheDocument()
+    const libres = screen.getAllByRole('button').filter((b) => b.getAttribute('title')?.startsWith('Éter') && !b.closest('[data-testid="mano"]'))
+    expect(libres.length).toBeGreaterThanOrEqual(3)
+    expect(pagados.length).toBe(3)
+
+    const bloqueables = libres.slice(-3)
+    for (const b of bloqueables) await user.click(b)
+    await user.click(screen.getByRole('button', { name: 'Bloquear y jugar' }))
+
+    // 3. casilla (si hay varias) y envío: pago y bloqueo juntos, sin repetir Éter
+    const casilla = screen.queryAllByRole('button', { name: /^Colocar en 3[ABC]$/ })[0]
+    if (casilla && onAccion.mock.calls.length === 0) await user.click(casilla)
+    await vi.waitFor(() => expect(onAccion).toHaveBeenCalledTimes(1), { timeout: 5000 })
+    const enviada = onAccion.mock.calls[0][0] as { type: string; eterIds: string[]; bloqueoEterIds: string[] }
+    expect(enviada.type).toBe('jugar_mistica')
+    expect(enviada.eterIds).toHaveLength(3)
+    expect(enviada.bloqueoEterIds).toHaveLength(3)
+    expect(enviada.bloqueoEterIds.some((id) => enviada.eterIds.includes(id))).toBe(false)
+  })
+})

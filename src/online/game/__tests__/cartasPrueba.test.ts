@@ -1062,11 +1062,11 @@ describe('(c) humo — Éteres con gatillo, Arcanas, copy y otros efectos de eje
     const pago = conEteres(s0, 'A', 4)
     conMistica(s0, 'B', 'm', PR.RAYO, 0, { entradaEsteTurno: true })
     const ctx = crearCtx()
-    let s = aplicar(s0, { type: 'jugar_mistica', cardInstanceId: 'esp', slot: 0, eterIds: pago.slice(0, 2) }, ctx)
+    // El bloqueo fijo es parte de jugarla: 2 Éter pagan y 2 se bloquean en la misma acción
+    let s = aplicar(s0, { type: 'jugar_mistica', cardInstanceId: 'esp', slot: 0, eterIds: pago.slice(0, 2), bloqueoEterIds: pago.slice(2) }, ctx)
     s = aplicar(s, { type: 'elegir_objetivo', objetivoId: 'm' }, ctx)
     expect(s.instances['esp'].copyTargetId).toBe('m')
     expect(s.players.A.campo.misticasTacticas[0]).toBe('esp') // bloqueo fijo: permanece en mesa
-    s = aplicar(s, { type: 'bloquear_eter', eterIds: pago.slice(2), targetInstanceId: 'esp' }, ctx)
     expect(s.instances['esp'].eterBloqueado).toHaveLength(2)
   })
 

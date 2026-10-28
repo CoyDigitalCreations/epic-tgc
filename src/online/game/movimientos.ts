@@ -12,6 +12,7 @@ import { dispararTrigger, condicionCumple } from './efectos'
 import { armarTriggers, construirTriggers } from './triggers'
 import { reiniciarCampeon } from './reglasTemporales'
 import { liberarEterBloqueado, enviarAlCementerio } from './replacements'
+import { aplicarBloqueoAlJugar, bloqueoParaJugar, motivoBloqueoAlJugar } from './bloqueoAlJugar'
 import { declararOpener, declararVentana, marcarInicioAccion } from './chain'
 import type { Action } from './core'
 import type { Ctx, TriggerApilado } from './types'
@@ -82,6 +83,9 @@ export function validarJugarMistica(state: GameState, action: Extract<Action, { 
   if (state.players[state.turno].campo.misticasTacticas[action.slot] !== null) return 'slot ocupado'
   const pago = validarPago(state, state.turno, action.eterIds, meta.id)
   if (!pago.ok) return pago.error ?? 'pago inválido'
+  // «Bloquea N Éter» al jugar (Último Refugio): el bloqueo viaja en la acción y hay que tener qué copiar
+  const bloqueo = motivoBloqueoAlJugar(state, state.turno, meta, action.eterIds, action.bloqueoEterIds)
+  if (bloqueo) return bloqueo
   // ARTEFACTO equipable: requiere al menos un Campeón en el campo propio
   if (esArtefactoEquipable(meta)) {
     const p = state.players[state.turno]
@@ -214,6 +218,8 @@ export function ejecutarJugarMistica(s: GameState, action: Extract<Action, { typ
   s.instances[id]!.entradaEsteTurno = true  // §5.5: no puede responder en cadena el turno que entra
   ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: id, zona, jugador: s.turno, bocaArriba: true })
   ctx.emit({ type: 'carta_invocada', cardInstanceId: id, tipo: 'Mística', slot: action.slot })
+  // «Bloquea N Éter» al jugar: ya en el campo, antes de elegir objetivo y abrir la ventana
+  aplicarBloqueoAlJugar(s, ctx, s.turno, id, action.bloqueoEterIds)
   // ARTEFACTO equipable: crear pendiente — los efectos se resuelven DESPUÉS de equipar
   const inst = s.instances[id]!
   const meta = inst.cardId ? getCardMeta(inst.cardId) : null
@@ -339,7 +345,10 @@ export function generarAccionesForja(state: GameState, playerId: PlayerId, cardI
       if (!eterIds) return null
       const slot = p.campo.misticasTacticas.findIndex((c) => c === null)
       if (slot === -1) return null
-      const accion: Action = { type: 'jugar_mistica', cardInstanceId, slot, eterIds }
+      // «Bloquea N Éter» al jugar: se proponen los primeros que no pagan; sin qué copiar o sin Éter, no se ofrece
+      const bloqueoEterIds = bloqueoParaJugar(state, playerId, meta, eterIds)
+      if (bloqueoEterIds === null) return null
+      const accion: Action = { type: 'jugar_mistica', cardInstanceId, slot, eterIds, ...(bloqueoEterIds ? { bloqueoEterIds } : {}) }
       if (validarJugarMistica(state, accion) !== null) return null
       if (requisitoDeMeta(state, meta, playerId) !== null) return null
       return accion
