@@ -4,7 +4,7 @@ import { Boton } from '../../shared/ui/Boton'
 import { Campo, CLASE_CAMPO } from '../../shared/ui/Campo'
 import { Seccion } from '../../shared/ui/Seccion'
 import { supabaseConfigurado } from '../backend/supabase'
-import { guardarNombre, leerPerfil, NOMBRE_MAX, validarNombre, type Perfil as PerfilJugador } from '../backend/perfilApi'
+import { enlazarGoogle, entrarConGoogle, guardarNombre, leerPerfil, NOMBRE_MAX, validarNombre, type Perfil as PerfilJugador } from '../backend/perfilApi'
 import { useMazosStore } from '../useMazosStore'
 
 /** Perfil del jugador: nombre visible, estado de la cuenta y sus mazos personalizados. */
@@ -52,6 +52,16 @@ export default function Perfil() {
     }
   }
 
+  // Ambos redirigen a Google; si algo falla antes de salir (proveedor sin activar, cuenta ya enlazada) se avisa aquí
+  const conGoogle = async (accion: () => Promise<void>) => {
+    setMensaje(null)
+    try {
+      await accion()
+    } catch (e) {
+      setMensaje({ tipo: 'error', texto: e instanceof Error ? e.message : String(e) })
+    }
+  }
+
   return (
     <div className="min-h-screen bg-[#0a0a12] font-body text-gray-100">
       <header className="border-b border-card-border/70 bg-surface/90">
@@ -91,11 +101,24 @@ export default function Perfil() {
                     </p>
                   )}
                 </div>
-                <p className="text-xs text-gray-500">
-                  {perfil.email
-                    ? `Cuenta enlazada a ${perfil.email}.`
-                    : 'Sesión anónima: tu perfil y tus mazos viven en este navegador. Enlazar un email para conservarlos en otros dispositivos llegará pronto.'}
-                </p>
+                {perfil.anonimo ? (
+                  <div className="space-y-2 rounded-xl border border-white/10 bg-white/[0.02] p-4">
+                    <p className="text-xs text-gray-400">
+                      Sesión anónima: tu perfil y tus mazos viven solo en este navegador. Enlaza tu cuenta de Google para conservarlos y usarlos desde
+                      otros dispositivos.
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      <Boton variante="primario" tam="md" onClick={() => void conGoogle(enlazarGoogle)}>
+                        Enlazar con Google
+                      </Boton>
+                      <Boton variante="secundario" tam="md" onClick={() => void conGoogle(entrarConGoogle)}>
+                        Ya tengo cuenta: entrar con Google
+                      </Boton>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-xs text-gray-500">{perfil.email ? `Cuenta enlazada a ${perfil.email}.` : 'Cuenta enlazada.'}</p>
+                )}
               </>
             ) : (
               mensaje && <p className="text-sm text-rose-300">{mensaje.texto}</p>

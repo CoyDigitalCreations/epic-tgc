@@ -47,3 +47,37 @@ export async function guardarNombre(id: string, nombre: string): Promise<void> {
   const { error } = await supabase.schema('eter').from('profiles').update({ display_name: valido.nombre }).eq('id', id)
   if (error) throw new Error(error.message)
 }
+
+/** A donde vuelve el navegador tras Google: la propia pantalla de perfil. */
+const volverAlPerfil = () => `${window.location.origin}/epiconline/perfil`
+
+/**
+ * Enlaza la cuenta de Google a la sesión anónima actual: conserva el mismo `user.id`, así el perfil y los mazos siguen siendo
+ * suyos. Redirige al navegador a Google; si esa cuenta de Google ya pertenece a otro perfil, falla (para eso está `entrarConGoogle`).
+ */
+export async function enlazarGoogle(): Promise<void> {
+  const supabase = getSupabase()
+  if (!supabase) throw new Error('Supabase no configurado')
+  await asegurarSesion()
+  const { error } = await supabase.auth.linkIdentity({ provider: 'google', options: { redirectTo: volverAlPerfil() } })
+  if (error) throw new Error(mensajeDeAuth(error.message))
+}
+
+/**
+ * Entra con una cuenta de Google que ya tiene perfil (otro navegador u otro equipo). La sesión anónima de este navegador se
+ * abandona; sus mazos locales sí pasan a la cuenta al sincronizar (hasta el tope de 5, que pone la base).
+ */
+export async function entrarConGoogle(): Promise<void> {
+  const supabase = getSupabase()
+  if (!supabase) throw new Error('Supabase no configurado')
+  const { error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: volverAlPerfil() } })
+  if (error) throw new Error(mensajeDeAuth(error.message))
+}
+
+/** Los errores de Auth llegan en inglés y técnicos: los dos que el jugador puede encontrar, en claro. */
+export function mensajeDeAuth(mensaje: string): string {
+  if (/already linked|identity_already_exists/i.test(mensaje)) return 'Esa cuenta de Google ya tiene un perfil. Usa «Ya tengo cuenta» para entrar con ella.'
+  if (/provider is not enabled|unsupported provider/i.test(mensaje)) return 'El acceso con Google aún no está activado en el servidor.'
+  if (/manual linking/i.test(mensaje)) return 'El enlace de cuentas no está activado en el servidor.'
+  return mensaje
+}
