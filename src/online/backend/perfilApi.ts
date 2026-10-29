@@ -2,7 +2,9 @@
  * perfilApi — perfil del jugador (`eter.profiles`: nombre visible). Lectura y edición de la fila propia, que permite la RLS.
  */
 import { getSupabase } from './supabase'
-import { asegurarSesion } from './matchApi'
+import { asegurarSesion, olvidarSesionVerificada } from './matchApi'
+import { olvidarPartida } from '../lobby/partidaGuardada'
+import { useMazosStore } from '../useMazosStore'
 
 export const NOMBRE_MAX = 24
 
@@ -80,4 +82,19 @@ export function mensajeDeAuth(mensaje: string): string {
   if (/provider is not enabled|unsupported provider/i.test(mensaje)) return 'El acceso con Google aún no está activado en el servidor.'
   if (/manual linking/i.test(mensaje)) return 'El enlace de cuentas no está activado en el servidor.'
   return mensaje
+}
+
+/**
+ * Cierra la sesión SOLO en este navegador (las de otros dispositivos siguen). Lo guardado en la cuenta no se toca; lo que este
+ * navegador recordaba de ella —sus mazos y la partida a la que reconectar— se borra, para que la siguiente persona que use el
+ * equipo no los herede ni los suba a su propia cuenta.
+ */
+export async function cerrarSesion(): Promise<void> {
+  const supabase = getSupabase()
+  if (!supabase) throw new Error('Supabase no configurado')
+  const { error } = await supabase.auth.signOut({ scope: 'local' })
+  if (error) throw new Error(error.message)
+  olvidarSesionVerificada()
+  olvidarPartida()
+  useMazosStore.setState({ mazosPersonalizados: [] })
 }

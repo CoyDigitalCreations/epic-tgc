@@ -4,7 +4,7 @@ import { Boton } from '../../shared/ui/Boton'
 import { Campo, CLASE_CAMPO } from '../../shared/ui/Campo'
 import { Seccion } from '../../shared/ui/Seccion'
 import { supabaseConfigurado } from '../backend/supabase'
-import { enlazarGoogle, entrarConGoogle, guardarNombre, leerPerfil, NOMBRE_MAX, validarNombre, type Perfil as PerfilJugador } from '../backend/perfilApi'
+import { cerrarSesion, enlazarGoogle, entrarConGoogle, guardarNombre, leerPerfil, NOMBRE_MAX, validarNombre, type Perfil as PerfilJugador } from '../backend/perfilApi'
 import { useMazosStore } from '../useMazosStore'
 
 /** Perfil del jugador: nombre visible, estado de la cuenta y sus mazos personalizados. */
@@ -117,7 +117,22 @@ export default function Perfil() {
                     </div>
                   </div>
                 ) : (
-                  <p className="text-xs text-gray-500">{perfil.email ? `Cuenta enlazada a ${perfil.email}.` : 'Cuenta enlazada.'}</p>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <p className="text-xs text-gray-500">{perfil.email ? `Cuenta enlazada a ${perfil.email}.` : 'Cuenta enlazada.'}</p>
+                    <Boton
+                      variante="secundario"
+                      tam="sm"
+                      onClick={() =>
+                        void conGoogle(async () => {
+                          await cerrarSesion()
+                          // Recarga completa: arranca limpia, con una sesión anónima nueva y sin nada de la cuenta anterior
+                          window.location.assign('/epiconline/perfil')
+                        })
+                      }
+                    >
+                      Cerrar sesión
+                    </Boton>
+                  </div>
                 )}
               </>
             ) : (

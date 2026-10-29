@@ -159,6 +159,11 @@ async function abrirSesion(): Promise<string> {
   return anon.user.id
 }
 
+/** Olvida la sesión verificada (tras cerrar sesión): la siguiente petición abre una nueva. */
+export function olvidarSesionVerificada(): void {
+  sesionVerificada = null
+}
+
 /** ¿Listo para jugar online? (env vars + sesión) */
 export function asegurarSesion(): Promise<string> {
   if (!sesionVerificada) {
