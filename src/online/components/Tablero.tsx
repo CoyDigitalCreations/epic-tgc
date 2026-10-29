@@ -2300,6 +2300,22 @@ export function Tablero({
         )
       })()}
 
+      {/* ── Cadena abierta con la prioridad del rival: sin esto, a quien espera le parece que la partida se pasmó ── */}
+      {!terminada && (() => {
+        const cadena = cadenaActiva(vista)
+        if (!cadena || cadena.prioridad === yoId) return null
+        const efecto = cadena.efectoActual?.descripcion
+        return (
+          <div
+            role="status"
+            className="anim-dock fixed left-1/2 top-16 z-[60] max-w-[min(92vw,28rem)] -translate-x-1/2 rounded-xl border border-amber-400/40 bg-gradient-to-b from-[#241c0c]/95 to-[#17120a]/95 px-4 py-2 text-center shadow-[0_10px_40px_-8px_rgba(0,0,0,0.7)] backdrop-blur"
+          >
+            <p className="text-xs font-semibold text-amber-100">⏳ Cadena abierta: el rival decide si responde o pasa prioridad</p>
+            {efecto && <p className="mt-0.5 text-[11px] text-amber-200/70">Efecto en espera: {efecto}</p>}
+          </div>
+        )
+      })()}
+
       {/* ── Zoom de carta (revisar el efecto en grande) ─────────── */}
       {zoom && <CartaZoom inst={zoom} onClose={() => setZoom(null)} />}
 

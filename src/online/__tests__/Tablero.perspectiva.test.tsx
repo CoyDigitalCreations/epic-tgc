@@ -104,4 +104,28 @@ describe('Tablero: perspectiva del jugador que mira', () => {
     montar(estado, 'B')
     expect(screen.getByRole('button', { name: /pasar/i })).toBeInTheDocument()
   })
+
+  it('quien espera la respuesta del rival en una cadena ve un aviso (y quien tiene la prioridad no)', () => {
+    const estado = base('B')
+    estado.cadena = {
+      pila: [],
+      origen: 'global',
+      prioridad: 'B',
+      faseAbierta: 'forja',
+      efectoActual: { jugador: 'B', descripcion: 'Varek', cardInstanceId: 'manoB' },
+      velocidadActual: 'normal',
+      pasesConsecutivos: 0,
+    } as never
+    montar(estado, 'A')
+    expect(screen.getByRole('status')).toHaveTextContent(/el rival decide/i)
+    expect(screen.getByRole('status')).toHaveTextContent(/Varek/)
+    cleanup()
+    montar(estado, 'B')
+    expect(screen.queryByRole('status')).not.toBeInTheDocument()
+  })
+
+  it('sin cadena abierta no hay aviso de espera', () => {
+    montar(base('A'), 'A')
+    expect(screen.queryByRole('status')).not.toBeInTheDocument()
+  })
 })
