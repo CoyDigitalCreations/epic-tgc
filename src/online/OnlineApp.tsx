@@ -31,6 +31,11 @@ export default function OnlineApp() {
   const coleccion = useCardStore((s) => s.cards)
   const mazosPersonalizados = useMazosStore((s) => s.mazosPersonalizados)
 
+  // Los mazos de la cuenta (si hay nube) se mezclan con los de este navegador al abrir el menú
+  useEffect(() => {
+    void useMazosStore.getState().sincronizarConNube()
+  }, [])
+
   // El catálogo del motor debe resolver las cartas custom ANTES de la partida.
   // Solo las custom con id FUERA de ALL_CARDS se registran: los sets quedan
   // puros (un rediseño con id de diseño no debe contaminar el set original).

@@ -91,12 +91,17 @@ async function callMatchEngine<T>(payload: Record<string, unknown>): Promise<T> 
   return data as T
 }
 
-export async function crearSala(deck: string[], limiteSegundos?: number): Promise<RoomInfo> {
-  return callMatchEngine<RoomInfo>({ action: 'create', deck, ...(limiteSegundos !== undefined && { limiteSegundos }) })
+/** Mazo con el que se entra a una sala: los 66 cardIds (mazos preestablecidos) o el id de uno guardado en la cuenta (lo lee el servidor). */
+export type MazoDeSala = string[] | { deckId: string }
+
+const cuerpoMazo = (mazo: MazoDeSala) => (Array.isArray(mazo) ? { deck: mazo } : { deckId: mazo.deckId })
+
+export async function crearSala(mazo: MazoDeSala, limiteSegundos?: number): Promise<RoomInfo> {
+  return callMatchEngine<RoomInfo>({ action: 'create', ...cuerpoMazo(mazo), ...(limiteSegundos !== undefined && { limiteSegundos }) })
 }
 
-export async function unirseASala(code: string, deck: string[]): Promise<RoomInfo> {
-  return callMatchEngine<RoomInfo>({ action: 'join', code: code.trim().toUpperCase(), deck })
+export async function unirseASala(code: string, mazo: MazoDeSala): Promise<RoomInfo> {
+  return callMatchEngine<RoomInfo>({ action: 'join', code: code.trim().toUpperCase(), ...cuerpoMazo(mazo) })
 }
 
 export async function iniciarPartida(gameId: string): Promise<MatchStateResponse> {

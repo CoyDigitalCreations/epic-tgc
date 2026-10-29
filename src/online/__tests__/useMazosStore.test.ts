@@ -1,5 +1,14 @@
-import { describe, expect, it, beforeEach } from 'vitest'
-import { useMazosStore, type MazoPersonalizado } from '../useMazosStore'
+import { describe, expect, it, beforeEach, vi } from 'vitest'
+import { esIdMazo, useMazosStore, type MazoPersonalizado } from '../useMazosStore'
+
+// La nube no se toca desde estos tests: se espía lo que el store le pide
+vi.mock('../backend/mazosNube', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../backend/mazosNube')>()),
+  subirMazo: vi.fn().mockResolvedValue(true),
+  borrarMazoNube: vi.fn().mockResolvedValue(true),
+  listarMazosNube: vi.fn().mockResolvedValue(null),
+}))
+import { borrarMazoNube, listarMazosNube, subirMazo } from '../backend/mazosNube'
 
 const KEY = 'epic-tgc-mazos-personalizados'
 
@@ -19,7 +28,7 @@ function limpiar() {
 describe('useMazosStore', () => {
   beforeEach(limpiar)
 
-  it('agrega un mazo con id slugificado', () => {
+  it('agrega un mazo con id uuid y lo sube a la nube', () => {
     const res = useMazosStore.getState().agregarMazo({
       nombre: 'Los Mutantes',
       cardIds: mazoValido('x').cardIds,
@@ -28,15 +37,16 @@ describe('useMazosStore', () => {
     const mazos = useMazosStore.getState().mazosPersonalizados
     expect(mazos.length).toBe(1)
     expect(mazos[0].nombre).toBe('Los Mutantes')
-    expect(mazos[0].id).toBe('los-mutantes')
+    expect(esIdMazo(mazos[0].id)).toBe(true)
+    expect(subirMazo).toHaveBeenCalledWith(mazos[0])
     expect(mazos[0].cardIds).toHaveLength(66)
   })
 
-  it('dedupe del id slugificado agrega sufijo -2', () => {
+  it('dos mazos con el mismo nombre tienen ids distintos', () => {
     useMazosStore.getState().agregarMazo({ nombre: 'Rojo', cardIds: mazoValido('x').cardIds })
     useMazosStore.getState().agregarMazo({ nombre: 'Rojo', cardIds: mazoValido('x').cardIds })
-    const mazos = useMazosStore.getState().mazosPersonalizados
-    expect(mazos.map((m) => m.id)).toEqual(['rojo', 'rojo-2'])
+    const ids = useMazosStore.getState().mazosPersonalizados.map((m) => m.id)
+    expect(new Set(ids).size).toBe(2)
   })
 
   it('rechaza un nombre vacío con error', () => {
@@ -97,5 +107,50 @@ describe('useMazosStore', () => {
     await useMazosStore.persist.rehydrate()
     expect(useMazosStore.getState().mazosPersonalizados).toHaveLength(1)
     expect(useMazosStore.getState().mazosPersonalizados[0].nombre).toBe('Persistido')
+  })
+
+  it('eliminar también lo borra de la nube', () => {
+    useMazosStore.getState().agregarMazo({ nombre: 'A', cardIds: mazoValido('x').cardIds })
+    const id = useMazosStore.getState().mazosPersonalizados[0].id
+    useMazosStore.getState().eliminarMazo(id)
+    expect(borrarMazoNube).toHaveBeenCalledWith(id)
+  })
+
+  it('editar o renombrar sube la versión nueva', () => {
+    useMazosStore.getState().agregarMazo({ nombre: 'A', cardIds: mazoValido('x').cardIds })
+    const id = useMazosStore.getState().mazosPersonalizados[0].id
+    useMazosStore.getState().renombrarMazo(id, 'B')
+    expect(subirMazo).toHaveBeenLastCalledWith(expect.objectContaining({ id, nombre: 'B' }))
+  })
+
+  describe('sincronizarConNube', () => {
+    const nubeId = '11111111-1111-4111-8111-111111111111'
+    const deNube = { id: nubeId, nombre: 'De la nube', cardIds: mazoValido('x').cardIds }
+
+    it('trae los mazos de la cuenta y sube los que solo estaban aquí', async () => {
+      useMazosStore.getState().agregarMazo({ nombre: 'Local', cardIds: mazoValido('x').cardIds })
+      const local = useMazosStore.getState().mazosPersonalizados[0]
+      vi.mocked(subirMazo).mockClear()
+      vi.mocked(listarMazosNube).mockResolvedValueOnce([deNube])
+      await useMazosStore.getState().sincronizarConNube()
+      expect(useMazosStore.getState().mazosPersonalizados.map((m) => m.id)).toEqual([nubeId, local.id])
+      expect(subirMazo).toHaveBeenCalledTimes(1)
+      expect(subirMazo).toHaveBeenCalledWith(local)
+    })
+
+    it('sin nube (null) no toca los mazos locales', async () => {
+      useMazosStore.getState().agregarMazo({ nombre: 'Local', cardIds: mazoValido('x').cardIds })
+      vi.mocked(listarMazosNube).mockResolvedValueOnce(null)
+      await useMazosStore.getState().sincronizarConNube()
+      expect(useMazosStore.getState().mazosPersonalizados).toHaveLength(1)
+    })
+  })
+
+  it('migra los ids viejos (slug) a uuid al rehidratar un estado v1', async () => {
+    localStorage.setItem(KEY, JSON.stringify({ state: { mazosPersonalizados: [{ id: 'los-mutantes', nombre: 'Los Mutantes', cardIds: ['a'] }] }, version: 1 }))
+    await useMazosStore.persist.rehydrate()
+    const [m] = useMazosStore.getState().mazosPersonalizados
+    expect(m.nombre).toBe('Los Mutantes')
+    expect(esIdMazo(m.id)).toBe(true)
   })
 })

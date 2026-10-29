@@ -11,6 +11,7 @@ import { supabaseConfigurado, supabaseUrl } from '../backend/supabase'
 import {
   asegurarSesion,
   crearSala,
+  type MazoDeSala,
   decidirPrimero,
   iniciarPartida,
   jugarPpt,
@@ -24,6 +25,7 @@ import { guardarPartida, leerPartidaGuardada, olvidarPartida } from './partidaGu
 import { PiedraPapelTijera } from './PiedraPapelTijera'
 import { ContadorInactividad } from './ContadorInactividad'
 import type { PptVista } from '../game'
+import { subirMazo } from '../backend/mazosNube'
 import { useMazosStore } from '../useMazosStore'
 
 type Vista = 'auth' | 'menu' | 'espera' | 'partida'
@@ -62,6 +64,19 @@ export default function Lobby() {
     const custom = mazosPersonalizados.find((m) => m.id === mazoId)
     return custom?.cardIds ?? MAZOS[0].cardIds
   }, [mazoId, mazosPersonalizados])
+
+  // Los mazos de la cuenta llegan al abrir el lobby (y los de este navegador que faltaban en ella se suben)
+  useEffect(() => {
+    void useMazosStore.getState().sincronizarConNube()
+  }, [])
+
+  // Lo que se manda a la sala: un mazo guardado en la cuenta viaja por id (el servidor lo lee y valida, nadie lo altera desde el
+  // cliente); si no se pudo subir a la nube —o es un preestablecido— viajan los 66 cardIds como siempre
+  const mazoParaSala = useCallback(async (): Promise<MazoDeSala> => {
+    const custom = mazosPersonalizados.find((m) => m.id === mazoId)
+    if (custom && (await subirMazo(custom))) return { deckId: custom.id }
+    return deck
+  }, [mazoId, mazosPersonalizados, deck])
 
   // Reconexión: si quedó una partida guardada (refresco o pestaña cerrada), el servidor dice si sigue viva. Cualquier otra
   // respuesta (terminada, sala ajena, inexistente, error) la olvida y se queda en el menú.
@@ -143,7 +158,7 @@ export default function Lobby() {
     setOcupado(true)
     setErrorSala(null)
     try {
-      const info = await crearSala(deck, limiteS)
+      const info = await crearSala(await mazoParaSala(), limiteS)
       guardarPartida(info)
       setSala(info)
       setVista('espera')
@@ -152,7 +167,7 @@ export default function Lobby() {
     } finally {
       setOcupado(false)
     }
-  }, [deck, limiteS])
+  }, [mazoParaSala, limiteS])
 
   const unirse = useCallback(async () => {
     if (!codigoInput.trim()) {
@@ -162,7 +177,7 @@ export default function Lobby() {
     setOcupado(true)
     setErrorSala(null)
     try {
-      const info = await unirseASala(codigoInput, deck)
+      const info = await unirseASala(codigoInput, await mazoParaSala())
       guardarPartida(info)
       setSala(info)
       setVista('espera')
@@ -173,7 +188,7 @@ export default function Lobby() {
     } finally {
       setOcupado(false)
     }
-  }, [codigoInput, deck])
+  }, [codigoInput, mazoParaSala])
 
   // Una jugada del piedra, papel o tijera: la respuesta ya trae mi vista actualizada, sin esperar al siguiente poll
   const enviarPpt = async (peticion: (gameId: string) => Promise<{ ppt: PptVista }>) => {

@@ -210,6 +210,26 @@ async function rechazarMazoIlegal(deck: string[], jugador: 'A' | 'B'): Promise<R
   }
 }
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+/**
+ * Mazo con el que se entra a una sala: un mazo guardado en la cuenta (`deckId`, se lee por id Y dueño, así nadie juega
+ * con el mazo de otro ni uno alterado en el cliente) o, para los mazos preestablecidos, el arreglo que manda el cliente.
+ */
+async function resolverMazo(deck: unknown, deckId: unknown, userId: string): Promise<{ deck: string[] } | { error: Response }> {
+  if (deckId === undefined || deckId === null) {
+    return esMazoValido(deck) ? { deck } : { error: err('deck must be 66 cardIds') }
+  }
+  if (typeof deckId !== 'string' || !UUID_RE.test(deckId)) return { error: err('deckId inválido') }
+  const res = await sb(`decks?id=eq.${deckId}&owner_id=eq.${encodeURIComponent(userId)}&select=cards`)
+  if (!res.ok) {
+    console.error('deck read failed', await res.text())
+    return { error: err('no se pudo leer el mazo', 500) }
+  }
+  const cards = ((await res.json()) as { cards: unknown }[])[0]?.cards
+  return esMazoValido(cards) ? { deck: cards } : { error: err('mazo no encontrado', 404) }
+}
+
 Deno.serve(async (req) => {
   // El preflight va ANTES de todo (sin JWT ni método): si no responde con las cabeceras CORS el navegador ni envía el POST
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS_HEADERS })
@@ -223,6 +243,8 @@ Deno.serve(async (req) => {
     gameId?: string
     code?: string
     deck?: string[]
+    /** create/join: id de un mazo guardado en la cuenta (alternativa a `deck`, que queda para los mazos preestablecidos) */
+    deckId?: unknown
     playerAction?: unknown
     /** create: segundos que tiene quien debe actuar antes de perder por abandono (60, 120, 180, 300 o 600; defecto 300) */
     limiteSegundos?: unknown
@@ -239,12 +261,14 @@ Deno.serve(async (req) => {
     return err('invalid JSON')
   }
 
-  const { action, gameId, code, deck, playerAction, desdeEventoId, jugada, empezar, limiteSegundos } = body
+  const { action, gameId, code, playerAction, desdeEventoId, jugada, empezar, limiteSegundos } = body
   if (!action) return err('action required')
 
   // ── create: genera sala lobby con código + deck del creador ──────────────
   if (action === 'create') {
-    if (!esMazoValido(deck)) return err('deck must be 66 cardIds')
+    const mazo = await resolverMazo(body.deck, body.deckId, userId)
+    if ('error' in mazo) return mazo.error
+    const deck = mazo.deck
     if (limiteSegundos !== undefined && !engine.esLimiteInactividadS(limiteSegundos)) return err('tiempo para responder inválido (60, 120, 180, 300 o 600 s)')
     const limite = limiteSegundos === undefined ? LIMITE_DEFECTO_S : Number(limiteSegundos)
     const rechazoA = await rechazarMazoIlegal(deck, 'A')
@@ -279,7 +303,9 @@ Deno.serve(async (req) => {
   // ── join: une a sala lobby por código + deck del rival ───────────────────
   if (action === 'join') {
     if (!code) return err('code required')
-    if (!esMazoValido(deck)) return err('deck must be 66 cardIds')
+    const mazo = await resolverMazo(body.deck, body.deckId, userId)
+    if ('error' in mazo) return mazo.error
+    const deck = mazo.deck
     const rechazoB = await rechazarMazoIlegal(deck, 'B')
     if (rechazoB) return rechazoB
     const findRes = await sb(
