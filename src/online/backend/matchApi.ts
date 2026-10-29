@@ -134,12 +134,20 @@ export async function rendirse(gameId: string): Promise<{ ok: boolean; winner?: 
   return callMatchEngine({ action: 'forfeit', gameId })
 }
 
-/** ¿Listo para jugar online? (env vars + sesión) */
-export async function asegurarSesion(): Promise<string> {
+/** Una sola comprobación contra el servidor por carga de página (no una por cada llamada que pida la sesión). */
+let sesionVerificada: Promise<string> | null = null
+
+async function abrirSesion(): Promise<string> {
   const supabase = getSupabase()
   if (!supabase) throw new Error('Supabase no configurado')
   const { data } = await supabase.auth.getSession()
-  if (data.session?.user?.id) return data.session.user.id
+  if (data.session?.user?.id) {
+    // El token guardado en el navegador puede ser de un usuario que ya no existe (p. ej. se borró en la base): getSession solo lee el
+    // almacenamiento local, getUser consulta al servidor. Si ya no vale, se descarta y se abre una sesión anónima nueva.
+    const { error } = await supabase.auth.getUser()
+    if (!error) return data.session.user.id
+    await supabase.auth.signOut({ scope: 'local' })
+  }
   // Anónimo: MVP de amigos sin email/SMTP
   const { data: anon, error } = await supabase.auth.signInAnonymously()
   if (error || !anon.user) {
@@ -149,4 +157,15 @@ export async function asegurarSesion(): Promise<string> {
     )
   }
   return anon.user.id
+}
+
+/** ¿Listo para jugar online? (env vars + sesión) */
+export function asegurarSesion(): Promise<string> {
+  if (!sesionVerificada) {
+    sesionVerificada = abrirSesion().catch((e) => {
+      sesionVerificada = null // un fallo (sin red, sin config) no se queda cacheado: el siguiente intento vuelve a probar
+      throw e
+    })
+  }
+  return sesionVerificada
 }
