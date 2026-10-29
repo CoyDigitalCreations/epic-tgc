@@ -37,7 +37,10 @@ import {
   applyAction,
   createCtxFromDraws,
   createInitialState,
+  esLimiteInactividadS,
   inactividadExpirada,
+  LIMITE_INACTIVIDAD_DEFECTO_S,
+  vencimientoInactividad,
   pptDecidir,
   pptJugar,
   pptVista,
@@ -70,7 +73,11 @@ type EngineModule = {
   visibleState: (state: never, playerId: 'A' | 'B') => never
   actorActual: (state: never) => 'A' | 'B' | null
   /** ¿Pasó el límite de inactividad desde la última actividad (`updated_at`)? */
-  inactividadExpirada: (ultimaActividad: string | null | undefined, ahora: number) => boolean
+  inactividadExpirada: (ultimaActividad: string | null | undefined, ahora: number, limiteMs?: number) => boolean
+  /** Los números fijos que ofrece el lobby como límite de inactividad (segundos). */
+  esLimiteInactividadS: (x: unknown) => boolean
+  /** Instante (ms epoch) en que vence el plazo desde la última actividad, o null si no se puede medir. */
+  vencimientoInactividad: (ultimaActividad: string | null | undefined, limiteMs?: number) => number | null
   pptJugar: (actual: PptEstado | null, jugador: 'A' | 'B', jugada: unknown) => PptResultado
   pptDecidir: (actual: PptEstado | null, jugador: 'A' | 'B', empezar: unknown) => PptResultado
   pptVista: (ppt: PptEstado | null, jugador: 'A' | 'B') => unknown
@@ -86,6 +93,8 @@ const engine: EngineModule = {
   visibleState: visibleState as EngineModule['visibleState'],
   actorActual: actorActual as EngineModule['actorActual'],
   inactividadExpirada: inactividadExpirada as EngineModule['inactividadExpirada'],
+  esLimiteInactividadS: esLimiteInactividadS as EngineModule['esLimiteInactividadS'],
+  vencimientoInactividad: vencimientoInactividad as EngineModule['vencimientoInactividad'],
   pptJugar: pptJugar as EngineModule['pptJugar'],
   pptDecidir: pptDecidir as EngineModule['pptDecidir'],
   pptVista: pptVista as EngineModule['pptVista'],
@@ -104,6 +113,9 @@ interface MatchPersist {
   state: Record<string, unknown>
   rngDraws: number
 }
+
+/** Segundos de inactividad por defecto de una sala (el mismo que usa el motor). */
+const LIMITE_DEFECTO_S = LIMITE_INACTIVIDAD_DEFECTO_S as number
 
 // CORS: el cliente (Vercel, localhost) llama desde el navegador con supabase-js, que manda un preflight OPTIONS por sus cabeceras
 // propias. La autenticación va en el header Authorization (JWT), no en cookies, así que un origen abierto no abre nada nuevo.
@@ -212,6 +224,8 @@ Deno.serve(async (req) => {
     code?: string
     deck?: string[]
     playerAction?: unknown
+    /** create: segundos que tiene quien debe actuar antes de perder por abandono (60, 120, 180, 300 o 600; defecto 300) */
+    limiteSegundos?: unknown
     /** ppt: 'piedra' | 'papel' | 'tijera' */
     jugada?: unknown
     /** ppt_decidir: true = el ganador empieza, false = cede el primer turno */
@@ -225,12 +239,14 @@ Deno.serve(async (req) => {
     return err('invalid JSON')
   }
 
-  const { action, gameId, code, deck, playerAction, desdeEventoId, jugada, empezar } = body
+  const { action, gameId, code, deck, playerAction, desdeEventoId, jugada, empezar, limiteSegundos } = body
   if (!action) return err('action required')
 
   // ── create: genera sala lobby con código + deck del creador ──────────────
   if (action === 'create') {
     if (!esMazoValido(deck)) return err('deck must be 66 cardIds')
+    if (limiteSegundos !== undefined && !engine.esLimiteInactividadS(limiteSegundos)) return err('tiempo para responder inválido (60, 120, 180, 300 o 600 s)')
+    const limite = limiteSegundos === undefined ? LIMITE_DEFECTO_S : Number(limiteSegundos)
     const rechazoA = await rechazarMazoIlegal(deck, 'A')
     if (rechazoA) return rechazoA
     const roomCode = generarCodigoSala()
@@ -244,6 +260,7 @@ Deno.serve(async (req) => {
         seed,
         deck_a: deck,
         deck_b: [],
+        limite_inactividad_s: limite,
         player_a_id: userId,
         state_json: null,
       }),
@@ -256,7 +273,7 @@ Deno.serve(async (req) => {
     const rows = await insertRes.json()
     const game = rows?.[0]
     if (!game) return err('failed to create room', 500)
-    return json({ ok: true, gameId: game.id, code: game.code, seed: game.seed, player: 'A' })
+    return json({ ok: true, gameId: game.id, code: game.code, seed: game.seed, player: 'A', limiteSegundos: game.limite_inactividad_s ?? limite })
   }
 
   // ── join: une a sala lobby por código + deck del rival ───────────────────
@@ -287,7 +304,7 @@ Deno.serve(async (req) => {
     const updated = await updRes.json()
     const game = updated?.[0]
     if (!game) return err('failed to join room', 500)
-    return json({ ok: true, gameId: game.id, code: game.code, seed: game.seed, player: 'B' })
+    return json({ ok: true, gameId: game.id, code: game.code, seed: game.seed, player: 'B', limiteSegundos: game.limite_inactividad_s ?? LIMITE_DEFECTO_S })
   }
 
   if (!gameId) return err('gameId required')
@@ -328,6 +345,19 @@ Deno.serve(async (req) => {
     return null
   }
 
+  /** Límite de inactividad de ESTA sala (lo eligió quien la creó); las filas anteriores a la columna usan el defecto. */
+  const limiteSalaS = Number(game.limite_inactividad_s) || LIMITE_DEFECTO_S
+  const limiteMs = () => limiteSalaS * 1000
+
+  /**
+   * Plazo para el contador del cliente. `ahora` es el reloj del SERVIDOR: el cliente calcula su desfase con él y no depende de
+   * que su reloj esté en hora. Fuera de `playing` no hay plazo que mostrar.
+   */
+  function plazo(ultimaActividad: string | null | undefined = game.updated_at) {
+    const venceEn = game.status === 'playing' ? engine.vencimientoInactividad(ultimaActividad, limiteMs()) : null
+    return { limiteSegundos: limiteSalaS, ahora: Date.now(), ...(venceEn !== null && { venceEn }) }
+  }
+
   /**
    * Abandono por inactividad: si el jugador al que le toca actuar lleva más del límite sin mover (`updated_at` se toca con cada
    * acción persistida), pierde. Se evalúa de forma perezosa en `state` y `act`, así el resultado no depende de quién consulte.
@@ -335,7 +365,7 @@ Deno.serve(async (req) => {
    */
   async function cerrarPorInactividad(persistObj: MatchPersist | null): Promise<'A' | 'B' | null> {
     if (game.status !== 'playing' || !persistObj?.state) return null
-    if (!engine.inactividadExpirada(game.updated_at, Date.now())) return null
+    if (!engine.inactividadExpirada(game.updated_at, Date.now(), limiteMs())) return null
     const actor = engine.actorActual(persistObj.state as never)
     if (!actor) return null
     const winner = actor === 'A' ? 'B' : 'A'
@@ -406,6 +436,7 @@ Deno.serve(async (req) => {
         validActions: [],
         bothPlayers,
         code: game.code,
+        limiteSegundos: limiteSalaS,
         // Sala de espera: SOLO la vista de este jugador (nunca la jugada pendiente del rival)
         ...(game.status === 'lobby' && bothPlayers && { ppt: engine.pptVista((game.ppt ?? null) as PptEstado | null, playerId) }),
       })
@@ -422,6 +453,7 @@ Deno.serve(async (req) => {
       winner: game.winner ?? null,
       finishReason: game.finish_reason ?? null,
       code: game.code,
+      ...plazo(),
       ...(log ?? {}),
     })
   }
@@ -632,6 +664,8 @@ Deno.serve(async (req) => {
       winner,
       finishReason,
       status: finished ? 'finished' : 'playing',
+      // El plazo corre desde esta acción recién persistida (updated_at se toca con ese UPDATE)
+      ...(finished ? { limiteSegundos: limiteSalaS, ahora: Date.now() } : plazo(new Date().toISOString())),
     })
   }
 

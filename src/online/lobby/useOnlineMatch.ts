@@ -21,6 +21,12 @@ import {
 
 const POLL_MS = 2500
 
+/** Plazo de quien debe actuar. `venceEn` está en el reloj LOCAL (ya corregido con el desfase del servidor); null fuera de `playing`. */
+export interface PlazoLocal {
+  limiteSegundos: number
+  venceEn: number | null
+}
+
 export interface OnlineMatch {
   gameId: string
   code: string
@@ -34,6 +40,7 @@ export interface OnlineMatch {
   error: string | null
   winner: PlayerId | null
   finishReason: string | null
+  plazo: PlazoLocal | null
   ejecutar: (a: Action) => Promise<void>
   abandonar: () => Promise<void>
   refrescar: () => Promise<void>
@@ -47,6 +54,7 @@ export function useOnlineMatch(gameId: string, player: PlayerId, code: string): 
   const [winner, setWinner] = useState<PlayerId | null>(null)
   const [finishReason, setFinishReason] = useState<string | null>(null)
   const [cargando, setCargando] = useState(false)
+  const [plazo, setPlazo] = useState<PlazoLocal | null>(null)
   const ocupadoRef = useRef(false)
   // Cursor del log del servidor: último evento ya visto. Sin él (carga inicial/reconexión) llega el historial completo.
   const cursorLogRef = useRef<number | undefined>(undefined)
@@ -56,6 +64,11 @@ export function useOnlineMatch(gameId: string, player: PlayerId, code: string): 
     if ('status' in resp && resp.status) setStatus(resp.status as OnlineMatch['status'])
     if ('winner' in resp) setWinner(resp.winner ?? null)
     if ('finishReason' in resp) setFinishReason(resp.finishReason ?? null)
+    // El servidor manda su propio reloj (`ahora`): con él se corrige el desfase y el contador no depende de que este reloj esté en hora
+    if (resp.limiteSegundos !== undefined) {
+      const desfase = resp.ahora !== undefined ? resp.ahora - Date.now() : 0
+      setPlazo({ limiteSegundos: resp.limiteSegundos, venceEn: resp.venceEn !== undefined ? resp.venceEn - desfase : null })
+    }
     // `state` trae los eventos del rival (log); `act` trae los propios
     let eventos = eventosAct
     if ('ultimoEventoId' in resp && resp.ultimoEventoId !== undefined) {
@@ -107,6 +120,18 @@ export function useOnlineMatch(gameId: string, player: PlayerId, code: string): 
     }, POLL_MS)
     return () => window.clearInterval(t)
   }, [status, estado, player, refrescar])
+
+  // Si es MI turno no hay poll, y si se me acaba el tiempo nadie me avisaría de que la partida ya se cerró por abandono:
+  // pasado el plazo consulto yo (el servidor cierra la partida al consultar)
+  useEffect(() => {
+    if (status !== 'playing' || !estado || plazo?.venceEn == null) return
+    if (actorActual(estado) !== player) return
+    const venceEn = plazo.venceEn
+    const t = window.setInterval(() => {
+      if (Date.now() > venceEn) void refrescar()
+    }, POLL_MS)
+    return () => window.clearInterval(t)
+  }, [status, estado, plazo, player, refrescar])
 
   // Auto-start cuando ambos están y somos A (creador)
   useEffect(() => {
@@ -165,6 +190,7 @@ export function useOnlineMatch(gameId: string, player: PlayerId, code: string): 
     error,
     winner,
     finishReason,
+    plazo,
     ejecutar,
     abandonar,
     refrescar,

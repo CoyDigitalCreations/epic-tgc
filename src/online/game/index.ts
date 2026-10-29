@@ -19,7 +19,10 @@ export { getValidActions, actorActual } from './validActions'
 export { visibleState } from './visibleState'
 
 // Inactividad (PvP): abandono por no actuar a tiempo
-export { LIMITE_INACTIVIDAD_MS, inactividadExpirada } from './inactividad'
+export {
+  LIMITE_INACTIVIDAD_MS, LIMITE_INACTIVIDAD_DEFECTO_S, LIMITES_INACTIVIDAD_S, esLimiteInactividadS, inactividadExpirada, vencimientoInactividad,
+} from './inactividad'
+export type { LimiteInactividadS } from './inactividad'
 
 // Piedra, papel o tijera (PvP): quién empieza
 export { JUGADAS_PPT, esJugadaPpt, ganadorPpt, pptInicial, pptJugar, pptDecidir, pptVista } from './ppt'

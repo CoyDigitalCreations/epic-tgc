@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Link } from 'react-router'
 import { MAZOS } from '../mazos'
-import { visibleState } from '../game'
+import { LIMITE_INACTIVIDAD_DEFECTO_S, LIMITES_INACTIVIDAD_S, visibleState } from '../game'
 import { Tablero } from '../components/Tablero'
 import { Boton } from '../../shared/ui/Boton'
 import { Modal } from '../../shared/ui/Modal'
@@ -22,10 +22,14 @@ import {
 import { useOnlineMatch } from './useOnlineMatch'
 import { guardarPartida, leerPartidaGuardada, olvidarPartida } from './partidaGuardada'
 import { PiedraPapelTijera } from './PiedraPapelTijera'
+import { ContadorInactividad } from './ContadorInactividad'
 import type { PptVista } from '../game'
 import { useMazosStore } from '../useMazosStore'
 
 type Vista = 'auth' | 'menu' | 'espera' | 'partida'
+
+/** 60 → «1 min», 600 → «10 min» (las opciones fijas son minutos enteros). */
+const etiquetaLimite = (segundos: number) => `${segundos / 60} min`
 
 /**
  * Lobby de salas para jugar con amigos (server-authoritative).
@@ -46,6 +50,8 @@ export default function Lobby() {
   const [ambosListos, setAmbosListos] = useState(false)
   const [copiado, setCopiado] = useState(false)
   const [ppt, setPpt] = useState<PptVista | null>(null)
+  // Tiempo para responder de la sala que se va a crear (el rival lo ve en la sala de espera)
+  const [limiteS, setLimiteS] = useState<number>(LIMITE_INACTIVIDAD_DEFECTO_S)
   const [pptOcupado, setPptOcupado] = useState(false)
   const mazosPersonalizados = useMazosStore((s) => s.mazosPersonalizados)
 
@@ -137,7 +143,7 @@ export default function Lobby() {
     setOcupado(true)
     setErrorSala(null)
     try {
-      const info = await crearSala(deck)
+      const info = await crearSala(deck, limiteS)
       guardarPartida(info)
       setSala(info)
       setVista('espera')
@@ -146,7 +152,7 @@ export default function Lobby() {
     } finally {
       setOcupado(false)
     }
-  }, [deck])
+  }, [deck, limiteS])
 
   const unirse = useCallback(async () => {
     if (!codigoInput.trim()) {
@@ -310,6 +316,7 @@ VITE_SUPABASE_ANON_KEY=sb_publishable_...`}
             )}
             <p className="mt-1.5 text-[11px] text-gray-500">
               Mazo: {nombreMazo} · eres el jugador {sala.player}
+              {sala.limiteSegundos !== undefined && <> · Tiempo para responder: {etiquetaLimite(sala.limiteSegundos)}</>}
             </p>
           </div>
           {errorSala && (
@@ -379,6 +386,23 @@ VITE_SUPABASE_ANON_KEY=sb_publishable_...`}
 
             <Seccion>Crear sala</Seccion>
             <p className="mb-3 text-xs text-gray-500">Generas un código de 6 caracteres y se lo pasas a tu amigo.</p>
+            <fieldset className="mb-3">
+              <legend className="mb-1.5 text-xs text-gray-400">Tiempo para responder</legend>
+              <div className="flex flex-wrap gap-1.5">
+                {LIMITES_INACTIVIDAD_S.map((seg) => (
+                  <Boton
+                    key={seg}
+                    tam="sm"
+                    variante={limiteS === seg ? 'primario' : 'secundario'}
+                    aria-pressed={limiteS === seg}
+                    onClick={() => setLimiteS(seg)}
+                  >
+                    {etiquetaLimite(seg)}
+                  </Boton>
+                ))}
+              </div>
+              <p className="mt-1.5 text-[11px] text-gray-600">Si quien debe actuar no mueve a tiempo, pierde la partida.</p>
+            </fieldset>
             <Boton variante="primario" tam="lg" className="w-full" onClick={crear} disabled={ocupado}>
               {ocupado ? 'Creando…' : 'Crear sala'}
             </Boton>
@@ -530,6 +554,9 @@ function PartidaOnline({
         }}
         animaciones={[]}
       />
+      {partida.status === 'playing' && partida.plazo?.venceEn != null && (
+        <ContadorInactividad venceEn={partida.plazo.venceEn} limiteSegundos={partida.plazo.limiteSegundos} leToca={partida.leToca} />
+      )}
       {partida.error && (
         <div
           role="alert"

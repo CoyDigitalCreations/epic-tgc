@@ -35,7 +35,7 @@ vi.mock('../../backend/matchApi', () => ({
 }))
 
 import Lobby from '../Lobby'
-import { asegurarSesion, iniciarPartida, obtenerEstado, rendirse } from '../../backend/matchApi'
+import { asegurarSesion, crearSala, iniciarPartida, obtenerEstado, rendirse } from '../../backend/matchApi'
 
 describe('Lobby online', () => {
   it('sin env vars muestra instrucciones de configuración', () => {
@@ -197,5 +197,56 @@ describe('Lobby online: piedra, papel o tijera antes de la partida', () => {
     await screen.findByText('¿Quién empieza?')
     await new Promise((r) => setTimeout(r, 1800)) // un poll completo (1.5 s)
     expect(iniciarPartida).not.toHaveBeenCalled()
+  })
+})
+
+describe('Lobby online: tiempo para responder', () => {
+  beforeEach(() => {
+    window.localStorage.clear()
+    vi.mocked(crearSala).mockClear()
+  })
+
+  async function irAlMenu() {
+    const user = userEvent.setup()
+    estado.configurado = true
+    render(
+      <MemoryRouter>
+        <Lobby />
+      </MemoryRouter>,
+    )
+    await user.click(screen.getByRole('button', { name: /entrar/i }))
+    await screen.findByRole('button', { name: /^crear sala$/i })
+    return user
+  }
+
+  it('ofrece los valores fijos y 5 min viene elegido por defecto', async () => {
+    await irAlMenu()
+    for (const min of ['1 min', '2 min', '3 min', '5 min', '10 min']) {
+      expect(screen.getByRole('button', { name: min })).toBeInTheDocument()
+    }
+    expect(screen.getByRole('button', { name: '5 min' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('button', { name: '1 min' })).toHaveAttribute('aria-pressed', 'false')
+  })
+
+  it('crear sala sin tocar nada usa 5 min (300 s)', async () => {
+    const user = await irAlMenu()
+    await user.click(screen.getByRole('button', { name: /^crear sala$/i }))
+    expect(crearSala).toHaveBeenCalledWith(expect.any(Array), 300)
+  })
+
+  it('crear sala con otro valor manda ese valor al servidor', async () => {
+    const user = await irAlMenu()
+    await user.click(screen.getByRole('button', { name: '10 min' }))
+    expect(screen.getByRole('button', { name: '10 min' })).toHaveAttribute('aria-pressed', 'true')
+    await user.click(screen.getByRole('button', { name: /^crear sala$/i }))
+    expect(crearSala).toHaveBeenCalledWith(expect.any(Array), 600)
+  })
+
+  it('la sala de espera muestra el tiempo de la sala', async () => {
+    vi.mocked(crearSala).mockResolvedValueOnce({ gameId: 'g1', code: 'ABCDEF', seed: 1, player: 'A', limiteSegundos: 120 } as never)
+    const user = await irAlMenu()
+    await user.click(screen.getByRole('button', { name: '2 min' }))
+    await user.click(screen.getByRole('button', { name: /^crear sala$/i }))
+    expect(await screen.findByText(/Tiempo para responder: 2 min/)).toBeInTheDocument()
   })
 })

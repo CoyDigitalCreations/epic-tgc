@@ -20,6 +20,8 @@ export interface RoomInfo {
   code: string
   seed: number
   player: PlayerId
+  /** Segundos que tiene quien debe actuar antes de perder por abandono (lo eligió quien creó la sala). */
+  limiteSegundos?: number
 }
 
 export interface MatchStateResponse {
@@ -37,6 +39,12 @@ export interface MatchStateResponse {
   eventos?: GameEvent[]
   /** Cursor para pedir el siguiente tramo del log (`desdeEventoId`) */
   ultimoEventoId?: number
+  /** Segundos que tiene quien debe actuar antes de perder por abandono. */
+  limiteSegundos?: number
+  /** Instante (ms epoch del SERVIDOR) en que vence el plazo de quien debe actuar; ausente fuera de `playing`. */
+  venceEn?: number
+  /** Reloj del servidor al responder: con él el cliente calcula su desfase y el contador no depende de su reloj. */
+  ahora?: number
 }
 
 export interface ActResponse {
@@ -48,6 +56,12 @@ export interface ActResponse {
   winner?: PlayerId | null
   finishReason?: string | null
   status?: string
+  /** Segundos que tiene quien debe actuar antes de perder por abandono. */
+  limiteSegundos?: number
+  /** Instante (ms epoch del SERVIDOR) en que vence el plazo de quien debe actuar; ausente fuera de `playing`. */
+  venceEn?: number
+  /** Reloj del servidor al responder: con él el cliente calcula su desfase y el contador no depende de su reloj. */
+  ahora?: number
 }
 
 /**
@@ -77,8 +91,8 @@ async function callMatchEngine<T>(payload: Record<string, unknown>): Promise<T> 
   return data as T
 }
 
-export async function crearSala(deck: string[]): Promise<RoomInfo> {
-  return callMatchEngine<RoomInfo>({ action: 'create', deck })
+export async function crearSala(deck: string[], limiteSegundos?: number): Promise<RoomInfo> {
+  return callMatchEngine<RoomInfo>({ action: 'create', deck, ...(limiteSegundos !== undefined && { limiteSegundos }) })
 }
 
 export async function unirseASala(code: string, deck: string[]): Promise<RoomInfo> {

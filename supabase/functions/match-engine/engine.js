@@ -8456,12 +8456,22 @@ function visibleState(state, playerId) {
 }
 
 // src/online/game/inactividad.ts
-var LIMITE_INACTIVIDAD_MS = 3 * 60 * 1e3;
+var LIMITES_INACTIVIDAD_S = [60, 120, 180, 300, 600];
+var LIMITE_INACTIVIDAD_DEFECTO_S = 300;
+var LIMITE_INACTIVIDAD_MS = LIMITE_INACTIVIDAD_DEFECTO_S * 1e3;
+function esLimiteInactividadS(x) {
+  return typeof x === "number" && LIMITES_INACTIVIDAD_S.includes(x);
+}
 function inactividadExpirada(ultimaActividad, ahora, limiteMs = LIMITE_INACTIVIDAD_MS) {
   if (!ultimaActividad) return false;
   const desde = Date.parse(ultimaActividad);
   if (Number.isNaN(desde)) return false;
   return ahora - desde > limiteMs;
+}
+function vencimientoInactividad(ultimaActividad, limiteMs = LIMITE_INACTIVIDAD_MS) {
+  if (!ultimaActividad) return null;
+  const desde = Date.parse(ultimaActividad);
+  return Number.isNaN(desde) ? null : desde + limiteMs;
 }
 
 // src/online/game/ppt.ts
@@ -9045,6 +9055,8 @@ registrarEfectos();
 export {
   CATALOGO_EVENTOS,
   JUGADAS_PPT,
+  LIMITES_INACTIVIDAD_S,
+  LIMITE_INACTIVIDAD_DEFECTO_S,
   LIMITE_INACTIVIDAD_MS,
   LIMITE_MANO,
   SLOTS_ARCANAS_COMBATE,
@@ -9080,6 +9092,7 @@ export {
   esCampeon,
   esEter,
   esJugadaPpt,
+  esLimiteInactividadS,
   esMistica,
   esSingular,
   esTriggerApilable,
@@ -9125,6 +9138,7 @@ export {
   validarPago,
   validarPasarPrioridad,
   validarResponderCadena,
+  vencimientoInactividad,
   verificarInvariantes,
   verificarZonaUnica,
   visibleState
