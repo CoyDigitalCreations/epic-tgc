@@ -72,7 +72,8 @@ export interface Medida {
 function medir(el: Element): Medida | null {
   const r = el.getBoundingClientRect()
   if (r.width === 0 || r.height === 0) return null
-  const rivalInvertido = el.closest('[data-testid="grilla-B"]') !== null
+  // La grilla girada 180° es la del rival SEGÚN QUIEN MIRE (en PvP, para el jugador B es la de A): la grilla lo declara
+  const rivalInvertido = el.closest('[data-invertida="true"]') !== null
   const horizontal = r.width > r.height
   return {
     cx: r.left + r.width / 2,

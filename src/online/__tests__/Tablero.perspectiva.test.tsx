@@ -4,7 +4,7 @@
  * Antes el tablero asumía que quien mira era siempre A (pensado para jugar contra el bot): B veía la mano de A
  * como propia (y oculta) y la suya como «la del rival».
  */
-import { render, screen, within } from '@testing-library/react'
+import { cleanup, render, screen, within } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { getCardMeta, getValidActions, visibleState } from '../game'
 import type { GameState } from '../game'
@@ -72,6 +72,16 @@ describe('Tablero: perspectiva del jugador que mira', () => {
     const mano = within(screen.getByTestId('mano'))
     expect(mano.queryAllByLabelText(nombre(CARTA_A)).length).toBeGreaterThan(0)
     expect(mano.queryAllByLabelText(nombre(CARTA_B))).toHaveLength(0)
+  })
+
+  it('la grilla girada 180° es la del RIVAL de quien mira: A ve girada la de B, B ve girada la de A', () => {
+    montar(base('A'), 'A')
+    expect(screen.getByTestId('grilla-B')).toHaveAttribute('data-invertida', 'true')
+    expect(screen.getByTestId('grilla-A')).not.toHaveAttribute('data-invertida')
+    cleanup()
+    montar(base('B'), 'B')
+    expect(screen.getByTestId('grilla-A')).toHaveAttribute('data-invertida', 'true')
+    expect(screen.getByTestId('grilla-B')).not.toHaveAttribute('data-invertida')
   })
 
   it('el turno de B se anuncia como «tu turno» a B y como del rival a A', () => {

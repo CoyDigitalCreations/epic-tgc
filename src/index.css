@@ -248,7 +248,7 @@
 }
 
 /* El campo del rival se dibuja girado 180° (vista de mesa): sus rótulos de zona se contra-giran para leerse derechos. */
-[data-testid='grilla-B'] [data-zona-label] {
+[data-invertida='true'] [data-zona-label] {
   transform: rotate(180deg);
 }
 

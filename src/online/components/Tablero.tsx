@@ -1100,6 +1100,9 @@ function GrillaJugador({
   return (
     <div
       data-testid={`grilla-${jugador}`}
+      // La grilla rival va girada 180°: quién es «la rival» depende de quién mira (en PvP, B ve a A girada), así que
+      // las animaciones y los rótulos leen este atributo en vez de suponer que es la de B
+      data-invertida={invertida ? 'true' : undefined}
       className="flex items-stretch gap-4 w-max"
       style={invertida ? { transform: 'rotate(180deg)' } : undefined}
     >
