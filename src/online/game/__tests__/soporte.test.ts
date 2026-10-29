@@ -16,7 +16,7 @@ import type { Ctx, GameState, PlayerId } from '../types'
 // DS-033 Mística — hoy: hechizo/tutor SIN trigger (hueco de Fase 2)
 // DS-032 Arcana — hoy: hechizo/tutor SIN trigger + condicion inicio_choque (recompensa sin ruta)
 // De apoyo: FB-010 Aurora Orden/Céleste cost 4 · FB-011 Vaela · DS-011 Kael ·
-// DS-001 Ragnar · FB-012 Mira · FB-024 Combate · FB-001 Éter Orden ·
+// DS-010 Ragnar · FB-012 Mira · FB-024 Combate · FB-001 Éter Orden ·
 // DS-002 Éter Caos · FB-002 Éter · DS-004 Éter descarte rival.
 const FB031 = 'FB-031' // tutor al morir: Campeones Orden/Céleste coste ≤ 4 del mazo
 const DS031 = 'DS-031' // tutor al morir: Campeones coste ≤ 2 del mazo
@@ -25,7 +25,7 @@ const DS032 = 'DS-032' // portador de tests de dispatch (su JSON hoy es hechizo/
 const AURORA = 'FB-010' // Orden/Céleste cost 4 — AHORA cumple el filtro de FB-031
 const VAELA = 'FB-011'
 const KAEL = 'DS-011'
-const RAGNAR = 'DS-001'
+const RAGNAR = 'DS-010'
 const MIRA = 'FB-012' // Transmutar
 const ARCANA_DE_UN_USO = 'FB-023' // Arcana sin ARTEFACTO: se consume a 2G al resolverse en la pila
 const ETER_ORDEN = 'FB-001'

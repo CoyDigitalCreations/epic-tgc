@@ -5,7 +5,7 @@ import { Link } from 'react-router'
 const ABANICO = [
   { id: 'FB-011', nombre: 'Vaela, Sed de Alba', clase: '-rotate-[9deg] translate-y-6 -mr-10 z-10' },
   { id: 'FB-010', nombre: 'Aurora, La Primogénita', clase: 'z-20 scale-110' },
-  { id: 'DS-001', nombre: 'Ragnar, Voz del Nudo', clase: 'rotate-[9deg] translate-y-6 -ml-10 z-10' },
+  { id: 'DS-010', nombre: 'Ragnar, Voz del Nudo', clase: 'rotate-[9deg] translate-y-6 -ml-10 z-10' },
 ]
 
 interface DestinoProps {

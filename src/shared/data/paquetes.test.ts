@@ -196,9 +196,9 @@ describe('Paquetes', () => {
       }
     })
 
-    it('Ragnar (DS-001) es el espejo de Aurora: misma potencia, defensa opuesta', () => {
+    it('Ragnar (DS-010) es el espejo de Aurora: misma potencia, defensa opuesta', () => {
       const aurora = ESTASIS_CARDS.find((c) => c.id === 'FB-010')!
-      const ragnar = DISONANCIA_CARDS.find((c) => c.id === 'DS-001')!
+      const ragnar = DISONANCIA_CARDS.find((c) => c.id === 'DS-010')!
       expect(ragnar).toBeDefined()
 
       // Mismo presupuesto: Única, Soberano, Singular, 9/9, coste 4

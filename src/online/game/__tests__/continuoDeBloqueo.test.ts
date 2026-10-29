@@ -2,7 +2,7 @@
 /**
  * Un CONTINUO con coste de Éter bloqueado (doctrina: todo lo que bloquea Éter es continuo). Antes solo funcionaban unos pocos
  * efectos cableados a mano (robo, doble ataque, tramos, invocar y equipar): con cualquier otro efecto raíz —incluida la
- * carta real Ragnar (DS-001)— bloquear Éter no hacía NADA y el mapa de cobertura lo daba por bueno. Ahora, según el efecto:
+ * carta real Ragnar (DS-010)— bloquear Éter no hacía NADA y el mapa de cobertura lo daba por bueno. Ahora, según el efecto:
  *  - SOSTENIDO («mientras ese Éter esté bloqueado»: buff, debuff, keyword sin duración, fix_exhaust): aura derivada si no
  *    elige objetivo (tú mismo / todos tus Campeones / todos los rivales); si es «un Campeón», se elige al bloquear y vale
  *    mientras la fuente siga bloqueando.
@@ -180,9 +180,9 @@ describe('fix_exhaust como efecto RAÍZ (antes solo valía como tramo)', () => {
   })
 })
 
-describe('Ragnar, Voz del Nudo (DS-001) — la carta REAL que tenía este efecto muerto', () => {
+describe('Ragnar, Voz del Nudo (DS-010) — la carta REAL que tenía este efecto muerto', () => {
   it('«Bloquea 2 Éter, un Campeón que controles gana Indestructible mientras ese Éter esté bloqueado»', () => {
-    const { s: s0, ctx } = escena('DS-001'); conCampeon(s0, 'A', 'amigo', PR.PEON, 1)
+    const { s: s0, ctx } = escena('DS-010'); conCampeon(s0, 'A', 'amigo', PR.PEON, 1)
     expect(keywordsDe(s0, 'amigo')).not.toContain('Indestructible')
     let s = bloquear(s0, ctx, 'src') // un solo bloqueo fijo de 2 Éter
     expect(s.instances.src.eterBloqueado).toHaveLength(2)
@@ -193,7 +193,7 @@ describe('Ragnar, Voz del Nudo (DS-001) — la carta REAL que tenía este efecto
     expect(keywordsDe(s, 'amigo')).not.toContain('Indestructible')
   })
   it('solo concede la keyword: NADA de ATQ (ni por su Comandante ni por el 2.º efecto; eran `stats` escondidos de otro diseño)', () => {
-    const { s: s0, ctx } = escena('DS-001'); conCampeon(s0, 'A', 'amigo', PR.PEON, 1)
+    const { s: s0, ctx } = escena('DS-010'); conCampeon(s0, 'A', 'amigo', PR.PEON, 1)
     const impreso = getCardMeta(PR.PEON)!
     const poderImpreso = 'stats' in impreso && impreso.stats && 'poder' in impreso.stats ? (impreso.stats.poder as number) : -1
     expect(statsDe(s0, 'amigo').poder).toBe(poderImpreso) // el Comandante de Ragnar ya NO da +3

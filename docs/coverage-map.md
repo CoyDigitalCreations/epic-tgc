@@ -16,14 +16,14 @@ Cartas: **65** | Efectos clasificados: **76** | Combos únicos (tipo×trigger×e
 
 | Combo | Cartas | Estados |
 |---|---|---|
-| `bloqueo` × `(sin trigger)` × `buff` | FB-007, FB-009, DS-008, DS-010 | OK_AURA_JSON |
+| `bloqueo` × `(sin trigger)` × `buff` | FB-007, FB-009, DS-008, DS-001 | OK_AURA_JSON |
 | `bloqueo` × `(sin trigger)` × `grant_keyword` | FB-008, DS-009 | OK_AURA_JSON |
 | `continuo` × `(sin trigger)` × `double_attack` | FB-015 | OK_ACTIVACION |
-| `continuo` × `(sin trigger)` × `grant_keyword` | DS-001 | OK_ACTIVACION |
+| `continuo` × `(sin trigger)` × `grant_keyword` | DS-010 | OK_ACTIVACION |
 | `continuo` × `(sin trigger)` × `steal_champion` | FB-010 | OK_ACTIVACION |
 | `continuo` × `(sin trigger)` × `toggle_exhaust+fix_exhaust` | FB-016 | OK_ACTIVACION |
 | `disparo` × `(sin trigger)` × `buff` | DS-016 | OK_ACTIVACION |
-| `disparo` × `(sin trigger)` × `destroy` | FB-010, FB-014, DS-001, DS-012, DS-013 | OK_ACTIVACION |
+| `disparo` × `(sin trigger)` × `destroy` | FB-010, FB-014, DS-010, DS-012, DS-013 | OK_ACTIVACION |
 | `disparo` × `(sin trigger)` × `mover` | FB-017, DS-017 | OK_ACTIVACION |
 | `disparo` × `(sin trigger)` × `return_hand` | DS-018 | OK_ACTIVACION |
 | `disparo` × `(sin trigger)` × `toggle_exhaust` | FB-013 | OK_ACTIVACION |
@@ -45,7 +45,7 @@ Cartas: **65** | Efectos clasificados: **76** | Combos únicos (tipo×trigger×e
 | `pago` × `al_pagar_eter` × `return_ether` | FB-006 | OK_INTERPRETER |
 | `pago` × `al_pagar_eter` × `rival_discard` | DS-004 | OK_INTERPRETER |
 | `pasivo` × `(sin trigger)` × `buff` | FB-010 | OK_AURA_JSON |
-| `pasivo` × `(sin trigger)` × `grant_keyword` | DS-001 | OK_AURA_JSON |
+| `pasivo` × `(sin trigger)` × `grant_keyword` | DS-010 | OK_AURA_JSON |
 | `pasivo` × `activacion` × `condicion` | DS-024 | OK_ACTIVACION |
 | `pasivo` × `al_atacar` × `debuff` | DS-011 | OK_INTERPRETER |
 | `pasivo` × `al_invocar` × `copy` | DS-015 | OK_INTERPRETER |

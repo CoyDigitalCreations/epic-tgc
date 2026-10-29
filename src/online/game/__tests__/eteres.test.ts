@@ -28,7 +28,7 @@ const ISOLDE = 'FB-014'
 // DS-002 reserva/ninguno/debuff -1 ATQ rivales (SÍ aura reserva)
 // DS-003 reserva/inicio_choque/Carga · DS-004 pago/rival_discard
 // DS-005 pago/buff · DS-006 Pasivo 1A · DS-007 pago/mover
-// DS-008 bloqueo/+1 RES · DS-009 bloqueo/Indestructible · DS-010 bloqueo/+1 ATQ
+// DS-008 bloqueo/+1 RES · DS-009 bloqueo/Indestructible · DS-001 bloqueo/+1 ATQ
 const FB001 = 'FB-001'
 const FB002 = 'FB-002'
 const FB003 = 'FB-003'
@@ -46,7 +46,7 @@ const DS006 = 'DS-006'
 const DS007 = 'DS-007'
 const DS008 = 'DS-008'
 const DS009 = 'DS-009'
-const DS010 = 'DS-010'
+const ETER_BLOQUEO_ATQ = 'DS-001'
 
 const deckA = expandirMazo(ESTASIS_CARDS)
 const deckB = expandirMazo(DISONANCIA_CARDS)

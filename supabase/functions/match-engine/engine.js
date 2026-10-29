@@ -1271,7 +1271,7 @@ var FuenteEfectos_default = [
     ]
   },
   {
-    id: "DS-001",
+    id: "DS-010",
     name: "Ragnar, Voz del Nudo",
     type: "Campe\xF3n",
     rarity: "\xDAnica",
@@ -1593,7 +1593,7 @@ var FuenteEfectos_default = [
     ]
   },
   {
-    id: "DS-010",
+    id: "DS-001",
     name: "\xC9ter del \xDAltimo Trueno",
     type: "\xC9ter",
     rarity: "Com\xFAn",
