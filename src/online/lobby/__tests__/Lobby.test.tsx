@@ -4,7 +4,7 @@
  * - Sin env Supabase → aviso de configuración
  * - Con env + auth mock → menú crear/unirse
  */
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { MemoryRouter } from 'react-router'
@@ -30,10 +30,12 @@ vi.mock('../../backend/matchApi', () => ({
   })),
   enviarAccion: vi.fn(),
   rendirse: vi.fn(),
+  jugarPpt: vi.fn(),
+  decidirPrimero: vi.fn(),
 }))
 
 import Lobby from '../Lobby'
-import { asegurarSesion, obtenerEstado, rendirse } from '../../backend/matchApi'
+import { asegurarSesion, iniciarPartida, obtenerEstado, rendirse } from '../../backend/matchApi'
 
 describe('Lobby online', () => {
   it('sin env vars muestra instrucciones de configuración', () => {
@@ -127,5 +129,73 @@ describe('Lobby online: reconexión tras refrescar', () => {
     await entrarAlLobby()
     expect(await screen.findByRole('button', { name: /^crear sala$/i })).toBeInTheDocument()
     expect(window.localStorage.getItem('eter-online:partida')).toBeNull()
+  })
+})
+
+describe('Lobby online: piedra, papel o tijera antes de la partida', () => {
+  beforeEach(() => {
+    window.localStorage.clear()
+    vi.mocked(obtenerEstado).mockReset()
+    vi.mocked(iniciarPartida).mockReset()
+  })
+
+  it('al unirse a una sala aparece el minijuego y la partida NO arranca sola', async () => {
+    vi.mocked(obtenerEstado).mockResolvedValue({ status: 'lobby', state: null, player: 'B', bothPlayers: true } as never)
+    const user = userEvent.setup()
+    estado.configurado = true
+    render(
+      <MemoryRouter>
+        <Lobby />
+      </MemoryRouter>,
+    )
+    await user.click(screen.getByRole('button', { name: /entrar/i }))
+    await user.type(await screen.findByPlaceholderText(/Ej\. /i), 'ABCDEF')
+    await user.click(screen.getByRole('button', { name: /unirse/i }))
+    expect(await screen.findByText('¿Quién empieza?')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Piedra' })).toBeInTheDocument()
+    expect(iniciarPartida).not.toHaveBeenCalled()
+  })
+
+  it('cuando el servidor informa quién empieza, se da el start', async () => {
+    window.localStorage.setItem('eter-online:partida', JSON.stringify({ gameId: 'g9', code: 'QWERTY', seed: 1, player: 'A' }))
+    vi.mocked(obtenerEstado).mockResolvedValue({
+      status: 'lobby',
+      state: null,
+      player: 'A',
+      bothPlayers: true,
+      ppt: { ronda: 1, rivalListo: false, ganador: 'A', primerJugador: 'A', ultima: { ronda: 1, A: 'piedra', B: 'tijera' } },
+    } as never)
+    vi.mocked(iniciarPartida).mockResolvedValue({} as never)
+    const user = userEvent.setup()
+    estado.configurado = true
+    render(
+      <MemoryRouter>
+        <Lobby />
+      </MemoryRouter>,
+    )
+    await user.click(screen.getByRole('button', { name: /entrar/i }))
+    await waitFor(() => expect(iniciarPartida).toHaveBeenCalledWith('g9'), { timeout: 4000 })
+  })
+
+  it('sin decisión del minijuego el poll no da start', async () => {
+    window.localStorage.setItem('eter-online:partida', JSON.stringify({ gameId: 'g9', code: 'QWERTY', seed: 1, player: 'A' }))
+    vi.mocked(obtenerEstado).mockResolvedValue({
+      status: 'lobby',
+      state: null,
+      player: 'A',
+      bothPlayers: true,
+      ppt: { ronda: 1, rivalListo: true },
+    } as never)
+    const user = userEvent.setup()
+    estado.configurado = true
+    render(
+      <MemoryRouter>
+        <Lobby />
+      </MemoryRouter>,
+    )
+    await user.click(screen.getByRole('button', { name: /entrar/i }))
+    await screen.findByText('¿Quién empieza?')
+    await new Promise((r) => setTimeout(r, 1800)) // un poll completo (1.5 s)
+    expect(iniciarPartida).not.toHaveBeenCalled()
   })
 })

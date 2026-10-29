@@ -6,7 +6,7 @@
  * fuente de verdad: valida actor, aplica applyAction, persiste { state,
  * rngDraws } y devuelve visibleState por jugador.
  *
- * Acciones:
+ * Acciones (ppt/ppt_decidir: piedra, papel o tijera en la sala; start exige que haya decidido quién empieza):
  *   create  — crea sala con código + deck del creador (player A)
  *   join    — une a sala por código + deck del rival (player B)
  *   start   — ambos listos → createInitialState + status=playing
@@ -38,13 +38,21 @@ import {
   createCtxFromDraws,
   createInitialState,
   inactividadExpirada,
+  pptDecidir,
+  pptJugar,
+  pptVista,
   registrarCartas,
   validarDeck,
   visibleState,
 } from './engine.js'
 
+/** Minijuego piedra/papel/tijera de la sala (src/online/game/ppt.ts): estado completo y proyección por jugador. */
+type PptEstado = { rev: number; ronda: number; [k: string]: unknown }
+type PptResultado = { ok: true; ppt: PptEstado } | { ok: false; error: string }
+
 type EngineModule = {
-  createInitialState: (deckA: string[], deckB: string[], seed: number) => {
+  /** `opts.primerJugador`: quién empieza, decidido por el minijuego (la moneda se tira igual y se ignora). */
+  createInitialState: (deckA: string[], deckB: string[], seed: number, opts?: { primerJugador?: 'A' | 'B' }) => {
     state: Record<string, unknown>
     ctx: { draws: number }
   }
@@ -63,6 +71,9 @@ type EngineModule = {
   actorActual: (state: never) => 'A' | 'B' | null
   /** ¿Pasó el límite de inactividad desde la última actividad (`updated_at`)? */
   inactividadExpirada: (ultimaActividad: string | null | undefined, ahora: number) => boolean
+  pptJugar: (actual: PptEstado | null, jugador: 'A' | 'B', jugada: unknown) => PptResultado
+  pptDecidir: (actual: PptEstado | null, jugador: 'A' | 'B', empezar: unknown) => PptResultado
+  pptVista: (ppt: PptEstado | null, jugador: 'A' | 'B') => unknown
   registrarCartas: (cartas: unknown[]) => void
   /** Lanza Error con el motivo si el mazo es ilegal (66 cartas, 15/45/6, cardIds conocidos, límite de copias). */
   validarDeck: (deck: string[], nombre: string) => void
@@ -75,6 +86,9 @@ const engine: EngineModule = {
   visibleState: visibleState as EngineModule['visibleState'],
   actorActual: actorActual as EngineModule['actorActual'],
   inactividadExpirada: inactividadExpirada as EngineModule['inactividadExpirada'],
+  pptJugar: pptJugar as EngineModule['pptJugar'],
+  pptDecidir: pptDecidir as EngineModule['pptDecidir'],
+  pptVista: pptVista as EngineModule['pptVista'],
   registrarCartas: registrarCartas as EngineModule['registrarCartas'],
   validarDeck: validarDeck as EngineModule['validarDeck'],
 }
@@ -193,11 +207,15 @@ Deno.serve(async (req) => {
   if (!userId) return err('unauthorized', 401)
 
   let body: {
-    action?: 'create' | 'join' | 'start' | 'act' | 'state' | 'forfeit'
+    action?: 'create' | 'join' | 'start' | 'act' | 'state' | 'forfeit' | 'ppt' | 'ppt_decidir'
     gameId?: string
     code?: string
     deck?: string[]
     playerAction?: unknown
+    /** ppt: 'piedra' | 'papel' | 'tijera' */
+    jugada?: unknown
+    /** ppt_decidir: true = el ganador empieza, false = cede el primer turno */
+    empezar?: unknown
     /** state: cursor del log (último id de game_events ya visto). Ausente = historial completo (carga inicial o reconexión). */
     desdeEventoId?: number
   }
@@ -207,7 +225,7 @@ Deno.serve(async (req) => {
     return err('invalid JSON')
   }
 
-  const { action, gameId, code, deck, playerAction, desdeEventoId } = body
+  const { action, gameId, code, deck, playerAction, desdeEventoId, jugada, empezar } = body
   if (!action) return err('action required')
 
   // ── create: genera sala lobby con código + deck del creador ──────────────
@@ -388,6 +406,8 @@ Deno.serve(async (req) => {
         validActions: [],
         bothPlayers,
         code: game.code,
+        // Sala de espera: SOLO la vista de este jugador (nunca la jugada pendiente del rival)
+        ...(game.status === 'lobby' && bothPlayers && { ppt: engine.pptVista((game.ppt ?? null) as PptEstado | null, playerId) }),
       })
     }
     const st = persistObj.state as never
@@ -404,6 +424,49 @@ Deno.serve(async (req) => {
       code: game.code,
       ...(log ?? {}),
     })
+  }
+
+  /**
+   * Cambia `games.ppt` con compare-and-set sobre `ppt.rev`: si otra jugada se coló entre la lectura y la escritura (los dos
+   * eligen a la vez) el PATCH no toca ninguna fila, se relee y se reintenta; así dos jugadas simultáneas no se pisan.
+   */
+  async function mutarPpt(cambio: (actual: PptEstado | null) => PptResultado): Promise<PptResultado> {
+    let actual = (game.ppt ?? null) as PptEstado | null
+    for (let intento = 0; intento < 4; intento++) {
+      const resultado = cambio(actual)
+      if (!resultado.ok) return resultado
+      const filtro = actual ? `ppt->>rev=eq.${actual.rev}` : 'ppt=is.null'
+      const res = await sb(`games?id=eq.${encodeURIComponent(gameId)}&status=eq.lobby&${filtro}`, {
+        method: 'PATCH',
+        headers: { Prefer: 'return=representation' },
+        body: JSON.stringify({ ppt: resultado.ppt }),
+      })
+      if (!res.ok) {
+        console.error('ppt write failed', await res.text())
+        return { ok: false, error: 'no se pudo guardar la jugada' }
+      }
+      if (((await res.json()) as unknown[]).length > 0) {
+        game.ppt = resultado.ppt
+        return resultado
+      }
+      const lectura = await sb(`games?id=eq.${encodeURIComponent(gameId)}&select=ppt,status`)
+      if (!lectura.ok) return { ok: false, error: 'no se pudo leer la sala' }
+      const fila = ((await lectura.json()) as { ppt: PptEstado | null; status: string }[])[0]
+      if (!fila || fila.status !== 'lobby') return { ok: false, error: 'la sala ya no está en espera' }
+      actual = fila.ppt ?? null
+    }
+    return { ok: false, error: 'la sala está ocupada, intenta de nuevo' }
+  }
+
+  // ── ppt / ppt_decidir: piedra, papel o tijera para decidir quién empieza ──
+  if (action === 'ppt' || action === 'ppt_decidir') {
+    if (game.status !== 'lobby') return err('game not in lobby', 409)
+    if (!game.player_a_id || !game.player_b_id) return err('waiting for both players', 409)
+    const resultado = await mutarPpt((actual) =>
+      action === 'ppt' ? engine.pptJugar(actual, playerId, jugada) : engine.pptDecidir(actual, playerId, empezar),
+    )
+    if (!resultado.ok) return err(resultado.error, 409)
+    return json({ ok: true, ppt: engine.pptVista(resultado.ppt, playerId) })
   }
 
   // ── forfeit ───────────────────────────────────────────────────────────────
@@ -445,11 +508,16 @@ Deno.serve(async (req) => {
     if (!esMazoValido(deckA) || !esMazoValido(deckB)) {
       return err('decks not ready (66 cardIds each)', 422)
     }
+    // Quién empieza lo decidió el minijuego de la sala (ppt): sin esa decisión no hay partida
+    const primerJugador = (game.ppt as { primerJugador?: 'A' | 'B' } | null)?.primerJugador
+    if (primerJugador !== 'A' && primerJugador !== 'B') {
+      return err('falta decidir quién empieza (piedra, papel o tijera)', 409)
+    }
     // Registrar cartas custom antes de crear el estado inicial
     await registrarCartasCustom()
     const seed = Number(game.seed)
     try {
-      const { state, ctx } = engine.createInitialState(deckA, deckB, seed)
+      const { state, ctx } = engine.createInitialState(deckA, deckB, seed, { primerJugador })
       const persistObj: MatchPersist = {
         state,
         rngDraws: ctx.draws,

@@ -166,8 +166,10 @@ export function createInitialState(
   shuffleFisherYates(ctx, a.vinculo)
   shuffleFisherYates(ctx, b.vinculo)
 
-  // 5. Moneda del primer jugador (extracción 99)
-  state.primerJugador = ctx.next() < 0.5 ? 'A' : 'B'
+  // 5. Moneda del primer jugador (extracción 99). Con `opts.primerJugador` (PvP: ganó el minijuego) la moneda se tira IGUAL,
+  // para no desplazar la secuencia aleatoria de nadie, y su resultado se descarta.
+  const moneda: PlayerId = ctx.next() < 0.5 ? 'A' : 'B'
+  state.primerJugador = opts?.primerJugador ?? moneda
 
   // Zonas (sin RNG): 2A, 4A-4F (orden elegido), 3G + mano inicial de 5
   const montarZonas = (

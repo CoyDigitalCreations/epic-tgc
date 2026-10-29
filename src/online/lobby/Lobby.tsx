@@ -11,7 +11,9 @@ import { supabaseConfigurado, supabaseUrl } from '../backend/supabase'
 import {
   asegurarSesion,
   crearSala,
+  decidirPrimero,
   iniciarPartida,
+  jugarPpt,
   obtenerEstado,
   rendirse,
   unirseASala,
@@ -19,6 +21,8 @@ import {
 } from '../backend/matchApi'
 import { useOnlineMatch } from './useOnlineMatch'
 import { guardarPartida, leerPartidaGuardada, olvidarPartida } from './partidaGuardada'
+import { PiedraPapelTijera } from './PiedraPapelTijera'
+import type { PptVista } from '../game'
 import { useMazosStore } from '../useMazosStore'
 
 type Vista = 'auth' | 'menu' | 'espera' | 'partida'
@@ -41,6 +45,8 @@ export default function Lobby() {
   const [enPartida, setEnPartida] = useState(false)
   const [ambosListos, setAmbosListos] = useState(false)
   const [copiado, setCopiado] = useState(false)
+  const [ppt, setPpt] = useState<PptVista | null>(null)
+  const [pptOcupado, setPptOcupado] = useState(false)
   const mazosPersonalizados = useMazosStore((s) => s.mazosPersonalizados)
 
   // Resolver deck: preset (MAZOS) o custom (useMazosStore)
@@ -66,6 +72,8 @@ export default function Lobby() {
       }
       if (resp.status === 'lobby') {
         setSala(guardada)
+        setAmbosListos(Boolean(resp.bothPlayers))
+        setPpt(resp.ppt ?? null)
         setVista('espera')
         return
       }
@@ -105,14 +113,17 @@ export default function Lobby() {
         }
         if (resp.bothPlayers) {
           setAmbosListos(true)
-          // Cualquiera puede dar start; lo intenta este cliente
-          try {
-            await iniciarPartida(sala.gameId)
-            setEnPartida(true)
-          } catch {
-            // el otro quizás ya lo hizo
-            const again = await obtenerEstado(sala.gameId)
-            if (again.status === 'playing') setEnPartida(true)
+          setPpt(resp.ppt ?? null)
+          // Con quién empieza ya decidido (piedra, papel o tijera), cualquiera puede dar start; lo intenta este cliente
+          if (resp.ppt?.primerJugador) {
+            try {
+              await iniciarPartida(sala.gameId)
+              setEnPartida(true)
+            } catch {
+              // el otro quizás ya lo hizo
+              const again = await obtenerEstado(sala.gameId)
+              if (again.status === 'playing') setEnPartida(true)
+            }
           }
         }
       } catch {
@@ -150,13 +161,7 @@ export default function Lobby() {
       setSala(info)
       setVista('espera')
       setAmbosListos(true)
-      // El creador hace start; si somos el único en la sala, esperamos poll
-      try {
-        await iniciarPartida(info.gameId)
-        setEnPartida(true)
-      } catch {
-        // esperar a que el creador inicie
-      }
+      // La partida arranca desde el poll de la sala cuando el piedra, papel o tijera decide quién empieza
     } catch (e) {
       setErrorSala(e instanceof Error ? e.message : String(e))
     } finally {
@@ -164,8 +169,23 @@ export default function Lobby() {
     }
   }, [codigoInput, deck])
 
+  // Una jugada del piedra, papel o tijera: la respuesta ya trae mi vista actualizada, sin esperar al siguiente poll
+  const enviarPpt = async (peticion: (gameId: string) => Promise<{ ppt: PptVista }>) => {
+    if (!sala || pptOcupado) return
+    setPptOcupado(true)
+    setErrorSala(null)
+    try {
+      setPpt((await peticion(sala.gameId)).ppt)
+    } catch (e) {
+      setErrorSala(e instanceof Error ? e.message : String(e))
+    } finally {
+      setPptOcupado(false)
+    }
+  }
+
   const volverMenu = () => {
     olvidarPartida()
+    setPpt(null)
     setSala(null)
     setEnPartida(false)
     setAmbosListos(false)
@@ -274,13 +294,20 @@ VITE_SUPABASE_ANON_KEY=sb_publishable_...`}
           </Boton>
 
           <div className="border-t border-white/10 pt-5">
-            <p className="flex items-center justify-center gap-2 text-sm text-gray-200">
-              <span
-                aria-hidden="true"
-                className={`size-2 rounded-full ${ambosListos ? 'bg-emerald-400' : 'animate-pulse bg-amber-400'}`}
+            {ambosListos ? (
+              <PiedraPapelTijera
+                yo={sala.player}
+                ppt={ppt}
+                ocupado={pptOcupado}
+                onJugar={(j) => void enviarPpt((id) => jugarPpt(id, j))}
+                onDecidir={(empezar) => void enviarPpt((id) => decidirPrimero(id, empezar))}
               />
-              {ambosListos ? '¡Rival listo! Iniciando…' : 'Esperando al rival…'}
-            </p>
+            ) : (
+              <p className="flex items-center justify-center gap-2 text-sm text-gray-200">
+                <span aria-hidden="true" className="size-2 animate-pulse rounded-full bg-amber-400" />
+                Esperando al rival…
+              </p>
+            )}
             <p className="mt-1.5 text-[11px] text-gray-500">
               Mazo: {nombreMazo} · eres el jugador {sala.player}
             </p>

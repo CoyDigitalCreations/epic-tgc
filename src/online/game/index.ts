@@ -21,6 +21,10 @@ export { visibleState } from './visibleState'
 // Inactividad (PvP): abandono por no actuar a tiempo
 export { LIMITE_INACTIVIDAD_MS, inactividadExpirada } from './inactividad'
 
+// Piedra, papel o tijera (PvP): quién empieza
+export { JUGADAS_PPT, esJugadaPpt, ganadorPpt, pptInicial, pptJugar, pptDecidir, pptVista } from './ppt'
+export type { JugadaPpt, PptEstado, PptVista, PptResultado } from './ppt'
+
 // Economía de Éter
 export { aporteDe, validarPago, aplicarPago, bloquearEter, reagruparEter, maxEterBloqueado, esBloqueoFijo } from './payments'
 export type { ContextoUso } from './payments'

@@ -2857,7 +2857,8 @@ function createInitialState(deckA, deckB, seed, opts) {
   const mazoBBarajado = shuffleFisherYates(ctx, b.principal);
   shuffleFisherYates(ctx, a.vinculo);
   shuffleFisherYates(ctx, b.vinculo);
-  state.primerJugador = ctx.next() < 0.5 ? "A" : "B";
+  const moneda = ctx.next() < 0.5 ? "A" : "B";
+  state.primerJugador = opts?.primerJugador ?? moneda;
   const montarZonas = (jugador, grupos, mazoBarajado, ordenVinculos) => {
     const p = state.players[jugador];
     p.eterReserva = grupos.eter;
@@ -8463,6 +8464,52 @@ function inactividadExpirada(ultimaActividad, ahora, limiteMs = LIMITE_INACTIVID
   return ahora - desde > limiteMs;
 }
 
+// src/online/game/ppt.ts
+var JUGADAS_PPT = ["piedra", "papel", "tijera"];
+var GANA_A = { piedra: "tijera", papel: "piedra", tijera: "papel" };
+var rivalDe2 = (j) => j === "A" ? "B" : "A";
+function pptInicial() {
+  return { rev: 0, ronda: 1, jugadas: {} };
+}
+function esJugadaPpt(x) {
+  return typeof x === "string" && JUGADAS_PPT.includes(x);
+}
+function ganadorPpt(a, b) {
+  if (a === b) return "empate";
+  return GANA_A[a] === b ? "A" : "B";
+}
+function pptJugar(actual, jugador, jugada) {
+  const ppt = actual ?? pptInicial();
+  if (!esJugadaPpt(jugada)) return { ok: false, error: "jugada inv\xE1lida (piedra, papel o tijera)" };
+  if (ppt.ganador) return { ok: false, error: "el minijuego ya tiene ganador" };
+  if (ppt.jugadas[jugador]) return { ok: false, error: "ya elegiste en esta ronda" };
+  const jugadas = { ...ppt.jugadas, [jugador]: jugada };
+  const { A, B } = jugadas;
+  if (!A || !B) return { ok: true, ppt: { ...ppt, rev: ppt.rev + 1, jugadas } };
+  const ultima = { ronda: ppt.ronda, A, B };
+  const res = ganadorPpt(A, B);
+  if (res === "empate") return { ok: true, ppt: { rev: ppt.rev + 1, ronda: ppt.ronda + 1, jugadas: {}, ultima } };
+  return { ok: true, ppt: { rev: ppt.rev + 1, ronda: ppt.ronda, jugadas: {}, ultima, ganador: res } };
+}
+function pptDecidir(actual, jugador, empezar) {
+  if (!actual?.ganador) return { ok: false, error: "todav\xEDa no hay ganador del minijuego" };
+  if (actual.primerJugador) return { ok: false, error: "el primer turno ya est\xE1 decidido" };
+  if (actual.ganador !== jugador) return { ok: false, error: "solo decide quien gan\xF3 el minijuego" };
+  if (typeof empezar !== "boolean") return { ok: false, error: "indica si empiezas o cedes el turno" };
+  return { ok: true, ppt: { ...actual, rev: actual.rev + 1, primerJugador: empezar ? jugador : rivalDe2(jugador) } };
+}
+function pptVista(ppt, jugador) {
+  const p = ppt ?? pptInicial();
+  return {
+    ronda: p.ronda,
+    ...p.jugadas[jugador] && { miJugada: p.jugadas[jugador] },
+    rivalListo: Boolean(p.jugadas[rivalDe2(jugador)]),
+    ...p.ultima && { ultima: p.ultima },
+    ...p.ganador && { ganador: p.ganador },
+    ...p.primerJugador && { primerJugador: p.primerJugador }
+  };
+}
+
 // src/online/game/invariants.ts
 function verificarZonaUnica(estado) {
   const zonasDe = /* @__PURE__ */ new Map();
@@ -8997,6 +9044,7 @@ function registrarEfectos() {
 registrarEfectos();
 export {
   CATALOGO_EVENTOS,
+  JUGADAS_PPT,
   LIMITE_INACTIVIDAD_MS,
   LIMITE_MANO,
   SLOTS_ARCANAS_COMBATE,
@@ -9031,12 +9079,14 @@ export {
   esBloqueoFijo,
   esCampeon,
   esEter,
+  esJugadaPpt,
   esMistica,
   esSingular,
   esTriggerApilable,
   esVinculo,
   exhaustFijado,
   faccionesCompartidas,
+  ganadorPpt,
   getCardMeta,
   getValidActions,
   hastaAlba,
@@ -9048,6 +9098,10 @@ export {
   ordenResolucion,
   otorgarKeyword,
   parejasBloqueoOpcion,
+  pptDecidir,
+  pptInicial,
+  pptJugar,
+  pptVista,
   purgarEfectosTemporales,
   purgarKeywordsTemporales,
   reagruparEfectosBloqueoAlba,

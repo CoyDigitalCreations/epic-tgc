@@ -538,6 +538,8 @@ export interface Ctx {
 export interface SetupOptions {
   vinculosA?: string[]
   vinculosB?: string[]
+  /** PvP: quién empieza lo decidió el minijuego de la sala (ppt.ts). La moneda se tira igual (misma secuencia aleatoria) y se ignora. */
+  primerJugador?: PlayerId
 }
 
 /**

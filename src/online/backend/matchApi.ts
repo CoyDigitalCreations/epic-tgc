@@ -10,7 +10,7 @@
  *   forfeit→ rendirse
  */
 import { getSupabase } from './supabase'
-import type { Action, GameEvent, GameState, PlayerId } from '../game'
+import type { Action, GameEvent, GameState, JugadaPpt, PlayerId, PptVista } from '../game'
 import type { EterGame } from '../../shared/types/eter-db'
 
 const FN = 'match-engine'
@@ -31,6 +31,8 @@ export interface MatchStateResponse {
   winner?: PlayerId | null
   finishReason?: string | null
   code?: string
+  /** Sala de espera con los dos jugadores: estado del piedra, papel o tijera (solo lo que este jugador puede ver) */
+  ppt?: PptVista
   /** Log: eventos nuevos desde el cursor (solo los del rival; sin cursor, el final del historial completo) */
   eventos?: GameEvent[]
   /** Cursor para pedir el siguiente tramo del log (`desdeEventoId`) */
@@ -97,6 +99,16 @@ export async function enviarAccion(
 /** `desdeEventoId`: cursor del log (`ultimoEventoId` de la respuesta anterior); sin él llega el historial completo. */
 export async function obtenerEstado(gameId: string, desdeEventoId?: number): Promise<MatchStateResponse> {
   return callMatchEngine<MatchStateResponse>({ action: 'state', gameId, ...(desdeEventoId !== undefined && { desdeEventoId }) })
+}
+
+/** Piedra, papel o tijera de la sala de espera: registra mi jugada (el servidor la mantiene oculta hasta que el rival elija). */
+export async function jugarPpt(gameId: string, jugada: JugadaPpt): Promise<{ ok: boolean; ppt: PptVista }> {
+  return callMatchEngine({ action: 'ppt', gameId, jugada })
+}
+
+/** El ganador del piedra, papel o tijera decide: `empezar` true = juega primero, false = cede el primer turno. */
+export async function decidirPrimero(gameId: string, empezar: boolean): Promise<{ ok: boolean; ppt: PptVista }> {
+  return callMatchEngine({ action: 'ppt_decidir', gameId, empezar })
 }
 
 export async function rendirse(gameId: string): Promise<{ ok: boolean; winner?: PlayerId | null }> {
