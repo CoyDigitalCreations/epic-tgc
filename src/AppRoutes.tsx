@@ -6,6 +6,7 @@ import Landing from './Landing'
 const ForgeApp = lazy(() => import('./forge/App'))
 const OnlineApp = lazy(() => import('./online/OnlineApp'))
 const Lobby = lazy(() => import('./online/lobby/Lobby'))
+const Perfil = lazy(() => import('./online/perfil/Perfil'))
 
 export function AppFallback() {
   return (
@@ -42,6 +43,14 @@ export function AppRoutes() {
         element={
           <Suspense fallback={<AppFallback />}>
             <Lobby />
+          </Suspense>
+        }
+      />
+      <Route
+        path="/epiconline/perfil"
+        element={
+          <Suspense fallback={<AppFallback />}>
+            <Perfil />
           </Suspense>
         }
       />

@@ -505,12 +505,20 @@ function Shell({
             <h1 className="font-display text-2xl font-bold tracking-wider">{titulo}</h1>
             <p className="mt-0.5 text-xs text-gray-500">{sub}</p>
           </div>
-          <Link
-            to="/epiconline"
-            className="rounded bg-ether-600/20 px-3 py-1.5 text-xs text-ether-200 transition-colors hover:bg-ether-600/40"
-          >
-            ← Éter Online
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              to="/epiconline/perfil"
+              className="rounded bg-white/5 px-3 py-1.5 text-xs text-gray-200 transition-colors hover:bg-white/10"
+            >
+              Perfil
+            </Link>
+            <Link
+              to="/epiconline"
+              className="rounded bg-ether-600/20 px-3 py-1.5 text-xs text-ether-200 transition-colors hover:bg-ether-600/40"
+            >
+              ← Éter Online
+            </Link>
+          </div>
         </div>
       </header>
       <main className={`relative mx-auto px-6 py-10 ${ANCHOS[ancho]}${ancho === 'xl' ? ' py-8' : ''}`}>{children}</main>
