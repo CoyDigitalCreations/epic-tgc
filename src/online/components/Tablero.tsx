@@ -2277,7 +2277,7 @@ export function Tablero({
       {leTocaA && (
         <PreventionModal
           state={vista}
-          playerId="A"
+          playerId={yoId}
           acciones={acciones}
           onAccion={onAccion}
           onZoom={abrirZoom}
@@ -2291,7 +2291,7 @@ export function Tablero({
         return (
           <PriorityModal
             state={vista}
-            playerId="A"
+            playerId={yoId}
             acciones={acciones}
             onAccion={onAccion}
             onElegirPago={pagarRespuesta}

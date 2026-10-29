@@ -88,4 +88,20 @@ describe('Tablero: perspectiva del jugador que mira', () => {
     montar(base('B'), 'B')
     expect(screen.getAllByText(/tu turno/i).length).toBeGreaterThan(0)
   })
+
+  it('B con la prioridad de una cadena abierta ve el modal para responder o pasar (antes quedaba la partida pasmada)', () => {
+    // Caso real: B invoca un Campeón, A pasa y la prioridad vuelve a B con la cadena abierta
+    const estado = base('B')
+    estado.cadena = {
+      pila: [],
+      origen: 'global',
+      prioridad: 'B',
+      faseAbierta: 'forja',
+      efectoActual: { jugador: 'B', descripcion: 'Varek', cardInstanceId: 'manoB' },
+      velocidadActual: 'normal',
+      pasesConsecutivos: 1,
+    } as never
+    montar(estado, 'B')
+    expect(screen.getByRole('button', { name: /pasar/i })).toBeInTheDocument()
+  })
 })
