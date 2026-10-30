@@ -67,6 +67,21 @@ export function BlockingInterface({ s, defensor, atacantes, onBloquear, onCancel
     })
   }
 
+  /** Clic en un defensor: ya asignado → lo libera; libre → va al primer atacante sin bloquear (con un solo atacante reemplaza al anterior). */
+  const alternarBloqueador = (bloqueadorId: string) => {
+    const asignadoA = Object.entries(asignaciones).find(([, blk]) => blk === bloqueadorId)?.[0]
+    if (asignadoA) {
+      setAsignaciones((prev) => {
+        const next = { ...prev }
+        delete next[asignadoA]
+        return next
+      })
+      return
+    }
+    const destino = atacantes.find((a) => !asignaciones[a]) ?? (atacantes.length === 1 ? atacantes[0] : undefined)
+    if (destino) seleccionarBloqueador(destino, bloqueadorId)
+  }
+
   const confirmar = () => {
     if (Object.keys(asignaciones).length > 0) {
       onBloquear(asignaciones)
@@ -87,6 +102,9 @@ export function BlockingInterface({ s, defensor, atacantes, onBloquear, onCancel
       ancho="lg"
       pie={
         <>
+          <Boton onClick={() => setAsignaciones({})} disabled={Object.keys(asignaciones).length === 0}>
+            Limpiar
+          </Boton>
           <Boton onClick={onCancelar}>No bloquear</Boton>
           <Boton variante="primario" onClick={confirmar} disabled={Object.keys(asignaciones).length !== kMaximo}>
             Confirmar bloqueo ({Object.keys(asignaciones).length}/{kMaximo})
@@ -137,11 +155,7 @@ export function BlockingInterface({ s, defensor, atacantes, onBloquear, onCancel
                 <TileCarta
                   key={id}
                   seleccionada={Object.values(asignaciones).includes(id)}
-                  onClick={() => {
-                    // Asignar al primer atacante sin bloqueador
-                    const sinBloquear = atacantes.find((a) => !asignaciones[a])
-                    if (sinBloquear) seleccionarBloqueador(sinBloquear, id)
-                  }}
+                  onClick={() => alternarBloqueador(id)}
                   pie={conStats ? <StatsCampeon s={s} id={id} /> : nombreDe(id)}
                 >
                   <div className="flex h-5 items-center">{ordenAsignado !== undefined && <Insignia n={ordenAsignado} tono="propio" />}</div>
