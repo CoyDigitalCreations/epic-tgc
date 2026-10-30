@@ -1,6 +1,6 @@
 import { useRef, useState, type ChangeEvent, type ReactNode } from 'react'
 import { useCardStore } from '../store/useCardStore'
-import { exportCardToPng } from '../utils/export-png'
+import { exportCardToPng, exportCardToWebp } from '../utils/export-png'
 import { fileToCompressedDataUrl, isValidImageFile } from '../utils/file-to-data-url'
 import { useCardImage } from '../hooks/useCardImage'
 import type { AnyCard } from '../../shared/types'
@@ -687,12 +687,22 @@ export function CardPreview({
     )
   }
 
+  // PNG para imprimir (nombre legible); WebP para el arte del juego (nombre = id, como espera public/cartas)
   const handleExport = async () => {
     if (previewRef.current) {
       await exportCardToPng(
         previewRef.current,
         displayCard.name.replace(/\s+/g, '_'),
       )
+    }
+  }
+
+  const handleExportWebp = async () => {
+    if (!previewRef.current) return
+    try {
+      await exportCardToWebp(previewRef.current, displayCard.id)
+    } catch (e) {
+      window.alert(e instanceof Error ? e.message : String(e))
     }
   }
 
@@ -787,13 +797,22 @@ export function CardPreview({
     return (
       <div className="flex flex-col items-center gap-4">
         {cardContent}
-        <button
-          onClick={handleExport}
-          className="bg-ether-600 hover:bg-ether-700 text-white font-medium px-6 py-2 rounded 
-                     transition-colors cursor-pointer text-sm"
-        >
-          Exportar PNG
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={handleExport}
+            className="bg-ether-600 hover:bg-ether-700 text-white font-medium px-6 py-2 rounded 
+                       transition-colors cursor-pointer text-sm"
+          >
+            Exportar PNG
+          </button>
+          <button
+            onClick={handleExportWebp}
+            className="bg-ether-600 hover:bg-ether-700 text-white font-medium px-6 py-2 rounded 
+                       transition-colors cursor-pointer text-sm"
+          >
+            Exportar WebP
+          </button>
+        </div>
       </div>
     )
   }
@@ -818,12 +837,20 @@ export function CardPreview({
           {cardContent}
         </div>
       </div>
-      <button
-        onClick={handleExport}
-        className="text-xs text-ether-400 hover:text-ether-300 transition-colors cursor-pointer bg-transparent border-none"
-      >
-        Exportar PNG
-      </button>
+      <div className="flex gap-3">
+        <button
+          onClick={handleExport}
+          className="text-xs text-ether-400 hover:text-ether-300 transition-colors cursor-pointer bg-transparent border-none"
+        >
+          Exportar PNG
+        </button>
+        <button
+          onClick={handleExportWebp}
+          className="text-xs text-ether-400 hover:text-ether-300 transition-colors cursor-pointer bg-transparent border-none"
+        >
+          Exportar WebP
+        </button>
+      </div>
     </div>
   )
 }

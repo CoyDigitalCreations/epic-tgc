@@ -130,7 +130,7 @@ export function progresoPaquete(
 
 /* ─────────────────────────────────────────────
    Arte versionado — convención automática.
-   Los PNGs viven en public/cartas/{cardId}.png.
+   Los WebP viven en public/cartas/{cardId}.webp.
    ───────────────────────────────────────────── */
 
 export const CARD_ART_IDS: ReadonlySet<string> = new Set([
@@ -141,5 +141,5 @@ export const CARD_ART_IDS: ReadonlySet<string> = new Set([
 /** Ruta del arte oficial de una carta, o undefined si no tiene */
 export function cardArtPath(cardId: string | undefined): string | undefined {
   if (!cardId || !CARD_ART_IDS.has(cardId)) return undefined
-  return `/cartas/${cardId}.png`
+  return `/cartas/${cardId}.webp`
 }

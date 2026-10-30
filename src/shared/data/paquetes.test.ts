@@ -255,21 +255,21 @@ describe('Paquetes', () => {
     it('todas las cartas de Estásis con arte tienen arte oficial mapeado', () => {
       for (const card of ESTASIS_CARDS) {
         if (!CARD_ART_IDS.has(card.id)) continue
-        expect(cardArtPath(card.id)).toBe(`/cartas/${card.id}.png`)
+        expect(cardArtPath(card.id)).toBe(`/cartas/${card.id}.webp`)
       }
     })
 
     it('todas las cartas de Disonancia tienen arte oficial mapeado', () => {
       for (const card of DISONANCIA_CARDS) {
         expect(CARD_ART_IDS.has(card.id)).toBe(true)
-        expect(cardArtPath(card.id)).toBe(`/cartas/${card.id}.png`)
+        expect(cardArtPath(card.id)).toBe(`/cartas/${card.id}.webp`)
       }
     })
 
     it('las cartas nuevas (C4) con arte versionado tienen arte oficial mapeado', () => {
       for (const id of ['FB-031', 'FB-032', 'DS-031', 'DS-032', 'DS-033']) {
         expect(CARD_ART_IDS.has(id)).toBe(true)
-        expect(cardArtPath(id)).toBe(`/cartas/${id}.png`)
+        expect(cardArtPath(id)).toBe(`/cartas/${id}.webp`)
       }
     })
 

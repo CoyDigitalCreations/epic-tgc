@@ -52,7 +52,7 @@ export async function exportCollectionToJson(
 ): Promise<void> {
   // Images live in IndexedDB, not in the persisted cards — embed them back
   // into the exported JSON so a backup keeps the art. Cards with a static
-  // path (/cartas/*.png) keep their path as-is: the art is versioned in
+  // path (/cartas/*.webp) keep their path as-is: the art is versioned in
   // public/ and the path stays valid everywhere.
   const exported = (await conArteEmbebido(cards)).map(limpiarEfectosDeCarta)
   const json = JSON.stringify(exported, null, 2)
@@ -97,7 +97,7 @@ function sinArte(card: AnyCard): AnyCard {
  * El JSON exportado desde Éter Forge embebe el arte como data URL base64
  * (coleccion-eter.json puede pesar MBs). Esta variante descarta imageUrl y
  * hasImage: el arte de las cartas terminadas ya vive en IndexedDB o en las
- * rutas estáticas /cartas/*.png, así que el import queda liviano y los datos
+ * rutas estáticas /cartas/*.webp, así que el import queda liviano y los datos
  * (stats, texto, taxonomía) se fusionan sin pisar imágenes existentes.
  */
 export function importCardDataFromJson(file: File): Promise<AnyCard[]> {

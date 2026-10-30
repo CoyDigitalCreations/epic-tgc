@@ -1,6 +1,6 @@
 /**
  * extract-art — Extrae el arte base64 de seed/FuenteArte.json
- * y lo escribe como PNG en public/cartas/{cardId}.png.
+ * y lo escribe con la extensión de su tipo (WebP) en public/cartas/{cardId}.webp.
  *
  * Uso:
  *   npx tsx scripts/extract-art.ts [--dry-run]
@@ -78,13 +78,13 @@ for (const card of withArt) {
   written++
 }
 
-// También limpiar PNGs viejos que ya no existen en el JSON
+// También limpiar imágenes viejas que ya no existen en el JSON
 if (!dryRun) {
   const { readdirSync } = await import('node:fs')
-  const existing = readdirSync(OUTPUT_DIR).filter((f) => f.endsWith('.png') || f.endsWith('.jpg'))
+  const existing = readdirSync(OUTPUT_DIR).filter((f) => /\.(png|jpg|webp)$/.test(f))
   const currentIds = new Set(withArt.map((c) => c.id))
   for (const file of existing) {
-    const id = file.replace(/\.(png|jpg)$/, '')
+    const id = file.replace(/\.(png|jpg|webp)$/, '')
     if (!currentIds.has(id)) {
       const { unlinkSync } = await import('node:fs')
       unlinkSync(resolve(OUTPUT_DIR, file))

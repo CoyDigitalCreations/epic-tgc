@@ -7,12 +7,12 @@ import { cardArtPath } from '../../shared/data/paquetes'
  *
  * Priority:
  * 1. `inlineUrl` — image already in memory (draft being edited, a card
- *    freshly loaded from an import, or a static path /cartas/*.png
+ *    freshly loaded from an import, or a static path /cartas/*.webp
  *    already stored on the card).
  * 2. IndexedDB — card flagged `hasImage` but art not in memory (after a
  *    page reload, since images are never persisted in localStorage).
- * 3. Static art — card belongs to a set with versioned PNGs in
- *    public/cartas/{cardId}.png (see cardArtPath).
+ * 3. Static art — card belongs to a set with versioned WebP in
+ *    public/cartas/{cardId}.webp (see cardArtPath).
  */
 export function useCardImage(
   cardId: string | undefined,

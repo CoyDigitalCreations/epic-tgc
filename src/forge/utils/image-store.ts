@@ -16,7 +16,7 @@ const STORE = 'card-images'
 
 /**
  * True cuando la URL es arte embebido (data URL base64).
- * Las rutas estáticas (`/cartas/FB-001.png`) NO pasan por IndexedDB:
+ * Las rutas estáticas (`/cartas/FB-001.webp`) NO pasan por IndexedDB:
  * viven versionadas en public/ y el navegador las sirve directo.
  */
 export function isDataUrl(url: string): boolean {

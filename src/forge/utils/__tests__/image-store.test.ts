@@ -61,8 +61,8 @@ describe('isDataUrl — distingue base64 embebido de rutas estáticas', () => {
     expect(isDataUrl('data:image/webp;base64,AAA')).toBe(true)
   })
 
-  it('NO confunde rutas estáticas versionadas (/cartas/*.png) con base64', () => {
-    expect(isDataUrl('/cartas/FB-001.png')).toBe(false)
+  it('NO confunde rutas estáticas versionadas (/cartas/*.webp) con base64', () => {
+    expect(isDataUrl('/cartas/FB-001.webp')).toBe(false)
     expect(isDataUrl('/facciones_white.png')).toBe(false)
     expect(isDataUrl('')).toBe(false)
     expect(isDataUrl('https://cdn.ejemplo.com/carta.png')).toBe(false)

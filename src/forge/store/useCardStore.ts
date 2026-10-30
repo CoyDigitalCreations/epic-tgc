@@ -118,7 +118,7 @@ function slugify(nombre: string): string {
    ───────────────────────────────────────────── */
 
 /** Move inline base64 art to IndexedDB (fire-and-forget, non-blocking).
- *  Rutas estáticas (/cartas/*.png) NO van a IndexedDB: ya viven en public/. */
+ *  Rutas estáticas (/cartas/*.webp) NO van a IndexedDB: ya viven en public/. */
 function persistImages(cards: AnyCard[]): void {
   for (const card of cards) {
     if (card.imageUrl && isDataUrl(card.imageUrl)) {
@@ -252,7 +252,7 @@ export const useCardStore = create<CardStore>()(
       deleteCard: (id) => {
         const old = get().cards.find((c) => c.id === id)
         // Solo hay arte en IndexedDB si la carta lo marcó (hasImage);
-        // las rutas estáticas (/cartas/*.png) viven en public/ y no se borran.
+        // las rutas estáticas (/cartas/*.webp) viven en public/ y no se borran.
         if (old?.hasImage) deleteCardImage(id)
         set((state) => {
           const colecciones = conCardsEn(

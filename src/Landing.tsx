@@ -110,7 +110,7 @@ export default function Landing() {
             {ABANICO.map((c) => (
               <img
                 key={c.id}
-                src={`/manual/cartas/${c.id}.png`}
+                src={`/manual/cartas/${c.id}.webp`}
                 alt=""
                 width={744}
                 height={1038}

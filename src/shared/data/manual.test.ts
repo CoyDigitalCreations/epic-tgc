@@ -25,10 +25,10 @@ describe('manual.html — documento imprimible', () => {
   })
 
   it('cada imagen de carta existe en disco y corresponde a una carta de la colección', () => {
-    const imgs = [...html.matchAll(/<img[^>]*src="\/manual\/cartas\/([\w-]+)\.png"[^>]*alt="([^"]*)"/g)]
+    const imgs = [...html.matchAll(/<img[^>]*src="\/manual\/cartas\/([\w-]+)\.webp"[^>]*alt="([^"]*)"/g)]
     expect(imgs.length).toBeGreaterThan(20)
     for (const [, id, alt] of imgs) {
-      expect(existsSync(resolve(process.cwd(), `public/manual/cartas/${id}.png`)), `${id}.png`).toBe(true)
+      expect(existsSync(resolve(process.cwd(), `public/manual/cartas/${id}.webp`)), `${id}.webp`).toBe(true)
       const carta = getCardById(id)
       expect(carta, `carta ${id}`).toBeDefined()
       expect(alt, `alt de ${id}`).toContain(id)

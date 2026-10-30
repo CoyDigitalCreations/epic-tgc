@@ -88,7 +88,7 @@ Ejemplo:
 
 /* ── Limpieza ── */
 
-/** Descarta arte embebido (base64) y flags de imagen. Rutas estáticas /cartas/*.png se conservan. */
+/** Descarta arte embebido (base64) y flags de imagen. Rutas estáticas /cartas/*.webp se conservan. */
 function sinArte(card: Json): Json {
   const out: Json = { ...card }
   const imageUrl = out.imageUrl

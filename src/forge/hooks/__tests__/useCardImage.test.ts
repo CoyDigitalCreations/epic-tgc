@@ -12,10 +12,10 @@ describe('useCardImage — resolución de arte', () => {
   })
 
   it('usa la ruta estática versionada cuando la carta es de un set con arte', () => {
-    // Carta oficial de Estásis SIN arte subido: cae a public/cartas/{id}.png
+    // Carta oficial de Estásis SIN arte subido: cae a public/cartas/{id}.webp
     const { result } = renderHook(() => useCardImage('FB-001', undefined, undefined))
     expect(result.current).toBe(cardArtPath('FB-001'))
-    expect(result.current).toBe('/cartas/FB-001.png')
+    expect(result.current).toBe('/cartas/FB-001.webp')
   })
 
   it('da prioridad al arte inline (base64 o ruta ya cargada)', () => {
@@ -41,7 +41,7 @@ describe('useCardImage — resolución de arte', () => {
     // hasImage marcado pero IndexedDB vacío (arte perdido): fallback a public/
     const { result } = renderHook(() => useCardImage('FB-001', true, undefined))
     await waitFor(() => {
-      expect(result.current).toBe('/cartas/FB-001.png')
+      expect(result.current).toBe('/cartas/FB-001.webp')
     })
   })
 

@@ -39,3 +39,6 @@ simulacion-partida.txt
 supabase/.temp/
 
 .engram/
+
+.vercel
+.env*
