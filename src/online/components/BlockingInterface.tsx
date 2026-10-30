@@ -9,7 +9,9 @@ import { Seccion } from '../../shared/ui/Seccion'
 import { TileCarta } from '../../shared/ui/TileCarta'
 import { getCardMeta } from '../game/cards'
 import type { GameState, PlayerId } from '../game'
+import { statsComparativos } from '../game/stats'
 import { MiniCard } from './MiniCard'
+import { StatsCampeon } from './StatsCampeon'
 
 interface BlockingInterfaceProps {
   s: GameState
@@ -22,11 +24,9 @@ interface BlockingInterfaceProps {
   onCancelar: () => void
 }
 
-/** ATQ/RES de un Campeón (null si la carta no tiene stats de combate). */
-function statsDe(s: GameState, id: string): { atq: number; res: number } | null {
-  const cardId = s.instances[id]?.cardId
-  const meta = cardId ? getCardMeta(cardId) : null
-  return meta?.type === 'Campeón' && 'poder' in meta.stats ? { atq: meta.stats.poder, res: meta.stats.resistencia } : null
+/** ¿Es un Campeón con stats de combate? (decide si se muestra el ATQ/RES actual). */
+function tieneStats(s: GameState, id: string): boolean {
+  return statsComparativos(s, id) !== null
 }
 
 /** Número de orden (de atacante o de su bloqueador) como insignia redonda. */
@@ -100,7 +100,7 @@ export function BlockingInterface({ s, defensor, atacantes, onBloquear, onCancel
           <Seccion cantidad={atacantes.length}>Orden de los atacantes</Seccion>
           <div className="flex flex-wrap gap-4">
             {atacantes.map((id, idx) => {
-              const stats = statsDe(s, id)
+              const conStats = tieneStats(s, id)
               const bloqueador = asignaciones[id]
               return (
                 <div key={id} className="flex w-24 flex-col items-center gap-1">
@@ -109,7 +109,11 @@ export function BlockingInterface({ s, defensor, atacantes, onBloquear, onCancel
                     <MiniCard inst={s.instances[id]!} anchoPx={84} sinTooltip sinAncla />
                   </div>
                   <span className="line-clamp-2 w-full text-center text-[10px] font-medium leading-tight text-rose-200">{nombreDe(id)}</span>
-                  {stats && <span className="font-mono text-[10px] text-gray-400">ATQ {stats.atq} · RES {stats.res}</span>}
+                  {conStats && (
+                    <span className="font-mono text-[10px] text-gray-400">
+                      <StatsCampeon s={s} id={id} />
+                    </span>
+                  )}
                   {bloqueador ? (
                     <span className="max-w-full truncate text-[10px] text-cyan-300">← {nombreDe(bloqueador)}</span>
                   ) : (
@@ -128,7 +132,7 @@ export function BlockingInterface({ s, defensor, atacantes, onBloquear, onCancel
             {disponibles.map((id) => {
               const asignadoA = Object.entries(asignaciones).find(([, blk]) => blk === id)?.[0]
               const ordenAsignado = asignadoA ? atacantes.indexOf(asignadoA) + 1 : undefined
-              const stats = statsDe(s, id)
+              const conStats = tieneStats(s, id)
               return (
                 <TileCarta
                   key={id}
@@ -138,7 +142,7 @@ export function BlockingInterface({ s, defensor, atacantes, onBloquear, onCancel
                     const sinBloquear = atacantes.find((a) => !asignaciones[a])
                     if (sinBloquear) seleccionarBloqueador(sinBloquear, id)
                   }}
-                  pie={stats ? `ATQ ${stats.atq} · RES ${stats.res}` : nombreDe(id)}
+                  pie={conStats ? <StatsCampeon s={s} id={id} /> : nombreDe(id)}
                 >
                   <div className="flex h-5 items-center">{ordenAsignado !== undefined && <Insignia n={ordenAsignado} tono="propio" />}</div>
                   <MiniCard inst={s.instances[id]!} anchoPx={72} sinTooltip sinAncla />

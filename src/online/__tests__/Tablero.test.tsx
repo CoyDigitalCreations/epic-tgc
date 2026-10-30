@@ -242,7 +242,7 @@ describe('Zoom de carta (CartaZoom)', () => {
     return { estado, campeon: campeon! }
   }
 
-  it('clic en un campeón de la mesa abre la carta en grande y Escape la cierra', async () => {
+  it('clic en un campeón de la mesa abre su menú; solo "Ver carta" la abre en grande y Escape la cierra', async () => {
     const user = userEvent.setup()
     const { estado, campeon } = forjaDeAConCampeonEnMesa()
     const vista = visibleState(estado, 'A')
@@ -259,7 +259,7 @@ describe('Zoom de carta (CartaZoom)', () => {
       />,
     )
 
-    // Click en la miniatura del campeón → se abre el diálogo de la carta en grande.
+    // Click en la miniatura del campeón → menú emergente (el zoom NO se abre por el clic suelto).
     // Si el campeón también está en la mano (jugable → lupita), elijo el de la mesa.
     const nombre = campeon.name
     const miniatura = screen
@@ -267,6 +267,10 @@ describe('Zoom de carta (CartaZoom)', () => {
       .find((el) => !el.querySelector('[aria-label="Ver carta grande"]'))
     expect(miniatura).toBeDefined()
     await user.click(miniatura!)
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+
+    // "Ver carta" abre el diálogo de la carta en grande
+    await user.click(within(screen.getByRole('group', { name: 'Opciones de la carta' })).getByRole('button', { name: 'Ver carta' }))
 
     const dialogo = screen.getByRole('dialog', { name: `Carta en grande: ${nombre}` })
     expect(dialogo).toBeInTheDocument()
@@ -779,8 +783,9 @@ describe('Cartas boca abajo (Arcanas/Combate/Vínculos)', () => {
     const dorso = within(celda).getByLabelText('Carta boca abajo')
     expect(within(celda).queryByTitle(arcana.name)).toBeNull()
 
-    // Clic → zoom con la carta real (es mía: puedo inspeccionarla)
+    // Clic → menú; "Ver carta" → zoom con la carta real (es mía: puedo inspeccionarla)
     await user.click(dorso)
+    await user.click(screen.getByRole('button', { name: 'Ver carta' }))
     expect(screen.getByRole('dialog', { name: `Carta en grande: ${arcana.name}` })).toBeInTheDocument()
     await user.keyboard('{Escape}')
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
@@ -821,6 +826,7 @@ describe('Cartas boca abajo (Arcanas/Combate/Vínculos)', () => {
     expect(within(celda).queryByTitle(vinculo.name)).toBeNull()
 
     await user.click(dorso)
+    await user.click(screen.getByRole('button', { name: 'Ver carta' }))
     expect(screen.getByRole('dialog', { name: `Carta en grande: ${vinculo.name}` })).toBeInTheDocument()
     await user.keyboard('{Escape}')
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
@@ -1116,6 +1122,7 @@ describe('Panel de Cementerio y Exilio (lista completa)', () => {
 
     // Clic en una carta de la lista → se ve en grande
     await user.click(screen.getAllByTitle(nombres[0])[0])
+    await user.click(screen.getByRole('button', { name: 'Ver carta' }))
     expect(screen.getByRole('dialog', { name: `Carta en grande: ${nombres[0]}` })).toBeInTheDocument()
     await user.keyboard('{Escape}')
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
@@ -1146,6 +1153,7 @@ describe('Panel de Cementerio y Exilio (lista completa)', () => {
     expect(tituloPanel('tuyo').textContent).toContain('Exilio')
     nombresListados(nombres)
     await user.click(screen.getAllByTitle(nombres[0])[0])
+    await user.click(screen.getByRole('button', { name: 'Ver carta' }))
     expect(screen.getByRole('dialog', { name: `Carta en grande: ${nombres[0]}` })).toBeInTheDocument()
   })
 

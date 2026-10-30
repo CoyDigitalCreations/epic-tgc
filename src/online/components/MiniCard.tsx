@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import { RenderCarta } from '../../forge/components/CardPreview'
 import { useCardImage } from '../../forge/hooks/useCardImage'
 import type { AnyCard } from '../../shared/types'
@@ -15,6 +16,12 @@ const DURACION_REVELAR_MS = 900
 
 export const TAMANOS = { xs: 44, sm: 64, md: 74, lg: 128 } as const
 export type TamanoMini = keyof typeof TAMANOS
+
+/** Opción extra del menú emergente de la carta (junto a "Ver carta"). */
+export interface OpcionMenuCarta {
+  etiqueta: string
+  onElegir: () => void
+}
 
 interface MiniCardProps {
   inst: CardInstance
@@ -46,9 +53,13 @@ interface MiniCardProps {
   /**
    * Abre la carta en grande (CartaZoom) para revisar su efecto. Si `onClick`
    * también está definido, el clic de la carta hace lo suyo y aparece una
-   * lupita para el zoom; si no, el clic directo abre el zoom.
+   * lupita para el zoom; si no, el clic abre un menú emergente con "Ver carta"
+   * (el zoom NUNCA se abre por un clic suelto: así no se cuela al pulsar un
+   * botón de acción de la carta).
    */
   onZoom?: () => void
+  /** Opciones extra del menú emergente (p. ej. "Ver todos"). Solo aplican si la carta no tiene `onClick`. */
+  opciones?: OpcionMenuCarta[]
   title?: string
   /**
    * Nombre del campeón al que está equipado este artefacto (Mística/Arcana).
@@ -100,6 +111,7 @@ export function MiniCard({
   bocaAbajo,
   onClick,
   onZoom,
+  opciones,
   title,
   equipadoANombre,
   eteresBloqueados,
@@ -160,13 +172,84 @@ export function MiniCard({
     return () => window.clearTimeout(id)
   }, [esDorso, animar])
 
+  // Menú emergente de la carta (Ver carta / opciones extra). Solo si el clic no tiene otro oficio.
+  const anclaRef = useRef<HTMLDivElement>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
+  const [menu, setMenu] = useState<{ x: number; arriba: number; abajo: number } | null>(null)
+  const entradasMenu: OpcionMenuCarta[] = [
+    ...(onZoom ? [{ etiqueta: 'Ver carta', onElegir: onZoom }] : []),
+    ...(opciones ?? []),
+  ]
+  const conMenu = !onClick && entradasMenu.length > 0
+  const alternarMenu = () => {
+    if (menu) return setMenu(null)
+    const r = anclaRef.current?.getBoundingClientRect()
+    if (r) setMenu({ x: r.left + r.width / 2, arriba: r.top, abajo: r.bottom })
+  }
+  const alHacerClic = onClick ?? (conMenu ? alternarMenu : undefined)
+
+  useEffect(() => {
+    if (!menu) return
+    const cerrar = () => setMenu(null)
+    const fuera = (e: PointerEvent) => {
+      const objetivo = e.target as Node
+      if (!menuRef.current?.contains(objetivo) && !anclaRef.current?.contains(objetivo)) cerrar()
+    }
+    const escape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') cerrar()
+    }
+    document.addEventListener('pointerdown', fuera)
+    document.addEventListener('keydown', escape)
+    window.addEventListener('scroll', cerrar, true)
+    window.addEventListener('resize', cerrar)
+    return () => {
+      document.removeEventListener('pointerdown', fuera)
+      document.removeEventListener('keydown', escape)
+      window.removeEventListener('scroll', cerrar, true)
+      window.removeEventListener('resize', cerrar)
+    }
+  }, [menu])
+
+  // En un portal: no lo recortan las casillas ni lo gira el tablero invertido
+  const menuNode =
+    menu &&
+    createPortal(
+      <div
+        ref={menuRef}
+        role="group"
+        aria-label="Opciones de la carta"
+        onClick={(e) => e.stopPropagation()}
+        className="fixed z-[70] flex flex-col gap-1 min-w-28 p-1.5 rounded-lg bg-[#0d0d14]/95 border border-card-border shadow-2xl"
+        style={
+          menu.arriba > 90
+            ? { left: menu.x, top: menu.arriba - 6, transform: 'translate(-50%, -100%)' }
+            : { left: menu.x, top: menu.abajo + 6, transform: 'translateX(-50%)' }
+        }
+      >
+        {entradasMenu.map((o) => (
+          <button
+            key={o.etiqueta}
+            onClick={() => {
+              setMenu(null)
+              o.onElegir()
+            }}
+            className="text-xs px-3 py-1.5 rounded transition-colors cursor-pointer whitespace-nowrap bg-surface-2 hover:bg-card-border text-gray-300"
+          >
+            {o.etiqueta}
+          </button>
+        ))}
+      </div>,
+      document.body,
+    )
+
   if (esDorso) {
     // Dorso: boca abajo (mano rival, mazos, Arcanas/Vínculos rivales o
     // Arcanas/Combate/Vínculos PROPIOS que el dueño prefiere ver como dorso).
-    // Si hay onClick/onZoom (carta propia) el clic abre la carta en grande.
+    // Si hay onClick/onZoom (carta propia) el clic abre su menú ("Ver carta").
     return (
       <div className="flex flex-col items-center gap-1" style={{ width: ancho, visibility }}>
         <div
+          ref={anclaRef}
           data-inst={ancla}
           style={{
             aspectRatio: '744/1038',
@@ -177,9 +260,9 @@ export function MiniCard({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            cursor: onClick ?? onZoom ? 'pointer' : 'default',
+            cursor: alHacerClic ? 'pointer' : 'default',
           }}
-          onClick={onClick ?? onZoom}
+          onClick={alHacerClic}
           aria-label="Carta boca abajo"
         >
           <span
@@ -188,6 +271,7 @@ export function MiniCard({
             ✦
           </span>
         </div>
+        {menuNode}
         {children}
       </div>
     )
@@ -211,7 +295,7 @@ export function MiniCard({
   return (
     <div className="group relative flex flex-col items-center gap-1" style={{ width: ancho, visibility }}>
       {/* Tooltip hover: nombre de la carta + vínculo equipado */}
-      {meta && !sinTooltip && (
+      {meta && !sinTooltip && !menu && (
         <div
           className="pointer-events-none absolute left-1/2 -translate-x-1/2 z-30 opacity-0 group-hover:opacity-100 transition-opacity duration-150 whitespace-nowrap px-2 py-1 rounded bg-black/85 border border-gray-600 text-[10px] text-gray-200"
           style={{ bottom: '100%', marginBottom: 4 }}
@@ -220,16 +304,17 @@ export function MiniCard({
         </div>
       )}
       <div
+        ref={anclaRef}
         data-inst={ancla}
         onMouseEnter={sinAncla ? undefined : () => inspeccionar({ inst, carta: aRenderizar })}
         style={{
           width: agotada ? altoCarta : ancho,
           height: agotada ? ancho : altoCarta,
           position: 'relative',
-          cursor: onClick ?? onZoom ? 'pointer' : 'default',
+          cursor: alHacerClic ? 'pointer' : 'default',
           transition: 'transform 150ms ease, box-shadow 150ms ease',
         }}
-        onClick={onClick ?? onZoom}
+        onClick={alHacerClic}
         title={sinTooltip ? undefined : tooltipTexto}
       >
         <div className={revelando ? 'anim-revelar-frente' : undefined} style={{ position: 'absolute', inset: 0 }}>
@@ -444,6 +529,8 @@ export function MiniCard({
           <div
             className="absolute inset-x-0 bottom-0 z-10 flex justify-center px-0.5 pb-0.5 pt-3"
             style={{ background: 'linear-gradient(to top, rgba(8,8,16,0.92) 40%, transparent)' }}
+            // Pulsar un botón de acción (Bloquear, Atacar…) no debe disparar el clic de la carta
+            onClick={(e) => e.stopPropagation()}
           >
             {children}
           </div>
@@ -484,6 +571,7 @@ export function MiniCard({
           </span>
         )}
       </div>
+      {menuNode}
       {!hijosSobreCarta && children}
     </div>
   )

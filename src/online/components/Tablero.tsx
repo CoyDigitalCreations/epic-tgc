@@ -807,7 +807,7 @@ function GrillaJugador({
             inst={bloqueados[0]}
             anchoPx={cwEter}
             onZoom={() => abrirZoom(bloqueados[0])}
-            onClick={() => abrirPanel(jugador, 'bloqueado', slot)}
+            opciones={[{ etiqueta: 'Ver todos', onElegir: () => abrirPanel(jugador, 'bloqueado', slot) }]}
             invertida={invertida}
             marca={
               bloqueados.length > 1 ? (
@@ -976,7 +976,7 @@ function GrillaJugador({
             inst={inst}
             anchoPx={cw}
             bocaAbajo={!inst.bocaArriba}
-            onClick={
+            onZoom={
               inst.cardId !== null && (soy || inst.bocaArriba === true)
                 ? () => abrirZoom(inst)
                 : undefined
@@ -1076,7 +1076,7 @@ function GrillaJugador({
                   inst={inst}
                   anchoPx={cwVinculo}
                   bocaAbajo={!inst.bocaArriba}
-                  onClick={
+                  onZoom={
                     inst.cardId !== null && (soy || inst.bocaArriba === true)
                       ? () => abrirZoom(inst)
                       : undefined

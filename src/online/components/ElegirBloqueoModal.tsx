@@ -5,6 +5,7 @@ import { getCardMeta } from '../game'
 import type { GameState, ParejaBloqueo } from '../game'
 import { InspectorCarta } from './InspectorCarta'
 import { MiniCard } from './MiniCard'
+import { StatsCampeon } from './StatsCampeon'
 import { InspeccionContext } from './tableroContext'
 import type { Inspeccion } from './tableroContext'
 
@@ -70,10 +71,7 @@ export function ElegirBloqueoModal({ vista, parejas, fuenteNombre, onElegir, onC
               const inst = vista.instances[id]
               if (!inst) return null
               const meta = inst.cardId ? getCardMeta(inst.cardId) : null
-              const combate =
-                !campeonId && meta?.type === 'Campeón' && 'poder' in meta.stats
-                  ? `ATQ ${meta.stats.poder} · RES ${meta.stats.resistencia}`
-                  : ''
+              const combate = !campeonId && meta?.type === 'Campeón' && 'poder' in meta.stats
               const disponibles = campeonId ? 0 : parejas.filter((q) => q.campeonId === id).length
               return (
                 <TileCarta
@@ -85,7 +83,11 @@ export function ElegirBloqueoModal({ vista, parejas, fuenteNombre, onElegir, onC
                   <span className="mt-0.5 line-clamp-2 w-full text-center text-xs font-medium leading-tight text-gray-100">
                     {meta?.name ?? 'Carta'}
                   </span>
-                  {combate && <span className="w-full text-center font-mono text-[10px] leading-tight text-gray-500">{combate}</span>}
+                  {combate && (
+                    <span className="w-full text-center font-mono text-[10px] leading-tight text-gray-500">
+                      <StatsCampeon s={vista} id={id} />
+                    </span>
+                  )}
                   {disponibles > 0 && (
                     <span className="w-full text-center text-[10px] leading-tight text-gray-500">
                       {disponibles} Éter{disponibles > 1 ? 'es' : ''} posible{disponibles > 1 ? 's' : ''}

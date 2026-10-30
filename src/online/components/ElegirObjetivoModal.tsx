@@ -5,6 +5,7 @@ import { getCardMeta } from '../game'
 import type { GameState } from '../game'
 import { InspectorCarta } from './InspectorCarta'
 import { MiniCard } from './MiniCard'
+import { StatsCampeon } from './StatsCampeon'
 import { InspeccionContext } from './tableroContext'
 import type { Inspeccion } from './tableroContext'
 
@@ -39,10 +40,7 @@ export function ElegirObjetivoModal({ vista, opciones, titulo, subtitulo, onEleg
               if (!inst) return null
               const meta = inst.cardId ? getCardMeta(inst.cardId) : null
               const bocaAbajo = inst.bocaArriba === false
-              const combate =
-                !bocaAbajo && meta?.type === 'Campeón' && 'poder' in meta.stats
-                  ? `ATQ ${meta.stats.poder} · RES ${meta.stats.resistencia}`
-                  : ''
+              const combate = !bocaAbajo && meta?.type === 'Campeón' && 'poder' in meta.stats
               return (
                 <TileCarta key={id} onClick={() => onElegir(id)} className="w-full">
                   <MiniCard inst={inst} anchoPx={104} bocaAbajo={bocaAbajo} sinTooltip />
@@ -52,7 +50,11 @@ export function ElegirObjetivoModal({ vista, opciones, titulo, subtitulo, onEleg
                   {meta && !bocaAbajo && (
                     <span className="w-full text-center text-[10px] leading-tight text-gray-500">
                       {meta.type} · Coste {meta.stats.cost}
-                      {combate && <span className="block font-mono">{combate}</span>}
+                      {combate && (
+                        <span className="block font-mono">
+                          <StatsCampeon s={vista} id={id} />
+                        </span>
+                      )}
                     </span>
                   )}
                 </TileCarta>
