@@ -79,9 +79,9 @@ export default function Landing() {
             <a href="/manual.html" className="transition-colors hover:text-ether-200">
               Manual
             </a>
-            <a href="/primogenitos.html" className="transition-colors hover:text-ether-200">
+            <Link to="/lore" className="transition-colors hover:text-ether-200">
               Primogénitos
-            </a>
+            </Link>
           </nav>
         </div>
       </header>
@@ -147,7 +147,7 @@ export default function Landing() {
             acento="text-card-arcana"
           />
           <Destino
-            href="/primogenitos.html"
+            to="/lore"
             titulo="Los Primogénitos"
             descripcion="El lore y la cosmología del Eje"
             glifo="☾"

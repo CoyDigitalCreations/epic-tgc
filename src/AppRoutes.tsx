@@ -7,6 +7,7 @@ const ForgeApp = lazy(() => import('./forge/App'))
 const OnlineApp = lazy(() => import('./online/OnlineApp'))
 const Lobby = lazy(() => import('./online/lobby/Lobby'))
 const Perfil = lazy(() => import('./online/perfil/Perfil'))
+const Lore = lazy(() => import('./lore/Lore'))
 
 export function AppFallback() {
   return (
@@ -54,6 +55,16 @@ export function AppRoutes() {
           </Suspense>
         }
       />
+      <Route
+        path="/lore"
+        element={
+          <Suspense fallback={<AppFallback />}>
+            <Lore />
+          </Suspense>
+        }
+      />
+      {/* El lore antes era un HTML estático: los enlaces viejos siguen llegando */}
+      <Route path="/primogenitos.html" element={<Navigate to="/lore" replace />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
     </>

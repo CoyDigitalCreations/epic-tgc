@@ -16,7 +16,7 @@ describe('Landing', () => {
     expect(online).toHaveAttribute('href', '/epiconline')
   })
 
-  it('enlaza a los archivos estáticos manual.html y primogenitos.html (rutas absolutas)', () => {
+  it('enlaza al manual (HTML estático) y al lore (ruta /lore de la app)', () => {
     render(
       <MemoryRouter>
         <Landing />
@@ -26,10 +26,7 @@ describe('Landing', () => {
       'href',
       '/manual.html',
     )
-    expect(screen.getByRole('link', { name: /^primogénitos$/i })).toHaveAttribute(
-      'href',
-      '/primogenitos.html',
-    )
+    expect(screen.getByRole('link', { name: /^primogénitos$/i })).toHaveAttribute('href', '/lore')
   })
 
   it('agrega vínculos visibles al manual y al lore en el grid principal', () => {
@@ -42,7 +39,7 @@ describe('Landing', () => {
     expect(manual).toHaveAttribute('href', '/manual.html')
     expect(manual.className).toContain('bg-surface')
     const lore = screen.getByRole('link', { name: /los primogénitos/i })
-    expect(lore).toHaveAttribute('href', '/primogenitos.html')
+    expect(lore).toHaveAttribute('href', '/lore')
     expect(lore.className).toContain('bg-surface')
   })
 

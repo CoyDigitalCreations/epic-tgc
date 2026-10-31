@@ -80,7 +80,7 @@ export const FACCION_IMAGES: Record<Faccion, string> = {
 
 /**
  * Runas legendarias del Éter — un glifo original por facción, dibujado según
- * la cosmología del Eje (ver FACCION_LORE y primogenitos.html, sección 1).
+ * la cosmología del Eje (ver FACCION_LORE y src/lore/contenido.ts).
  * Son paths SVG (viewBox 24x24, trazo), no caracteres Unicode, porque el
  * soporte de fuentes rúnicas en Windows es inconsistente y así cada runa es
  * 100% propia y escalable en cualquier tamaño (ver RuneIcon).
@@ -108,7 +108,7 @@ export const FACCION_RUNES: Record<Faccion, string> = {
 
 /**
  * Cosmología del Eje — el nombre legendario de cada facción en el mapa de
- * las 8 facetas (ver primogenitos.html, sección 1 y 2).
+ * las 8 facetas (ver src/lore/contenido.ts).
  *
  * - faceta   : nombre primigenio en el cosmos. Orden y Caos son los DOS
  *              POLOS del Eje (Estásis y Disonancia); Creación y Destrucción
