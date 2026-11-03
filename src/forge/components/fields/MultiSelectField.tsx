@@ -33,7 +33,7 @@ export function MultiSelectField({ label, value, onChange, options, max }: Multi
         {value.length ? value.join(', ') : 'Seleccionar...'}
       </button>
       {isOpen && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-[#13131f] border border-white/10 rounded-lg z-10 shadow-xl">
+        <div className="absolute top-full left-0 right-0 mt-1 max-h-60 overflow-y-auto overscroll-contain bg-[#13131f] border border-white/10 rounded-lg z-10 shadow-xl">
           {options.map((opt) => {
             const disabled = !value.includes(opt) && atLimit
             return (
