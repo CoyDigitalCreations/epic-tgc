@@ -21,13 +21,20 @@ export function literalesNumericos(src: string): string[] {
   return encontrados.filter((n) => !PERMITIDOS.has(n))
 }
 
-const archivos = import.meta.glob<string>('./*.ts', {
+const archivos = import.meta.glob<string>(['./*.ts', './vistas/*.{ts,tsx}', './componentes/*.{ts,tsx}'], {
   query: '?raw',
   import: 'default',
   eager: true,
 })
 
-const EXCLUIDOS = /(?:config|tipos)\.ts$|\.test\.ts$/
+/**
+ * Excepciones mínimas y documentadas:
+ * - config.ts y tipos.ts: es donde viven las constantes de negocio.
+ * - vistas/constantesUi.ts: constantes de PRESENTACIÓN (alturas, márgenes, intensidades); no son reglas.
+ * - componentes/colores.ts: paleta de presentación (colores), sin reglas de balance.
+ * - pruebas (*.test.ts, *.test.tsx).
+ */
+const EXCLUIDOS = /(?:^|\/)(?:config|tipos)\.ts$|vistas\/constantesUi\.ts$|componentes\/colores\.ts$|\.test\.tsx?$/
 
 describe('detector de literales', () => {
   it('detecta números sueltos en código', () => {
@@ -38,6 +45,16 @@ describe('detector de literales', () => {
   it('ignora comentarios, cadenas y números estructurales', () => {
     expect(literalesNumericos('const a = 0 // tope 9\nconst b = "7-9" + x[1]')).toEqual([])
     expect(literalesNumericos('/* 18 */ const c = Math.round(x * 10) / 10')).toEqual([])
+  })
+
+  it('en .tsx detecta números en atributos y expresiones JSX', () => {
+    expect(literalesNumericos('<Grafica height={300} />')).toEqual(['300'])
+    expect(literalesNumericos('<p>{suma > 8 ? a : b}</p>')).toEqual(['8'])
+  })
+
+  it('en .tsx ignora clases, textos y números estructurales', () => {
+    expect(literalesNumericos('<p className="mt-3 size-4 text-sm">{lista[1]}{x * 100}</p>')).toEqual([])
+    expect(literalesNumericos("<td title='Coste 7'>{`Coste ${n}`}</td>")).toEqual([])
   })
 })
 

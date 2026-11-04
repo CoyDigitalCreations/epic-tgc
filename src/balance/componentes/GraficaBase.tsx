@@ -1,5 +1,6 @@
 import type { ReactElement } from 'react'
 import { ResponsiveContainer } from 'recharts'
+import { ALTO_GRAFICA_RESPONSIVA } from '../vistas/constantesUi'
 import { TablaAlternativa, type DatosTabla } from './TablaAlternativa'
 
 interface Props {
@@ -24,7 +25,7 @@ export function GraficaBase({ titulo, descripcion, tabla, ancho, alto, tablaVisi
         {fija ? (
           children(ancho, alto)
         ) : (
-          <ResponsiveContainer width="100%" height={300}>
+          <ResponsiveContainer width="100%" height={ALTO_GRAFICA_RESPONSIVA}>
             {children()}
           </ResponsiveContainer>
         )}

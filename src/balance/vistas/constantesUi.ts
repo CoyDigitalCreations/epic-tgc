@@ -2,9 +2,13 @@ import type { Rarity } from '../../shared/types/enums'
 
 /**
  * Constantes de PRESENTACIÓN de las vistas (márgenes, tamaños, colores). No son reglas de
- * balance: esas viven en config.ts. Esta carpeta queda fuera de la guardia sinConstantes
- * (que solo revisa los módulos de cálculo de primer nivel de src/balance).
+ * balance: esas viven en config.ts. Este archivo es una excepción documentada de la
+ * guardia sinConstantes, que sí revisa el resto de vistas/ y componentes/.
  */
+
+/** Alto (px) de la gráfica cuando se adapta al contenedor con ResponsiveContainer. */
+export const ALTO_GRAFICA_RESPONSIVA = 300
+
 export const MARGEN_GRAFICA = { top: 8, right: 16, bottom: 8, left: 0 }
 
 /** Alto de la gráfica horizontal del ranking: una barra por carta mostrada. */
