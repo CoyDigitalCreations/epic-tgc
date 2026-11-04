@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { PanelReferencia } from './PanelReferencia'
@@ -58,5 +58,36 @@ describe('PanelReferencia', () => {
   it('avisa que no cuentan en métricas, letalidad, ajustes ni exportación', () => {
     render(<PanelReferencia />)
     expect(screen.getByText(/no cuentan/i)).toBeInTheDocument()
+  })
+})
+
+describe('PanelReferencia cuando falla la carga del paquete', () => {
+  afterEach(() => {
+    vi.doUnmock('../../../seed/CartasPrueba.json')
+  })
+
+  it('muestra un aviso, no muestra cartas y permite reintentar al apagar y volver a activar', async () => {
+    vi.doMock('../../../seed/CartasPrueba.json', () => {
+      throw new Error('sin red')
+    })
+    render(<PanelReferencia />)
+    await userEvent.click(screen.getByRole('switch', { name: NOMBRE }))
+
+    const alerta = await screen.findByRole('alert')
+    expect(alerta).toHaveTextContent('No se pudieron cargar las cartas de referencia.')
+    expect(screen.queryByRole('table')).not.toBeInTheDocument()
+    expect(screen.queryByText('Referencia (no publicadas)')).not.toBeInTheDocument()
+    expect(screen.queryByRole('status')).not.toBeInTheDocument()
+    expect(screen.getByRole('switch', { name: NOMBRE })).toBeChecked()
+
+    // Al apagar, el aviso desaparece.
+    await userEvent.click(screen.getByRole('switch', { name: NOMBRE }))
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+
+    // Al volver a activar con el paquete disponible, se recupera sin aviso residual.
+    vi.doMock('../../../seed/CartasPrueba.json', async (importarOriginal) => importarOriginal())
+    await userEvent.click(screen.getByRole('switch', { name: NOMBRE }))
+    expect(await screen.findByRole('table', { name: /cartas de referencia/i })).toBeInTheDocument()
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
   })
 })

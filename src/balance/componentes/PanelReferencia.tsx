@@ -22,7 +22,9 @@ export function PanelReferencia() {
     let vigente = true
     import('../../../seed/CartasPrueba.json')
       .then((modulo) => {
-        if (vigente) setFilas(rankingReferencia(cargarReferencia(modulo.default as unknown as AnyCard[])))
+        if (!vigente) return
+        setError(false)
+        setFilas(rankingReferencia(cargarReferencia(modulo.default as unknown as AnyCard[])))
       })
       .catch(() => {
         if (vigente) setError(true)
