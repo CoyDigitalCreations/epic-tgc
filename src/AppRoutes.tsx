@@ -8,6 +8,7 @@ const OnlineApp = lazy(() => import('./online/OnlineApp'))
 const Lobby = lazy(() => import('./online/lobby/Lobby'))
 const Perfil = lazy(() => import('./online/perfil/Perfil'))
 const Lore = lazy(() => import('./lore/Lore'))
+const Balance = lazy(() => import('./balance/Balance'))
 
 export function AppFallback() {
   return (
@@ -60,6 +61,14 @@ export function AppRoutes() {
         element={
           <Suspense fallback={<AppFallback />}>
             <Lore />
+          </Suspense>
+        }
+      />
+      <Route
+        path="/balance"
+        element={
+          <Suspense fallback={<AppFallback />}>
+            <Balance />
           </Suspense>
         }
       />

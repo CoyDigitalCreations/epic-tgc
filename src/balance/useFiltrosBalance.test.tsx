@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { describe, it, expect } from 'vitest'
 import { act, renderHook } from '@testing-library/react'
 import { MemoryRouter, useLocation } from 'react-router'
-import { leerFiltros, useFiltrosBalance } from './useFiltrosBalance'
+import { leerFiltros, useFiltrosBalance, VISTAS } from './useFiltrosBalance'
 
 const envoltorio = (url: string) =>
   function Envoltorio({ children }: { children: ReactNode }) {
@@ -18,6 +18,21 @@ describe('leerFiltros', () => {
     const r = leerFiltros(new URLSearchParams('mazo=estasis&tipo=Campeón&coste=3&rareza=Única&vista=ranking'))
     expect(r.filtros).toEqual({ mazo: 'estasis', tipo: 'Campeón', coste: 3, rareza: 'Única' })
     expect(r.vista).toBe('ranking')
+  })
+
+  it('reconoce las nueve vistas, incluida la matriz de letalidad', () => {
+    expect(VISTAS).toEqual([
+      'resumen',
+      'dispersion',
+      'presupuesto',
+      'verbos',
+      'ranking',
+      'curva',
+      'letalidad',
+      'comparador',
+      'auditoria',
+    ])
+    expect(leerFiltros(new URLSearchParams('vista=letalidad')).vista).toBe('letalidad')
   })
 
   it('sin parámetros devuelve todo vacío y la vista por defecto', () => {

@@ -17,6 +17,10 @@ vi.mock('./online/OnlineApp', () => ({
   default: () => <button>Comenzar partida</button>,
 }))
 
+vi.mock('./balance/Balance', () => ({
+  default: () => <h1>Tablero de balance (mock)</h1>,
+}))
+
 describe('AppRoutes', () => {
   it('renderiza la landing en / sin montar el card maker (lazy)', () => {
     render(
@@ -58,6 +62,24 @@ describe('AppRoutes', () => {
     expect(
       await screen.findByRole('button', { name: 'Comenzar partida' }),
     ).toBeInTheDocument()
+  })
+
+  it('monta el tablero de balance en /balance (lazy) y no en la raíz', async () => {
+    render(
+      <MemoryRouter initialEntries={['/']}>
+        <AppRoutes />
+      </MemoryRouter>,
+    )
+    expect(screen.queryByText('Tablero de balance (mock)')).not.toBeInTheDocument()
+  })
+
+  it('carga el tablero de balance al entrar en /balance', async () => {
+    render(
+      <MemoryRouter initialEntries={['/balance']}>
+        <AppRoutes />
+      </MemoryRouter>,
+    )
+    expect(await screen.findByText('Tablero de balance (mock)')).toBeInTheDocument()
   })
 })
 

@@ -43,6 +43,33 @@ describe('Landing', () => {
     expect(lore.className).toContain('bg-surface')
   })
 
+  it('enlaza al tablero de balance con un único enlace a /balance', () => {
+    render(
+      <MemoryRouter>
+        <Landing />
+      </MemoryRouter>,
+    )
+    const balance = screen.getByRole('link', { name: /tablero de balance/i })
+    expect(balance).toHaveAttribute('href', '/balance')
+    expect(balance.className).toContain('bg-surface')
+    expect(screen.getByText('Mide el poder y los stats de cada carta')).toBeInTheDocument()
+  })
+
+  it('separa 2 destinos principales y 3 secundarios en filas distintas', () => {
+    render(
+      <MemoryRouter>
+        <Landing />
+      </MemoryRouter>,
+    )
+    const filaPrincipal = screen.getByRole('link', { name: /card maker/i }).parentElement
+    const filaSecundaria = screen.getByRole('link', { name: /tablero de balance/i }).parentElement
+    expect(filaPrincipal).toHaveClass('sm:grid-cols-2')
+    expect(filaSecundaria).toHaveClass('sm:grid-cols-3')
+    expect(filaSecundaria).not.toBe(filaPrincipal)
+    expect(filaSecundaria?.querySelectorAll('a')).toHaveLength(3)
+    expect(filaPrincipal?.querySelectorAll('a')).toHaveLength(2)
+  })
+
   it('usa las clases del tema (font-display y surface)', () => {
     render(
       <MemoryRouter>

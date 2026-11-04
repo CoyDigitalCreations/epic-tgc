@@ -122,37 +122,48 @@ export default function Landing() {
         </section>
 
         {/* Destinos */}
-        <section className="mt-14 grid gap-5 sm:grid-cols-2" aria-label="Aplicaciones">
-          <Destino
-            to="/card-maker"
-            titulo="Card Maker"
-            descripcion="Crea y edita tus cartas de Éter TCG"
-            glifo="✦"
-            acento="text-ether-200"
-            principal
-          />
-          <Destino
-            to="/epiconline"
-            titulo="Éter Online"
-            descripcion="Juega partidas de Éter TCG en línea"
-            glifo="⚔"
-            acento="text-card-campeon"
-            principal
-          />
-          <Destino
-            href="/manual.html"
-            titulo="Manual de reglas"
-            descripcion="Reglas completas de Éter TCG v2.0"
-            glifo="❖"
-            acento="text-card-arcana"
-          />
-          <Destino
-            to="/lore"
-            titulo="Los Primogénitos"
-            descripcion="El lore y la cosmología del Eje"
-            glifo="☾"
-            acento="text-card-mistica"
-          />
+        <section className="mt-14 space-y-5" aria-label="Aplicaciones">
+          <div className="grid gap-5 sm:grid-cols-2">
+            <Destino
+              to="/card-maker"
+              titulo="Card Maker"
+              descripcion="Crea y edita tus cartas de Éter TCG"
+              glifo="✦"
+              acento="text-ether-200"
+              principal
+            />
+            <Destino
+              to="/epiconline"
+              titulo="Éter Online"
+              descripcion="Juega partidas de Éter TCG en línea"
+              glifo="⚔"
+              acento="text-card-campeon"
+              principal
+            />
+          </div>
+          <div className="grid gap-5 sm:grid-cols-3">
+            <Destino
+              href="/manual.html"
+              titulo="Manual de reglas"
+              descripcion="Reglas completas de Éter TCG v2.0"
+              glifo="❖"
+              acento="text-card-arcana"
+            />
+            <Destino
+              to="/lore"
+              titulo="Los Primogénitos"
+              descripcion="El lore y la cosmología del Eje"
+              glifo="☾"
+              acento="text-card-mistica"
+            />
+            <Destino
+              to="/balance"
+              titulo="Tablero de balance"
+              descripcion="Mide el poder y los stats de cada carta"
+              glifo="⚖"
+              acento="text-ether-200"
+            />
+          </div>
         </section>
       </main>
 

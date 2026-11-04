@@ -4,7 +4,7 @@ import { CARD_TYPES, RARITIES } from '../shared/types/enums'
 import type { FiltrosBalance } from './metricas'
 import type { MazoId } from './tipos'
 
-/** Las ocho vistas del tablero; la primera es la que se abre por defecto. */
+/** Las nueve vistas del tablero; la primera es la que se abre por defecto. */
 export const VISTAS = [
   'resumen',
   'dispersion',
@@ -12,6 +12,7 @@ export const VISTAS = [
   'verbos',
   'ranking',
   'curva',
+  'letalidad',
   'comparador',
   'auditoria',
 ] as const
