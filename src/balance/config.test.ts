@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { KEYWORDS } from '../shared/types/enums'
 import { CONFIG_V1 } from './config'
 
 describe('CONFIG_V1', () => {
@@ -37,5 +38,16 @@ describe('CONFIG_V1', () => {
     expect(CONFIG_V1.identidad.disonancia.identidad).toEqual(
       expect.arrayContaining(['destroy', 'debuff', 'rival_discard', 'exile']),
     )
+  })
+  it('pesa cada keyword del juego en poder.keyword', () => {
+    expect(Object.keys(CONFIG_V1.poder.keyword).sort()).toEqual([...KEYWORDS].sort())
+    for (const peso of Object.values(CONFIG_V1.poder.keyword)) expect(peso).toBeGreaterThan(0)
+  })
+
+  it('pesa las keywords de inmunidad por encima de las de ritmo', () => {
+    const { keyword } = CONFIG_V1.poder
+    expect(keyword.Inmortal).toBeGreaterThan(keyword.Carga)
+    expect(keyword.Indestructible).toBeGreaterThan(keyword.Carga)
+    expect(keyword.Fugaz).toBeGreaterThan(keyword.Presteza)
   })
 })

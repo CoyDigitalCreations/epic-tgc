@@ -2,7 +2,8 @@ import { describe, it, expect } from 'vitest'
 import { ALL_CARDS } from '../shared/data/paquetes'
 import { cargarCartas } from './cargador'
 import { CONFIG_V1 } from './config'
-import { evaluarPresupuesto } from './presupuesto'
+import { evaluarConImpuesto, evaluarPresupuesto, impuestoDe } from './presupuesto'
+import { poderDeCarta } from './poderEfecto'
 import type { CartaBalance, ConfigBalance } from './tipos'
 
 const { cartas } = cargarCartas(ALL_CARDS)
@@ -22,6 +23,7 @@ const campeon = (coste: number, atq: number, res: number): CartaBalance => ({
   mazo: 'estasis',
   roles: ['Normal'],
   stats: { atq, res },
+  keywords: [],
   efectos: [],
 })
 
@@ -115,5 +117,75 @@ describe('evaluarPresupuesto es configurable', () => {
 
   it('es determinista', () => {
     expect(evaluarPresupuesto(carta('FB-014'))).toEqual(evaluarPresupuesto(carta('FB-014')))
+  })
+})
+
+/** Efecto fuerte de prueba: destroy sin costo ni restricciones. */
+const efectoFuerte = {
+  verbo: 'destroy',
+  sinVerbo: false,
+  verbosTramos: [],
+  tipo: 'hechizo',
+  trigger: null,
+  objetivoTipo: 'campeon',
+  duracion: null,
+  costoTipo: null,
+  costoCantidad: 0,
+  activacion: null,
+  keywordsConcedidas: [],
+  esComandante: false,
+}
+
+describe('impuesto por efecto y suma objetivo', () => {
+  it('S5.1: un efecto fuerte rebaja la suma objetivo respecto de un Campeón sin efectos', () => {
+    const sinEfectos = campeon(3, 4, 4)
+    const conEfecto: CartaBalance = { ...campeon(3, 4, 4), efectos: [efectoFuerte] }
+    const a = evaluarConImpuesto(sinEfectos)
+    const b = evaluarConImpuesto(conEfecto)
+    expect(a?.objetivoSuma).toBe(CONFIG_V1.bandas[3].sumaMax)
+    expect(b?.objetivoSuma).toBeLessThan(a?.objetivoSuma ?? 0)
+    expect(b?.impuesto).toBeGreaterThan(0)
+  })
+
+  it('el impuesto es el índice de poder por los puntos por poder', () => {
+    const c: CartaBalance = { ...campeon(3, 4, 4), efectos: [efectoFuerte] }
+    const esperado = poderDeCarta(c).indice * CONFIG_V1.impuesto.puntosPorPoder
+    expect(impuestoDe(c)).toBeCloseTo(esperado, 1)
+  })
+
+  it('el impuesto no pasa del máximo de la config', () => {
+    const muchos: CartaBalance = { ...campeon(3, 4, 4), efectos: Array(10).fill(efectoFuerte) }
+    expect(impuestoDe(muchos)).toBe(CONFIG_V1.impuesto.maxImpuesto)
+  })
+
+  it('solo los Campeones pagan impuesto', () => {
+    const mistica: CartaBalance = { ...campeon(3, 4, 4), tipo: 'Mística', stats: null, efectos: [efectoFuerte] }
+    expect(impuestoDe(mistica)).toBe(0)
+  })
+
+  it('los Campeones exentos (Únicas y Soberanos) no pagan impuesto aunque su índice sea alto', () => {
+    const aurora = carta('FB-010')
+    expect(poderDeCarta(aurora).indice).toBeGreaterThan(0)
+    expect(impuestoDe(aurora)).toBe(0)
+    expect(evaluarConImpuesto(aurora)?.fueraDeBanda).toBe(false)
+    expect(evaluarConImpuesto(carta('DS-010'))?.fueraDeBanda).toBe(false)
+  })
+
+  it('cambiar los puntos por poder cambia la suma objetivo', () => {
+    const c: CartaBalance = { ...campeon(3, 4, 4), efectos: [efectoFuerte] }
+    const dura = structuredClone(CONFIG_V1)
+    dura.impuesto.puntosPorPoder = dura.impuesto.puntosPorPoder * 2
+    expect(evaluarConImpuesto(c, dura)?.objetivoSuma).toBeLessThan(evaluarConImpuesto(c)?.objetivoSuma ?? 0)
+  })
+
+  it('con el impuesto en 0 coincide con evaluarPresupuesto sin impuesto', () => {
+    const c = carta('FB-013')
+    const sinImpuesto = structuredClone(CONFIG_V1)
+    sinImpuesto.impuesto.puntosPorPoder = 0
+    expect(evaluarConImpuesto(c, sinImpuesto)).toEqual(evaluarPresupuesto(c, sinImpuesto, 0))
+  })
+
+  it('devuelve null para una carta que no es Campeón', () => {
+    expect(evaluarConImpuesto({ ...campeon(3, 4, 4), tipo: 'Mística', stats: null })).toBeNull()
   })
 })

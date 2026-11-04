@@ -47,6 +47,23 @@ describe('cargarCartas con el seed real', () => {
     expect(carga.avisos.some((a) => a.includes('hasta_alba_oponente'))).toBe(true)
   })
 
+  it('expone las keywords propias de la carta', () => {
+    const k = (id: string) => carga.cartas.find((c) => c.id === id)?.keywords
+    expect(k('FB-010')).toEqual(['Inmortal'])
+    expect(k('DS-010')).toEqual(['Indestructible'])
+    expect(k('FB-024')).toEqual(['Artefacto', 'Presteza'])
+    expect(k('FB-012')).toEqual([])
+  })
+
+  it('expone la keyword concedida por grant_keyword (también en el comandante)', () => {
+    const ragnar = carga.cartas.find((c) => c.id === 'DS-010')
+    const concedidas = ragnar?.efectos.flatMap((e) => e.keywordsConcedidas)
+    expect(concedidas).toEqual(['Indestructible', 'Indestructible'])
+    const vigor = carga.cartas.find((c) => c.id === 'FB-002')
+    expect(vigor?.efectos[0].keywordsConcedidas).toEqual(['Vigor'])
+    expect(carga.cartas.find((c) => c.id === 'FB-012')?.efectos.every((e) => e.keywordsConcedidas.length === 0)).toBe(true)
+  })
+
   it('no muta el seed', () => {
     const antes = JSON.stringify(ALL_CARDS)
     cargarCartas(ALL_CARDS)
@@ -99,6 +116,21 @@ describe('cargarCartas en los bordes', () => {
     expect(r.cartas).toHaveLength(1)
     expect(r.cartas[0].stats).toBeNull()
     expect(r.cartas[0].coste).toBe(0)
+  })
+
+  it('avisa de una keyword desconocida en la carta o concedida, sin lanzar', () => {
+    const r = cargarCartas([
+      {
+        ...base,
+        type: 'Campeón',
+        keywords: ['Rarísima'],
+        stats: { cost: 2, poder: 3, resistencia: 3 },
+        efectos: [{ tipo: 'pasivo', efecto: 'grant_keyword', keyword: 'Misteriosa' }],
+      } as unknown as AnyCard,
+    ])
+    expect(r.cartas[0].keywords).toEqual(['Rarísima'])
+    expect(r.avisos.some((a) => a.includes('Rarísima'))).toBe(true)
+    expect(r.avisos.some((a) => a.includes('Misteriosa'))).toBe(true)
   })
 
   it('deja el mazo en null si el paquete no es de los dos conocidos', () => {

@@ -15,6 +15,16 @@ function mazoDe(paqueteId: string | undefined): MazoId | null {
   return MAZOS.find((m) => m === paqueteId) ?? null
 }
 
+/** Keywords que otorga un efecto: la del verbo grant_keyword y las de sus tramos. */
+function keywordsConcedidas(e: EfectoData): string[] {
+  const lista: string[] = []
+  if (e.efecto === 'grant_keyword' && e.keyword) lista.push(e.keyword)
+  for (const t of e.tramos ?? []) {
+    if (t.efecto === 'grant_keyword' && t.keyword) lista.push(t.keyword)
+  }
+  return lista
+}
+
 function normalizarEfecto(e: EfectoData, esComandante: boolean): EfectoBalance {
   const verbosTramos = (e.tramos ?? []).map((t) => t.efecto)
   const verbo = e.efecto ?? null
@@ -30,6 +40,7 @@ function normalizarEfecto(e: EfectoData, esComandante: boolean): EfectoBalance {
     costoTipo: e.costo?.tipo ?? null,
     costoCantidad: e.costo?.cantidad ?? 0,
     activacion: e.activacion ?? null,
+    keywordsConcedidas: keywordsConcedidas(e),
     esComandante,
   }
 }
@@ -64,6 +75,13 @@ export function cargarCartas(cards: readonly AnyCard[], cfg: ConfigBalance = CON
         avisos.push(`${c.id}: duración desconocida «${e.duracion}», se usa el peso por defecto`)
       }
     }
+    const keywords: string[] = [...(c.keywords ?? [])]
+    for (const k of keywords) {
+      if (!(k in cfg.poder.keyword)) avisos.push(`${c.id}: keyword desconocida «${k}», se usa el peso por defecto`)
+    }
+    for (const k of efectos.flatMap((e) => e.keywordsConcedidas)) {
+      if (!(k in cfg.poder.keyword)) avisos.push(`${c.id}: keyword concedida desconocida «${k}», se usa el peso por defecto`)
+    }
     return {
       id: c.id,
       nombre: c.name,
@@ -73,6 +91,7 @@ export function cargarCartas(cards: readonly AnyCard[], cfg: ConfigBalance = CON
       mazo: mazoDe(c.paqueteId),
       roles: c.roles ?? [],
       stats: statsDe(c),
+      keywords,
       efectos,
     }
   })

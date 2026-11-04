@@ -1,4 +1,4 @@
-import type { CardType, Rarity, Rol } from '../shared/types/enums'
+import type { CardType, Keyword, Rarity, Rol } from '../shared/types/enums'
 
 /** Mazos temáticos que mide el tablero (paqueteId del seed). */
 export type MazoId = 'estasis' | 'disonancia'
@@ -38,13 +38,15 @@ export interface ConfigBalance {
     activacion: Record<string, number>
     duracion: Record<string, number>
     objetivo: Record<string, number>
+    /** Peso de cada keyword; se suma una vez por keyword propia y, si la concede un efecto, por el multiplicador de objetivo. */
+    keyword: Record<Keyword, number>
     /** Resta de poder según el tipo de costo del efecto. */
     costo: Record<string, number>
     /** Peso por defecto cuando falta el trigger, o el verbo o la duración no se conocen. */
     fallback: number
   }
   impuesto: { puntosPorPoder: number; maxImpuesto: number }
-  /** Mapa verbo -> identidad por mazo; lo que no aparece es «fuera de identidad». */
+  /** Mapa verbo -> identidad por mazo; «fuera de identidad» es la identidad del mazo rival; lo que no aparece en ninguno es neutral. */
   identidad: Record<MazoId, { identidad: string[]; neutral: string[] }>
   semaforo: { verde: number; amarillo: number }
   /** Poder esperado de una carta que no es Campeón = coste * este valor. */
@@ -67,6 +69,8 @@ export interface EfectoBalance {
   costoTipo: string | null
   costoCantidad: number
   activacion: string | null
+  /** Keywords que concede el efecto (grant_keyword, también por tramo). */
+  keywordsConcedidas: string[]
   esComandante: boolean
 }
 
@@ -86,6 +90,8 @@ export interface CartaBalance {
   roles: Rol[]
   /** Solo Campeones con poder y resistencia numéricos. */
   stats: StatsCampeon | null
+  /** Keywords impresas en la carta (no las que concede). */
+  keywords: string[]
   efectos: EfectoBalance[]
 }
 

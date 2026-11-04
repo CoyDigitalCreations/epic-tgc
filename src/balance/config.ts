@@ -72,6 +72,33 @@ export const CONFIG_V1: ConfigBalance = {
     activacion: { una_por_turno: 0.8, una_mientras_bloqueado: 0.8 },
     duracion: { permanente: 1, turno: 0.5, n_turnos: 0.75, mientras_en_campo: 1, mientras_ester_bloqueado: 1, hasta_fase: 0.5, '1_por_turno': 0.8 },
     objetivo: { self: 1, campeon: 1, todos_campeones_propios: 1.5, todos_campeones_rivales: 1.5 },
+    // Peso de cada keyword (misma escala que el verbo). Fundamento según el manual v3.0:
+    //  Carga 1       puede atacar al invocarse: tempo, pero una sola vez.
+    //  Vigor 1.5     no se agota al atacar: ataca y además defiende cada turno.
+    //  Tirador 1     no se agota al disparar: ventaja menor, solo sus efectos Disparo.
+    //  Inmortal 2.5  inmune a destrucción por efectos (las Místicas y Arcanas de remoción no lo tocan).
+    //  Indestructible 2  inmune a destrucción en batalla; los efectos aún lo matan.
+    //  Inexiliable 0.5   inmune solo al exilio: nicho.
+    //  Inegable 1.5  la carta no se puede negar: salta el control de Estásis.
+    //  Recarga 1.5   al atacar regresa 1 Éter bloqueado: aceleración de Éter.
+    //  Protector 2   protege a los demás Campeones de habilidades Activas rivales.
+    //  Artefacto 0.5 es sobre todo una forma de jugar la carta (se equipa, y es un riesgo si el Campeón sale).
+    //  Presteza 1.5  velocidad media: responde en la cadena, solo se contesta con Presteza o Fugaz.
+    //  Fugaz 2.5     velocidad máxima: no se puede responder.
+    keyword: {
+      Carga: 1,
+      Vigor: 1.5,
+      Tirador: 1,
+      Inmortal: 2.5,
+      Indestructible: 2,
+      Inexiliable: 0.5,
+      Inegable: 1.5,
+      Recarga: 1.5,
+      Protector: 2,
+      Artefacto: 0.5,
+      Presteza: 1.5,
+      Fugaz: 2.5,
+    },
     // Un costo restrictivo resta poder; el Éter bloqueado vuelve en el Alba propia, así que resta más.
     costo: { ninguno: 0, eter: -0.5, eter_bloqueado: -0.75, bloqueo_fijo: -0.75, exhaust: -0.5, exile_self: -1, cemetery_self: -0.5 },
     fallback: 1,

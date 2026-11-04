@@ -1,4 +1,5 @@
 import { CONFIG_V1 } from './config'
+import { poderDeCarta } from './poderEfecto'
 import type { BandaCoste, CartaBalance, ConfigBalance, EvaluacionPresupuesto, EstadoSuma } from './tipos'
 
 /** Un Campeón está exento de la banda por coste si su rol o su rareza lo indica. */
@@ -54,4 +55,25 @@ export function evaluarPresupuesto(
     excesoRes,
     fueraDeBanda: estado !== 'dentro' || excesoAtq > 0 || excesoRes > 0,
   }
+}
+
+/**
+ * Impuesto de stats por efecto: lo que el índice de poder le resta a la suma
+ * permitida de un Campeón. Solo lo pagan los Campeones con banda por coste:
+ * los exentos (Únicas, Soberanos, Emperadores) ya pagan su poder con el
+ * sacrificio de Campeones, así que no se les descuenta nada, aunque su índice
+ * sea alto. Se redondea a un decimal y no pasa de `maxImpuesto`.
+ */
+export function impuestoDe(carta: CartaBalance, cfg: ConfigBalance = CONFIG_V1): number {
+  if (carta.tipo !== 'Campeón' || esExento(carta, cfg)) return 0
+  const crudo = poderDeCarta(carta, cfg).indice * cfg.impuesto.puntosPorPoder
+  return Math.min(cfg.impuesto.maxImpuesto, Math.round(crudo * 10) / 10)
+}
+
+/** Evalúa el presupuesto de un Campeón aplicando su impuesto de efecto (objetivoSuma = sumaMax - impuesto). */
+export function evaluarConImpuesto(
+  carta: CartaBalance,
+  cfg: ConfigBalance = CONFIG_V1,
+): EvaluacionPresupuesto | null {
+  return evaluarPresupuesto(carta, cfg, impuestoDe(carta, cfg))
 }
