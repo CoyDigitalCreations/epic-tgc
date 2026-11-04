@@ -131,4 +131,7 @@ export const CONFIG_V1: ConfigBalance = {
 
   // Poder esperado de Éter, Mística, Arcana y Vínculo = coste * 2.
   poderPorCoste: 2,
+
+  // Análisis de carta (BORRADOR): paso de la simulación «subir +1» y holgura que cuenta como «cerca del tope».
+  analisis: { pasoSubida: 1, cercaDelTope: 0.5 },
 }

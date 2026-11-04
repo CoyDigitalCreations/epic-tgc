@@ -59,6 +59,8 @@ export interface ConfigBalance {
   semaforo: { verde: number; amarillo: number }
   /** Poder esperado de una carta que no es Campeón = coste * este valor. */
   poderPorCoste: number
+  /** Análisis de carta: cuánto se sube un stat al evaluar «puede subir» y cuándo se avisa «cerca del tope». */
+  analisis: { pasoSubida: number; cercaDelTope: number }
 }
 
 /** Efecto normalizado del seed. */

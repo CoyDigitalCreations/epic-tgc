@@ -3,6 +3,10 @@ import { KEYWORDS } from '../shared/types/enums'
 import { CONFIG_V1 } from './config'
 
 describe('CONFIG_V1', () => {
+  it('define los pasos del análisis de carta (borrador)', () => {
+    expect(CONFIG_V1.analisis).toEqual({ pasoSubida: 1, cercaDelTope: 0.5 })
+  })
+
   it('declara su versión', () => {
     expect(CONFIG_V1.version).toBe('v1')
   })
