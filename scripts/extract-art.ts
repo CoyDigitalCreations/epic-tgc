@@ -13,6 +13,7 @@
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs'
 import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { archivosObsoletos, parsearDataUrlImagen } from './lib/fuentes'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const INPUT_PATH = resolve(__dirname, '../seed/FuenteArte.json')
@@ -56,16 +57,15 @@ let skipped = 0
 let errors = 0
 
 for (const card of withArt) {
-  const match = card.imageUrl!.match(/^data:image\/(\w+);base64,(.+)$/)
-  if (!match) {
+  const imagen = parsearDataUrlImagen(card.imageUrl!)
+  if (!imagen) {
     console.warn(`  ⚠️  ${card.id}: formato dataURL no reconocido`)
     errors++
     continue
   }
 
-  const ext = match[1] === 'jpeg' ? 'jpg' : match[1]
-  const base64 = match[2]
-  const buffer = Buffer.from(base64, 'base64')
+  const ext = imagen.tipo === 'jpeg' ? 'jpg' : imagen.tipo
+  const buffer = imagen.bytes
   const filename = `${card.id}.${ext}`
   const filepath = resolve(OUTPUT_DIR, filename)
 
@@ -81,15 +81,11 @@ for (const card of withArt) {
 // También limpiar imágenes viejas que ya no existen en el JSON
 if (!dryRun) {
   const { readdirSync } = await import('node:fs')
-  const existing = readdirSync(OUTPUT_DIR).filter((f) => /\.(png|jpg|webp)$/.test(f))
   const currentIds = new Set(withArt.map((c) => c.id))
-  for (const file of existing) {
-    const id = file.replace(/\.(png|jpg|webp)$/, '')
-    if (!currentIds.has(id)) {
-      const { unlinkSync } = await import('node:fs')
-      unlinkSync(resolve(OUTPUT_DIR, file))
-      console.log(`  🗑️  Eliminado obsoleto: ${file}`)
-    }
+  for (const file of archivosObsoletos(readdirSync(OUTPUT_DIR), currentIds)) {
+    const { unlinkSync } = await import('node:fs')
+    unlinkSync(resolve(OUTPUT_DIR, file))
+    console.log(`  🗑️  Eliminado obsoleto: ${file}`)
   }
 }
 

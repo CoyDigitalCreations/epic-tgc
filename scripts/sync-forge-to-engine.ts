@@ -1,6 +1,6 @@
 /**
  * sync-forge-to-engine — Sincroniza un export de Éter Forge hacia la fuente
- * de verdad del motor: seed/FuenteEfectos.json
+ * del runtime del motor, derivada de FuenteArte: seed/FuenteEfectos.json
  *
  * Uso:
  *   npx tsx scripts/sync-forge-to-engine.ts <export.json> [opciones]
@@ -23,41 +23,16 @@
  * - Los campos extra del Forge (variantePago, etc.) se conservan tal cual —
  *   el motor los ignora si no los conoce.
  * - Convención de debuffs: magnitudes POSITIVAS (el script avisa si ve negativos).
+ * - La lógica pura (validación, limpieza, diff, merge) vive en scripts/lib/fuentes.ts;
+ *   este archivo ejecuta main() al importarse, así que nadie lo importa en los tests.
  */
 import { readFileSync, writeFileSync } from 'node:fs'
 import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import type { AnyCard } from '../src/shared/types'
-import { limpiarEfectosDeCarta } from '../src/forge/utils/limpiar-efecto'
+import { derivarEfectos, type Json } from './lib/fuentes'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ENGINE_PATH = resolve(__dirname, '../seed/FuenteEfectos.json')
-
-const CARD_TYPES = new Set(['Campeón', 'Mística', 'Arcana', 'Éter', 'Vínculo'])
-const EFECTO_TIPOS = new Set([
-  'pasivo', 'disparo', 'continuo', 'comandante', 'reserva', 'pago', 'bloqueo', 'hechizo', 'vinculo',
-])
-const EFECTO_ACCIONES = new Set([
-  'buff', 'debuff', 'destroy', 'exile', 'return_hand',
-  'draw', 'steal_champion', 'steal_ether', 'block_ether',
-  'free_ether', 'return_ether', 'toggle_exhaust', 'prevent_destroy',
-  'scry', 'tutor', 'copy', 'redirect',
-  'double_attack', 'direct_attack', 'change_type', 'grant_keyword',
-  'recuperar_campo', 'recuperar_mano', 'recuperar_mazo',
-  'recuperar_mazo_barajar', 'recuperar_mazo_top', 'recuperar_mazo_bottom',
-  'recuperar_exilio',
-  'invocar', 'invocar_y_equipar',
-  'mover', 'negar', 'rival_discard',
-  'fix_exhaust', 'modificar_regla',
-])
-
-type Json = Record<string, unknown>
-
-interface Diagnostico {
-  cardId: string
-  errores: string[]
-  avisos: string[]
-}
 
 /* ── CLI ── */
 
@@ -84,147 +59,6 @@ Ejemplo:
   npx tsx scripts/sync-forge-to-engine.ts ~/Downloads/mi-coleccion.json --dry-run
 `)
   process.exit(1)
-}
-
-/* ── Limpieza ── */
-
-/** Descarta arte embebido (base64) y flags de imagen. Rutas estáticas /cartas/*.webp se conservan. */
-function sinArte(card: Json): Json {
-  const out: Json = { ...card }
-  const imageUrl = out.imageUrl
-  if (typeof imageUrl === 'string' && imageUrl.startsWith('data:')) {
-    delete out.imageUrl
-  }
-  // hasImage solo aplica a IndexedDB local del Forge — el motor usa public/cartas/
-  delete out.hasImage
-  return out
-}
-
-/** Normaliza para comparar: ordena keys recursivamente. */
-function canon(value: unknown): string {
-  if (Array.isArray(value)) {
-    return `[${value.map(canon).join(',')}]`
-  }
-  if (value && typeof value === 'object') {
-    const entries = Object.entries(value as Json)
-      .filter(([, v]) => v !== undefined)
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([k, v]) => `${JSON.stringify(k)}:${canon(v)}`)
-    return `{${entries.join(',')}}`
-  }
-  return JSON.stringify(value) ?? 'undefined'
-}
-
-/* ── Validación ── */
-
-function validarEfecto(cardId: string, efecto: Json, idx: number, diag: Diagnostico): void {
-  const label = `efectos[${idx}]`
-  const tipo = efecto.tipo
-  if (typeof tipo !== 'string' || !EFECTO_TIPOS.has(tipo)) {
-    diag.errores.push(`${label}.tipo inválido: ${JSON.stringify(tipo)} (esperado: pasivo|disparo|continuo|...)`)
-  }
-  const accion = efecto.efecto
-  if (accion != null && (typeof accion !== 'string' || !EFECTO_ACCIONES.has(accion))) {
-    diag.errores.push(`${label}.efecto inválido: ${JSON.stringify(accion)} — no está en EfectoAccion vivo`)
-  }
-  if (efecto.objetivo != null) {
-    const obj = efecto.objetivo as Json
-    if (typeof obj.tipo !== 'string') {
-      diag.errores.push(`${label}.objetivo.tipo falta o no es string`)
-    }
-    if (typeof obj.controlador !== 'string') {
-      diag.avisos.push(`${label}.objetivo.controlador falta (el motor defaultea)`)
-    }
-  }
-  if (efecto.costo != null) {
-    const costo = efecto.costo as Json
-    const ct = costo.tipo
-    const costosOk = new Set(['ninguno', 'eter', 'eter_bloqueado', 'bloqueo_fijo', 'exhaust', 'exile_self', 'cemetery_self'])
-    if (ct == null) {
-      // Dato Card-Maker histórico (p.ej. FB-024 costo:{cantidad:1} sin tipo) — el motor lo tolera
-      diag.avisos.push(`${label}.costo sin tipo — el motor no lo trata como eter_bloqueado/bloqueo_fijo; preferible completar tipo`)
-    } else if (typeof ct !== 'string' || !costosOk.has(ct)) {
-      diag.errores.push(`${label}.costo.tipo inválido: ${JSON.stringify(ct)}`)
-    }
-  }
-  // Convención de signos: debuffs con magnitudes negativas
-  if (accion === 'debuff' && efecto.stats && typeof efecto.stats === 'object') {
-    const stats = efecto.stats as Json
-    const atq = stats.ATQ
-    const res = stats.RES
-    if (typeof atq === 'number' && atq < 0) {
-      diag.avisos.push(`${label}: debuff con ATQ negativo (${atq}) — convención del motor: magnitud positiva (ATQ: ${Math.abs(atq)})`)
-    }
-    if (typeof res === 'number' && res < 0) {
-      diag.avisos.push(`${label}: debuff con RES negativo (${res}) — convención: magnitud positiva`)
-    }
-  }
-}
-
-function validarCarta(card: Json, idx: number): Diagnostico {
-  const id = typeof card.id === 'string' ? card.id : `#idx-${idx}`
-  const diag: Diagnostico = { cardId: id, errores: [], avisos: [] }
-
-  if (typeof card.id !== 'string' || !card.id.trim()) {
-    diag.errores.push('id falta o no es string')
-  } else if (!/^[A-Za-z0-9_-]+$/.test(card.id)) {
-    diag.avisos.push(`id "${card.id}" tiene caracteres raros (preferido: FB-001, DS-001, o slug sin espacios)`)
-  }
-
-  if (typeof card.name !== 'string' || !card.name.trim()) {
-    diag.errores.push('name falta o vacío')
-  }
-
-  if (typeof card.type !== 'string' || !CARD_TYPES.has(card.type)) {
-    diag.errores.push(`type inválido: ${JSON.stringify(card.type)} (esperado: Campeón|Mística|Arcana|Éter|Vínculo)`)
-  }
-
-  if (!card.stats || typeof card.stats !== 'object') {
-    diag.errores.push('stats falta o no es objeto')
-  } else {
-    const stats = card.stats as Json
-    if (typeof stats.cost !== 'number') {
-      diag.avisos.push('stats.cost no es number (el motor lo lee para coste/Éter)')
-    }
-    if (card.type === 'Campeón') {
-      if (typeof stats.poder !== 'number') diag.avisos.push('Campeón sin stats.poder')
-      if (typeof stats.resistencia !== 'number') diag.avisos.push('Campeón sin stats.resistencia')
-    }
-  }
-
-  if (typeof card.paqueteId !== 'string' || !card.paqueteId) {
-    diag.avisos.push('paqueteId falta — la carta no aparecerá en ESTASIS_CARDS/DISONANCIA_CARDS')
-  }
-
-  if (card.efectos != null) {
-    if (!Array.isArray(card.efectos)) {
-      diag.errores.push('efectos no es array')
-    } else {
-      card.efectos.forEach((e, i) => {
-        if (e && typeof e === 'object') validarEfecto(id, e as Json, i, diag)
-        else diag.errores.push(`efectos[${i}] no es objeto`)
-      })
-    }
-  } else if (card.type !== 'Éter' && card.type !== 'Vínculo') {
-    // Éter/Vínculo pueden tener efectos; Campeón/Mística/Arcana casi siempre
-    diag.avisos.push('sin efectos[] — la carta no hará nada en el motor salvo stats básicas')
-  }
-
-  if (card.type === 'Arcana' && card.condicion != null) {
-    const cond = card.condicion as Json
-    if (typeof cond !== 'object' || typeof cond.trigger !== 'string') {
-      diag.errores.push('condicion debe ser objeto con trigger (string)')
-    }
-  }
-
-  // Campos legacy que NO deberían viajar
-  for (const legacy of ['efectoPasivo', 'efectoDisparo', 'efectoContinuo', 'efectoReserva', 'efectoPago', 'efectoBloqueo']) {
-    if (legacy in card) {
-      diag.avisos.push(`campo legacy "${legacy}" presente — el motor lo ignora; preferible limpiarlo`)
-    }
-  }
-
-  return diag
 }
 
 /* ── Main ── */
@@ -255,40 +89,28 @@ function main(): void {
   }
 
   // Además del arte, se quitan los campos escondidos de OTROS efectos (p. ej. el copyAttributes que quedó en Thane): un export
-  // hecho antes de que el Card-Maker los limpiara no debe reintroducirlos en el seed
-  const exportCards = (raw as Json[]).map(sinArte).map((c) => limpiarEfectosDeCarta(c as unknown as AnyCard) as unknown as Json)
-  console.log(`\nCartas en el export: ${exportCards.length}`)
+  // hecho antes de que el Card-Maker los limpiara no debe reintroducirlos en el seed (ver derivarCarta)
+  console.log(`\nCartas en el export: ${(raw as Json[]).length}`)
 
-  // 2. Validar
-  const diagnosticos = exportCards.map((c, i) => validarCarta(c, i))
-  const conErrores = diagnosticos.filter((d) => d.errores.length > 0)
-  const conAvisos = diagnosticos.filter((d) => d.avisos.length > 0)
+  // 2. Validar (no depende del motor: se hace antes de leerlo)
+  const validacion = derivarEfectos(raw as Json[], [], { prune })
 
-  // IDs duplicados en el export
-  const idsVistos = new Map<string, number>()
-  for (const c of exportCards) {
-    const id = typeof c.id === 'string' ? c.id : ''
-    if (!id) continue
-    idsVistos.set(id, (idsVistos.get(id) ?? 0) + 1)
-  }
-  const duplicados = [...idsVistos.entries()].filter(([, n]) => n > 1)
-
-  if (conErrores.length > 0 || duplicados.length > 0) {
+  if (validacion.errores.length > 0 || validacion.duplicados.length > 0) {
     console.log('\n❌ ERRORES DE VALIDACIÓN:')
-    for (const d of conErrores) {
+    for (const d of validacion.errores) {
       console.log(`  ${d.cardId}:`)
       for (const e of d.errores) console.log(`    - ${e}`)
     }
-    for (const [id, n] of duplicados) {
+    for (const [id, n] of validacion.duplicados) {
       console.log(`  ID duplicado en el export: ${id} (×${n})`)
     }
     console.error('\nCorrige el export antes de sincronizar. Abortando.')
     process.exit(1)
   }
 
-  if (conAvisos.length > 0) {
+  if (validacion.avisos.length > 0) {
     console.log('\n⚠️  AVISOS (no bloquean):')
-    for (const d of conAvisos) {
+    for (const d of validacion.avisos) {
       console.log(`  ${d.cardId}:`)
       for (const a of d.avisos) console.log(`    - ${a}`)
     }
@@ -302,24 +124,11 @@ function main(): void {
     console.error(`\n❌ No se pudo leer ${ENGINE_PATH}`)
     process.exit(1)
   }
-  const enginePorId = new Map(engineCards.map((c) => [String(c.id), c]))
-  const exportPorId = new Map(exportCards.map((c) => [String(c.id), c]))
 
-  // 4. Diff
-  const nuevos: string[] = []
-  const actualizados: string[] = []
-  const sinCambios: string[] = []
-  for (const [id, card] of exportPorId) {
-    const actual = enginePorId.get(id)
-    if (!actual) {
-      nuevos.push(id)
-    } else if (canon(actual) !== canon(card)) {
-      actualizados.push(id)
-    } else {
-      sinCambios.push(id)
-    }
-  }
-  const soloMotor = [...enginePorId.keys()].filter((id) => !exportPorId.has(id))
+  // 4. Diff + 5. Resultado
+  const plan = derivarEfectos(raw as Json[], engineCards, { prune })
+  const { nuevos, actualizados, sinCambios, soloMotor } = plan
+  const resultado = plan.resultado!
 
   console.log('\n─'.repeat(72))
   console.log('DIFF vs motor actual')
@@ -328,24 +137,6 @@ function main(): void {
   console.log(`  ✏️  Actualizadas:        ${actualizados.length}${actualizados.length ? ` → ${actualizados.join(', ')}` : ''}`)
   console.log(`  =  Sin cambios:         ${sinCambios.length}`)
   console.log(`  🗑️  Solo en motor:       ${soloMotor.length}${soloMotor.length ? ` → ${soloMotor.join(', ')}` : ''}${prune ? ' (SE ELIMINAN)' : ' (se conservan)'}`)
-
-  // 5. Construir resultado
-  let resultado: Json[]
-  if (prune) {
-    resultado = exportCards // el export es el nuevo universo completo
-  } else {
-    // Conservar orden del motor para las que ya existen; append nuevas al final
-    const resultadoMap = new Map<string, Json>()
-    for (const c of engineCards) {
-      const id = String(c.id)
-      if (exportPorId.has(id)) resultadoMap.set(id, exportPorId.get(id)!)
-      else resultadoMap.set(id, c)
-    }
-    for (const [id, card] of exportPorId) {
-      if (!resultadoMap.has(id)) resultadoMap.set(id, card)
-    }
-    resultado = [...resultadoMap.values()]
-  }
 
   if (dryRun) {
     console.log('\n🔎 DRY-RUN: no se escribió nada.')
