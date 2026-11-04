@@ -1,0 +1,256 @@
+import { describe, it, expect } from 'vitest'
+import cartasPruebaJson from '../../seed/CartasPrueba.json'
+import type { AnyCard } from '../shared/types'
+import { ALL_CARDS } from '../shared/data/paquetes'
+import { aplicarAjustes, simularAjustes } from './ajuste'
+import { cargarCartas } from './cargador'
+import { CONFIG_V1 } from './config'
+import {
+  agruparPor,
+  curvaCoste,
+  espejo,
+  evaluarCarta,
+  filtrarCartas,
+  FILTROS_VACIOS,
+  mapaVerbos,
+  promedioPorCoste,
+  rankingPoder,
+  resumenPorMazo,
+  semaforoDe,
+} from './metricas'
+import { cargarReferencia } from './referencia'
+import type { CartaBalance } from './tipos'
+
+const { cartas } = cargarCartas(ALL_CARDS)
+const referencia = cargarReferencia(cartasPruebaJson as unknown as AnyCard[])
+const carta = (id: string): CartaBalance => {
+  const c = cartas.find((x) => x.id === id)
+  if (!c) throw new Error(`Falta ${id} en el seed`)
+  return c
+}
+
+/** Recorre el valor buscando NaN o Infinity. */
+function hayNoFinitos(x: unknown): boolean {
+  if (typeof x === 'number') return !Number.isFinite(x)
+  if (Array.isArray(x)) return x.some(hayNoFinitos)
+  if (x !== null && typeof x === 'object') return Object.values(x).some(hayNoFinitos)
+  return false
+}
+
+const sinResultados = filtrarCartas(cartas, { ...FILTROS_VACIOS, coste: 99 })
+
+describe('filtrarCartas', () => {
+  it('sin filtros devuelve las 65 cartas del seed', () => {
+    expect(filtrarCartas(cartas, FILTROS_VACIOS)).toHaveLength(65)
+  })
+
+  it('S7.1: mazo=disonancia y coste=3 solo deja cartas de Disonancia de coste 3', () => {
+    const r = filtrarCartas(cartas, { ...FILTROS_VACIOS, mazo: 'disonancia', coste: 3 })
+    expect(r.length).toBeGreaterThan(0)
+    expect(r.every((c) => c.mazo === 'disonancia' && c.coste === 3)).toBe(true)
+  })
+
+  it('los filtros se combinan (mazo, tipo, rareza)', () => {
+    const r = filtrarCartas(cartas, { mazo: 'estasis', tipo: 'Campeón', coste: null, rareza: 'Única' })
+    expect(r.map((c) => c.id)).toEqual(['FB-010'])
+  })
+
+  it('un filtro sin coincidencias devuelve una lista vacía', () => {
+    expect(sinResultados).toEqual([])
+  })
+
+  it('R11: la referencia queda fuera por defecto y entra si se pide', () => {
+    const mezcla = [...cartas, ...referencia]
+    expect(filtrarCartas(mezcla, FILTROS_VACIOS)).toHaveLength(65)
+    expect(filtrarCartas(mezcla, FILTROS_VACIOS, { incluirReferencia: true })).toHaveLength(65 + 58)
+  })
+})
+
+describe('semáforo y evaluación por carta', () => {
+  it('un Campeón dentro de banda es verde', () => {
+    expect(evaluarCarta(carta('FB-011')).semaforo).toBe('verde')
+  })
+
+  it('un Campeón sobre su suma objetivo es más que verde y marca rota si pasa el máximo', () => {
+    const draven = evaluarCarta(carta('DS-012'))
+    expect(draven.presupuesto?.estado).toBe('sobre')
+    expect(draven.rota).toBe(true)
+    expect(draven.semaforo).not.toBe('verde')
+  })
+
+  it('un Campeón por debajo de la banda no es rota', () => {
+    const elena = evaluarCarta(carta('FB-015'))
+    expect(elena.presupuesto?.estado).toBe('bajo')
+    expect(elena.rota).toBe(false)
+    expect(elena.semaforo).toBe('verde')
+  })
+
+  it('una Mística cara para su coste sale roja y una barata verde', () => {
+    const base = cartas.find((c) => c.tipo === 'Mística' && c.efectos.length > 0) as CartaBalance
+    const barata = { ...base, coste: 9 }
+    const cara = { ...base, coste: 0, efectos: [...base.efectos, ...base.efectos, ...base.efectos, ...base.efectos] }
+    expect(semaforoDe(barata).semaforo).toBe('verde')
+    expect(semaforoDe(cara).semaforo).not.toBe('verde')
+  })
+
+  it('los umbrales del semáforo viven en config', () => {
+    const cfg = structuredClone(CONFIG_V1)
+    cfg.semaforo.verde = 100
+    expect(evaluarCarta(carta('DS-012'), cfg).semaforo).toBe('verde')
+  })
+
+  it('trae el índice y el impuesto de la carta', () => {
+    const e = evaluarCarta(carta('DS-012'))
+    expect(e.indice).toBeGreaterThan(0)
+    expect(e.impuesto).toBeGreaterThan(0)
+  })
+})
+
+describe('resumenPorMazo', () => {
+  const r = resumenPorMazo(cartas)
+
+  it('devuelve Estásis y Disonancia con 32 y 33 cartas', () => {
+    expect(r.map((m) => m.mazo)).toEqual(['estasis', 'disonancia'])
+    expect(r.map((m) => m.cartas)).toEqual([32, 33])
+  })
+
+  it('trae el porcentaje de identidad en [0,100] y los Campeones fuera de banda', () => {
+    for (const m of r) {
+      expect(m.identidad.porcentaje).toBeGreaterThanOrEqual(0)
+      expect(m.identidad.porcentaje).toBeLessThanOrEqual(100)
+    }
+    expect(r[0].fueraDeBanda + r[1].fueraDeBanda).toBe(8)
+  })
+
+  it('las cartas rotas son las que pasan su presupuesto', () => {
+    expect(r.reduce((n, m) => n + m.rotas, 0)).toBeGreaterThan(0)
+  })
+
+  it('con filtros vacíos no hay NaN', () => {
+    const v = resumenPorMazo(sinResultados)
+    expect(v.map((m) => m.cartas)).toEqual([0, 0])
+    expect(hayNoFinitos(v)).toBe(false)
+  })
+})
+
+describe('agruparPor (suma por coste, rareza y mazo)', () => {
+  it('por coste: cada grupo trae conteo, promedios y fuera de banda', () => {
+    const g = agruparPor(cartas, 'coste')
+    const tres = g.find((x) => x.clave === '3')
+    expect(tres?.conteo).toBeGreaterThan(0)
+    expect(tres?.promedioSuma).not.toBeNull()
+    expect(tres?.fueraDeBanda).toBeGreaterThan(0)
+    expect(g.reduce((n, x) => n + x.conteo, 0)).toBe(65)
+  })
+
+  it('por rareza: la suma de conteos es el total', () => {
+    expect(agruparPor(cartas, 'rareza').reduce((n, x) => n + x.conteo, 0)).toBe(65)
+  })
+
+  it('por mazo: Estásis 32 y Disonancia 33', () => {
+    const g = agruparPor(cartas, 'mazo')
+    expect(g.find((x) => x.clave === 'estasis')?.conteo).toBe(32)
+    expect(g.find((x) => x.clave === 'disonancia')?.conteo).toBe(33)
+  })
+
+  it('los grupos sin Campeones tienen promedios nulos, no NaN', () => {
+    const soloEter = cartas.filter((c) => c.tipo === 'Éter')
+    const g = agruparPor(soloEter, 'coste')
+    expect(g[0].promedioAtq).toBeNull()
+    expect(g[0].promedioSuma).toBeNull()
+    expect(hayNoFinitos(g)).toBe(false)
+  })
+
+  it('S7.2: un filtro vacío devuelve lista vacía sin NaN', () => {
+    expect(agruparPor(sinResultados, 'coste')).toEqual([])
+  })
+})
+
+describe('curvaCoste', () => {
+  it('cuenta las cartas por coste y rareza y ordena por coste', () => {
+    const curva = curvaCoste(cartas)
+    expect(curva.map((c) => c.coste)).toEqual([...curva.map((c) => c.coste)].sort((a, b) => a - b))
+    expect(curva.reduce((n, c) => n + c.total, 0)).toBe(65)
+    for (const c of curva) expect(Object.values(c.porRareza).reduce((n, x) => n + x, 0)).toBe(c.total)
+  })
+
+  it('vacío sin errores', () => {
+    expect(curvaCoste(sinResultados)).toEqual([])
+  })
+})
+
+describe('mapaVerbos (mazo × verbo)', () => {
+  const mapa = mapaVerbos(cartas)
+
+  it('cuenta los efectos por mazo y verbo', () => {
+    const destroy = mapa.find((f) => f.verbo === 'destroy')
+    expect(destroy?.disonancia).toBeGreaterThan(0)
+    expect(destroy?.total).toBe((destroy?.estasis ?? 0) + (destroy?.disonancia ?? 0))
+  })
+
+  it('trae el eje de identidad de cada verbo por mazo', () => {
+    const destroy = mapa.find((f) => f.verbo === 'destroy')
+    expect(destroy?.claseEstasis).toBe('fuera')
+    expect(destroy?.claseDisonancia).toBe('identidad')
+    expect(mapa.find((f) => f.verbo === 'block_ether')?.claseEstasis).toBe('identidad')
+  })
+
+  it('ordena por total descendente', () => {
+    for (let i = 1; i < mapa.length; i++) expect(mapa[i - 1].total).toBeGreaterThanOrEqual(mapa[i].total)
+  })
+
+  it('con filtros vacíos no hay filas', () => {
+    expect(mapaVerbos(sinResultados)).toEqual([])
+  })
+})
+
+describe('rankingPoder', () => {
+  const r = rankingPoder(cartas)
+
+  it('ordena por índice descendente e incluye todas las cartas', () => {
+    expect(r).toHaveLength(65)
+    for (let i = 1; i < r.length; i++) expect(r[i - 1].indice).toBeGreaterThanOrEqual(r[i].indice)
+  })
+
+  it('Ragnar encabeza el ranking de poder', () => {
+    expect(r[0].id).toBe('DS-010')
+  })
+
+  it('cada fila trae semáforo', () => {
+    expect(r.every((f) => ['verde', 'amarillo', 'rojo'].includes(f.semaforo))).toBe(true)
+  })
+})
+
+describe('espejo Estásis vs Disonancia', () => {
+  it('trae las mismas métricas para ambos mazos', () => {
+    const e = espejo(cartas)
+    expect(Object.keys(e)).toEqual(['estasis', 'disonancia'])
+    expect(Object.keys(e.estasis)).toEqual(Object.keys(e.disonancia))
+    expect(e.estasis.conteo).toBe(32)
+    expect(e.disonancia.conteo).toBe(33)
+    expect(e.estasis.sumaMedia).not.toBeNull()
+    expect(e.disonancia.poderMedio).not.toBeNull()
+  })
+
+  it('vacío: conteo 0 y promedios nulos', () => {
+    const e = espejo(sinResultados)
+    expect(e.estasis).toMatchObject({ conteo: 0, sumaMedia: null, poderMedio: null, porcentajeIdentidad: 0 })
+    expect(hayNoFinitos(e)).toBe(false)
+  })
+})
+
+describe('promedioPorCoste (antes y después)', () => {
+  it('S2.2: la suma media de coste 3 después del ajuste queda dentro de la banda 8-10', () => {
+    const despues = aplicarAjustes(cartas, simularAjustes(cartas).ajustes)
+    const antes = promedioPorCoste(cartas).find((p) => p.coste === 3)
+    const luego = promedioPorCoste(despues).find((p) => p.coste === 3)
+    expect(antes?.sumaMedia).toBeLessThan(CONFIG_V1.bandas[3].sumaMin)
+    expect(luego?.sumaMedia).toBeGreaterThanOrEqual(CONFIG_V1.bandas[3].sumaMin)
+    expect(luego?.sumaMedia).toBeLessThanOrEqual(CONFIG_V1.bandas[3].sumaMax)
+  })
+
+  it('solo promedia Campeones y no tiene NaN con filtros vacíos', () => {
+    expect(promedioPorCoste(sinResultados)).toEqual([])
+    expect(hayNoFinitos(promedioPorCoste(cartas))).toBe(false)
+  })
+})
