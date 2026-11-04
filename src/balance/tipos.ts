@@ -45,7 +45,15 @@ export interface ConfigBalance {
     /** Peso por defecto cuando falta el trigger, o el verbo o la duración no se conocen. */
     fallback: number
   }
-  impuesto: { puntosPorPoder: number; maxImpuesto: number }
+  /**
+   * Impuesto de stats por efecto, forma «franquicia»: solo se paga lo que el índice
+   * de poder pasa de `umbral`, a razón de `puntosPorPoder` por punto, con tope `maxImpuesto`.
+   */
+  impuesto: { umbral: number; puntosPorPoder: number; maxImpuesto: number }
+  /** Formato de la exportación JSON. */
+  exportacion: { sangria: number }
+  /** Umbrales de la métrica de letalidad. */
+  letalidad: { dominanteMata: number; dominanteLoMatan: number }
   /** Mapa verbo -> identidad por mazo; «fuera de identidad» es la identidad del mazo rival; lo que no aparece en ninguno es neutral. */
   identidad: Record<MazoId, { identidad: string[]; neutral: string[] }>
   semaforo: { verde: number; amarillo: number }
@@ -93,6 +101,11 @@ export interface CartaBalance {
   /** Keywords impresas en la carta (no las que concede). */
   keywords: string[]
   efectos: EfectoBalance[]
+  /**
+   * true en las cartas del paquete de pruebas (referencia opcional). Por defecto quedan
+   * fuera de métricas, pool de letalidad, ajuste y exportación.
+   */
+  esReferencia?: boolean
 }
 
 export type EstadoSuma = 'dentro' | 'bajo' | 'sobre'

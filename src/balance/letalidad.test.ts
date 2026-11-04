@@ -1,0 +1,176 @@
+import { describe, it, expect } from 'vitest'
+import { ALL_CARDS } from '../shared/data/paquetes'
+import { cargarCartas } from './cargador'
+import { CONFIG_V1 } from './config'
+import { letalidad, matrizLetalidad, poolLetalidad, techosDelPool, umbralesPorStat } from './letalidad'
+import type { CartaBalance } from './tipos'
+
+const { cartas } = cargarCartas(ALL_CARDS)
+const pool = poolLetalidad(cartas)
+const carta = (id: string): CartaBalance => {
+  const c = cartas.find((x) => x.id === id)
+  if (!c) throw new Error(`Falta ${id} en el seed`)
+  return c
+}
+
+const campeon = (id: string, atq: number, res: number, extra: Partial<CartaBalance> = {}): CartaBalance => ({
+  id,
+  nombre: id,
+  tipo: 'Campeón',
+  rareza: 'Común',
+  coste: 2,
+  mazo: 'estasis',
+  roles: ['Normal'],
+  stats: { atq, res },
+  keywords: [],
+  efectos: [],
+  ...extra,
+})
+
+describe('poolLetalidad', () => {
+  it('son los 18 Campeones no exentos del seed (sin Aurora ni Ragnar)', () => {
+    expect(pool).toHaveLength(18)
+    expect(pool.map((c) => c.id)).not.toContain('FB-010')
+    expect(pool.map((c) => c.id)).not.toContain('DS-010')
+  })
+
+  it('descarta lo que no es Campeón o no tiene stats', () => {
+    const mistica = campeon('X-1', 1, 1, { tipo: 'Mística', stats: null })
+    expect(poolLetalidad([mistica, campeon('X-2', 1, 1, { stats: null }), campeon('X-3', 2, 2)]).map((c) => c.id)).toEqual(['X-3'])
+  })
+
+  it('R11: por defecto la referencia (esReferencia) queda fuera, y entra solo si se pide', () => {
+    const ref = campeon('PR-1', 2, 2, { esReferencia: true })
+    expect(poolLetalidad([...cartas, ref])).toHaveLength(18)
+    expect(poolLetalidad([...cartas, ref], CONFIG_V1, { incluirReferencia: true })).toHaveLength(19)
+  })
+})
+
+describe('letalidad de una carta', () => {
+  it('daño >= RES mata (el empate mata)', () => {
+    const p = [campeon('A', 3, 3), campeon('B', 3, 3)]
+    const l = letalidad(p[0], p)
+    expect(l?.mata).toBe(1)
+    expect(l?.loMatan).toBe(1)
+  })
+
+  it('excluye a la propia carta del pool', () => {
+    const a = campeon('A', 5, 3)
+    const l = letalidad(a, [a, campeon('B', 0, 9)])
+    expect(l?.total).toBe(1)
+    expect(l?.mata).toBe(0)
+    expect(l?.loMatan).toBe(0)
+  })
+
+  it('devuelve conteos y porcentajes con un decimal', () => {
+    const a = campeon('A', 2, 2)
+    const p = [a, campeon('B', 1, 9), campeon('C', 3, 1), campeon('D', 0, 0)]
+    const l = letalidad(a, p)
+    expect(l).toMatchObject({ total: 3, mata: 2, loMatan: 1 })
+    expect(l?.pctMata).toBe(66.7)
+    expect(l?.pctLoMatan).toBe(33.3)
+  })
+
+  it('con un pool vacío no hay NaN', () => {
+    const a = campeon('A', 2, 2)
+    expect(letalidad(a, [a])).toMatchObject({ total: 0, pctMata: 0, pctLoMatan: 0, dominante: false })
+  })
+
+  it('una carta sin stats no tiene letalidad', () => {
+    expect(letalidad(campeon('A', 0, 0, { stats: null }), pool)).toBeNull()
+  })
+
+  it('R10: Nymeria y Vorlag (4/5) son dominantes: matan 11 y los matan 3', () => {
+    for (const id of ['FB-017', 'DS-017']) {
+      const l = letalidad(carta(id), pool)
+      expect(l).toMatchObject({ mata: 11, loMatan: 3, total: 17, dominante: true })
+    }
+  })
+
+  it('R10: Vaela y Kael (5/3) matan a casi todos y mueren ante todos, no son dominantes', () => {
+    for (const id of ['FB-011', 'DS-011']) {
+      const l = letalidad(carta(id), pool)
+      expect(l?.mata).toBeGreaterThanOrEqual(14)
+      expect(l?.loMatan).toBe(l?.total)
+      expect(l?.dominante).toBe(false)
+    }
+  })
+
+  it('R10: Isolde, Rowena y Skarn (RES 6-7) son invulnerables en combate', () => {
+    for (const id of ['FB-014', 'FB-018', 'DS-018']) expect(letalidad(carta(id), pool)?.loMatan).toBe(0)
+  })
+
+  it('coincide con un conteo independiente sobre el seed real', () => {
+    for (const c of pool) {
+      const otros = pool.filter((o) => o.id !== c.id)
+      const l = letalidad(c, pool)
+      expect(l?.mata).toBe(otros.filter((o) => (c.stats?.atq ?? 0) >= (o.stats?.res ?? 0)).length)
+      expect(l?.loMatan).toBe(otros.filter((o) => (o.stats?.atq ?? 0) >= (c.stats?.res ?? 0)).length)
+    }
+  })
+
+  it('los umbrales de dominante viven en config', () => {
+    const laxa = structuredClone(CONFIG_V1)
+    laxa.letalidad.dominanteMata = 0
+    laxa.letalidad.dominanteLoMatan = 100
+    expect(letalidad(carta('FB-011'), pool, laxa)?.dominante).toBe(true)
+  })
+})
+
+describe('matrizLetalidad', () => {
+  it('celdas[i][j] dice si i mata a j; la diagonal es falsa', () => {
+    const p = [campeon('A', 3, 1), campeon('B', 0, 3)]
+    const m = matrizLetalidad(p)
+    expect(m.ids).toEqual(['A', 'B'])
+    expect(m.celdas).toEqual([
+      [false, true],
+      [false, false],
+    ])
+  })
+
+  it('con el seed real es cuadrada de 18 y coherente con letalidad()', () => {
+    const m = matrizLetalidad(pool)
+    expect(m.celdas).toHaveLength(18)
+    pool.forEach((c, i) => {
+      expect(m.celdas[i].filter(Boolean).length).toBe(letalidad(c, pool)?.mata)
+    })
+  })
+})
+
+describe('umbralesPorStat (escalones)', () => {
+  const u = umbralesPorStat(pool)
+  const lm = (valor: number) => u.res.find((f) => f.valor === valor)?.loMatan
+  const mt = (valor: number) => u.atq.find((f) => f.valor === valor)?.mata
+
+  it('R10: RES 0 a 3 son equivalentes: los matan a todos', () => {
+    for (const v of [0, 1, 2, 3]) expect(lm(v)).toBe(18)
+  })
+
+  it('RES 4 la matan 11, RES 5 la matan 3 y RES 6 o más no la mata nadie', () => {
+    expect(lm(4)).toBe(11)
+    expect(lm(5)).toBe(3)
+    expect(lm(6)).toBe(0)
+    expect(lm(7)).toBe(0)
+  })
+
+  it('ATQ 4 mata a 11, ATQ 5 a 15', () => {
+    expect(mt(4)).toBe(11)
+    expect(mt(5)).toBe(15)
+  })
+
+  it('cubre todos los valores de 0 al máximo de cada stat y trae porcentajes', () => {
+    expect(u.res.map((f) => f.valor)).toEqual([0, 1, 2, 3, 4, 5, 6, 7])
+    expect(u.atq.map((f) => f.valor)).toEqual([0, 1, 2, 3, 4, 5])
+    expect(u.res[0].pct).toBe(100)
+  })
+
+  it('con un pool vacío no truena', () => {
+    expect(umbralesPorStat([])).toEqual({ atq: [], res: [] })
+  })
+})
+
+describe('techosDelPool', () => {
+  it('ATQ máximo 5 y RES máxima 7 en el seed real', () => {
+    expect(techosDelPool(pool)).toEqual({ atq: 5, res: 7 })
+  })
+})

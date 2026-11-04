@@ -36,10 +36,11 @@ describe('calibración de CONFIG_V1 con los Campeones del seed', () => {
 
 /**
  * Segunda fotografía: los mismos 20 Campeones, ahora CON el impuesto de efecto
- * (índice de poder de efectos y keywords × 0.5, máx. 3). Tampoco decide qué es
- * correcto: deja a la vista que el impuesto saca de banda a cartas que antes
- * estaban dentro (p. ej. Vaela y Mira, banda 7-8 menos 0.8) y por eso la
- * decisión sobre bandas queda pendiente del usuario.
+ * (franquicia: se paga lo que el índice de poder pasa del umbral 2, × 0.5, máx. 3).
+ * Con el impuesto lineal anterior (índice × 0.5) salían 10 fuera, incluso Vaela y
+ * Mira (índice 1.5, banda 7-8 menos 0.8); con el umbral esos efectos menores ya
+ * no pagan y solo pagan los efectos fuertes (Draven, Kael, Marek, Isolde).
+ * Las bandas y topes siguen sin tocarse: queda pendiente la matriz de letalidad.
  */
 describe('calibración de CONFIG_V1 con impuesto de efecto', () => {
   const { campeones } = cargarCartas(ALL_CARDS)
@@ -49,14 +50,12 @@ describe('calibración de CONFIG_V1 con impuesto de efecto', () => {
       .map((c) => c.id)
       .sort()
 
-  it('con impuesto salen fuera 10 Campeones (6 sin impuesto)', () => {
+  it('con impuesto con umbral salen fuera 8 Campeones (6 sin impuesto, 10 con el impuesto lineal)', () => {
     expect(idsFuera()).toEqual([
       'DS-011',
       'DS-012',
       'DS-013',
-      'DS-015',
-      'FB-011',
-      'FB-012',
+      'DS-014',
       'FB-013',
       'FB-014',
       'FB-015',
@@ -69,10 +68,10 @@ describe('calibración de CONFIG_V1 con impuesto de efecto', () => {
     expect(idsFuera()).not.toContain('DS-010')
   })
 
-  it('opción A como piso (sumaMin coste 3 = 7 y coste 4 = 8) deja 7 fuera con impuesto', () => {
+  it('opción A como piso (sumaMin coste 3 = 7 y coste 4 = 8) deja 4 fuera con impuesto', () => {
     const conPiso = structuredClone(CONFIG_V1)
     conPiso.bandas[3].sumaMin = 7
     conPiso.bandas[4].sumaMin = 8
-    expect(idsFuera(conPiso)).toEqual(['DS-011', 'DS-012', 'DS-015', 'FB-011', 'FB-012', 'FB-014', 'FB-015'])
+    expect(idsFuera(conPiso)).toEqual(['DS-011', 'DS-012', 'FB-014', 'FB-015'])
   })
 })

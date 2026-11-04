@@ -62,11 +62,13 @@ export function evaluarPresupuesto(
  * permitida de un Campeón. Solo lo pagan los Campeones con banda por coste:
  * los exentos (Únicas, Soberanos, Emperadores) ya pagan su poder con el
  * sacrificio de Campeones, así que no se les descuenta nada, aunque su índice
- * sea alto. Se redondea a un decimal y no pasa de `maxImpuesto`.
+ * sea alto. Es una franquicia continua: solo se paga lo que el índice pasa del
+ * umbral (sin escalón). Se redondea a un decimal y no pasa de `maxImpuesto`.
  */
 export function impuestoDe(carta: CartaBalance, cfg: ConfigBalance = CONFIG_V1): number {
   if (carta.tipo !== 'Campeón' || esExento(carta, cfg)) return 0
-  const crudo = poderDeCarta(carta, cfg).indice * cfg.impuesto.puntosPorPoder
+  const exceso = Math.max(0, poderDeCarta(carta, cfg).indice - cfg.impuesto.umbral)
+  const crudo = exceso * cfg.impuesto.puntosPorPoder
   return Math.min(cfg.impuesto.maxImpuesto, Math.round(crudo * 10) / 10)
 }
 

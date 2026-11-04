@@ -28,7 +28,7 @@ describe('CONFIG_V1', () => {
   })
 
   it('define el impuesto por poder de efecto con tope', () => {
-    expect(CONFIG_V1.impuesto).toEqual({ puntosPorPoder: 0.5, maxImpuesto: 3 })
+    expect(CONFIG_V1.impuesto).toEqual({ umbral: 2, puntosPorPoder: 0.5, maxImpuesto: 3 })
   })
 
   it('clasifica la identidad de cada mazo', () => {

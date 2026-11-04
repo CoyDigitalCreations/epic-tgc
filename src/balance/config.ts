@@ -104,7 +104,15 @@ export const CONFIG_V1: ConfigBalance = {
     fallback: 1,
   },
 
-  impuesto: { puntosPorPoder: 0.5, maxImpuesto: 3 },
+  // Franquicia: los primeros 2 puntos de poder son gratis (un efecto menor o una keyword
+  // no deben rebajar la suma); lo que pasa del umbral paga 0.5 de suma por punto, máx. 3.
+  impuesto: { umbral: 2, puntosPorPoder: 0.5, maxImpuesto: 3 },
+
+  // El JSON exportado lleva sangría de dos espacios.
+  exportacion: { sangria: 2 },
+
+  // Un Campeón es dominante si mata a al menos 60 % del pool y lo matan a lo sumo 20 %. BORRADOR.
+  letalidad: { dominanteMata: 60, dominanteLoMatan: 20 },
 
   // SUPUESTO 2: toggle_exhaust y fix_exhaust cuentan como control de Éter de Estásis.
   identidad: {

@@ -147,10 +147,35 @@ describe('impuesto por efecto y suma objetivo', () => {
     expect(b?.impuesto).toBeGreaterThan(0)
   })
 
-  it('el impuesto es el índice de poder por los puntos por poder', () => {
+  it('R9: el impuesto es lo que el índice pasa del umbral por los puntos por poder', () => {
     const c: CartaBalance = { ...campeon(3, 4, 4), efectos: [efectoFuerte] }
-    const esperado = poderDeCarta(c).indice * CONFIG_V1.impuesto.puntosPorPoder
-    expect(impuestoDe(c)).toBeCloseTo(esperado, 1)
+    const { umbral, puntosPorPoder } = CONFIG_V1.impuesto
+    const indice = poderDeCarta(c).indice
+    expect(indice).toBeGreaterThan(umbral)
+    expect(impuestoDe(c)).toBeCloseTo((indice - umbral) * puntosPorPoder, 1)
+  })
+
+  it('R9: un índice igual o menor al umbral no paga impuesto', () => {
+    const debil: CartaBalance = { ...campeon(2, 4, 4), efectos: [{ ...efectoFuerte, verbo: 'mover' }] }
+    expect(poderDeCarta(debil).indice).toBeLessThanOrEqual(CONFIG_V1.impuesto.umbral)
+    expect(impuestoDe(debil)).toBe(0)
+    expect(impuestoDe(campeon(2, 4, 4))).toBe(0)
+  })
+
+  it('R9: el impuesto es continuo: crece sin escalón al pasar el umbral', () => {
+    const cfg = structuredClone(CONFIG_V1)
+    cfg.poder.verbo.destroy = cfg.impuesto.umbral + 0.2
+    const c: CartaBalance = { ...campeon(3, 4, 4), efectos: [efectoFuerte] }
+    expect(impuestoDe(c, cfg)).toBeLessThanOrEqual(0.1)
+    cfg.poder.verbo.destroy = cfg.impuesto.umbral
+    expect(impuestoDe(c, cfg)).toBe(0)
+  })
+
+  it('R9: cambiar el umbral cambia el impuesto', () => {
+    const c: CartaBalance = { ...campeon(3, 4, 4), efectos: [efectoFuerte] }
+    const sinUmbral = structuredClone(CONFIG_V1)
+    sinUmbral.impuesto.umbral = 0
+    expect(impuestoDe(c, sinUmbral)).toBeGreaterThan(impuestoDe(c))
   })
 
   it('el impuesto no pasa del máximo de la config', () => {
@@ -174,7 +199,7 @@ describe('impuesto por efecto y suma objetivo', () => {
   it('cambiar los puntos por poder cambia la suma objetivo', () => {
     const c: CartaBalance = { ...campeon(3, 4, 4), efectos: [efectoFuerte] }
     const dura = structuredClone(CONFIG_V1)
-    dura.impuesto.puntosPorPoder = dura.impuesto.puntosPorPoder * 2
+    dura.impuesto.puntosPorPoder = dura.impuesto.puntosPorPoder * 2 // 0.5 -> 1: el efecto fuerte pasa 1 punto del umbral
     expect(evaluarConImpuesto(c, dura)?.objetivoSuma).toBeLessThan(evaluarConImpuesto(c)?.objetivoSuma ?? 0)
   })
 
