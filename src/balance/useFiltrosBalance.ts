@@ -1,10 +1,10 @@
-import { useCallback } from 'react'
+import { useCallback, useEffect } from 'react'
 import { useSearchParams } from 'react-router'
 import { CARD_TYPES, RARITIES } from '../shared/types/enums'
 import type { FiltrosBalance } from './metricas'
 import type { MazoId } from './tipos'
 
-/** Las nueve vistas del tablero; la primera es la que se abre por defecto. */
+/** Las diez vistas del tablero; la primera es la que se abre por defecto. */
 export const VISTAS = [
   'resumen',
   'dispersion',
@@ -15,6 +15,7 @@ export const VISTAS = [
   'letalidad',
   'comparador',
   'auditoria',
+  'analisis',
 ] as const
 export type VistaBalance = (typeof VISTAS)[number]
 
@@ -27,10 +28,17 @@ function elegir<T extends string>(valor: string | null, validos: readonly T[]): 
   return validos.find((v) => v === valor) ?? null
 }
 
-/** Lee filtros y vista de la URL; lo que no es válido se ignora. */
-export function leerFiltros(params: URLSearchParams): { filtros: FiltrosBalance; vista: VistaBalance } {
+/**
+ * Lee filtros, vista y carta de la URL; lo que no es válido se ignora. La carta solo vale si es
+ * una de `idsValidos` (las publicadas); sin ese conjunto no hay forma de validarla y queda en null.
+ */
+export function leerFiltros(
+  params: URLSearchParams,
+  idsValidos?: ReadonlySet<string>,
+): { filtros: FiltrosBalance; vista: VistaBalance; carta: string | null } {
   const coste = params.get('coste')
   const numero = coste === null || coste.trim() === '' ? Number.NaN : Number(coste)
+  const carta = params.get('carta')
   return {
     filtros: {
       mazo: elegir(params.get('mazo'), MAZOS),
@@ -39,16 +47,32 @@ export function leerFiltros(params: URLSearchParams): { filtros: FiltrosBalance;
       rareza: elegir(params.get('rareza'), RARITIES),
     },
     vista: elegir(params.get('vista'), VISTAS) ?? VISTA_INICIAL,
+    carta: carta !== null && idsValidos?.has(carta) === true ? carta : null,
   }
 }
 
 /**
- * Filtros y vista del tablero guardados en la URL (mazo, tipo, coste, rareza,
- * vista): se pueden compartir y sobreviven a una recarga.
+ * Filtros, vista y carta del tablero guardados en la URL (mazo, tipo, coste, rareza,
+ * vista, carta): se pueden compartir y sobreviven a una recarga. Con `idsValidos`, una
+ * carta que no existe se borra de la URL (replace, sin ensuciar el historial).
+ * `limpiar()` solo quita los filtros: la carta y la vista no son filtros.
  */
-export function useFiltrosBalance() {
+export function useFiltrosBalance(idsValidos?: ReadonlySet<string>) {
   const [params, setParams] = useSearchParams()
-  const { filtros, vista } = leerFiltros(params)
+  const { filtros, vista, carta } = leerFiltros(params, idsValidos)
+  const hayCartaInvalida = idsValidos !== undefined && params.has('carta') && carta === null
+
+  useEffect(() => {
+    if (!hayCartaInvalida) return
+    setParams(
+      (previos) => {
+        const siguientes = new URLSearchParams(previos)
+        siguientes.delete('carta')
+        return siguientes
+      },
+      { replace: true },
+    )
+  }, [hayCartaInvalida, setParams])
 
   const cambiar = useCallback(
     (clave: string, valor: string | null) =>
@@ -66,6 +90,18 @@ export function useFiltrosBalance() {
     [cambiar],
   )
   const setVista = useCallback((nueva: VistaBalance) => cambiar('vista', nueva), [cambiar])
+  const setCarta = useCallback((id: string | null) => cambiar('carta', id), [cambiar])
+  /** Abre el análisis de una carta: vista y carta en UN solo cambio (dos seguidos se pisarían). */
+  const analizar = useCallback(
+    (id: string) =>
+      setParams((previos) => {
+        const siguientes = new URLSearchParams(previos)
+        siguientes.set('vista', 'analisis')
+        siguientes.set('carta', id)
+        return siguientes
+      }),
+    [setParams],
+  )
   const limpiar = useCallback(
     () =>
       setParams((previos) => {
@@ -76,5 +112,5 @@ export function useFiltrosBalance() {
     [setParams],
   )
 
-  return { filtros, vista, setFiltro, setVista, limpiar }
+  return { filtros, vista, carta, setFiltro, setVista, setCarta, analizar, limpiar }
 }

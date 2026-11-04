@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { simularAjustes } from '../ajuste'
+import { BotonAnalizar } from '../componentes/BotonAnalizar'
 import { Semaforo } from '../componentes/Semaforo'
 import { SinCartas } from '../componentes/SinCartas'
 import { TituloVista } from '../componentes/TituloVista'
@@ -7,7 +8,7 @@ import { aJson } from '../exportacion'
 import { evaluarCarta } from '../metricas'
 import type { CartaBalance } from '../tipos'
 import { num, veredictoDe } from './formato'
-import type { PropsVistaConPool } from './props'
+import type { PropsConAnalizar, PropsVistaConPool } from './props'
 
 const COLUMNAS = [
   'ID', 'Carta', 'Tipo', 'Rareza', 'Coste', 'ATQ', 'RES', 'Suma', 'Suma objetivo', 'Impuesto', 'Índice', 'Estado', 'Semáforo',
@@ -31,7 +32,13 @@ function descargarAjustes(publicadas: readonly CartaBalance[]) {
 }
 
 /** Tabla completa de indicadores, avisos del cargador y exportación de los ajustes propuestos. */
-export function Auditoria({ cartas, publicadas, avisos = [] }: PropsVistaConPool & { avisos?: string[] }) {
+export function Auditoria({
+  cartas,
+  publicadas,
+  avisos = [],
+  onAnalizar,
+}: PropsVistaConPool & PropsConAnalizar & { avisos?: string[] }) {
+  const columnas = onAnalizar === undefined ? COLUMNAS : [...COLUMNAS, 'Analizar']
   const evaluaciones = useMemo(() => cartas.map((c) => ({ carta: c, ev: evaluarCarta(c) })), [cartas])
   return (
     <section>
@@ -70,7 +77,7 @@ export function Auditoria({ cartas, publicadas, avisos = [] }: PropsVistaConPool
             <caption className="mb-1 text-left text-xs text-gray-500">Auditoría de las cartas con todos sus indicadores</caption>
             <thead>
               <tr>
-                {COLUMNAS.map((c) => (
+                {columnas.map((c) => (
                   <th key={c} scope="col" className={TH}>{c}</th>
                 ))}
               </tr>
@@ -91,6 +98,9 @@ export function Auditoria({ cartas, publicadas, avisos = [] }: PropsVistaConPool
                   <td className={TD}>{num(ev.indice)}</td>
                   <td className={TD}>{ev.presupuesto === null ? '—' : veredictoDe(ev.presupuesto)}</td>
                   <td className={TD}><Semaforo valor={ev.semaforo} /></td>
+                  {onAnalizar !== undefined && (
+                    <td className={TD}><BotonAnalizar id={carta.id} nombre={carta.nombre} onAnalizar={onAnalizar} /></td>
+                  )}
                 </tr>
               ))}
             </tbody>

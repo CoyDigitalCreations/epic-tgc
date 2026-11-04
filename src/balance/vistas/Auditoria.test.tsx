@@ -55,6 +55,23 @@ describe('Auditoria', () => {
     expect(screen.getByRole('button', { name: 'Exportar JSON' })).toBeInTheDocument()
   })
 
+  describe('enlace «Analizar»', () => {
+    it('con onAnalizar agrega la columna y un botón por fila que avisa el id de la carta', async () => {
+      const alAnalizar = vi.fn()
+      render(<Auditoria cartas={CARTAS} avisos={AVISOS} onAnalizar={alAnalizar} />)
+      expect(within(tabla()).getAllByRole('columnheader').at(-1)).toHaveTextContent('Analizar')
+      expect(within(tabla()).getAllByRole('button', { name: /^Analizar / })).toHaveLength(65)
+      await userEvent.click(screen.getByRole('button', { name: /^Analizar Elena/ }))
+      expect(alAnalizar).toHaveBeenCalledExactlyOnceWith('FB-015')
+    })
+
+    it('sin onAnalizar no hay columna ni botones', () => {
+      render(<Auditoria cartas={CARTAS} avisos={AVISOS} />)
+      expect(within(tabla()).queryByRole('columnheader', { name: 'Analizar' })).not.toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: /^Analizar / })).not.toBeInTheDocument()
+    })
+  })
+
   describe('Exportar JSON', () => {
     let blobs: Blob[]
     let descargas: { href: string; download: string }[]

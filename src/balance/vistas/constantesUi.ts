@@ -21,6 +21,10 @@ export const INTENSIDAD_MAXIMA = 70
 export const RADIO_PUNTO = 70
 export const OPACIDAD_BANDA = 0.18
 
+/** Ancho y alto (px) declarados en la ilustración de la carta para reservar su espacio; la clase CSS la adapta. */
+export const ANCHO_ARTE = 1024
+export const ALTO_ARTE = 1024
+
 /** Cuántas cartas muestra la gráfica del ranking. */
 export const TOP_RANKING = 10
 

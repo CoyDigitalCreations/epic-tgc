@@ -15,3 +15,11 @@ export interface PropsVista {
 export interface PropsVistaConPool extends PropsVista {
   publicadas?: CartaBalance[]
 }
+
+/**
+ * Vistas con una tabla de cartas que pueden abrir su análisis. Sin `onAnalizar` no se muestra la
+ * columna «Analizar»: así las vistas funcionan igual fuera del tablero.
+ */
+export interface PropsConAnalizar {
+  onAnalizar?: (id: string) => void
+}

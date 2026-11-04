@@ -1,5 +1,6 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { ALTO_PRUEBA, ANCHO_PRUEBA, instalarEntornoGraficas } from '../test/entornoGraficas'
 import { CARTAS } from '../test/cartasReales'
 import { RankingPoder } from './RankingPoder'
@@ -38,6 +39,22 @@ describe('RankingPoder', () => {
     const top = screen.getByRole('table', { name: /diez cartas con mayor índice/i })
     expect(within(top).getAllByRole('row')).toHaveLength(11)
     expect(screen.getByRole('img', { name: /diez cartas con mayor índice/i })).toBeInTheDocument()
+  })
+
+  it('con onAnalizar agrega la columna «Analizar» y un botón cuyo nombre incluye la carta', async () => {
+    const alAnalizar = vi.fn()
+    render(<RankingPoder cartas={CARTAS} ancho={ANCHO_PRUEBA} alto={ALTO_PRUEBA} onAnalizar={alAnalizar} />)
+    const tabla = within(screen.getByRole('table', { name: /ranking del índice de poder de todas/i }))
+    expect(tabla.getAllByRole('columnheader').at(-1)).toHaveTextContent('Analizar')
+    expect(tabla.getAllByRole('button', { name: /^Analizar / })).toHaveLength(65)
+    await userEvent.click(tabla.getByRole('button', { name: 'Analizar Ragnar, Voz del Nudo' }))
+    expect(alAnalizar).toHaveBeenCalledExactlyOnceWith('DS-010')
+  })
+
+  it('sin onAnalizar no hay columna ni botones', () => {
+    montar()
+    expect(screen.queryByRole('columnheader', { name: 'Analizar' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /^Analizar / })).not.toBeInTheDocument()
   })
 
   it('sin cartas muestra el estado vacío', () => {

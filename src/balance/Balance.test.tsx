@@ -28,6 +28,7 @@ const PESTANAS = [
   ['letalidad', 'Matriz de letalidad'],
   ['comparador', 'Comparador antes y después'],
   ['auditoria', 'Auditoría'],
+  ['analisis', 'Análisis de carta'],
 ] as const
 
 const NOMBRE_INTERRUPTOR = 'Incluir cartas de referencia (paquete de pruebas, no publicado)'
@@ -45,7 +46,7 @@ describe('Balance', () => {
     expect(screen.getByText(/solo lectura/i)).toBeInTheDocument()
   })
 
-  it('ofrece las nueve vistas como pestañas y abre la primera', () => {
+  it('ofrece las diez vistas como pestañas y abre la primera', () => {
     montar()
     const tabs = within(screen.getByRole('tablist', { name: 'Vistas del tablero' })).getAllByRole('tab')
     expect(tabs.map((t) => t.textContent)).toEqual(PESTANAS.map(([, nombre]) => nombre))
@@ -100,6 +101,75 @@ describe('Balance', () => {
   it('la Auditoría muestra los avisos del cargador', () => {
     montar('/balance?vista=auditoria')
     expect(screen.getByRole('list', { name: 'Avisos del cargador' })).toHaveTextContent('hasta_alba_oponente')
+  })
+
+  describe('análisis de carta', () => {
+    const selector = () => screen.getByRole('combobox', { name: 'Carta' })
+
+    it('un enlace con vista=analisis&carta=FB-015 abre el análisis de Elena', () => {
+      montar('/balance?vista=analisis&carta=FB-015')
+      expect(screen.getByRole('tab', { name: 'Análisis de carta' })).toHaveAttribute('aria-selected', 'true')
+      expect(screen.getByRole('heading', { level: 3, name: /Elena/ })).toBeInTheDocument()
+      expect(selector()).toHaveValue('FB-015')
+    })
+
+    it('una carta inexistente se borra de la URL y queda sin selección', async () => {
+      montar('/balance?vista=analisis&carta=ZZ-999&mazo=estasis')
+      await waitFor(() => expect(screen.getByTestId('url')).not.toHaveTextContent('carta='))
+      expect(screen.getByTestId('url')).toHaveTextContent('mazo=estasis')
+      expect(screen.queryByRole('heading', { level: 3 })).not.toBeInTheDocument()
+    })
+
+    it('elegir otra carta actualiza la URL', async () => {
+      montar('/balance?vista=analisis&carta=FB-015')
+      await userEvent.selectOptions(selector(), 'FB-014')
+      expect(screen.getByTestId('url')).toHaveTextContent('carta=FB-014')
+      expect(screen.getByRole('heading', { level: 3, name: /Isolde/ })).toBeInTheDocument()
+    })
+
+    it.each(['auditoria', 'ranking'])('el botón «Analizar» de %s abre el análisis de esa carta en un solo paso', async (vista) => {
+      montar(`/balance?vista=${vista}&mazo=estasis`)
+      await userEvent.click(screen.getByRole('button', { name: /^Analizar Elena/ }))
+      expect(screen.getByRole('tab', { name: 'Análisis de carta' })).toHaveAttribute('aria-selected', 'true')
+      expect(screen.getByTestId('url')).toHaveTextContent('vista=analisis')
+      expect(screen.getByTestId('url')).toHaveTextContent('carta=FB-015')
+      expect(screen.getByTestId('url')).toHaveTextContent('mazo=estasis')
+      expect(await screen.findByRole('heading', { level: 3, name: /Elena/ })).toHaveFocus()
+    })
+
+    it('Comparador y Dispersión no ofrecen «Analizar»', async () => {
+      montar('/balance?vista=comparador')
+      expect(screen.queryByRole('button', { name: /^Analizar / })).not.toBeInTheDocument()
+      await userEvent.click(screen.getByRole('tab', { name: 'Dispersión de ATQ y RES' }))
+      expect(screen.queryByRole('button', { name: /^Analizar / })).not.toBeInTheDocument()
+    })
+
+    it('«Limpiar filtros» no borra la carta ni la vista', async () => {
+      montar('/balance?vista=analisis&carta=FB-015&mazo=estasis')
+      await userEvent.click(screen.getByRole('button', { name: 'Limpiar filtros' }))
+      expect(screen.getByTestId('url')).toHaveTextContent('carta=FB-015')
+      expect(screen.getByTestId('url')).toHaveTextContent('vista=analisis')
+      expect(screen.getByTestId('url')).not.toHaveTextContent('mazo=')
+    })
+
+    it('el interruptor del panel alimenta el selector; elegir una PR limpia la URL y apagarlo limpia la selección', async () => {
+      montar('/balance?vista=analisis&carta=FB-015')
+      const grupoRef = () => within(selector()).queryByRole('group', { name: 'Referencia (no publicadas)' })
+      expect(grupoRef()).not.toBeInTheDocument()
+
+      await userEvent.click(screen.getByRole('switch', { name: NOMBRE_INTERRUPTOR }))
+      await waitFor(() => expect(grupoRef()).toBeInTheDocument())
+      expect(within(grupoRef()!).getAllByRole('option')).toHaveLength(58)
+
+      await userEvent.selectOptions(selector(), 'PR-030')
+      expect(screen.getByTestId('url')).not.toHaveTextContent('carta=')
+      expect(screen.getByRole('heading', { level: 3, name: /Muro Doble/ })).toBeInTheDocument()
+
+      await userEvent.click(screen.getByRole('switch', { name: NOMBRE_INTERRUPTOR }))
+      expect(screen.queryByRole('heading', { level: 3 })).not.toBeInTheDocument()
+      expect(screen.getByTestId('url')).not.toHaveTextContent('carta=')
+      expect(selector()).toHaveValue('')
+    })
   })
 
   describe('cartas de referencia', () => {

@@ -3,9 +3,11 @@ import { ALL_CARDS } from '../shared/data/paquetes'
 import { cargarCartas } from './cargador'
 import { FiltrosBalance } from './componentes/FiltrosBalance'
 import { PanelReferencia } from './componentes/PanelReferencia'
-import { filtrarCartas } from './metricas'
+import { filtrarCartas, type FiltrosBalance as ValoresFiltros } from './metricas'
 import type { CartaBalance } from './tipos'
 import { useFiltrosBalance, VISTAS, type VistaBalance } from './useFiltrosBalance'
+import { useReferencia, type Referencia } from './useReferencia'
+import { AnalisisCarta } from './vistas/AnalisisCarta'
 import { Auditoria } from './vistas/Auditoria'
 import { Comparador } from './vistas/Comparador'
 import { CurvaCoste } from './vistas/CurvaCoste'
@@ -19,6 +21,9 @@ import { ResumenMazo } from './vistas/ResumenMazo'
 /** Las cartas publicadas, normalizadas una sola vez. La referencia (paquete de pruebas) NUNCA entra aquí. */
 const CARGA = cargarCartas(ALL_CARDS)
 
+/** Ids de las publicadas: la única carta que puede ir en la URL. */
+const IDS_PUBLICADAS: ReadonlySet<string> = new Set(CARGA.cartas.map((c) => c.id))
+
 const NOMBRE_VISTA: Record<VistaBalance, string> = {
   resumen: 'Resumen por mazo',
   dispersion: 'Dispersión de ATQ y RES',
@@ -29,9 +34,20 @@ const NOMBRE_VISTA: Record<VistaBalance, string> = {
   letalidad: 'Matriz de letalidad',
   comparador: 'Comparador antes y después',
   auditoria: 'Auditoría',
+  analisis: 'Análisis de carta',
 }
 
-function contenidoDe(vista: VistaBalance, visibles: CartaBalance[]): ReactElement {
+/** Lo que las vistas reciben además de las cartas visibles: el análisis de carta lo necesita todo. */
+interface ContextoVistas {
+  filtros: ValoresFiltros
+  carta: string | null
+  setCarta: (id: string | null) => void
+  /** Abre el análisis de una carta (cambia a su pestaña con la carta elegida). */
+  analizar: (id: string) => void
+  referencia: Referencia
+}
+
+function contenidoDe(vista: VistaBalance, visibles: CartaBalance[], ctx: ContextoVistas): ReactElement {
   const publicadas = CARGA.cartas
   switch (vista) {
     case 'resumen':
@@ -43,7 +59,7 @@ function contenidoDe(vista: VistaBalance, visibles: CartaBalance[]): ReactElemen
     case 'verbos':
       return <MapaVerbos cartas={visibles} />
     case 'ranking':
-      return <RankingPoder cartas={visibles} />
+      return <RankingPoder cartas={visibles} onAnalizar={ctx.analizar} />
     case 'curva':
       return <CurvaCoste cartas={visibles} />
     case 'letalidad':
@@ -51,7 +67,18 @@ function contenidoDe(vista: VistaBalance, visibles: CartaBalance[]): ReactElemen
     case 'comparador':
       return <Comparador cartas={visibles} publicadas={publicadas} />
     case 'auditoria':
-      return <Auditoria cartas={visibles} publicadas={publicadas} avisos={CARGA.avisos} />
+      return <Auditoria cartas={visibles} publicadas={publicadas} avisos={CARGA.avisos} onAnalizar={ctx.analizar} />
+    case 'analisis':
+      return (
+        <AnalisisCarta
+          cartas={visibles}
+          publicadas={publicadas}
+          filtros={ctx.filtros}
+          carta={ctx.carta}
+          onCarta={ctx.setCarta}
+          referencia={ctx.referencia}
+        />
+      )
   }
 }
 
@@ -63,7 +90,8 @@ const idPestana = (v: VistaBalance) => `pestana-${v}`
  * respeta la identidad de su mazo. Solo lectura. Filtros y vista activa viven en la URL.
  */
 export default function Balance() {
-  const { filtros, vista, setVista } = useFiltrosBalance()
+  const { filtros, vista, carta, setVista, setCarta, analizar } = useFiltrosBalance(IDS_PUBLICADAS)
+  const referencia = useReferencia()
   const { mazo, tipo, coste, rareza } = filtros
   const visibles = useMemo(() => filtrarCartas(CARGA.cartas, { mazo, tipo, coste, rareza }), [mazo, tipo, coste, rareza])
 
@@ -89,7 +117,7 @@ export default function Balance() {
       </header>
       <main className="mx-auto max-w-7xl space-y-6 px-6 py-8">
         <FiltrosBalance />
-        <PanelReferencia />
+        <PanelReferencia referencia={referencia} />
 
         <div role="tablist" aria-label="Vistas del tablero" className="flex flex-wrap gap-2">
           {VISTAS.map((v) => {
@@ -118,7 +146,7 @@ export default function Balance() {
         </div>
 
         <div role="tabpanel" id={IDENTIFICADOR_PANEL} aria-labelledby={idPestana(vista)}>
-          {contenidoDe(vista, visibles)}
+          {contenidoDe(vista, visibles, { filtros, carta, setCarta, analizar, referencia })}
         </div>
       </main>
     </div>
