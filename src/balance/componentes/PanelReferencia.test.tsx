@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { CARTAS } from '../test/cartasReales'
 import { PanelReferencia } from './PanelReferencia'
 
 const cargas = vi.hoisted(() => ({ n: 0 }))
@@ -58,6 +59,34 @@ describe('PanelReferencia', () => {
   it('avisa que no cuentan en métricas, letalidad, ajustes ni exportación', () => {
     render(<PanelReferencia />)
     expect(screen.getByText(/no cuentan/i)).toBeInTheDocument()
+  })
+})
+
+describe('PanelReferencia con el estado levantado (prop referencia)', () => {
+  const cartasPrueba = CARTAS.slice(0, 3).map((c) => ({ ...c, esReferencia: true }))
+  const base = { activa: true, estado: 'lista' as const, cartas: cartasPrueba, crudas: new Map(), setActiva: () => {} }
+
+  it('usa la referencia recibida: muestra su tabla sin cargar el paquete por su cuenta', () => {
+    const antes = cargas.n
+    render(<PanelReferencia referencia={base} />)
+    expect(screen.getByRole('switch', { name: NOMBRE })).toBeChecked()
+    const tabla = screen.getByRole('table', { name: /cartas de referencia/i })
+    expect(within(tabla).getAllByRole('row').slice(1)).toHaveLength(3)
+    expect(cargas.n).toBe(antes)
+  })
+
+  it('el interruptor llama a setActiva de la referencia recibida', async () => {
+    const setActiva = vi.fn()
+    render(<PanelReferencia referencia={{ ...base, activa: false, estado: 'apagada', cartas: [], setActiva }} />)
+    await userEvent.click(screen.getByRole('switch', { name: NOMBRE }))
+    expect(setActiva).toHaveBeenCalledWith(true)
+  })
+
+  it('muestra cargando y error según el estado recibido', () => {
+    const { rerender } = render(<PanelReferencia referencia={{ ...base, estado: 'cargando', cartas: [] }} />)
+    expect(screen.getByRole('status')).toHaveTextContent('Cargando cartas de referencia')
+    rerender(<PanelReferencia referencia={{ ...base, estado: 'error', cartas: [] }} />)
+    expect(screen.getByRole('alert')).toHaveTextContent('No se pudieron cargar las cartas de referencia.')
   })
 })
 
