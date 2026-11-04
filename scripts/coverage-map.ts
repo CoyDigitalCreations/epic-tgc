@@ -1,6 +1,6 @@
 /**
  * Fase 0 — CLI del mapa de cobertura.
- * Fuente de verdad: seed/FuenteEfectos.json (NO paquetes.ts).
+ * Fuente del runtime, derivada de FuenteArte: seed/FuenteEfectos.json (NO paquetes.ts).
  * Uso: npx tsx scripts/coverage-map.ts
  * Escribe: docs/coverage-map.md e imprime el resumen por consola.
  */
@@ -25,7 +25,7 @@ writeFileSync(outPath, markdown, 'utf8')
 const ok = pctOK(reporte)
 console.log('─'.repeat(72))
 console.log('MAPA DE COBERTURA — Motor vs JSON')
-console.log(`Fuente de verdad: seed/FuenteEfectos.json`)
+console.log(`Fuente del runtime (derivada de FuenteArte): seed/FuenteEfectos.json`)
 console.log('─'.repeat(72))
 console.log(`Cartas: ${reporte.totalCartas} | Efectos: ${reporte.totalEfectos} | Combos únicos: ${reporte.combos.length}`)
 console.log(`Cobertura data-driven: ${ok}%`)

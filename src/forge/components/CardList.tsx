@@ -487,7 +487,7 @@ export function CardList({ onPlegar }: { onPlegar?: () => void } = {}) {
                       cerrarMenuArchivo()
                       exportCollectionSinArte(cards, FUENTE_EFECTOS)
                     }}
-                    title="Descargar las cartas SIN arte con el nombre FuenteEfectos.json (fuente de verdad del motor, va en seed/)"
+                    title="Descargar las cartas SIN arte con el nombre FuenteEfectos.json (fuente del runtime, derivada de FuenteArte.json; va en seed/)"
                     className={ITEM_MENU_ORO}
                   >
                     ⭐ Exportar FuenteEfectos.json
@@ -499,7 +499,7 @@ export function CardList({ onPlegar }: { onPlegar?: () => void } = {}) {
                         console.error("Error al exportar FuenteArte.json:", err)
                       })
                     }}
-                    title="Descargar las cartas CON arte con el nombre FuenteArte.json (fuente de verdad del arte, va en seed/; archivo grande)"
+                    title="Descargar las cartas CON arte con el nombre FuenteArte.json (fuente de verdad aguas arriba, de la que se deriva FuenteEfectos.json; va en seed/; archivo grande)"
                     className={ITEM_MENU_ORO}
                   >
                     ⭐ Exportar FuenteArte.json

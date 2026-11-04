@@ -3,8 +3,9 @@ import { FACCION_COLORS } from '../types'
 import primerosEfectos from '../../../seed/FuenteEfectos.json'
 
 /* ─────────────────────────────────────────────
-   FUENTE DE VERDAD de diseños y efectos
-   seed/FuenteEfectos.json (export de Card-Maker).
+   FUENTE DEL RUNTIME de diseños y efectos
+   seed/FuenteEfectos.json, derivada de FuenteArte.json
+   (export con arte del Card-Maker; ver scripts/sync-forge-to-engine.ts).
 
    paquetes.ts ya NO embebe cartas: solo metadata de paquetes
    (PAQUETES) y helpers. Los efectos que el motor interpreta

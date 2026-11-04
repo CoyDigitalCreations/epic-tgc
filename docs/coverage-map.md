@@ -1,4 +1,4 @@
-# Mapa de Cobertura — Motor vs JSON (fuente de verdad: seed/FuenteEfectos.json)
+# Mapa de Cobertura — Motor vs JSON (fuente del runtime, derivada de FuenteArte: seed/FuenteEfectos.json)
 
 Cartas: **65** | Efectos clasificados: **76** | Combos únicos (tipo×trigger×efecto): **52**
 

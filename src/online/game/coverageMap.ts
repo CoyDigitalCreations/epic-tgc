@@ -1,7 +1,7 @@
 /**
- * Fase 0 — Mapa de cobertura: motor vs JSON (fuente de verdad).
+ * Fase 0 — Mapa de cobertura: motor vs JSON (fuente del runtime).
  *
- * FUENTE DE VERDAD: seed/FuenteEfectos.json (Card-Maker).
+ * FUENTE DEL RUNTIME: seed/FuenteEfectos.json, derivada de FuenteArte.json (Card-Maker).
  * NO paquetes.ts — esa data arrastraba efectos legacy/rediseños viejos.
  *
  * Módulo PURO (sin efectos secundarios): clasifica cada efecto de cada carta
@@ -658,7 +658,7 @@ export function formatReporte(r: ReporteCobertura): string {
   const lines: string[] = []
   const ok = pctOK(r)
 
-  lines.push('# Mapa de Cobertura — Motor vs JSON (fuente de verdad: seed/FuenteEfectos.json)')
+  lines.push('# Mapa de Cobertura — Motor vs JSON (fuente del runtime, derivada de FuenteArte: seed/FuenteEfectos.json)')
   lines.push('')
   lines.push(`Cartas: **${r.totalCartas}** | Efectos clasificados: **${r.totalEfectos}** | Combos únicos (tipo×trigger×efecto): **${r.combos.length}**`)
   lines.push('')
