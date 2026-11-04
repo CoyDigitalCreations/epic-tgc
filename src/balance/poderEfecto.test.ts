@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { ALL_CARDS } from '../shared/data/paquetes'
 import { cargarCartas } from './cargador'
 import { CONFIG_V1 } from './config'
-import { poderDeCarta, poderDeEfecto } from './poderEfecto'
+import { componentesDeEfecto, poderDeCarta, poderDeEfecto } from './poderEfecto'
 import type { CartaBalance, ConfigBalance, EfectoBalance } from './tipos'
 
 const { cartas, campeones } = cargarCartas(ALL_CARDS)
@@ -171,5 +171,66 @@ describe('poderDeCarta', () => {
     const mediana = indices[Math.floor(indices.length / 2)]
     expect(poderDeCarta(real('FB-010')).indice).toBeGreaterThan(mediana)
     expect(poderDeCarta(real('DS-010')).indice).toBeGreaterThan(mediana)
+  })
+})
+
+describe('componentesDeEfecto', () => {
+  const todos = cartas.flatMap((c) => c.efectos.map((e) => ({ id: c.id, e })))
+
+  it('S5.1: el poder de los componentes es EXACTAMENTE el de poderDeEfecto en los efectos de las 65 cartas', () => {
+    expect(cartas).toHaveLength(65)
+    expect(todos).toHaveLength(71)
+    for (const { id, e } of todos) {
+      const c = componentesDeEfecto(e)
+      expect(c.poder, id).toBe(poderDeEfecto(e).poder)
+      expect(c.keywords, id).toBe(poderDeEfecto(e).keywords)
+    }
+  })
+
+  it('S5.1: base × multiplicador + keywords + costo reconstruye el poder con los factores del desglose', () => {
+    for (const { id, e } of todos) {
+      const c = componentesDeEfecto(e)
+      const producto = c.tipo * c.trigger * c.activacion * c.duracion * c.objetivo
+      expect(c.multiplicador, id).toBe(producto)
+      expect(c.base * c.multiplicador + c.keywords + c.costo, id).toBe(c.poder)
+    }
+  })
+
+  it('S5.2: el trigger pesa el valor por defecto porque cfg.poder.trigger está vacío', () => {
+    expect(CONFIG_V1.poder.trigger).toEqual({})
+    const conTrigger = todos.filter(({ e }) => e.trigger !== null)
+    expect(conTrigger.length).toBeGreaterThan(0)
+    for (const { e } of conTrigger) {
+      expect(componentesDeEfecto(e).trigger).toBe(CONFIG_V1.poder.fallback)
+    }
+  })
+
+  it('un trigger con peso en la config cambia el componente trigger', () => {
+    const cfg = conPeso((c) => {
+      c.poder.trigger = { al_entrar: 2 }
+    })
+    expect(componentesDeEfecto(efecto({ trigger: 'al_entrar' }), cfg).trigger).toBe(2)
+  })
+
+  it('S5.4: Ragnar concede Indestructible (2) a todos los campeones propios (×1.5) y Aurora imprime Inmortal (2.5)', () => {
+    const ragnar = real('DS-010').efectos.map((e) => componentesDeEfecto(e))
+    expect(ragnar.some((c) => c.keywords === 2 * 1.5)).toBe(true)
+    const aurora = poderDeCarta(real('FB-010')).keywords
+    expect(aurora).toContainEqual({ keyword: 'Inmortal', peso: 2.5 })
+  })
+
+  it('S9.3: un efecto sin verbo da todo 0 y multiplicador 1; Cassandra (verbos en tramos) no se marca sin verbo', () => {
+    const c = componentesDeEfecto(efecto({ verbo: null, sinVerbo: true }))
+    expect(c).toEqual({ base: 0, tipo: 0, trigger: 0, activacion: 0, duracion: 0, objetivo: 0, multiplicador: 1, keywords: 0, costo: 0, poder: 0 })
+    const cassandra = real('FB-016').efectos.map((e) => componentesDeEfecto(e))
+    expect(cassandra.some((x) => x.base > 0)).toBe(true)
+  })
+
+  it('S5.1: la suma de componentes y keywords impresas es el poderDeCarta bruto en las 65 cartas', () => {
+    for (const c of cartas) {
+      const efectos = c.efectos.reduce((n, e) => n + componentesDeEfecto(e).poder, 0)
+      const impresas = poderDeCarta(c).keywords.reduce((n, k) => n + k.peso, 0)
+      expect(Math.max(0, efectos + impresas), c.id).toBe(poderDeCarta(c).indice)
+    }
   })
 })
