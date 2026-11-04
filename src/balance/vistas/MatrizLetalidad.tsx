@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { SinCartas } from '../componentes/SinCartas'
 import { TablaAlternativa } from '../componentes/TablaAlternativa'
 import { TituloVista } from '../componentes/TituloVista'
@@ -17,13 +18,17 @@ function equivalencia(etiqueta: string, valores: readonly { valor: number; cuent
  * igual a su RES). Los filtros solo recortan las filas de la primera tabla: el pool siempre es completo.
  */
 export function MatrizLetalidad({ cartas, publicadas }: PropsVistaConPool) {
-  const pool = poolLetalidad(publicadas ?? cartas)
-  const visibles = new Set(cartas.map((c) => c.id))
-  const filas = pool.filter((c) => visibles.has(c.id))
-  if (pool.length === 0 || filas.length === 0) return <SinCartas mensaje="Sin Campeones con estos filtros" />
+  const origen = publicadas ?? cartas
+  const pool = useMemo(() => poolLetalidad(origen), [origen])
+  const filas = useMemo(() => {
+    const visibles = new Set(cartas.map((c) => c.id))
+    return pool.filter((c) => visibles.has(c.id))
+  }, [pool, cartas])
+  // La matriz y los escalones dependen solo del pool; se calculan con hooks antes de cualquier return.
+  const matriz = useMemo(() => (pool.length === 0 ? null : matrizLetalidad(pool)), [pool])
+  const umbrales = useMemo(() => (pool.length === 0 ? null : umbralesPorStat(pool)), [pool])
+  if (matriz === null || umbrales === null || filas.length === 0) return <SinCartas mensaje="Sin Campeones con estos filtros" />
 
-  const matriz = matrizLetalidad(pool)
-  const umbrales = umbralesPorStat(pool)
   const eqRes = equivalencia('RES', umbrales.res.map((u) => ({ valor: u.valor, cuenta: u.loMatan })))
   const eqAtq = equivalencia('ATQ', umbrales.atq.map((u) => ({ valor: u.valor, cuenta: u.mata })))
 

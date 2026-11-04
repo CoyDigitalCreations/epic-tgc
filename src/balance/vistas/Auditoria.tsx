@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { simularAjustes } from '../ajuste'
 import { Semaforo } from '../componentes/Semaforo'
 import { SinCartas } from '../componentes/SinCartas'
@@ -31,7 +32,7 @@ function descargarAjustes(publicadas: readonly CartaBalance[]) {
 
 /** Tabla completa de indicadores, avisos del cargador y exportación de los ajustes propuestos. */
 export function Auditoria({ cartas, publicadas, avisos = [] }: PropsVistaConPool & { avisos?: string[] }) {
-  const evaluaciones = cartas.map((c) => ({ carta: c, ev: evaluarCarta(c) }))
+  const evaluaciones = useMemo(() => cartas.map((c) => ({ carta: c, ev: evaluarCarta(c) })), [cartas])
   return (
     <section>
       <TituloVista

@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { Bar, BarChart, CartesianGrid, Legend, Tooltip, XAxis, YAxis } from 'recharts'
 import { aplicarAjustes, simularAjustes } from '../ajuste'
 import { GraficaBase } from '../componentes/GraficaBase'
@@ -16,17 +17,27 @@ import type { PropsVistaConPool } from './props'
  * solo se muestran las cartas visibles. Es exploratoria: no escribe nada.
  */
 export function Comparador({ cartas, publicadas, ancho, alto }: PropsVistaConPool) {
+  const pool = publicadas ?? cartas
+  // Cálculos puros: solo se rehacen si cambian las cartas visibles o el conjunto publicado.
+  const simulacion = useMemo(() => simularAjustes(pool), [pool])
+  const calculo = useMemo(() => {
+    const visibles = new Set(cartas.map((c) => c.id))
+    const ajustes = simulacion.ajustes.filter((a) => visibles.has(a.id))
+    const despues = aplicarAjustes(cartas, ajustes)
+    return {
+      ajustes,
+      despues,
+      antesPorCoste: promedioPorCoste(cartas),
+      despuesPorCoste: promedioPorCoste(despues),
+      antes: espejo(cartas),
+      tras: espejo(despues),
+    }
+  }, [cartas, simulacion])
+
   if (cartas.length === 0) return <SinCartas />
 
-  const simulacion = simularAjustes(publicadas ?? cartas)
-  const visibles = new Set(cartas.map((c) => c.id))
-  const ajustes = simulacion.ajustes.filter((a) => visibles.has(a.id))
-  const despues = aplicarAjustes(cartas, ajustes)
-
+  const { ajustes, antesPorCoste, despuesPorCoste, antes, tras } = calculo
   const avisos = ajustes.flatMap((a) => a.avisos.map((texto) => `${a.id}: ${texto}`))
-
-  const antesPorCoste = promedioPorCoste(cartas)
-  const despuesPorCoste = promedioPorCoste(despues)
   const costes = [...new Set([...antesPorCoste, ...despuesPorCoste].map((p) => p.coste))].sort((a, b) => a - b)
   const porCoste = costes.map((coste) => ({
     coste,
@@ -40,8 +51,6 @@ export function Comparador({ cartas, publicadas, ancho, alto }: PropsVistaConPoo
     Después: p.despues ?? undefined,
   }))
 
-  const antes = espejo(cartas)
-  const tras = espejo(despues)
   const filaEspejo = (metrica: string, valor: (e: typeof antes.estasis) => string) => [
     metrica,
     valor(antes.estasis),
