@@ -141,7 +141,11 @@ describe('comparación de fuentes (fixtures)', () => {
   })
 })
 
-describe.skipIf(!hayArte)('consistencia con seed/FuenteArte.json (se salta: falta seed/FuenteArte.json)', () => {
+describe.skipIf(!hayArte)(
+  hayArte
+    ? 'consistencia con seed/FuenteArte.json (presente: se comprueba)'
+    : 'consistencia con seed/FuenteArte.json (ausente: se salta)',
+  () => {
   let arte: Json[] = []
   let efectos: Json[] = []
 

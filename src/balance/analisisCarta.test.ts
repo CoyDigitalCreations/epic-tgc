@@ -76,6 +76,41 @@ describe('margenesDeStats: estados', () => {
     expect(porStat('Rowena', cfg).res.estado).toBe('amarillo')
   })
 
+  it('frontera de cercaDelTope en ATQ/RES: holgura igual al umbral es amarillo y apenas mayor es verde', () => {
+    const { atq, res } = porStat('Rowena')
+    for (const m of [atq, res]) {
+      expect(m.holgura).toBeGreaterThan(0)
+      const igual = { ...CONFIG_V1, analisis: { ...CONFIG_V1.analisis, cercaDelTope: m.holgura } }
+      const menor = { ...CONFIG_V1, analisis: { ...CONFIG_V1.analisis, cercaDelTope: m.holgura - 0.01 } }
+      expect(porStat('Rowena', igual)[m.stat as 'atq' | 'res'].estado, m.stat).toBe('amarillo')
+      expect(porStat('Rowena', menor)[m.stat as 'atq' | 'res'].estado, m.stat).toBe('verde')
+    }
+  })
+
+  it('frontera de cercaDelTope en la suma: holgura igual al umbral es amarillo y apenas mayor es verde', () => {
+    const { suma } = porStat('Rowena')
+    expect(suma.holgura).toBeGreaterThan(0)
+    const igual = { ...CONFIG_V1, analisis: { ...CONFIG_V1.analisis, cercaDelTope: suma.holgura } }
+    const menor = { ...CONFIG_V1, analisis: { ...CONFIG_V1.analisis, cercaDelTope: suma.holgura - 0.01 } }
+    expect(porStat('Rowena', igual).suma.estado).toBe('amarillo')
+    expect(porStat('Rowena', menor).suma.estado).toBe('verde')
+  })
+
+  it('Mira (FB-012, 4/4, coste 2): suma 8 contra objetivo 8 queda «Cerca del tope», ATQ y RES verdes, en el límite y sin poder subir', () => {
+    const mira = CARTAS.find((c) => c.id === 'FB-012')!
+    expect(mira.stats).toEqual({ atq: 4, res: 4 })
+    const { atq, res, suma } = porStat('Mira')
+    expect(suma.valor).toBe(8)
+    expect(suma.tope).toBe(8)
+    expect(suma.holgura).toBe(0)
+    expect(suma.estado).toBe('amarillo')
+    expect(suma.texto).toBe('Cerca del tope')
+    expect(atq.estado).toBe('verde')
+    expect(res.estado).toBe('verde')
+    expect(suma.puedeSubir).toBe(0)
+    expect(estadoDe(mira).estado).toBe('en-limite')
+  })
+
   it('una carta sin stats no tiene márgenes', () => {
     const eter = CARTAS.find((c) => c.stats === null)
     expect(eter).toBeDefined()
@@ -225,7 +260,9 @@ describe('estadoDeCarta', () => {
   })
 
   it('S7.1/S7.2: ningún Vínculo tiene semáforo', () => {
-    for (const v of CARTAS.filter((c) => c.tipo === 'Vínculo')) {
+    const vinculos = CARTAS.filter((c) => c.tipo === 'Vínculo')
+    expect(vinculos.length).toBeGreaterThan(0)
+    for (const v of vinculos) {
       expect(estadoDe(v).estado, v.id).toBe('sin-semaforo')
     }
   })
@@ -383,12 +420,18 @@ describe('razonesDeCarta', () => {
     expect(razones(v).map((x) => x.texto)).toContain('Sin coste: no hay poder esperado comparable.')
   })
 
-  it('una carta sin stats que pasa su poder esperado explica el desvío', () => {
-    const roja = CARTAS.filter((c) => c.stats === null && c.tipo !== 'Vínculo' && estadoDe(c).estado === 'excede')
-    for (const c of roja) {
-      const r = razones(c)
-      expect(r.some((x) => x.nivel === 'error' && x.texto.includes('poder esperado')), c.id).toBe(true)
-    }
+  it('una carta sin stats que pasa su poder esperado explica el desvío (carta sintética)', () => {
+    // Ninguna de las cartas reales sin stats excede: se fabrica un Éter de coste 1 con efectos de sobra.
+    const base = CARTAS.find((c) => c.stats === null && c.tipo === 'Éter' && c.coste === 1 && c.efectos.length > 0)
+    expect(base).toBeDefined()
+    const cara: CartaBalance = { ...base!, id: 'T-010', efectos: Array.from({ length: 12 }, () => base!.efectos[0]) }
+    const d = desgloseDePoder(cara, [])
+    expect(d.esperado).toBe(CONFIG_V1.poderPorCoste * cara.coste)
+    expect(d.indice).toBeGreaterThan(d.esperado!)
+    expect(estadoDe(cara).estado).toBe('excede')
+    const r = razones(cara)
+    expect(r.length).toBeGreaterThan(0)
+    expect(r.some((x) => x.nivel === 'error' && x.texto.includes('poder esperado'))).toBe(true)
   })
 
   it('en las 65 cartas: sin razones si está dentro o exenta, y con un error si excede', () => {
@@ -520,7 +563,7 @@ describe('analizarCarta', () => {
     }
   })
 
-  it('S9.6: es determinista y no cambia aunque cambie la config de pasos', () => {
+  it('S9.5: el análisis lee la config recibida: otro cercaDelTope cambia el estado y el default no', () => {
     const cfg = { ...CONFIG_V1, analisis: { ...CONFIG_V1.analisis, cercaDelTope: 1.5 } }
     const a = analizarCarta(carta('Rowena'), ctxCompleto, [], cfg)
     expect(a.estado).toBe('en-limite')
