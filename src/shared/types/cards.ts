@@ -29,7 +29,10 @@ export interface EfectoData {
   trigger?: 'al_invocar' | 'al_atacar' | 'al_matar_en_combate' | 'al_pagar_eter'
           | 'inicio_choque' | 'inicio_alba' | 'al_jugar_mistica'
           | 'al_resolver_cadena' | 'al_ser_enviado_al_cementerio'
-          | 'al_ser_destruido_vinculo' | 'cuando_vinculo_seria_destruido' | 'ninguno'
+          | 'al_ser_destruido_vinculo' | 'cuando_vinculo_seria_destruido'
+          /** «Cuando un Campeón que controles sea enviado al Cementerio» (con `controladorTrigger: 'rival'`: «un Campeón del rival»). El Campeón enviado es `objetivo.tipo = 'campeon_del_trigger'`. */
+          | 'cuando_campeon_propio_al_cementerio'
+          | 'ninguno'
 
   // ── Capa 2b: TRIGGER ZONA (opcional) ──
   /** Where the card was when the trigger happened (for al_ser_enviado_al_cementerio) */
@@ -53,6 +56,8 @@ export interface EfectoData {
    *   terminar el turno). Para los efectos que reagrupan su Éter (Aurora, Ragnar);
    * - `'una_mientras_bloqueado'`: solo se activa si el efecto NO tiene ya Éter propio bloqueado (el externo no cuenta);
    *   al liberarse ese Éter puede activarse otra vez (Elena, Último Refugio).
+   * «Una vez por turno» también se admite con un coste de Éter (u otro que no sea `ninguno`): el texto lo dice tras la cláusula
+   * del coste («Puedes pagar 1 Éter, una vez por turno, …»). `una_mientras_bloqueado` sigue siendo solo del bloqueo fijo.
    */
   activacion?: 'una_por_turno' | 'una_mientras_bloqueado'
 
@@ -107,6 +112,8 @@ export interface EfectoData {
   duracion?: 'permanente' | 'turno' | 'mientras_ester_bloqueado'
            | 'mientras_en_campo' | 'mientras_equipped' | '1_por_turno' | 'n_turnos'
            | 'hasta_fase'
+           /** «mientras tenga Éter bloqueado»: CUALQUIER Éter bloqueado en la carta (≠ `mientras_ester_bloqueado`, que es el Éter de ESTE efecto) */
+           | 'mientras_tenga_eter_bloqueado'
   /** Number of turns when duracion='n_turnos' */
   duracionTurnos?: number
   /** Fase destino when duracion='hasta_fase' */
@@ -116,7 +123,11 @@ export interface EfectoData {
 
   // ── Capa 10: REAGRUPAR (opcional) ──
   /** Regroup ether — "Al inicio de la fase [X], reagrupa el Éter usado" */
-  reagrupar?: { fase: 'alba' | 'choque'; turno: 'propio' | 'oponente' }
+  reagrupar?: {
+    fase: 'alba' | 'choque'; turno: 'propio' | 'oponente'
+    /** Qué se reagrupa: `efecto` (por defecto, si falta) = «el Éter usado por este efecto»; `todo` = «todo el Éter bloqueado en esta carta» */
+    alcance?: 'efecto' | 'todo'
+  }
 
   // ── Capa 11: CONDICIÓN (solo para Arcana) ──
   /** Activation condition for Arcanas — CondicionEfecto estructurado (string legacy eliminado Fase 3e: 0 hits en JSON) */
@@ -134,6 +145,21 @@ export interface EfectoData {
   // ── Capa 5d: REGLA MODIFICADA (solo cuando efecto = 'modificar_regla') ──
   /** Qué regla del manual cambia este efecto y cómo (Capa 2: el efecto gana al manual). */
   regla?: ModificacionRegla
+  /** Regla enumerada del Card-Maker (solo `modificar_regla`, alternativa a `regla`): ver `ReglaEnumerada`. */
+  reglaEnumerada?: ReglaEnumerada
+  /** Parámetro numérico de la regla enumerada (p. ej. `coste_campeones_rival_mas` con 1). */
+  reglaValor?: number
+
+  // ── activar_disparo / anclar_eter ──
+  /** `scry`: el texto dice «y puedes enviarla al fondo» (el motor ya deja mandar cartas al fondo; esto solo lo declara en el texto) */
+  opcionFondo?: boolean
+  /** El efecto NO es opcional: con trigger y sin coste el texto no lleva «puedes» (p. ej. «Al matar en combate, devuelve 1 Éter…») */
+  obligatorio?: boolean
+
+  /** `activar_disparo`: se activa SIN pagar el coste del Disparo («sin pagar su costo») */
+  sinPagarCosto?: boolean
+  /** `activar_disparo`: la activación NO agota al Campeón («sin agotarlo») */
+  sinAgotar?: boolean
 
   // ── Cambio de tipo (solo cuando efecto = 'change_type') ──
   /**
@@ -176,6 +202,13 @@ export type CopyAttribute =
   | 'eter_bloqueo'         // efecto al bloquear
   // ── Vínculo ──
   | 'vinculo_efecto'       // efecto del vínculo
+
+/**
+ * Reglas enumeradas que el Card-Maker ofrece a `modificar_regla` además del catálogo `REGLAS` (que es de reglas del manual).
+ * - `disparo_sin_agotar`: «el efecto Disparo no agota» (requiere `activacion: 'una_por_turno'` → «Una vez por turno por Campeón»)
+ * - `coste_campeones_rival_mas`: «los Campeones del rival cuestan N Éter más» (`reglaValor` = N ≥ 1)
+ */
+export type ReglaEnumerada = 'disparo_sin_agotar' | 'coste_campeones_rival_mas'
 
 /** Cost structure — what the player pays */
 export interface CostoEfecto {
@@ -233,6 +266,10 @@ export type EfectoAccion =
   | 'recuperar_exilio'
   | 'invocar' | 'invocar_y_equipar'
   | 'mover' | 'negar' | 'rival_discard' | 'modificar_regla'
+  /** «Activa un efecto Disparo de otro Campeón que controles» (opciones `sinPagarCosto`, `sinAgotar`) */
+  | 'activar_disparo'
+  /** «Selecciona hasta N Éter que controla el rival en su zona de pago, estos no se reagrupan en su próxima Alba» */
+  | 'anclar_eter'
 
 /** Structured target — 4-layer system: type + controller + zone + filters + destination */
 export interface ObjetivoEfecto {
@@ -242,8 +279,12 @@ export interface ObjetivoEfecto {
        | 'equipped_champion'
        /** El Campeón que se está invocando (solo con `contextoUso: 'invocar'`, p. ej. «Cuando pagues esta carta para invocar un Campeón, ese Campeón…»). No se elige. */
        | 'invocado'
+       /** El Campeón que activó el trigger (`cuando_campeon_propio_al_cementerio`). No se elige. Con `recuperar_mano`: «devuélvelo a tu mano». */
+       | 'campeon_del_trigger'
   /** Who controls the target */
   controlador: 'propio' | 'rival' | 'ambos' | 'ninguno'
+  /** «otro»: el objetivo NO puede ser esta carta («otro Campeón que controles») */
+  excluyeEsta?: boolean
   /** Where the target is located */
   zona: 'campo' | 'cementerio' | 'exilio' | 'reserva' | 'pagado' | 'bloqueado' | 'mano' | 'mazo'
   /** Where to move the target (for return_ether, move effects) */
@@ -374,8 +415,11 @@ export interface CampeonCard extends CardMeta {
   stats: CombatStats
   /** Unified effect list — the ONLY source of truth for effects */
   efectos?: EfectoData[]
-  /** Comandante effect — applies to ALL champions of same faction you control */
-  efectoComandante?: EfectoData
+  /**
+   * Efecto(s) de Comandante — aplican a TODOS los Campeones de la misma facción que controlas. Un objeto (formato histórico) o un
+   * arreglo (varios efectos, p. ej. Aurora). Léelo SIEMPRE con `efectosComandante` (src/shared/efectoComandante.ts).
+   */
+  efectoComandante?: EfectoData | EfectoData[]
 }
 
 export interface MisticaCard extends CardMeta {

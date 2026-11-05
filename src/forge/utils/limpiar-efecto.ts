@@ -11,6 +11,11 @@ const CAMPO_DE_EFECTO: ReadonlyArray<readonly [keyof EfectoData, readonly string
   ['tipoNegacion', ['negar']],
   ['cambioTipo', ['change_type']],
   ['regla', ['modificar_regla']],
+  ['reglaEnumerada', ['modificar_regla']],
+  ['reglaValor', ['modificar_regla']],
+  ['sinPagarCosto', ['activar_disparo']],
+  ['sinAgotar', ['activar_disparo']],
+  ['opcionFondo', ['scry']],
   // El formulario los muestra solo con estos efectos (`showStats` / `showKeyword` en EffectField.tsx): con cualquier otro
   // quedan escondidos y no se pueden borrar desde la UI (así quedaron el ATQ de Thane y el de Ragnar)
   ['stats', ['buff', 'debuff']],
@@ -20,6 +25,14 @@ const CAMPO_DE_EFECTO: ReadonlyArray<readonly [keyof EfectoData, readonly string
 
 /** Claves que YA NO EXISTEN en el esquema (restos de diseños anteriores): no las lee ni el motor ni el formulario. */
 const CLAVES_OBSOLETAS = ['zonaActivacion'] as const
+
+/** ¿La «Activación» del efecto tiene dónde aplicarse? */
+export function activacionConSentido(efecto: EfectoData): boolean {
+  const coste = efecto.costo?.tipo
+  if (coste === 'bloqueo_fijo') return true
+  if (efecto.activacion === 'una_por_turno' && coste && coste !== 'ninguno') return true
+  return efecto.activacion === 'una_por_turno' && efecto.efecto === 'modificar_regla' && efecto.reglaEnumerada === 'disparo_sin_agotar'
+}
 
 /** Parche (`undefined`) que quita los campos que NO pertenecen a `efecto`, para pasarlo al `update` del formulario. */
 export function camposAjenosVacios(efecto: EfectoData['efecto']): Partial<EfectoData> {
@@ -58,8 +71,9 @@ export function limpiarCamposAjenos(efecto: EfectoData): EfectoData {
     delete limpio.costo
     cambio = true
   }
-  // «Una vez por turno» se decide por el COSTE (no por el efecto): solo tiene sentido con un bloqueo fijo
-  if (efecto.activacion !== undefined && efecto.costo?.tipo !== 'bloqueo_fijo') {
+  // «Una vez por turno» se decide por el COSTE (no por el efecto): con un bloqueo fijo (las dos activaciones) o con cualquier otro
+  // coste (solo «una por turno»). Sin coste solo lo conserva la regla enumerada `disparo_sin_agotar` («por Campeón»).
+  if (efecto.activacion !== undefined && !activacionConSentido(efecto)) {
     delete limpio.activacion
     cambio = true
   }
@@ -78,15 +92,25 @@ export function limpiarCamposAjenos(efecto: EfectoData): EfectoData {
 
 /** La carta con todos sus efectos (y el de Comandante) sin restos. Mismo objeto si no hay nada que limpiar. */
 export function limpiarEfectosDeCarta(card: AnyCard): AnyCard {
-  const conEfectos = card as AnyCard & { efectos?: EfectoData[]; efectoComandante?: EfectoData }
+  const conEfectos = card as AnyCard & { efectos?: EfectoData[]; efectoComandante?: EfectoData | EfectoData[] }
   let cambio = false
   const efectos = conEfectos.efectos?.map((e) => {
     const limpio = limpiarCamposAjenos(e)
     if (limpio !== e) cambio = true
     return limpio
   })
-  const comandante = conEfectos.efectoComandante ? limpiarCamposAjenos(conEfectos.efectoComandante) : undefined
-  if (comandante !== conEfectos.efectoComandante) cambio = true
+  // Un objeto sigue siendo objeto y un arreglo sigue siendo arreglo (la forma no cambia al limpiar)
+  const original = conEfectos.efectoComandante
+  let comandante: EfectoData | EfectoData[] | undefined
+  if (Array.isArray(original)) {
+    const limpios = original.map(limpiarCamposAjenos)
+    const cambioComandante = limpios.some((l, i) => l !== original[i])
+    if (cambioComandante) cambio = true
+    comandante = cambioComandante ? limpios : original
+  } else if (original) {
+    comandante = limpiarCamposAjenos(original)
+    if (comandante !== original) cambio = true
+  }
   if (!cambio) return card
   return { ...card, ...(efectos ? { efectos } : {}), ...(comandante ? { efectoComandante: comandante } : {}) } as AnyCard
 }

@@ -30,6 +30,7 @@ const EFECTO_ACCIONES = new Set([
   'invocar', 'invocar_y_equipar',
   'mover', 'negar', 'rival_discard',
   'fix_exhaust', 'modificar_regla',
+  'activar_disparo', 'anclar_eter',
 ])
 
 /* ── Limpieza ── */

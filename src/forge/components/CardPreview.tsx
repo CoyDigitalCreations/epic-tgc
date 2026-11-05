@@ -7,6 +7,7 @@ import type { AnyCard } from '../../shared/types'
 import { FACCION_COLORS, FACCION_IMAGES, KEYWORDS } from '../../shared/types'
 import { CardFrame, CostGem, EtherHexagon, NamePlate, RuneIcon, StatBadge, TextScroll } from './card-art'
 import { tamanoQueEntra } from './card-art/ajusteTexto'
+import { efectosComandante } from '../../shared/efectoComandante'
 import { condicionArcanaTexto } from './fields/CondicionArcanaField'
 
 /** Wrap keywords in bold tags within a text string */
@@ -87,7 +88,7 @@ function parrafosDeEfecto(c: AnyCard): Parrafo[] {
       agregar('pasivo', 'Pasivo', getEffectText('pasivo'))
       agregar('disparo', 'Disparo', getEffectText('disparo'))
       agregar('continuo', 'Continuo', getEffectText('continuo'))
-      agregar('comandante', 'Comandante', 'efectoComandante' in c && c.efectoComandante?.texto ? c.efectoComandante.texto : undefined)
+      agregar('comandante', 'Comandante', 'efectoComandante' in c ? efectosComandante(c.efectoComandante).map((e) => e.texto).filter(Boolean).join(' ') || undefined : undefined)
       break
     case 'Mística':
       agregar('hechizo', 'Efecto', getEffectText('hechizo'))

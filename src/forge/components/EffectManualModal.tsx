@@ -383,7 +383,8 @@ export function EffectManualModal({ isOpen, onClose }: EffectManualModalProps) {
                 ['Este turno', 'hasta el final del turno'],
                 ['Hasta tu Alba', 'hasta tu próxima Alba'],
                 ['Hasta la Alba del oponente', 'hasta la próxima Alba del oponente'],
-                ['Mientras éter bloqueado', 'mientras ese Éter esté bloqueado'],
+                ['Mientras éter bloqueado', 'mientras ese Éter esté bloqueado (el Éter de ESTE efecto)'],
+                ['Mientras tenga Éter bloqueado (cualquiera)', 'mientras tenga Éter bloqueado (cualquier Éter bloqueado en la carta)'],
                 ['Mientras esté en campo', 'mientras esta carta esté en el campo'],
                 ['Mientras esté equipado', 'mientras esté equipado'],
                 ['1 por turno', 'una vez por turno'],
@@ -456,6 +457,10 @@ export function EffectManualModal({ isOpen, onClose }: EffectManualModalProps) {
                 ['Choque', 'Oponente', 'Al inicio del Choque del oponente reagrupa el Éter usado por este efecto'],
               ]}
             />
+            <p className="mt-2 text-xs text-gray-500">
+              El campo <strong>Alcance</strong> elige qué se reagrupa: <strong>El Éter usado por este efecto</strong> (por defecto; el texto de arriba) o
+              <strong> Todo el Éter bloqueado en la carta</strong>, que añade una oración aparte: «Al inicio de tu Alba reagrupa todo el Éter bloqueado en esta carta.»
+            </p>
           </Section>
 
           {/* 19. CANTIDADES SOPORTADAS */}
@@ -521,7 +526,64 @@ export function EffectManualModal({ isOpen, onClose }: EffectManualModalProps) {
             <p className="mb-2">Campo separado <strong>"Efecto Comandante"</strong> (no está en la lista de efectos). Se muestra cuando <code>catHabilidad</code> incluye <strong>"Comandante"</strong>.</p>
             <p className="mb-2">El efecto comandante aplica a TODOS los Campeones de la misma facción que el comandante.</p>
             <p className="text-xs text-gray-500">Se genera una vista previa del texto debajo del campo.</p>
-            <p className="text-xs mt-1">Ejemplo: "Ganan +2 de ATQ y +2 de RES." (aplica a todos los Campeones de Orden)</p>
+            <p className="text-xs mt-1">Ejemplo: "Incremento de 2 de ATQ y 2 de RES." (aplica a todos los Campeones de Orden)</p>
+            <p className="mt-2 text-xs text-gray-500">
+              En un efecto de tipo <strong>Comandante</strong> el objetivo «Todos tus Campeones» queda implícito y NO se escribe:
+              un buff sale «Incremento de 2 de ATQ y 2 de RES.», un debuff «Reducción de 1 de ATQ.» y una keyword «Ganan Indestructible.».
+              Un Comandante puede tener varias entradas de tipo Comandante (por ejemplo un incremento y una regla) y no cuentan para el tope de efectos.
+            </p>
+          </Section>
+
+          {/* 21b. OPCIONES NUEVAS */}
+          <Section title="21b. Verbos, reglas, trigger y opciones nuevas">
+            <p className="mb-2">Nada se escribe a mano: todo esto se genera de los campos.</p>
+
+            <h4 className="font-semibold text-gray-200 mt-3 mb-1">«Una vez por turno» con cualquier coste</h4>
+            <p className="mb-1">El campo <strong>Activación → Una vez por turno</strong> (además del Bloqueo fijo) está disponible con cualquier coste (Éter, Agotar...) y se dice justo después de la cláusula del coste:</p>
+            <p className="text-xs text-ether-400 italic">→ "Puedes pagar 1 Éter, una vez por turno, devuelve hasta 2 Éter de tu zona de pago a tu Reserva."</p>
+
+            <h4 className="font-semibold text-gray-200 mt-3 mb-1">Verbos nuevos</h4>
+            <Table
+              headers={['Efecto', 'Campos', 'Texto generado']}
+              rows={[
+                ['Activar Disparo', 'Objetivo Campeón propio + «Otro (no esta carta)»; Sin pagar su costo; Sin agotar', 'activa un efecto Disparo de otro Campeón que controles sin pagar su costo ni agotarlo (solo una opción: «…sin agotarlo» / «…sin pagar su costo»)'],
+                ['Anclar Éter', 'Cantidad N (objetivo y duración se ponen solos: Éter del rival, zona de pago, hasta su próxima Alba)', 'Selecciona hasta N Éter que controla el rival en su zona de pago, estos no se reagrupan en su próxima Alba'],
+                ['Mirar cartas + «Puede enviarla al fondo»', 'Cantidad, casilla del fondo', 'mira la carta superior de tu mazo y puedes enviarla al fondo'],
+              ]}
+            />
+
+            <h4 className="font-semibold text-gray-200 mt-3 mb-1">Modificar una regla — reglas enumeradas</h4>
+            <Table
+              headers={['Regla enumerada', 'Campos', 'Texto generado']}
+              rows={[
+                ['El efecto Disparo no agota', 'Solo en un Comandante; Activación «Una vez por turno por Campeón»', 'Una vez por turno por Campeón, el efecto Disparo no agota. (el alcance «los Campeones de la facción» es implícito)'],
+                ['Los Campeones del rival cuestan N Éter más', 'Valor N ≥ 1', 'los Campeones del rival cuestan 1 Éter más'],
+              ]}
+            />
+            <p className="mt-1 text-xs text-gray-500">Una regla enumerada sustituye a la regla del manual: se elige una u otra, nunca las dos.</p>
+
+            <h4 className="font-semibold text-gray-200 mt-3 mb-1">Trigger «Cuando un Campeón va al Cementerio»</h4>
+            <Table
+              headers={['Quién', 'Texto']}
+              rows={[
+                ['Propio', 'cuando un Campeón que controles sea enviado al Cementerio'],
+                ['Rival', 'cuando un Campeón del rival sea enviado al Cementerio'],
+              ]}
+            />
+            <p className="mt-1 text-xs text-gray-500">
+              Con el objetivo <strong>El Campeón del trigger</strong> (se pone el trigger solo) el verbo «Devolver a mano desde zona» dice «devuélvelo a tu mano».
+              Con «Una vez por turno», esa frase va antes del trigger: «Una vez por turno, cuando un Campeón que controles sea enviado al Cementerio, bloquea 2 Éter, devuélvelo a tu mano.»
+            </p>
+
+            <h4 className="font-semibold text-gray-200 mt-3 mb-1">Otras opciones</h4>
+            <Table
+              headers={['Campo', 'Efecto en el texto']}
+              rows={[
+                ['Cantidad en «Cambiar agotamiento» / «Dar keyword»', 'dice «1 Campeón que controles» en vez de «un Campeón que controles»'],
+                ['Obligatorio (con trigger y sin coste)', 'quita el «puedes»: «Al matar en combate, devuelve 1 Éter…»'],
+                ['Filtro Agotamiento en «Todos tus Campeones»', '«todos tus Campeones agotados»'],
+              ]}
+            />
           </Section>
 
           {/* 22. PALABRAS CLAVE EN NEGRITA */}

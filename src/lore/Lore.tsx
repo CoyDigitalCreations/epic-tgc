@@ -368,7 +368,7 @@ export default function Lore() {
                 <Reveal>
                   <div className="mb-6 rounded-r-lg border-l-[3px] border-card-arcana bg-surface-2 px-5 py-3 text-sm text-gray-300">
                     <p className="mb-1 text-xs font-semibold text-card-arcana">NOTA v2.0 — MAZO IMPLEMENTADO</p>
-                    El mazo Estásis, primera entrega de Los Primogénitos, ya está implementado para la v2.0: <B>32 diseños / 66 cartas</B> (15 de Éter, 45 de Mazo Principal y 6 de Vínculos), disponibles en el constructor de cartas. Su contraparte del polo sur, el mazo Disonancia, también está implementado: lo encuentras en la sección 10.
+                    El mazo Estásis, primera entrega de Los Primogénitos, ya está implementado para la v2.0: <B>33 diseños / 66 cartas</B> (15 de Éter, 45 de Mazo Principal y 6 de Vínculos), disponibles en el constructor de cartas. Su contraparte del polo sur, el mazo Disonancia, también está implementado: lo encuentras en la sección 10.
                   </div>
                 </Reveal>
 
@@ -425,7 +425,7 @@ export default function Lore() {
                 </Reveal>
 
                 <p className="mt-8 text-sm italic text-gray-500">
-                  El mazo Estásis está disponible en el constructor de cartas (32 diseños / 66 cartas). El lore continúa expandiéndose con la nueva cosmología del Éter.
+                  El mazo Estásis está disponible en el constructor de cartas (33 diseños / 66 cartas). El lore continúa expandiéndose con la nueva cosmología del Éter.
                 </p>
               </div>
             </section>

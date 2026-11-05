@@ -66,7 +66,7 @@ export const FORM_CONFIGS: CardFormConfig[] = [
       { name: 'roles', label: 'Roles (máx 2)', type: 'multi-select', required: true, options: [...ROLES], max: 2 },
       { name: 'catHabilidad', label: 'Categorías de Habilidad (máx 2)', type: 'multi-select', required: true, options: [...CAT_HABILIDAD], max: 2 },
       { name: 'efectos', label: 'Efectos', type: 'effect-list', required: false },
-      { name: 'efectoComandante', label: 'Efecto Comandante', type: 'effect', required: false, showEffectFields: ['efecto', 'stats', 'keyword'] },
+      { name: 'efectoComandante', label: 'Efecto Comandante', type: 'effect-list', required: false },
       { name: 'keywords', label: 'Palabras Clave', type: 'multi-select', required: false },
       { name: 'flavorText', label: 'Texto de Sabor', type: 'textarea', required: false, placeholder: 'Ambientación...' },
       { name: 'limiteCopias', label: 'Límite por Mazo', type: 'select', required: false, options: ['1', '2', '3'] },

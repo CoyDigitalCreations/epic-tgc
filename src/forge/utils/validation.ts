@@ -2,9 +2,12 @@ import { CARD_TYPES, RARITIES, KEYWORDS } from '../../shared/types'
 import type { CardType, AnyCard } from '../../shared/types'
 import { FORM_CONFIGS } from '../types/form-config'
 import { REGLA_IDS, esReglaNumerica, operacionesDe } from '../../shared/rules/reglas'
+import { activacionConSentido } from './limpiar-efecto'
 
 /** Tipos de negación que el motor ejecuta (el resto se jugaría como «activacion»). Ver executeEffect `negar`. */
 const TIPOS_NEGACION_IMPLEMENTADOS: readonly string[] = ['activacion', 'efecto_activo']
+
+const REGLAS_ENUMERADAS: readonly string[] = ['disparo_sin_agotar', 'coste_campeones_rival_mas']
 
 /** Fields that live inside `stats` sub-object instead of flat on the card */
 const STATS_FIELDS = new Set(['cost', 'poder', 'resistencia', 'duracion'])
@@ -77,10 +80,22 @@ function validarEfectos(card: Partial<AnyCard>): ValidationError[] {
     if (e.trigger === 'cuando_vinculo_seria_destruido' && e.efecto !== 'prevent_destroy') {
       return falta('el trigger «Cuando Vínculo sería destruido» solo sirve con el efecto «Prevenir destrucción»')
     }
-    // El motor solo limita las activaciones de los bloqueos fijos: en cualquier otro coste la «Activación» no hace nada
-    if (e.activacion && e.costo?.tipo !== 'bloqueo_fijo') {
-      return falta('la «Activación» (una vez por turno / una vez mientras siga bloqueado) solo sirve con el coste «Bloqueo fijo»')
+    // «Una vez mientras siga bloqueado» es solo del bloqueo fijo; «una vez por turno» sirve con cualquier coste (o, sin coste,
+    // con la regla enumerada «el Disparo no agota», que es «una vez por turno por Campeón»)
+    if (e.activacion === 'una_mientras_bloqueado' && e.costo?.tipo !== 'bloqueo_fijo') {
+      return falta('la «Activación» «una vez mientras siga bloqueado» solo sirve con el coste «Bloqueo fijo»')
     }
+    if (e.activacion && !activacionConSentido(e)) {
+      return falta('la «Activación» «una vez por turno» necesita un coste (Éter, Bloqueo fijo, Agotar...)')
+    }
+    // «Ese Campeón» solo existe cuando un Campeón va al Cementerio (el trigger lo fija)
+    if (e.objetivo?.tipo === 'campeon_del_trigger' && e.trigger !== 'cuando_campeon_propio_al_cementerio') {
+      return falta('el objetivo «El Campeón del trigger» necesita el trigger «Cuando un Campeón va al Cementerio»')
+    }
+    if (e.trigger === 'cuando_campeon_propio_al_cementerio' && !e.objetivo) {
+      return falta('el trigger «Cuando un Campeón va al Cementerio» necesita un objetivo (p. ej. «El Campeón del trigger»)')
+    }
+    if (e.reglaEnumerada && e.efecto !== 'modificar_regla') return falta('la regla enumerada solo sirve con el efecto «Modificar una regla»')
     // Un Continuo con coste de Éter bloqueado actúa solo, sin jugada: no puede redirigir ni negar una activación, que necesitan
     // la cadena. Esos efectos van en una Mística o un Disparo que se responda.
     const bloquea = e.costo?.tipo === 'eter_bloqueado' || e.costo?.tipo === 'bloqueo_fijo'
@@ -98,12 +113,26 @@ function validarEfectos(card: Partial<AnyCard>): ValidationError[] {
     }
     switch (e.efecto) {
       case 'modificar_regla': {
+        if (e.reglaEnumerada) {
+          if (e.regla) return falta('elige una regla del manual O una regla enumerada, no las dos')
+          if (!REGLAS_ENUMERADAS.includes(e.reglaEnumerada)) return falta('la regla enumerada no existe')
+          if (e.reglaEnumerada === 'coste_campeones_rival_mas' && !(Number.isInteger(e.reglaValor) && (e.reglaValor as number) >= 1)) return falta('indica cuántos Éter más cuestan (mínimo 1)')
+          if (e.reglaEnumerada === 'disparo_sin_agotar' && e.tipo !== 'comandante') return falta('«El efecto Disparo no agota» es una regla de Comandante (aplica a los Campeones de su facción)')
+          return
+        }
         const regla = e.regla
         if (!regla || !REGLA_IDS.includes(regla.id)) return falta('elige qué regla del manual modifica')
         if (!operacionesDe(regla.id).includes(regla.operacion)) return falta(`la operación '${regla.operacion}' no sirve para esa regla`)
         if (esReglaNumerica(regla.id) && regla.valor === undefined) return falta('indica el valor de la regla')
         return
       }
+      case 'activar_disparo':
+        // Válido con cualquiera de las dos opciones, con las dos o con ninguna; lo único obligatorio es un Campeón al que activarle el Disparo
+        if (e.objetivo?.tipo !== 'campeon') return falta('«Activar Disparo» necesita un Campeón como objetivo')
+        return
+      case 'anclar_eter':
+        if (!(Number.isInteger(e.cantidad) && (e.cantidad as number) >= 1)) return falta('«Anclar Éter» necesita una cantidad de al menos 1')
+        return
       case 'change_type':
         if (!e.cambioTipo || !(e.cambioTipo.esencia || e.cambioTipo.rol || e.cambioTipo.faccion)) return falta('elige Facción, Esencia o Rol en que se convierte')
         return

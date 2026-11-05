@@ -62,16 +62,17 @@ describe('limpiarCamposAjenos', () => {
     const buff: EfectoData = { tipo: 'pasivo', efecto: 'buff', stats: { ATQ: -1 } } // un buff negativo es otra cosa: no se toca
     expect(limpiarCamposAjenos(buff)).toBe(buff)
   })
-  it('la «Activación» se queda con un bloqueo fijo y se va con cualquier otro coste (o sin coste)', () => {
+  it('la «Activación» se queda con un bloqueo fijo; «una por turno» también con otros costes; sin coste se va', () => {
     for (const activacion of ['una_por_turno', 'una_mientras_bloqueado'] as const) {
       const fijo: EfectoData = { tipo: 'continuo', efecto: 'steal_champion', costo: { tipo: 'bloqueo_fijo', cantidad: 4 }, activacion }
       expect(limpiarCamposAjenos(fijo)).toBe(fijo)
-      expect('activacion' in limpiarCamposAjenos({ ...fijo, costo: { tipo: 'eter_bloqueado', cantidad: 4 } })).toBe(false)
+      // «una vez mientras siga bloqueado» es solo del bloqueo fijo; «una vez por turno» sirve con cualquier coste
+      expect('activacion' in limpiarCamposAjenos({ ...fijo, costo: { tipo: 'eter_bloqueado', cantidad: 4 } })).toBe(activacion === 'una_por_turno')
       expect('activacion' in limpiarCamposAjenos({ ...fijo, costo: undefined })).toBe(false)
     }
   })
   it('la «Activación» se limpia aunque el efecto no tenga `efecto` raíz (tramos)', () => {
-    const e = { tipo: 'continuo', costo: { tipo: 'eter_bloqueado', cantidad: 4 }, activacion: 'una_por_turno', tramos: [{ umbral: 1, efecto: 'toggle_exhaust' }] } as unknown as EfectoData
+    const e = { tipo: 'continuo', costo: { tipo: 'eter_bloqueado', cantidad: 4 }, activacion: 'una_mientras_bloqueado', tramos: [{ umbral: 1, efecto: 'toggle_exhaust' }] } as unknown as EfectoData
     expect('activacion' in limpiarCamposAjenos(e)).toBe(false)
   })
   it('un efecto sin `efecto` raíz (los tramos definen los suyos) no se toca', () => {
@@ -83,11 +84,11 @@ describe('limpiarCamposAjenos', () => {
 describe('camposAjenosVacios (el parche del formulario al cambiar de efecto)', () => {
   it('al pasar a negar vacía todo lo ajeno, pero NO tipoNegacion', () => {
     const parche = camposAjenosVacios('negar')
-    expect(Object.keys(parche).sort()).toEqual(['buffPerBlockedEther', 'cambioTipo', 'copyAttributes', 'keyword', 'regla', 'stats'])
+    expect(Object.keys(parche).sort()).toEqual(['buffPerBlockedEther', 'cambioTipo', 'copyAttributes', 'keyword', 'opcionFondo', 'regla', 'reglaEnumerada', 'reglaValor', 'sinAgotar', 'sinPagarCosto', 'stats'])
     expect(Object.values(parche).every((v) => v === undefined)).toBe(true)
   })
   it('al pasar a copy conserva copyAttributes y vacía el resto', () => {
-    expect(Object.keys(camposAjenosVacios('copy')).sort()).toEqual(['buffPerBlockedEther', 'cambioTipo', 'keyword', 'regla', 'stats', 'tipoNegacion'])
+    expect(Object.keys(camposAjenosVacios('copy')).sort()).toEqual(['buffPerBlockedEther', 'cambioTipo', 'keyword', 'opcionFondo', 'regla', 'reglaEnumerada', 'reglaValor', 'sinAgotar', 'sinPagarCosto', 'stats', 'tipoNegacion'])
   })
   it('buff y debuff comparten stats y buffPerBlockedEther: pasar de uno a otro NO los borra', () => {
     for (const efecto of ['buff', 'debuff'] as const) {
@@ -102,7 +103,7 @@ describe('camposAjenosVacios (el parche del formulario al cambiar de efecto)', (
     expect(claves).toContain('stats')
   })
   it('sin efecto vacía todos', () => {
-    expect(Object.keys(camposAjenosVacios(undefined)).sort()).toEqual(['buffPerBlockedEther', 'cambioTipo', 'copyAttributes', 'keyword', 'regla', 'stats', 'tipoNegacion'])
+    expect(Object.keys(camposAjenosVacios(undefined)).sort()).toEqual(['buffPerBlockedEther', 'cambioTipo', 'copyAttributes', 'keyword', 'opcionFondo', 'regla', 'reglaEnumerada', 'reglaValor', 'sinAgotar', 'sinPagarCosto', 'stats', 'tipoNegacion'])
   })
 })
 

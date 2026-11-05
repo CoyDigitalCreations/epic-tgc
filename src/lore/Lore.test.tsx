@@ -134,7 +134,7 @@ describe('Lore del sur (Disonancia)', () => {
     expect(disonanciaDistribucion()).toMatchObject({ eter: 15, principal: 45, vinculos: 6, total: 66 })
     expect(DISONANCIA_CARDS).toHaveLength(33)
     expect(estasisDistribucion()).toMatchObject({ eter: 15, principal: 45, vinculos: 6, total: 66 })
-    expect(ESTASIS_CARDS).toHaveLength(32)
+    expect(ESTASIS_CARDS).toHaveLength(33)
   })
 })
 

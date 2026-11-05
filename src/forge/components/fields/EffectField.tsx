@@ -2,7 +2,7 @@
  * EffectField — Structured effect editor with 11-layer system.
  * Shows/hides fields based on effect type selection.
  */
-import type { EfectoData, TramoEfecto, CardType, CostoEfecto, ObjetivoEfecto, FiltroObjetivo, CopyAttribute } from '../../../shared/types/cards'
+import type { EfectoData, TramoEfecto, CardType, CostoEfecto, ObjetivoEfecto, FiltroObjetivo, CopyAttribute, ReglaEnumerada } from '../../../shared/types/cards'
 import { FACCIONES, ESENCIAS, ROLES, KEYWORDS, CAT_HABILIDAD } from '../../../shared/types/enums'
 import { REGLAS, REGLA_IDS, esReglaNumerica, operacionesDe, type OperacionRegla, type ReglaId } from '../../../shared/rules/reglas'
 import { camposAjenosVacios } from '../../utils/limpiar-efecto'
@@ -34,6 +34,7 @@ const TRIGGER_OPTIONS = [
   { value: 'al_resolver_cadena', label: 'Al resolver cadena' },
   { value: 'al_ser_enviado_al_cementerio', label: 'Al ir al cementerio' }, { value: 'al_ser_destruido_vinculo', label: 'Al destruir Vínculo' },
   { value: 'cuando_vinculo_seria_destruido', label: 'Cuando Vínculo sería destruido' },
+  { value: 'cuando_campeon_propio_al_cementerio', label: 'Cuando un Campeón va al Cementerio' },
 ]
 const CONTROLADOR_TRIGGER_OPTIONS = [
   { value: '', label: 'Propio (tu turno)' },
@@ -57,7 +58,7 @@ export const EFFECT_CATEGORIES = [
   },
   {
     nombre: 'Control',
-    efectos: ['steal_champion', 'steal_ether', 'redirect', 'copy', 'change_type'] as const,
+    efectos: ['steal_champion', 'steal_ether', 'redirect', 'copy', 'change_type', 'activar_disparo'] as const,
   },
   {
     nombre: 'Destrucción',
@@ -73,7 +74,7 @@ export const EFFECT_CATEGORIES = [
   },
   {
     nombre: 'Éter',
-    efectos: ['block_ether', 'free_ether', 'return_ether'] as const,
+    efectos: ['block_ether', 'free_ether', 'return_ether', 'anclar_eter'] as const,
   },
   {
     nombre: 'Robo',
@@ -114,12 +115,15 @@ const EFECTO_OPTIONS = [
   { value: 'recuperar_exilio', label: 'Devolver del Exilio' },
   { value: 'invocar', label: 'Invocar' },
   { value: 'modificar_regla', label: 'Modificar una regla' },
+  { value: 'activar_disparo', label: 'Activar Disparo' },
+  { value: 'anclar_eter', label: 'Anclar Éter' },
   { value: 'invocar_y_equipar', label: 'Invocar y equipar' },
   { value: 'rival_discard', label: 'Descartar carta rival' },
 ]
 const DURACION_OPTIONS = [
   { value: 'permanente', label: 'Permanente' }, { value: 'turno', label: 'Este turno' },
   { value: 'mientras_ester_bloqueado', label: 'Mientras éter bloqueado' },
+  { value: 'mientras_tenga_eter_bloqueado', label: 'Mientras tenga Éter bloqueado (cualquiera)' },
   { value: 'mientras_en_campo', label: 'Mientras esté en campo' }, { value: 'mientras_equipped', label: 'Mientras equipado' },
   { value: '1_por_turno', label: '1 por turno' }, { value: 'n_turnos', label: 'N turnos' },
   { value: 'hasta_fase', label: 'Hasta fase...' },
@@ -141,6 +145,12 @@ const OBJETIVO_TIPO_OPTIONS = [
   { value: 'rival_hand', label: 'Mano del rival' },
   { value: 'equipped_champion', label: 'Campeón equipado' },
   { value: 'invocado', label: 'El Campeón que se invoca' },
+  { value: 'campeon_del_trigger', label: 'El Campeón del trigger' },
+]
+/** Reglas enumeradas de `modificar_regla` (además del catálogo del manual) */
+const REGLA_ENUMERADA_OPTIONS = [
+  { value: 'disparo_sin_agotar', label: 'El efecto Disparo no agota' },
+  { value: 'coste_campeones_rival_mas', label: 'Los Campeones del rival cuestan N Éter más' },
 ]
 const CONTROLADOR_OPTIONS = [
   { value: 'propio', label: 'Propio' }, { value: 'rival', label: 'Rival' },
@@ -278,7 +288,7 @@ export function EffectField({ label, value, onChange, cardType }: EffectFieldPro
   const showTrigger = data.tipo !== 'comandante'
   const showObjetivo = data.tipo !== 'comandante'
   const showStats = data.efecto === 'buff' || data.efecto === 'debuff'
-  const showCantidad = data.efecto === 'tutor' || (data.efecto ? ['draw', 'destroy', 'exile', 'scry', 'mover', 'return_ether', 'return_hand', 'steal_champion', 'steal_ether', 'block_ether', 'free_ether', 'invocar', 'invocar_y_equipar'].includes(data.efecto) : false)
+  const showCantidad = data.efecto === 'tutor' || (data.efecto ? ['draw', 'destroy', 'exile', 'scry', 'mover', 'return_ether', 'return_hand', 'steal_champion', 'steal_ether', 'block_ether', 'free_ether', 'invocar', 'invocar_y_equipar', 'toggle_exhaust', 'grant_keyword', 'recuperar_campo', 'anclar_eter'].includes(data.efecto) : false)
   const showKeyword = data.efecto === 'grant_keyword'
   const showDuracion = data.tipo !== 'comandante'
   const showReagrupar = (data.costo?.tipo === 'eter_bloqueado' || data.costo?.tipo === 'bloqueo_fijo') && (cardType === 'Campeón' || cardType === 'Éter')
@@ -319,6 +329,12 @@ export function EffectField({ label, value, onChange, cardType }: EffectFieldPro
             if (v === 'fix_exhaust') {
               const obj = data.objetivo ?? { tipo: 'campeon' as const, controlador: 'rival' as const, zona: 'campo' as const }
               update({ ...ajenos, efecto: v as any, objetivo: { ...obj, tipo: 'campeon', controlador: obj.controlador === 'propio' ? 'rival' : obj.controlador, filtros: { ...obj.filtros, agotado: true } } })
+            } else if (v === 'anclar_eter') {
+              // «Hasta N Éter de la zona de pago del rival, no se reagrupan hasta su próxima Alba»: objetivo y duración fijos
+              update({ ...ajenos, efecto: v as any, objetivo: { tipo: 'eter', controlador: 'rival', zona: 'pagado' }, duracion: 'hasta_fase', duracionFase: 'alba', duracionControlador: 'rival' })
+            } else if (v === 'activar_disparo') {
+              // «un efecto Disparo de OTRO Campeón que controles»
+              update({ ...ajenos, efecto: v as any, objetivo: { tipo: 'campeon', controlador: 'propio', zona: 'campo', excluyeEsta: true } })
             } else if (v === 'prevent_destroy') {
               // El motor solo previene la destrucción de un Vínculo con ESTE trigger y pagando «Exiliar esta carta» (que el
               // selector de costo oculta): sin los dos la carta no hace nada. Se ponen solos al elegir el efecto.
@@ -375,7 +391,7 @@ export function EffectField({ label, value, onChange, cardType }: EffectFieldPro
       {/* Capa 3: Costo (for disparo/continuo) */}
       {showCost && (
         <div className="grid grid-cols-3 gap-2 mt-2">
-          <SelectField label="Costo" value={data.costo?.tipo} options={COSTO_OPTIONS.filter((o) => o.value !== 'exile_self' && o.value !== 'cemetery_self')} onChange={(v) => update({ costo: { ...data.costo, tipo: v as any }, ...(v !== 'bloqueo_fijo' ? { activacion: undefined } : {}) })} />
+          <SelectField label="Costo" value={data.costo?.tipo} options={COSTO_OPTIONS.filter((o) => o.value !== 'exile_self' && o.value !== 'cemetery_self')} onChange={(v) => update({ costo: { ...data.costo, tipo: v as any }, ...(v !== 'bloqueo_fijo' && data.activacion === 'una_mientras_bloqueado' ? { activacion: undefined } : {}), ...(!v || v === 'ninguno' ? { activacion: undefined } : {}) })} />
           {data.costo?.tipo && data.costo.tipo !== 'ninguno' && <NumberInput label="Cantidad" value={data.costo?.cantidad} onChange={(v) => updateCosto({ cantidad: v })} min={1} max={10} />}
           {/* Fase 2 (c): zona de ORIGEN del pago — solo costos de bloqueo
               ('reserva' 2A default / 'pagado' 1A — FB-025 "desde la zona de
@@ -402,6 +418,18 @@ export function EffectField({ label, value, onChange, cardType }: EffectFieldPro
                 { value: 'una_mientras_bloqueado', label: 'Una vez mientras siga bloqueado' },
               ]}
               onChange={(v) => update({ activacion: v === 'repetible' ? undefined : (v as 'una_por_turno' | 'una_mientras_bloqueado') })}
+            />
+          )}
+          {/* «Una vez por turno» también con otros costes (Éter, Agotar...): se dice tras la cláusula del coste */}
+          {data.costo?.tipo && data.costo.tipo !== 'ninguno' && data.costo.tipo !== 'bloqueo_fijo' && (
+            <SelectField
+              label="Activación"
+              value={data.activacion ?? 'repetible'}
+              options={[
+                { value: 'repetible', label: 'Repetible' },
+                { value: 'una_por_turno', label: 'Una vez por turno' },
+              ]}
+              onChange={(v) => update({ activacion: v === 'una_por_turno' ? 'una_por_turno' : undefined })}
             />
           )}
           {/* Umbral simple (solo "hasta" SIN tramos) — con tramos, la lista
@@ -522,12 +550,56 @@ export function EffectField({ label, value, onChange, cardType }: EffectFieldPro
           <SelectField label="Tipo objetivo" value={data.objetivo?.tipo} options={OBJETIVO_TIPO_OPTIONS} onChange={(v) => {
             // «Ese Campeón» solo existe al pagar un Éter PARA INVOCAR: el trigger y el contexto se ponen solos (sin ellos la
             // carta no haría nada o daría el bono con cualquier pago). Al elegir otro tipo se suelta el contexto.
-            if (v === 'invocado') update({ trigger: 'al_pagar_eter', contextoUso: 'invocar', objetivo: { tipo: 'invocado', controlador: 'propio', zona: 'campo' } })
+            if (v === 'campeon_del_trigger') update({ trigger: 'cuando_campeon_propio_al_cementerio', objetivo: { tipo: 'campeon_del_trigger', controlador: 'propio', zona: 'cementerio' } })
+            else if (v === 'invocado') update({ trigger: 'al_pagar_eter', contextoUso: 'invocar', objetivo: { tipo: 'invocado', controlador: 'propio', zona: 'campo' } })
             else if (data.objetivo?.tipo === 'invocado') update({ contextoUso: undefined, objetivo: { ...data.objetivo, tipo: v as any } })
             else updateObjetivo({ tipo: v as any })
           }} />
           <SelectField label="Controlador" value={data.objetivo?.controlador} options={CONTROLADOR_OPTIONS} onChange={(v) => updateObjetivo({ controlador: v as any })} />
           <SelectField label="Zona" value={data.objetivo?.zona} options={ZONA_OPTIONS} onChange={(v) => updateObjetivo({ zona: v as any })} />
+          {data.objetivo?.tipo === 'campeon' && (
+            <label className="flex items-center gap-2 text-[10px] uppercase tracking-wider text-gray-400">
+              <input type="checkbox" checked={data.objetivo.excluyeEsta ?? false} onChange={(e) => updateObjetivo({ excluyeEsta: e.target.checked || undefined })}
+                className="rounded border-gray-600 bg-gray-800 text-ether-500 focus:ring-ether-500" />
+              Otro (no esta carta)
+            </label>
+          )}
+        </div>
+      )}
+
+      {/* activar_disparo: opciones de la activación */}
+      {data.efecto === 'activar_disparo' && (
+        <div className="flex flex-wrap items-center gap-4 mt-2 border border-gray-600/30 rounded p-2">
+          <label className="flex items-center gap-2 text-[10px] uppercase tracking-wider text-gray-400">
+            <input type="checkbox" checked={data.sinPagarCosto ?? false} onChange={(e) => update({ sinPagarCosto: e.target.checked || undefined })}
+              className="rounded border-gray-600 bg-gray-800 text-ether-500 focus:ring-ether-500" />
+            Sin pagar su costo
+          </label>
+          <label className="flex items-center gap-2 text-[10px] uppercase tracking-wider text-gray-400">
+            <input type="checkbox" checked={data.sinAgotar ?? false} onChange={(e) => update({ sinAgotar: e.target.checked || undefined })}
+              className="rounded border-gray-600 bg-gray-800 text-ether-500 focus:ring-ether-500" />
+            Sin agotar
+          </label>
+        </div>
+      )}
+
+      {/* Opciones sueltas: scry puede enviar al fondo; un efecto con trigger y sin coste puede ser obligatorio (sin «puedes») */}
+      {(data.efecto === 'scry' || (data.trigger && data.trigger !== 'ninguno' && (!data.costo || data.costo.tipo === 'ninguno'))) && (
+        <div className="flex flex-wrap items-center gap-4 mt-2">
+          {data.efecto === 'scry' && (
+            <label className="flex items-center gap-2 text-[10px] uppercase tracking-wider text-gray-400">
+              <input type="checkbox" checked={data.opcionFondo ?? false} onChange={(e) => update({ opcionFondo: e.target.checked || undefined })}
+                className="rounded border-gray-600 bg-gray-800 text-ether-500 focus:ring-ether-500" />
+              Puede enviarla al fondo
+            </label>
+          )}
+          {data.trigger && data.trigger !== 'ninguno' && (!data.costo || data.costo.tipo === 'ninguno') && (
+            <label className="flex items-center gap-2 text-[10px] uppercase tracking-wider text-gray-400">
+              <input type="checkbox" checked={data.obligatorio ?? false} onChange={(e) => update({ obligatorio: e.target.checked || undefined })}
+                className="rounded border-gray-600 bg-gray-800 text-ether-500 focus:ring-ether-500" />
+              Obligatorio (sin «puedes»)
+            </label>
+          )}
         </div>
       )}
 
@@ -618,7 +690,35 @@ export function EffectField({ label, value, onChange, cardType }: EffectFieldPro
       {data.efecto === 'modificar_regla' && (
         <div className="border border-gray-600/30 rounded p-2 mt-2">
           <p className="text-xs text-gray-400 mb-1">Qué regla del manual cambia este efecto</p>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-3 gap-2 mb-2">
+            <SelectField
+              label="Regla enumerada"
+              value={data.reglaEnumerada}
+              options={[{ value: '', label: 'Ninguna (usa una regla del manual)' }, ...REGLA_ENUMERADA_OPTIONS]}
+              onChange={(v) => {
+                if (!v) { update({ reglaEnumerada: undefined, reglaValor: undefined }); return }
+                // La regla enumerada sustituye a la del manual; `disparo_sin_agotar` es «una vez por turno por Campeón»
+                update({
+                  reglaEnumerada: v as ReglaEnumerada,
+                  regla: undefined,
+                  reglaValor: v === 'coste_campeones_rival_mas' ? 1 : undefined,
+                  ...(v === 'disparo_sin_agotar' ? { activacion: 'una_por_turno' as const } : {}),
+                })
+              }}
+            />
+            {data.reglaEnumerada === 'coste_campeones_rival_mas' && (
+              <NumberInput label="Éter más" value={data.reglaValor} onChange={(v) => update({ reglaValor: v })} min={1} max={10} />
+            )}
+            {data.reglaEnumerada === 'disparo_sin_agotar' && (
+              <SelectField
+                label="Activación"
+                value={data.activacion ?? 'repetible'}
+                options={[{ value: 'repetible', label: 'Siempre' }, { value: 'una_por_turno', label: 'Una vez por turno por Campeón' }]}
+                onChange={(v) => update({ activacion: v === 'una_por_turno' ? 'una_por_turno' : undefined })}
+              />
+            )}
+          </div>
+          <div className={data.reglaEnumerada ? 'hidden' : 'grid grid-cols-3 gap-2'}>
             <SelectField
               label="Regla"
               value={data.regla?.id}
@@ -627,7 +727,7 @@ export function EffectField({ label, value, onChange, cardType }: EffectFieldPro
                 if (!v) { update({ regla: undefined }); return }
                 const id = v as ReglaId
                 // al cambiar de regla la operación vuelve a la primera que tiene sentido para su tipo
-                update({ regla: { id, operacion: operacionesDe(id)[0], ...(esReglaNumerica(id) ? { valor: 1 } : {}) } })
+                update({ reglaEnumerada: undefined, reglaValor: undefined, regla: { id, operacion: operacionesDe(id)[0], ...(esReglaNumerica(id) ? { valor: 1 } : {}) } })
               }}
             />
             {data.regla && (
@@ -702,11 +802,19 @@ export function EffectField({ label, value, onChange, cardType }: EffectFieldPro
         <div className="grid grid-cols-3 gap-2 mt-2">
           <SelectField label="Reagrupar" value={data.reagrupar?.fase} options={[{ value: '', label: 'No' }, { value: 'alba', label: 'Alba' }, { value: 'choque', label: 'Choque' }]} onChange={(v) => update({ reagrupar: v ? { fase: v as any, turno: data.reagrupar?.turno ?? 'propio' } : undefined })} />
           {data.reagrupar?.fase && <SelectField label="Turno" value={data.reagrupar?.turno} options={[{ value: 'propio', label: 'Propio' }, { value: 'oponente', label: 'Oponente' }]} onChange={(v) => update({ reagrupar: { ...data.reagrupar!, turno: v as any } })} />}
+          {data.reagrupar?.fase && (
+            <SelectField
+              label="Alcance"
+              value={data.reagrupar.alcance ?? 'efecto'}
+              options={[{ value: 'efecto', label: 'El Éter usado por este efecto' }, { value: 'todo', label: 'Todo el Éter bloqueado en la carta' }]}
+              onChange={(v) => update({ reagrupar: { ...data.reagrupar!, alcance: v === 'todo' ? 'todo' : undefined } })}
+            />
+          )}
         </div>
       )}
 
       {/* Filtros del objetivo — dynamic based on target type (no filters for Vínculo, equipped_champion) */}
-      {showObjetivo && data.objetivo?.tipo && !['self', 'todos_campeones_propios', 'todos_campeones_rivales', 'rival_hand', 'vinculo', 'equipped_champion', 'invocado'].includes(data.objetivo.tipo) && (
+      {showObjetivo && data.objetivo?.tipo && !['self', 'todos_campeones_propios', 'todos_campeones_rivales', 'rival_hand', 'vinculo', 'equipped_champion', 'invocado', 'campeon_del_trigger'].includes(data.objetivo.tipo) && (
         <details className="mt-2 rounded border border-gray-600/30 p-2">
           <summary className="cursor-pointer text-[10px] uppercase tracking-wider text-gray-400 hover:text-gray-200">
             Filtros del objetivo

@@ -70,9 +70,9 @@
     "keywords": [],
     "flavorText": "Lo que corre por sus venas no es sangre: es promesa.",
     "paqueteId": "estasis",
-    "limiteCopias": "2",
+    "limiteCopias": "1",
     "createdAt": "2026-08-03T00:00:00.000Z",
-    "updatedAt": "2026-09-29T05:03:30.287Z",
+    "updatedAt": "2026-11-05T04:05:17.762Z",
     "stats": {
       "cost": 1
     },
@@ -100,7 +100,7 @@
     "keywords": [],
     "flavorText": "Aún roto, el cristal recuerda cómo cantar.",
     "paqueteId": "estasis",
-    "limiteCopias": "2",
+    "limiteCopias": "3",
     "createdAt": "2026-08-03T00:00:00.000Z",
     "updatedAt": "2026-09-29T05:04:09.856Z",
     "stats": {
@@ -136,25 +136,24 @@
     "paqueteId": "estasis",
     "limiteCopias": "2",
     "createdAt": "2026-08-03T00:00:00.000Z",
-    "updatedAt": "2026-10-24T18:27:28.209Z",
+    "updatedAt": "2026-11-05T04:05:17.762Z",
     "stats": {
       "cost": 1
     },
-    "variantePago": "Pasivo",
+    "variantePago": "Gatillo",
     "efectos": [
       {
         "tipo": "pago",
-        "efecto": "block_ether",
+        "trigger": "al_pagar_eter",
+        "efecto": "grant_keyword",
+        "keyword": "Tirador",
         "objetivo": {
           "tipo": "campeon",
           "controlador": "propio",
-          "zona": "campo",
-          "filtros": {
-            "puedeBloquearEter": true
-          }
+          "zona": "campo"
         },
-        "texto": "Bloquea 1 Éter de tu Reserva sobre un Campeón que pueda recibir éter bloqueado que controles, una vez por turno.",
-        "duracion": "1_por_turno"
+        "duracion": "turno",
+        "texto": "Cuando pagues esta carta, un Campeón que controles gana Tirador, hasta el final del turno."
       }
     ]
   },
@@ -168,7 +167,7 @@
     "paqueteId": "estasis",
     "limiteCopias": "1",
     "createdAt": "2026-08-03T00:00:00.000Z",
-    "updatedAt": "2026-09-29T05:04:43.456Z",
+    "updatedAt": "2026-11-05T04:05:17.762Z",
     "stats": {
       "cost": 1
     },
@@ -176,16 +175,16 @@
     "efectos": [
       {
         "tipo": "pago",
-        "texto": "Cuando pagues esta carta, devuelve 1 Éter de la zona de pago a tu Reserva.",
         "trigger": "al_pagar_eter",
-        "efecto": "return_ether",
+        "efecto": "scry",
+        "cantidad": 1,
+        "opcionFondo": true,
         "objetivo": {
-          "tipo": "eter",
+          "tipo": "carta",
           "controlador": "propio",
-          "zona": "pagado",
-          "zonaDestino": "reserva"
+          "zona": "mazo"
         },
-        "cantidad": 1
+        "texto": "Cuando pagues esta carta, mira la carta superior de tu mazo y puedes enviarla al fondo."
       }
     ]
   },
@@ -230,21 +229,23 @@
     "paqueteId": "estasis",
     "limiteCopias": "2",
     "createdAt": "2026-08-03T00:00:00.000Z",
-    "updatedAt": "2026-09-29T05:05:47.218Z",
+    "updatedAt": "2026-11-05T04:05:17.762Z",
     "stats": {
       "cost": 1
     },
     "efectos": [
       {
-        "tipo": "bloqueo",
+        "tipo": "pago",
+        "trigger": "al_pagar_eter",
         "efecto": "grant_keyword",
+        "keyword": "Carga",
         "objetivo": {
           "tipo": "campeon",
           "controlador": "propio",
           "zona": "campo"
         },
-        "texto": "Mientras esté bloqueado, el Campeón que tenga este Éter gana Inmortal.",
-        "keyword": "Inmortal"
+        "duracion": "turno",
+        "texto": "Cuando pagues esta carta, un Campeón que controles gana Carga, hasta el final del turno."
       }
     ]
   },
@@ -290,7 +291,7 @@
     "paqueteId": "estasis",
     "limiteCopias": "1",
     "createdAt": "2026-08-03T00:00:00.000Z",
-    "updatedAt": "2026-10-24T18:15:01.960Z",
+    "updatedAt": "2026-11-05T04:05:17.762Z",
     "facciones": [
       "Orden"
     ],
@@ -307,58 +308,67 @@
       "poder": 9,
       "resistencia": 9
     },
-    "disparoAgota": "No",
-    "disparoUnSoloUso": "No",
     "efectos": [
       {
         "tipo": "disparo",
-        "efecto": "destroy",
-        "objetivo": {
-          "tipo": "mistica_arcana",
-          "controlador": "rival",
-          "zona": "campo"
-        },
-        "texto": "Puedes pagar 2 Éter, destruye 1 Mística o Arcana que controla el rival.",
+        "efecto": "activar_disparo",
         "costo": {
           "tipo": "eter",
           "cantidad": 2
-        }
+        },
+        "activacion": "una_por_turno",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "campo",
+          "excluyeEsta": true
+        },
+        "sinPagarCosto": true,
+        "sinAgotar": true,
+        "texto": "Puedes pagar 2 Éter, una vez por turno, activa un efecto Disparo de otro Campeón que controles sin pagar su costo ni agotarlo."
       },
       {
         "tipo": "continuo",
-        "efecto": "steal_champion",
-        "objetivo": {
-          "tipo": "campeon",
-          "controlador": "rival",
-          "zona": "campo"
-        },
-        "texto": "Una vez por turno, bloquea 4 Éter, toma control de 1 un Campeón que controla el rival, mientras ese Éter esté bloqueado, Al inicio de tu Alba reagrupa el Éter usado por este efecto.",
-        "duracion": "mientras_ester_bloqueado",
+        "efecto": "modificar_regla",
         "costo": {
           "tipo": "bloqueo_fijo",
-          "cantidad": 4
+          "cantidad": 3
         },
+        "activacion": "una_por_turno",
+        "reglaEnumerada": "coste_campeones_rival_mas",
+        "reglaValor": 1,
+        "duracion": "mientras_tenga_eter_bloqueado",
         "reagrupar": {
           "fase": "alba",
-          "turno": "propio"
+          "turno": "propio",
+          "alcance": "todo"
         },
-        "activacion": "una_por_turno"
+        "texto": "Una vez por turno, bloquea 3 Éter, los Campeones del rival cuestan 1 Éter más, mientras tenga Éter bloqueado. Al inicio de tu Alba reagrupa todo el Éter bloqueado en esta carta."
       }
     ],
-    "efectoComandante": {
-      "tipo": "pasivo",
-      "efecto": "buff",
-      "texto": "Todos tus Campeones ganan 2 de ATQ y 2 de RES.",
-      "stats": {
-        "ATQ": 2,
-        "RES": 2
+    "efectoComandante": [
+      {
+        "tipo": "comandante",
+        "efecto": "buff",
+        "stats": {
+          "ATQ": 2,
+          "RES": 2
+        },
+        "objetivo": {
+          "tipo": "todos_campeones_propios",
+          "controlador": "propio",
+          "zona": "campo"
+        },
+        "texto": "Incremento de 2 de ATQ y 2 de RES."
       },
-      "objetivo": {
-        "tipo": "todos_campeones_propios",
-        "controlador": "propio",
-        "zona": "campo"
+      {
+        "tipo": "comandante",
+        "efecto": "modificar_regla",
+        "reglaEnumerada": "disparo_sin_agotar",
+        "activacion": "una_por_turno",
+        "texto": "Una vez por turno por Campeón, el efecto Disparo no agota."
       }
-    }
+    ]
   },
   {
     "id": "FB-011",
@@ -372,7 +382,7 @@
     "paqueteId": "estasis",
     "limiteCopias": "3",
     "createdAt": "2026-08-03T00:00:00.000Z",
-    "updatedAt": "2026-09-29T05:07:17.147Z",
+    "updatedAt": "2026-11-05T04:05:17.762Z",
     "facciones": [
       "Orden"
     ],
@@ -384,23 +394,24 @@
       "Efecto"
     ],
     "stats": {
-      "cost": 2,
+      "cost": 3,
       "poder": 5,
-      "resistencia": 3
+      "resistencia": 2
     },
     "efectos": [
       {
         "tipo": "pasivo",
-        "efecto": "mover",
+        "trigger": "al_matar_en_combate",
+        "efecto": "return_ether",
+        "cantidad": 1,
         "objetivo": {
           "tipo": "eter",
-          "controlador": "rival",
-          "zona": "reserva",
-          "zonaDestino": "pagado",
-          "controladorDestino": "rival"
+          "controlador": "propio",
+          "zona": "pagado",
+          "zonaDestino": "reserva",
+          "controladorDestino": "propio"
         },
-        "texto": "Al matar en combate, puedes mover 1 Éter que controla el rival de la Reserva a la zona de pago del rival.",
-        "trigger": "al_matar_en_combate"
+        "texto": "Al matar en combate, puedes devolver 1 Éter de tu zona de pago a tu Reserva."
       }
     ]
   },
@@ -414,7 +425,7 @@
     "paqueteId": "estasis",
     "limiteCopias": "3",
     "createdAt": "2026-08-03T00:00:00.000Z",
-    "updatedAt": "2026-09-29T05:07:54.116Z",
+    "updatedAt": "2026-11-05T04:05:17.762Z",
     "facciones": [
       "Orden"
     ],
@@ -426,8 +437,8 @@
       "Efecto"
     ],
     "stats": {
-      "cost": 2,
-      "poder": 4,
+      "cost": 3,
+      "poder": 3,
       "resistencia": 4
     },
     "efectos": [
@@ -444,9 +455,28 @@
             "esencia": "Céleste"
           }
         },
-        "texto": "Al ser enviada al Cementerio desde cualquier zona, puedes buscar 1 Campeón de facción Orden de esencia Céleste de tu Cementerio y agregalo a tu mano.",
+        "texto": "Al ser enviada al Cementerio desde cualquier zona, puedes buscar 1 Campeón de facción Orden de esencia Céleste de tu Cementerio y agrégalo a tu mano.",
         "trigger": "al_ser_enviado_al_cementerio",
         "triggerZona": "cualquier_zona"
+      },
+      {
+        "tipo": "disparo",
+        "efecto": "return_ether",
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 1
+        },
+        "activacion": "una_por_turno",
+        "cantidad": 2,
+        "esHasta": true,
+        "objetivo": {
+          "tipo": "eter",
+          "controlador": "propio",
+          "zona": "pagado",
+          "zonaDestino": "reserva",
+          "controladorDestino": "propio"
+        },
+        "texto": "Puedes pagar 1 Éter, una vez por turno, devuelve hasta 2 Éter de tu zona de pago a tu Reserva."
       }
     ]
   },
@@ -458,9 +488,9 @@
     "keywords": [],
     "flavorText": "Sus palabras aún resuenan en las ruinas de las casas.",
     "paqueteId": "estasis",
-    "limiteCopias": "3",
+    "limiteCopias": "2",
     "createdAt": "2026-08-03T00:00:00.000Z",
-    "updatedAt": "2026-10-24T18:15:14.752Z",
+    "updatedAt": "2026-11-05T04:05:17.762Z",
     "facciones": [
       "Orden"
     ],
@@ -476,22 +506,21 @@
       "poder": 4,
       "resistencia": 3
     },
-    "disparoAgota": true,
-    "disparoUnSoloUso": true,
     "efectos": [
       {
         "tipo": "disparo",
         "efecto": "toggle_exhaust",
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 1
+        },
+        "cantidad": 1,
         "objetivo": {
           "tipo": "campeon",
           "controlador": "propio",
           "zona": "campo"
         },
-        "texto": "Puedes pagar 3 Éter, cambia el agotamiento de un Campeón que controles.",
-        "costo": {
-          "tipo": "eter",
-          "cantidad": 3
-        }
+        "texto": "Puedes pagar 1 Éter, cambia el agotamiento de 1 Campeón que controles."
       }
     ]
   },
@@ -507,7 +536,7 @@
     "paqueteId": "estasis",
     "limiteCopias": "2",
     "createdAt": "2026-08-03T00:00:00.000Z",
-    "updatedAt": "2026-10-24T18:04:16.306Z",
+    "updatedAt": "2026-11-05T04:05:17.762Z",
     "facciones": [
       "Orden"
     ],
@@ -519,26 +548,27 @@
       "Efecto"
     ],
     "stats": {
-      "cost": 3,
+      "cost": 4,
       "poder": 3,
-      "resistencia": 7
+      "resistencia": 6
     },
-    "disparoAgota": true,
-    "disparoUnSoloUso": true,
     "efectos": [
       {
         "tipo": "disparo",
-        "efecto": "destroy",
-        "objetivo": {
-          "tipo": "mistica_arcana",
-          "controlador": "rival",
-          "zona": "campo"
-        },
-        "texto": "Puedes pagar 2 Éter, destruye 1 Mística o Arcana que controla el rival.",
+        "efecto": "grant_keyword",
+        "keyword": "Inmortal",
         "costo": {
           "tipo": "eter",
           "cantidad": 2
-        }
+        },
+        "cantidad": 1,
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "campo"
+        },
+        "duracion": "turno",
+        "texto": "Puedes pagar 2 Éter, 1 Campeón que controles gana Inmortal, hasta el final del turno."
       }
     ]
   },
@@ -554,7 +584,7 @@
     "paqueteId": "estasis",
     "limiteCopias": "2",
     "createdAt": "2026-08-03T00:00:00.000Z",
-    "updatedAt": "2026-09-29T05:18:22.728Z",
+    "updatedAt": "2026-11-05T04:05:17.762Z",
     "facciones": [
       "Orden"
     ],
@@ -567,8 +597,8 @@
     ],
     "stats": {
       "cost": 3,
-      "poder": 3,
-      "resistencia": 0
+      "poder": 4,
+      "resistencia": 2
     },
     "efectos": [
       {
@@ -614,8 +644,6 @@
       "poder": 3,
       "resistencia": 5
     },
-    "disparoAgota": false,
-    "disparoUnSoloUso": false,
     "efectos": [
       {
         "tipo": "continuo",
@@ -677,8 +705,6 @@
       "poder": 4,
       "resistencia": 5
     },
-    "disparoAgota": true,
-    "disparoUnSoloUso": true,
     "efectos": [
       {
         "tipo": "disparo",
@@ -710,7 +736,7 @@
     "paqueteId": "estasis",
     "limiteCopias": "3",
     "createdAt": "2026-08-03T00:00:00.000Z",
-    "updatedAt": "2026-09-29T05:25:08.295Z",
+    "updatedAt": "2026-11-05T04:05:17.762Z",
     "facciones": [
       "Orden"
     ],
@@ -740,6 +766,25 @@
         "costo": {
           "tipo": "exile_self"
         }
+      },
+      {
+        "tipo": "disparo",
+        "efecto": "recuperar_campo",
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 4
+        },
+        "activacion": "una_por_turno",
+        "cantidad": 1,
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "cementerio",
+          "filtros": {
+            "costeMax": 3
+          }
+        },
+        "texto": "Puedes pagar 4 Éter, una vez por turno, invoca 1 Campeón de coste 3 o menos de tu Cementerio."
       }
     ]
   },
@@ -769,7 +814,7 @@
             "atqMax": 5
           }
         },
-        "texto": "Devuelve a la mano de su dueño 1 un Campeón ATQ 5 o menos que controla el rival."
+        "texto": "Devuelve a la mano de su dueño 1 Campeón ATQ 5 o menos que controla el rival."
       }
     ]
   },
@@ -785,9 +830,9 @@
     "paqueteId": "estasis",
     "limiteCopias": "3",
     "createdAt": "2026-08-03T00:00:00.000Z",
-    "updatedAt": "2026-09-29T00:47:03.948Z",
+    "updatedAt": "2026-11-05T04:05:17.762Z",
     "stats": {
-      "cost": 1
+      "cost": 3
     },
     "efectos": [
       {
@@ -853,31 +898,23 @@
     "paqueteId": "estasis",
     "limiteCopias": "3",
     "createdAt": "2026-08-03T00:00:00.000Z",
-    "updatedAt": "2026-10-22T01:00:26.833Z",
+    "updatedAt": "2026-11-05T04:05:17.762Z",
     "stats": {
-      "cost": 3
+      "cost": 4
     },
     "efectos": [
       {
         "tipo": "hechizo",
-        "efecto": "copy",
+        "efecto": "toggle_exhaust",
         "objetivo": {
-          "tipo": "mistica_arcana",
-          "controlador": "rival",
-          "zona": "campo"
+          "tipo": "todos_campeones_propios",
+          "controlador": "propio",
+          "zona": "campo",
+          "filtros": {
+            "agotado": true
+          }
         },
-        "texto": "Bloquea 3 Éter (solo una vez mientras siga bloqueado), copia el efecto de hechizo, el efecto continuo y la recompensa de una Mística o Arcana que controla el rival, mientras ese Éter esté bloqueado.",
-        "duracion": "mientras_ester_bloqueado",
-        "costo": {
-          "tipo": "bloqueo_fijo",
-          "cantidad": 3
-        },
-        "copyAttributes": [
-          "mistica_hechizo",
-          "mistica_continuo",
-          "arcana_recompensa"
-        ],
-        "activacion": "una_mientras_bloqueado"
+        "texto": "Cambia el agotamiento de todos tus Campeones agotados."
       }
     ]
   },
@@ -891,39 +928,32 @@
     "paqueteId": "estasis",
     "limiteCopias": "3",
     "createdAt": "2026-08-03T00:00:00.000Z",
-    "updatedAt": "2026-09-24T05:23:08.788Z",
+    "updatedAt": "2026-11-05T04:05:17.762Z",
     "stats": {
-      "cost": 2
+      "cost": 3
     },
-    "condicion": {
-      "trigger": "inicio_alba",
-      "condiciones": [
-        {
-          "tipo": "controlar_minimo",
-          "cantidad": 2,
-          "objetivo": {
-            "tipo": "campeon",
-            "controlador": "propio",
-            "filtros": {
-              "conEterBloqueado": true
-            }
-          }
-        }
-      ]
-    },
-    "recompensa": "Roba 2 cartas y un Campeón que controles gana +3 de Poder hasta el final del turno.",
+    "recompensa": "Una vez por turno, cuando un Campeón que controles sea enviado al Cementerio, bloquea 2 Éter, devuélvelo a tu mano.",
     "efectos": [
       {
         "tipo": "hechizo",
-        "efecto": "draw",
-        "objetivo": {
-          "tipo": "carta",
-          "controlador": "propio",
-          "zona": "mazo",
-          "filtros": {}
+        "trigger": "cuando_campeon_propio_al_cementerio",
+        "costo": {
+          "tipo": "bloqueo_fijo",
+          "cantidad": 2
         },
-        "texto": "Roba 2 carta de tu mazo.",
-        "cantidad": 2
+        "activacion": "una_por_turno",
+        "efecto": "recuperar_mano",
+        "objetivo": {
+          "tipo": "campeon_del_trigger",
+          "controlador": "propio",
+          "zona": "cementerio",
+          "controladorDestino": "dueno"
+        },
+        "texto": "Una vez por turno, cuando un Campeón que controles sea enviado al Cementerio, bloquea 2 Éter, devuélvelo a la mano de su dueño. Al inicio de tu Alba reagrupa el Éter usado por este efecto.",
+        "reagrupar": {
+          "fase": "alba",
+          "turno": "propio"
+        }
       }
     ]
   },
@@ -1116,7 +1146,7 @@
     "paqueteId": "estasis",
     "limiteCopias": "1",
     "createdAt": "2026-08-03T00:00:00.000Z",
-    "updatedAt": "2026-09-24T05:27:02.124Z",
+    "updatedAt": "2026-11-05T04:05:17.762Z",
     "stats": {
       "cost": 0
     },
@@ -1129,10 +1159,10 @@
           "controlador": "propio",
           "zona": "cementerio",
           "filtros": {
-            "costeMax": 3
+            "costeMax": 2
           }
         },
-        "texto": "Al inicio de tu Alba, puedes devolver a la mano de su dueño 1 un Campeón coste 3 o menos de tu Cementerio, una vez por turno.",
+        "texto": "Al inicio de tu Alba, puedes devolver a la mano de su dueño 1 Campeón coste 2 o menos de tu Cementerio, una vez por turno.",
         "trigger": "inicio_alba",
         "duracion": "1_por_turno"
       }
@@ -1148,7 +1178,7 @@
     "paqueteId": "estasis",
     "limiteCopias": "1",
     "createdAt": "2026-08-03T00:00:00.000Z",
-    "updatedAt": "2026-09-20T04:57:19.829Z",
+    "updatedAt": "2026-11-05T04:05:17.762Z",
     "stats": {
       "cost": 0
     },
@@ -1168,10 +1198,10 @@
           }
         },
         "stats": {
-          "ATQ": 3,
-          "RES": 3
+          "ATQ": 2,
+          "RES": 2
         },
-        "texto": "El Campeón con mayor RES que controla el rival pierde 3 de ATQ y 3 de RES, mientras esta carta esté en el campo.",
+        "texto": "El Campeón con mayor RES que controla el rival pierde 2 de ATQ y 2 de RES, mientras esta carta esté en el campo.",
         "duracion": "mientras_en_campo"
       }
     ]
@@ -1184,9 +1214,9 @@
     "keywords": [],
     "flavorText": "Cae una enviada; llegan las casas.",
     "paqueteId": "estasis",
-    "limiteCopias": "3",
+    "limiteCopias": "2",
     "createdAt": "2026-08-12T00:00:00.000Z",
-    "updatedAt": "2026-10-14T05:03:38.300Z",
+    "updatedAt": "2026-11-05T04:05:17.762Z",
     "facciones": [
       "Orden"
     ],
@@ -1199,7 +1229,7 @@
     ],
     "stats": {
       "cost": 2,
-      "poder": 4,
+      "poder": 3,
       "resistencia": 3
     },
     "efectos": [
@@ -1215,7 +1245,7 @@
             "costeMax": 4
           }
         },
-        "texto": "Al ser enviada al Cementerio desde el campo, puedes buscar 1 Campeón de facción Orden coste 4 o menos de esencia Céleste de tu mazo y agregalo a tu mano.",
+        "texto": "Al ser enviada al Cementerio desde el campo, puedes buscar 1 Campeón de facción Orden coste 4 o menos de esencia Céleste de tu mazo y agrégalo a tu mano.",
         "trigger": "al_ser_enviado_al_cementerio",
         "triggerZona": "campo",
         "zonaOrigen": "mazo"
@@ -1234,9 +1264,9 @@
     "paqueteId": "estasis",
     "limiteCopias": "2",
     "createdAt": "2026-08-12T00:00:00.000Z",
-    "updatedAt": "2026-09-21T02:14:22.895Z",
+    "updatedAt": "2026-11-05T04:05:17.762Z",
     "stats": {
-      "cost": 2
+      "cost": 4
     },
     "efectos": [
       {
@@ -1254,6 +1284,42 @@
           "tipo": "bloqueo_fijo",
           "cantidad": 4
         }
+      }
+    ]
+  },
+  {
+    "id": "FB-033",
+    "name": "Runa de Ancla",
+    "type": "Mística",
+    "rarity": "Poco Común",
+    "keywords": [
+      "Presteza"
+    ],
+    "flavorText": "",
+    "paqueteId": "estasis",
+    "limiteCopias": "2",
+    "createdAt": "2026-11-05T04:05:17.762Z",
+    "updatedAt": "2026-11-05T04:05:17.762Z",
+    "facciones": [
+      "Orden"
+    ],
+    "stats": {
+      "cost": 3
+    },
+    "efectos": [
+      {
+        "tipo": "hechizo",
+        "efecto": "anclar_eter",
+        "cantidad": 2,
+        "objetivo": {
+          "tipo": "eter",
+          "controlador": "rival",
+          "zona": "pagado"
+        },
+        "duracion": "hasta_fase",
+        "duracionFase": "alba",
+        "duracionControlador": "rival",
+        "texto": "Selecciona hasta 2 Éter que controla el rival en su zona de pago, estos no se reagrupan en su próxima Alba."
       }
     ]
   },
@@ -1310,7 +1376,7 @@
           "controlador": "propio",
           "zona": "campo"
         },
-        "texto": "Una vez por turno, bloquea 2 Éter, un Campeón que controles gana Indestructible, mientras ese Éter esté bloqueado, Al inicio de tu Alba reagrupa el Éter usado por este efecto.",
+        "texto": "Una vez por turno, bloquea 2 Éter, un Campeón que controles gana Indestructible, mientras ese Éter esté bloqueado. Al inicio de tu Alba reagrupa el Éter usado por este efecto.",
         "keyword": "Indestructible",
         "costo": {
           "tipo": "bloqueo_fijo",

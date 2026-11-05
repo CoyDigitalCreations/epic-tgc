@@ -35,6 +35,8 @@ export const REGLAS = {
   rupturasPorTurno: { etiqueta: 'Vínculos que rompe la Ruptura por turno', manual: '§9.4', ambito: 'jugador', base: 1, min: 0 },
   atacarTrasRuptura: { etiqueta: 'Se puede seguir atacando tras romper un Vínculo', manual: '§9.4', ambito: 'jugador', base: false },
   derrotaPorVinculos: { etiqueta: 'Pierde la partida al quedarse sin Vínculos', manual: '§13', ambito: 'jugador', base: true },
+  // Éter que se suma al coste de invocar a CADA Campeón del jugador (lo fija, p. ej., el tributo de Aurora al rival).
+  costeCampeonesExtra: { etiqueta: 'Éter extra que cuestan sus Campeones', manual: '§7.3', ambito: 'jugador', base: 0, min: 0 },
 
   /* ── campeón ── */
   agotadoPuedeBloquear: { etiqueta: 'Un Campeón agotado puede bloquear', manual: '§9.3', ambito: 'campeon', base: false },

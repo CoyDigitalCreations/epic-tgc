@@ -46,11 +46,13 @@ describe('EffectField — «Activación» (bloqueo fijo)', () => {
   /** El selector de «Activación» (su etiqueta no está ligada al control: se busca dentro del mismo bloque). */
   const selector = () => screen.getByText('Activación').parentElement!.querySelector('select') as HTMLSelectElement
 
-  it('solo aparece con el coste «Bloqueo fijo»', () => {
+  it('con el coste «Bloqueo fijo» ofrece las tres activaciones; con otro coste solo «una vez por turno»; sin coste no aparece', () => {
     const { rerender } = render(<EffectField label="" value={FIJO} onChange={() => {}} cardType="Campeón" />)
     expect(selector()).toBeInTheDocument()
     expect(Array.from(selector().options).map((o) => o.value)).toEqual(['', 'repetible', 'una_por_turno', 'una_mientras_bloqueado'])
     rerender(<EffectField label="" value={{ ...FIJO, costo: { tipo: 'eter_bloqueado', cantidad: 4 } }} onChange={() => {}} cardType="Campeón" />)
+    expect(Array.from(selector().options).map((o) => o.value)).toEqual(['', 'repetible', 'una_por_turno'])
+    rerender(<EffectField label="" value={{ ...FIJO, costo: undefined }} onChange={() => {}} cardType="Campeón" />)
     expect(screen.queryByText('Activación')).toBeNull()
   })
 

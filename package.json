@@ -11,6 +11,7 @@
     "coverage-map": "tsx scripts/coverage-map.ts",
     "sync:cards": "tsx scripts/sync-forge-to-engine.ts",
     "sync:fuentes": "tsx scripts/sync-fuentes.ts",
+    "regenerar:textos": "tsx scripts/regenerar-textos.ts",
     "test": "vitest run",
     "test:watch": "vitest"
   },

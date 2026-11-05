@@ -123,12 +123,12 @@ describe('validateCard — efectos a medio configurar (se jugarían sin hacer na
     expect(cont({ efecto: 'destroy' })).toEqual([])
     expect(mensajes({ efecto: 'redirect' })).toEqual([]) // un hechizo normal sí puede
   })
-  it('la «Activación» solo se acepta con el coste «Bloqueo fijo»', () => {
+  it('la «Activación»: las dos con «Bloqueo fijo»; solo «una vez por turno» con otro coste; ninguna sin coste', () => {
     const fijo = { tipo: 'continuo', efecto: 'destroy', costo: { tipo: 'bloqueo_fijo', cantidad: 4 } }
-    const msg = 'Efecto 1: la «Activación» (una vez por turno / una vez mientras siga bloqueado) solo sirve con el coste «Bloqueo fijo»'
+    const msg = 'Efecto 1: la «Activación» «una vez mientras siga bloqueado» solo sirve con el coste «Bloqueo fijo»'
     for (const activacion of ['una_por_turno', 'una_mientras_bloqueado']) {
       expect(mensajes({ ...fijo, activacion })).toEqual([])
-      expect(mensajes({ ...fijo, costo: { tipo: 'eter_bloqueado', cantidad: 4 }, activacion })).toEqual([msg])
+      expect(mensajes({ ...fijo, costo: { tipo: 'eter_bloqueado', cantidad: 4 }, activacion })).toEqual(activacion === 'una_por_turno' ? [] : [msg])
       expect(mensajes({ ...fijo, costo: undefined, activacion })).toHaveLength(1)
     }
     expect(mensajes({ ...fijo, costo: { tipo: 'eter_bloqueado', cantidad: 4 } })).toEqual([]) // sin activación no hay nada que decir

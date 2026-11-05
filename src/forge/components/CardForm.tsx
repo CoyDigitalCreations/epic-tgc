@@ -13,6 +13,7 @@ import { generateEffectText } from './EffectList'
 import { EffectManualModal } from './EffectManualModal'
 import { ImageUpload } from './ImageUpload'
 import { PAQUETES } from '../../shared/data/paquetes'
+import { efectosComandante } from '../../shared/efectoComandante'
 import { Boton } from '../../shared/ui/Boton'
 import { CLASE_CAMPO } from '../../shared/ui/Campo'
 
@@ -236,13 +237,16 @@ export function CardForm() {
         )
       }
       case 'effect-list': {
-        const effects = (value as EfectoData[]) ?? []
+        const esComandante = field.name === 'efectoComandante'
+        // El Comandante admite UN objeto (formato histórico) o un arreglo: se edita siempre como lista y se guarda como arreglo
+        const effects = esComandante ? efectosComandante(value as EfectoData | EfectoData[] | undefined) : ((value as EfectoData[]) ?? [])
         return (
           <EffectList
             key={field.name}
             cardType={(draft.type as CardType) || 'Campeón'}
             effects={effects}
-            onChange={(v) => onChange(v)}
+            soloComandante={esComandante}
+            onChange={(v) => onChange(esComandante && v.length === 0 ? undefined : v)}
           />
         )
       }

@@ -34,9 +34,9 @@ describe('Paquetes', () => {
     expect(disonancia?.distribucion).toEqual({ eter: 15, principal: 45, vinculos: 6 })
   })
 
-  describe('Estásis (entrega Primogénitos) — 32 diseños / 66 cartas', () => {
-    it('tiene 32 diseños con IDs únicos y prefijo FB-', () => {
-      expect(ESTASIS_CARDS).toHaveLength(32)
+  describe('Estásis (entrega Primogénitos) — 33 diseños / 66 cartas', () => {
+    it('tiene 33 diseños con IDs únicos y prefijo FB-', () => {
+      expect(ESTASIS_CARDS).toHaveLength(33)
       const ids = ESTASIS_CARDS.map((c) => c.id)
       expect(new Set(ids).size).toBe(ids.length)
       expect(ids.every((id) => /^FB-\d{3}$/.test(id))).toBe(true)
@@ -60,9 +60,19 @@ describe('Paquetes', () => {
     })
 
     it('todas tienen nombre, flavor text y límite de copias válido', () => {
+      // Excepción explícita: Runa de Ancla (FB-033) está pendiente de flavor text.
+      // Cuando se escriba su flavor, este test fallará hasta que quites el id de la lista.
+      const FLAVOR_PENDIENTE = ['FB-033']
       for (const card of ESTASIS_CARDS) {
         expect(card.name.trim().length).toBeGreaterThan(0)
-        expect(card.flavorText.trim().length).toBeGreaterThan(0)
+        if (FLAVOR_PENDIENTE.includes(card.id)) {
+          expect(
+            card.flavorText.trim().length,
+            `${card.id} ya tiene flavor text: quítala de FLAVOR_PENDIENTE`,
+          ).toBe(0)
+        } else {
+          expect(card.flavorText.trim().length).toBeGreaterThan(0)
+        }
         expect(['1', '2', '3']).toContain(card.limiteCopias)
       }
     })
@@ -219,8 +229,12 @@ describe('Paquetes', () => {
         if (!('efectos' in card) || !card.efectos) return undefined
         return card.efectos.find((e) => e.tipo === tipo)?.texto
       }
-      // Éter bloqueado: FB-008 da Inmortal ↔ DS-009 da Indestructible
-      expect(findEfectoTexto(ESTASIS_CARDS.find((c) => c.id === 'FB-008')!, 'bloqueo')).toContain('Inmortal')
+      // Éter bloqueado: el espejo FB-008 ↔ DS-009 ya no existe (tras el rediseño, FB-008 da Carga
+      // al pagarse y no tiene efecto de bloqueo). Queda documentado: ningún Éter de Estásis da
+      // Inmortal por bloqueo, la fuente vigente de Inmortal por efecto es Isolde (FB-014, disparo)
+      // y DS-009 conserva su Indestructible por bloqueo.
+      expect(findEfectoTexto(ESTASIS_CARDS.find((c) => c.id === 'FB-008')!, 'bloqueo')).toBeUndefined()
+      expect(findEfectoTexto(ESTASIS_CARDS.find((c) => c.id === 'FB-014')!, 'disparo')).toContain('Inmortal')
       expect(findEfectoTexto(DISONANCIA_CARDS.find((c) => c.id === 'DS-009')!, 'bloqueo')).toContain('Indestructible')
       // Vínculos: FB-028 da Inmortal permanente ↔ DS-028 da Indestructible permanente
       expect(findEfectoTexto(ESTASIS_CARDS.find((c) => c.id === 'FB-028')!, 'vinculo')).toContain('Inmortal')
@@ -290,10 +304,10 @@ describe('Paquetes', () => {
     })
 
     it('suma copias por limiteCopias, no diseños únicos', () => {
-      // FB-001 ×2 + FB-002 ×1 + FB-003 ×2 = 5 copias (3 diseños)
+      // FB-001 ×2 + FB-002 ×1 + FB-003 ×1 = 4 copias (3 diseños)
       const parcial = ESTASIS_CARDS.slice(0, 3)
       const prog = progresoPaquete(parcial, 'estasis')
-      expect(prog?.coleccionadas).toBe(5)
+      expect(prog?.coleccionadas).toBe(4)
       expect(prog?.completo).toBe(false)
     })
 
