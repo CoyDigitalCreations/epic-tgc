@@ -8,6 +8,7 @@ import { faccionesDe } from './atributos'
 import { efectosNegados } from './reglas'
 import { claseDeContinuo, eligeObjetivo, esContinuoDeBloqueo, metaDeInstancia, umbralDeBloqueo } from './efectosInstancia'
 import { contarEterUmbral } from './eter'
+import { efectosComandante } from '../../shared/efectoComandante'
 import type { CondicionEfecto, EfectoData } from '../../shared/types'
 
 /**
@@ -45,6 +46,8 @@ export type TriggerEfecto =
   | 'al-ser-enviado-al-cementerio'
   | 'al-ser-destruido-vinculo'
   | 'al-resolver-cadena'
+  /** Lote 3: «cuando un Campeón (propio o del rival) sea enviado al Cementerio» (JSON `cuando_campeon_propio_al_cementerio`) */
+  | 'cuando-campeon-al-cementerio'
   | 'al-bloquear-eter'
   | 'activable'
 
@@ -54,7 +57,10 @@ export interface PayloadEfecto {
   objetivoId?: string
   contextoUso?: string
   killerId?: string
+  /** Víctima del combate; con `cuando-campeon-al-cementerio`, el Campeón que fue enviado al Cementerio (`campeon_del_trigger`). */
   victimaId?: string
+  /** `cuando-campeon-al-cementerio`: quién CONTROLABA al Campeón al salir del campo (puede no ser su dueño si estaba robado). */
+  controladorVictima?: PlayerId
   /** «Al ser enviada al Cementerio»: de dónde venía la carta (ver `triggerZona` de EfectoData y replacements.moverAlCementerio). */
   zonaOrigen?: 'mano' | 'campo' | 'otra'
   fromTrigger?: boolean
@@ -468,7 +474,7 @@ export function modificadoresJSONDe(s: GameState, id: string): ModificadoresJSON
     // Una Arcana boca abajo no tiene efectos vigentes hasta revelarse (un Artefacto Arcana no da su bono antes)
     if (fuenteMeta.type === 'Arcana' && fuenteInst.bocaArriba !== true) continue
 
-    if (fuenteMeta.type === 'Campeón' && fuenteMeta.efectoComandante) {
+    if (fuenteMeta.type === 'Campeón' && efectosComandante(fuenteMeta.efectoComandante).length > 0) {
       candidatos.push({ inst: fuenteInst, meta: fuenteMeta, esComandante: true, origen: 'campo' })
     }
     if ('efectos' in fuenteMeta && fuenteMeta.efectos?.some((e) => esAuraZona(e) || esAuraCondicionada(e) || esAuraEquipada(e))) {
@@ -540,8 +546,8 @@ export function modificadoresJSONDe(s: GameState, id: string): ModificadoresJSON
     const efectos: EfectoData[] = []
     // Negar un «efecto activo» apaga las auras del Campeón, NO su efecto de Comandante (§10: inmutable)
     const negada = c.origen === 'campo' && efectosNegados(s, c.inst.cardInstanceId)
-    if (c.esComandante && c.meta.type === 'Campeón' && c.meta.efectoComandante) {
-      efectos.push(c.meta.efectoComandante)
+    if (c.esComandante && c.meta.type === 'Campeón') {
+      efectos.push(...efectosComandante(c.meta.efectoComandante))
     }
     if ('efectos' in c.meta && c.meta.efectos) {
       for (const e of c.meta.efectos) {
@@ -579,7 +585,7 @@ export function modificadoresJSONDe(s: GameState, id: string): ModificadoresJSON
 export function hasAuraCampoRegistrada(cardId: string): boolean {
   const meta = getCardMeta(cardId)
   if (!meta) return false
-  if (meta.type === 'Campeón' && meta.efectoComandante) return true
+  if (meta.type === 'Campeón' && efectosComandante(meta.efectoComandante).length > 0) return true
   if (!('efectos' in meta) || !meta.efectos) return false
   return meta.efectos.some((e) => esAuraZona(e) || esAuraCondicionada(e))
 }
@@ -773,6 +779,7 @@ const TRIGGER_A_JSON: Readonly<Record<string, string>> = {
   'al-ser-enviado-al-cementerio': 'al_ser_enviado_al_cementerio',
   'al-ser-destruido-vinculo': 'al_ser_destruido_vinculo',
   'al-resolver-cadena': 'al_resolver_cadena',
+  'cuando-campeon-al-cementerio': 'cuando_campeon_propio_al_cementerio',
 }
 
 /** Efecto de efectos[] que matchea un trigger interno (con su índice), tal como lo ven dispararTrigger y el apilado. */
@@ -802,7 +809,7 @@ export function triggersQueMatchean(
   trigger: TriggerEfecto,
   jugador: PlayerId,
   ids: readonly string[],
-  opts?: { evaluarCondicion?: boolean; zonaOrigen?: 'mano' | 'campo' | 'otra'; ignorarZonaOrigen?: boolean },
+  opts?: { evaluarCondicion?: boolean; zonaOrigen?: 'mano' | 'campo' | 'otra'; ignorarZonaOrigen?: boolean; victimaId?: string; controladorVictima?: PlayerId },
 ): TriggerMatch[] {
   const res: TriggerMatch[] = []
   const efectoTrigger = TRIGGER_A_JSON[trigger]
@@ -829,6 +836,15 @@ export function triggersQueMatchean(
     const negada = efectosNegados(s, id)
     efectos.forEach((efecto, efectoIdx) => {
       if (negada && efecto.tipo !== 'comandante') return
+      // Lote 3 — «cuando un Campeón que controles / del rival sea enviado al Cementerio»: el Campeón se compara con el
+      // controlador del efecto (`jugador`) según `controladorTrigger` (por defecto propio). `excluyeEsta` (`otro Campeón`):
+      // la propia carta no dispara con su envío. Sin víctima conocida (invocación a mano del trigger) no filtra.
+      if (trigger === 'cuando-campeon-al-cementerio' && opts?.victimaId !== undefined) {
+        const quiereRival = efecto.controladorTrigger === 'rival'
+        const esDelRival = opts.controladorVictima !== undefined && opts.controladorVictima !== jugador
+        if (quiereRival !== esDelRival) return
+        if (efecto.objetivo?.excluyeEsta && opts.victimaId === id) return
+      }
       // «Al ser enviada al Cementerio DESDE el campo / la mano»: solo si venía de esa zona (antes se ignoraba y Titania
       // —«desde el campo»— también disparaba al descartarla de la mano). Sin `triggerZona` o «desde cualquier zona»: siempre.
       // La zona se decide al ARMAR el gatillo (como la `condicion`); al resolver una elección ya armada no se vuelve a filtrar.
@@ -895,6 +911,8 @@ export function dispararTrigger(
     const primero = triggersQueMatchean(s, trigger, payload.jugador, [id], {
       zonaOrigen: payload.zonaOrigen,
       ignorarZonaOrigen: payload.contextoUso === 'objetivo-elegido', // resolución de una elección ya armada
+      victimaId: payload.victimaId,
+      controladorVictima: payload.controladorVictima,
     })[0]
     if (primero) {
       const { efecto, efectoIdx } = primero

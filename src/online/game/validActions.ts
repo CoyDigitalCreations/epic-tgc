@@ -1,4 +1,5 @@
-import { getCardMeta, esArcana, efectoActivableDe, esCostoBloqueo } from './cards'
+import { getCardMeta, esArcana, efectoActivableDe, esCostoBloqueo, esEfectoDeBloqueoManual } from './cards'
+import { candidatosActivarDisparo } from './resonancia'
 import { eterDeEfecto } from './eter'
 import { hayParejaBloqueo, pasivosBloqueo1A } from './efectos'
 import { bloqueoParaJugar } from './bloqueoAlJugar'
@@ -7,7 +8,7 @@ import type { Action } from './actions'
 import { generarAccionesForja, validarActivarArcana } from './actions'
 import { atacantesElegibles, asignacionForzada, ataquesBloqueables, ataquesSinBloquear, bloqueadoresDisponibles, rivalDe, tieneKeyword } from './combat'
 import { cadenaActiva, disparoDeRespuesta, respondiblesDe, respuestasDeMano } from './chain'
-import { eterIdsParaHabilidad } from './habilidadPago'
+import { eterIdsParaHabilidad, habilidadUsadaEsteTurno } from './habilidadPago'
 import { metaDeInstancia } from './efectosInstancia'
 import { etersParaPagar } from './payments'
 import { descartarFrentesMuertos, electorAjeno, opcionesVigentes } from './pendientes'
@@ -80,7 +81,7 @@ function accionesBloqueoEter(state: GameState, playerId: PlayerId, enCadena = fa
       if (!('efectos' in t.meta) || !t.meta.efectos) continue
       const fuentes = t.meta.efectos
         .map((efecto, i) => ({ efecto, i }))
-        .filter(({ efecto }) => esCostoBloqueo(efecto.costo) && efecto.tipo !== 'disparo')
+        .filter(({ efecto }) => esEfectoDeBloqueoManual(efecto))
       if (fuentes.length === 0) continue
       for (const { efecto, i } of fuentes) {
         // Fase 2 (c): la ZONA de origen del pago define los éteres disponibles
@@ -410,7 +411,9 @@ export function getValidActions(state: GameState, playerId: PlayerId): Action[] 
           }
         } else {
           // Patrón "Paga y Agota" (disparo pago): necesita enderezado; sin límite por turno
-          if (inst.agotado) continue
+          if (inst.agotado || habilidadUsadaEsteTurno(state, champId, efectoAct)) continue
+          // Resonancia (activar_disparo): sin otro Campeón con un Disparo copiable no hay nada que activar
+          if (efectoAct.efecto === 'activar_disparo' && candidatosActivarDisparo(state, playerId, champId, efectoAct).length === 0) continue
           const costoReal = costo > 0 ? costo : 1
           if (p.eterReserva.length >= costoReal) {
             acciones.push({ type: 'activar_habilidad', cardInstanceId: champId, eterIds: p.eterReserva.slice(0, costoReal) })

@@ -34,7 +34,7 @@ import { interpretEffect } from './effectInterpreter'
 import { aplicarPago, etersParaPagar, validarPago, type ContextoUso } from './payments'
 import { enviarAlCementerio } from './replacements'
 import { efectosNegados } from './reglas'
-import { eterIdsParaHabilidad, pagarHabilidad } from './habilidadPago'
+import { eterIdsParaHabilidad, habilidadUsadaEsteTurno, pagarHabilidad } from './habilidadPago'
 import { aplicarBloqueoAlJugar, bloqueoParaJugar, motivoBloqueoAlJugar } from './bloqueoAlJugar'
 import { metaDeInstancia } from './efectosInstancia'
 import type { CondicionEfecto, EfectoData } from '../../shared/types'
@@ -162,6 +162,7 @@ export function motivoNoResponde(state: GameState, jugador: PlayerId, id: string
     const disparo = disparoDeRespuesta(meta)
     if (disparo) {
       if (esCostoBloqueo(disparo.efecto.costo) && inst.opcionUsadaEsteTurno) return 'ya usaste esta habilidad este turno'
+      if (!esCostoBloqueo(disparo.efecto.costo) && habilidadUsadaEsteTurno(state, id, disparo.efecto)) return 'ya usaste esta habilidad este turno'
       if (eterIdsParaHabilidad(state, jugador, disparo.efecto) === null) return 'no puedes pagar su coste'
     }
     return null

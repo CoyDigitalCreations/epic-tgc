@@ -138,13 +138,13 @@ describe('Selección de Éter en el tablero 4×7', () => {
   it('permite elegir los Éteres a bloquear sobre un Campeón propio', async () => {
     const user = userEvent.setup()
     const estado = forjaDeA()
-    // Campeón con habilidad que necesita éter bloqueado (FB-010 Aurora, bloqueo_fijo:4)
+    // Campeón con habilidad que necesita éter bloqueado (FB-010 Aurora, bloqueo_fijo:3)
     const campeon = ESTASIS_CARDS.find((c) => c.id === 'FB-010')
     expect(campeon).toBeDefined()
     estado.instances['inst-camp'] = { cardInstanceId: 'inst-camp', cardId: campeon!.id, owner: 'A' }
     estado.players.A.campo.campeones[0] = 'inst-camp'
-    // Garantizar ≥4 Éteres en Reserva para el bloqueo fijo de Aurora
-    while (estado.players.A.eterReserva.length < 4) {
+    // Garantizar ≥3 Éteres en Reserva para el bloqueo fijo de Aurora
+    while (estado.players.A.eterReserva.length < 3) {
       const id = `eter-extra-${estado.players.A.eterReserva.length}`
       estado.instances[id] = { cardInstanceId: id, cardId: 'FB-001', owner: 'A' }
       estado.players.A.eterReserva.push(id)
@@ -153,11 +153,11 @@ describe('Selección de Éter en el tablero 4×7', () => {
     const vista = visibleState(estado, 'A')
     const acciones = getValidActions(estado, 'A')
     // Fase 3a: bloquear_eter usa targetInstanceId (no campeonSlot)
-    // bloqueo_fijo:4 → UNA acción con los 4 Éteres exactos
+    // bloqueo_fijo:3 → UNA acción con los 3 Éteres exactos
     const accBloqueo = acciones.find((a) => a.type === 'bloquear_eter' && a.targetInstanceId === 'inst-camp')
     expect(accBloqueo).toBeDefined()
     if (accBloqueo?.type === 'bloquear_eter') {
-      expect(accBloqueo.eterIds).toHaveLength(4)
+      expect(accBloqueo.eterIds).toHaveLength(3)
     }
 
     const onAccion = vi.fn()
@@ -175,19 +175,19 @@ describe('Selección de Éter en el tablero 4×7', () => {
     // Botón "Bloquear" bajo el campeón → abre el selector (no ejecuta directo)
     await user.click(screen.getAllByRole('button', { name: 'Bloquear' })[0])
     // Label de bloqueo FIJO: pago exacto
-    expect(screen.getByText(/Bloquea exactamente 4 Éter/)).toBeInTheDocument()
+    expect(screen.getByText(/Bloquea exactamente 3 Éter/)).toBeInTheDocument()
 
     // Confirmar deshabilitado con 0 Éteres seleccionados
     let confirmar = screen.getAllByRole('button', { name: 'Bloquear' })
     expect(confirmar[confirmar.length - 1]).toBeDisabled()
 
-    // Seleccionar 4 Éteres habilitados del selector (botones con título de Éter)
+    // Seleccionar 3 Éteres habilitados del selector (botones con título de Éter)
     const candidatos = screen.getAllByRole('button').filter((b) => {
       const t = b.getAttribute('title') ?? ''
       return t.startsWith('Éter') && !b.disabled
     })
-    expect(candidatos.length).toBeGreaterThanOrEqual(4)
-    for (let i = 0; i < 4; i++) {
+    expect(candidatos.length).toBeGreaterThanOrEqual(3)
+    for (let i = 0; i < 3; i++) {
       await user.click(candidatos[i])
     }
 
@@ -200,7 +200,7 @@ describe('Selección de Éter en el tablero 4×7', () => {
     const accion = onAccion.mock.calls[0][0] as Action & { eterIds: string[]; targetInstanceId: string }
     expect(accion.type).toBe('bloquear_eter')
     expect(accion.targetInstanceId).toBe('inst-camp')
-    expect(accion.eterIds.length).toBe(4)
+    expect(accion.eterIds.length).toBe(3)
   })
 
   it('el bloqueo fijo pide N exactos aunque la carta ya tenga Éter bloqueado (externo del Pasivo 1A u otra activación)', async () => {
@@ -209,7 +209,7 @@ describe('Selección de Éter en el tablero 4×7', () => {
     estado.instances['inst-camp'] = { cardInstanceId: 'inst-camp', cardId: 'FB-010', owner: 'A', eterBloqueado: ['eter-previo'] }
     estado.instances['eter-previo'] = { cardInstanceId: 'eter-previo', cardId: 'FB-001', owner: 'A' }
     estado.players.A.campo.campeones[0] = 'inst-camp'
-    while (estado.players.A.eterReserva.length < 5) {
+    while (estado.players.A.eterReserva.length < 4) {
       const id = `eter-extra-${estado.players.A.eterReserva.length}`
       estado.instances[id] = { cardInstanceId: id, cardId: 'FB-001', owner: 'A' }
       estado.players.A.eterReserva.push(id)
@@ -219,8 +219,8 @@ describe('Selección de Éter en el tablero 4×7', () => {
       <Tablero vista={visibleState(estado, 'A')} acciones={getValidActions(estado, 'A')} leTocaA={true} log={[]} onAccion={vi.fn()} onAbandonar={vi.fn()} />,
     )
     await user.click(screen.getAllByRole('button', { name: 'Bloquear' })[0])
-    // Antes pedía 3 (4 − 1 ya bloqueado) y el motor rechazaba: «debes bloquear exactamente 4»
-    expect(screen.getByText(/Bloquea exactamente 4 Éter/)).toBeInTheDocument()
+    // Antes pedía 2 (3 − 1 ya bloqueado) y el motor rechazaba: «debes bloquear exactamente 3»
+    expect(screen.getByText(/Bloquea exactamente 3 Éter/)).toBeInTheDocument()
   })
 })
 
@@ -1202,6 +1202,9 @@ describe('PriorityModal — unificación de respuesta a cadenas (2026-10-14)', (
 
   it('se muestra SIEMPRE con tu prioridad, aunque no tengas respondibles', () => {
     const s = estadoConCadena()
+    // La mano del mazo de Estásis ahora trae Místicas Fugaces que sí pueden responder: se vacía
+    // para que el caso «0 respondibles» no dependa de qué cartas reparte el mazo.
+    s.players.A.mano = []
     const acciones = getValidActions(s, 'A')
     // Sin cartas respondibles en campo: solo rendirse + pasar_prioridad
     expect(acciones.filter((a) => a.type === 'responder_cadena')).toHaveLength(0)

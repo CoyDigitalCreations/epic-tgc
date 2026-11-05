@@ -7,17 +7,22 @@ import { bloquearEter } from '../payments'
 import { getCardMeta } from '../cards'
 import { evaluarCandadosArcanas } from '../efectos'
 import type { Ctx, GameState, PlayerId } from '../types'
+import { REINO_PERDIDO_CLASICO, registrarReinoPerdidoClasico } from './helpers/reinoPerdidoClasico'
+
+// FB-023 se rediseñó (ya no es una Arcana con candado de Alba que roba 2): estos tests usan su
+// versión clásica (fixture sintético).
+registrarReinoPerdidoClasico()
 
 // Cartas reales del catálogo (fuente de verdad: seed/FuenteEfectos.json):
 // FB-011 Campeón Normal · FB-010 Aurora Soberano Singular cost 4 ·
-// FB-019 Mística · FB-021 Táctica · FB-023 Arcana (coste se lee del JSON) ·
+// FB-019 Mística · FB-021 Táctica · Reino Perdido clásico Arcana (fixture; coste se lee del JSON) ·
 // FB-024 Combate · FB-001 Éter Orden · DS-002 Éter Caos ·
 // DS-011 Campeón Caos (para sacrificio de facción AJENA).
 const CAMPEON = 'FB-011'
 const AURORA = 'FB-010' // Soberano Singular
 const MISTICA = 'FB-019'
 const TACTICA = 'FB-021'
-const ARCANA = 'FB-023'
+const ARCANA = REINO_PERDIDO_CLASICO
 const COMBATE = 'FB-024'
 const ETER_ORDEN = 'FB-001'
 const ETER_CAOS = 'DS-002'
@@ -118,7 +123,7 @@ function aplicar(s: GameState, accion: Action, ctx: Ctx): GameState {
 describe('jugar_campeon (R9)', () => {
   it('invoca un Campeón pagando el coste: mano → 2B boca arriba, ENDEREZADO con invocación cansada (§5.2), evento carta_invocada', () => {
     let s = conMano(estadoMinimo(), { cam: CAMPEON })
-    const { s: s2, ids } = conEteres(s, ETER_ORDEN, 2)
+    const { s: s2, ids } = conEteres(s, ETER_ORDEN, 3) // Vaela cuesta 3 tras el rediseño
     s = s2
     const ctx = crearCtx()
     s = aplicar(s, { type: 'jugar_campeon', cardInstanceId: 'cam', slot: 0, eterIds: ids }, ctx)
@@ -130,7 +135,7 @@ describe('jugar_campeon (R9)', () => {
     expect(s.players.A.eterPagado).toEqual(ids)
     expect(s.players.A.eterReserva).toHaveLength(0)
     expect(ctx.events).toEqual([
-      { type: 'eter_pagado', jugador: 'A', eterIds: ids, costo: 2, aportado: 2 },
+      { type: 'eter_pagado', jugador: 'A', eterIds: ids, costo: 3, aportado: 3 },
       { type: 'carta_salida_de_zona', cardInstanceId: 'cam', zona: 'mano', jugador: 'A' },
       { type: 'carta_entrada_a_zona', cardInstanceId: 'cam', zona: '2B', jugador: 'A', bocaArriba: true },
       { type: 'carta_invocada', cardInstanceId: 'cam', tipo: 'Campeón', slot: 0 },
@@ -349,7 +354,7 @@ describe('colocar_arcana (boca abajo 3D-3F, gratis) + activar_arcana (paga coste
     let s = conMano(estadoMinimo(), { arc: ARCANA })
     const { s: s2, ids } = conEteres(s, ETER_ORDEN, costeArc)
     s = s2
-    // §5.4 (Fase 2a): FB-023 exige condicion JSON — 2 Campeones con Éter bloqueado
+    // §5.4 (Fase 2a): el Reino Perdido clásico exige condicion JSON — 2 Campeones con Éter bloqueado
     const { s: s3, id: champ1 } = conCampeonEnCampo(s, CAMPEON, 0)
     s = s3
     const { s: s4, id: champ2 } = conCampeonEnCampo(s, CAMPEON_CAOS, 1)
@@ -383,7 +388,7 @@ describe('colocar_arcana (boca abajo 3D-3F, gratis) + activar_arcana (paga coste
 
     // Simular turno siguiente: limpiar entradaEsteTurno (como hace phases.ts en Alba)
     delete s.instances['arc']!.entradaEsteTurno
-    // F5g: FB-023 tiene trigger inicio_alba (candado): el Alba de A (aquí simulada) la habilita al cumplirse su condición
+    // F5g: el Reino Perdido clásico tiene trigger inicio_alba (candado): el Alba de A (aquí simulada) la habilita al cumplirse su condición
     evaluarCandadosArcanas(s, 'inicio_alba', 'A')
 
     // Paso 2: activar (paga coste + resuelve recompensa hechizo del JSON)
@@ -401,7 +406,7 @@ describe('colocar_arcana (boca abajo 3D-3F, gratis) + activar_arcana (paga coste
     while (s.declaracionEnEleccion) {
       s = aplicar(s, { type: 'elegir_objetivo', objetivoId: s.objetivosPendientes![0].opciones[0] }, ctx)
     }
-    // Recompensa FB-023 (hechizo/draw cantidad 2): roba 2 del mazo
+    // Recompensa del Reino Perdido clásico (hechizo/draw cantidad 2): roba 2 del mazo
     expect(s.players.A.mano).toEqual(['m1', 'm2'])
   })
 })

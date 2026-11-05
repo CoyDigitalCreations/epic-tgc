@@ -22,6 +22,7 @@
  */
 import type { AnyCard, EfectoData } from '../../shared/types'
 import { esCostoBloqueo } from './cards'
+import { efectosComandante } from '../../shared/efectoComandante'
 import { esAuraEquipada } from './efectos'
 
 /* ─────────────────────────── Capability map ─────────────────────────── */
@@ -37,6 +38,8 @@ export const INTERPRETER_EXEC = new Set<string>([
   'copy', 'modificar_regla',
   // negar: `case 'negar'` en executeEffect (ventana de negación de la cadena) — antes se colaba al «sin case» al vaciarse EXTERNOS_NOP
   'negar',
+  // Lote 3 (Estásis): Resonancia de Aurora (resonancia.ts) y Runa de Ancla (eterAnclado + reagruparEter)
+  'activar_disparo', 'anclar_eter',
 ])
 
 /** No-ops explícitos SIN implementación verificada desde JSON.
@@ -77,6 +80,8 @@ export const DISPATCH: Record<string, {
   al_ser_enviado_al_cementerio: { llamado: true, nota: 'replacements.ts:94,195', instanciasOk: true },
   al_ser_destruido_vinculo: { llamado: true, nota: 'replacements.ts:185 — vínculo', instanciasOk: true },
   al_resolver_cadena: { llamado: true, nota: 'chain.ts:228,257,260', instanciasOk: true },
+  // Lote 3: replacements.ts dispararCampeonAlCementerio (destruirCarta + enviarAlCementerio) — cartas en juego de AMBOS jugadores
+  cuando_campeon_propio_al_cementerio: { llamado: true, nota: 'replacements.ts dispararCampeonAlCementerio — cartas en juego de ambos jugadores; el filtro propio/rival y excluyeEsta viven en triggersQueMatchean', instanciasOk: true },
   inicio_alba: {
     llamado: true,
     nota: 'phases.ts:40-42 — instancias = eterPagado + vínculos (NO eterReserva ni campo)',
@@ -601,8 +606,8 @@ export function buildReporte(cards: AnyCard[]): ReporteCobertura {
         notas: ['Guards hardcodeados eliminados (Fase 2a) — una sola fuente: condicion JSON.'],
       })
     }
-    if (card.type === 'Campeón' && card.efectoComandante) {
-      items.push(clasificarEfecto(card, card.efectoComandante, 'efectoComandante'))
+    if (card.type === 'Campeón') {
+      for (const e of efectosComandante(card.efectoComandante)) items.push(clasificarEfecto(card, e, 'efectoComandante'))
     }
     if ('efectos' in card && card.efectos) {
       for (const efecto of card.efectos) {

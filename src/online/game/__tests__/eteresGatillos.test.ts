@@ -1,6 +1,6 @@
 // @vitest-environment node
 /**
- * Gatillos de los Éteres «al pagar» (FB-002/003/004/006, DS-004/005/007) y de los de Reserva «al inicio del Choque» (DS-003),
+ * Gatillos de los Éteres «al pagar» (FB-002/003/004/006, PR-009, DS-004/005/007) y de los de Reserva «al inicio del Choque» (DS-003),
  * con las cartas REALES y lo que dicen HOY. Sustituye a 10 tests de `eteres.test.ts` que eran `expect(true).toBe(true)`
  * (pasaban siempre) y cuyos títulos describían diseños viejos (p. ej. FB-002 «en reserva», cuando hoy es un Éter de pago).
  * DS-005 («para invocar… ese Campeón») usa el objetivo `invocado` y el contexto de pago `invocar`.
@@ -48,16 +48,25 @@ describe('Éteres «Cuando pagues esta carta» (tipo pago)', () => {
     purgarKeywordsTemporales(s) // las keywords temporales no viven en `modificadores`: las limpia su propia purga del Ocaso
     expect(keywordsDe(s, 'c')).not.toContain('Vigor')
   })
-  it('FB-006: devuelve 1 Éter (a tu elección) de la zona de pago a tu Reserva', () => {
+  it('FB-006: mira la carta superior de tu mazo y puedes enviarla al fondo', () => {
+    // FB-006 dejó de devolver Éter (rediseño de Estásis): ahora es un scry de 1 con opción de fondo
+    const { s: s0, ctx } = pagarCon('FB-006')
+    const tope = s0.players.A.mazo[0]
+    expect(s0.scryPendientes?.[0]).toMatchObject({ jugador: 'A', mazoDe: 'A', cartas: [tope] })
+    const s = aplicar(s0, { type: 'ordenar_mazo', arriba: [], fondo: [tope] }, ctx)
+    expect(s.players.A.mazo.at(-1)).toBe(tope)
+    expect(s.scryPendientes).toBeUndefined()
+  })
+  it('PR-009 (el FB-006 de antes): devuelve 1 Éter (a tu elección) de la zona de pago a tu Reserva', () => {
     let previo = ''
-    const { s: s0, ctx } = pagarCon('FB-006', (e) => {
+    const { s: s0, ctx } = pagarCon(PR.ETER_RETORNO, (e) => {
       const [p] = conEteres(e, 'A', 1); previo = p
       e.players.A.eterReserva = e.players.A.eterReserva.filter((x) => x !== p); e.players.A.eterPagado.push(p) // ya pagado antes
     })
     expect(s0.objetivosPendientes?.[0].opciones).toContain(previo) // elige entre TODOS los pagados
     const s = elegir(s0, ctx, previo)
     expect(s.players.A.eterReserva).toEqual([previo])
-    expect(s.players.A.eterPagado).toHaveLength(1) // queda solo el FB-006 recién pagado
+    expect(s.players.A.eterPagado).toHaveLength(1) // queda solo el PR-009 recién pagado
   })
   it('DS-007: mueve 1 Éter (a elección) de la Reserva del rival a la zona de pago del rival', () => {
     const { s: s0, ctx } = pagarCon('DS-007', (e) => { conEteres(e, 'B', 2) })

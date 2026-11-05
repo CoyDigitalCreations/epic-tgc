@@ -158,7 +158,7 @@ describe('Card-Maker JSON → engine integration', () => {
   })
 
   it('FB-030 debuff with seleccionar filter works via interpreter', () => {
-    // FB-030: "El Campeón con mayor RES que controla el rival pierde 3/3"
+    // FB-030: "El Campeón con mayor RES que controla el rival pierde 2/2"
     const card = jsonCards.find(c => c.id === 'FB-030')
     expect(card).toBeDefined()
     const meta = getCardMeta('FB-030')
@@ -166,8 +166,8 @@ describe('Card-Maker JSON → engine integration', () => {
 
     let s = createTestState()
     s = placeChampion(s, 'c1', 'FB-030', 'A', 0) // caster
-    s = placeChampion(s, 'c2', 'FB-011', 'B', 0) // Vaela: RES 3
-    s = placeChampion(s, 'c3', 'FB-014', 'B', 1) // Isolde: RES 7 (highest)
+    s = placeChampion(s, 'c2', 'FB-011', 'B', 0) // Vaela: RES 2
+    s = placeChampion(s, 'c3', 'FB-014', 'B', 1) // Isolde: RES 6 (highest)
 
     const efecto = meta!.efectos![0] as EfectoData
     const ctx = createCtx()
@@ -175,21 +175,21 @@ describe('Card-Maker JSON → engine integration', () => {
 
     // Isolde (highest RES) should get debuffed
     const isoldeMods = s.instances['c3'].modificadores ?? []
-    expect(isoldeMods.some(m => m.stat === 'poder' && m.valor === -3)).toBe(true)
-    expect(isoldeMods.some(m => m.stat === 'resistencia' && m.valor === -3)).toBe(true)
+    expect(isoldeMods.some(m => m.stat === 'poder' && m.valor === -2)).toBe(true)
+    expect(isoldeMods.some(m => m.stat === 'resistencia' && m.valor === -2)).toBe(true)
     // Vaela (lower RES) should NOT be debuffed
     const vaelaMods = s.instances['c2'].modificadores ?? []
     expect(vaelaMods.length).toBe(0)
   })
 
   it('FB-005 block_ether with puedeBloquearEter filter works', () => {
-    // FB-005: "Bloquea 1 Éter sobre un Campeón que pueda recibir éter bloqueado"
-    const card = jsonCards.find(c => c.id === 'FB-005')
+    // DS-006: "Bloquea 1 Éter sobre un Campeón que pueda recibir éter bloqueado" (FB-005 pasó a pago/grant_keyword)
+    const card = jsonCards.find(c => c.id === 'DS-006')
     expect(card).toBeDefined()
-    const meta = getCardMeta('FB-005')
+    const meta = getCardMeta('DS-006')
     expect(meta).not.toBeNull()
 
-    // FB-005 is an Ether, not a champion — verify it has the correct structure
+    // DS-006 is an Ether, not a champion — verify it has the correct structure
     const efecto = meta!.efectos![0]
     expect(efecto.objetivo?.filtros?.puedeBloquearEter).toBe(true)
   })
@@ -207,22 +207,22 @@ describe('Card-Maker JSON → engine integration', () => {
   })
 
   it('draw effect works via interpreter with JSON card data', () => {
-    // FB-023: "Roba 2 carta de tu mazo"
-    const card = jsonCards.find(c => c.id === 'FB-023')
+    // FB-003: "Cuando pagues esta carta, roba 1 carta de tu mazo" (FB-023 dejó de robar tras el rediseño)
+    const card = jsonCards.find(c => c.id === 'FB-003')
     expect(card).toBeDefined()
-    const meta = getCardMeta('FB-023')
+    const meta = getCardMeta('FB-003')
     expect(meta).not.toBeNull()
 
     let s = createTestState()
-    s = addInstance(s, 'c1', 'FB-023', 'A')
+    s = addInstance(s, 'c1', 'FB-003', 'A')
     s = { ...s, players: { ...s.players, A: { ...s.players.A, mazo: ['card1', 'card2', 'card3'] } } }
 
     const efecto = meta!.efectos![0] as EfectoData
     const ctx = createCtx()
     interpretEffect(s, ctx, s.instances['c1'], efecto, { jugador: 'A' })
 
-    expect(s.players.A.mano.length).toBe(2)
-    expect(s.players.A.mazo.length).toBe(1)
+    expect(s.players.A.mano.length).toBe(1)
+    expect(s.players.A.mazo.length).toBe(2)
   })
 
   it('buff effect with stats works via interpreter', () => {

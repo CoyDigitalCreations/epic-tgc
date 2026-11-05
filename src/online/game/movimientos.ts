@@ -51,7 +51,7 @@ export function validarJugarCampeon(state: GameState, action: Extract<Action, { 
   const sacrificios = action.sacrificios ?? []
   if (ocupante !== null && !sacrificios.includes(ocupante)) return 'slot ocupado'
 
-  const pago = validarPago(state, state.turno, action.eterIds, meta.id)
+  const pago = validarPago(state, state.turno, action.eterIds, meta.id, true) // invocar: coste con recargos (costeCampeonesExtra)
   if (!pago.ok) return pago.error ?? 'pago inválido'
 
   const requeridos = sacrificiosRequeridos(meta.roles)
@@ -322,7 +322,7 @@ export function generarAccionesForja(state: GameState, playerId: PlayerId, cardI
   if (!meta) return null
   switch (meta.type) {
     case 'Campeón': {
-      const eterIds = etersParaPagar(state, playerId, meta.id)
+      const eterIds = etersParaPagar(state, playerId, meta.id, true)
       if (!eterIds) return null
       const requeridos = sacrificiosRequeridos(meta.roles)
       const sacrificables = campeonesSacrificables(state, playerId, meta.id)

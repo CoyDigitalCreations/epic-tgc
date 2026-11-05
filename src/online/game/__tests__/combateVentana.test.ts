@@ -10,17 +10,20 @@ import { verificarInvariantes } from '../invariants'
 import { ESTASIS_CARDS, DISONANCIA_CARDS } from '../../../shared/data/paquetes'
 import { expandirMazo } from './helpers'
 import type { Ctx, GameState, PlayerId } from '../types'
+import { REINO_PERDIDO_CLASICO, registrarReinoPerdidoClasico } from './helpers/reinoPerdidoClasico'
 
 // F5c: declarar ataque y declarar bloqueo respetan la pila (§9.6).
-// Cartas reales: FB-011 Vaela 5/3 · FB-015 Elena 5/4 · FB-016 Cassandra 3/5 · FB-023 El Reino Perdido (Arcana)
+// Cartas reales: FB-011 Vaela 5/2 · FB-015 Elena 4/2 · FB-016 Cassandra 3/5 · Reino Perdido clásico (Arcana, fixture)
 // · FB-025 Primer Juramento (Vínculo).
 const VAELA = 'FB-011'
 const ELENA = 'FB-015'
 const CASSANDRA = 'FB-016'
-// F5f: responder con una Arcana exige cumplir su `condicion` (FB-023: 2 Campeones propios con Éter bloqueado). Estos
-// tests son de mecánica de la ventana de combate, no de esa condición: usan un clon de FB-023 sin condicion.
+// F5f: responder con una Arcana exige cumplir su `condicion` (Reino Perdido clásico: 2 Campeones propios con Éter bloqueado). Estos
+// tests son de mecánica de la ventana de combate, no de esa condición: usan un clon del Reino Perdido clásico sin condicion.
 const ARCANA = 'TEST-ARCANA-LIBRE'
-registrarCartas([{ ...getCardMeta('FB-023')!, id: ARCANA, condicion: undefined } as AnyCard])
+// FB-023 se rediseñó: el clon parte del Reino Perdido clásico (fixture: Arcana coste 2 que roba 2).
+registrarReinoPerdidoClasico()
+registrarCartas([{ ...getCardMeta(REINO_PERDIDO_CLASICO)!, id: ARCANA, condicion: undefined } as AnyCard])
 const VINCULO = 'FB-025'
 
 function estadoMinimo(): GameState {

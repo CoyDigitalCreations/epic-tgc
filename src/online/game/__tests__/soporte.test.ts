@@ -8,6 +8,9 @@ import { registrarEfectos } from '../index'
 import { registrarCartas } from '../cards'
 import type { AnyCard } from '../../../shared/types'
 import type { Ctx, GameState, PlayerId } from '../types'
+import { REINO_PERDIDO_CLASICO, registrarReinoPerdidoClasico } from './helpers/reinoPerdidoClasico'
+
+registrarReinoPerdidoClasico()
 
 // Cartas reales del catálogo (fuente de verdad: seed/FuenteEfectos.json):
 // FB-031 Campeón Orden/Céleste cost 2 — tutor al morir: Campeones Orden+Céleste coste ≤ 4 del mazo
@@ -27,7 +30,7 @@ const VAELA = 'FB-011'
 const KAEL = 'DS-011'
 const RAGNAR = 'DS-010'
 const MIRA = 'FB-012' // Transmutar
-const ARCANA_DE_UN_USO = 'FB-023' // Arcana sin ARTEFACTO: se consume a 2G al resolverse en la pila
+const ARCANA_DE_UN_USO = REINO_PERDIDO_CLASICO // Arcana sin ARTEFACTO (FB-023 se rediseñó: fixture clásico): se consume a 2G al resolverse en la pila
 const ETER_ORDEN = 'FB-001'
 const ETER_CAOS = 'DS-002'
 const FB002 = 'FB-002' // Éter (inicio-choque)
@@ -268,7 +271,7 @@ describe('soporte C5 (dependencia mazo 45): dispatch al-ser-enviado-al-cementeri
     let s = estadoMinimo() // choque, turno A
     const combateId = 'combate-1'
     // F5f: FB-024 es ARTEFACTO (permanece en mesa al resolverse, como en activar_arcana); la Arcana de un solo uso
-    // que se consume a 2G es una sin la keyword (FB-023)
+    // que se consume a 2G es una sin la keyword (Reino Perdido clásico)
     s.instances[combateId] = { cardInstanceId: combateId, cardId: ARCANA_DE_UN_USO, owner: 'B' }
     s.players.B.campo.arcanasCombate[0] = combateId
     s.combate = {
@@ -513,7 +516,7 @@ describe('soporte C5: dispatch al-jugar-mistica', () => {
     const mistica = 'mistica-1'
     s.instances[mistica] = { cardInstanceId: mistica, cardId: FB032, owner: 'A' }
     s.players.A.mano = [mistica]
-    const { s: s2, ids } = conEteres(s, ETER_ORDEN, 2)
+    const { s: s2, ids } = conEteres(s, ETER_ORDEN, 4) // FB-032 cuesta 4 tras el rediseño
     s = s2
 
     const llamadas: string[] = []

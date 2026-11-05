@@ -38,7 +38,10 @@ export function botTonto(state: GameState, playerId: PlayerId, dificultad: Dific
     return getValidActions(state, playerId).find((a) => a.type === 'elegir_objetivo') ?? null
   }
   // F9c: scry — el bot conserva el orden y no manda nada al fondo (la jugada canónica de getValidActions)
-  if (scryActual(state)) {
+  // Un equipar pendiente (vigente) va ANTES que el scry (mismo orden que actorActual): se deja pasar al flujo normal del bot.
+  const equipar = state.equiparPendiente
+  const equiparVigente = !!equipar && !state.instances[equipar.artefactoId]?.equipadoA
+  if (scryActual(state) && !equiparVigente) {
     if (actorActual(state) !== playerId) return null
     return getValidActions(state, playerId).find((a) => a.type === 'ordenar_mazo') ?? null
   }

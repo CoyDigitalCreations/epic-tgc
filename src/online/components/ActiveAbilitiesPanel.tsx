@@ -10,6 +10,7 @@
 import { getCardMeta, esCampeon, esEter } from '../game/cards'
 import { modificadoresJSONDe, keywordsDe, hasAuraCampoRegistrada } from '../game/efectos'
 import type { EterCard, CampeonCard } from '../../shared/types'
+import { efectosComandante } from '../../shared/efectoComandante'
 import type { GameState, PlayerId } from '../game'
 
 interface ActiveEffect {
@@ -30,7 +31,8 @@ function findEfectoTexto(meta: { efectos?: Array<{ tipo: string; texto?: string 
 function getChampionEffectText(meta: CampeonCard, type: 'aura-campo' | 'keyword'): string {
   if (type === 'aura-campo') {
     // Aura de campo = efecto pasivo/comandante que aplica a otros
-    if (meta.efectoComandante?.texto) return meta.efectoComandante.texto
+    const textoComandante = efectosComandante(meta.efectoComandante).map((e) => e.texto).filter(Boolean).join(' ')
+    if (textoComandante) return textoComandante
     return findEfectoTexto(meta, 'pasivo') ?? 'Efecto de campo'
   }
   // Keywords se muestran como están

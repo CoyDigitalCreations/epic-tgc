@@ -24,7 +24,7 @@ const ISOLDE = 'FB-014'
 // IDs de Éteres — diseños según la fuente de verdad:
 // FB-001 pago/al_pagar_eter (NO aura reserva) · FB-002 pago/grant_keyword Vigor
 // FB-003 pago/draw · FB-004 pago/buff · FB-005 Pasivo 1A · FB-006 pago/mover
-// FB-007 bloqueo/buff +1 ATQ · FB-008 bloqueo/Inmortal · FB-009 bloqueo/+1 RES
+// FB-007 bloqueo/buff +1 ATQ · DS-009 bloqueo/Indestructible (FB-008 pasó a pago/Carga) · FB-009 bloqueo/+1 RES
 // DS-002 reserva/ninguno/debuff -1 ATQ rivales (SÍ aura reserva)
 // DS-003 reserva/inicio_choque/Carga · DS-004 pago/rival_discard
 // DS-005 pago/buff · DS-006 Pasivo 1A · DS-007 pago/mover
@@ -36,7 +36,7 @@ const FB004 = 'FB-004'
 const FB005 = 'FB-005'
 const FB006 = 'FB-006'
 const FB007 = 'FB-007'
-const FB008 = 'FB-008'
+
 const FB009 = 'FB-009'
 const DS002 = 'DS-002' // aura reserva: -1 ATQ rivales
 const DS003 = 'DS-003'
@@ -196,14 +196,14 @@ describe('2.1 Auras por zona — reserva (2A), derivadas del JSON (Fase 1)', () 
     let s = estadoMinimo()
     const { s: s1 } = conEterReserva(s, DS002, 'A')
     s = s1
-    const { s: s2, id: campeonA } = conCampeon(s, VAELA, 0, 'A') // Vaela 5/3 base
+    const { s: s2, id: campeonA } = conCampeon(s, VAELA, 0, 'A') // Vaela 5/2 base
     s = s2
-    const { s: s3, id: campeonB } = conCampeon(s, VAELA, 0, 'B') // Vaela 5/3 base
+    const { s: s3, id: campeonB } = conCampeon(s, VAELA, 0, 'B') // Vaela 5/2 base
     s = s3
     // Rival de A (= B) pierde 1 ATQ: base 5 - 1 = 4
-    expect(statsDe(s, campeonB)).toEqual({ poder: 4, resistencia: 3 })
+    expect(statsDe(s, campeonB)).toEqual({ poder: 4, resistencia: 2 })
     // Propio de A sin cambio
-    expect(statsDe(s, campeonA)).toEqual({ poder: 5, resistencia: 3 })
+    expect(statsDe(s, campeonA)).toEqual({ poder: 5, resistencia: 2 })
   })
 
   it('FB-001 en reserva NO da aura (JSON lo rediseñó a pago/al_pagar_eter)', () => {
@@ -213,32 +213,32 @@ describe('2.1 Auras por zona — reserva (2A), derivadas del JSON (Fase 1)', () 
     const { s: s2, id: campeonA } = conCampeon(s, VAELA, 0, 'A')
     s = s2
     // Sin aura: stats base
-    expect(statsDe(s, campeonA)).toEqual({ poder: 5, resistencia: 3 })
+    expect(statsDe(s, campeonA)).toEqual({ poder: 5, resistencia: 2 })
   })
 
   it('auras de bloqueo: FB-007 da +1 ATQ al anfitrión (JSON nuevo, no +2/+2)', () => {
     let s = estadoMinimo()
     const { s: s1, id: campeon } = conCampeon(s, VAELA, 0, 'A')
     s = s1
-    expect(statsDe(s, campeon)).toEqual({ poder: 5, resistencia: 3 })
+    expect(statsDe(s, campeon)).toEqual({ poder: 5, resistencia: 2 })
 
     const eterId = 'e-FB-007-bloqueado'
     s.instances[eterId] = { cardInstanceId: eterId, cardId: FB007, owner: 'A' }
     s = mutarEterBloqueado(s, campeon, eterId)
     // FB-007 nuevo: buff +1 ATQ (el handler viejo daba +2/+2 — DRIFT eliminado)
-    expect(statsDe(s, campeon)).toEqual({ poder: 6, resistencia: 3 })
+    expect(statsDe(s, campeon)).toEqual({ poder: 6, resistencia: 2 })
   })
 
-  it('auras de bloqueo: FB-008 otorga Inmortal al anfitrión via keywordsDe', () => {
+  it('auras de bloqueo: DS-009 otorga Indestructible al anfitrión via keywordsDe', () => {
     let s = estadoMinimo()
     const { s: s1, id: campeon } = conCampeon(s, VAELA, 0, 'A')
     s = s1
-    expect(keywordsDe(s, campeon)).not.toContain('Inmortal')
+    expect(keywordsDe(s, campeon)).not.toContain('Indestructible')
 
-    const eterId = 'e-FB-008-bloqueado'
-    s.instances[eterId] = { cardInstanceId: eterId, cardId: FB008, owner: 'A' }
+    const eterId = 'e-DS-009-bloqueado'
+    s.instances[eterId] = { cardInstanceId: eterId, cardId: DS009, owner: 'A' }
     s = mutarEterBloqueado(s, campeon, eterId)
-    expect(keywordsDe(s, campeon)).toContain('Inmortal')
+    expect(keywordsDe(s, campeon)).toContain('Indestructible')
   })
 })
 

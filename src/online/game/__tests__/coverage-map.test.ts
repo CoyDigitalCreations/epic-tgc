@@ -11,6 +11,7 @@ import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import type { AnyCard } from '../../../shared/types'
+import { efectosComandante } from '../../../shared/efectoComandante'
 import { buildReporte, pctOK, HANDLERS, GUARDS } from '../coverageMap'
 
 const sourcePath = resolve(__dirname, '../../../../seed/FuenteEfectos.json')
@@ -33,9 +34,10 @@ describe('coverageMap — mapa de cobertura motor vs fuente de verdad', () => {
   })
 
   it('los efectoComandante presentes en la fuente de verdad quedan clasificados como OK_AURA_JSON (Fase 1)', () => {
-    const comandantes = CARDS.filter((c) => c.type === 'Campeón' && c.efectoComandante)
+    // efectoComandante puede ser un arreglo (Aurora lleva dos): cada entrada es un item
+    const entradas = CARDS.flatMap((c) => (c.type === 'Campeón' ? efectosComandante(c.efectoComandante) : []))
     const items = reporte.items.filter((i) => i.origen === 'efectoComandante')
-    expect(items.length).toBe(comandantes.length)
+    expect(items.length).toBe(entradas.length)
     for (const it of items) {
       expect(it.estado).toBe('OK_AURA_JSON')
     }

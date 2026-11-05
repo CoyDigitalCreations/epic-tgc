@@ -6,14 +6,21 @@ import { parejasBloqueoOpcion } from '../habilidades'
 import { getValidActions } from '../validActions'
 import { reagruparEter } from '../payments'
 import type { Ctx, GameState, PlayerId } from '../types'
+import { PR, cargarCartasPrueba } from './helpers/cartasPrueba'
+import { AURORA_CLASICA, registrarAuroraClasica } from './helpers/auroraClasica'
 
-// Pasivo 1A (FB-005 Voz de las Casas): "bloquea 1 Éter de tu Reserva sobre un Campeón".
-// Cassandra FB-016 bloquea "hasta N" Éter (acepta 1 suelto). Aurora FB-010 es de bloqueo FIJO (4 propios exactos),
+// FB-005 pasó a pago/grant_keyword y Aurora (FB-010) dejó de robar: el Pasivo 1A se prueba con
+// el Éter Pasivo de Enlace (PR-004) y el bloqueo fijo con la Aurora clásica (fixture sintético).
+cargarCartasPrueba()
+registrarAuroraClasica()
+
+// Pasivo 1A (PR-004 Éter Pasivo de Enlace, antes FB-005): "bloquea 1 Éter de tu Reserva sobre un Campeón".
+// Cassandra FB-016 bloquea "hasta N" Éter (acepta 1 suelto). La Aurora clásica es de bloqueo FIJO (4 propios exactos),
 // pero DECISIÓN A: el Éter del Pasivo entra como EXTERNO y no le exige los 4 juntos. Vaela FB-011 no usa Éter bloqueado.
 const CASSANDRA = 'FB-016'
-const AURORA = 'FB-010'
+const AURORA = AURORA_CLASICA
 const VAELA = 'FB-011'
-const ETER_PASIVO = 'FB-005'
+const ETER_PASIVO = PR.ETER_PASIVO_1A
 const ETER = 'FB-001'
 
 function crearCtx(): Ctx {
@@ -21,7 +28,7 @@ function crearCtx(): Ctx {
   return { next: () => 0, emit: (e) => { events.push(e) }, events }
 }
 
-/** Forja de A con Aurora (slot 0), dos Cassandras (slots 1-2), Vaela (slot 3), 3 Éteres en la Reserva y el Pasivo 1A (FB-005) en la zona de pago. */
+/** Forja de A con Aurora (slot 0), dos Cassandras (slots 1-2), Vaela (slot 3), 3 Éteres en la Reserva y el Pasivo 1A (PR-004) en la zona de pago. */
 function escenario(): GameState {
   const jugador = (id: PlayerId) => ({
     id,

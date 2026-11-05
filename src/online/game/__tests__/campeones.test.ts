@@ -22,11 +22,11 @@ import type { EfectoData, AnyCard } from '../../../shared/types/cards'
 // ─── Cartas reales usadas como data mínima ─────────────────────────
 // Usamos cartas reales para que getCardMeta() funcione, pero los tests
 // NO dependen de los efectos de estas cartas — usan EfectoData mock.
-const CAMPEON_A = 'FB-011' // Vaela 5/3
+const CAMPEON_A = 'FB-011' // Vaela 5/2
 const CAMPEON_B = 'DS-011' // Kael 5/3 (rival — different ID for unique matching)
-const CAMPEON_PROTECTOR = 'FB-014' // Isolde 3/7 Protector
+const CAMPEON_PROTECTOR = 'FB-014' // Isolde 3/6 Protector
 const CAMPEON_INMORTAL = 'FB-010' // Aurora 9/9 Inmortal
-const CAMPEON_COST2 = 'FB-011' // Vaela cost 2
+const CAMPEON_COST2 = 'FB-011' // Vaela cost 3
 const CAMPEON_COST4 = 'FB-010' // Aurora cost 4
 const ETER_ORDEN = 'FB-001'
 
@@ -115,15 +115,16 @@ describe('C3a: infraestructura de targeting + dispatch de triggers', () => {
     const championId = 'c-vaela-mano'
     s.instances[championId] = { cardInstanceId: championId, cardId: CAMPEON_A, owner: 'A' }
     s.players.A.mano = [championId]
-    s.players.A.eterReserva = ['e1', 'e2']
+    s.players.A.eterReserva = ['e1', 'e2', 'e3']
     s.instances['e1'] = { cardInstanceId: 'e1', cardId: ETER_ORDEN, owner: 'A' }
     s.instances['e2'] = { cardInstanceId: 'e2', cardId: ETER_ORDEN, owner: 'A' }
+    s.instances['e3'] = { cardInstanceId: 'e3', cardId: ETER_ORDEN, owner: 'A' }
 
     const invocadas: string[] = []
     registrarEfecto('al-invocar', CAMPEON_A, (_st, _ctx, inst) => invocadas.push(inst.cardInstanceId))
 
     const ctx = crearCtx()
-    const sFinal = aplicar(s, { type: 'jugar_campeon', cardInstanceId: championId, slot: 0, eterIds: ['e1', 'e2'] }, ctx)
+    const sFinal = aplicar(s, { type: 'jugar_campeon', cardInstanceId: championId, slot: 0, eterIds: ['e1', 'e2', 'e3'] }, ctx)
     expect(invocadas).toEqual([championId])
     expect(sFinal.players.A.campo.campeones[0]).toBe(championId)
   })
@@ -385,7 +386,7 @@ describe('C3b: modificadores continuos desde el JSON (Fase 1) + Protector (D3)',
     s = s3
 
     // Otro campeón propio: base 5 + 1 aura = 6
-    expect(statsDe(s, otro)).toEqual({ poder: 6, resistencia: 3 })
+    expect(statsDe(s, otro)).toEqual({ poder: 6, resistencia: 2 })
     // La fuente NO se buffea a sí misma (convención "otros")
     expect(statsDe(s, fuente)).toEqual({ poder: 3, resistencia: 3 })
     // Rival sin aura
@@ -425,8 +426,8 @@ describe('C3b: modificadores continuos desde el JSON (Fase 1) + Protector (D3)',
 
     // Comandante SÍ se buffea a sí mismo ("Todos tus Campeones") — base 5/5 +2/+2
     expect(statsDe(s, comandante)).toEqual({ poder: 7, resistencia: 7 })
-    // Otro campeón propio (Vaela 5/3) también: 7/5
-    expect(statsDe(s, otro)).toEqual({ poder: 7, resistencia: 5 })
+    // Otro campeón propio (Vaela 5/2) también: 7/4
+    expect(statsDe(s, otro)).toEqual({ poder: 7, resistencia: 4 })
     // Rival (Kael 5/3) sin aura
     expect(statsDe(s, rival)).toEqual({ poder: 5, resistencia: 3 })
   })
@@ -460,7 +461,7 @@ describe('C3b: modificadores continuos desde el JSON (Fase 1) + Protector (D3)',
     // Comandante Orden (5/5)
     const { s: s1, id: comandante } = conCampeon(s, COMANDANTE_ORDEN, 0, 'A')
     s = s1
-    // Campeón Orden propio (Vaela FB-011 — Orden, 5/3)
+    // Campeón Orden propio (Vaela FB-011 — Orden, 5/2)
     const { s: s2, id: ordenPropio } = conCampeon(s, CAMPEON_A, 1, 'A')
     s = s2
     // Campeón Caos propio (Kael DS-011 — Caos, 5/3)
@@ -469,8 +470,8 @@ describe('C3b: modificadores continuos desde el JSON (Fase 1) + Protector (D3)',
 
     // Comandante Orden: 5/5 +2/+2 = 7/7 (sí se buffea a sí mismo)
     expect(statsDe(s, comandante)).toEqual({ poder: 7, resistencia: 7 })
-    // Campeón Orden propio: 5/3 +2/+2 = 7/5 (SÍ recibe el buff)
-    expect(statsDe(s, ordenPropio)).toEqual({ poder: 7, resistencia: 5 })
+    // Campeón Orden propio: 5/2 +2/+2 = 7/4 (SÍ recibe el buff)
+    expect(statsDe(s, ordenPropio)).toEqual({ poder: 7, resistencia: 4 })
     // Campeón Caos propio: 5/3 SIN buff (NO comparte facción con el comandante)
     expect(statsDe(s, caosPropio)).toEqual({ poder: 5, resistencia: 3 })
   })
@@ -506,7 +507,7 @@ describe('C3b: modificadores continuos desde el JSON (Fase 1) + Protector (D3)',
 
     // El comandante SÍ se buffea a sí mismo
     expect(statsDe(s, comandante)).toEqual({ poder: 7, resistencia: 7 })
-    expect(statsDe(s, otro)).toEqual({ poder: 7, resistencia: 5 })
+    expect(statsDe(s, otro)).toEqual({ poder: 7, resistencia: 4 })
 
     // REDISEÑO obs 1874: la negación es un CONTADOR sobre la activación
     // pendiente de la ventana (activar_habilidad) — nunca sobre auras
@@ -594,7 +595,7 @@ describe('C3b: modificadores continuos desde el JSON (Fase 1) + Protector (D3)',
     // Rival de A (= B) pierde 1 ATQ: base 5 - 1 = 4
     expect(statsDe(s, campeonB)).toEqual({ poder: 4, resistencia: 3 })
     // Propio de A sin cambio
-    expect(statsDe(s, campeonA)).toEqual({ poder: 5, resistencia: 3 })
+    expect(statsDe(s, campeonA)).toEqual({ poder: 5, resistencia: 2 })
   })
 
   it('aura bloqueo buff: Éter bloqueado sobre el anfitrión le da +1 ATQ (mientras esté bloqueado)', () => {
@@ -624,7 +625,7 @@ describe('C3b: modificadores continuos desde el JSON (Fase 1) + Protector (D3)',
     const { s: s1, id: champ } = conCampeon(s, CAMPEON_A, 0, 'A')
     s = s1
     // Sin éter bloqueado: stats base
-    expect(statsDe(s, champ)).toEqual({ poder: 5, resistencia: 3 })
+    expect(statsDe(s, champ)).toEqual({ poder: 5, resistencia: 2 })
 
     // Con éter bloqueado sobre el anfitrión: +1 ATQ
     const eterId = 'e-test-bloq-A'
@@ -633,7 +634,7 @@ describe('C3b: modificadores continuos desde el JSON (Fase 1) + Protector (D3)',
       ...s,
       instances: { ...s.instances, [champ]: { ...s.instances[champ], eterBloqueado: [eterId] } },
     }
-    expect(statsDe(s, champ)).toEqual({ poder: 6, resistencia: 3 })
+    expect(statsDe(s, champ)).toEqual({ poder: 6, resistencia: 2 })
   })
 
   it('aura bloqueo grant_keyword: Éter bloqueado otorga Inmortal al anfitrión', () => {
@@ -704,7 +705,7 @@ describe('C3b: modificadores continuos desde el JSON (Fase 1) + Protector (D3)',
     s = s2
 
     // Sin éter bloqueado en la fuente: aura inactiva
-    expect(statsDe(s, otro)).toEqual({ poder: 5, resistencia: 3 })
+    expect(statsDe(s, otro)).toEqual({ poder: 5, resistencia: 2 })
 
     // La fuente bloquea éter: aura activa para todos los propios
     const eterId = 'e-test-cond-A'
@@ -713,7 +714,7 @@ describe('C3b: modificadores continuos desde el JSON (Fase 1) + Protector (D3)',
       ...s,
       instances: { ...s.instances, [fuente]: { ...s.instances[fuente], eterBloqueado: [eterId] } },
     }
-    expect(statsDe(s, otro)).toEqual({ poder: 6, resistencia: 3 })
+    expect(statsDe(s, otro)).toEqual({ poder: 6, resistencia: 2 })
     // La fuente también se beneficia (todos_campeones_propios en aura condicional = todos)
     expect(statsDe(s, fuente)).toEqual({ poder: 4, resistencia: 5 })
   })
@@ -774,10 +775,10 @@ describe('C3b: modificadores continuos desde el JSON (Fase 1) + Protector (D3)',
     const { s: s2, id: otro } = conCampeon(s, CAMPEON_A, 1, 'A')
     s = s2
 
-    // Sin aura: otro campeón queda en stats base (5/3 de Vaela)
-    expect(statsDe(s, otro)).toEqual({ poder: 5, resistencia: 3 })
-    // Isolde también en base (3/7)
-    expect(statsDe(s, isolde)).toEqual({ poder: 3, resistencia: 7 })
+    // Sin aura: otro campeón queda en stats base (5/2 de Vaela)
+    expect(statsDe(s, otro)).toEqual({ poder: 5, resistencia: 2 })
+    // Isolde también en base (3/6)
+    expect(statsDe(s, isolde)).toEqual({ poder: 3, resistencia: 6 })
   })
 
   it('objetivosCampeonesValidos: sin Protector → todos; con Protector → solo Protectores', () => {

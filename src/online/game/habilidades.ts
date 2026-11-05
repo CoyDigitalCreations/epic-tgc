@@ -17,7 +17,8 @@ import { metaDeInstancia } from './efectosInstancia'
 import { liberarEterBloqueado, enviarAlCementerio } from './replacements'
 import { slotAZona } from './zones'
 import { validarBloqueo } from './payments'
-import { pagarHabilidad } from './habilidadPago'
+import { habilidadUsadaEsteTurno, pagarHabilidad } from './habilidadPago'
+import { candidatosActivarDisparo } from './resonancia'
 import { continuarDeclaracion, declararOpener, equiparComoRespuesta, marcarInicioAccion, motivoArcanaNoActivable, registrarObjetivoOpener, type MarcadorAccion } from './chain'
 import type { Action } from './core'
 
@@ -74,6 +75,11 @@ export function validarActivarHabilidad(state: GameState, action: Extract<Action
     return 'esta carta se activa bloqueando Éter (usa la acción bloquear_eter)'
   }
 
+  // Resonancia (activar_disparo): hace falta otro Campeón propio con un Disparo copiable (si no, el coste se pagaría en balde)
+  if (efectoSel.efecto === 'activar_disparo' && candidatosActivarDisparo(state, state.turno, action.cardInstanceId, efectoSel).length === 0) {
+    return 'no hay otro Campeón tuyo con un Disparo que activar'
+  }
+
   const esBloqueado = esCostoBloqueo(efectoSel.costo)
 
   if (esBloqueado) {
@@ -103,6 +109,7 @@ export function validarActivarHabilidad(state: GameState, action: Extract<Action
     // agotamiento (§8.3a); el Continuo pagado conserva su 1/turno.
     if (inst.agotado) return 'la carta ya está agotada'
     if (efectoSel.tipo !== 'disparo' && inst.opcionUsadaEsteTurno) return 'ya usaste esta habilidad este turno'
+    if (habilidadUsadaEsteTurno(state, action.cardInstanceId, efectoSel)) return 'ya usaste esta habilidad este turno'
     const costoEsperado = efectoSel.costo?.cantidad ?? 0
     const costoReal = costoEsperado > 0 ? costoEsperado : 1 // fallback: 1 éter
     if (action.eterIds.length !== costoReal) {

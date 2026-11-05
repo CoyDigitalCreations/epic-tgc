@@ -122,6 +122,15 @@ export function efectoActivableDe(card: AnyCard, conObjetivo: boolean): EfectoDa
 }
 
 /**
+ * Lote 3: ¿el efecto se paga con la ACCIÓN bloquear_eter? Los de costo-bloqueo que no son Disparo, SALVO los que tienen
+ * TRIGGER: «cuando…, bloquea N Éter» (Reino Perdido) se paga al dispararse el trigger (cobrarCostoDeTrigger). Antes la acción
+ * manual también se ofrecía para ellos y bloqueaba el Éter sin producir nada (fuga de Éter).
+ */
+export function esEfectoDeBloqueoManual(e: EfectoData): boolean {
+  return esCostoBloqueo(e.costo) && e.tipo !== 'disparo' && (!e.trigger || e.trigger === 'ninguno')
+}
+
+/**
  * true si la carta recibe Éter bloqueado vía la acción bloquear_eter: tiene
  * algún efecto con costo-bloqueo que NO es disparo (continuo/hechizo/vinculo
  * → aura derivada o one-shot de umbral). Los disparos con costo-bloqueo son
@@ -142,7 +151,7 @@ export function cartaBloqueaPorAccion(card: AnyCard): boolean {
  */
 export function efectoBloqueoAccion(card: AnyCard): { efecto: EfectoData; indice: number } | null {
   if (!('efectos' in card) || !card.efectos) return null
-  const indice = card.efectos.findIndex((e) => esCostoBloqueo(e.costo) && e.tipo !== 'disparo')
+  const indice = card.efectos.findIndex(esEfectoDeBloqueoManual)
   return indice === -1 ? null : { efecto: card.efectos[indice], indice }
 }
 

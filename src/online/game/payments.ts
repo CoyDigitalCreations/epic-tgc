@@ -1,8 +1,8 @@
 import { esEter, getCardMeta, cartaNecesitaEterBloqueado, efectoBloqueoAccion } from './cards'
-import { etiquetarEter, eterDeEfecto } from './eter'
+import { etiquetarEter, eterDeEfecto, marcarContinuoActivado } from './eter'
 import type { AnyCard } from '../../shared/types'
 import { dispararTrigger } from './efectos'
-import { efectosNegados } from './reglas'
+import { efectosNegados, reglaNumero } from './reglas'
 import type { Ctx, GameState, PlayerId } from './types'
 
 /**
@@ -48,12 +48,30 @@ export function aporteDe(eterCardId: string, _objetivoCardId: string): number {
   return 1
 }
 
-/** Validación read-only: exactamente el coste, sin sobrepago. */
+/**
+ * Coste en Éter de INVOCAR a un Campeón por `jugador`: el impreso más lo que le sumen las reglas (`costeCampeonesExtra`,
+ * p. ej. el tributo de Aurora a los Campeones del rival). Fuente ÚNICA: la validación, el pago, las acciones que genera el
+ * motor y la UI (Tablero) leen el coste por aquí. Una carta que no es Campeón cuesta lo impreso.
+ */
+export function costeDeCampeon(state: GameState, jugador: PlayerId, cardId: string): number {
+  const meta = getCardMeta(cardId)
+  if (!meta) return 0
+  if (meta.type !== 'Campeón') return meta.stats.cost
+  return meta.stats.cost + reglaNumero(state, 'costeCampeonesExtra', { jugador })
+}
+
+/** Coste a pagar: el de invocar (con recargos de Campeón) o el impreso (Místicas, Arcanas, habilidades). */
+function costeAPagar(state: GameState, jugador: PlayerId, cardId: string, invocacion: boolean): number {
+  return invocacion ? costeDeCampeon(state, jugador, cardId) : (getCardMeta(cardId)?.stats.cost ?? 0)
+}
+
+/** Validación read-only: exactamente el coste, sin sobrepago. `invocacion`: se paga la invocación de un Campeón (coste con recargos). */
 export function validarPago(
   state: GameState,
   jugador: PlayerId,
   eterIds: string[],
   objetivoCardId: string,
+  invocacion = false,
 ): ResultadoPago {
   if (eterIds.length === 0) return { ok: false, error: 'no indicaste Éteres para pagar' }
   const objetivo = getCardMeta(objetivoCardId)
@@ -70,8 +88,9 @@ export function validarPago(
     if (!p.eterReserva.includes(id)) return { ok: false, error: `el Éter no está en tu Reserva: ${id}` }
     suma += aporteDe(meta.id, objetivoCardId)
   }
-  if (suma < objetivo.stats.cost) return { ok: false, error: 'pago insuficiente' }
-  if (suma > objetivo.stats.cost) return { ok: false, error: 'sobrepago no permitido — selecciona exactamente el coste' }
+  const coste = costeAPagar(state, jugador, objetivoCardId, invocacion)
+  if (suma < coste) return { ok: false, error: 'pago insuficiente' }
+  if (suma > coste) return { ok: false, error: 'sobrepago no permitido — selecciona exactamente el coste' }
   return { ok: true, aportado: suma }
 }
 
@@ -84,7 +103,8 @@ export function aplicarPago(
   objetivoCardId: string,
   contextoUso?: ContextoUso,
 ): GameState {
-  const validado = validarPago(s, jugador, eterIds, objetivoCardId)
+  const invocacion = contextoUso?.tipo === 'invocar'
+  const validado = validarPago(s, jugador, eterIds, objetivoCardId, invocacion)
   if (!validado.ok || validado.aportado === undefined) return s
   const objetivo = getCardMeta(objetivoCardId)
   if (!objetivo) return s // defensivo: validarPago ya lo comprobó
@@ -98,7 +118,7 @@ export function aplicarPago(
     type: 'eter_pagado',
     jugador,
     eterIds,
-    costo: objetivo.stats.cost,
+    costo: costeAPagar(s, jugador, objetivoCardId, invocacion),
     aportado: validado.aportado,
   })
 
@@ -131,11 +151,11 @@ export function aplicarPago(
  * Selecciona Éteres de la Reserva que sumen EXACTAMENTE el coste (sin sobrepago).
  * Busca la combinación más pequeña que sume exactamente el coste.
  */
-export function etersParaPagar(state: GameState, jugador: PlayerId, objetivoCardId: string): string[] | null {
+export function etersParaPagar(state: GameState, jugador: PlayerId, objetivoCardId: string, invocacion = false): string[] | null {
   const objetivo = getCardMeta(objetivoCardId)
   if (!objetivo) return null
   const p = state.players[jugador]
-  const coste = objetivo.stats.cost
+  const coste = costeAPagar(state, jugador, objetivoCardId, invocacion)
 
   // Preparar éteres con su contribución
   const eteres: { id: string; contrib: number }[] = []
@@ -321,6 +341,7 @@ export function bloquearEter(
     if (idx !== -1) zonaOrigen.splice(idx, 1)
   }
   etiquetarEter(s, eterIds, targetInstanceId, fuente?.indice ?? -1, jugador)
+  if (fuente) marcarContinuoActivado(s, targetInstanceId, fuente.indice) // Lote 2: «mientras tenga Éter bloqueado» se enciende al pagar
   // Fase B: «una vez por turno» se GASTA al pagar (aunque la activación luego sea negada)
   if (fuente?.efecto.costo?.tipo === 'bloqueo_fijo' && fuente.efecto.activacion === 'una_por_turno') {
     instTarget.efectosUsadosEsteTurno = [...(instTarget.efectosUsadosEsteTurno ?? []), fuente.indice]
@@ -333,11 +354,17 @@ export function bloquearEter(
 /** Alba del dueño: 1A → 2A (eter_reagrupado). El Éter bloqueado permanece en el Campeón. */
 export function reagruparEter(s: GameState, ctx: Ctx, jugador: PlayerId): void {
   const p = s.players[jugador]
+  // Lote 3 (Runa de Ancla): el Éter ANCLADO se queda en 1A esta Alba. El ancla dura UNA sola Alba: se vacía siempre aquí
+  // (también si el Éter ya no está en 1A). Va en el propio reagrupar, no en purgarHastaFase('alba'), porque la purga corre
+  // ANTES de reagruparEter (resolverAlba) y el ancla no habría protegido nada.
+  const anclados = new Set(p.eterAnclado ?? [])
+  delete p.eterAnclado
   if (p.eterPagado.length === 0) return
-  const reagrupados = p.eterPagado
+  const reagrupados = p.eterPagado.filter((id) => !anclados.has(id))
+  if (reagrupados.length === 0) return
   // El Pasivo 1A de una carta de Éter (una vez por turno) se estrena de nuevo la próxima vez que se pague
   for (const id of reagrupados) delete s.instances[id]?.opcionUsadaEsteTurno
   p.eterReserva.push(...reagrupados)
-  p.eterPagado = []
+  p.eterPagado = p.eterPagado.filter((id) => anclados.has(id))
   ctx.emit({ type: 'eter_reagrupado', jugador, eterIds: reagrupados })
 }

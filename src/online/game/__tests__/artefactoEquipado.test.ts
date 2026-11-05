@@ -11,6 +11,8 @@ import { statsDe, purgarEfectosTemporales } from '../efectos'
 import { getCardMeta } from '../cards'
 import { getValidActions } from '../validActions'
 import { applyAction } from '../actions'
+import { botTonto } from '../bot'
+import { actorActual } from '../validActions'
 import { descartarEquiparMuerto } from '../pendientes'
 import type { AnyCard } from '../../../shared/types'
 import type { GameState } from '../types'
@@ -115,6 +117,38 @@ describe('Arcana Artefacto boca abajo: no se equipa de forma voluntaria (PvP: pe
     fuera.equiparPendiente = { artefactoId: 'filo', jugador: 'A', contexto: 'activar_arcana' }
     descartarEquiparMuerto(fuera)
     expect(fuera.equiparPendiente).toBeUndefined()
+  })
+})
+
+describe('equipar + scry pendientes a la vez (Lote 0: interbloqueo)', () => {
+  function conAmbos(): GameState {
+    const s = escena(); conMistica(s, 'A', 'art', 'DS-021', 0)
+    s.equiparPendiente = { artefactoId: 'art', jugador: 'A', contexto: 'jugar_mistica' }
+    s.scryPendientes = [{ jugador: 'A', mazoDe: 'A', cartas: [s.players.A.mazo[0]] }]
+    return s
+  }
+  it('el equipar va primero: el actor puede equipar y el motor lo acepta', () => {
+    const s = conAmbos()
+    expect(actorActual(s)).toBe('A')
+    const eq = getValidActions(s, 'A').find((a) => a.type === 'equipar_artefacto')
+    expect(eq, 'debe ofrecerse equipar').toBeDefined()
+    const r = applyAction(s, eq!, crearCtx())
+    expect(r.ok).toBe(true)
+  })
+  it('tras equipar se resuelve el scry; ambos pendientes terminan', () => {
+    let s = conAmbos(); const ctx = crearCtx()
+    s = aplicar(s, getValidActions(s, 'A').find((a) => a.type === 'equipar_artefacto')!, ctx)
+    expect(s.equiparPendiente).toBeUndefined()
+    expect(actorActual(s)).toBe('A')
+    s = aplicar(s, getValidActions(s, 'A').find((a) => a.type === 'ordenar_mazo')!, ctx)
+    expect(s.scryPendientes).toBeUndefined()
+  })
+  it('el bot no se interbloquea: equipa primero y luego ordena', () => {
+    let s = conAmbos(); const ctx = crearCtx()
+    const a1 = botTonto(s, 'A')
+    expect(a1?.type).toBe('equipar_artefacto')
+    s = aplicar(s, a1!, ctx)
+    expect(botTonto(s, 'A')?.type).toBe('ordenar_mazo')
   })
 })
 

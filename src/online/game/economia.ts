@@ -8,7 +8,7 @@ import { validarBloqueo, bloquearEter } from './payments'
 import { dispararUmbralBloqueo } from './effectInterpreter'
 import type { Action } from './core'
 import { cadenaActiva } from './chain'
-import { efectoBloqueoAccion, getCardMeta } from './cards'
+import { efectoBloqueoAccion, esCostoBloqueo, esEfectoDeBloqueoManual, getCardMeta } from './cards'
 
 /* ─────────────────────── Validador ─────────────────────── */
 
@@ -32,6 +32,15 @@ export function validarBloquearEter(state: GameState, action: Extract<Action, { 
   // Decisión del usuario (2026-10-26): un efecto continuo (bloquear Éter) solo puede usarse COMO RESPUESTA
   // dentro de una cadena durante la Forja; no agota al Campeón (eso mantiene útiles a los efectos Disparo)
   if (cadenaActiva(state) && state.fase !== 'forja') return 'un efecto continuo solo puede responder en la Forja (§8.3a)'
+  // Lote 3: un efecto con TRIGGER («cuando…, bloquea N Éter», Reino Perdido) se paga al dispararse (cobrarCostoDeTrigger), nunca
+  // con esta acción: antes se podía bloquear el Éter a mano sin producir nada (fuga de Éter)
+  const metaDestino = getCardMeta(state.instances[action.targetInstanceId]?.cardId ?? '')
+  const efectoPagado = metaDestino && 'efectos' in metaDestino && metaDestino.efectos
+    ? (action.efectoIdx !== undefined ? metaDestino.efectos[action.efectoIdx] : efectoBloqueoAccion(metaDestino)?.efecto)
+    : undefined
+  if (efectoPagado && esCostoBloqueo(efectoPagado.costo) && efectoPagado.tipo !== 'disparo' && !esEfectoDeBloqueoManual(efectoPagado)) {
+    return 'este efecto se paga al cumplirse su condición (trigger): no se activa bloqueando Éter a mano'
+  }
   return validarBloqueo(state, actorDeBloqueo(state), action.eterIds, action.targetInstanceId, action.efectoIdx)
 }
 

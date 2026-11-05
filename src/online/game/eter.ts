@@ -130,8 +130,25 @@ export function quitarEteres(s: GameState, fuenteId: string, ids: string[]): voi
   if (!inst?.eterBloqueado) return
   const quedan = inst.eterBloqueado.filter((id) => !ids.includes(id))
   if (quedan.length > 0) inst.eterBloqueado = quedan
-  else delete inst.eterBloqueado
+  else {
+    delete inst.eterBloqueado
+    delete inst.continuosActivados // sin Éter, «mientras tenga Éter bloqueado» se apaga
+  }
 }
+
+/**
+ * Marca un Continuo de duración `mientras_tenga_eter_bloqueado` como ACTIVADO (su bloqueo se pagó): desde ahora vale
+ * mientras la carta tenga CUALQUIER Éter bloqueado. Se llama al pagar el bloqueo (bloquearEter / pagarHabilidad).
+ */
+export function marcarContinuoActivado(s: GameState, instId: string, indiceEfecto: number): void {
+  const inst = s.instances[instId]
+  if (!inst || indiceEfecto < 0) return
+  const meta = inst.cardId ? getCardMeta(inst.cardId) : null
+  const efecto = meta && 'efectos' in meta ? meta.efectos?.[indiceEfecto] : undefined
+  if (efecto?.duracion !== 'mientras_tenga_eter_bloqueado') return
+  if (!(inst.continuosActivados ?? []).includes(indiceEfecto)) inst.continuosActivados = [...(inst.continuosActivados ?? []), indiceEfecto]
+}
+
 
 /**
  * Libera éter AGRUPANDO POR PAGADOR: cada pagador recibe los suyos en su
@@ -178,6 +195,7 @@ export function limpiarFlagsUmbralSiVacia(s: GameState, fuenteId: string): void 
   delete inst.fijadoExhaustTargetId
   delete inst.sostenidos
   delete inst.efectosUmbralDisparados
+  delete inst.continuosActivados
 }
 
 /**
@@ -237,6 +255,7 @@ export function retornarCampeonesRobados(
         delete other.fijadoExhaustTargetId
         delete other.sostenidos
         delete other.efectosUmbralDisparados
+        delete other.continuosActivados
         const grupos = liberarEterA(s, eteres, '2A', ladron)
         for (const [jugador, ids] of Object.entries(grupos) as [PlayerId, string[]][]) {
           ctx.emit({ type: 'eter_reagrupado', jugador, eterIds: ids })

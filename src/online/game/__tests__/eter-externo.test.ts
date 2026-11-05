@@ -1,7 +1,7 @@
 // @vitest-environment node
 /**
  * Fase A — Éter EXTERNO: Éter bloqueado sobre un Campeón por una carta AJENA
- * (Pasivo 1A de FB-005 / DS-006 vía elegir_opcion).
+ * (Pasivo 1A de DS-006 vía elegir_opcion).
  *
  * Reglas aprobadas (handoff §2.2 / §2.3):
  *  - Se etiqueta `${campeon}#ext` (NO como propio `${campeon}#${idx}`).
@@ -11,7 +11,7 @@
  *  - Un externo NO completa un `bloqueo_fijo` (contarEterUmbral → solo propio).
  *
  * Cartas reales: FB-016 Cassandra (eter_bloqueado «hasta 4», tramos 2/4),
- * FB-010 Aurora (bloqueo_fijo 4 + reagrupar Alba), FB-005 Pasivo 1A, FB-011 Vaela (rival).
+ * Aurora clásica (fixture: bloqueo_fijo 4 + reagrupar Alba), DS-006 Pasivo 1A, FB-011 Vaela (rival).
  */
 import { describe, it, expect } from 'vitest'
 import { applyAction } from '../actions'
@@ -31,11 +31,16 @@ import {
   quitarEteres,
 } from '../eter'
 import type { Ctx, GameState, PlayerId } from '../types'
+import { AURORA_CLASICA, registrarAuroraClasica } from './helpers/auroraClasica'
+
+// Aurora (FB-010) dejó de robar y FB-005 pasó a pago/grant_keyword: se usan la Aurora clásica
+// (fixture sintético) y DS-006, que conserva el Pasivo 1A de bloquear 1 Éter.
+registrarAuroraClasica()
 
 const CASSANDRA = 'FB-016'
-const AURORA = 'FB-010'
+const AURORA = AURORA_CLASICA
 const VAELA = 'FB-011'
-const PASIVO = 'FB-005'
+const PASIVO = 'DS-006'
 const ETER = 'FB-001'
 
 function crearCtx(): Ctx {
@@ -122,7 +127,7 @@ function escenarioAurora(): GameState {
   return conReserva(s, Array.from({ length: 8 }, (_, i) => `x${i}`))
 }
 
-describe('Éter externo — etiquetado (Pasivo 1A real de FB-005 sobre Cassandra)', () => {
+describe('Éter externo — etiquetado (Pasivo 1A real de DS-006 sobre Cassandra)', () => {
   it('elegir_opcion etiqueta el Éter como EXTERNO (#ext), no como propio del efecto', () => {
     let s = escenarioCassandra()
     s = poner(s, 'pasivo', PASIVO)
@@ -254,14 +259,14 @@ describe('Éter externo (f) — NO completa un bloqueo_fijo (decisión 2.4, Auro
   })
 })
 
-describe('Éter externo (d) — jugada completa: FB-005 sobre Aurora (decisión A)', () => {
-  it('FB-005 bloquea 1 externo → Aurora roba con 4 propios → Alba libera los 4 y el robo sigue → sin externo regresa', () => {
+describe('Éter externo (d) — jugada completa: DS-006 sobre Aurora (decisión A)', () => {
+  it('DS-006 bloquea 1 externo → Aurora roba con 4 propios → Alba libera los 4 y el robo sigue → sin externo regresa', () => {
     let s = escenarioAurora()
-    // Pasivo 1A (FB-005) en la zona de pago: solo funciona desde 1A
+    // Pasivo 1A (DS-006) en la zona de pago: solo funciona desde 1A
     s = poner(s, 'pasivo', PASIVO)
     s = { ...s, players: { ...s.players, A: { ...s.players.A, eterPagado: ['pasivo'] } } }
 
-    // 1) FB-005 bloquea x7 (Reserva) sobre Aurora → EXTERNO
+    // 1) DS-006 bloquea x7 (Reserva) sobre Aurora → EXTERNO
     s = aplicar(s, { type: 'elegir_opcion', opcionId: 'pasivo', campeonId: 'aur', eterId: 'x7' })
     expect(s.instances.x7.bloqueadoPorEfecto).toBe(claveExterno('aur'))
 

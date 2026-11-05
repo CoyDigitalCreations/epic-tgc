@@ -11,7 +11,7 @@
  */
 import { esCampeon, esVinculo, getCardMeta } from './cards'
 import { reiniciarCampeon } from './reglasTemporales'
-import { dispararTrigger, keywordsDe } from './efectos'
+import { dispararTrigger, instanciasEnCampo, keywordsDe } from './efectos'
 import { liberarEterA, evaluarFinSteal } from './eter'
 import { esExiliable, permitirExilio } from './exilio'
 import type { CausaDestruccion, Ctx, GameState, PlayerId } from './types'
@@ -75,6 +75,28 @@ export function moverAlCementerio(s: GameState, ctx: Ctx, cardInstanceId: string
  */
 export type ZonaOrigenCementerio = 'mano' | 'campo' | 'otra'
 
+/** Quién CONTROLA al Campeón ahora mismo (el jugador en cuyo campo está; un Campeón robado vive en el campo del ladrón), o undefined. */
+function controladorEnCampo(s: GameState, id: string): PlayerId | undefined {
+  for (const j of ['A', 'B'] as PlayerId[]) if (s.players[j].campo.campeones.includes(id)) return j
+  return undefined
+}
+
+/**
+ * Lote 3 — «cuando un Campeón que controles (o del rival) sea enviado al Cementerio» (Reino Perdido). Se dispara DESPUÉS de
+ * `al-ser-enviado-al-cementerio`, con el Campeón ya en 2G, para las cartas en juego de AMBOS jugadores (el del turno primero).
+ * `controlador` es quien lo controlaba al salir del campo (puede no ser su dueño si estaba robado); el filtro por
+ * `controladorTrigger` y `excluyeEsta` vive en triggersQueMatchean. Solo Campeones que estaban EN el campo.
+ */
+function dispararCampeonAlCementerio(s: GameState, ctx: Ctx, cardInstanceId: string, controlador: PlayerId | undefined): void {
+  if (!controlador) return
+  const meta = s.instances[cardInstanceId]?.cardId ? getCardMeta(s.instances[cardInstanceId]!.cardId!) : null
+  if (!meta || !esCampeon(meta)) return
+  const orden: PlayerId[] = s.turno === 'A' ? ['A', 'B'] : ['B', 'A']
+  for (const j of orden) {
+    dispararTrigger(s, ctx, 'cuando-campeon-al-cementerio', j, instanciasEnCampo(s, j), { victimaId: cardInstanceId, controladorVictima: controlador })
+  }
+}
+
 /**
  * Primitiva C5 (change 4): envía una instancia a 2G (cementerio de su dueño)
  * y dispara `al-ser-enviado-al-cementerio` con la carta YA en 2G (glosario). Es la vía ÚNICA de descarte/sacrificio/coste/consumo → 2G con
@@ -86,6 +108,7 @@ export type ZonaOrigenCementerio = 'mano' | 'campo' | 'otra'
 export function enviarAlCementerio(s: GameState, ctx: Ctx, cardInstanceId: string, desde?: ZonaOrigenCementerio): void {
   const inst = s.instances[cardInstanceId]
   if (!inst) return
+  const controlador = controladorEnCampo(s, cardInstanceId) ?? (desde === 'campo' ? inst.owner : undefined) // Lote 3
   // VÍNCULO INVERTIDO (invocar_y_equipar): si esta carta tiene un campeón vinculado,
   // destruir también a TODOS los campeones vinculados (uno por activación) ANTES de mover esta carta al cementerio.
   // `concat` tolera el formato viejo de partidas guardadas (un solo id en vez de lista).
@@ -111,6 +134,7 @@ export function enviarAlCementerio(s: GameState, ctx: Ctx, cardInstanceId: strin
   // Los sacrificios ya liberaron a '2A' antes de llegar aquí — segundo call es no-op.
   liberarEterBloqueado(s, ctx, cardInstanceId, '1A')
   dispararTrigger(s, ctx, 'al-ser-enviado-al-cementerio', inst.owner, [cardInstanceId], { zonaOrigen: desde ?? origen })
+  dispararCampeonAlCementerio(s, ctx, cardInstanceId, controlador)
   reiniciarEnCementerio(s, cardInstanceId)
 }
 
@@ -168,6 +192,7 @@ function liberarEterBloqueadoCore(s: GameState, ctx: Ctx, cardInstanceId: string
   if (!inst?.eterBloqueado || inst.eterBloqueado.length === 0) return
   const eteres = inst.eterBloqueado
   delete inst.eterBloqueado
+  delete inst.continuosActivados
   // Fase 3a Phase D + 3c: efectos de umbral/copy se desactivan al liberar Éter (§7.7)
   delete inst.efectoUmbralDisparado
   delete inst.copyOneShotDisparado
@@ -352,6 +377,7 @@ export function destruirCarta(s: GameState, ctx: Ctx, cardInstanceId: string, ca
   }
 
   // Campeón: → 2G + Éter 1A + carta_muerta + destruccion (ADR-14)
+  const controlador = controladorEnCampo(s, cardInstanceId) ?? inst.owner // Lote 3: quién lo controlaba al morir
   const origen = moverAlCementerio(s, ctx, cardInstanceId)
   liberarEterBloqueado(s, ctx, cardInstanceId, '1A')
   // §10: los artefactos equipados van con el Campeón que sale (antes del trigger
@@ -359,6 +385,7 @@ export function destruirCarta(s: GameState, ctx: Ctx, cardInstanceId: string, ca
   liberarArtefactosEquipados(s, ctx, cardInstanceId)
   // C5 (change 4): trigger al-ser-enviado-al-cementerio (carta YA en 2G)
   dispararTrigger(s, ctx, 'al-ser-enviado-al-cementerio', inst.owner, [cardInstanceId], { zonaOrigen: origen })
+  dispararCampeonAlCementerio(s, ctx, cardInstanceId, controlador)
   ctx.emit({ type: 'carta_muerta', cardInstanceId, jugador: inst.owner, causa })
   ctx.emit({ type: 'destruccion', cardInstanceId, jugador: inst.owner, causa })
   reiniciarEnCementerio(s, cardInstanceId)

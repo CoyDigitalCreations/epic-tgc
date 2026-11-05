@@ -509,7 +509,9 @@ describe('varias elecciones seguidas, pendientes obsoletos y al-pagar-eter', () 
 
 describe('el bot no se atasca con declaraciones en elección', () => {
   it.each([1, 7, 42, 66099, 66676])('seed %i: la partida simulada termina sin "sin progreso"', (seed) => {
-    const r = simularPartida(expandirMazo(ESTASIS_CARDS), expandirMazo(DISONANCIA_CARDS), seed)
+    // Lote 3: tope de 3000 acciones (el de fábrica, 1000, se quedaba corto: con Resonancia y el Ancla ya operativos la semilla
+    // 66099 termina por mazo agotado en el turno 71, ~1050 acciones; no es un atasco: las 5 semillas siguen terminando)
+    const r = simularPartida(expandirMazo(ESTASIS_CARDS), expandirMazo(DISONANCIA_CARDS), seed, 3000)
     expect(r.estado.fase).toBe('terminada')
     expect(verificarInvariantes(r.estado)).toEqual([]) // F5h: incluye "una instancia, una zona"
   })

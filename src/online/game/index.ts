@@ -29,7 +29,7 @@ export { JUGADAS_PPT, esJugadaPpt, ganadorPpt, pptInicial, pptJugar, pptDecidir,
 export type { JugadaPpt, PptEstado, PptVista, PptResultado } from './ppt'
 
 // Economía de Éter
-export { aporteDe, validarPago, aplicarPago, bloquearEter, reagruparEter, maxEterBloqueado, esBloqueoFijo } from './payments'
+export { aporteDe, costeDeCampeon, validarPago, aplicarPago, bloquearEter, reagruparEter, maxEterBloqueado, esBloqueoFijo } from './payments'
 export type { ContextoUso } from './payments'
 
 // Pasivo 1A: parejas legales Campeón + Éter para el modal de elección

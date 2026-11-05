@@ -21,9 +21,13 @@ import type { Action } from '../actions'
 import { getValidActions } from '../validActions'
 import { validarActivarHabilidad } from '../habilidades'
 import type { GameState, Ctx, PlayerId } from '../types'
+import { AURORA_CLASICA, registrarAuroraClasica } from './helpers/auroraClasica'
+
+// Aurora (FB-010) se rediseñó; este bug de routing se reproduce con su diseño clásico (fixture).
+registrarAuroraClasica()
 
 const ETER_ORDEN = 'FB-001'
-const AURORA = 'FB-010' // disparo destroy eter:2 + continuo steal_champion bloqueo_fijo:4
+const AURORA = AURORA_CLASICA // disparo destroy eter:2 + continuo steal_champion bloqueo_fijo:4
 const RIVAL = 'FB-011' // Vaela — campeón rival
 
 function estadoMinimo(): GameState {

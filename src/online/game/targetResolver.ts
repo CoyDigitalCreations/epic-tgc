@@ -40,6 +40,9 @@ export function resolveTargets(
     if (rivalChamps.some(esProtector)) baseTargets = rivalChamps.filter(esProtector)
   }
 
+  // «otro» (Lote 3, `excluyeEsta`): el objetivo no puede ser la propia carta que genera el efecto
+  if (objetivo.excluyeEsta && fuenteId) baseTargets = baseTargets.filter((id) => id !== fuenteId)
+
   // 2. Apply filters
   const filtered = applyFilters(s, baseTargets, filtros)
 

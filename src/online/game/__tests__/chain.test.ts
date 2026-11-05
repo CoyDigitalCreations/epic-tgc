@@ -8,19 +8,22 @@ import { getCardMeta, registrarCartas, type AnyCard } from '../cards'
 import { visibleState } from '../visibleState'
 import type { GameEvent } from '../events'
 import type { Ctx, GameState, PlayerId } from '../types'
+import { REINO_PERDIDO_CLASICO, registrarReinoPerdidoClasico } from './helpers/reinoPerdidoClasico'
 
 // Cartas reales del paquete (paquetes.ts):
-// FB-011 Vaela 5/3 Carga · FB-014 Isolde 3/7 Protector · FB-019 (Mística) ·
-// FB-021 Marcha de las Primeras (Táctica) · FB-023 El Reino Perdido (Arcana) ·
+// FB-011 Vaela 5/2 · FB-014 Isolde 3/6 · FB-019 (Mística) ·
+// FB-021 Marcha de las Primeras (Táctica) · Reino Perdido clásico (Arcana, fixture) ·
 // FB-024 Filo del Éter Primigenio (Combate)
 const VAELA = 'FB-011'
 const ISOLDE = 'FB-014'
 const MISTICA = 'FB-019'
 const TACTICA = 'FB-021'
-// F5f: responder con una Arcana exige cumplir su `condicion` (FB-023: 2 Campeones propios con Éter bloqueado). Estos
-// tests son de mecánica de cadena, no de esa condición: usan un clon de FB-023 sin condicion.
+// F5f: responder con una Arcana exige cumplir su `condicion` (Reino Perdido clásico: 2 Campeones propios con Éter bloqueado). Estos
+// tests son de mecánica de cadena, no de esa condición: usan un clon del Reino Perdido clásico sin condicion.
 const ARCANA = 'TEST-ARCANA-LIBRE'
-registrarCartas([{ ...getCardMeta('FB-023')!, id: ARCANA, condicion: undefined } as AnyCard])
+// FB-023 se rediseñó: el clon parte del Reino Perdido clásico (fixture: Arcana coste 2 que roba 2).
+registrarReinoPerdidoClasico()
+registrarCartas([{ ...getCardMeta(REINO_PERDIDO_CLASICO)!, id: ARCANA, condicion: undefined } as AnyCard])
 const COMBATE = 'FB-024'
 
 function estadoMinimo(): GameState {

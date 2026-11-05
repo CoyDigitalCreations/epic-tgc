@@ -5,7 +5,7 @@ import type { Action } from '../actions'
 import { getValidActions } from '../validActions'
 import type { Ctx, GameState, PlayerId } from '../types'
 
-const CAMPEON = 'FB-011' // cost 2
+const CAMPEON = 'FB-011' // cost 3
 const CAMPEON_BLOQUEO = 'FB-015' // Elena: habilidad con patrón "bloqueo_fijo" 3
 const MISTICA = 'FB-019' // cost 2
 const TACTICA = 'FB-021' // cost 0
@@ -177,7 +177,7 @@ describe('getValidActions en Forja (5.5)', () => {
   })
 
   it('solo expone acciones para el jugador ACTIVO; el rival solo ve rendirse', () => {
-    const s = conEteres(conMano(estadoMinimo(), { cam: CAMPEON }), ETER_ORDEN, 2)
+    const s = conEteres(conMano(estadoMinimo(), { cam: CAMPEON }), ETER_ORDEN, 3)
     const activo = getValidActions(s, 'A')
     const rival = getValidActions(s, 'B')
     expect(activo.some((a) => a.type === 'jugar_campeon')).toBe(true)

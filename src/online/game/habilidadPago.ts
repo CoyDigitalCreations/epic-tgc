@@ -11,9 +11,10 @@
  * Módulo sin dependencias de la cadena (evita el ciclo chain ↔ habilidades).
  */
 import { esCostoBloqueo, getCardMeta } from './cards'
-import { etiquetarEter } from './eter'
+import { etiquetarEter, marcarContinuoActivado } from './eter'
 import { hastaAlba, registrarEfectoPendiente } from './effectRegistry'
-import { reglaBool } from './reglas'
+import { disparoNoAgotaPorComandante, MARCA_DISPARO_SIN_AGOTAR, reglaBool } from './reglas'
+import { metaDeInstancia } from './efectosInstancia'
 import type { EfectoData } from '../../shared/types'
 import type { Ctx, GameState, PlayerId } from './types'
 
@@ -32,6 +33,23 @@ export function eterIdsParaHabilidad(state: GameState, jugador: PlayerId, efecto
   }
   const necesarios = costo > 0 ? costo : 1
   return p.eterReserva.length >= necesarios ? p.eterReserva.slice(0, necesarios) : null
+}
+
+/** Índice de `efecto` en las habilidades de la instancia (incluye las copiadas de otro Campeón), o -1. */
+function indiceDeHabilidad(state: GameState, instId: string, efecto: EfectoData): number {
+  const meta = metaDeInstancia(state, instId)
+  return meta && 'efectos' in meta && meta.efectos ? meta.efectos.indexOf(efecto) : -1
+}
+
+/**
+ * `activacion: 'una_por_turno'` de un Disparo con coste PAGADO: ya se activó este turno. El límite vive por carta y por
+ * índice de efecto (`efectosUsadosEsteTurno`, se reinicia al empezar el turno) y se consume al pagar (`pagarHabilidad`).
+ * Sin él, un Disparo que no agota (Tirador, Comandante) se podía repetir en bucle (Mira + Éter).
+ */
+export function habilidadUsadaEsteTurno(state: GameState, instId: string, efecto: EfectoData): boolean {
+  if (efecto.activacion !== 'una_por_turno') return false
+  const idx = indiceDeHabilidad(state, instId, efecto)
+  return idx !== -1 && (state.instances[instId]?.efectosUsadosEsteTurno ?? []).includes(idx)
 }
 
 /** Cobra el coste de la habilidad `efectoSel` del Campeón `instId` y aplica lo que el coste implica (bloqueo, 1/turno, agotar). */
@@ -60,6 +78,7 @@ export function pagarHabilidad(
     // Fase 2: filiación — el efecto activado (índice en efectos[]) es la fuente que bloquea; `jugador` lo pagó.
     const idxSel = meta.efectos?.indexOf(efectoSel) ?? -1
     etiquetarEter(s, [...eterIds], instId, idxSel, jugador)
+    marcarContinuoActivado(s, instId, idxSel)
     // Check if effect has reagrupar (Alba) — register pending effect
     const efectoConReagrupar = meta.efectos && 'efectos' in meta
       ? meta.efectos.find((e) => e.reagrupar && esCostoBloqueo(e.costo))
@@ -90,7 +109,19 @@ export function pagarHabilidad(
     ctx.emit({ type: 'eter_pagado', jugador, eterIds: [...eterIds], costo: eterIds.length, aportado: eterIds.length })
   }
   if (efectoSel.tipo !== 'disparo') inst.opcionUsadaEsteTurno = true
+  // «Una vez por turno» de un Disparo pagado: se gasta al pagar, aunque la activación se niegue (igual que el coste).
+  if (efectoSel.activacion === 'una_por_turno') {
+    const idx = indiceDeHabilidad(s, instId, efectoSel)
+    if (idx !== -1 && !(inst.efectosUsadosEsteTurno ?? []).includes(idx)) inst.efectosUsadosEsteTurno = [...(inst.efectosUsadosEsteTurno ?? []), idx]
+  }
   // Paga y Agota (§5.2, §8.3a): el Disparo con Éter pagado agota al Campeón, salvo que la regla `disparoAgota` esté
   // prohibida (Tirador, §10). El agotamiento es parte del coste: se paga ya.
-  if (efectoSel.tipo === 'disparo' && reglaBool(s, 'disparoAgota', { instId })) inst.agotado = true
+  if (efectoSel.tipo === 'disparo') {
+    if (reglaBool(s, 'disparoAgota', { instId })) inst.agotado = true
+    // Lote 2 (Aurora): si NO agota porque se lo concede el Comandante, esa concesión se gasta (una vez por turno por Campeón).
+    // Se mide DESPUÉS de leer la regla y se marca en el mismo contador de «una vez por turno» (se reinicia con el turno).
+    else if (disparoNoAgotaPorComandante(s, instId) && !(inst.efectosUsadosEsteTurno ?? []).includes(MARCA_DISPARO_SIN_AGOTAR)) {
+      inst.efectosUsadosEsteTurno = [...(inst.efectosUsadosEsteTurno ?? []), MARCA_DISPARO_SIN_AGOTAR]
+    }
+  }
 }

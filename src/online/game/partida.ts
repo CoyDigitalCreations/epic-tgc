@@ -166,6 +166,9 @@ export function ejecutarPasarTurno(s: GameState, ctx: Ctx): void {
     if (inst.efectosUsadosEsteTurno) delete inst.efectosUsadosEsteTurno // Fase B: «una vez por turno» se reinicia
   }
   delete s.rupturasEsteTurno
+  // Lote 2: una keyword otorgada con duración de turno DURANTE el Ocaso (después de la purga al entrar a él) también termina
+  // con el turno: se purga al pasar al Alba del rival, no se arrastra a su turno.
+  purgarKeywordsTemporales(s)
   // F5h: la cola de objetivos pendientes solo vive hasta el Ocaso del turno en que se armó (pendientes.ts)
   descartarPendientesObsoletos(s)
   s.turno = rival

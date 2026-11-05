@@ -138,6 +138,13 @@ export interface CardInstance {
    */
   efectosUsadosEsteTurno?: number[]
   /**
+   * Lote 2 (Estásis): índices (en `efectos[]`) de los Continuos con `duracion: mientras_tenga_eter_bloqueado` que ya se
+   * ACTIVARON (se pagó su bloqueo). El efecto vale mientras esté en la lista Y la carta tenga CUALQUIER Éter bloqueado
+   * (propio o externo); sin la marca, un Éter externo no lo encendería gratis. Se limpia al quedar la carta sin Éter y al
+   * cambiar de zona (ESTADO_DE_CAMPO).
+   */
+  continuosActivados?: number[]
+  /**
    * Activación diferida (§5.5, C4): la carta entró al campo ESTE turno.
    * Tácticas/Arcanas recién colocadas NO pueden responder en la cadena 9.6
    * (solo las de turnos anteriores); la Alba del dueño lo borra (phases.ts).
@@ -239,6 +246,12 @@ export interface PlayerState {
   eterReserva: string[]
   /** 1A — Éter pagado (vuelve a 2A en tu Alba salvo bloqueado). */
   eterPagado: string[]
+  /**
+   * Lote 3 (Estásis, Runa de Ancla): Éter de 1A «anclado» por un efecto `anclar_eter` del rival. NO se reagrupa en la
+   * próxima Alba de este jugador; `reagruparEter` los deja en 1A y vacía la lista (el ancla dura UNA sola Alba). Un
+   * Éter que dejó 1A antes (se gastó, se bloqueó) simplemente ya no cuenta.
+   */
+  eterAnclado?: string[]
   campo: {
     /** 2B-2F (5 slots). */
     campeones: (string | null)[]

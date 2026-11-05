@@ -4,7 +4,7 @@
  *
  * Diseño aprobado por el usuario (JSON actualizado por Card-Maker):
  * - FB-030 + DS-030: AURA CONTINUA (duracion='mientras_en_campo') — vínculos
- *   siempre en campo = permanente. FB-030 debuffa rival mayor RES (-3/-3);
+ *   siempre en campo = permanente. FB-030 debuffa rival mayor RES (-2/-2);
  *   DS-030 buffa propio menor RES (+4 RES).
  * - DS-026: trigger inicio_alba + 1_por_turno — patrón FB-025 (cero engine work).
  * - DS-027: trigger inicio_choque + controladorTrigger:'rival' — firea EN el
@@ -17,11 +17,11 @@ import { statsDe, dispararTrigger } from '../efectos'
 import { getCardMeta } from '../cards'
 import type { Ctx, GameState, PlayerId } from '../types'
 
-const FB030 = 'FB-030' // Vínculo debuff rival mayor RES -3/-3, mientras_en_campo
+const FB030 = 'FB-030' // Vínculo debuff rival mayor RES -2/-2, mientras_en_campo
 const DS030 = 'DS-030' // Vínculo buff propio menor RES +4, mientras_en_campo
 const DS026 = 'DS-026' // Vínculo rival_discard, inicio_alba, 1_por_turno
 const DS027 = 'DS-027' // Vínculo mover éter rival, inicio_choque, controladorTrigger rival
-const CAMPEON = 'FB-011' // Vaela 5/3
+const CAMPEON = 'FB-011' // Vaela 5/2
 const ETER_ORDEN = 'FB-001'
 
 function estadoMinimo(): GameState {
@@ -112,74 +112,74 @@ function crearCtx(): Ctx {
 
 describe('FB-030 Lamento de la Primogénita — aura vínculo (Fase 3d)', () => {
   /**
-   * "El Campeón con mayor RES que controla el rival pierde 3 de ATQ y 3 de RES,
+   * "El Campeón con mayor RES que controla el rival pierde 2 de ATQ y 2 de RES,
    * mientras esta carta esté en el campo."
-   * Aura: debuff -3/-3 al campeón rival de MAYOR RES. Vaela base 5/3.
+   * Aura: debuff -2/-2 al campeón rival de MAYOR RES. Vaela base 5/2.
    * Con otro campeón rival de mayor RES, Vaela NO recibe el debuff.
    */
 
-  it('debuff -3/-3 al único campeón rival (mayor RES por default) — vínculo DESTRUIDO', () => {
-    const conCamp = conCampeon(estadoMinimo(), CAMPEON, 'B', 0) // Vaela 5/3 rival
+  it('debuff -2/-2 al único campeón rival (mayor RES por default) — vínculo DESTRUIDO', () => {
+    const conCamp = conCampeon(estadoMinimo(), CAMPEON, 'B', 0) // Vaela 5/2 rival
     const conVinc = conVinculo(conCamp.s, FB030, 'A', 0, { destruido: true }) // boca arriba
-    // Vaela es el único campeón de B → es el de mayor RES → -3/-3 → 2/0
-    expect(statsDe(conVinc.s, conCamp.id)).toEqual({ poder: 2, resistencia: 0 })
+    // Vaela es el único campeón de B → es el de mayor RES → -2/-2 → 3/0
+    expect(statsDe(conVinc.s, conCamp.id)).toEqual({ poder: 3, resistencia: 0 })
   })
 
   it('§5.5: vínculo BOCA ABAJO (vivo) NO aplica aura', () => {
     const conCamp = conCampeon(estadoMinimo(), CAMPEON, 'B', 0)
     const conVinc = conVinculo(conCamp.s, FB030, 'A', 0, { destruido: false }) // vivo
     // Sin debuff: stats base de Vaela
-    expect(statsDe(conVinc.s, conCamp.id)).toEqual({ poder: 5, resistencia: 3 })
+    expect(statsDe(conVinc.s, conCamp.id)).toEqual({ poder: 5, resistencia: 2 })
   })
 
   it('NO debuffa si hay otro campeón rival de MAYOR RES', () => {
-    // Camp0: Vaela 5/3; Camp1: campeón con RES mayor (usar extra para simular stats altos)
-    const conCamp0 = conCampeon(estadoMinimo(), CAMPEON, 'B', 0) // Vaela 5/3
+    // Camp0: Vaela 5/2; Camp1: campeón con RES mayor (usar extra para simular stats altos)
+    const conCamp0 = conCampeon(estadoMinimo(), CAMPEON, 'B', 0) // Vaela 5/2
     const conCamp1 = conCampeon(conCamp0.s, CAMPEON, 'B', 1, { resistencia: 10 }) // RES 10 override
     const conVinc = conVinculo(conCamp1.s, FB030, 'A', 0, { destruido: true })
     // El de mayor RES es camp1 (10) → él recibe el debuff; Vaela queda intacta
-    expect(statsDe(conVinc.s, conCamp0.id)).toEqual({ poder: 5, resistencia: 3 }) // Vaela sin debuff
-    // camp1 con override resistencia 10 + debuff -3 → 7 (poder base 5 - 3 = 2)
-    expect(statsDe(conVinc.s, conCamp1.id).resistencia).toBe(7)
+    expect(statsDe(conVinc.s, conCamp0.id)).toEqual({ poder: 5, resistencia: 2 }) // Vaela sin debuff
+    // camp1 con override resistencia 10 + debuff -2 → 8 (poder base 5 - 2 = 3)
+    expect(statsDe(conVinc.s, conCamp1.id).resistencia).toBe(8)
   })
 
   it('el campeón PROPIO no recibe el debuff (controlador rival)', () => {
     const conCampPropio = conCampeon(estadoMinimo(), CAMPEON, 'A', 0) // propio de A
     const conCampRival = conCampeon(conCampPropio.s, CAMPEON, 'B', 0) // rival
     const conVinc = conVinculo(conCampRival.s, FB030, 'A', 0, { destruido: true })
-    // Propio de A: sin debuff (5/3)
-    expect(statsDe(conVinc.s, conCampPropio.id)).toEqual({ poder: 5, resistencia: 3 })
-    // Rival de A (único de B): con debuff (2/0)
-    expect(statsDe(conVinc.s, conCampRival.id)).toEqual({ poder: 2, resistencia: 0 })
+    // Propio de A: sin debuff (5/2)
+    expect(statsDe(conVinc.s, conCampPropio.id)).toEqual({ poder: 5, resistencia: 2 })
+    // Rival de A (único de B): con debuff (3/0)
+    expect(statsDe(conVinc.s, conCampRival.id)).toEqual({ poder: 3, resistencia: 0 })
   })
 })
 
 describe('DS-030 Grito del Primogénito — aura vínculo buff propio (Fase 3d)', () => {
   /**
    * "El Campeón con menor RES gana 4 de RES, mientras esta carta esté en el campo."
-   * Aura: buff +4 RES al campeón PROPIO de MENOR RES. Vaela base 5/3.
+   * Aura: buff +4 RES al campeón PROPIO de MENOR RES. Vaela base 5/2.
    * §5.5: solo aplica si el vínculo está DESTRUIDO (boca arriba).
    */
 
   it('buff +4 RES al único campeón propio (menor RES por default) — destruido', () => {
-    const conCamp = conCampeon(estadoMinimo(), CAMPEON, 'A', 0) // Vaela 5/3 propio
+    const conCamp = conCampeon(estadoMinimo(), CAMPEON, 'A', 0) // Vaela 5/2 propio
     const conVinc = conVinculo(conCamp.s, DS030, 'A', 0, { destruido: true })
-    // Vaela única → menor RES → +4 → 5/7
-    expect(statsDe(conVinc.s, conCamp.id)).toEqual({ poder: 5, resistencia: 7 })
+    // Vaela única → menor RES → +4 → 5/6
+    expect(statsDe(conVinc.s, conCamp.id)).toEqual({ poder: 5, resistencia: 6 })
   })
 
   it('§5.5: vínculo BOCA ABAJO NO buffa', () => {
     const conCamp = conCampeon(estadoMinimo(), CAMPEON, 'A', 0)
     const conVinc = conVinculo(conCamp.s, DS030, 'A', 0, { destruido: false })
-    expect(statsDe(conVinc.s, conCamp.id)).toEqual({ poder: 5, resistencia: 3 })
+    expect(statsDe(conVinc.s, conCamp.id)).toEqual({ poder: 5, resistencia: 2 })
   })
 
   it('NO buffa si hay otro campeón propio de MENOR RES', () => {
-    const conCamp0 = conCampeon(estadoMinimo(), CAMPEON, 'A', 0) // Vaela 5/3
+    const conCamp0 = conCampeon(estadoMinimo(), CAMPEON, 'A', 0) // Vaela 5/2
     const conCamp1 = conCampeon(conCamp0.s, CAMPEON, 'A', 1, { resistencia: 1 }) // RES 1 override
     const conVinc = conVinculo(conCamp1.s, DS030, 'A', 0, { destruido: true })
-    // El de menor RES es camp1 (1) → él recibe +4 → 5; Vaela queda 5/3
-    expect(statsDe(conVinc.s, conCamp0.id)).toEqual({ poder: 5, resistencia: 3 }) // Vaela sin buff
+    // El de menor RES es camp1 (1) → él recibe +4 → 5; Vaela queda 5/2
+    expect(statsDe(conVinc.s, conCamp0.id)).toEqual({ poder: 5, resistencia: 2 }) // Vaela sin buff
     expect(statsDe(conVinc.s, conCamp1.id).resistencia).toBe(5) // 1 + 4
   })
 
@@ -187,10 +187,10 @@ describe('DS-030 Grito del Primogénito — aura vínculo buff propio (Fase 3d)'
     const conCampPropio = conCampeon(estadoMinimo(), CAMPEON, 'A', 0)
     const conCampRival = conCampeon(conCampPropio.s, CAMPEON, 'B', 0)
     const conVinc = conVinculo(conCampRival.s, DS030, 'A', 0, { destruido: true })
-    // Rival de A: sin buff (5/3)
-    expect(statsDe(conVinc.s, conCampRival.id)).toEqual({ poder: 5, resistencia: 3 })
-    // Propio de A: con buff (5/7)
-    expect(statsDe(conVinc.s, conCampPropio.id)).toEqual({ poder: 5, resistencia: 7 })
+    // Rival de A: sin buff (5/2)
+    expect(statsDe(conVinc.s, conCampRival.id)).toEqual({ poder: 5, resistencia: 2 })
+    // Propio de A: con buff (5/6)
+    expect(statsDe(conVinc.s, conCampPropio.id)).toEqual({ poder: 5, resistencia: 6 })
   })
 })
 

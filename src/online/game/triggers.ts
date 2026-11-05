@@ -60,7 +60,7 @@
  */
 import { getCardMeta } from './cards'
 import { instanciasEnCampo, triggersQueMatchean, type PayloadEfecto, type TriggerEfecto, type TriggerMatch } from './efectos'
-import { canExecuteEffect, cobrarCostoEter, interpretEffect, objetivoCompleto } from './effectInterpreter'
+import { canExecuteEffect, cobrarCostoDeTrigger, interpretEffect, objetivoCompleto } from './effectInterpreter'
 import { resolveTargets } from './targetResolver'
 import { abrirCadenaGlobal, declararVentana, marcarInicioAccion, type MarcadorAccion } from './chain'
 import type { CadenaState, Ctx, DeclaracionCadena, GameState, TriggerApilado } from './types'
@@ -328,7 +328,7 @@ export function resolverTrigger(s: GameState, ctx: Ctx, t: TriggerApilado, modo:
       if (efecto.objetivo && efecto.objetivo.tipo !== 'self') {
         if (!resolveTargets(s, objetivoCompleto(efecto), t.jugador, t.cardInstanceId).includes(t.objetivoId)) return
       }
-      if (efecto.costo && !cobrarCostoEter(s, ctx, inst, efecto.costo, t.jugador)) return
+      if (efecto.costo && !cobrarCostoDeTrigger(s, ctx, inst, efecto, t.jugador)) return
       interpretEffect(s, ctx, inst, efecto, { ...payloadBase(t), sinEleccion: true, contextoUso: 'objetivo-elegido', objetivoId: t.objetivoId })
       return
     }

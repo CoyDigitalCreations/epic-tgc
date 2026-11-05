@@ -143,7 +143,9 @@ function validarAccion(state: GameState, action: Action): string | null {
   }
   // F9c: un mazo por ordenar (scry) congela el resto del juego hasta que quien lo mira lo ordene
   // (las elecciones de arriba van primero: si conviven, esas se atienden antes y el scry espera)
-  if (scryActual(state) && !state.declaracionEnEleccion && !electorAjeno(state) && action.type !== 'ordenar_mazo' && action.type !== 'rendirse') {
+  // Orden determinista de pendientes: equipar -> (elecciones) -> scry. El equipar de quien jugó la Mística va primero, así que
+  // `equipar_artefacto` no se bloquea por un scry a la vez (antes: interbloqueo, el actor era el que equipa y no podía equipar).
+  if (scryActual(state) && !state.declaracionEnEleccion && !electorAjeno(state) && !equipando && action.type !== 'ordenar_mazo' && action.type !== 'rendirse') {
     return 'hay un mazo por ordenar antes de continuar'
   }
   // Pila única (F5a): con la cadena abierta el turno queda congelado — solo se

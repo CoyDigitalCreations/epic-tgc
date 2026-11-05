@@ -4,6 +4,13 @@ import { describe, expect, it, vi } from 'vitest'
 import { getValidActions, visibleState } from '../game'
 import type { GameState } from '../game'
 import { Tablero } from '../components/Tablero'
+import { REINO_PERDIDO_CLASICO, registrarReinoPerdidoClasico } from '../game/__tests__/helpers/reinoPerdidoClasico'
+import { REFUGIO_CLASICO, registrarRefugioClasico } from '../game/__tests__/helpers/refugioClasico'
+
+// Último Refugio (FB-022) se rediseñó y ya no bloquea Éter: estos tests usan el Refugio clásico
+// (fixture sintético, nombre «Último Refugio (clásico)») para cubrir el flujo pago + bloqueo.
+registrarRefugioClasico()
+registrarReinoPerdidoClasico()
 
 /** Forja de A: Cassandra en 2B, el rival con una Mística en 3A (sirve de efecto que abre la cadena) y Éteres en la Reserva. */
 function base(): GameState {
@@ -111,8 +118,8 @@ describe('Presteza desde la mano: el jugador elige con qué Éter paga', () => {
     const user = userEvent.setup()
     const s = conCadena()
     s.players.A.mano = []
-    // El Reino Perdido (coste 2) boca abajo con su candado abierto: puede activarse como respuesta
-    s.instances.arc = { cardInstanceId: 'arc', cardId: 'FB-023', owner: 'A', bocaArriba: false, condicionHabilitada: true }
+    // El Reino Perdido clásico (coste 2) boca abajo con su candado abierto: puede activarse como respuesta
+    s.instances.arc = { cardInstanceId: 'arc', cardId: REINO_PERDIDO_CLASICO, owner: 'A', bocaArriba: false, condicionHabilitada: true }
     s.players.A.campo.arcanasCombate[0] = 'arc'
     expect(getValidActions(s, 'A').some((a) => a.type === 'responder_cadena' && a.cardInstanceId === 'arc')).toBe(true)
     const onAccion = montar(s)
@@ -139,7 +146,7 @@ describe('Presteza desde la mano: el jugador elige con qué Éter paga', () => {
   })
 })
 
-describe('Último Refugio: bloquear el Éter es parte de jugarla', () => {
+describe('Último Refugio (clásico): bloquear el Éter es parte de jugarla', () => {
   it('tras elegir el pago pide el bloqueo (sin los Éteres ya elegidos) y manda ambos en la misma acción', async () => {
     const user = userEvent.setup()
     const s = base()
@@ -148,7 +155,7 @@ describe('Último Refugio: bloquear el Éter es parte de jugarla', () => {
       s.instances[`e${n}`] = { cardInstanceId: `e${n}`, cardId: 'FB-001', owner: 'A' }
       s.players.A.eterReserva.push(`e${n}`)
     }
-    s.instances.fb022 = { cardInstanceId: 'fb022', cardId: 'FB-022', owner: 'A' }
+    s.instances.fb022 = { cardInstanceId: 'fb022', cardId: REFUGIO_CLASICO, owner: 'A' }
     s.players.A.mano = ['fb022']
     s.instances.rival = { cardInstanceId: 'rival', cardId: 'FB-020', owner: 'B' }
     s.players.B.campo.misticasTacticas[0] = 'rival'

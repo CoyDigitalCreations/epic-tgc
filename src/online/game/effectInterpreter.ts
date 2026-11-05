@@ -11,12 +11,13 @@ import { aplicarMod, otorgarKeyword, crearOpcionBloqueo, statsDe, keywordsDe, di
 import { construirTriggers, resolverTriggersDeEfecto } from './triggers'
 import { aplicarCambioAtributo, aplicarEfectosPrestados, aplicarReglaTemporal, reiniciarCampeon } from './reglasTemporales'
 import { faccionesDe } from './atributos'
-import { claseDeContinuo, eligeObjetivo, esEfectoCopiable, umbralDeBloqueo } from './efectosInstancia'
+import { claseDeContinuo, eligeObjetivo, esEfectoCopiable, metaDeInstancia, umbralDeBloqueo } from './efectosInstancia'
 import { efectosNegados, reglaBool, reglaDeEfecto } from './reglas'
 import { iniciarScry } from './scry'
 import { ejecutarRedirect } from './redirect'
 import { REGLAS } from '../../shared/rules/reglas'
-import { aplicarPago } from './payments'
+import { aplicarPago, bloquearEter } from './payments'
+import { candidatosActivarDisparo, ejecutarActivarDisparo } from './resonancia'
 import { enviarAlCementerio, destruirCarta, liberarEterBloqueado, liberarArtefactosEquipados } from './replacements'
 import { esExiliable, permitirExilio } from './exilio'
 import { eterDeEfecto, contarEterUmbral, quitarEteres, liberarEterA, limpiarFlagsUmbralSiVacia, evaluarFinSteal, retornarCampeonesRobados } from './eter'
@@ -52,8 +53,11 @@ export function interpretEffect(
     // F5e/F5h: el objetivo se eligió ANTES de resolver (al declarar, al responder o en un
     // pendiente de la cola); al resolver debe seguir siendo candidato del efecto (salió de la
     // zona, ganó Protector, se exilió...). Si ya no, el efecto se pierde (fizzle) sin efectos parciales.
-    if (objetivo && objetivo.tipo !== 'self') {
-      if (!resolveTargets(s, objetivoCompleto(efectoData), jugador, inst.cardInstanceId).includes(payload.objetivoId)) return
+    if (objetivo && objetivo.tipo !== 'self' && objetivo.tipo !== 'campeon_del_trigger') {
+      const candidatos = efecto === 'activar_disparo'
+        ? candidatosActivarDisparo(s, jugador, inst.cardInstanceId, efectoData)
+        : resolveTargets(s, objetivoCompleto(efectoData), jugador, inst.cardInstanceId)
+      if (!candidatos.includes(payload.objetivoId)) return
     }
     const targetIds = [payload.objetivoId]
     executeEffect(s, ctx, inst, efecto, targetIds, jugador, efectoData)
@@ -81,8 +85,10 @@ export function interpretEffect(
   // payload.cobrarCosto — los caminos de acción [activar_habilidad,
   // jugar_mistica, ...] ya cobraron su pago aparte y NO duplican). Sin fondos
   // en Reserva → fizzled: ni cobra ni resuelve.
-  if (payload.cobrarCosto && costo && costo.tipo === 'eter' && inst.cardId) {
-    if (!cobrarCostoEter(s, ctx, inst, costo, jugador)) return
+  // Lote 3: lo mismo con `bloqueo_fijo` (antes un efecto con trigger y «bloquea N Éter» salía GRATIS): se bloquean en la propia
+  // carta, con «una vez por turno», etiquetado y reagrupar como en el flujo normal (bloquearEter). Sin Éter → fizzled.
+  if (payload.cobrarCosto && costo && (costo.tipo === 'eter' || costo.tipo === 'bloqueo_fijo') && inst.cardId) {
+    if (!cobrarCostoDeTrigger(s, ctx, inst, efectoData, jugador)) return
   }
 
   // CONTEXTO USO CHECK: if the effect specifies contextoUso (e.g., 'invocar'),
@@ -101,12 +107,20 @@ export function interpretEffect(
   if (objetivo) {
     if (objetivo.tipo === 'self') {
       targetIds = [inst.cardInstanceId]
+    } else if (objetivo.tipo === 'campeon_del_trigger') {
+      // El Campeón que provocó el trigger (`cuando_campeon_propio_al_cementerio`): no se elige. Debe seguir en la zona que dice
+      // el objetivo (su Cementerio): si un efecto anterior ya lo movió, no hay a quién devolver.
+      const victima = payload.victimaId ? s.instances[payload.victimaId] : undefined
+      const sigueAhi = !!victima && (objetivo.zona !== 'cementerio' || s.players[victima.owner].cementerio.includes(victima.cardInstanceId))
+      targetIds = sigueAhi && payload.victimaId ? [payload.victimaId] : []
     } else if (objetivo.tipo === 'invocado') {
       // El Campeón que se está invocando (aún en la mano: el pago ocurre antes de entrar al campo). Solo existe en el contexto
       // 'invocar'; en cualquier otro (jugar una Mística, activar una habilidad) no hay a quién dárselo
       targetIds = payload.contextoUso === 'invocar' && payload.objetivoId && s.instances[payload.objetivoId] ? [payload.objetivoId] : []
     } else {
       targetIds = resolveTargets(s, objetivoCompleto(efectoData), jugador, inst.cardInstanceId)
+      // Resonancia: solo Campeones con un Disparo copiable
+      if (efecto === 'activar_disparo') targetIds = candidatosActivarDisparo(s, jugador, inst.cardInstanceId, efectoData)
     }
   }
 
@@ -116,8 +130,10 @@ export function interpretEffect(
   // For direct calls (fromTrigger=false/undefined), execute directly when only 1 target.
   // Fase 3d: mover + esHasta auto-resuelve (sin D1 — "hasta N" determinista, sin
   // elección significativa; también evita pendientes no-turno con controladorTrigger:'rival').
+  // Lote 0: return_ether + esHasta igual (decisión del usuario: se resuelven los primeros N; Mira devuelve 2, no 1).
   const isTriggered = payload.fromTrigger === true
-  const autoResolver = efecto === 'mover' && efectoData.esHasta === true
+  // Lote 3: anclar_eter («hasta N Éter del rival») también se resuelve solo: los primeros N de su 1A, sin elección
+  const autoResolver = ((efecto === 'mover' || efecto === 'return_ether') && efectoData.esHasta === true) || efecto === 'anclar_eter'
   const mergedFiltros = efectoData.filtros
     ? { ...objetivo?.filtros, ...efectoData.filtros }
     : objetivo?.filtros
@@ -151,6 +167,25 @@ export function interpretEffect(
  * Cobra el costo tipo 'eter' de un efecto disparado (Reserva → 1A, B8). Devuelve false si no hay fondos
  * (el efecto se pierde, sin cobrar nada). Compartido por interpretEffect y la resolución de triggers apilados (F5d-2).
  */
+/**
+ * Coste de un efecto con TRIGGER al resolverse (interpretEffect y los triggers apilados): `eter` se paga a 1A
+ * (cobrarCostoEter) y `bloqueo_fijo` se BLOQUEA en la propia carta con el mismo pago que la acción bloquear_eter. false = no se
+ * pudo pagar (sin Éter, ya usado este turno...): el efecto no ocurre y no se cobra nada. Otros costes no se cobran aquí.
+ */
+export function cobrarCostoDeTrigger(s: GameState, ctx: Ctx, inst: CardInstance, efectoData: EfectoData, jugador: PlayerId): boolean {
+  const costo = efectoData.costo
+  if (!costo || !inst.cardId) return true
+  if (costo.tipo === 'eter') return cobrarCostoEter(s, ctx, inst, costo, jugador)
+  if (costo.tipo !== 'bloqueo_fijo') return true
+  const meta = metaDeInstancia(s, inst.cardInstanceId)
+  const idx = meta && 'efectos' in meta && meta.efectos ? meta.efectos.indexOf(efectoData) : -1
+  const cant = costo.cantidad ?? 0
+  const p = s.players[jugador]
+  const zona = costo.origen === 'pagado' ? p.eterPagado : p.eterReserva
+  if (idx === -1 || cant <= 0 || zona.length < cant) return false
+  return bloquearEter(s, ctx, jugador, zona.slice(0, cant), inst.cardInstanceId, idx) === null
+}
+
 export function cobrarCostoEter(
   s: GameState,
   ctx: Ctx,
@@ -197,7 +232,7 @@ function needsPlayerChoice(objetivo: EfectoData['objetivo'], efecto?: EfectoData
   // negar un «efecto activo» SÍ elige al Campeón al que se lo niega (a diferencia de negar la activación pendiente)
   if (efecto === 'negar' && tipoNegacion === 'efecto_activo') return true
   // Self and auto-targets don't need choice
-  if (objetivo.tipo === 'self' || objetivo.tipo === 'todos_campeones_propios' || 
+  if (objetivo.tipo === 'self' || objetivo.tipo === 'campeon_del_trigger' || objetivo.tipo === 'todos_campeones_propios' || 
       objetivo.tipo === 'todos_campeones_rivales' || objetivo.tipo === 'rival_hand' ||
       objetivo.tipo === 'equipped_champion' || objetivo.tipo === 'invocado') { // F5g: el Campeón equipado / invocado es implícito, no se elige
     return false
@@ -381,6 +416,16 @@ function executeEffect(
       // Double attack is handled by combat system
       break
 
+    case 'activar_disparo':
+      // Lote 3 (Aurora: Resonancia): ver resonancia.ts
+      ejecutarActivarDisparo(s, ctx, targetIds, jugador, efectoData)
+      break
+
+    case 'anclar_eter':
+      // Lote 3 (Runa de Ancla): el Éter elegido de la zona de pago del rival no se reagrupa en su próxima Alba
+      executeAnclarEter(s, targetIds, cantidad)
+      break
+
     case 'modificar_regla':
     case 'direct_attack': // atajo de modificar_regla: puedeSerBloqueado prohibida (reglaDeEfecto)
       executeModificarRegla(s, targetIds, jugador, efectoData)
@@ -426,6 +471,20 @@ function executeEffect(
         }
       }
       break
+  }
+}
+
+/**
+ * anclar_eter: marca hasta `cantidad` Éter (los primeros de los candidatos, que ya vienen filtrados a la zona de pago del
+ * rival) en `eterAnclado` de su dueño. `reagruparEter` los deja en 1A en su próxima Alba y borra la marca.
+ */
+function executeAnclarEter(s: GameState, targetIds: string[], cantidad?: number): void {
+  for (const id of targetIds.slice(0, cantidad ?? 1)) {
+    for (const j of ['A', 'B'] as PlayerId[]) {
+      const p = s.players[j]
+      if (!p.eterPagado.includes(id)) continue
+      if (!(p.eterAnclado ?? []).includes(id)) p.eterAnclado = [...(p.eterAnclado ?? []), id]
+    }
   }
 }
 
@@ -575,6 +634,10 @@ function executeRecuperar(
 
     const dueno = jugadorDestino(efectoData.objetivo?.controladorDestino, jugador, inst)
     const p = s.players[dueno]
+    // Un Campeón que vuelve a la mano o al mazo es una carta nueva (puede venir de «cuando es enviado al Cementerio», que corre
+    // antes de que el Cementerio le borre buffs, agotamiento y negaciones)
+    const metaRecuperada = inst.cardId ? getCardMeta(inst.cardId) : null
+    if ((destino.zona === 'mano' || destino.zona === 'mazo') && metaRecuperada && esCampeon(metaRecuperada)) reiniciarCampeon(s, id)
     if (destino.zona === 'mano') {
       p.mano.push(id)
       ctx.emit({ type: 'carta_devuelta_a_mano', cardInstanceId: id, jugador: dueno })
@@ -896,7 +959,13 @@ export function reagruparEfectosBloqueoAlba(s: GameState, ctx: Ctx, jugador: Pla
     // Fase 2 (d): el reagrupar libera SOLO el Éter de SU fuente/efecto — el
     // Éter de otros efectos de la misma carta permanece (eterDeEfecto: sin tag
     // cuenta como propio, fallback de compatibilidad).
-    const eteres = eterDeEfecto(s, id, idxReagrupar)
+    // ALCANCE `todo` (Lote 2, Aurora): alcance NUEVO e INDEPENDIENTE del reagrupar por efecto. `efecto` (por defecto) libera
+    // solo el Éter bloqueado con ESTE efecto; `todo` libera TODO el Éter bloqueado en la carta, también el que le bloqueó
+    // otra carta (Éter externo, p. ej. el Pasivo 1A). Cada Éter vuelve a su pagador. Para quitárselo a una carta basta
+    // quitar `reagrupar.alcance` de su efecto (o este ramal): el comportamiento `efecto` no depende de él. Orden del Alba: esto
+    // corre DESPUÉS de purgarHastaFase('alba') y de reagruparEter (resolverAlba), así que no hay nada que purgar con el Éter ya libre.
+    const alcanceTodo = meta.efectos[idxReagrupar].reagrupar?.alcance === 'todo'
+    const eteres = alcanceTodo ? [...inst.eterBloqueado] : eterDeEfecto(s, id, idxReagrupar)
     if (eteres.length === 0) continue
     quitarEteres(s, id, eteres)
     // Reserva de cada PAGADOR (NO 1A) — liberarEterA agrupa por pagadoPor
@@ -1501,6 +1570,7 @@ function executeStealChampion(
     if (targetInst.eterBloqueado && targetInst.eterBloqueado.length > 0) {
       const eteres = [...targetInst.eterBloqueado]
       delete targetInst.eterBloqueado
+      delete targetInst.continuosActivados
       delete targetInst.efectoUmbralDisparado
       delete targetInst.copyOneShotDisparado
       delete targetInst.tramosDisparados

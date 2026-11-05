@@ -29,6 +29,9 @@ import { validarActivarArcana } from '../habilidades'
 import { validarBloquearEter } from '../economia'
 import type { EfectoData } from '../../../shared/types'
 import type { Ctx, GameState, PlayerId } from '../types'
+import { REFUGIO_CLASICO, registrarRefugioClasico } from './helpers/refugioClasico'
+
+registrarRefugioClasico()
 
 function estadoMinimo(): GameState {
   const jugador = (id: PlayerId) => ({
@@ -256,7 +259,9 @@ describe('§5.3 — esPermanenteEnMesa: un solo uso vs permanente (A4)', () => {
   it('hechizo de un solo uso → cementerio; continuo/artefacto → permanece', () => {
     expect(esPermanenteEnMesa(getCardMeta('FB-019')!)).toBe(false) // Heredad del Alba: hechizo simple
     expect(esPermanenteEnMesa(getCardMeta('FB-020')!)).toBe(true)  // Lamento: Éter bloqueado + Artefacto
-    expect(esPermanenteEnMesa(getCardMeta('FB-022')!)).toBe(true)  // Último Refugio: bloqueo_fijo
+    // Último Refugio (FB-022) se rediseñó a toggle_exhaust Fugaz sin Éter bloqueado: ya es de un solo uso
+    expect(esPermanenteEnMesa(getCardMeta('FB-022')!)).toBe(false)
+    expect(esPermanenteEnMesa(getCardMeta(REFUGIO_CLASICO)!)).toBe(true) // Refugio clásico (fixture): copy con bloqueo_fijo
     // REDISEÑO obs 1874: Marcha (negar) ya NO es candado continuo — contador
     // de un solo uso que va al Cementerio como cualquier hechizo (§5.3)
     expect(esPermanenteEnMesa(getCardMeta('FB-021')!)).toBe(false)

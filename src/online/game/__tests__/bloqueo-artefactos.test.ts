@@ -8,7 +8,7 @@
  *
  * Tests genéricos por TIPO (mecánica de bloqueo) + cartas reales del JSON:
  * FB-020 Lamento de las Casas — Mística Artefacto, hechizo buff, eter_bloqueado:3
- * FB-022 Último Refugio — Mística Fugaz, hechizo copy, eter_bloqueado:3
+ * PR-049 Espejo de Prueba — Mística, hechizo copy, bloqueo_fijo:2
  * FB-032 Rito del Alba — Mística Artefacto, hechizo invocar_y_equipar, bloqueo_fijo:4
  * FB-019 Mística SIN costo bloqueado (rechazo)
  */
@@ -22,13 +22,21 @@ import { dispararUmbralBloqueo, reagruparEfectosBloqueoAlba } from '../effectInt
 import { destruirCarta, enviarAlCementerio, liberarEterBloqueado } from '../replacements'
 import { resolverAlba } from '../phases'
 import type { Ctx, GameState, PlayerId } from '../types'
+import { PR, cargarCartasPrueba } from './helpers/cartasPrueba'
+import { AURORA_CLASICA, registrarAuroraClasica } from './helpers/auroraClasica'
+
+// Último Refugio (FB-022) y Aurora (FB-010) se rediseñaron: el copy con bloqueo_fijo y el
+// steal por bloqueo_fijo 4 siguen siendo mecánica del motor, así que se prueban con el
+// Espejo de Prueba (PR-049) y con la Aurora clásica (fixture sintético).
+cargarCartasPrueba()
+registrarAuroraClasica()
 
 const FB020 = 'FB-020' // Mística Artefacto, eter_bloqueado:3 (flexible "hasta"), buffPerBlockedEther
-const FB022 = 'FB-022' // Mística Fugaz, bloqueo_fijo:3 (exactly — cambiada por el usuario en Card-Maker 2026-10-22), copy
+const ESPEJO = PR.ESPEJO // PR-049: Mística copy con bloqueo_fijo:2 (antes FB-022, bloqueo_fijo:3)
 const FB032 = 'FB-032' // Mística Artefacto, bloqueo_fijo:4, invocar_y_equipar
 const MISTICA_SIN_BLOQUEO = 'FB-019' // Mística sin costo bloqueado
 const ETER_ORDEN = 'FB-001'
-const CAMPEON = 'FB-011' // Vaela 5/3 — sin habilidad de bloqueo
+const CAMPEON = 'FB-011' // Vaela 5/2 — sin habilidad de bloqueo
 const CAMPEON_BLOQUEO = 'FB-015' // Elena: continuo double_attack, bloqueo_fijo 3
 
 function estadoMinimo(): GameState {
@@ -141,7 +149,7 @@ describe('bloqueo de Éter en Artefactos — mecánica genérica (Fase 3a)', () 
   it('Mística con costo-bloqueado acepta bloquear_eter: 2A → inst.eterBloqueado + evento', () => {
     const ctx = crearCtx()
     // FB-020 (hasta 3): acepta bloqueos parciales — ejemplar flexible desde
-    // que FB-022 pasó a bloqueo_fijo (2026-10-22)
+    // que el copy pasó a bloqueo_fijo (2026-10-22)
     const conCampo = conMisticaEnCampo(estadoMinimo(), FB020, 0)
     const { s, ids } = conEteres(conCampo.s, ETER_ORDEN, 1)
     const s2 = aplicar(s, { type: 'bloquear_eter', eterIds: ids, targetInstanceId: conCampo.id }, ctx)
@@ -166,7 +174,7 @@ describe('bloqueo de Éter en Artefactos — mecánica genérica (Fase 3a)', () 
   })
 
   it('capacidad máxima: acepta hasta costo.cantidad, rechaza el exceso', () => {
-    // FB-020: eter_bloqueado cantidad 3 → máximo 3 (FB-022 ya no sirve como
+    // FB-020: eter_bloqueado cantidad 3 → máximo 3 (el Espejo ya no sirve como
     // ejemplar flexible: es bloqueo_fijo desde 2026-10-22)
     const ctx = crearCtx()
     const conCampo = conMisticaEnCampo(estadoMinimo(), FB020, 0)
@@ -198,11 +206,11 @@ describe('bloqueo de Éter en Artefactos — mecánica genérica (Fase 3a)', () 
 
   it('rechaza Éter ya bloqueado en OTRA carta del jugador (check defensivo)', () => {
     const ctx = crearCtx()
-    const conMist = conMisticaEnCampo(estadoMinimo(), FB022, 0)
+    const conMist = conMisticaEnCampo(estadoMinimo(), ESPEJO, 0)
     const conMist2 = conMisticaEnCampo(conMist.s, FB020, 1)
     const { s, ids } = conEteres(conMist2.s, ETER_ORDEN, 1)
 
-    // Estado inconsistente defensivo: éter EN Reserva Y bloqueado en FB-022
+    // Estado inconsistente defensivo: éter EN Reserva Y bloqueado en el Espejo
     // (el check "ya está bloqueado en otra carta" debe atraparlo antes que
     // el flujo normal donde el éter sale de la Reserva al bloquearse)
     const sInconsistente: GameState = {
@@ -260,30 +268,30 @@ describe('bloqueo en Artefactos — getValidActions (Fase 3a)', () => {
     }
   })
 
-  it('FB-022 (ahora bloqueo_fijo:3): UNA acción exacta de 3 Éteres — sin parciales', () => {
-    // Cambio del usuario en Card-Maker (2026-10-22): FB-022 dejó de ser
+  it('Espejo (PR-049, bloqueo_fijo:2): UNA acción exacta de 2 Éteres — sin parciales', () => {
+    // Cambio del usuario en Card-Maker (2026-10-22): el copy dejó de ser
     // "hasta 3" y pasó a pago EXACTO — misma semántica que FB-032/FB-015.
-    const conCampo = conMisticaEnCampo(estadoMinimo(), FB022, 0)
+    const conCampo = conMisticaEnCampo(estadoMinimo(), ESPEJO, 0)
     const { s } = conEteres(conCampo.s, ETER_ORDEN, 6)
 
     const bloqueos = getValidActions(s, 'A').filter((a) => a.type === 'bloquear_eter' && a.targetInstanceId === conCampo.id)
     expect(bloqueos).toHaveLength(1)
-    if (bloqueos[0]?.type === 'bloquear_eter') expect(bloqueos[0].eterIds).toHaveLength(3)
+    if (bloqueos[0]?.type === 'bloquear_eter') expect(bloqueos[0].eterIds).toHaveLength(2)
 
-    // Bloqueo parcial → rechazado (fijo exige exactamente 3 de una)
+    // Bloqueo parcial → rechazado (fijo exige exactamente 2 de una)
     const ctx = crearCtx()
     const { s: s2, ids } = conEteres(conCampo.s, ETER_ORDEN, 4)
-    const error = bloquearEter(s2, ctx, 'A', ids.slice(0, 2), conCampo.id)
-    expect(error).toMatch(/exactamente 3/)
+    const error = bloquearEter(s2, ctx, 'A', ids.slice(0, 1), conCampo.id)
+    expect(error).toMatch(/exactamente 2/)
   })
 
-  it('NO genera el path hardcodeado stale de FB-022 (activar_habilidad con eterIds vacíos)', () => {
-    // Setup: Campeón en campo + FB-022 equipada + campeones en cementerio coste ≤3
+  it('NO genera el path hardcodeado stale del copy (activar_habilidad con eterIds vacíos)', () => {
+    // Setup: Campeón en campo + el Espejo equipado + campeones en cementerio coste ≤3
     // El path stale (validActions.ts) generaba activar_habilidad con eterIds: []
-    // cuando FB-022 estaba equipada — describe el DISEÑO VIEJO de la carta.
+    // cuando el copy estaba equipada — describe el DISEÑO VIEJO de la carta.
     const conCamp = conCampeonEnCampo(estadoMinimo(), CAMPEON, 0)
     let s = conInstancias(conCamp.s, {
-      'fb022-eq': { cardId: FB022, owner: 'A', extra: { equipadoA: conCamp.id } },
+      'fb022-eq': { cardId: ESPEJO, owner: 'A', extra: { equipadoA: conCamp.id } },
     })
     // Cementerio con campeones de coste ≤ 3
     s = conInstancias(s, {
@@ -359,7 +367,7 @@ describe('FB-020 Lamento de las Casas — aura derivada (Fase 3a Phase C)', () =
    * equipado con esta carta gana 2 de ATQ por cada Éter bloqueado."
    * Efecto: hechizo buff, buffPerBlockedEther, objetivo equipped_champion propio.
    * El buff es DERIVADO: +2 × (éter bloqueado EN LA MÍSTICA).
-   * FB-011 Vaela base: 5 ATQ / 3 RES.
+   * FB-011 Vaela base: 5 ATQ / 2 RES.
    */
 
   /** Setup: Campeón + FB-020 equipada, con N éteres bloqueados en la Mística. */
@@ -386,22 +394,22 @@ describe('FB-020 Lamento de las Casas — aura derivada (Fase 3a Phase C)', () =
 
   it('0 éter bloqueado: stats base del campeón (sin buff)', () => {
     const { s, champId } = conFB020Equipada(0)
-    expect(statsDe(s, champId)).toEqual({ poder: 5, resistencia: 3 })
+    expect(statsDe(s, champId)).toEqual({ poder: 5, resistencia: 2 })
   })
 
   it('1 éter bloqueado: +2 ATQ (5→7), RES sin cambio', () => {
     const { s, champId } = conFB020Equipada(1)
-    expect(statsDe(s, champId)).toEqual({ poder: 7, resistencia: 3 })
+    expect(statsDe(s, champId)).toEqual({ poder: 7, resistencia: 2 })
   })
 
   it('2 éteres bloqueados: +4 ATQ (5→9)', () => {
     const { s, champId } = conFB020Equipada(2)
-    expect(statsDe(s, champId)).toEqual({ poder: 9, resistencia: 3 })
+    expect(statsDe(s, champId)).toEqual({ poder: 9, resistencia: 2 })
   })
 
   it('3 éteres bloqueados (máximo): +6 ATQ (5→11)', () => {
     const { s, champId } = conFB020Equipada(3)
-    expect(statsDe(s, champId)).toEqual({ poder: 11, resistencia: 3 })
+    expect(statsDe(s, champId)).toEqual({ poder: 11, resistencia: 2 })
   })
 
   it('FB-020 en campo SIN equipar: no aplica buff a ningún campeón', () => {
@@ -419,7 +427,7 @@ describe('FB-020 Lamento de las Casas — aura derivada (Fase 3a Phase C)', () =
       },
     }
     // El campeón NO tiene equipadoA apuntando a FB-020 → sin buff
-    expect(statsDe(s, conCamp.id)).toEqual({ poder: 5, resistencia: 3 })
+    expect(statsDe(s, conCamp.id)).toEqual({ poder: 5, resistencia: 2 })
   })
 
   it('buff aplica SOLO al campeón equipado, no a otros', () => {
@@ -439,8 +447,8 @@ describe('FB-020 Lamento de las Casas — aura derivada (Fase 3a Phase C)', () =
         'e-blq-0': { cardInstanceId: 'e-blq-0', cardId: ETER_ORDEN, owner: 'A' },
       },
     }
-    expect(statsDe(s, conCamp0.id)).toEqual({ poder: 7, resistencia: 3 }) // equipado: +2
-    expect(statsDe(s, conCamp1.id)).toEqual({ poder: 5, resistencia: 3 }) // sin equipar: base
+    expect(statsDe(s, conCamp0.id)).toEqual({ poder: 7, resistencia: 2 }) // equipado: +2
+    expect(statsDe(s, conCamp1.id)).toEqual({ poder: 5, resistencia: 2 }) // sin equipar: base
   })
 })
 
@@ -605,8 +613,8 @@ describe('FB-032 Rito del Alba — one-shot invocar_y_equipar (Fase 3a Phase D)'
   })
 })
 
-describe('Aurora FB-010 — steal_champion vía bloqueo_fijo', () => {
-  const AURORA = 'FB-010'
+describe('Aurora clásica (fixture) — steal_champion vía bloqueo_fijo', () => {
+  const AURORA = AURORA_CLASICA
   const RIVAL = 'FB-011' // Vaela — campeón rival
 
   function setupAurora(): { s: GameState; auroraId: string; rivalId: string; ids: string[] } {

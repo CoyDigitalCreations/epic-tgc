@@ -25,8 +25,10 @@ import { efectoBloqueoAccion, getCardMeta, registrarCartas } from '../cards'
 import type { AnyCard } from '../cards'
 import { getValidActions } from '../validActions'
 import type { Ctx, GameState, PlayerId } from '../types'
+import { AURORA_CLASICA, registrarAuroraClasica } from './helpers/auroraClasica'
 
-const FB010 = 'FB-010' // Aurora: disparo destroy(eter:2) + continuo steal bloqueo_fijo:4 (reagrupar alba)
+registrarAuroraClasica()
+
 const FB011 = 'FB-011' // Vaela 5/3 — campeón "genérico" (víctima de steal)
 const FB015 = 'FB-015' // Elena: continuo double_attack, bloqueo_fijo 3 (efecto[0])
 const FB016 = 'FB-016' // Cassandra: continuo eter_bloqueado:4 con tramos [2 toggle, 4 fix]
@@ -281,9 +283,10 @@ describe('Fase 2 (e) — umbrales y tramos cuentan SOLO Éter de su fuente', () 
 describe('Fase 2 (d) — reagrupar selectivo y fin de steal por Éter total', () => {
   it('reagruparEfectosBloqueoAlba libera SOLO el Éter de su efecto (el ajeno permanece)', () => {
     let s = estadoMinimo()
-    const aur = conCampeonEnCampo(s, FB010, 0)
+    // Aurora clásica (alcance de reagrupar por defecto: `efecto`): la FB-010 real ahora reagrupa con alcance `todo` (ver estasisLote2.test.ts)
+    const aur = conCampeonEnCampo(s, AURORA_CLASICA, 0)
     s = aur.s
-    const fuente = efectoBloqueoAccion(getCardMeta(FB010)!)!
+    const fuente = efectoBloqueoAccion(getCardMeta(AURORA_CLASICA)!)!
     expect(fuente.indice).toBe(1) // el steal continuo (efecto[1]) — el disparo es costo 'eter', no bloqueo
     const propios = ['au-0', 'au-1']
     s = conInstancias(s, Object.fromEntries(propios.map((id) => [id, { cardId: ETER_ORDEN, owner: 'A' }])))
@@ -317,7 +320,8 @@ describe('Fase 2 (d) — reagrupar selectivo y fin de steal por Éter total', ()
 
   it('evaluarFinSteal: ≥1 Éter de CUALQUIER fuente sostiene el steal; 0 lo termina', () => {
     let s = estadoMinimo()
-    const aur = conCampeonEnCampo(s, FB010, 0)
+    // La Aurora real ya no roba Campeones (rediseño de Estásis): se usa la clásica (fixture)
+    const aur = conCampeonEnCampo(s, AURORA_CLASICA, 0)
     s = aur.s
     // Víctima robada: física en el campo del ladrón (A), dueño original B
     const victim = conCampeonEnCampo(s, FB011, 1)

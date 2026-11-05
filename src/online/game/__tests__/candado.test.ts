@@ -10,7 +10,7 @@
  *  3. El objetivo `equipped_champion` resuelve al Campeón al que está equipado el Artefacto que usa el efecto.
  *  4. Un Artefacto jugado/activado como respuesta cuyo Campeón desaparece antes de resolver pierde su efecto, va al
  *     Cementerio una sola vez, sale de la pila y deja el Éter pagado en la zona de pago.
- * Usa las cartas reales FB-023 / FB-024 / DS-032 y el set de prueba PR-xxx (helpers/cartasPrueba.ts).
+ * Usa FB-023 clásica (fixture) y las cartas reales FB-024 / DS-032 y el set de prueba PR-xxx (helpers/cartasPrueba.ts).
  */
 import { describe, it, expect, beforeAll } from 'vitest'
 import { applyAction } from '../actions'
@@ -29,12 +29,18 @@ import { ESTASIS_CARDS, DISONANCIA_CARDS } from '../../../shared/data/paquetes'
 import { expandirMazo } from './helpers'
 import type { Ctx, GameState, PlayerId } from '../types'
 import type { CondicionEfecto } from '../../../shared/types'
+import { REINO_PERDIDO_CLASICO, registrarReinoPerdidoClasico } from './helpers/reinoPerdidoClasico'
 import {
   PR, cargarCartasPrueba, mazoPrueba, crearCtx, escenaVacia, aplicar, conMano, conEteres, conMazo, conCampeon,
   conArcana, inst,
 } from './helpers/cartasPrueba'
 
+// El Reino Perdido (FB-023) se rediseñó (ya no tiene candado de Alba): estos tests ejercitan el candado con
+// su versión clásica (fixture sintético: Arcana coste 2, candado inicio_alba, 2 Campeones con Éter bloqueado).
+const FB023 = REINO_PERDIDO_CLASICO
+
 beforeAll(() => {
+  registrarReinoPerdidoClasico()
   cargarCartasPrueba()
 })
 
@@ -71,18 +77,18 @@ function conBloqueados(s: GameState, owner: PlayerId, id: string, slot: number, 
   return id
 }
 
-/** FB-023 (inicio_alba, 2 Campeones propios con Éter bloqueado) colocada en un turno ANTERIOR, lista para el Alba de A. */
+/** Reino Perdido clásico (inicio_alba, 2 Campeones propios con Éter bloqueado) colocada en un turno ANTERIOR, lista para el Alba de A. */
 function escenaFB023(): GameState {
   const s = escena('A')
   conBloqueados(s, 'A', 'c1', 0)
   conBloqueados(s, 'A', 'c2', 1)
-  conArcana(s, 'A', 'arc', 'FB-023', 0)
+  conArcana(s, 'A', 'arc', FB023, 0)
   conEteres(s, 'A', 2)
   conCampeon(s, 'B', 'b0', PR.PEON, 0)
   return s
 }
 
-describe('candado y llave: inicio_alba (FB-023)', () => {
+describe('candado y llave: inicio_alba (Reino Perdido clásico)', () => {
   it('nace cerrado; el Alba del OTRO jugador no lo evalúa; el Alba de su controlador lo abre; se activa en cualquier fase', () => {
     const ctx = crearCtx()
     let s = escenaFB023()
@@ -97,7 +103,7 @@ describe('candado y llave: inicio_alba (FB-023)', () => {
     expect(motivoArcanaNoActivable(s, 'A', 'arc')).toBeNull()
     s = pasar(s, ctx, 1)
     expect(s.fase).toBe('choque')
-    const r = applyAction(s, { type: 'activar_arcana', cardInstanceId: 'arc', slot: 0, eterIds: pago(s, 'A', 'FB-023') }, ctx)
+    const r = applyAction(s, { type: 'activar_arcana', cardInstanceId: 'arc', slot: 0, eterIds: pago(s, 'A', FB023) }, ctx)
     expect(r.ok).toBe(true)
   })
 
@@ -107,7 +113,7 @@ describe('candado y llave: inicio_alba (FB-023)', () => {
     expect(s.instances['arc'].condicionHabilitada).toBe(true)
     // el rival destruye un Campeón con Éter bloqueado: la condición ya no se cumple EN VIVO, pero el candado sigue abierto
     destruirCarta(s, ctx, 'c2', 'efecto')
-    expect(condicionCumple(s, (getCardMeta('FB-023') as { condicion?: CondicionEfecto }).condicion, 'A')).not.toBeNull()
+    expect(condicionCumple(s, (getCardMeta(FB023) as { condicion?: CondicionEfecto }).condicion, 'A')).not.toBeNull()
     expect(s.instances['arc'].condicionHabilitada).toBe(true)
     expect(motivoArcanaNoActivable(s, 'A', 'arc')).toBeNull()
     // sigue abierto durante el turno del rival...
@@ -133,7 +139,7 @@ describe('candado y llave: inicio_alba (FB-023)', () => {
     const s0 = escena('A')
     conBloqueados(s0, 'A', 'c1', 0)
     conBloqueados(s0, 'A', 'c2', 1)
-    conMano(s0, 'A', 'arc', 'FB-023')
+    conMano(s0, 'A', 'arc', FB023)
     conCampeon(s0, 'B', 'b0', PR.PEON, 0)
     let s = aplicar(s0, { type: 'colocar_arcana', cardInstanceId: 'arc', slot: 0 }, ctx)
     expect(s.instances['arc'].condicionHabilitada).toBeUndefined()
@@ -270,13 +276,13 @@ describe('objetivo.controlador: rival cuenta a los Campeones del rival (FB-024)'
     expect(s.instances['filo'].condicionHabilitada).toBe(false)
   })
 
-  it('las condiciones `propio` y rival_* siguen contando a quien decían (FB-023, DS-023)', () => {
+  it('las condiciones `propio` y rival_* siguen contando a quien decían (Reino Perdido clásico, DS-023)', () => {
     const s = escena('A')
     conBloqueados(s, 'A', 'c1', 0)
     conBloqueados(s, 'A', 'c2', 1)
     conBloqueados(s, 'B', 'b0', 0)
-    expect(condicionCumple(s, (getCardMeta('FB-023') as { condicion?: CondicionEfecto }).condicion, 'A')).toBeNull()
-    expect(condicionCumple(s, (getCardMeta('FB-023') as { condicion?: CondicionEfecto }).condicion, 'B')).not.toBeNull()
+    expect(condicionCumple(s, (getCardMeta(FB023) as { condicion?: CondicionEfecto }).condicion, 'A')).toBeNull()
+    expect(condicionCumple(s, (getCardMeta(FB023) as { condicion?: CondicionEfecto }).condicion, 'B')).not.toBeNull()
     const ds023 = (getCardMeta('DS-023') as { condicion?: CondicionEfecto }).condicion // rival con >=3 Campeones con Éter
     expect(condicionCumple(s, ds023, 'B')).not.toBeNull() // A tiene 2
     conBloqueados(s, 'A', 'c3', 2)

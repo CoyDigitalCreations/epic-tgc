@@ -7,7 +7,7 @@
  *  - Con `unaVezPorTurno: true`: solo una activación de ESE efecto por turno (por carta y por índice).
  *    Se gasta al pagar y se reinicia al terminar el turno.
  *
- * Cartas reales: Aurora FB-010 (una vez por turno), Elena FB-015 (una sola vez mientras siga bloqueado).
+ * Cartas: Aurora clásica (fixture; una vez por turno), Elena real FB-015 (una sola vez mientras siga bloqueado), Elena FB-015 (una sola vez mientras siga bloqueado).
  * La restricción por turno se prueba con un Dummy sintético; las cartas reales se prueban sin ella con copias.
  */
 import { describe, it, expect } from 'vitest'
@@ -22,8 +22,13 @@ import { destruirCarta, liberarEterBloqueado } from '../replacements'
 import { tieneDoubleAttackActivo } from '../efectos'
 import { claveEfecto, claveExterno } from '../eter'
 import type { Ctx, GameState, PlayerId } from '../types'
+import { AURORA_CLASICA, registrarAuroraClasica } from './helpers/auroraClasica'
 
-const AURORA = 'FB-010'
+// Aurora (FB-010) dejó de robar Campeones: estos tests usan la Aurora clásica (fixture sintético:
+// steal por bloqueo_fijo 4, una vez por turno). Debe registrarse antes de armar las copias de abajo.
+registrarAuroraClasica()
+
+const AURORA = AURORA_CLASICA
 const ELENA = 'FB-015'
 const VAELA = 'FB-011'
 const ETER = 'FB-001'
@@ -169,7 +174,7 @@ describe('(a) bloqueo_fijo repetible — Aurora (copia exacta) sin restricción'
     expect(s.instances.aur.efectosUsadosEsteTurno).toBeUndefined()
   })
 
-  it('Aurora REAL (FB-010) ya lleva «una vez por turno»: la segunda activación del mismo turno se rechaza', () => {
+  it('Aurora clásica ya lleva «una vez por turno»: la segunda activación del mismo turno se rechaza', () => {
     let s = escenarioAurora()
     s = aplicar(s, { type: 'bloquear_eter', eterIds: ids(0, 4), targetInstanceId: 'aur' })
     expect(s.instances.aur.efectosUsadosEsteTurno).toEqual([1])
@@ -295,9 +300,9 @@ describe('Elena (sostenido sin elección): repetir la activación NO apila el ef
 })
 
 describe('(e) Aurora real: Éter externo + dos robos en turnos distintos; al salir Aurora regresan todos', () => {
-  it('externo (FB-005) + 4 propios → robo 1 → Alba → 4 propios más → robo 2 → Aurora sale → ambos vuelven', () => {
+  it('externo (DS-006) + 4 propios → robo 1 → Alba → 4 propios más → robo 2 → Aurora sale → ambos vuelven', () => {
     let s = escenarioAurora(9)
-    s = poner(s, 'pasivo', 'FB-005')
+    s = poner(s, 'pasivo', 'DS-006')
     s = { ...s, players: { ...s.players, A: { ...s.players.A, eterPagado: ['pasivo'] } } }
     // Externo: el Pasivo 1A bloquea x8 sobre Aurora (no cuenta para el pago exacto)
     s = aplicar(s, { type: 'elegir_opcion', opcionId: 'pasivo', campeonId: 'aur', eterId: 'x8' })

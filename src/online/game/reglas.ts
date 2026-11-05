@@ -19,8 +19,10 @@ import {
   type ModificadorRegla,
   type ReglaId,
 } from '../../shared/rules/reglas'
-import type { EfectoData } from '../../shared/types'
-import { getCardMeta } from './cards'
+import type { EfectoData, ReglaEnumerada } from '../../shared/types'
+import { efectosComandante } from '../../shared/efectoComandante'
+import { faccionesCompartidas, getCardMeta } from './cards'
+import { faccionesDe } from './atributos'
 import { keywordsDe } from './efectos'
 import { efectosPrestadosDe } from './efectosInstancia'
 import { contarEterUmbral } from './eter'
@@ -36,12 +38,56 @@ export type SujetoRegla = { jugador: PlayerId } | { instId: string } | undefined
 const otro = (j: PlayerId): PlayerId => (j === 'A' ? 'B' : 'A')
 
 /**
- * La modificación de regla que lleva un efecto: `modificar_regla` la declara; `direct_attack` es el atajo de
- * "este Campeón no puede ser bloqueado" (misma idea que una keyword: no tiene lógica propia, cambia una regla).
+ * Marca (dentro de `efectosUsadosEsteTurno`) de que el Campeón YA gastó este turno la concesión de «el Disparo no agota»
+ * que le da su Comandante. Es negativa para no chocar con los índices reales de `efectos[]` (siempre ≥ 0); se reinicia con
+ * el turno junto al resto de «una vez por turno» (partida.ts).
+ */
+export const MARCA_DISPARO_SIN_AGOTAR = -2
+
+/**
+ * Reglas ENUMERADAS del Card-Maker (`reglaEnumerada`) -> regla del motor. Una entrada = la regla que modifica + a quién
+ * alcanza. Agregar una regla enumerada nueva es agregar una entrada aquí (y a `ReglaEnumerada` en shared/types/cards.ts).
+ */
+interface ReglaEnumeradaMotor {
+  /** La modificación de regla que aplica el efecto. */
+  modificacion: (efecto: EfectoData) => ModificacionRegla
+  /** Reglas de ámbito jugador: a quién alcanza respecto de quien CONTROLA la fuente (por defecto el que dice el objetivo del efecto). */
+  jugadores?: 'propio' | 'rival'
+  /** Reglas de ámbito Campeón: ¿alcanza al Campeón `instId`? (por defecto, el objetivo del efecto). */
+  alcanza?: (s: GameState, f: FuenteRegla, instId: string) => boolean
+}
+
+const REGLAS_ENUMERADAS: Record<ReglaEnumerada, ReglaEnumeradaMotor> = {
+  /**
+   * «Una vez por turno por Campeón, el efecto Disparo no agota» (Aurora). La concede el efecto de COMANDANTE (§10), así que
+   * alcanza solo a los Campeones de la facción del Comandante que su controlador tiene en el campo — no por el texto del
+   * efecto, sino por ser un efecto de Comandante. Una vez gastada en el turno (MARCA_DISPARO_SIN_AGOTAR) deja de alcanzarlo.
+   */
+  disparo_sin_agotar: {
+    modificacion: () => ({ id: 'disparoAgota', operacion: 'prohibir' }),
+    alcanza: (s, f, instId) => {
+      if (!s.players[f.controlador].campo.campeones.includes(instId)) return false
+      if ((s.instances[instId]?.efectosUsadosEsteTurno ?? []).includes(MARCA_DISPARO_SIN_AGOTAR)) return false
+      return faccionesCompartidas(faccionesDe(s, f.inst.cardInstanceId), faccionesDe(s, instId))
+    },
+  },
+  /** «Los Campeones del rival cuestan N Éter más» (tributo de Aurora): suma N al coste de invocar de quien NO controla la fuente. */
+  coste_campeones_rival_mas: {
+    modificacion: (efecto) => ({ id: 'costeCampeonesExtra', operacion: 'sumar', valor: efecto.reglaValor ?? 1 }),
+    jugadores: 'rival',
+  },
+}
+
+/**
+ * La modificación de regla que lleva un efecto: `modificar_regla` la declara (con `regla` del manual o con una
+ * `reglaEnumerada`); `direct_attack` es el atajo de "este Campeón no puede ser bloqueado" (misma idea que una keyword: no
+ * tiene lógica propia, cambia una regla).
  */
 export function reglaDeEfecto(efecto: EfectoData): ModificacionRegla | undefined {
   if (efecto.efecto === 'direct_attack') return { id: 'puedeSerBloqueado', operacion: 'prohibir' }
-  return efecto.efecto === 'modificar_regla' ? efecto.regla : undefined
+  if (efecto.efecto !== 'modificar_regla') return undefined
+  if (efecto.reglaEnumerada) return REGLAS_ENUMERADAS[efecto.reglaEnumerada]?.modificacion(efecto)
+  return efecto.regla
 }
 
 /** Efectos `modificar_regla` de una carta (memo por cardId: el catálogo no cambia durante la partida). */
@@ -50,10 +96,19 @@ function efectosReglaDe(cardId: string): { efecto: EfectoData; indice: number }[
   const memo = memoEfectosRegla.get(cardId)
   if (memo) return memo
   const meta = getCardMeta(cardId)
-  const lista =
+  const propios =
     meta && 'efectos' in meta && meta.efectos
       ? meta.efectos.map((efecto, indice) => ({ efecto, indice })).filter(({ efecto }) => !!reglaDeEfecto(efecto))
       : []
+  // Lote 2: el efecto de COMANDANTE (objeto o arreglo, ver efectosComandante) también modifica reglas. No ocupa un lugar en
+  // `efectos[]`, así que su índice es NEGATIVO (-1, -2, ...): nunca choca con los índices reales ni con los prestados.
+  const deComandante =
+    meta && meta.type === 'Campeón'
+      ? efectosComandante(meta.efectoComandante)
+          .map((efecto, k) => ({ efecto, indice: -(k + 1) }))
+          .filter(({ efecto }) => !!reglaDeEfecto(efecto))
+      : []
+  const lista = [...propios, ...deComandante]
   memoEfectosRegla.set(cardId, lista)
   return lista
 }
@@ -129,6 +184,11 @@ function efectoActivo(s: GameState, f: FuenteRegla, efecto: EfectoData, indice: 
       const meta = f.inst.cardId ? getCardMeta(f.inst.cardId) : null
       if (meta?.type === 'Arcana' && f.inst.bocaArriba !== true) return false // una Arcana boca abajo no tiene efectos vigentes
       const costo = efecto.costo
+      // «Mientras tenga Éter bloqueado»: vale desde que se ACTIVÓ (se pagó su bloqueo) y mientras la carta tenga CUALQUIER
+      // Éter bloqueado, propio o externo (no el umbral del coste). Sin la activación, un Éter externo no lo encendería gratis.
+      if (efecto.duracion === 'mientras_tenga_eter_bloqueado') {
+        return (f.inst.continuosActivados ?? []).includes(indice) && (f.inst.eterBloqueado?.length ?? 0) > 0
+      }
       const pagaConBloqueo = costo?.tipo === 'eter_bloqueado' || costo?.tipo === 'bloqueo_fijo'
       if (pagaConBloqueo || efecto.duracion === 'mientras_ester_bloqueado') {
         const requerido = costo?.umbral ?? (costo?.tipo === 'bloqueo_fijo' ? costo.cantidad : undefined) ?? 1
@@ -148,8 +208,8 @@ function efectoActivo(s: GameState, f: FuenteRegla, efecto: EfectoData, indice: 
 }
 
 /** Jugadores a los que alcanza un efecto de ámbito jugador/partida, según el `controlador` de su objetivo. */
-function jugadoresAfectados(f: FuenteRegla, efecto: EfectoData): PlayerId[] {
-  const c = efecto.objetivo?.controlador ?? 'propio'
+function jugadoresAfectados(f: FuenteRegla, efecto: EfectoData, forzado?: 'propio' | 'rival'): PlayerId[] {
+  const c = forzado ?? efecto.objetivo?.controlador ?? 'propio'
   if (c === 'ambos') return ['A', 'B']
   if (c === 'rival') return [otro(f.controlador)]
   return [f.controlador]
@@ -196,7 +256,13 @@ export function efectosNegados(s: GameState, instId: string): boolean {
 }
 
 /** Todos los modificadores que hoy alcanzan a `sujeto` para la regla `regla` (sin resolver). */
-export function modificadoresReglaDe(s: GameState, regla: ReglaId, sujeto: SujetoRegla): ModificadorRegla[] {
+export function modificadoresReglaDe(
+  s: GameState,
+  regla: ReglaId,
+  sujeto: SujetoRegla,
+  /** Reglas enumeradas que NO se cuentan (para saber qué pasaría sin ellas; ver disparoNoAgotaPorComandante). */
+  omitirEnumeradas: readonly ReglaEnumerada[] = [],
+): ModificadorRegla[] {
   const def = REGLAS[regla]
   const mods: ModificadorRegla[] = []
 
@@ -212,13 +278,15 @@ export function modificadoresReglaDe(s: GameState, regla: ReglaId, sujeto: Sujet
     for (const { efecto, indice } of efectosReglaDeInst(s, f.inst)) {
       const m = reglaDeEfecto(efecto)
       if (!m || m.id !== regla || !efectoActivo(s, f, efecto, indice)) continue
+      const enumerada = efecto.reglaEnumerada ? REGLAS_ENUMERADAS[efecto.reglaEnumerada] : undefined
+      if (efecto.reglaEnumerada && omitirEnumeradas.includes(efecto.reglaEnumerada)) continue
       // Un Campeón con sus efectos negados no modifica reglas (salvo su efecto de Comandante). `efectosActivos` no se
       // niega a sí misma: así no hay recursión.
       if (regla !== 'efectosActivos' && f.origen === 'campo' && efecto.tipo !== 'comandante' && efectosNegados(s, f.inst.cardInstanceId)) continue
       let alcanza = false
       if (def.ambito === 'partida') alcanza = true
-      else if (def.ambito === 'jugador') alcanza = !!sujeto && 'jugador' in sujeto && jugadoresAfectados(f, efecto).includes(sujeto.jugador)
-      else alcanza = !!sujeto && 'instId' in sujeto && afectaACarta(s, f, efecto, sujeto.instId)
+      else if (def.ambito === 'jugador') alcanza = !!sujeto && 'jugador' in sujeto && jugadoresAfectados(f, efecto, enumerada?.jugadores).includes(sujeto.jugador)
+      else if (sujeto && 'instId' in sujeto) alcanza = enumerada?.alcanza ? enumerada.alcanza(s, f, sujeto.instId) : afectaACarta(s, f, efecto, sujeto.instId)
       if (alcanza) mods.push({ regla, operacion: m.operacion, valor: m.valor, orden: 0 })
     }
   }
@@ -244,4 +312,14 @@ export function reglaNumero(s: GameState, regla: ReglaNumerica, sujeto?: SujetoR
 /** Valor vigente de una regla BOOLEANA. */
 export function reglaBool(s: GameState, regla: ReglaBooleana, sujeto?: SujetoRegla): boolean {
   return resolverRegla(regla, modificadoresReglaDe(s, regla, sujeto)) as boolean
+}
+
+/**
+ * ¿Es el Comandante quien hace que el Disparo de `instId` NO agote ahora? Verdadero si la regla `disparoAgota` está
+ * prohibida y, SIN la concesión del Comandante (`disparo_sin_agotar`), seguiría agotando. Así un Tirador (que ya no agota por
+ * su keyword) no gasta la concesión: solo se consume cuando de verdad se usó (habilidadPago.ts).
+ */
+export function disparoNoAgotaPorComandante(s: GameState, instId: string): boolean {
+  if (reglaBool(s, 'disparoAgota', { instId })) return false
+  return resolverRegla('disparoAgota', modificadoresReglaDe(s, 'disparoAgota', { instId }, ['disparo_sin_agotar'])) === true
 }

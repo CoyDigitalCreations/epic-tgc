@@ -7,14 +7,17 @@ import { getCardMeta, registrarCartas, type AnyCard } from '../cards'
 import { visibleState } from '../visibleState'
 import { getValidActions, actorActual } from '../validActions'
 import type { Ctx, GameState, PlayerId } from '../types'
+import { REINO_PERDIDO_CLASICO, registrarReinoPerdidoClasico } from './helpers/reinoPerdidoClasico'
 
 // F5a — pila única: una sola ranura `GameState.cadena` (origen 'combate' | 'global').
-// Cartas reales: FB-011 Vaela (Campeón) · FB-023 El Reino Perdido (Arcana).
+// Cartas reales: FB-011 Vaela (Campeón) · Reino Perdido clásico (Arcana, fixture).
 const VAELA = 'FB-011'
-// F5f: responder con una Arcana exige cumplir su `condicion` (FB-023: 2 Campeones propios con Éter bloqueado). Estos
-// tests son de mecánica de la pila, no de esa condición: usan un clon de FB-023 sin condicion.
+// F5f: responder con una Arcana exige cumplir su `condicion` (Reino Perdido clásico: 2 Campeones propios con Éter bloqueado). Estos
+// tests son de mecánica de la pila, no de esa condición: usan un clon del Reino Perdido clásico sin condicion.
 const ARCANA = 'TEST-ARCANA-LIBRE'
-registrarCartas([{ ...getCardMeta('FB-023')!, id: ARCANA, condicion: undefined } as AnyCard])
+// FB-023 se rediseñó: el clon parte del Reino Perdido clásico (fixture: Arcana coste 2 que roba 2).
+registrarReinoPerdidoClasico()
+registrarCartas([{ ...getCardMeta(REINO_PERDIDO_CLASICO)!, id: ARCANA, condicion: undefined } as AnyCard])
 const MSG_CADENA = 'cadena abierta'
 
 function estadoMinimo(fase: GameState['fase'] = 'forja'): GameState {

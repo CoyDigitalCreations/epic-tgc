@@ -1,6 +1,6 @@
 // @vitest-environment node
 /**
- * Fase 3c — copy (FB-022 Último Refugio).
+ * Fase 3c — copy (Refugio clásico: el diseño previo de FB-022 Último Refugio).
  *
  * "Puedes bloquear hasta un máximo de 3 Éter (Max. 3), copia el efecto de
  * hechizo, el efecto continuo y la recompensa de una Mística o Arcana que
@@ -10,9 +10,8 @@
  * via modificadoresJSONDe) + A extensible (eventos copy = one-shot en
  * transición 0→≥1 bloqueado, patrón FB-032) + hook Presteza documentado.
  *
- * Cartas: FB-022 Último Refugio (Mística Fugaz, copy, eter_bloqueado:3) ·
+ * Cartas: Refugio clásico (fixture; Mística Fugaz, copy, bloqueo_fijo:3) ·
  * DS-021 El Nudo Aprieta (Mística hechizo buff — target de copy) ·
- * FB-023 El Reino Perdido (Arcana recompensa draw — target arcana_recompensa) ·
  * FB-016 Cassandra (Campeón — receptor de auras) · FB-001 Éter Orden.
  */
 import { describe, it, expect } from 'vitest'
@@ -24,10 +23,14 @@ import { statsDe } from '../efectos'
 import { bloquearEter } from '../payments'
 import { liberarEterBloqueado } from '../replacements'
 import type { Ctx, GameState, PlayerId } from '../types'
+import { REFUGIO_CLASICO, registrarRefugioClasico } from './helpers/refugioClasico'
 
-const FB022 = 'FB-022' // Mística Fugaz, copy, eter_bloqueado:3
+// Último Refugio (FB-022) se rediseñó (ya no copia): estos tests usan el Refugio clásico, un
+// fixture sintético con el diseño viejo (Mística Fugaz, copy, bloqueo_fijo 3).
+registrarRefugioClasico()
+
+const REFUGIO = REFUGIO_CLASICO // Mística Fugaz, copy, bloqueo_fijo:3
 const DS021 = 'DS-021' // Mística hechizo buff — target de copy mistica_hechizo
-const FB023 = 'FB-023' // Arcana recompensa draw — target arcana_recompensa
 const CASSANDRA = 'FB-016' // Campeón receptor de auras
 const ETER_ORDEN = 'FB-001'
 
@@ -165,54 +168,54 @@ function aplicar(s: GameState, accion: Action, ctx: Ctx): GameState {
 describe('copyActivo — estado derivado (Fase 3c)', () => {
   it('true: copyTargetId + ≥1 éter bloqueado + target en campo', () => {
     const conMistTarget = conMistica(estadoMinimo(), DS021, 'B', 0)
-    const conFB022 = conMistica(conMistTarget.s, FB022, 'A', 0, {
+    const conRefugio = conMistica(conMistTarget.s, REFUGIO, 'A', 0, {
       copyTargetId: conMistTarget.id,
       eterBloqueado: ['e-0'],
     })
     // Registrar instancia del éter bloqueado
-    const s = conInstancias(conFB022.s, { 'e-0': { cardId: ETER_ORDEN, owner: 'A' } })
-    expect(copyActivo(s, conFB022.id)).toBe(true)
+    const s = conInstancias(conRefugio.s, { 'e-0': { cardId: ETER_ORDEN, owner: 'A' } })
+    expect(copyActivo(s, conRefugio.id)).toBe(true)
   })
 
   it('false: sin éter bloqueado', () => {
     const conMistTarget = conMistica(estadoMinimo(), DS021, 'B', 0)
-    const conFB022 = conMistica(conMistTarget.s, FB022, 'A', 0, {
+    const conRefugio = conMistica(conMistTarget.s, REFUGIO, 'A', 0, {
       copyTargetId: conMistTarget.id,
     })
-    expect(copyActivo(conFB022.s, conFB022.id)).toBe(false)
+    expect(copyActivo(conRefugio.s, conRefugio.id)).toBe(false)
   })
 
   it('false: sin copyTargetId', () => {
-    const conFB022 = conMistica(estadoMinimo(), FB022, 'A', 0, {
+    const conRefugio = conMistica(estadoMinimo(), REFUGIO, 'A', 0, {
       eterBloqueado: ['e-0'],
     })
-    const s = conInstancias(conFB022.s, { 'e-0': { cardId: ETER_ORDEN, owner: 'A' } })
-    expect(copyActivo(s, conFB022.id)).toBe(false)
+    const s = conInstancias(conRefugio.s, { 'e-0': { cardId: ETER_ORDEN, owner: 'A' } })
+    expect(copyActivo(s, conRefugio.id)).toBe(false)
   })
 
   it('false: target salió del campo', () => {
-    const conFB022 = conMistica(estadoMinimo(), FB022, 'A', 0, {
+    const conRefugio = conMistica(estadoMinimo(), REFUGIO, 'A', 0, {
       copyTargetId: 'mist-fuera',
       eterBloqueado: ['e-0'],
     })
-    const s = conInstancias(conFB022.s, {
+    const s = conInstancias(conRefugio.s, {
       'e-0': { cardId: ETER_ORDEN, owner: 'A' },
       'mist-fuera': { cardId: DS021, owner: 'B' }, // instancia existe pero FUERA del campo
     })
-    expect(copyActivo(s, conFB022.id)).toBe(false)
+    expect(copyActivo(s, conRefugio.id)).toBe(false)
   })
 })
 
-describe('flujo integral jugar FB-022 (Fase 3c)', () => {
-  it('al jugar FB-022 → D1 elige target → copyTargetId seteado', () => {
+describe('flujo integral jugar Refugio clásico (Fase 3c)', () => {
+  it('al jugar Refugio clásico → D1 elige target → copyTargetId seteado', () => {
     const ctx = crearCtx()
     const conTarget = conMistica(estadoMinimo(), DS021, 'B', 0)
-    let s = conMano(conTarget.s, 'A', { fb022: FB022 })
+    let s = conMano(conTarget.s, 'A', { refugio: REFUGIO })
     const { s: sEteres, ids } = conEteres(s, 'A', ETER_ORDEN, 6)
     s = sEteres
 
     // Jugarla incluye bloquear 3 Éter (no queda para después): 3 pagan, 3 se bloquean
-    s = aplicar(s, { type: 'jugar_mistica', cardInstanceId: 'fb022', slot: 0, eterIds: ids.slice(0, 3), bloqueoEterIds: ids.slice(3) }, ctx)
+    s = aplicar(s, { type: 'jugar_mistica', cardInstanceId: 'refugio', slot: 0, eterIds: ids.slice(0, 3), bloqueoEterIds: ids.slice(3) }, ctx)
 
     // D1 pendiente (fromTrigger=true fuerza elección)
     expect(s.objetivosPendientes?.length).toBe(1)
@@ -223,20 +226,20 @@ describe('flujo integral jugar FB-022 (Fase 3c)', () => {
     s = aplicar(s, { type: 'elegir_objetivo', objetivoId: conTarget.id }, ctx)
     while (s.cadena) s = aplicar(s, { type: 'pasar_prioridad' }, ctx)
 
-    const fb022Inst = Object.values(s.instances).find((i) => i?.cardId === FB022)
-    expect(fb022Inst?.copyTargetId).toBe(conTarget.id)
+    const refugioInst = Object.values(s.instances).find((i) => i?.cardId === REFUGIO)
+    expect(refugioInst?.copyTargetId).toBe(conTarget.id)
     // El Éter se bloqueó al jugarla, así que la copia ya está activa
-    expect(fb022Inst?.eterBloqueado).toHaveLength(3)
-    expect(copyActivo(s, fb022Inst!.cardInstanceId)).toBe(true)
+    expect(refugioInst?.eterBloqueado).toHaveLength(3)
+    expect(copyActivo(s, refugioInst!.cardInstanceId)).toBe(true)
   })
 
   describe('«Bloquea 3 Éter» es parte de jugarla (Último Refugio)', () => {
     const jugar = (s: GameState, extra: object) =>
-      applyAction(s, { type: 'jugar_mistica', cardInstanceId: 'fb022', slot: 0, ...extra } as never, crearCtx())
+      applyAction(s, { type: 'jugar_mistica', cardInstanceId: 'refugio', slot: 0, ...extra } as never, crearCtx())
 
     function escenario(conRival = true, eteres = 6) {
       const base = conRival ? conMistica(estadoMinimo(), DS021, 'B', 0).s : estadoMinimo()
-      const { s, ids } = conEteres(conMano(base, 'A', { fb022: FB022 }), 'A', ETER_ORDEN, eteres)
+      const { s, ids } = conEteres(conMano(base, 'A', { refugio: REFUGIO }), 'A', ETER_ORDEN, eteres)
       return { s, ids }
     }
 
@@ -263,27 +266,27 @@ describe('flujo integral jugar FB-022 (Fase 3c)', () => {
 
     it('con menos de 6 Éter (3 para pagar + 3 para bloquear) no se ofrece', () => {
       const { s } = escenario(true, 5)
-      expect(getValidActions(s, 'A').some((a) => a.type === 'jugar_mistica' && a.cardInstanceId === 'fb022')).toBe(false)
+      expect(getValidActions(s, 'A').some((a) => a.type === 'jugar_mistica' && a.cardInstanceId === 'refugio')).toBe(false)
     })
 
     it('como respuesta (Fugaz desde la mano) también bloquea al jugarla, y sin el bloqueo se rechaza', () => {
       const { s, ids } = escenario()
       s.cadena = { origen: 'global', pila: [], prioridad: 'A', pasesConsecutivos: 0, faseAbierta: 'forja' }
-      const accion = getValidActions(s, 'A').find((a) => a.type === 'jugar_respuesta' && a.cardInstanceId === 'fb022')
+      const accion = getValidActions(s, 'A').find((a) => a.type === 'jugar_respuesta' && a.cardInstanceId === 'refugio')
       expect(accion).toBeDefined()
       if (accion?.type !== 'jugar_respuesta') return
       expect(accion.bloqueoEterIds).toHaveLength(3)
       expect(applyAction(s, { ...accion, bloqueoEterIds: undefined }, crearCtx()).ok).toBe(false)
       const r = applyAction(s, accion, crearCtx())
       expect(r.ok).toBe(true)
-      const inst = Object.values(r.state.instances).find((i) => i?.cardId === FB022)
+      const inst = Object.values(r.state.instances).find((i) => i?.cardId === REFUGIO)
       expect(inst?.eterBloqueado).toHaveLength(3)
       expect(ids.length).toBe(6)
     })
 
     it('el motor propone la acción completa: pago y bloqueo con Éteres distintos', () => {
       const { s } = escenario()
-      const accion = getValidActions(s, 'A').find((a) => a.type === 'jugar_mistica' && a.cardInstanceId === 'fb022')
+      const accion = getValidActions(s, 'A').find((a) => a.type === 'jugar_mistica' && a.cardInstanceId === 'refugio')
       expect(accion).toBeDefined()
       if (accion?.type !== 'jugar_mistica') return
       expect(accion.eterIds).toHaveLength(3)
@@ -293,37 +296,37 @@ describe('flujo integral jugar FB-022 (Fase 3c)', () => {
     })
   })
 
-  it('bloquear éter en FB-022 con target → copyActivo true', () => {
+  it('bloquear éter en Refugio clásico con target → copyActivo true', () => {
     const ctx = crearCtx()
     const conTarget = conMistica(estadoMinimo(), DS021, 'B', 0)
-    const conFB022 = conMistica(conTarget.s, FB022, 'A', 0, { copyTargetId: conTarget.id })
-    // FB-022 ahora es bloqueo_fijo:3 (cambio del usuario en Card-Maker,
+    const conRefugio = conMistica(conTarget.s, REFUGIO, 'A', 0, { copyTargetId: conTarget.id })
+    // El Refugio clásico es bloqueo_fijo:3 (cambio del usuario en Card-Maker,
     // 2026-10-22) — exige exactamente 3 Éteres de una
-    const { s: sEteres, ids } = conEteres(conFB022.s, 'A', ETER_ORDEN, 3)
+    const { s: sEteres, ids } = conEteres(conRefugio.s, 'A', ETER_ORDEN, 3)
 
-    const s = aplicar(sEteres, { type: 'bloquear_eter', eterIds: ids, targetInstanceId: conFB022.id }, ctx)
-    expect(copyActivo(s, conFB022.id)).toBe(true)
+    const s = aplicar(sEteres, { type: 'bloquear_eter', eterIds: ids, targetInstanceId: conRefugio.id }, ctx)
+    expect(copyActivo(s, conRefugio.id)).toBe(true)
   })
 
   it('liberar éter → copyActivo false; flag one-shot limpiado', () => {
     const ctx = crearCtx()
     const conTarget = conMistica(estadoMinimo(), DS021, 'B', 0)
-    const conFB022 = conMistica(conTarget.s, FB022, 'A', 0, {
+    const conRefugio = conMistica(conTarget.s, REFUGIO, 'A', 0, {
       copyTargetId: conTarget.id,
       copyOneShotDisparado: true,
     })
-    const s0 = conInstancias(conFB022.s, { 'e-0': { cardId: ETER_ORDEN, owner: 'A' } })
+    const s0 = conInstancias(conRefugio.s, { 'e-0': { cardId: ETER_ORDEN, owner: 'A' } })
     const s: GameState = {
       ...s0,
       instances: {
         ...s0.instances,
-        [conFB022.id]: { ...s0.instances[conFB022.id], eterBloqueado: ['e-0'] },
+        [conRefugio.id]: { ...s0.instances[conRefugio.id], eterBloqueado: ['e-0'] },
       },
     }
-    expect(copyActivo(s, conFB022.id)).toBe(true)
+    expect(copyActivo(s, conRefugio.id)).toBe(true)
 
-    liberarEterBloqueado(s, ctx, conFB022.id, '1A')
-    expect(copyActivo(s, conFB022.id)).toBe(false)
-    expect(s.instances[conFB022.id].copyOneShotDisparado).toBeUndefined()
+    liberarEterBloqueado(s, ctx, conRefugio.id, '1A')
+    expect(copyActivo(s, conRefugio.id)).toBe(false)
+    expect(s.instances[conRefugio.id].copyOneShotDisparado).toBeUndefined()
   })
 })

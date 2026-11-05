@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
-import { aporteDe, atacantesElegibles, campeonesSacrificables, costeEterHabilidad, faccionesCompartidas, getCardMeta, sacrificiosRequeridos, esBloqueoFijo, maxEterBloqueado, efectoBloqueoAccion, parejasBloqueoOpcion, cadenaActiva, ordenResolucion } from '../game'
+import { aporteDe, costeDeCampeon, atacantesElegibles, campeonesSacrificables, costeEterHabilidad, faccionesCompartidas, getCardMeta, sacrificiosRequeridos, esBloqueoFijo, maxEterBloqueado, efectoBloqueoAccion, parejasBloqueoOpcion, cadenaActiva, ordenResolucion } from '../game'
 import type { Action, CardInstance, GameState, PlayerId } from '../game'
 import { disparoDeRespuesta } from '../game/chain'
 import { bloqueoAlJugar } from '../game/bloqueoAlJugar'
@@ -1247,7 +1247,9 @@ export function Tablero({
         ? (costeEterHabilidad(meta) || 1)
         : disparoResp
           ? (disparoResp.efecto.costo?.cantidad || 1)
-          : meta.stats.cost
+          : accionBase.type === 'jugar_campeon'
+            ? costeDeCampeon(vista, yoId, meta.id) // Lote 2: incluye lo que le sumen las reglas (p. ej. el tributo de Aurora al rival)
+            : meta.stats.cost
       setSeleccion({ tipo: 'pagar', accionBase, objetivoCardId, coste: costo })
     }
     setElegidos(new Set())
@@ -1266,7 +1268,7 @@ export function Tablero({
     const hayQuePagar = !meta
       ? false
       : accion.type === 'jugar_respuesta' || meta.type === 'Arcana'
-        ? meta.stats.cost > 0
+        ? costeDeCampeon(vista, yoId, meta.id) > 0
         : !!disparo && (disparo.efecto.costo?.cantidad ?? 1) > 0
     if (meta && hayQuePagar) abrirSelector(accion, meta.id)
     else onAccion(accion)

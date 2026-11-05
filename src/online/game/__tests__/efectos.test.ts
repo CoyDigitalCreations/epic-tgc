@@ -18,8 +18,8 @@ import {
 } from '../efectos'
 
 // Cartas reales del catálogo (fuente de verdad: seed/FuenteEfectos.json):
-// FB-010 Aurora · FB-011 Vaela (hoy: al_matar_en_combate/mover) · DS-011 Kael (pasivo/al_atacar/debuff)
-const AURORA = 'FB-010'
+// FB-011 Vaela (hoy: al_matar_en_combate/return_ether) · DS-011 Kael (pasivo/al_atacar/debuff)
+
 const VAELA = 'FB-011'
 const KAEL = 'DS-011' // pasivo / al_atacar / debuff −1 ATQ al rival
 const ISOLDE = 'FB-014'
@@ -108,9 +108,9 @@ describe('registro y dispatch de efectos (F1, ADR-20)', () => {
 
   it('dispararTrigger ejecuta el handler registrado para (trigger, cardId) con ctx', () => {
     const ctx = crearCtx()
-    const { s, id } = conCampeon(estadoMinimo(), AURORA, 0)
+    const { s, id } = conCampeon(estadoMinimo(), KAEL, 0)
     // Use a custom trigger that doesn't match any JSON effect
-    registrarEfecto('custom-dispatch-test' as any, AURORA, (st, c, inst) => {
+    registrarEfecto('custom-dispatch-test' as any, KAEL, (st, c, inst) => {
       expect(c).toBe(ctx)
       inst.keywords = [...(inst.keywords ?? []), 'Prueba']
     })
@@ -120,7 +120,7 @@ describe('registro y dispatch de efectos (F1, ADR-20)', () => {
 
   it('sin handler registrado → no-op (no lanza, no muta)', () => {
     const ctx = crearCtx()
-    const { s, id } = conCampeon(estadoMinimo(), AURORA, 0)
+    const { s, id } = conCampeon(estadoMinimo(), KAEL, 0)
     const antes = JSON.stringify(s)
     dispararTrigger(s, ctx, 'al-invocar', 'A', [id])
     expect(JSON.stringify(s)).toBe(antes)
@@ -130,15 +130,15 @@ describe('registro y dispatch de efectos (F1, ADR-20)', () => {
     const ctx = crearCtx()
     let s = estadoMinimo()
     const orden: string[] = []
-    const { s: s1, id: id1 } = conCampeon(s, AURORA, 0)
+    const { s: s1, id: id1 } = conCampeon(s, KAEL, 0)
     s = s1
     const { s: s2, id: id2 } = conCampeon(s, VAELA, 1)
     s = s2
     // Use custom triggers that don't match JSON effects
-    registrarEfecto('custom-order-1' as any, AURORA, (_st, _c, inst) => orden.push(inst.cardInstanceId))
+    registrarEfecto('custom-order-1' as any, KAEL, (_st, _c, inst) => orden.push(inst.cardInstanceId))
     registrarEfecto('custom-order-2' as any, VAELA, (_st, _c, inst) => orden.push(inst.cardInstanceId))
     // Register both on same custom trigger
-    registrarEfecto('custom-order-test' as any, AURORA, (_st, _c, inst) => orden.push(inst.cardInstanceId))
+    registrarEfecto('custom-order-test' as any, KAEL, (_st, _c, inst) => orden.push(inst.cardInstanceId))
     registrarEfecto('custom-order-test' as any, VAELA, (_st, _c, inst) => orden.push(inst.cardInstanceId))
     dispararTrigger(s, ctx, 'custom-order-test' as any, 'A', [id2, id1]) // desordenadas
     expect(orden).toEqual([id1, id2])
@@ -185,28 +185,28 @@ describe('registro y dispatch de efectos (F1, ADR-20)', () => {
       ...s,
       instances: {
         ...s.instances,
-        'm-vaela': { cardInstanceId: 'm-vaela', cardId: 'FB-011', owner: 'A' },
+        'm-kael': { cardInstanceId: 'm-kael', cardId: 'DS-011', owner: 'A' },
         'm-aurora': { cardInstanceId: 'm-aurora', cardId: 'FB-010', owner: 'A' },
       },
       players: {
         ...s.players,
-        A: { ...s.players.A, mazo: ['m-vaela', 'm-aurora'] },
+        A: { ...s.players.A, mazo: ['m-kael', 'm-aurora'] },
       },
     }
 
     // Fire al-ser-enviado-al-cementerio — JSON interpreter should create pending
     dispararTrigger(s, ctx, 'al-ser-enviado-al-cementerio', 'A', [ds031])
 
-    // Should have pending objective with only Vaela (cost ≤ 2 champion)
+    // Should have pending objective with only Kael (cost ≤ 2 champion; Aurora cuesta 4)
     expect(s.objetivosPendientes).toBeDefined()
-    expect(s.objetivosPendientes![0].opciones).toEqual(['m-vaela'])
+    expect(s.objetivosPendientes![0].opciones).toEqual(['m-kael'])
   })
 })
 
 describe('statsDe y keywordsDe (ADR-20)', () => {
   it('statsDe = base meta + override de instancia (poder?/resistencia?)', () => {
-    const { s, id } = conCampeon(estadoMinimo(), VAELA, 0) // Vaela 5/3
-    expect(statsDe(s, id)).toEqual({ poder: 5, resistencia: 3 })
+    const { s, id } = conCampeon(estadoMinimo(), VAELA, 0) // Vaela 5/2
+    expect(statsDe(s, id)).toEqual({ poder: 5, resistencia: 2 })
     const conOverride = {
       ...s,
       instances: { ...s.instances, [id]: { ...s.instances[id], poder: 7, resistencia: 1 } },
@@ -215,10 +215,10 @@ describe('statsDe y keywordsDe (ADR-20)', () => {
   })
 
   it('statsDe suma los modificadores (Σ aditivo, ADR-22)', () => {
-    const { s, id } = conCampeon(estadoMinimo(), VAELA, 0) // 5/3
+    const { s, id } = conCampeon(estadoMinimo(), VAELA, 0) // 5/2
     aplicarMod(s, id, 'poder', 2, 'ocaso')
     aplicarMod(s, id, 'resistencia', -1, 'permanente')
-    expect(statsDe(s, id)).toEqual({ poder: 7, resistencia: 2 })
+    expect(statsDe(s, id)).toEqual({ poder: 7, resistencia: 1 })
   })
 
   it('keywordsDe = data + inst.keywords + inst.keywordsTemporales', () => {
@@ -237,11 +237,11 @@ describe('statsDe y keywordsDe (ADR-20)', () => {
 describe('regresión: combat usa statsDe (C1.3)', () => {
   it('un modificador de resistencia cambia el resultado de la resolución', () => {
     const ctx = crearCtx()
-    const { s: s1, id: vaela } = conCampeon(estadoMinimo(), VAELA, 0, 'A') // 5/3
-    const { s: s2, id: isolde } = conCampeon(s1, ISOLDE, 0, 'B') // 3/7
+    const { s: s1, id: vaela } = conCampeon(estadoMinimo(), VAELA, 0, 'A') // 5/2
+    const { s: s2, id: isolde } = conCampeon(s1, ISOLDE, 0, 'B') // 3/6
     let s = s2
-    // Sin modificador: Vaela (RES 3) muere ante Isolde (PODER 3 ≥ 3).
-    // Con +3 RES (5/6): 3 < 6 → Vaela sobrevive; y 5 < 7 → Isolde sobrevive.
+    // Sin modificador: Vaela (RES 2) muere ante Isolde (PODER 3 ≥ 2).
+    // Con +3 RES (5/5): 3 < 5 → Vaela sobrevive; y 5 < 6 → Isolde sobrevive.
     aplicarMod(s, vaela, 'resistencia', 3, 'permanente')
     s = aplicar(s, { type: 'declarar_ataque', atacanteIds: [vaela] }, ctx)
     // F5a: con la cadena 9.6 abierta solo se responde o se pasa; se cierra antes de bloquear

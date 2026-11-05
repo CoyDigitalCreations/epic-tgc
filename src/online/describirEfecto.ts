@@ -1,4 +1,5 @@
 import type { EfectoData, ObjetivoEfecto } from '../shared/types/cards'
+import { efectosComandante } from '../shared/efectoComandante'
 
 /**
  * Describe un EfectoData en texto legible para:
@@ -145,14 +146,14 @@ export function describirEfecto(e: EfectoData): string {
 }
 
 /** Todas las líneas de efectos[] de una carta (para modal pre-ejecución). */
-export function describirEfectosDeCarta(meta: { efectos?: EfectoData[]; efectoComandante?: EfectoData; type?: string } | null): string[] {
+export function describirEfectosDeCarta(meta: { efectos?: EfectoData[]; efectoComandante?: EfectoData | EfectoData[]; type?: string } | null): string[] {
   if (!meta) return []
   const lineas: string[] = []
   if (meta.efectos?.length) {
     for (const e of meta.efectos) lineas.push(describirEfecto(e))
   }
-  if (meta.efectoComandante) {
-    lineas.push(`Comandante: ${describirEfecto(meta.efectoComandante)}`)
+  for (const e of efectosComandante(meta.efectoComandante)) {
+    lineas.push(`Comandante: ${describirEfecto(e)}`)
   }
   return lineas
 }
