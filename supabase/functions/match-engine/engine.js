@@ -83,9 +83,9 @@ var FuenteEfectos_default = [
     keywords: [],
     flavorText: "Lo que corre por sus venas no es sangre: es promesa.",
     paqueteId: "estasis",
-    limiteCopias: "2",
+    limiteCopias: "1",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-09-29T05:03:30.287Z",
+    updatedAt: "2026-11-05T04:05:17.762Z",
     stats: {
       cost: 1
     },
@@ -113,7 +113,7 @@ var FuenteEfectos_default = [
     keywords: [],
     flavorText: "A\xFAn roto, el cristal recuerda c\xF3mo cantar.",
     paqueteId: "estasis",
-    limiteCopias: "2",
+    limiteCopias: "3",
     createdAt: "2026-08-03T00:00:00.000Z",
     updatedAt: "2026-09-29T05:04:09.856Z",
     stats: {
@@ -149,25 +149,24 @@ var FuenteEfectos_default = [
     paqueteId: "estasis",
     limiteCopias: "2",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-10-24T18:27:28.209Z",
+    updatedAt: "2026-11-05T04:05:17.762Z",
     stats: {
       cost: 1
     },
-    variantePago: "Pasivo",
+    variantePago: "Gatillo",
     efectos: [
       {
         tipo: "pago",
-        efecto: "block_ether",
+        trigger: "al_pagar_eter",
+        efecto: "grant_keyword",
+        keyword: "Tirador",
         objetivo: {
           tipo: "campeon",
           controlador: "propio",
-          zona: "campo",
-          filtros: {
-            puedeBloquearEter: true
-          }
+          zona: "campo"
         },
-        texto: "Bloquea 1 \xC9ter de tu Reserva sobre un Campe\xF3n que pueda recibir \xE9ter bloqueado que controles, una vez por turno.",
-        duracion: "1_por_turno"
+        duracion: "turno",
+        texto: "Cuando pagues esta carta, un Campe\xF3n que controles gana Tirador, hasta el final del turno."
       }
     ]
   },
@@ -181,7 +180,7 @@ var FuenteEfectos_default = [
     paqueteId: "estasis",
     limiteCopias: "1",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-09-29T05:04:43.456Z",
+    updatedAt: "2026-11-05T04:05:17.762Z",
     stats: {
       cost: 1
     },
@@ -189,16 +188,16 @@ var FuenteEfectos_default = [
     efectos: [
       {
         tipo: "pago",
-        texto: "Cuando pagues esta carta, devuelve 1 \xC9ter de la zona de pago a tu Reserva.",
         trigger: "al_pagar_eter",
-        efecto: "return_ether",
+        efecto: "scry",
+        cantidad: 1,
+        opcionFondo: true,
         objetivo: {
-          tipo: "eter",
+          tipo: "carta",
           controlador: "propio",
-          zona: "pagado",
-          zonaDestino: "reserva"
+          zona: "mazo"
         },
-        cantidad: 1
+        texto: "Cuando pagues esta carta, mira la carta superior de tu mazo y puedes enviarla al fondo."
       }
     ]
   },
@@ -243,21 +242,23 @@ var FuenteEfectos_default = [
     paqueteId: "estasis",
     limiteCopias: "2",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-09-29T05:05:47.218Z",
+    updatedAt: "2026-11-05T04:05:17.762Z",
     stats: {
       cost: 1
     },
     efectos: [
       {
-        tipo: "bloqueo",
+        tipo: "pago",
+        trigger: "al_pagar_eter",
         efecto: "grant_keyword",
+        keyword: "Carga",
         objetivo: {
           tipo: "campeon",
           controlador: "propio",
           zona: "campo"
         },
-        texto: "Mientras est\xE9 bloqueado, el Campe\xF3n que tenga este \xC9ter gana Inmortal.",
-        keyword: "Inmortal"
+        duracion: "turno",
+        texto: "Cuando pagues esta carta, un Campe\xF3n que controles gana Carga, hasta el final del turno."
       }
     ]
   },
@@ -303,7 +304,7 @@ var FuenteEfectos_default = [
     paqueteId: "estasis",
     limiteCopias: "1",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-10-24T18:15:01.960Z",
+    updatedAt: "2026-11-05T04:05:17.762Z",
     facciones: [
       "Orden"
     ],
@@ -320,58 +321,67 @@ var FuenteEfectos_default = [
       poder: 9,
       resistencia: 9
     },
-    disparoAgota: "No",
-    disparoUnSoloUso: "No",
     efectos: [
       {
         tipo: "disparo",
-        efecto: "destroy",
-        objetivo: {
-          tipo: "mistica_arcana",
-          controlador: "rival",
-          zona: "campo"
-        },
-        texto: "Puedes pagar 2 \xC9ter, destruye 1 M\xEDstica o Arcana que controla el rival.",
+        efecto: "activar_disparo",
         costo: {
           tipo: "eter",
           cantidad: 2
-        }
+        },
+        activacion: "una_por_turno",
+        objetivo: {
+          tipo: "campeon",
+          controlador: "propio",
+          zona: "campo",
+          excluyeEsta: true
+        },
+        sinPagarCosto: true,
+        sinAgotar: true,
+        texto: "Puedes pagar 2 \xC9ter, una vez por turno, activa un efecto Disparo de otro Campe\xF3n que controles sin pagar su costo ni agotarlo."
       },
       {
         tipo: "continuo",
-        efecto: "steal_champion",
-        objetivo: {
-          tipo: "campeon",
-          controlador: "rival",
-          zona: "campo"
-        },
-        texto: "Una vez por turno, bloquea 4 \xC9ter, toma control de 1 un Campe\xF3n que controla el rival, mientras ese \xC9ter est\xE9 bloqueado, Al inicio de tu Alba reagrupa el \xC9ter usado por este efecto.",
-        duracion: "mientras_ester_bloqueado",
+        efecto: "modificar_regla",
         costo: {
           tipo: "bloqueo_fijo",
-          cantidad: 4
+          cantidad: 3
         },
+        activacion: "una_por_turno",
+        reglaEnumerada: "coste_campeones_rival_mas",
+        reglaValor: 1,
+        duracion: "mientras_tenga_eter_bloqueado",
         reagrupar: {
           fase: "alba",
-          turno: "propio"
+          turno: "propio",
+          alcance: "todo"
         },
-        activacion: "una_por_turno"
+        texto: "Una vez por turno, bloquea 3 \xC9ter, los Campeones del rival cuestan 1 \xC9ter m\xE1s, mientras tenga \xC9ter bloqueado. Al inicio de tu Alba reagrupa todo el \xC9ter bloqueado en esta carta."
       }
     ],
-    efectoComandante: {
-      tipo: "pasivo",
-      efecto: "buff",
-      texto: "Todos tus Campeones ganan 2 de ATQ y 2 de RES.",
-      stats: {
-        ATQ: 2,
-        RES: 2
+    efectoComandante: [
+      {
+        tipo: "comandante",
+        efecto: "buff",
+        stats: {
+          ATQ: 2,
+          RES: 2
+        },
+        objetivo: {
+          tipo: "todos_campeones_propios",
+          controlador: "propio",
+          zona: "campo"
+        },
+        texto: "Incremento de 2 de ATQ y 2 de RES."
       },
-      objetivo: {
-        tipo: "todos_campeones_propios",
-        controlador: "propio",
-        zona: "campo"
+      {
+        tipo: "comandante",
+        efecto: "modificar_regla",
+        reglaEnumerada: "disparo_sin_agotar",
+        activacion: "una_por_turno",
+        texto: "Una vez por turno por Campe\xF3n, el efecto Disparo no agota."
       }
-    }
+    ]
   },
   {
     id: "FB-011",
@@ -385,7 +395,7 @@ var FuenteEfectos_default = [
     paqueteId: "estasis",
     limiteCopias: "3",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-09-29T05:07:17.147Z",
+    updatedAt: "2026-11-05T04:05:17.762Z",
     facciones: [
       "Orden"
     ],
@@ -397,23 +407,24 @@ var FuenteEfectos_default = [
       "Efecto"
     ],
     stats: {
-      cost: 2,
+      cost: 3,
       poder: 5,
-      resistencia: 3
+      resistencia: 2
     },
     efectos: [
       {
         tipo: "pasivo",
-        efecto: "mover",
+        trigger: "al_matar_en_combate",
+        efecto: "return_ether",
+        cantidad: 1,
         objetivo: {
           tipo: "eter",
-          controlador: "rival",
-          zona: "reserva",
-          zonaDestino: "pagado",
-          controladorDestino: "rival"
+          controlador: "propio",
+          zona: "pagado",
+          zonaDestino: "reserva",
+          controladorDestino: "propio"
         },
-        texto: "Al matar en combate, puedes mover 1 \xC9ter que controla el rival de la Reserva a la zona de pago del rival.",
-        trigger: "al_matar_en_combate"
+        texto: "Al matar en combate, puedes devolver 1 \xC9ter de tu zona de pago a tu Reserva."
       }
     ]
   },
@@ -427,7 +438,7 @@ var FuenteEfectos_default = [
     paqueteId: "estasis",
     limiteCopias: "3",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-09-29T05:07:54.116Z",
+    updatedAt: "2026-11-05T04:05:17.762Z",
     facciones: [
       "Orden"
     ],
@@ -439,8 +450,8 @@ var FuenteEfectos_default = [
       "Efecto"
     ],
     stats: {
-      cost: 2,
-      poder: 4,
+      cost: 3,
+      poder: 3,
       resistencia: 4
     },
     efectos: [
@@ -457,9 +468,28 @@ var FuenteEfectos_default = [
             esencia: "C\xE9leste"
           }
         },
-        texto: "Al ser enviada al Cementerio desde cualquier zona, puedes buscar 1 Campe\xF3n de facci\xF3n Orden de esencia C\xE9leste de tu Cementerio y agregalo a tu mano.",
+        texto: "Al ser enviada al Cementerio desde cualquier zona, puedes buscar 1 Campe\xF3n de facci\xF3n Orden de esencia C\xE9leste de tu Cementerio y agr\xE9galo a tu mano.",
         trigger: "al_ser_enviado_al_cementerio",
         triggerZona: "cualquier_zona"
+      },
+      {
+        tipo: "disparo",
+        efecto: "return_ether",
+        costo: {
+          tipo: "eter",
+          cantidad: 1
+        },
+        activacion: "una_por_turno",
+        cantidad: 2,
+        esHasta: true,
+        objetivo: {
+          tipo: "eter",
+          controlador: "propio",
+          zona: "pagado",
+          zonaDestino: "reserva",
+          controladorDestino: "propio"
+        },
+        texto: "Puedes pagar 1 \xC9ter, una vez por turno, devuelve hasta 2 \xC9ter de tu zona de pago a tu Reserva."
       }
     ]
   },
@@ -471,9 +501,9 @@ var FuenteEfectos_default = [
     keywords: [],
     flavorText: "Sus palabras a\xFAn resuenan en las ruinas de las casas.",
     paqueteId: "estasis",
-    limiteCopias: "3",
+    limiteCopias: "2",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-10-24T18:15:14.752Z",
+    updatedAt: "2026-11-05T04:05:17.762Z",
     facciones: [
       "Orden"
     ],
@@ -489,22 +519,21 @@ var FuenteEfectos_default = [
       poder: 4,
       resistencia: 3
     },
-    disparoAgota: true,
-    disparoUnSoloUso: true,
     efectos: [
       {
         tipo: "disparo",
         efecto: "toggle_exhaust",
+        costo: {
+          tipo: "eter",
+          cantidad: 1
+        },
+        cantidad: 1,
         objetivo: {
           tipo: "campeon",
           controlador: "propio",
           zona: "campo"
         },
-        texto: "Puedes pagar 3 \xC9ter, cambia el agotamiento de un Campe\xF3n que controles.",
-        costo: {
-          tipo: "eter",
-          cantidad: 3
-        }
+        texto: "Puedes pagar 1 \xC9ter, cambia el agotamiento de 1 Campe\xF3n que controles."
       }
     ]
   },
@@ -520,7 +549,7 @@ var FuenteEfectos_default = [
     paqueteId: "estasis",
     limiteCopias: "2",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-10-24T18:04:16.306Z",
+    updatedAt: "2026-11-05T04:05:17.762Z",
     facciones: [
       "Orden"
     ],
@@ -532,26 +561,27 @@ var FuenteEfectos_default = [
       "Efecto"
     ],
     stats: {
-      cost: 3,
+      cost: 4,
       poder: 3,
-      resistencia: 7
+      resistencia: 6
     },
-    disparoAgota: true,
-    disparoUnSoloUso: true,
     efectos: [
       {
         tipo: "disparo",
-        efecto: "destroy",
-        objetivo: {
-          tipo: "mistica_arcana",
-          controlador: "rival",
-          zona: "campo"
-        },
-        texto: "Puedes pagar 2 \xC9ter, destruye 1 M\xEDstica o Arcana que controla el rival.",
+        efecto: "grant_keyword",
+        keyword: "Inmortal",
         costo: {
           tipo: "eter",
           cantidad: 2
-        }
+        },
+        cantidad: 1,
+        objetivo: {
+          tipo: "campeon",
+          controlador: "propio",
+          zona: "campo"
+        },
+        duracion: "turno",
+        texto: "Puedes pagar 2 \xC9ter, 1 Campe\xF3n que controles gana Inmortal, hasta el final del turno."
       }
     ]
   },
@@ -567,7 +597,7 @@ var FuenteEfectos_default = [
     paqueteId: "estasis",
     limiteCopias: "2",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-09-29T05:18:22.728Z",
+    updatedAt: "2026-11-05T04:05:17.762Z",
     facciones: [
       "Orden"
     ],
@@ -580,8 +610,8 @@ var FuenteEfectos_default = [
     ],
     stats: {
       cost: 3,
-      poder: 3,
-      resistencia: 0
+      poder: 4,
+      resistencia: 2
     },
     efectos: [
       {
@@ -627,8 +657,6 @@ var FuenteEfectos_default = [
       poder: 3,
       resistencia: 5
     },
-    disparoAgota: false,
-    disparoUnSoloUso: false,
     efectos: [
       {
         tipo: "continuo",
@@ -690,8 +718,6 @@ var FuenteEfectos_default = [
       poder: 4,
       resistencia: 5
     },
-    disparoAgota: true,
-    disparoUnSoloUso: true,
     efectos: [
       {
         tipo: "disparo",
@@ -723,7 +749,7 @@ var FuenteEfectos_default = [
     paqueteId: "estasis",
     limiteCopias: "3",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-09-29T05:25:08.295Z",
+    updatedAt: "2026-11-05T04:05:17.762Z",
     facciones: [
       "Orden"
     ],
@@ -753,6 +779,25 @@ var FuenteEfectos_default = [
         costo: {
           tipo: "exile_self"
         }
+      },
+      {
+        tipo: "disparo",
+        efecto: "recuperar_campo",
+        costo: {
+          tipo: "eter",
+          cantidad: 4
+        },
+        activacion: "una_por_turno",
+        cantidad: 1,
+        objetivo: {
+          tipo: "campeon",
+          controlador: "propio",
+          zona: "cementerio",
+          filtros: {
+            costeMax: 3
+          }
+        },
+        texto: "Puedes pagar 4 \xC9ter, una vez por turno, invoca 1 Campe\xF3n de coste 3 o menos de tu Cementerio."
       }
     ]
   },
@@ -782,7 +827,7 @@ var FuenteEfectos_default = [
             atqMax: 5
           }
         },
-        texto: "Devuelve a la mano de su due\xF1o 1 un Campe\xF3n ATQ 5 o menos que controla el rival."
+        texto: "Devuelve a la mano de su due\xF1o 1 Campe\xF3n ATQ 5 o menos que controla el rival."
       }
     ]
   },
@@ -798,9 +843,9 @@ var FuenteEfectos_default = [
     paqueteId: "estasis",
     limiteCopias: "3",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-09-29T00:47:03.948Z",
+    updatedAt: "2026-11-05T04:05:17.762Z",
     stats: {
-      cost: 1
+      cost: 3
     },
     efectos: [
       {
@@ -866,31 +911,23 @@ var FuenteEfectos_default = [
     paqueteId: "estasis",
     limiteCopias: "3",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-10-22T01:00:26.833Z",
+    updatedAt: "2026-11-05T04:05:17.762Z",
     stats: {
-      cost: 3
+      cost: 4
     },
     efectos: [
       {
         tipo: "hechizo",
-        efecto: "copy",
+        efecto: "toggle_exhaust",
         objetivo: {
-          tipo: "mistica_arcana",
-          controlador: "rival",
-          zona: "campo"
+          tipo: "todos_campeones_propios",
+          controlador: "propio",
+          zona: "campo",
+          filtros: {
+            agotado: true
+          }
         },
-        texto: "Bloquea 3 \xC9ter (solo una vez mientras siga bloqueado), copia el efecto de hechizo, el efecto continuo y la recompensa de una M\xEDstica o Arcana que controla el rival, mientras ese \xC9ter est\xE9 bloqueado.",
-        duracion: "mientras_ester_bloqueado",
-        costo: {
-          tipo: "bloqueo_fijo",
-          cantidad: 3
-        },
-        copyAttributes: [
-          "mistica_hechizo",
-          "mistica_continuo",
-          "arcana_recompensa"
-        ],
-        activacion: "una_mientras_bloqueado"
+        texto: "Cambia el agotamiento de todos tus Campeones agotados."
       }
     ]
   },
@@ -904,39 +941,32 @@ var FuenteEfectos_default = [
     paqueteId: "estasis",
     limiteCopias: "3",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-09-24T05:23:08.788Z",
+    updatedAt: "2026-11-05T04:05:17.762Z",
     stats: {
-      cost: 2
+      cost: 3
     },
-    condicion: {
-      trigger: "inicio_alba",
-      condiciones: [
-        {
-          tipo: "controlar_minimo",
-          cantidad: 2,
-          objetivo: {
-            tipo: "campeon",
-            controlador: "propio",
-            filtros: {
-              conEterBloqueado: true
-            }
-          }
-        }
-      ]
-    },
-    recompensa: "Roba 2 cartas y un Campe\xF3n que controles gana +3 de Poder hasta el final del turno.",
+    recompensa: "Una vez por turno, cuando un Campe\xF3n que controles sea enviado al Cementerio, bloquea 2 \xC9ter, devu\xE9lvelo a tu mano.",
     efectos: [
       {
         tipo: "hechizo",
-        efecto: "draw",
-        objetivo: {
-          tipo: "carta",
-          controlador: "propio",
-          zona: "mazo",
-          filtros: {}
+        trigger: "cuando_campeon_propio_al_cementerio",
+        costo: {
+          tipo: "bloqueo_fijo",
+          cantidad: 2
         },
-        texto: "Roba 2 carta de tu mazo.",
-        cantidad: 2
+        activacion: "una_por_turno",
+        efecto: "recuperar_mano",
+        objetivo: {
+          tipo: "campeon_del_trigger",
+          controlador: "propio",
+          zona: "cementerio",
+          controladorDestino: "dueno"
+        },
+        texto: "Una vez por turno, cuando un Campe\xF3n que controles sea enviado al Cementerio, bloquea 2 \xC9ter, devu\xE9lvelo a la mano de su due\xF1o. Al inicio de tu Alba reagrupa el \xC9ter usado por este efecto.",
+        reagrupar: {
+          fase: "alba",
+          turno: "propio"
+        }
       }
     ]
   },
@@ -1129,7 +1159,7 @@ var FuenteEfectos_default = [
     paqueteId: "estasis",
     limiteCopias: "1",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-09-24T05:27:02.124Z",
+    updatedAt: "2026-11-05T04:05:17.762Z",
     stats: {
       cost: 0
     },
@@ -1142,10 +1172,10 @@ var FuenteEfectos_default = [
           controlador: "propio",
           zona: "cementerio",
           filtros: {
-            costeMax: 3
+            costeMax: 2
           }
         },
-        texto: "Al inicio de tu Alba, puedes devolver a la mano de su due\xF1o 1 un Campe\xF3n coste 3 o menos de tu Cementerio, una vez por turno.",
+        texto: "Al inicio de tu Alba, puedes devolver a la mano de su due\xF1o 1 Campe\xF3n coste 2 o menos de tu Cementerio, una vez por turno.",
         trigger: "inicio_alba",
         duracion: "1_por_turno"
       }
@@ -1161,7 +1191,7 @@ var FuenteEfectos_default = [
     paqueteId: "estasis",
     limiteCopias: "1",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-09-20T04:57:19.829Z",
+    updatedAt: "2026-11-05T04:05:17.762Z",
     stats: {
       cost: 0
     },
@@ -1181,10 +1211,10 @@ var FuenteEfectos_default = [
           }
         },
         stats: {
-          ATQ: 3,
-          RES: 3
+          ATQ: 2,
+          RES: 2
         },
-        texto: "El Campe\xF3n con mayor RES que controla el rival pierde 3 de ATQ y 3 de RES, mientras esta carta est\xE9 en el campo.",
+        texto: "El Campe\xF3n con mayor RES que controla el rival pierde 2 de ATQ y 2 de RES, mientras esta carta est\xE9 en el campo.",
         duracion: "mientras_en_campo"
       }
     ]
@@ -1197,9 +1227,9 @@ var FuenteEfectos_default = [
     keywords: [],
     flavorText: "Cae una enviada; llegan las casas.",
     paqueteId: "estasis",
-    limiteCopias: "3",
+    limiteCopias: "2",
     createdAt: "2026-08-12T00:00:00.000Z",
-    updatedAt: "2026-10-14T05:03:38.300Z",
+    updatedAt: "2026-11-05T04:05:17.762Z",
     facciones: [
       "Orden"
     ],
@@ -1212,7 +1242,7 @@ var FuenteEfectos_default = [
     ],
     stats: {
       cost: 2,
-      poder: 4,
+      poder: 3,
       resistencia: 3
     },
     efectos: [
@@ -1228,7 +1258,7 @@ var FuenteEfectos_default = [
             costeMax: 4
           }
         },
-        texto: "Al ser enviada al Cementerio desde el campo, puedes buscar 1 Campe\xF3n de facci\xF3n Orden coste 4 o menos de esencia C\xE9leste de tu mazo y agregalo a tu mano.",
+        texto: "Al ser enviada al Cementerio desde el campo, puedes buscar 1 Campe\xF3n de facci\xF3n Orden coste 4 o menos de esencia C\xE9leste de tu mazo y agr\xE9galo a tu mano.",
         trigger: "al_ser_enviado_al_cementerio",
         triggerZona: "campo",
         zonaOrigen: "mazo"
@@ -1247,9 +1277,9 @@ var FuenteEfectos_default = [
     paqueteId: "estasis",
     limiteCopias: "2",
     createdAt: "2026-08-12T00:00:00.000Z",
-    updatedAt: "2026-09-21T02:14:22.895Z",
+    updatedAt: "2026-11-05T04:05:17.762Z",
     stats: {
-      cost: 2
+      cost: 4
     },
     efectos: [
       {
@@ -1267,6 +1297,42 @@ var FuenteEfectos_default = [
           tipo: "bloqueo_fijo",
           cantidad: 4
         }
+      }
+    ]
+  },
+  {
+    id: "FB-033",
+    name: "Runa de Ancla",
+    type: "M\xEDstica",
+    rarity: "Poco Com\xFAn",
+    keywords: [
+      "Presteza"
+    ],
+    flavorText: "",
+    paqueteId: "estasis",
+    limiteCopias: "2",
+    createdAt: "2026-11-05T04:05:17.762Z",
+    updatedAt: "2026-11-05T04:05:17.762Z",
+    facciones: [
+      "Orden"
+    ],
+    stats: {
+      cost: 3
+    },
+    efectos: [
+      {
+        tipo: "hechizo",
+        efecto: "anclar_eter",
+        cantidad: 2,
+        objetivo: {
+          tipo: "eter",
+          controlador: "rival",
+          zona: "pagado"
+        },
+        duracion: "hasta_fase",
+        duracionFase: "alba",
+        duracionControlador: "rival",
+        texto: "Selecciona hasta 2 \xC9ter que controla el rival en su zona de pago, estos no se reagrupan en su pr\xF3xima Alba."
       }
     ]
   },
@@ -1323,7 +1389,7 @@ var FuenteEfectos_default = [
           controlador: "propio",
           zona: "campo"
         },
-        texto: "Una vez por turno, bloquea 2 \xC9ter, un Campe\xF3n que controles gana Indestructible, mientras ese \xC9ter est\xE9 bloqueado, Al inicio de tu Alba reagrupa el \xC9ter usado por este efecto.",
+        texto: "Una vez por turno, bloquea 2 \xC9ter, un Campe\xF3n que controles gana Indestructible, mientras ese \xC9ter est\xE9 bloqueado. Al inicio de tu Alba reagrupa el \xC9ter usado por este efecto.",
         keyword: "Indestructible",
         costo: {
           tipo: "bloqueo_fijo",
@@ -2656,9 +2722,12 @@ function efectoActivableDe(card, conObjetivo) {
   const continuoPago = card.efectos.find((e) => e.tipo === "continuo" && !esCostoBloqueo(e.costo));
   return card.efectos.find((e) => e.tipo === "disparo") ?? continuoPago ?? null;
 }
+function esEfectoDeBloqueoManual(e) {
+  return esCostoBloqueo(e.costo) && e.tipo !== "disparo" && (!e.trigger || e.trigger === "ninguno");
+}
 function efectoBloqueoAccion(card) {
   if (!("efectos" in card) || !card.efectos) return null;
-  const indice = card.efectos.findIndex((e) => esCostoBloqueo(e.costo) && e.tipo !== "disparo");
+  const indice = card.efectos.findIndex(esEfectoDeBloqueoManual);
   return indice === -1 ? null : { efecto: card.efectos[indice], indice };
 }
 function costeEterHabilidad(card) {
@@ -2912,6 +2981,7 @@ var ESTADO_DE_CAMPO = [
   "agotado",
   "bloqueosEsteTurno",
   "efectosUsadosEsteTurno",
+  "continuosActivados",
   "opcionUsadaEsteTurno",
   "destruccionPendiente"
 ];
@@ -3037,7 +3107,18 @@ function quitarEteres(s, fuenteId, ids) {
   if (!inst?.eterBloqueado) return;
   const quedan = inst.eterBloqueado.filter((id) => !ids.includes(id));
   if (quedan.length > 0) inst.eterBloqueado = quedan;
-  else delete inst.eterBloqueado;
+  else {
+    delete inst.eterBloqueado;
+    delete inst.continuosActivados;
+  }
+}
+function marcarContinuoActivado(s, instId, indiceEfecto) {
+  const inst = s.instances[instId];
+  if (!inst || indiceEfecto < 0) return;
+  const meta = inst.cardId ? getCardMeta(inst.cardId) : null;
+  const efecto = meta && "efectos" in meta ? meta.efectos?.[indiceEfecto] : void 0;
+  if (efecto?.duracion !== "mientras_tenga_eter_bloqueado") return;
+  if (!(inst.continuosActivados ?? []).includes(indiceEfecto)) inst.continuosActivados = [...inst.continuosActivados ?? [], indiceEfecto];
 }
 function liberarEterA(s, eteres, destino, fallbackPagador) {
   const grupos = {};
@@ -3068,6 +3149,7 @@ function limpiarFlagsUmbralSiVacia(s, fuenteId) {
   delete inst.fijadoExhaustTargetId;
   delete inst.sostenidos;
   delete inst.efectosUmbralDisparados;
+  delete inst.continuosActivados;
 }
 function evaluarFinSteal(s, ctx, fuenteId) {
   const inst = s.instances[fuenteId];
@@ -3099,6 +3181,7 @@ function retornarCampeonesRobados(s, ctx, fuenteId, ladron) {
         delete other.fijadoExhaustTargetId;
         delete other.sostenidos;
         delete other.efectosUmbralDisparados;
+        delete other.continuosActivados;
         const grupos = liberarEterA(s, eteres, "2A", ladron);
         for (const [jugador, ids] of Object.entries(grupos)) {
           ctx.emit({ type: "eter_reagrupado", jugador, eterIds: ids });
@@ -3131,6 +3214,8 @@ var REGLAS = {
   rupturasPorTurno: { etiqueta: "V\xEDnculos que rompe la Ruptura por turno", manual: "\xA79.4", ambito: "jugador", base: 1, min: 0 },
   atacarTrasRuptura: { etiqueta: "Se puede seguir atacando tras romper un V\xEDnculo", manual: "\xA79.4", ambito: "jugador", base: false },
   derrotaPorVinculos: { etiqueta: "Pierde la partida al quedarse sin V\xEDnculos", manual: "\xA713", ambito: "jugador", base: true },
+  // Éter que se suma al coste de invocar a CADA Campeón del jugador (lo fija, p. ej., el tributo de Aurora al rival).
+  costeCampeonesExtra: { etiqueta: "\xC9ter extra que cuestan sus Campeones", manual: "\xA77.3", ambito: "jugador", base: 0, min: 0 },
   /* ── campeón ── */
   agotadoPuedeBloquear: { etiqueta: "Un Campe\xF3n agotado puede bloquear", manual: "\xA79.3", ambito: "campeon", base: false },
   invocacionCansada: { etiqueta: "No ataca el turno en que es invocado", manual: "\xA79.2", ambito: "campeon", base: true },
@@ -3179,6 +3264,47 @@ var KEYWORD_REGLAS = {
   Inmortal: [{ regla: "puedeSerDestruidaPorEfecto", operacion: "prohibir" }],
   Indestructible: [{ regla: "puedeSerDestruidaEnBatalla", operacion: "prohibir" }]
 };
+
+// src/shared/efectoComandante.ts
+function efectosComandante(valor) {
+  if (!valor) return [];
+  return Array.isArray(valor) ? valor : [valor];
+}
+
+// src/online/game/atributos.ts
+function ultimoCambio(s, instId, atributo) {
+  const lista = s.cambiosAtributo;
+  if (!lista?.length) return void 0;
+  for (let i = lista.length - 1; i >= 0; i--) {
+    if (lista[i].instId === instId && lista[i].atributo === atributo) return lista[i];
+  }
+  return void 0;
+}
+function cambioDe(s, instId, atributo) {
+  return ultimoCambio(s, instId, atributo)?.valor;
+}
+function metaDe(s, instId) {
+  const cardId = s.instances[instId]?.cardId;
+  return cardId ? getCardMeta(cardId) : null;
+}
+function esenciaDe(s, instId) {
+  const cambio = cambioDe(s, instId, "esencia");
+  if (cambio) return cambio;
+  const meta = metaDe(s, instId);
+  return meta && "esencia" in meta ? meta.esencia : void 0;
+}
+function rolesDe(s, instId) {
+  const cambio = cambioDe(s, instId, "rol");
+  if (cambio) return [cambio];
+  const meta = metaDe(s, instId);
+  return meta && "roles" in meta ? meta.roles : void 0;
+}
+function faccionesDe(s, instId) {
+  const cambio = ultimoCambio(s, instId, "faccion");
+  if (cambio) return cambio.valores ?? [cambio.valor];
+  const meta = metaDe(s, instId);
+  return meta && "facciones" in meta ? meta.facciones : void 0;
+}
 
 // src/online/game/efectosInstancia.ts
 function esEfectoCopiable(efecto) {
@@ -3236,16 +3362,41 @@ function metaDeInstancia(s, instId) {
 
 // src/online/game/reglas.ts
 var otro = (j) => j === "A" ? "B" : "A";
+var MARCA_DISPARO_SIN_AGOTAR = -2;
+var REGLAS_ENUMERADAS = {
+  /**
+   * «Una vez por turno por Campeón, el efecto Disparo no agota» (Aurora). La concede el efecto de COMANDANTE (§10), así que
+   * alcanza solo a los Campeones de la facción del Comandante que su controlador tiene en el campo — no por el texto del
+   * efecto, sino por ser un efecto de Comandante. Una vez gastada en el turno (MARCA_DISPARO_SIN_AGOTAR) deja de alcanzarlo.
+   */
+  disparo_sin_agotar: {
+    modificacion: () => ({ id: "disparoAgota", operacion: "prohibir" }),
+    alcanza: (s, f, instId) => {
+      if (!s.players[f.controlador].campo.campeones.includes(instId)) return false;
+      if ((s.instances[instId]?.efectosUsadosEsteTurno ?? []).includes(MARCA_DISPARO_SIN_AGOTAR)) return false;
+      return faccionesCompartidas(faccionesDe(s, f.inst.cardInstanceId), faccionesDe(s, instId));
+    }
+  },
+  /** «Los Campeones del rival cuestan N Éter más» (tributo de Aurora): suma N al coste de invocar de quien NO controla la fuente. */
+  coste_campeones_rival_mas: {
+    modificacion: (efecto) => ({ id: "costeCampeonesExtra", operacion: "sumar", valor: efecto.reglaValor ?? 1 }),
+    jugadores: "rival"
+  }
+};
 function reglaDeEfecto(efecto) {
   if (efecto.efecto === "direct_attack") return { id: "puedeSerBloqueado", operacion: "prohibir" };
-  return efecto.efecto === "modificar_regla" ? efecto.regla : void 0;
+  if (efecto.efecto !== "modificar_regla") return void 0;
+  if (efecto.reglaEnumerada) return REGLAS_ENUMERADAS[efecto.reglaEnumerada]?.modificacion(efecto);
+  return efecto.regla;
 }
 var memoEfectosRegla = /* @__PURE__ */ new Map();
 function efectosReglaDe(cardId) {
   const memo = memoEfectosRegla.get(cardId);
   if (memo) return memo;
   const meta = getCardMeta(cardId);
-  const lista = meta && "efectos" in meta && meta.efectos ? meta.efectos.map((efecto, indice) => ({ efecto, indice })).filter(({ efecto }) => !!reglaDeEfecto(efecto)) : [];
+  const propios = meta && "efectos" in meta && meta.efectos ? meta.efectos.map((efecto, indice) => ({ efecto, indice })).filter(({ efecto }) => !!reglaDeEfecto(efecto)) : [];
+  const deComandante = meta && meta.type === "Campe\xF3n" ? efectosComandante(meta.efectoComandante).map((efecto, k) => ({ efecto, indice: -(k + 1) })).filter(({ efecto }) => !!reglaDeEfecto(efecto)) : [];
+  const lista = [...propios, ...deComandante];
   memoEfectosRegla.set(cardId, lista);
   return lista;
 }
@@ -3295,6 +3446,9 @@ function efectoActivo(s, f, efecto, indice) {
       const meta = f.inst.cardId ? getCardMeta(f.inst.cardId) : null;
       if (meta?.type === "Arcana" && f.inst.bocaArriba !== true) return false;
       const costo = efecto.costo;
+      if (efecto.duracion === "mientras_tenga_eter_bloqueado") {
+        return (f.inst.continuosActivados ?? []).includes(indice) && (f.inst.eterBloqueado?.length ?? 0) > 0;
+      }
       const pagaConBloqueo = costo?.tipo === "eter_bloqueado" || costo?.tipo === "bloqueo_fijo";
       if (pagaConBloqueo || efecto.duracion === "mientras_ester_bloqueado") {
         const requerido = costo?.umbral ?? (costo?.tipo === "bloqueo_fijo" ? costo.cantidad : void 0) ?? 1;
@@ -3312,8 +3466,8 @@ function efectoActivo(s, f, efecto, indice) {
       return efecto.tipo === "vinculo";
   }
 }
-function jugadoresAfectados(f, efecto) {
-  const c = efecto.objetivo?.controlador ?? "propio";
+function jugadoresAfectados(f, efecto, forzado) {
+  const c = forzado ?? efecto.objetivo?.controlador ?? "propio";
   if (c === "ambos") return ["A", "B"];
   if (c === "rival") return [otro(f.controlador)];
   return [f.controlador];
@@ -3346,7 +3500,7 @@ var REGLAS_DE_KEYWORD = new Set(Object.values(KEYWORD_REGLAS).flatMap((ms) => ms
 function efectosNegados(s, instId) {
   return !reglaBool(s, "efectosActivos", { instId });
 }
-function modificadoresReglaDe(s, regla, sujeto) {
+function modificadoresReglaDe(s, regla, sujeto, omitirEnumeradas = []) {
   const def = REGLAS[regla];
   const mods = [];
   if (sujeto && "instId" in sujeto && REGLAS_DE_KEYWORD.has(regla)) {
@@ -3358,11 +3512,13 @@ function modificadoresReglaDe(s, regla, sujeto) {
     for (const { efecto, indice } of efectosReglaDeInst(s, f.inst)) {
       const m = reglaDeEfecto(efecto);
       if (!m || m.id !== regla || !efectoActivo(s, f, efecto, indice)) continue;
+      const enumerada = efecto.reglaEnumerada ? REGLAS_ENUMERADAS[efecto.reglaEnumerada] : void 0;
+      if (efecto.reglaEnumerada && omitirEnumeradas.includes(efecto.reglaEnumerada)) continue;
       if (regla !== "efectosActivos" && f.origen === "campo" && efecto.tipo !== "comandante" && efectosNegados(s, f.inst.cardInstanceId)) continue;
       let alcanza = false;
       if (def.ambito === "partida") alcanza = true;
-      else if (def.ambito === "jugador") alcanza = !!sujeto && "jugador" in sujeto && jugadoresAfectados(f, efecto).includes(sujeto.jugador);
-      else alcanza = !!sujeto && "instId" in sujeto && afectaACarta(s, f, efecto, sujeto.instId);
+      else if (def.ambito === "jugador") alcanza = !!sujeto && "jugador" in sujeto && jugadoresAfectados(f, efecto, enumerada?.jugadores).includes(sujeto.jugador);
+      else if (sujeto && "instId" in sujeto) alcanza = enumerada?.alcanza ? enumerada.alcanza(s, f, sujeto.instId) : afectaACarta(s, f, efecto, sujeto.instId);
       if (alcanza) mods.push({ regla, operacion: m.operacion, valor: m.valor, orden: 0 });
     }
   }
@@ -3379,6 +3535,10 @@ function reglaNumero(s, regla, sujeto) {
 }
 function reglaBool(s, regla, sujeto) {
   return resolverRegla(regla, modificadoresReglaDe(s, regla, sujeto));
+}
+function disparoNoAgotaPorComandante(s, instId) {
+  if (reglaBool(s, "disparoAgota", { instId })) return false;
+  return resolverRegla("disparoAgota", modificadoresReglaDe(s, "disparoAgota", { instId }, ["disparo_sin_agotar"])) === true;
 }
 
 // src/online/game/exilio.ts
@@ -3459,9 +3619,23 @@ function moverAlCementerio(s, ctx, cardInstanceId) {
   if (!p.cementerio.includes(cardInstanceId)) p.cementerio.push(cardInstanceId);
   return origen;
 }
+function controladorEnCampo(s, id) {
+  for (const j of ["A", "B"]) if (s.players[j].campo.campeones.includes(id)) return j;
+  return void 0;
+}
+function dispararCampeonAlCementerio(s, ctx, cardInstanceId, controlador) {
+  if (!controlador) return;
+  const meta = s.instances[cardInstanceId]?.cardId ? getCardMeta(s.instances[cardInstanceId].cardId) : null;
+  if (!meta || !esCampeon(meta)) return;
+  const orden = s.turno === "A" ? ["A", "B"] : ["B", "A"];
+  for (const j of orden) {
+    dispararTrigger(s, ctx, "cuando-campeon-al-cementerio", j, instanciasEnCampo(s, j), { victimaId: cardInstanceId, controladorVictima: controlador });
+  }
+}
 function enviarAlCementerio(s, ctx, cardInstanceId, desde) {
   const inst = s.instances[cardInstanceId];
   if (!inst) return;
+  const controlador = controladorEnCampo(s, cardInstanceId) ?? (desde === "campo" ? inst.owner : void 0);
   if (inst.vinculadoA) {
     const vinculados = [].concat(inst.vinculadoA);
     inst.vinculadoA = void 0;
@@ -3479,6 +3653,7 @@ function enviarAlCementerio(s, ctx, cardInstanceId, desde) {
   const origen = moverAlCementerio(s, ctx, cardInstanceId);
   liberarEterBloqueado(s, ctx, cardInstanceId, "1A");
   dispararTrigger(s, ctx, "al-ser-enviado-al-cementerio", inst.owner, [cardInstanceId], { zonaOrigen: desde ?? origen });
+  dispararCampeonAlCementerio(s, ctx, cardInstanceId, controlador);
   reiniciarEnCementerio(s, cardInstanceId);
 }
 function reiniciarEnCementerio(s, cardInstanceId) {
@@ -3509,6 +3684,7 @@ function liberarEterBloqueadoCore(s, ctx, cardInstanceId, destino) {
   if (!inst?.eterBloqueado || inst.eterBloqueado.length === 0) return;
   const eteres = inst.eterBloqueado;
   delete inst.eterBloqueado;
+  delete inst.continuosActivados;
   delete inst.efectoUmbralDisparado;
   delete inst.copyOneShotDisparado;
   delete inst.tramosDisparados;
@@ -3612,10 +3788,12 @@ function destruirCarta(s, ctx, cardInstanceId, causa) {
   if (esVinculoCard) {
     return ejecutarDestruccionVinculo(s, ctx, cardInstanceId, causa);
   }
+  const controlador = controladorEnCampo(s, cardInstanceId) ?? inst.owner;
   const origen = moverAlCementerio(s, ctx, cardInstanceId);
   liberarEterBloqueado(s, ctx, cardInstanceId, "1A");
   liberarArtefactosEquipados(s, ctx, cardInstanceId);
   dispararTrigger(s, ctx, "al-ser-enviado-al-cementerio", inst.owner, [cardInstanceId], { zonaOrigen: origen });
+  dispararCampeonAlCementerio(s, ctx, cardInstanceId, controlador);
   ctx.emit({ type: "carta_muerta", cardInstanceId, jugador: inst.owner, causa });
   ctx.emit({ type: "destruccion", cardInstanceId, jugador: inst.owner, causa });
   reiniciarEnCementerio(s, cardInstanceId);
@@ -3888,7 +4066,16 @@ function aporteDe(eterCardId, _objetivoCardId) {
   if (!eter) return 0;
   return 1;
 }
-function validarPago(state, jugador, eterIds, objetivoCardId) {
+function costeDeCampeon(state, jugador, cardId) {
+  const meta = getCardMeta(cardId);
+  if (!meta) return 0;
+  if (meta.type !== "Campe\xF3n") return meta.stats.cost;
+  return meta.stats.cost + reglaNumero(state, "costeCampeonesExtra", { jugador });
+}
+function costeAPagar(state, jugador, cardId, invocacion) {
+  return invocacion ? costeDeCampeon(state, jugador, cardId) : getCardMeta(cardId)?.stats.cost ?? 0;
+}
+function validarPago(state, jugador, eterIds, objetivoCardId, invocacion = false) {
   if (eterIds.length === 0) return { ok: false, error: "no indicaste \xC9teres para pagar" };
   const objetivo = getCardMeta(objetivoCardId);
   if (!objetivo) return { ok: false, error: `carta objetivo desconocida: ${objetivoCardId}` };
@@ -3904,12 +4091,14 @@ function validarPago(state, jugador, eterIds, objetivoCardId) {
     if (!p.eterReserva.includes(id)) return { ok: false, error: `el \xC9ter no est\xE1 en tu Reserva: ${id}` };
     suma += aporteDe(meta.id, objetivoCardId);
   }
-  if (suma < objetivo.stats.cost) return { ok: false, error: "pago insuficiente" };
-  if (suma > objetivo.stats.cost) return { ok: false, error: "sobrepago no permitido \u2014 selecciona exactamente el coste" };
+  const coste = costeAPagar(state, jugador, objetivoCardId, invocacion);
+  if (suma < coste) return { ok: false, error: "pago insuficiente" };
+  if (suma > coste) return { ok: false, error: "sobrepago no permitido \u2014 selecciona exactamente el coste" };
   return { ok: true, aportado: suma };
 }
 function aplicarPago(s, ctx, jugador, eterIds, objetivoCardId, contextoUso) {
-  const validado = validarPago(s, jugador, eterIds, objetivoCardId);
+  const invocacion = contextoUso?.tipo === "invocar";
+  const validado = validarPago(s, jugador, eterIds, objetivoCardId, invocacion);
   if (!validado.ok || validado.aportado === void 0) return s;
   const objetivo = getCardMeta(objetivoCardId);
   if (!objetivo) return s;
@@ -3923,7 +4112,7 @@ function aplicarPago(s, ctx, jugador, eterIds, objetivoCardId, contextoUso) {
     type: "eter_pagado",
     jugador,
     eterIds,
-    costo: objetivo.stats.cost,
+    costo: costeAPagar(s, jugador, objetivoCardId, invocacion),
     aportado: validado.aportado
   });
   const gatillos = eterIds.filter((id) => {
@@ -3943,11 +4132,11 @@ function aplicarPago(s, ctx, jugador, eterIds, objetivoCardId, contextoUso) {
   }
   return s;
 }
-function etersParaPagar(state, jugador, objetivoCardId) {
+function etersParaPagar(state, jugador, objetivoCardId, invocacion = false) {
   const objetivo = getCardMeta(objetivoCardId);
   if (!objetivo) return null;
   const p = state.players[jugador];
-  const coste = objetivo.stats.cost;
+  const coste = costeAPagar(state, jugador, objetivoCardId, invocacion);
   const eteres = [];
   for (const id of p.eterReserva) {
     const inst = state.instances[id];
@@ -4056,6 +4245,7 @@ function bloquearEter(s, ctx, jugador, eterIds, targetInstanceId, efectoIdx) {
     if (idx !== -1) zonaOrigen.splice(idx, 1);
   }
   etiquetarEter(s, eterIds, targetInstanceId, fuente?.indice ?? -1, jugador);
+  if (fuente) marcarContinuoActivado(s, targetInstanceId, fuente.indice);
   if (fuente?.efecto.costo?.tipo === "bloqueo_fijo" && fuente.efecto.activacion === "una_por_turno") {
     instTarget.efectosUsadosEsteTurno = [...instTarget.efectosUsadosEsteTurno ?? [], fuente.indice];
   }
@@ -4064,11 +4254,14 @@ function bloquearEter(s, ctx, jugador, eterIds, targetInstanceId, efectoIdx) {
 }
 function reagruparEter(s, ctx, jugador) {
   const p = s.players[jugador];
+  const anclados = new Set(p.eterAnclado ?? []);
+  delete p.eterAnclado;
   if (p.eterPagado.length === 0) return;
-  const reagrupados = p.eterPagado;
+  const reagrupados = p.eterPagado.filter((id) => !anclados.has(id));
+  if (reagrupados.length === 0) return;
   for (const id of reagrupados) delete s.instances[id]?.opcionUsadaEsteTurno;
   p.eterReserva.push(...reagrupados);
-  p.eterPagado = [];
+  p.eterPagado = p.eterPagado.filter((id) => anclados.has(id));
   ctx.emit({ type: "eter_reagrupado", jugador, eterIds: reagrupados });
 }
 
@@ -4253,6 +4446,15 @@ function eterIdsParaHabilidad(state, jugador, efecto) {
   const necesarios = costo > 0 ? costo : 1;
   return p.eterReserva.length >= necesarios ? p.eterReserva.slice(0, necesarios) : null;
 }
+function indiceDeHabilidad(state, instId, efecto) {
+  const meta = metaDeInstancia(state, instId);
+  return meta && "efectos" in meta && meta.efectos ? meta.efectos.indexOf(efecto) : -1;
+}
+function habilidadUsadaEsteTurno(state, instId, efecto) {
+  if (efecto.activacion !== "una_por_turno") return false;
+  const idx = indiceDeHabilidad(state, instId, efecto);
+  return idx !== -1 && (state.instances[instId]?.efectosUsadosEsteTurno ?? []).includes(idx);
+}
 function pagarHabilidad(s, ctx, jugador, instId, efectoSel, eterIds) {
   const p = s.players[jugador];
   const inst = s.instances[instId];
@@ -4267,6 +4469,7 @@ function pagarHabilidad(s, ctx, jugador, instId, efectoSel, eterIds) {
     inst.eterBloqueado = [...inst.eterBloqueado ?? [], ...eterIds];
     const idxSel = meta.efectos?.indexOf(efectoSel) ?? -1;
     etiquetarEter(s, [...eterIds], instId, idxSel, jugador);
+    marcarContinuoActivado(s, instId, idxSel);
     const efectoConReagrupar = meta.efectos && "efectos" in meta ? meta.efectos.find((e) => e.reagrupar && esCostoBloqueo(e.costo)) : void 0;
     if (efectoConReagrupar?.reagrupar) {
       registrarEfectoPendiente(s, {
@@ -4292,7 +4495,16 @@ function pagarHabilidad(s, ctx, jugador, instId, efectoSel, eterIds) {
     ctx.emit({ type: "eter_pagado", jugador, eterIds: [...eterIds], costo: eterIds.length, aportado: eterIds.length });
   }
   if (efectoSel.tipo !== "disparo") inst.opcionUsadaEsteTurno = true;
-  if (efectoSel.tipo === "disparo" && reglaBool(s, "disparoAgota", { instId })) inst.agotado = true;
+  if (efectoSel.activacion === "una_por_turno") {
+    const idx = indiceDeHabilidad(s, instId, efectoSel);
+    if (idx !== -1 && !(inst.efectosUsadosEsteTurno ?? []).includes(idx)) inst.efectosUsadosEsteTurno = [...inst.efectosUsadosEsteTurno ?? [], idx];
+  }
+  if (efectoSel.tipo === "disparo") {
+    if (reglaBool(s, "disparoAgota", { instId })) inst.agotado = true;
+    else if (disparoNoAgotaPorComandante(s, instId) && !(inst.efectosUsadosEsteTurno ?? []).includes(MARCA_DISPARO_SIN_AGOTAR)) {
+      inst.efectosUsadosEsteTurno = [...inst.efectosUsadosEsteTurno ?? [], MARCA_DISPARO_SIN_AGOTAR];
+    }
+  }
 }
 
 // src/online/game/bloqueoAlJugar.ts
@@ -4410,6 +4622,7 @@ function motivoNoResponde(state, jugador, id, origen) {
     const disparo = disparoDeRespuesta(meta);
     if (disparo) {
       if (esCostoBloqueo(disparo.efecto.costo) && inst.opcionUsadaEsteTurno) return "ya usaste esta habilidad este turno";
+      if (!esCostoBloqueo(disparo.efecto.costo) && habilidadUsadaEsteTurno(state, id, disparo.efecto)) return "ya usaste esta habilidad este turno";
       if (eterIdsParaHabilidad(state, jugador, disparo.efecto) === null) return "no puedes pagar su coste";
     }
     return null;
@@ -4997,47 +5210,12 @@ function resolverTrigger(s, ctx, t, modo = "elegido") {
       if (efecto.objetivo && efecto.objetivo.tipo !== "self") {
         if (!resolveTargets(s, objetivoCompleto(efecto), t.jugador, t.cardInstanceId).includes(t.objetivoId)) return;
       }
-      if (efecto.costo && !cobrarCostoEter(s, ctx, inst, efecto.costo, t.jugador)) return;
+      if (efecto.costo && !cobrarCostoDeTrigger(s, ctx, inst, efecto, t.jugador)) return;
       interpretEffect(s, ctx, inst, efecto, { ...payloadBase(t), sinEleccion: true, contextoUso: "objetivo-elegido", objetivoId: t.objetivoId });
       return;
     }
     interpretEffect(s, ctx, inst, efecto, { ...payloadBase(t), cobrarCosto: true, sinEleccion: true, ...contextoUso ? { contextoUso } : {} });
   });
-}
-
-// src/online/game/atributos.ts
-function ultimoCambio(s, instId, atributo) {
-  const lista = s.cambiosAtributo;
-  if (!lista?.length) return void 0;
-  for (let i = lista.length - 1; i >= 0; i--) {
-    if (lista[i].instId === instId && lista[i].atributo === atributo) return lista[i];
-  }
-  return void 0;
-}
-function cambioDe(s, instId, atributo) {
-  return ultimoCambio(s, instId, atributo)?.valor;
-}
-function metaDe(s, instId) {
-  const cardId = s.instances[instId]?.cardId;
-  return cardId ? getCardMeta(cardId) : null;
-}
-function esenciaDe(s, instId) {
-  const cambio = cambioDe(s, instId, "esencia");
-  if (cambio) return cambio;
-  const meta = metaDe(s, instId);
-  return meta && "esencia" in meta ? meta.esencia : void 0;
-}
-function rolesDe(s, instId) {
-  const cambio = cambioDe(s, instId, "rol");
-  if (cambio) return [cambio];
-  const meta = metaDe(s, instId);
-  return meta && "roles" in meta ? meta.roles : void 0;
-}
-function faccionesDe(s, instId) {
-  const cambio = ultimoCambio(s, instId, "faccion");
-  if (cambio) return cambio.valores ?? [cambio.valor];
-  const meta = metaDe(s, instId);
-  return meta && "facciones" in meta ? meta.facciones : void 0;
 }
 
 // src/online/game/scry.ts
@@ -5154,6 +5332,59 @@ function ejecutarRedirect(s, ctx, fuente, targetIds, jugador) {
   if (cambio && entrada) ctx.emit({ type: "objetivo_redirigido", jugador, cardInstanceId: entrada, objetivoId: nuevo });
 }
 
+// src/online/game/resonancia.ts
+function disparoActivableDe(s, id) {
+  const meta = metaDeInstancia(s, id);
+  if (!s.instances[id] || !meta || !esCampeon(meta) || !("efectos" in meta) || !meta.efectos) return null;
+  if (efectosNegados(s, id)) return null;
+  const idx = meta.efectos.findIndex((e) => e.tipo === "disparo" && !!e.efecto && (!e.trigger || e.trigger === "ninguno"));
+  if (idx === -1) return null;
+  const efecto = meta.efectos[idx];
+  if (efecto.efecto === "activar_disparo") return null;
+  return { efecto, idx };
+}
+function sePuedeActivar(s, jugador, tid, d, efectoData) {
+  const tinst = s.instances[tid];
+  if (!tinst) return false;
+  if (esCostoBloqueo(d.efecto.costo) ? tinst.opcionUsadaEsteTurno : habilidadUsadaEsteTurno(s, tid, d.efecto)) return false;
+  if (efectoData.sinAgotar !== true && tinst.agotado) return false;
+  if (efectoData.sinPagarCosto !== true && eterIdsParaHabilidad(s, jugador, d.efecto) === null) return false;
+  return true;
+}
+function candidatosActivarDisparo(s, jugador, fuenteId, efectoData) {
+  if (!efectoData.objetivo) return [];
+  return resolveTargets(s, objetivoCompleto(efectoData), jugador, fuenteId).filter((id) => {
+    const d = disparoActivableDe(s, id);
+    return d !== null && sePuedeActivar(s, jugador, id, d, efectoData);
+  });
+}
+function ejecutarActivarDisparo(s, ctx, targetIds, jugador, efectoData) {
+  const tid = targetIds[0];
+  const d = tid ? disparoActivableDe(s, tid) : null;
+  const tinst = tid ? s.instances[tid] : void 0;
+  if (!tid || !d || !tinst) return;
+  const sinPagar = efectoData.sinPagarCosto === true;
+  const sinAgotar = efectoData.sinAgotar === true;
+  const bloqueo = esCostoBloqueo(d.efecto.costo);
+  if (!sePuedeActivar(s, jugador, tid, d, efectoData)) return;
+  const eterIds = sinPagar ? [] : eterIdsParaHabilidad(s, jugador, d.efecto) ?? [];
+  if (!sinPagar) {
+    const agotadoAntes = tinst.agotado;
+    pagarHabilidad(s, ctx, jugador, tid, d.efecto, eterIds);
+    if (sinAgotar) {
+      if (agotadoAntes === void 0) delete tinst.agotado;
+      else tinst.agotado = agotadoAntes;
+    }
+  } else {
+    if (bloqueo) tinst.opcionUsadaEsteTurno = true;
+    else if (d.efecto.activacion === "una_por_turno" && !(tinst.efectosUsadosEsteTurno ?? []).includes(d.idx)) {
+      tinst.efectosUsadosEsteTurno = [...tinst.efectosUsadosEsteTurno ?? [], d.idx];
+    }
+    if (!sinAgotar && reglaBool(s, "disparoAgota", { instId: tid })) tinst.agotado = true;
+  }
+  interpretEffect(s, ctx, tinst, d.efecto, { jugador, costoPagado: true });
+}
+
 // src/online/game/effectInterpreter.ts
 function interpretEffect(s, ctx, inst, efectoData, payload) {
   const { efecto, objetivo, costo } = efectoData;
@@ -5162,8 +5393,9 @@ function interpretEffect(s, ctx, inst, efectoData, payload) {
     if (!canExecuteEffect(s, efecto, jugador)) {
       return;
     }
-    if (objetivo && objetivo.tipo !== "self") {
-      if (!resolveTargets(s, objetivoCompleto(efectoData), jugador, inst.cardInstanceId).includes(payload.objetivoId)) return;
+    if (objetivo && objetivo.tipo !== "self" && objetivo.tipo !== "campeon_del_trigger") {
+      const candidatos = efecto === "activar_disparo" ? candidatosActivarDisparo(s, jugador, inst.cardInstanceId, efectoData) : resolveTargets(s, objetivoCompleto(efectoData), jugador, inst.cardInstanceId);
+      if (!candidatos.includes(payload.objetivoId)) return;
     }
     const targetIds2 = [payload.objetivoId];
     executeEffect(s, ctx, inst, efecto, targetIds2, jugador, efectoData);
@@ -5176,8 +5408,8 @@ function interpretEffect(s, ctx, inst, efectoData, payload) {
       }
     }
   }
-  if (payload.cobrarCosto && costo && costo.tipo === "eter" && inst.cardId) {
-    if (!cobrarCostoEter(s, ctx, inst, costo, jugador)) return;
+  if (payload.cobrarCosto && costo && (costo.tipo === "eter" || costo.tipo === "bloqueo_fijo") && inst.cardId) {
+    if (!cobrarCostoDeTrigger(s, ctx, inst, efectoData, jugador)) return;
   }
   if (efectoData.contextoUso && efectoData.contextoUso !== "ninguno") {
     if (payload.contextoUso !== efectoData.contextoUso) {
@@ -5188,14 +5420,19 @@ function interpretEffect(s, ctx, inst, efectoData, payload) {
   if (objetivo) {
     if (objetivo.tipo === "self") {
       targetIds = [inst.cardInstanceId];
+    } else if (objetivo.tipo === "campeon_del_trigger") {
+      const victima = payload.victimaId ? s.instances[payload.victimaId] : void 0;
+      const sigueAhi = !!victima && (objetivo.zona !== "cementerio" || s.players[victima.owner].cementerio.includes(victima.cardInstanceId));
+      targetIds = sigueAhi && payload.victimaId ? [payload.victimaId] : [];
     } else if (objetivo.tipo === "invocado") {
       targetIds = payload.contextoUso === "invocar" && payload.objetivoId && s.instances[payload.objetivoId] ? [payload.objetivoId] : [];
     } else {
       targetIds = resolveTargets(s, objetivoCompleto(efectoData), jugador, inst.cardInstanceId);
+      if (efecto === "activar_disparo") targetIds = candidatosActivarDisparo(s, jugador, inst.cardInstanceId, efectoData);
     }
   }
   const isTriggered = payload.fromTrigger === true;
-  const autoResolver = efecto === "mover" && efectoData.esHasta === true;
+  const autoResolver = (efecto === "mover" || efecto === "return_ether") && efectoData.esHasta === true || efecto === "anclar_eter";
   const mergedFiltros = efectoData.filtros ? { ...objetivo?.filtros, ...efectoData.filtros } : objetivo?.filtros;
   const hasAutoSelect = mergedFiltros?.seleccionar != null;
   const needsPending = isTriggered ? targetIds.length > 0 && !hasAutoSelect : targetIds.length > 1;
@@ -5215,6 +5452,19 @@ function interpretEffect(s, ctx, inst, efectoData, payload) {
   }
   if (payload.declararOpener) return;
   executeEffect(s, ctx, inst, efecto, targetIds, jugador, efectoData);
+}
+function cobrarCostoDeTrigger(s, ctx, inst, efectoData, jugador) {
+  const costo = efectoData.costo;
+  if (!costo || !inst.cardId) return true;
+  if (costo.tipo === "eter") return cobrarCostoEter(s, ctx, inst, costo, jugador);
+  if (costo.tipo !== "bloqueo_fijo") return true;
+  const meta = metaDeInstancia(s, inst.cardInstanceId);
+  const idx = meta && "efectos" in meta && meta.efectos ? meta.efectos.indexOf(efectoData) : -1;
+  const cant = costo.cantidad ?? 0;
+  const p = s.players[jugador];
+  const zona = costo.origen === "pagado" ? p.eterPagado : p.eterReserva;
+  if (idx === -1 || cant <= 0 || zona.length < cant) return false;
+  return bloquearEter(s, ctx, jugador, zona.slice(0, cant), inst.cardInstanceId, idx) === null;
 }
 function cobrarCostoEter(s, ctx, inst, costo, jugador) {
   if (costo.tipo !== "eter" || !inst.cardId) return true;
@@ -5238,7 +5488,7 @@ function objetivoCompleto(efectoData) {
 function needsPlayerChoice(objetivo, efecto, tipoNegacion) {
   if (!objetivo) return false;
   if (efecto === "negar" && tipoNegacion === "efecto_activo") return true;
-  if (objetivo.tipo === "self" || objetivo.tipo === "todos_campeones_propios" || objetivo.tipo === "todos_campeones_rivales" || objetivo.tipo === "rival_hand" || objetivo.tipo === "equipped_champion" || objetivo.tipo === "invocado") {
+  if (objetivo.tipo === "self" || objetivo.tipo === "campeon_del_trigger" || objetivo.tipo === "todos_campeones_propios" || objetivo.tipo === "todos_campeones_rivales" || objetivo.tipo === "rival_hand" || objetivo.tipo === "equipped_champion" || objetivo.tipo === "invocado") {
     return false;
   }
   if (efecto === "draw" || efecto === "scry" || efecto === "rival_discard" || efecto === "block_ether" || efecto === "double_attack" || efecto === "negar") {
@@ -5350,6 +5600,12 @@ function executeEffect(s, ctx, inst, efecto, targetIds, jugador, efectoData) {
       break;
     case "double_attack":
       break;
+    case "activar_disparo":
+      ejecutarActivarDisparo(s, ctx, targetIds, jugador, efectoData);
+      break;
+    case "anclar_eter":
+      executeAnclarEter(s, targetIds, cantidad);
+      break;
     case "modificar_regla":
     case "direct_attack":
       executeModificarRegla(s, targetIds, jugador, efectoData);
@@ -5377,6 +5633,15 @@ function executeEffect(s, ctx, inst, efecto, targetIds, jugador, efectoData) {
         }
       }
       break;
+  }
+}
+function executeAnclarEter(s, targetIds, cantidad) {
+  for (const id of targetIds.slice(0, cantidad ?? 1)) {
+    for (const j of ["A", "B"]) {
+      const p = s.players[j];
+      if (!p.eterPagado.includes(id)) continue;
+      if (!(p.eterAnclado ?? []).includes(id)) p.eterAnclado = [...p.eterAnclado ?? [], id];
+    }
   }
 }
 function executeInvocarEquipar(s, ctx, inst, targetIds, jugador) {
@@ -5482,6 +5747,8 @@ function executeRecuperar(s, ctx, efecto, targetIds, jugador, efectoData) {
     }
     const dueno = jugadorDestino(efectoData.objetivo?.controladorDestino, jugador, inst);
     const p = s.players[dueno];
+    const metaRecuperada = inst.cardId ? getCardMeta(inst.cardId) : null;
+    if ((destino.zona === "mano" || destino.zona === "mazo") && metaRecuperada && esCampeon(metaRecuperada)) reiniciarCampeon(s, id);
     if (destino.zona === "mano") {
       p.mano.push(id);
       ctx.emit({ type: "carta_devuelta_a_mano", cardInstanceId: id, jugador: dueno });
@@ -5684,7 +5951,8 @@ function reagruparEfectosBloqueoAlba(s, ctx, jugador) {
       (e) => e.reagrupar?.fase === "alba" && e.reagrupar?.turno === "propio" && (e.costo?.tipo === "bloqueo_fijo" || e.costo?.tipo === "eter_bloqueado")
     );
     if (idxReagrupar === -1) continue;
-    const eteres = eterDeEfecto(s, id, idxReagrupar);
+    const alcanceTodo = meta.efectos[idxReagrupar].reagrupar?.alcance === "todo";
+    const eteres = alcanceTodo ? [...inst.eterBloqueado] : eterDeEfecto(s, id, idxReagrupar);
     if (eteres.length === 0) continue;
     quitarEteres(s, id, eteres);
     const grupos = liberarEterA(s, eteres, "2A", jugador);
@@ -6026,6 +6294,7 @@ function executeStealChampion(s, ctx, targetIds, jugador, inst) {
     if (targetInst.eterBloqueado && targetInst.eterBloqueado.length > 0) {
       const eteres = [...targetInst.eterBloqueado];
       delete targetInst.eterBloqueado;
+      delete targetInst.continuosActivados;
       delete targetInst.efectoUmbralDisparado;
       delete targetInst.copyOneShotDisparado;
       delete targetInst.tramosDisparados;
@@ -6223,6 +6492,9 @@ function validarActivarHabilidad(state, action) {
   if (!efectoSel) {
     return "esta carta se activa bloqueando \xC9ter (usa la acci\xF3n bloquear_eter)";
   }
+  if (efectoSel.efecto === "activar_disparo" && candidatosActivarDisparo(state, state.turno, action.cardInstanceId, efectoSel).length === 0) {
+    return "no hay otro Campe\xF3n tuyo con un Disparo que activar";
+  }
   const esBloqueado = esCostoBloqueo(efectoSel.costo);
   if (esBloqueado) {
     if (inst.opcionUsadaEsteTurno) return "ya usaste esta habilidad este turno";
@@ -6244,6 +6516,7 @@ function validarActivarHabilidad(state, action) {
   } else {
     if (inst.agotado) return "la carta ya est\xE1 agotada";
     if (efectoSel.tipo !== "disparo" && inst.opcionUsadaEsteTurno) return "ya usaste esta habilidad este turno";
+    if (habilidadUsadaEsteTurno(state, action.cardInstanceId, efectoSel)) return "ya usaste esta habilidad este turno";
     const costoEsperado = efectoSel.costo?.cantidad ?? 0;
     const costoReal = costoEsperado > 0 ? costoEsperado : 1;
     if (action.eterIds.length !== costoReal) {
@@ -6639,7 +6912,7 @@ function modificadoresJSONDe(s, id) {
     const fuenteMeta = metaDeInstancia(s, fuenteId);
     if (!fuenteMeta) continue;
     if (fuenteMeta.type === "Arcana" && fuenteInst.bocaArriba !== true) continue;
-    if (fuenteMeta.type === "Campe\xF3n" && fuenteMeta.efectoComandante) {
+    if (fuenteMeta.type === "Campe\xF3n" && efectosComandante(fuenteMeta.efectoComandante).length > 0) {
       candidatos.push({ inst: fuenteInst, meta: fuenteMeta, esComandante: true, origen: "campo" });
     }
     if ("efectos" in fuenteMeta && fuenteMeta.efectos?.some((e) => esAuraZona(e) || esAuraCondicionada(e) || esAuraEquipada(e))) {
@@ -6696,8 +6969,8 @@ function modificadoresJSONDe(s, id) {
   for (const c of candidatos) {
     const efectos = [];
     const negada = c.origen === "campo" && efectosNegados(s, c.inst.cardInstanceId);
-    if (c.esComandante && c.meta.type === "Campe\xF3n" && c.meta.efectoComandante) {
-      efectos.push(c.meta.efectoComandante);
+    if (c.esComandante && c.meta.type === "Campe\xF3n") {
+      efectos.push(...efectosComandante(c.meta.efectoComandante));
     }
     if ("efectos" in c.meta && c.meta.efectos) {
       for (const e of c.meta.efectos) {
@@ -6833,7 +7106,8 @@ var TRIGGER_A_JSON = {
   "al-jugar-mistica": "al_jugar_mistica",
   "al-ser-enviado-al-cementerio": "al_ser_enviado_al_cementerio",
   "al-ser-destruido-vinculo": "al_ser_destruido_vinculo",
-  "al-resolver-cadena": "al_resolver_cadena"
+  "al-resolver-cadena": "al_resolver_cadena",
+  "cuando-campeon-al-cementerio": "cuando_campeon_propio_al_cementerio"
 };
 function triggersQueMatchean(s, trigger, jugador, ids, opts) {
   const res = [];
@@ -6856,6 +7130,12 @@ function triggersQueMatchean(s, trigger, jugador, ids, opts) {
     const negada = efectosNegados(s, id);
     efectos.forEach((efecto, efectoIdx) => {
       if (negada && efecto.tipo !== "comandante") return;
+      if (trigger === "cuando-campeon-al-cementerio" && opts?.victimaId !== void 0) {
+        const quiereRival = efecto.controladorTrigger === "rival";
+        const esDelRival = opts.controladorVictima !== void 0 && opts.controladorVictima !== jugador;
+        if (quiereRival !== esDelRival) return;
+        if (efecto.objetivo?.excluyeEsta && opts.victimaId === id) return;
+      }
       if (trigger === "al-ser-enviado-al-cementerio" && !opts?.ignorarZonaOrigen && efecto.triggerZona && efecto.triggerZona !== "cualquier_zona" && efecto.triggerZona !== opts?.zonaOrigen) return;
       const triggerDelEfecto = efecto.trigger === "ninguno" ? void 0 : efecto.trigger;
       const esUmbral = trigger === "al-bloquear-eter";
@@ -6880,8 +7160,10 @@ function dispararTrigger(s, ctx, trigger, jugador, instancias, payloadExtra) {
     if (efectosNegados(s, id)) continue;
     const primero = triggersQueMatchean(s, trigger, payload.jugador, [id], {
       zonaOrigen: payload.zonaOrigen,
-      ignorarZonaOrigen: payload.contextoUso === "objetivo-elegido"
+      ignorarZonaOrigen: payload.contextoUso === "objetivo-elegido",
       // resolución de una elección ya armada
+      victimaId: payload.victimaId,
+      controladorVictima: payload.controladorVictima
     })[0];
     if (primero) {
       const { efecto, efectoIdx } = primero;
@@ -7057,6 +7339,7 @@ function resolveTargets(s, objetivo, jugador, fuenteId) {
     };
     if (rivalChamps.some(esProtector)) baseTargets = rivalChamps.filter(esProtector);
   }
+  if (objetivo.excluyeEsta && fuenteId) baseTargets = baseTargets.filter((id) => id !== fuenteId);
   const filtered = applyFilters(s, baseTargets, filtros);
   if (filtros?.seleccionar) {
     return selectByRanking(s, filtered, filtros.seleccionar);
@@ -7477,7 +7760,7 @@ function validarJugarCampeon(state, action) {
   const ocupante = p.campo.campeones[action.slot];
   const sacrificios = action.sacrificios ?? [];
   if (ocupante !== null && !sacrificios.includes(ocupante)) return "slot ocupado";
-  const pago = validarPago(state, state.turno, action.eterIds, meta.id);
+  const pago = validarPago(state, state.turno, action.eterIds, meta.id, true);
   if (!pago.ok) return pago.error ?? "pago inv\xE1lido";
   const requeridos = sacrificiosRequeridos(meta.roles);
   if (new Set(sacrificios).size !== sacrificios.length) return "sacrificios duplicados";
@@ -7671,7 +7954,7 @@ function generarAccionesForja(state, playerId, cardInstanceId) {
   if (!meta) return null;
   switch (meta.type) {
     case "Campe\xF3n": {
-      const eterIds = etersParaPagar(state, playerId, meta.id);
+      const eterIds = etersParaPagar(state, playerId, meta.id, true);
       if (!eterIds) return null;
       const requeridos = sacrificiosRequeridos(meta.roles);
       const sacrificables = campeonesSacrificables(state, playerId, meta.id);
@@ -7723,6 +8006,11 @@ function validarBloquearEter(state, action) {
     return "bloquear_eter solo en Forja/Choque/Ocaso (\xA78.3a: nunca en Alba)";
   }
   if (cadenaActiva(state) && state.fase !== "forja") return "un efecto continuo solo puede responder en la Forja (\xA78.3a)";
+  const metaDestino = getCardMeta(state.instances[action.targetInstanceId]?.cardId ?? "");
+  const efectoPagado = metaDestino && "efectos" in metaDestino && metaDestino.efectos ? action.efectoIdx !== void 0 ? metaDestino.efectos[action.efectoIdx] : efectoBloqueoAccion(metaDestino)?.efecto : void 0;
+  if (efectoPagado && esCostoBloqueo(efectoPagado.costo) && efectoPagado.tipo !== "disparo" && !esEfectoDeBloqueoManual(efectoPagado)) {
+    return "este efecto se paga al cumplirse su condici\xF3n (trigger): no se activa bloqueando \xC9ter a mano";
+  }
   return validarBloqueo(state, actorDeBloqueo(state), action.eterIds, action.targetInstanceId, action.efectoIdx);
 }
 function ejecutarBloquearEter(s, action, ctx) {
@@ -7833,6 +8121,7 @@ function ejecutarPasarTurno(s, ctx) {
     if (inst.efectosUsadosEsteTurno) delete inst.efectosUsadosEsteTurno;
   }
   delete s.rupturasEsteTurno;
+  purgarKeywordsTemporales(s);
   descartarPendientesObsoletos(s);
   s.turno = rival;
   ctx.emit({ type: "turno_iniciado", jugador: rival });
@@ -7895,7 +8184,7 @@ function validarAccion(state, action) {
   if (electorAjeno(state) && !equipando && action.type !== "elegir_objetivo" && action.type !== "rendirse" && action.type !== "responder_prevenicion") {
     return "el rival debe elegir un objetivo antes de continuar";
   }
-  if (scryActual(state) && !state.declaracionEnEleccion && !electorAjeno(state) && action.type !== "ordenar_mazo" && action.type !== "rendirse") {
+  if (scryActual(state) && !state.declaracionEnEleccion && !electorAjeno(state) && !equipando && action.type !== "ordenar_mazo" && action.type !== "rendirse") {
     return "hay un mazo por ordenar antes de continuar";
   }
   if (cadenaActiva(state) && !state.declaracionEnEleccion && !ACCIONES_CON_CADENA_ABIERTA.has(action.type)) {
@@ -8099,7 +8388,7 @@ function accionesBloqueoEter(state, playerId, enCadena = false) {
     for (const t of targets) {
       if (efectosNegados(state, t.id)) continue;
       if (!("efectos" in t.meta) || !t.meta.efectos) continue;
-      const fuentes = t.meta.efectos.map((efecto, i) => ({ efecto, i })).filter(({ efecto }) => esCostoBloqueo(efecto.costo) && efecto.tipo !== "disparo");
+      const fuentes = t.meta.efectos.map((efecto, i) => ({ efecto, i })).filter(({ efecto }) => esEfectoDeBloqueoManual(efecto));
       if (fuentes.length === 0) continue;
       for (const { efecto, i } of fuentes) {
         const zonaOrigen = efecto.costo?.origen === "pagado" ? p.eterPagado : p.eterReserva;
@@ -8311,7 +8600,8 @@ function getValidActions(state, playerId) {
             acciones.push({ type: "activar_habilidad", cardInstanceId: champId, eterIds: [eteresValidos[0]] });
           }
         } else {
-          if (inst.agotado) continue;
+          if (inst.agotado || habilidadUsadaEsteTurno(state, champId, efectoAct)) continue;
+          if (efectoAct.efecto === "activar_disparo" && candidatosActivarDisparo(state, playerId, champId, efectoAct).length === 0) continue;
           const costoReal = costo > 0 ? costo : 1;
           if (p.eterReserva.length >= costoReal) {
             acciones.push({ type: "activar_habilidad", cardInstanceId: champId, eterIds: p.eterReserva.slice(0, costoReal) });
@@ -8997,7 +9287,9 @@ function botTonto(state, playerId, dificultad = "facil") {
     if (actorActual(state) !== playerId) return null;
     return getValidActions(state, playerId).find((a) => a.type === "elegir_objetivo") ?? null;
   }
-  if (scryActual(state)) {
+  const equipar = state.equiparPendiente;
+  const equiparVigente = !!equipar && !state.instances[equipar.artefactoId]?.equipadoA;
+  if (scryActual(state) && !equiparVigente) {
     if (actorActual(state) !== playerId) return null;
     return getValidActions(state, playerId).find((a) => a.type === "ordenar_mazo") ?? null;
   }
@@ -9079,6 +9371,7 @@ export {
   campeonesSacrificables,
   construirTriggers,
   copiasEnCampo,
+  costeDeCampeon,
   costeEterHabilidad,
   createCtx,
   createCtxFromDraws,
