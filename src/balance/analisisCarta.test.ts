@@ -5,15 +5,18 @@ import type { ContextoAnalisis, MargenStat } from './analisisCarta'
 import { CONFIG_V1 } from './config'
 import { poolLetalidad, techosDelPool } from './letalidad'
 import { semaforoDe } from './metricas'
+import { evaluarEfectoPorCoste } from './efectoPorCoste'
 import { poderDeCarta } from './poderEfecto'
+import { esExento } from './presupuesto'
 import type { CartaBalance } from './tipos'
-import { CARTAS, carta } from './test/cartasReales'
+import { CARTAS, CARTAS_ANTES, CARTAS_ELENA_32, TEXTO_ISOLDE_LEGADO, carta, legado } from './test/cartasReales'
+import { efectosComandante } from '../shared/efectoComandante'
 
 const pool = poolLetalidad(CARTAS)
 const ctx: ContextoAnalisis = { pool, techos: techosDelPool(pool), ajustes: new Map() }
 
-const porStat = (nombre: string, cfg = CONFIG_V1): Record<MargenStat['stat'], MargenStat> => {
-  const m = margenesDeStats(carta(nombre), ctx, cfg)
+const porStat = (nombre: string | CartaBalance, cfg = CONFIG_V1): Record<MargenStat['stat'], MargenStat> => {
+  const m = margenesDeStats(typeof nombre === 'string' ? carta(nombre) : nombre, ctx, cfg)
   const buscar = (s: MargenStat['stat']) => {
     const x = m.find((y) => y.stat === s)
     if (!x) throw new Error(`Falta el margen ${s} de ${nombre}`)
@@ -23,28 +26,42 @@ const porStat = (nombre: string, cfg = CONFIG_V1): Record<MargenStat['stat'], Ma
 }
 
 describe('margenesDeStats: estados', () => {
+  // Elena real es ahora 4/2 (suma 6, dentro de la banda de coste 3). Los números de estos casos son los de la Elena 3/0 de antes.
   it('S1.1: Elena (3/0, coste 3) queda bajo banda y semaforoDe no cambia', () => {
-    const { suma } = porStat('Elena')
+    const { suma } = porStat(legado('Elena'))
     expect(suma.estado).toBe('bajo')
     expect(suma.texto).toBe('Bajo banda: puede subir')
-    expect(suma.holgura).toBe(7)
-    expect(semaforoDe(carta('Elena'))).toEqual({ desvio: 0, semaforo: 'verde' })
+    // Bandas v1.1: coste 3 = 6-8. Con el tope de costo del 50 % el efecto de Elena vale 2.3 (antes 0.85) y paga un impuesto de 0.1,
+    // así que su suma máxima es 7.9 y le faltan 4.9 (antes 5): misma intención, el número sigue al índice nuevo.
+    expect(suma.holgura).toBe(CONFIG_V1.bandas[3].sumaMax - 0.1 - 3)
+    expect(semaforoDe(legado('Elena'))).toEqual({ desvio: 0, semaforo: 'verde' })
   })
 
-  it.each(['Seraphina', 'Cassandra', 'Varek', 'Thane'])('S1.2: %s queda bajo banda aunque semaforoDe la marque verde', (n) => {
-    expect(porStat(n).suma.estado).toBe('bajo')
-    expect(semaforoDe(carta(n)).semaforo).toBe('verde')
+  it('S1.1b: la Elena de antes (3/2, suma 5) sigue bajo banda y la real (4/2, suma 6) ya entra en la banda', () => {
+    expect(porStat(legado('Elena 3/2')).suma.estado).toBe('bajo')
+    expect(porStat('Elena').suma.estado).toBe('verde')
   })
 
-  it('S1.3: Isolde (3/7) excede el tope de RES por 1 y su ATQ queda verde', () => {
-    const { atq, res, suma } = porStat('Isolde')
+  // Con las bandas v1.1 (coste 3 = 6-8, coste 4 = 8-10) ya no hay cartas reales bajo banda salvo Elena.
+  // Para seguir probando que la banda y semaforoDe son ejes distintos, se bajan los stats a 2/2 (suma 4).
+  it.each(['Seraphina', 'Cassandra', 'Varek', 'Thane'])('S1.2: %s con stats 2/2 queda bajo banda aunque semaforoDe la marque verde', (n) => {
+    const base = carta(n)
+    const baja: CartaBalance = { ...base, stats: { atq: 2, res: 2 } }
+    expect(margenesDeStats(base, ctx).find((m) => m.stat === 'suma')?.estado).not.toBe('bajo')
+    expect(margenesDeStats(baja, ctx).find((m) => m.stat === 'suma')?.estado).toBe('bajo')
+    expect(semaforoDe(baja).semaforo).toBe('verde')
+  })
+
+  // La Isolde real (3/6, coste 4) ya cabe; el caso «excede el tope de RES» se conserva con la Isolde de antes (3/7, coste 3, destroy).
+  it('S1.3: Isolde (3/7) excede el tope de RES por 2 y su ATQ queda verde', () => {
+    const { atq, res, suma } = porStat(legado('Isolde'))
     expect(res.estado).toBe('rojo')
-    expect(res.tope).toBe(6)
-    expect(res.holgura).toBe(-1)
+    expect(res.tope).toBe(5)
+    expect(res.holgura).toBe(-2)
     expect(res.puedeSubir).toBe(0)
     expect(atq.estado).toBe('verde')
-    // Con el impuesto de su efecto (1) la suma máxima baja a 9 y 10 la pasa.
-    expect(suma.tope).toBe(9)
+    // Con el impuesto de su efecto (1) la suma máxima baja a 7 (8 - 1) y 10 la pasa.
+    expect(suma.tope).toBe(7)
     expect(suma.estado).toBe('rojo')
   })
 
@@ -63,8 +80,8 @@ describe('margenesDeStats: estados', () => {
     }
   })
 
-  it('S1.6: un stat con holgura <= cercaDelTope es amarillo con «Cerca del tope» (Vaela, ATQ 5 con tope 5)', () => {
-    const { atq } = porStat('Vaela')
+  it('S1.6: un stat con holgura <= cercaDelTope es amarillo con «Cerca del tope» (Marek, ATQ 5 con tope 5 del coste 3)', () => {
+    const { atq } = porStat('Marek')
     expect(atq.holgura).toBe(0)
     expect(atq.estado).toBe('amarillo')
     expect(atq.texto).toBe('Cerca del tope')
@@ -96,12 +113,22 @@ describe('margenesDeStats: estados', () => {
     expect(porStat('Rowena', menor).suma.estado).toBe('verde')
   })
 
-  it('Mira (FB-012, 4/4, coste 2): suma 8 contra objetivo 8 queda «Cerca del tope», ATQ y RES verdes, en el límite y sin poder subir', () => {
-    const mira = CARTAS.find((c) => c.id === 'FB-012')!
+  it('Mira de antes (FB-012, 4/4, coste 2) pasa el máximo de 6 de las bandas v1.1: «excede»', () => {
+    const mira = legado('Mira')
     expect(mira.stats).toEqual({ atq: 4, res: 4 })
-    const { atq, res, suma } = porStat('Mira')
-    expect(suma.valor).toBe(8)
-    expect(suma.tope).toBe(8)
+    const { suma } = porStat(mira)
+    expect(suma.tope).toBe(CONFIG_V1.bandas[2].sumaMax)
+    expect(suma.holgura).toBe(-2)
+    expect(estadoDe(mira).estado).toBe('excede')
+  })
+
+  it('Mira con stats 3/3 (coste 2): suma 6 contra objetivo 6 queda «Cerca del tope», ATQ y RES verdes, en el límite y sin poder subir', () => {
+    // La Mira de antes (4/4) ya se pasa con las bandas v1.1; se baja a 3/3 para mantener el caso de la suma exacta en el máximo.
+    const mira: CartaBalance = { ...legado('Mira'), stats: { atq: 3, res: 3 } }
+    const m = margenesDeStats(mira, ctx)
+    const [atq, res, suma] = (['atq', 'res', 'suma'] as const).map((s) => m.find((x) => x.stat === s) as MargenStat)
+    expect(suma.valor).toBe(6)
+    expect(suma.tope).toBe(6)
     expect(suma.holgura).toBe(0)
     expect(suma.estado).toBe('amarillo')
     expect(suma.texto).toBe('Cerca del tope')
@@ -119,29 +146,31 @@ describe('margenesDeStats: estados', () => {
 })
 
 describe('margenesDeStats: puede subir', () => {
-  it('S2.1: Elena puede subir 3 de ATQ, 6 de RES y 7 de suma', () => {
-    const { atq, res, suma } = porStat('Elena')
-    expect([atq.holgura, res.holgura, suma.holgura]).toEqual([3, 6, 7])
-    expect([atq.puedeSubir, res.puedeSubir, suma.puedeSubir]).toEqual([3, 6, 7])
+  it('S2.1: Elena puede subir 2 de ATQ, 5 de RES y 4.9 de suma (coste 3: tope 5, suma máxima 8 menos el impuesto 0.1)', () => {
+    const { atq, res, suma } = porStat(legado('Elena'))
+    expect([atq.holgura, res.holgura, suma.holgura]).toEqual([2, 5, 4.9])
+    // puedeSubir son stats enteros: la suma 4.9 solo permite subir 4 (antes 5), y la RES queda en 4 por la suma
+    expect([atq.puedeSubir, res.puedeSubir, suma.puedeSubir]).toEqual([2, 4, 4])
   })
 
   it('S2.2: una carta pegada al tope no puede subir', () => {
-    const { atq, suma } = porStat('Vaela')
+    const { atq, suma } = porStat('Marek')
+    expect(atq.holgura).toBe(0)
     expect(atq.puedeSubir).toBe(0)
     expect(suma.puedeSubir).toBe(0)
   })
 
   it('S2.3: el impuesto rebaja la suma máxima (Draven, 4/4, impuesto 0.8): se pasa y no puede subir', () => {
     const { atq, suma } = porStat('Draven')
-    expect(suma.tope).toBe(7.2)
-    expect(suma.holgura).toBe(-0.8)
+    expect(suma.tope).toBe(5.2)
+    expect(suma.holgura).toBe(-2.8)
     expect(suma.estado).toBe('rojo')
-    expect(atq.holgura).toBe(1)
+    expect(atq.holgura).toBe(0)
     expect(atq.puedeSubir).toBe(0)
   })
 
-  it('redondea a 2 decimales antes de comparar (Marek, impuesto 0.3: holgura de suma 0.7)', () => {
-    expect(porStat('Marek').suma.holgura).toBe(0.7)
+  it('redondea a 2 decimales antes de comparar (Marek, impuesto 0.3: 7.7 - 9 sería -1.2999999999999998, queda -1.3)', () => {
+    expect(porStat('Marek').suma.holgura).toBe(-1.3)
   })
 })
 
@@ -180,7 +209,10 @@ describe('desgloseDePoder', () => {
     const ultimo = d.efectos[d.efectos.length - 1]
     expect(ultimo.esComandante).toBe(true)
     expect(ultimo.texto).toBe(`texto ${textos.length - 1}`)
-    expect(d.efectos.slice(0, -1).every((e) => !e.esComandante)).toBe(true)
+    // Aurora lleva DOS efectos de Comandante: forman un bloque al final y ninguno de los anteriores es de Comandante
+    const nComandante = d.efectos.filter((e) => e.esComandante).length
+    expect(d.efectos.slice(-nComandante).every((e) => e.esComandante)).toBe(true)
+    expect(d.efectos.slice(0, d.efectos.length - nComandante).every((e) => !e.esComandante)).toBe(true)
   })
 
   it('S9.2: una carta sin efectos ni keywords da poder 0, desglose vacío y sin NaN', () => {
@@ -236,12 +268,16 @@ describe('desgloseDePoder', () => {
 })
 
 describe('estadoDeCarta', () => {
-  it('Isolde excede, Elena queda bajo banda, Rowena está dentro y Vaela en el límite', () => {
+  it('Isolde (de antes y la real) exceden, la Elena de antes queda bajo banda, la real y Rowena están dentro y Korr en el límite', () => {
+    expect(estadoDe(legado('Isolde')).estado).toBe('excede')
+    // Intención cambiada con el tope de costo del 50 %: la Isolde real (3/6, suma 9) llegaba justo a su máximo con impuesto 1.0
+    // (en el límite); su índice sube de 4.00 a 4.75, el impuesto a 1.4 y ahora excede (máximo 8.6).
     expect(estadoDe(carta('Isolde')).estado).toBe('excede')
-    expect(estadoDe(carta('Elena')).estado).toBe('bajo-banda')
-    expect(estadoDe(carta('Elena')).etiqueta).toBe('Bajo banda: puede subir')
+    expect(estadoDe(legado('Elena 3/2')).estado).toBe('bajo-banda')
+    expect(estadoDe(legado('Elena 3/2')).etiqueta).toBe('Bajo banda: puede subir')
+    expect(estadoDe(carta('Elena')).estado).toBe('dentro')
     expect(estadoDe(carta('Rowena')).estado).toBe('dentro')
-    expect(estadoDe(carta('Vaela')).estado).toBe('en-limite')
+    expect(estadoDe(carta('Korr')).estado).toBe('en-limite')
   })
 
   it('Aurora y Ragnar son exentas', () => {
@@ -269,12 +305,17 @@ describe('estadoDeCarta', () => {
 })
 
 describe('contextoDeAnalisis', () => {
-  it('calcula una vez el pool (18 Campeones no exentos de las 65), los techos y los ajustes', () => {
+  it('calcula una vez el pool (18 Campeones no exentos de las 66), los techos y los ajustes', () => {
     const c = contextoDeAnalisis(CARTAS)
     expect(c.pool).toHaveLength(18)
-    expect(c.techos).toEqual({ atq: 5, res: 7 })
-    expect(c.ajustes.get('FB-015')?.despues).toEqual({ poder: 6, resistencia: 2 })
+    expect(c.techos).toEqual({ atq: 5, res: 6 })
+    // Elena (4/2, suma 6) ya cabe en la banda de coste 3: sin ajuste. Con la Elena de antes (3/2) el ajuste exploratorio es 4/2.
+    expect(c.ajustes.has('FB-015')).toBe(false)
+    expect(contextoDeAnalisis(CARTAS_ELENA_32).ajustes.get('FB-015')?.despues).toEqual({ poder: 4, resistencia: 2 })
+    // Vaela (5/2, coste 3) ya cabe; una carta sobre el máximo (Draven) sí tiene ajuste
     expect(c.ajustes.has('FB-011')).toBe(false)
+    expect(c.ajustes.has('DS-012')).toBe(true)
+    expect(c.ajustes.has('FB-013')).toBe(false)
   })
 
   it('S10.1: nunca incluye cartas de referencia, ni en el pool ni en los ajustes', () => {
@@ -298,16 +339,18 @@ describe('textosDeEfectos', () => {
   const card = (id: string) => ALL_CARDS.find((c) => c.id === id)
 
   it('devuelve el texto de cada efecto, alineado por índice con el cargador (Isolde)', () => {
-    expect(textosDeEfectos(card('FB-014'))).toEqual(['Puedes pagar 2 Éter, destruye 1 Mística o Arcana que controla el rival.'])
+    expect(textosDeEfectos(card('FB-014'))).toEqual(['Puedes pagar 2 Éter, 1 Campeón que controles gana Inmortal, hasta el final del turno.'])
   })
 
   it('pone el texto del Comandante al final (Aurora)', () => {
     const aurora = card('FB-010')
     const textos = textosDeEfectos(aurora)
     expect(textos).toHaveLength(carta('Aurora').efectos.length)
-    const comandante = aurora && 'efectoComandante' in aurora ? aurora.efectoComandante?.texto ?? null : null
-    expect(comandante).not.toBeNull()
-    expect(textos[textos.length - 1]).toBe(comandante)
+    // Aurora lleva dos efectos de Comandante: sus textos van al final, en orden
+    const comandantes = aurora && 'efectoComandante' in aurora ? efectosComandante(aurora.efectoComandante).map((e) => e.texto ?? null) : []
+    expect(comandantes).toHaveLength(2)
+    expect(comandantes.every((t) => t !== null)).toBe(true)
+    expect(textos.slice(-comandantes.length)).toEqual(comandantes)
   })
 
   it('una carta sin definir da una lista vacía', () => {
@@ -339,10 +382,11 @@ describe('margenesDeStats: letalidad como aviso', () => {
     expect(de(sintetica(4, 2), 'atq').superaTecho).toBe(false)
   })
 
-  it('S3.1: la RES se compara con el techo de RES del pool (7)', () => {
-    expect(de(sintetica(2, 7), 'res').superaTecho).toBe(true)
-    expect(de(sintetica(2, 6), 'res').superaTecho).toBe(false)
-    expect(de(sintetica(2, 6), 'res').techoPool).toBe(7)
+  // El techo de RES del pool bajó de 7 a 6 (Isolde 3/7 pasó a 3/6): los mismos casos, un escalón más abajo.
+  it('S3.1: la RES se compara con el techo de RES del pool (6)', () => {
+    expect(de(sintetica(2, 6), 'res').superaTecho).toBe(true)
+    expect(de(sintetica(2, 5), 'res').superaTecho).toBe(false)
+    expect(de(sintetica(2, 5), 'res').techoPool).toBe(6)
   })
 
   it('S3.2: Nymeria (ATQ 4) mata a 3 rivales más con ATQ 5 (los de RES 5, sin contarse a sí misma)', () => {
@@ -353,7 +397,7 @@ describe('margenesDeStats: letalidad como aviso', () => {
   })
 
   it('S3.3: subir RES de 0 a 1 no cambia a quién la mata (escalón plano)', () => {
-    expect(de(carta('Elena'), 'res').ganancia).toEqual({ mata: 0, loMatan: 0 })
+    expect(de(legado('Elena'), 'res').ganancia).toEqual({ mata: 0, loMatan: 0 })
   })
 
   it('la suma no lleva techo ni ganancia', () => {
@@ -373,33 +417,34 @@ describe('margenesDeStats: letalidad como aviso', () => {
 describe('razonesDeCarta', () => {
   const ctxCompleto = contextoDeAnalisis(CARTAS)
   const textosReales = (id: string) => textosDeEfectos(ALL_CARDS.find((c) => c.id === id))
-  const razones = (c: CartaBalance) => {
-    const desglose = desgloseDePoder(c, textosReales(c.id))
-    return razonesDeCarta(c, margenesDeStats(c, ctxCompleto), desglose, ctxCompleto.ajustes.get(c.id) ?? null, ctxCompleto)
+  const ctxAntes = contextoDeAnalisis(CARTAS_ANTES)
+  const razones = (c: CartaBalance, textos: readonly (string | null)[] = textosReales(c.id), contexto = ctxCompleto) => {
+    const desglose = desgloseDePoder(c, textos)
+    return razonesDeCarta(c, margenesDeStats(c, contexto), desglose, contexto.ajustes.get(c.id) ?? null, contexto)
   }
 
-  it('S4.1: Isolde explica RES 7 contra el tope 6, el impuesto 1.0 y cita el texto del efecto', () => {
-    const r = razones(carta('Isolde'))
+  it('S4.1: Isolde (de antes) explica RES 7 contra el tope 5, el impuesto 1.0 y cita el texto del efecto', () => {
+    const r = razones(legado('Isolde'), [TEXTO_ISOLDE_LEGADO], ctxAntes)
     const res = r.find((x) => x.texto.includes('RES 7'))
     expect(res).toBeDefined()
     expect(res!.nivel).toBe('error')
-    expect(res!.texto).toContain('tope de 6')
+    expect(res!.texto).toContain('tope de 5')
     const impuesto = r.find((x) => x.texto.includes('destruye 1 Mística o Arcana'))
     expect(impuesto).toBeDefined()
     expect(impuesto!.texto).toContain('impuesto de 1.0')
   })
 
-  it('S4.1: dice qué stat causa el exceso a partir del ajuste exploratorio (RES baja de 7 a 6)', () => {
-    const r = razones(carta('Isolde'))
-    expect(r.some((x) => /RES.*7.*6/.test(x.texto) && x.texto.includes('ajuste'))).toBe(true)
+  it('S4.1: dice qué stat causa el exceso a partir del ajuste exploratorio (RES baja de 7 a 5)', () => {
+    const r = razones(legado('Isolde'), [TEXTO_ISOLDE_LEGADO], ctxAntes)
+    expect(r.some((x) => /RES.*7.*5/.test(x.texto) && x.texto.includes('ajuste'))).toBe(true)
   })
 
-  it('S4.2: Elena explica que su suma 3 queda por debajo del mínimo de 8 para coste 3', () => {
-    const r = razones(carta('Elena'))
+  it('S4.2: Elena (de antes) explica que su suma 3 queda por debajo del mínimo de 5.9 para coste 3 (6 menos el impuesto 0.1)', () => {
+    const r = razones(legado('Elena'), textosReales('FB-015'), ctxAntes)
     const suma = r.find((x) => /suma 3/.test(x.texto))
     expect(suma).toBeDefined()
     expect(suma!.nivel).toBe('aviso')
-    expect(suma!.texto).toMatch(/mínimo de 8/)
+    expect(suma!.texto).toMatch(/mínimo de 5\.9/)
     expect(suma!.texto).toMatch(/coste 3/)
   })
 
@@ -408,11 +453,11 @@ describe('razonesDeCarta', () => {
     expect(razones(carta('Aurora'))).toEqual([])
   })
 
-  it('un stat cerca del tope es solo informativo (Vaela, ATQ 5 con tope 5)', () => {
-    const r = razones(carta('Vaela'))
+  it('un stat cerca del tope es solo informativo (Korr, RES 5 con tope 5 del coste 3 y suma 8 en el máximo)', () => {
+    const r = razones(carta('Korr'))
     expect(r.length).toBeGreaterThan(0)
     expect(r.every((x) => x.nivel === 'info')).toBe(true)
-    expect(r.some((x) => x.texto.includes('ATQ 5'))).toBe(true)
+    expect(r.some((x) => x.texto.includes('RES 5'))).toBe(true)
   })
 
   it('S7.1: un Vínculo lleva el aviso de que no tiene poder esperado comparable', () => {
@@ -434,13 +479,45 @@ describe('razonesDeCarta', () => {
     expect(r.some((x) => x.nivel === 'error' && x.texto.includes('poder esperado'))).toBe(true)
   })
 
-  it('en las 65 cartas: sin razones si está dentro o exenta, y con un error si excede', () => {
+  it('en las 65 cartas: sin razones si está dentro o exenta (salvo tope de efecto y verbo bajo coste), y con un error si excede', () => {
+    const deEfectoPorCoste = (texto: string) => texto.includes('tope de efecto') || texto.includes('exige coste mínimo')
     for (const c of CARTAS) {
       const e = estadoDe(c).estado
       const r = razones(c)
-      if (e === 'dentro' || e === 'exenta') expect(r, c.id).toEqual([])
+      if (e === 'dentro' || e === 'exenta') expect(r.filter((x) => !deEfectoPorCoste(x.texto)), c.id).toEqual([])
       if (e === 'excede') expect(r.some((x) => x.nivel === 'error'), c.id).toBe(true)
+      // Una carta que no pasa el efecto por coste nunca se muestra favorable.
+      if (!evaluarEfectoPorCoste(c).ok) expect(e, c.id).toBe('excede')
+      // Las razones de efecto por coste aparecen exactamente cuando la carta no pasa esa evaluación.
+      expect(r.some((x) => deEfectoPorCoste(x.texto)), c.id).toBe(!evaluarEfectoPorCoste(c).ok)
     }
+  })
+
+  it('una carta sin stats dentro del semáforo pero con el efecto por coste roto excede, con su razón', () => {
+    // FB-008 Despertar ya no pasa su tope (índice 1.5 tras el rediseño). El caso «semáforo amarillo con índice > tope 2» se conserva
+    // con un Éter sintético (FB-002 + el efecto de FB-001: índice 2.5). FB-003 (semáforo verde, verbo draw pide coste 2) sigue real.
+    const dosEfectos = CARTAS.find((c) => c.id === 'FB-002')!
+    const despertar: CartaBalance = { ...dosEfectos, id: 'T-020', efectos: [...dosEfectos.efectos, ...CARTAS.find((c) => c.id === 'FB-001')!.efectos] }
+    expect(semaforoDe(despertar).semaforo).toBe('amarillo')
+    expect(estadoDe(despertar).estado).toBe('excede')
+    expect(estadoDe(despertar).etiqueta).toBe('Excede el presupuesto')
+    expect(razones(despertar).filter((x) => x.nivel === 'error')).toHaveLength(1)
+    const sangre = CARTAS.find((c) => c.id === 'FB-003')!
+    expect(estadoDe(sangre).estado).toBe('excede')
+    expect(razones(sangre).map((x) => x.texto)).toContain('El verbo draw exige coste mínimo 2, pero la carta cuesta 1.')
+  })
+
+  it('razona el tope de efecto de un Campeón y el coste mínimo de un verbo', () => {
+    const base = CARTAS.find((c) => c.tipo === 'Campeón' && c.stats !== null && c.coste === 2 && !esExento(c))!
+    const verboCaro = CARTAS.flatMap((c) => c.efectos).find((e) => e.verbo === 'destroy')!
+    const cara: CartaBalance = {
+      ...base,
+      id: 'T-011',
+      efectos: Array.from({ length: 6 }, () => ({ ...verboCaro, verbo: 'destroy', sinVerbo: false, verbosTramos: [] })),
+    }
+    const r = razones(cara)
+    expect(r.some((x) => x.nivel === 'error' && /pasa el tope de efecto 4\.0 \(coste 2 × 2\)/.test(x.texto))).toBe(true)
+    expect(r.some((x) => x.nivel === 'error' && x.texto.includes('El verbo destroy exige coste mínimo 3'))).toBe(true)
   })
 
   it('S4.3/S8.1: ninguna razón de las 65 cartas usa voseo rioplatense', () => {
@@ -453,32 +530,48 @@ describe('razonesDeCarta', () => {
 
 describe('analizarCarta', () => {
   const ctxCompleto = contextoDeAnalisis(CARTAS)
+  const ctxAntesAnalisis = contextoDeAnalisis(CARTAS_ANTES)
   const analizar = (c: CartaBalance, contexto = ctxCompleto) =>
     analizarCarta(c, contexto, textosDeEfectos(ALL_CARDS.find((x) => x.id === c.id)))
 
-  it('S8.1: Elena queda bajo banda, con el ajuste exploratorio 3/0 -> 6/2 que supera el techo', () => {
-    const a = analizar(carta('Elena'))
+  it('S8.1: Elena (de antes) queda bajo banda, con el ajuste exploratorio 3/0 -> 5/1 (el tope de ATQ del coste 3 coincide con el techo del pool)', () => {
+    const a = analizar(legado('Elena'), ctxAntesAnalisis)
     expect(a.estado).toBe('bajo-banda')
     expect(a.etiqueta).toBe('Bajo banda: puede subir')
     expect(a.ajuste?.antes).toEqual({ poder: 3, resistencia: 0 })
-    expect(a.ajuste?.despues).toEqual({ poder: 6, resistencia: 2 })
-    expect(a.ajuste?.superaTecho).toBe(true)
+    expect(a.ajuste?.despues).toEqual({ poder: 5, resistencia: 1 })
+    expect(a.ajuste?.superaTecho).toBe(false)
     expect(a.etiquetaAjuste).toBe('Exploratorio')
     expect(a.razones.length).toBeGreaterThan(0)
     expect(a.nombre).toBe(carta('Elena').nombre)
     expect(a.config).toBe('según CONFIG_V1 (borrador)')
   })
 
-  it('S8.2: Vaela no tiene ajuste propuesto', () => {
-    const a = analizar(carta('Vaela'))
+  it('S8.1b: la Elena de antes (3/2) queda bajo banda con el ajuste exploratorio 3/2 -> 4/2', () => {
+    const a = analizar(legado('Elena 3/2'), contextoDeAnalisis(CARTAS_ELENA_32))
+    expect(a.estado).toBe('bajo-banda')
+    expect(a.ajuste?.antes).toEqual({ poder: 3, resistencia: 2 })
+    expect(a.ajuste?.despues).toEqual({ poder: 4, resistencia: 2 })
+    expect(a.ajuste?.superaTecho).toBe(false)
+  })
+
+  it('S8.1c: la Elena real (4/2, suma 6) está dentro de banda y no tiene ajuste propuesto', () => {
+    const a = analizar(carta('Elena'))
+    expect(a.estado).toBe('dentro')
     expect(a.ajuste).toBeNull()
     expect(a.etiquetaAjuste).toBeNull()
   })
 
-  it('Isolde excede, trae su letalidad y marca el verbo fuera de identidad', () => {
-    const a = analizar(carta('Isolde'))
+  it('S8.2: Seraphina (dentro de banda) no tiene ajuste propuesto', () => {
+    const a = analizar(carta('Seraphina'))
+    expect(a.ajuste).toBeNull()
+    expect(a.etiquetaAjuste).toBeNull()
+  })
+
+  it('Isolde (de antes) excede, trae su letalidad y marca el verbo fuera de identidad', () => {
+    const a = analizar(legado('Isolde'), ctxAntesAnalisis)
     expect(a.estado).toBe('excede')
-    expect(a.presupuesto?.excesoRes).toBe(1)
+    expect(a.presupuesto?.excesoRes).toBe(2)
     expect(a.letalidad?.total).toBe(17)
     expect(a.fueraDeIdentidad).toEqual(['destroy'])
   })
@@ -513,7 +606,7 @@ describe('analizarCarta', () => {
   })
 
   it('S9.4: el efecto de Comandante cuenta en el índice, en el impuesto y en las razones', () => {
-    const base = carta('Isolde')
+    const base = legado('Isolde')
     const conComandante: CartaBalance = {
       ...base,
       id: 'T-002',
@@ -542,15 +635,16 @@ describe('analizarCarta', () => {
       }
       return x
     }
-    const frescas = congelar(structuredClone(CARTAS))
+    // Se usa el seed con la Elena de antes (3/2) para que el estado «bajo banda» siga representado
+    const frescas = congelar(structuredClone(CARTAS_ELENA_32))
     const c1 = contextoDeAnalisis(frescas)
     const c2 = contextoDeAnalisis(frescas)
     const una = frescas.map((c) => analizarCarta(c, c1, textosDeEfectos(ALL_CARDS.find((x) => x.id === c.id))))
     const dos = frescas.map((c) => analizarCarta(c, c2, textosDeEfectos(ALL_CARDS.find((x) => x.id === c.id))))
-    expect(una).toHaveLength(65)
+    expect(una).toHaveLength(66)
     expect(dos).toEqual(una)
     expect(una.filter((a) => a.estado === 'excede').length).toBeGreaterThan(0)
-    expect(una.filter((a) => a.estado === 'bajo-banda')).toHaveLength(5)
+    expect(una.filter((a) => a.estado === 'bajo-banda')).toHaveLength(1)
     expect(una.every((a) => !JSON.stringify(a).includes('NaN'))).toBe(true)
   })
 

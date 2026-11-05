@@ -5,7 +5,8 @@ import userEvent from '@testing-library/user-event'
 import { cardArtPath } from '../../shared/data/paquetes'
 import type { FiltrosBalance } from '../metricas'
 import { FILTROS_VACIOS, filtrarCartas } from '../metricas'
-import { CARTAS } from '../test/cartasReales'
+import type { CartaBalance } from '../tipos'
+import { CARTAS, CARTAS_ANTES, CARTAS_ELENA_32 } from '../test/cartasReales'
 import { useReferencia } from '../useReferencia'
 import { AnalisisCarta } from './AnalisisCarta'
 import FUENTE_VISTA from './AnalisisCarta.tsx?raw'
@@ -15,10 +16,13 @@ function Arnes({
   inicial = null,
   filtros = FILTROS_VACIOS,
   onCarta,
+  base = CARTAS,
 }: {
   inicial?: string | null
   filtros?: FiltrosBalance
   onCarta?: (id: string | null) => void
+  /** Las cartas publicadas que ve la vista (CARTAS_ANTES = Elena, Isolde y Mira como eran antes del rediseño de Estásis) */
+  base?: CartaBalance[]
 }) {
   const [carta, setCarta] = useState<string | null>(inicial)
   const referencia = useReferencia()
@@ -28,8 +32,8 @@ function Arnes({
         Alternar referencia
       </button>
       <AnalisisCarta
-        cartas={filtrarCartas(CARTAS, filtros)}
-        publicadas={CARTAS}
+        cartas={filtrarCartas(base, filtros)}
+        publicadas={base}
         filtros={filtros}
         carta={carta}
         onCarta={(id) => {
@@ -47,10 +51,10 @@ const grupo = (nombre: string) => within(selector()).getByRole('group', { name: 
 const opciones = (nombre: string) => within(grupo(nombre)).getAllByRole('option')
 
 describe('AnalisisCarta: selector', () => {
-  it('por defecto lista las 65 publicadas y ninguna carta de referencia', () => {
+  it('por defecto lista las 66 publicadas y ninguna carta de referencia', () => {
     render(<Arnes />)
     expect(screen.getByRole('heading', { level: 2, name: 'Análisis de carta' })).toBeInTheDocument()
-    expect(opciones('Publicadas')).toHaveLength(65)
+    expect(opciones('Publicadas')).toHaveLength(66)
     expect(within(selector()).queryByRole('group', { name: 'Referencia (no publicadas)' })).not.toBeInTheDocument()
     expect(within(selector()).queryByRole('option', { name: /PR-/ })).not.toBeInTheDocument()
     expect(screen.queryByRole('heading', { level: 3 })).not.toBeInTheDocument()
@@ -61,7 +65,7 @@ describe('AnalisisCarta: selector', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Alternar referencia' }))
     await waitFor(() => expect(opciones('Referencia (no publicadas)')).toHaveLength(58))
     expect(opciones('Referencia (no publicadas)').every((o) => /\(PR-\d+\)/.test(o.textContent ?? ''))).toBe(true)
-    expect(opciones('Publicadas')).toHaveLength(65)
+    expect(opciones('Publicadas')).toHaveLength(66)
   })
 
   it('la búsqueda por nombre o ID recorta las opciones', async () => {
@@ -76,7 +80,7 @@ describe('AnalisisCarta: selector', () => {
 
   it('respeta los filtros del tablero', () => {
     render(<Arnes filtros={{ ...FILTROS_VACIOS, mazo: 'estasis' }} />)
-    expect(opciones('Publicadas')).toHaveLength(32)
+    expect(opciones('Publicadas')).toHaveLength(33)
   })
 
   it('sin coincidencias muestra el estado vacío, sin error ni carta seleccionada', async () => {
@@ -147,8 +151,10 @@ const medidor = (nombre: string) => screen.getByRole('meter', { name: nombre })
 const bloque = (nombre: string) => screen.getByRole('region', { name: nombre })
 
 describe('AnalisisCarta: contenido', () => {
-  it('Elena: estadísticas, barras con texto de estado y cuánto puede subir', () => {
-    render(<Arnes inicial="FB-015" />)
+  // Rediseño de Estásis: Elena real es 3/2 e Isolde 3/6 (coste 4). Los casos «Elena 3/0 bajo banda» e «Isolde 3/7 excede» se conservan
+  // renderizando la vista con CARTAS_ANTES (esas cartas con su perfil anterior); abajo hay un caso nuevo con la Elena real.
+  it('Elena (de antes): estadísticas, barras con texto de estado y cuánto puede subir', () => {
+    render(<Arnes inicial="FB-015" base={CARTAS_ANTES} />)
     const stats = bloque('Estadísticas de la carta')
     const valorDe = (etiqueta: string) => within(stats).getByText(etiqueta, { selector: 'dt' }).nextElementSibling?.textContent
     expect(valorDe('Coste')).toBe('3')
@@ -161,7 +167,7 @@ describe('AnalisisCarta: contenido', () => {
     expect(valorDe('Keywords')).toBeDefined()
 
     expect(medidor('ATQ')).toHaveAttribute('aria-valuenow', '3')
-    expect(medidor('ATQ')).toHaveAttribute('aria-valuemax', '6')
+    expect(medidor('ATQ')).toHaveAttribute('aria-valuemax', '5')
     expect(medidor('RES')).toHaveAttribute('aria-valuenow', '0')
     expect(medidor('Suma')).toHaveAttribute('aria-valuenow', '3')
 
@@ -170,17 +176,36 @@ describe('AnalisisCarta: contenido', () => {
     expect(within(margenes).getAllByText(/Puede subir hasta \+\d/).length).toBeGreaterThan(0)
   })
 
-  it('Isolde: RES excede el tope y la razón cita el impuesto y el texto del efecto', () => {
-    render(<Arnes inicial="FB-014" />)
+  it('Elena real (4/2, suma 6): dentro de banda, sin «bajo banda» ni ajuste propuesto', () => {
+    render(<Arnes inicial="FB-015" />)
+    const stats = bloque('Estadísticas de la carta')
+    const valorDe = (etiqueta: string) => within(stats).getByText(etiqueta, { selector: 'dt' }).nextElementSibling?.textContent
+    expect([valorDe('ATQ'), valorDe('RES'), valorDe('Suma')]).toEqual(['4', '2', '6'])
+    const margenes = bloque('Márgenes de los stats')
+    expect(within(margenes).queryByText('Bajo banda: puede subir')).not.toBeInTheDocument()
+    expect(screen.getByText('Sin ajuste propuesto')).toBeInTheDocument()
+  })
+
+  it('Elena de antes (3/2): bajo banda y puede subir', () => {
+    render(<Arnes inicial="FB-015" base={CARTAS_ELENA_32} />)
+    const stats = bloque('Estadísticas de la carta')
+    const valorDe = (etiqueta: string) => within(stats).getByText(etiqueta, { selector: 'dt' }).nextElementSibling?.textContent
+    expect([valorDe('ATQ'), valorDe('RES'), valorDe('Suma')]).toEqual(['3', '2', '5'])
+    const margenes = bloque('Márgenes de los stats')
+    expect(within(margenes).getByText('Bajo banda: puede subir')).toBeInTheDocument()
+  })
+
+  it('Isolde (de antes): RES excede el tope y la razón cita el impuesto y el texto del efecto', () => {
+    render(<Arnes inicial="FB-014" base={CARTAS_ANTES} />)
     expect(medidor('RES').closest('li')).toHaveTextContent('Excede el tope')
     const razones = screen.getByRole('list', { name: 'Razones' })
-    expect(within(razones).getByText(/RES 7 pasa el tope de 6/)).toBeInTheDocument()
+    expect(within(razones).getByText(/RES 7 pasa el tope de 5/)).toBeInTheDocument()
     expect(within(razones).getByText(/impuesto de 1\.0/)).toBeInTheDocument()
     expect(screen.getByText(/según CONFIG_V1 \(borrador\)/i)).toBeInTheDocument()
   })
 
-  it('Vaela en el tope de ATQ: «Cerca del tope», «No puede subir» y aviso de techo del pool sin bloquear', () => {
-    render(<Arnes inicial={porNombre('Vaela').id} />)
+  it('Marek en el tope de ATQ (5 del coste 3): «Cerca del tope», «No puede subir» y aviso de techo del pool sin bloquear', () => {
+    render(<Arnes inicial={porNombre('Marek').id} />)
     const margenes = bloque('Márgenes de los stats')
     expect(within(margenes).getAllByText('Cerca del tope').length).toBeGreaterThan(0)
     expect(within(margenes).getAllByText('No puede subir').length).toBeGreaterThan(0)
@@ -190,7 +215,7 @@ describe('AnalisisCarta: contenido', () => {
   })
 
   it('un escalón plano de RES se avisa como «sin efecto práctico en el pool»', () => {
-    render(<Arnes inicial="FB-015" />)
+    render(<Arnes inicial="FB-015" base={CARTAS_ANTES} />)
     const avisos = screen.getByRole('list', { name: 'Avisos de letalidad' })
     expect(within(avisos).getByText(/RES.*sin efecto práctico en el pool/i)).toBeInTheDocument()
   })
@@ -204,17 +229,17 @@ describe('AnalisisCarta: contenido', () => {
     expect(within(margenes).queryByText(/Puede subir hasta/)).not.toBeInTheDocument()
   })
 
-  it('Elena: ajuste propuesto marcado «Exploratorio» con el aviso de techo', () => {
-    render(<Arnes inicial="FB-015" />)
+  it('Elena (de antes): ajuste propuesto marcado «Exploratorio»; con las bandas v1.1 su ATQ 5 solo iguala el techo y no hay aviso', () => {
+    render(<Arnes inicial="FB-015" base={CARTAS_ANTES} />)
     const ajuste = bloque('Ajuste propuesto')
     expect(within(ajuste).getByText('Exploratorio')).toBeInTheDocument()
     expect(within(ajuste).getByText(/3\/0/)).toBeInTheDocument()
-    expect(within(ajuste).getByText(/6\/2/)).toBeInTheDocument()
-    expect(within(ajuste).getByText(/supera el techo del pool/i)).toBeInTheDocument()
+    expect(within(ajuste).getByText(/5\/1/)).toBeInTheDocument()
+    expect(within(ajuste).queryByText(/supera el techo del pool/i)).not.toBeInTheDocument()
   })
 
-  it('Vaela no tiene ajuste y lo dice', () => {
-    render(<Arnes inicial={porNombre('Vaela').id} />)
+  it('Seraphina (dentro de banda) no tiene ajuste y lo dice', () => {
+    render(<Arnes inicial={porNombre('Seraphina').id} />)
     expect(screen.getByText('Sin ajuste propuesto')).toBeInTheDocument()
   })
 
@@ -232,7 +257,10 @@ describe('AnalisisCarta: contenido', () => {
     if (!conComandante) throw new Error('Ninguna carta con Comandante')
     render(<Arnes inicial={conComandante.id} />)
     const tabla = screen.getByRole('table', { name: 'Desglose del poder por efecto' })
-    expect(within(tabla).getByText('Comandante')).toBeInTheDocument()
+    // Aurora lleva dos efectos de Comandante: cada uno sale etiquetado
+    const nComandante = conComandante.efectos.filter((e) => e.esComandante).length
+    expect(nComandante).toBe(2)
+    expect(within(tabla).getAllByText('Comandante')).toHaveLength(nComandante)
   })
 
   it('un Vínculo no tiene semáforo y avisa que no hay poder esperado comparable', () => {

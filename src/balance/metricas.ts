@@ -1,5 +1,6 @@
 import type { CardType, Rarity } from '../shared/types/enums'
 import { CONFIG_V1 } from './config'
+import { evaluarEfectoPorCoste } from './efectoPorCoste'
 import { clasificarVerbo, resumenIdentidad } from './identidad'
 import type { ClaseIdentidad, ResumenIdentidad } from './identidad'
 import type { OpcionesPool } from './letalidad'
@@ -59,7 +60,7 @@ export interface EvaluacionCarta {
   /** Cuánto se pasa de lo esperado (negativo = le sobra espacio). */
   desvio: number
   semaforo: Semaforo
-  /** Pasa su presupuesto: Campeón sobre la suma objetivo o sobre un tope, o semáforo rojo. */
+  /** Pasa su presupuesto: Campeón sobre la suma objetivo o sobre un tope, semáforo rojo, índice sobre el tope de efecto o verbo bajo su coste mínimo. */
   rota: boolean
 }
 
@@ -99,7 +100,7 @@ export function evaluarCarta(carta: CartaBalance, cfg: ConfigBalance = CONFIG_V1
     presupuesto,
     desvio,
     semaforo,
-    rota: presupuesto === null ? semaforo === 'rojo' : pasaPresupuesto,
+    rota: (presupuesto === null ? semaforo === 'rojo' : pasaPresupuesto) || !evaluarEfectoPorCoste(carta, cfg).ok,
   }
 }
 

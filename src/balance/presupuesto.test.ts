@@ -28,25 +28,54 @@ const campeon = (coste: number, atq: number, res: number): CartaBalance => ({
 })
 
 describe('evaluarPresupuesto con el seed real', () => {
-  it('S3.1: Vaela 5/3 y Mira 4/4 (coste 2) están dentro de banda', () => {
-    for (const id of ['FB-011', 'FB-012']) {
+  it('S3.1: Seraphina 4/3 y Thane 3/4 (coste 3, suma 7) están dentro de banda', () => {
+    for (const id of ['FB-013', 'DS-014']) {
       const ev = evaluarPresupuesto(carta(id))
-      expect(ev?.suma).toBe(8)
+      expect(ev?.suma).toBe(7)
       expect(ev?.fueraDeBanda).toBe(false)
       expect(ev?.estado).toBe('dentro')
     }
   })
 
-  it('S3.2: Elena 3/0 queda por debajo e Isolde 3/7 por encima del tope de RES', () => {
-    const elena = evaluarPresupuesto(carta('FB-015'))
-    expect(elena?.suma).toBe(3)
+  // Rediseño de Estásis: Vaela 5/2 y Mira 3/4 pasan a coste 3 (suma 7) y caben en la banda 6-8. La intención «una carta de coste
+  // bajo pasa el máximo» la conserva Kael (DS-011, coste 2, 5/3, suma 8 > 6).
+  it('S3.1b: Vaela 5/2 y Mira 3/4 (coste 3, suma 7) caben en la banda v1.1; Kael 5/3 (coste 2, suma 8) pasa el máximo de 6', () => {
+    for (const id of ['FB-011', 'FB-012']) {
+      const ev = evaluarPresupuesto(carta(id))
+      expect(ev?.suma).toBe(7)
+      expect(ev?.banda.sumaMax).toBe(8)
+      expect(ev?.estado).toBe('dentro')
+      expect(ev?.fueraDeBanda).toBe(false)
+    }
+    const kael = evaluarPresupuesto(carta('DS-011'))
+    expect(kael?.suma).toBe(8)
+    expect(kael?.banda.sumaMax).toBe(6)
+    expect(kael?.estado).toBe('sobre')
+    expect(kael?.fueraDeBanda).toBe(true)
+  })
+
+  // Rediseño de Estásis: Elena pasa a 3/2 y luego a 4/2 (suma 6, ya dentro; el caso «bajo» usa la Elena 3/2 de antes) e Isolde a 3/6 coste 4 (ya cabe). El caso «exceso del tope de RES»
+  // que cubría Isolde 3/7 lo toma una carta sintética de coste 3 con RES 6 (tope 5) para no perder la aserción.
+  it('S3.2: Elena 3/2 (de antes) queda por debajo y la real 4/2 cabe; Isolde 3/6 (coste 4) cabe; un RES sobre el tope pasa el tope de RES', () => {
+    const real = evaluarPresupuesto(carta('FB-015'))
+    expect(real?.suma).toBe(6)
+    expect(real?.fueraDeBanda).toBe(false)
+    expect(real?.estado).toBe('dentro')
+
+    const elena = evaluarPresupuesto({ ...carta('FB-015'), stats: { atq: 3, res: 2 } })
+    expect(elena?.suma).toBe(5)
     expect(elena?.fueraDeBanda).toBe(true)
     expect(elena?.estado).toBe('bajo')
 
     const isolde = evaluarPresupuesto(carta('FB-014'))
-    expect(isolde?.suma).toBe(10)
-    expect(isolde?.excesoRes).toBe(1)
-    expect(isolde?.fueraDeBanda).toBe(true)
+    expect(isolde?.suma).toBe(9)
+    expect(isolde?.excesoRes).toBe(0)
+    expect(isolde?.fueraDeBanda).toBe(false)
+
+    const sobreTope = evaluarPresupuesto({ ...carta('FB-014'), coste: 3, stats: { atq: 3, res: 7 } })
+    expect(sobreTope?.suma).toBe(10)
+    expect(sobreTope?.excesoRes).toBe(2)
+    expect(sobreTope?.fueraDeBanda).toBe(true)
   })
 
   it('S3.3: Aurora y Ragnar 9/9 quedan dentro por excepción contra el tope propio', () => {
@@ -61,8 +90,8 @@ describe('evaluarPresupuesto con el seed real', () => {
 
 describe('evaluarPresupuesto en los bordes', () => {
   it('S3.4: marca el exceso de tope individual de ATQ aunque la suma esté en banda', () => {
-    // Coste 3: banda 8-10, tope ATQ 6. 7/2 suma 9 pero ATQ sobre el tope.
-    const ev = evaluarPresupuesto(campeon(3, 7, 2))
+    // Coste 3: banda 6-8, tope ATQ 5. 6/1 suma 7 pero ATQ sobre el tope.
+    const ev = evaluarPresupuesto(campeon(3, 6, 1))
     expect(ev?.estado).toBe('dentro')
     expect(ev?.excesoAtq).toBe(1)
     expect(ev?.excesoRes).toBe(0)
@@ -70,7 +99,8 @@ describe('evaluarPresupuesto en los bordes', () => {
   })
 
   it('marca «sobre» cuando la suma pasa el máximo', () => {
-    const ev = evaluarPresupuesto(campeon(2, 4, 5))
+    // Coste 2: máximo 6. 3/4 suma 7.
+    const ev = evaluarPresupuesto(campeon(2, 3, 4))
     expect(ev?.estado).toBe('sobre')
     expect(ev?.desvio).toBe(1)
     expect(ev?.fueraDeBanda).toBe(true)
@@ -87,7 +117,8 @@ describe('evaluarPresupuesto en los bordes', () => {
   })
 
   it('un coste sin banda definida no tiene evaluación', () => {
-    expect(evaluarPresupuesto(campeon(9, 5, 5))).toBeNull()
+    // Las bandas v1.1 cubren costes 1-10; no existen cartas de coste mayor.
+    expect(evaluarPresupuesto(campeon(11, 5, 5))).toBeNull()
   })
 
   it('calcula los puntos de stats con los pesos de la config', () => {
@@ -96,8 +127,8 @@ describe('evaluarPresupuesto en los bordes', () => {
   })
 
   it('el impuesto rebaja la suma objetivo y el mínimo de la banda', () => {
-    const sin = evaluarPresupuesto(campeon(3, 5, 5))
-    const con = evaluarPresupuesto(campeon(3, 5, 5), CONFIG_V1, 2)
+    const sin = evaluarPresupuesto(campeon(3, 4, 4))
+    const con = evaluarPresupuesto(campeon(3, 4, 4), CONFIG_V1, 2)
     expect(sin?.estado).toBe('dentro')
     expect(con?.objetivoSuma).toBe((sin?.objetivoSuma ?? 0) - 2)
     expect(con?.estado).toBe('sobre')
@@ -105,8 +136,8 @@ describe('evaluarPresupuesto en los bordes', () => {
 })
 
 describe('evaluarPresupuesto es configurable', () => {
-  it('S1.1: Elena pasa de fuera a dentro al cambiar la banda de coste 3', () => {
-    const elena = carta('FB-015')
+  it('S1.1: Elena (la de antes, 3/2) pasa de fuera a dentro al cambiar la banda de coste 3', () => {
+    const elena: CartaBalance = { ...carta('FB-015'), stats: { atq: 3, res: 2 } }
     expect(evaluarPresupuesto(elena)?.fueraDeBanda).toBe(true)
     const cfg: ConfigBalance = {
       ...CONFIG_V1,

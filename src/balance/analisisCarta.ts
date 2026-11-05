@@ -2,6 +2,7 @@ import { simularAjustes } from './ajuste'
 import type { Ajuste } from './ajuste'
 import type { AnyCard } from '../shared/types'
 import { CONFIG_V1 } from './config'
+import { evaluarEfectoPorCoste } from './efectoPorCoste'
 import { clasificarEfecto, clasificarVerbo } from './identidad'
 import type { ClaseIdentidad } from './identidad'
 import { letalidad, poolLetalidad, techosDelPool } from './letalidad'
@@ -9,6 +10,7 @@ import type { Letalidad } from './letalidad'
 import { semaforoDe } from './metricas'
 import type { Semaforo } from './metricas'
 import { componentesDeEfecto, poderDeCarta } from './poderEfecto'
+import { efectosComandante } from '../shared/efectoComandante'
 import type { ComponentesEfecto, PoderKeyword } from './poderEfecto'
 import { evaluarConImpuesto } from './presupuesto'
 import type { CartaBalance, ConfigBalance, EvaluacionPresupuesto } from './tipos'
@@ -191,8 +193,23 @@ const ETIQUETA_ESTADO: Record<EstadoAnalisis, string> = {
 
 const COLOR_A_ESTADO: Record<Semaforo, EstadoAnalisis> = { verde: 'dentro', amarillo: 'en-limite', rojo: 'excede' }
 
-/** Estado general: rojo en algún stat excede; luego bajo banda, en el límite, exenta o dentro. Sin stats, el color de `semaforoDe`. */
+/**
+ * Estado general: rojo en algún stat excede; luego bajo banda, en el límite, exenta o dentro. Sin stats,
+ * el color de `semaforoDe`. Una carta que no pasa el chequeo de efecto por coste nunca queda en un
+ * estado favorable: sube a «excede» (la razón visible sale de `razonesDeCarta`).
+ */
 export function estadoDeCarta(
+  carta: CartaBalance,
+  margenes: readonly MargenStat[],
+  desglose: DesglosePoder,
+  cfg: ConfigBalance = CONFIG_V1,
+): EstadoGeneral {
+  const base = estadoBase(carta, margenes, desglose, cfg)
+  if (base.estado === 'excede' || evaluarEfectoPorCoste(carta, cfg).ok) return base
+  return { estado: 'excede', etiqueta: ETIQUETA_ESTADO.excede }
+}
+
+function estadoBase(
   carta: CartaBalance,
   margenes: readonly MargenStat[],
   desglose: DesglosePoder,
@@ -225,7 +242,7 @@ export function contextoDeAnalisis(publicadas: readonly CartaBalance[], cfg: Con
 export function textosDeEfectos(card: AnyCard | undefined): (string | null)[] {
   if (card === undefined) return []
   const textos = (card.efectos ?? []).map((e) => e.texto ?? null)
-  if (card.type === 'Campeón' && card.efectoComandante) textos.push(card.efectoComandante.texto ?? null)
+  if (card.type === 'Campeón') for (const e of efectosComandante(card.efectoComandante)) textos.push(e.texto ?? null)
   return textos
 }
 
@@ -272,13 +289,13 @@ export function razonesDeCarta(
   const razones: Razon[] = []
 
   if (margenes.length === 0) {
-    const { estado } = estadoDeCarta(carta, margenes, desglose, cfg)
+    const { estado } = estadoBase(carta, margenes, desglose, cfg)
     if (estado === 'sin-semaforo') razones.push({ nivel: 'info', texto: 'Sin coste: no hay poder esperado comparable.' })
     if ((estado === 'excede' || estado === 'en-limite') && desglose.esperado !== null) {
       const texto = `Su poder ${decimal(desglose.indice)} ${estado === 'excede' ? 'pasa el' : 'está en el límite del'} poder esperado ${decimal(desglose.esperado)} (coste ${carta.coste} por ${cfg.poderPorCoste}).`
       razones.push({ nivel: estado === 'excede' ? 'error' : 'aviso', texto })
     }
-    return razones
+    return [...razones, ...razonesDeEfectoPorCoste(carta, cfg)]
   }
 
   const ev = evaluarConImpuesto(carta, cfg)
@@ -305,6 +322,23 @@ export function razonesDeCarta(
       nivel: 'info',
       texto: `El poder ${decimal(desglose.indice)} de sus efectos cobra un impuesto de ${decimal(ev.impuesto)} a la suma máxima: ${citaDeEfectos(desglose)}.`,
     })
+  }
+  return [...razones, ...razonesDeEfectoPorCoste(carta, cfg)]
+}
+
+/** Razones del tope de efecto por coste y del coste mínimo por verbo. Una carta exenta no genera ninguna. */
+function razonesDeEfectoPorCoste(carta: CartaBalance, cfg: ConfigBalance): Razon[] {
+  const ev = evaluarEfectoPorCoste(carta, cfg)
+  if (ev.exento || ev.indiceMax === null) return []
+  const razones: Razon[] = []
+  if (ev.aplicaTope && ev.excesoIndice > 0) {
+    razones.push({
+      nivel: 'error',
+      texto: `Su índice de efecto ${decimal(ev.indice)} pasa el tope de efecto ${decimal(ev.indiceMax)} (coste ${carta.coste} × ${cfg.poderPorCoste}).`,
+    })
+  }
+  for (const v of ev.verbosBajoCosto) {
+    razones.push({ nivel: 'error', texto: `El verbo ${v.verbo} exige coste mínimo ${v.costeMinimo}, pero la carta cuesta ${carta.coste}.` })
   }
   return razones
 }

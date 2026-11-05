@@ -146,11 +146,12 @@ describe('umbralesPorStat (escalones)', () => {
     for (const v of [0, 1, 2, 3]) expect(lm(v)).toBe(18)
   })
 
-  it('RES 4 la matan 11, RES 5 la matan 3 y RES 6 o más no la mata nadie', () => {
-    expect(lm(4)).toBe(11)
+  // Rediseño de Estásis: Isolde pasó de RES 7 a 6 y Rowena y Vaela cambiaron de perfil; el pool ya no llega a RES 7. Elena sube a ATQ 4, así que un RES 4 ahora lo matan 10.
+  it('RES 4 la matan 10, RES 5 la matan 3 y RES 6 o más no la mata nadie', () => {
+    expect(lm(4)).toBe(10)
     expect(lm(5)).toBe(3)
     expect(lm(6)).toBe(0)
-    expect(lm(7)).toBe(0)
+    expect(lm(7)).toBeUndefined()
   })
 
   it('ATQ 4 mata a 11, ATQ 5 a 15', () => {
@@ -159,7 +160,7 @@ describe('umbralesPorStat (escalones)', () => {
   })
 
   it('cubre todos los valores de 0 al máximo de cada stat y trae porcentajes', () => {
-    expect(u.res.map((f) => f.valor)).toEqual([0, 1, 2, 3, 4, 5, 6, 7])
+    expect(u.res.map((f) => f.valor)).toEqual([0, 1, 2, 3, 4, 5, 6])
     expect(u.atq.map((f) => f.valor)).toEqual([0, 1, 2, 3, 4, 5])
     expect(u.res[0].pct).toBe(100)
   })
@@ -170,7 +171,7 @@ describe('umbralesPorStat (escalones)', () => {
 })
 
 describe('techosDelPool', () => {
-  it('ATQ máximo 5 y RES máxima 7 en el seed real', () => {
-    expect(techosDelPool(pool)).toEqual({ atq: 5, res: 7 })
+  it('ATQ máximo 5 y RES máxima 6 en el seed real (antes 7: Isolde bajó a 3/6)', () => {
+    expect(techosDelPool(pool)).toEqual({ atq: 5, res: 6 })
   })
 })

@@ -13,10 +13,16 @@ describe('CONFIG_V1', () => {
 
   it('define las bandas de suma y los topes individuales por coste', () => {
     expect(CONFIG_V1.bandas).toEqual({
-      1: { sumaMin: 4, sumaMax: 6, topeAtq: 4, topeRes: 4 },
-      2: { sumaMin: 7, sumaMax: 8, topeAtq: 5, topeRes: 5 },
-      3: { sumaMin: 8, sumaMax: 10, topeAtq: 6, topeRes: 6 },
-      4: { sumaMin: 9, sumaMax: 11, topeAtq: 7, topeRes: 7 },
+      1: { sumaMin: 3, sumaMax: 4, topeAtq: 3, topeRes: 3 },
+      2: { sumaMin: 5, sumaMax: 6, topeAtq: 4, topeRes: 4 },
+      3: { sumaMin: 6, sumaMax: 8, topeAtq: 5, topeRes: 5 },
+      4: { sumaMin: 8, sumaMax: 10, topeAtq: 7, topeRes: 7 },
+      5: { sumaMin: 10, sumaMax: 13, topeAtq: 8, topeRes: 8 },
+      6: { sumaMin: 13, sumaMax: 16, topeAtq: 10, topeRes: 10 },
+      7: { sumaMin: 16, sumaMax: 20, topeAtq: 13, topeRes: 13 },
+      8: { sumaMin: 20, sumaMax: 25, topeAtq: 16, topeRes: 16 },
+      9: { sumaMin: 22, sumaMax: 27, topeAtq: 18, topeRes: 18 },
+      10: { sumaMin: 24, sumaMax: 30, topeAtq: 20, topeRes: 20 },
     })
   })
 
@@ -43,6 +49,17 @@ describe('CONFIG_V1', () => {
       expect.arrayContaining(['destroy', 'debuff', 'rival_discard', 'exile']),
     )
   })
+  it('pesa los verbos nuevos del rediseño de Estásis (activar_disparo y anclar_eter) y anclar_eter es identidad de Estásis', () => {
+    expect(CONFIG_V1.poder.verbo.activar_disparo).toBe(2)
+    expect(CONFIG_V1.poder.verbo.anclar_eter).toBe(2)
+    expect(CONFIG_V1.identidad.estasis.identidad).toContain('anclar_eter')
+    expect(CONFIG_V1.identidad.disonancia.identidad).not.toContain('anclar_eter')
+  })
+
+  it('la duración «mientras tenga Éter bloqueado» pesa igual que «mientras ese Éter esté bloqueado»', () => {
+    expect(CONFIG_V1.poder.duracion.mientras_tenga_eter_bloqueado).toBe(CONFIG_V1.poder.duracion.mientras_ester_bloqueado)
+  })
+
   it('pesa cada keyword del juego en poder.keyword', () => {
     expect(Object.keys(CONFIG_V1.poder.keyword).sort()).toEqual([...KEYWORDS].sort())
     for (const peso of Object.values(CONFIG_V1.poder.keyword)) expect(peso).toBeGreaterThan(0)

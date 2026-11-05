@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { evaluarConImpuesto } from '../presupuesto'
-import { carta } from '../test/cartasReales'
+import { carta, legado } from '../test/cartasReales'
 import { NOMBRE_MAZO, num, veredictoDe } from './formato'
 
 const ev = (nombre: string) => {
@@ -28,9 +28,17 @@ describe('formato de las vistas', () => {
   })
 
   it('veredicto en palabras', () => {
-    expect(veredictoDe(ev('Elena'))).toBe('Fuera de banda: por debajo')
+    // Elena real (4/2, suma 6) está dentro; la de antes (3/2, suma 5) conserva el caso «por debajo».
+    expect(veredictoDe(ev('Elena'))).toBe('Dentro de banda')
+    const elenaAntes = evaluarConImpuesto(legado('Elena 3/2'))
+    if (elenaAntes === null) throw new Error('sin evaluación')
+    expect(veredictoDe(elenaAntes)).toBe('Fuera de banda: por debajo')
+    // Rediseño de Estásis: Isolde y Vaela ya caben en su banda; «por encima» lo ilustra Kael (DS-011, coste 2, 5/3).
+    // Isolde pasa a «por encima» con el tope de costo del 50 % (índice 4.75, impuesto 1.4); Vaela sigue dentro.
     expect(veredictoDe(ev('Isolde'))).toBe('Fuera de banda: por encima')
     expect(veredictoDe(ev('Vaela'))).toBe('Dentro de banda')
+    expect(veredictoDe(ev('Kael'))).toBe('Fuera de banda: por encima')
+    expect(veredictoDe(ev('Seraphina'))).toBe('Dentro de banda')
     expect(veredictoDe(ev('Aurora'))).toBe('Exenta: dentro de su tope propio')
   })
 })

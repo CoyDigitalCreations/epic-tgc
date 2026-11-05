@@ -32,9 +32,9 @@ describe('PresupuestoCoste', () => {
       'Banda máxima',
     ])
     expect(filas()).toEqual([
-      ['Coste 2', '6', '7.67', '7', '8'],
-      ['Coste 3', '7', '7.29', '8', '10'],
-      ['Coste 4', '5', '8.8', '9', '11'],
+      ['Coste 2', '4', '7.25', '5', '6'],
+      ['Coste 3', '8', '7.25', '6', '8'],
+      ['Coste 4', '6', '8.83', '8', '10'],
     ])
   })
 
@@ -43,7 +43,7 @@ describe('PresupuestoCoste', () => {
     await userEvent.selectOptions(screen.getByRole('combobox', { name: /agrupar por/i }), 'mazo')
     expect(filas()).toEqual([
       ['Disonancia', '10', '9', '—', '—'],
-      ['Estásis', '10', '8.7', '—', '—'],
+      ['Estásis', '10', '8.6', '—', '—'],
     ])
   })
 

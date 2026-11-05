@@ -14,12 +14,22 @@ export const CONFIG_V1: ConfigBalance = {
   // Daño >= RES mata, por eso la RES pesa más que el ATQ.
   pesos: { atq: 1.0, res: 1.25 },
 
-  // Sin rampa: el coste es Éter inmovilizado, así que la suma crece casi lineal.
+  // v1.1: tabla de diseño coste -> suma máxima (ATQ + RES). No existen cartas de coste > 10.
+  // sumaMax lo fija el diseño; el resto sale de las proporciones que ya tenía la config:
+  //   sumaMin ≈ 80 % de sumaMax (piso: por debajo la carta está regalada),
+  //   topeAtq = topeRes ≈ 65 % de sumaMax (evita stats extremos tipo 12/1).
+  // Los costes 5-10 aún no tienen cartas reales: son el criterio para diseñar las que vengan.
   bandas: {
-    1: { sumaMin: 4, sumaMax: 6, topeAtq: 4, topeRes: 4 },
-    2: { sumaMin: 7, sumaMax: 8, topeAtq: 5, topeRes: 5 },
-    3: { sumaMin: 8, sumaMax: 10, topeAtq: 6, topeRes: 6 },
-    4: { sumaMin: 9, sumaMax: 11, topeAtq: 7, topeRes: 7 },
+    1: { sumaMin: 3, sumaMax: 4, topeAtq: 3, topeRes: 3 },
+    2: { sumaMin: 5, sumaMax: 6, topeAtq: 4, topeRes: 4 },
+    3: { sumaMin: 6, sumaMax: 8, topeAtq: 5, topeRes: 5 },
+    4: { sumaMin: 8, sumaMax: 10, topeAtq: 7, topeRes: 7 },
+    5: { sumaMin: 10, sumaMax: 13, topeAtq: 8, topeRes: 8 },
+    6: { sumaMin: 13, sumaMax: 16, topeAtq: 10, topeRes: 10 },
+    7: { sumaMin: 16, sumaMax: 20, topeAtq: 13, topeRes: 13 },
+    8: { sumaMin: 20, sumaMax: 25, topeAtq: 16, topeRes: 16 },
+    9: { sumaMin: 22, sumaMax: 27, topeAtq: 18, topeRes: 18 },
+    10: { sumaMin: 24, sumaMax: 30, topeAtq: 20, topeRes: 20 },
   },
 
   // SUPUESTO 1: el sacrificio de Campeones paga la suma de Soberanos y Únicas.
@@ -66,11 +76,14 @@ export const CONFIG_V1: ConfigBalance = {
       negar: 3,
       rival_discard: 2,
       modificar_regla: 2,
+      // Verbos nuevos del rediseño de Estásis (peso propuesto 2 cada uno; BORRADOR calibrable)
+      activar_disparo: 2,
+      anclar_eter: 2,
     },
     tipo: { pasivo: 1, disparo: 1, continuo: 1, comandante: 1, reserva: 1, pago: 1, bloqueo: 1, hechizo: 1, vinculo: 1 },
     trigger: {},
     activacion: { una_por_turno: 0.8, una_mientras_bloqueado: 0.8 },
-    duracion: { permanente: 1, turno: 0.5, n_turnos: 0.75, mientras_en_campo: 1, mientras_ester_bloqueado: 1, hasta_fase: 0.5, '1_por_turno': 0.8 },
+    duracion: { permanente: 1, turno: 0.5, n_turnos: 0.75, mientras_en_campo: 1, mientras_ester_bloqueado: 1, mientras_tenga_eter_bloqueado: 1, hasta_fase: 0.5, '1_por_turno': 0.8 },
     objetivo: { self: 1, campeon: 1, todos_campeones_propios: 1.5, todos_campeones_rivales: 1.5 },
     // Peso de cada keyword (misma escala que el verbo). Fundamento según el manual v3.0:
     //  Carga 1       puede atacar al invocarse: tempo, pero una sola vez.
@@ -101,6 +114,9 @@ export const CONFIG_V1: ConfigBalance = {
     },
     // Un costo restrictivo resta poder; el Éter bloqueado vuelve en el Alba propia, así que resta más.
     costo: { ninguno: 0, eter: -0.5, eter_bloqueado: -0.75, bloqueo_fijo: -0.75, exhaust: -0.5, exile_self: -1, cemetery_self: -0.5 },
+    // El costo nunca resta más del 50 % del poder bruto del efecto (base × multiplicadores): un efecto
+    // real, aunque cueste mucho, conserva al menos la mitad de su poder y no se hunde a 0.
+    topeCostoProporcion: 0.5,
     fallback: 1,
   },
 
@@ -117,7 +133,7 @@ export const CONFIG_V1: ConfigBalance = {
   // SUPUESTO 2: toggle_exhaust y fix_exhaust cuentan como control de Éter de Estásis.
   identidad: {
     estasis: {
-      identidad: ['block_ether', 'negar', 'toggle_exhaust', 'fix_exhaust', 'prevent_destroy', 'return_hand', 'return_ether'],
+      identidad: ['block_ether', 'negar', 'toggle_exhaust', 'fix_exhaust', 'prevent_destroy', 'return_hand', 'return_ether', 'anclar_eter'],
       neutral: ['buff', 'grant_keyword', 'mover', 'tutor', 'copy', 'draw', 'invocar_y_equipar'],
     },
     disonancia: {
@@ -131,6 +147,10 @@ export const CONFIG_V1: ConfigBalance = {
 
   // Poder esperado de Éter, Mística, Arcana y Vínculo = coste * 2.
   poderPorCoste: 2,
+
+  // Coste mínimo por verbo: por defecto ceil(peso del verbo en poder.verbo). Aquí solo van
+  // los OVERRIDES explícitos { verbo: costeMinimo }; si un verbo aparece, gana sobre la fórmula.
+  costeMinimoVerbo: {},
 
   // Análisis de carta (BORRADOR): paso de la simulación «subir +1» y holgura que cuenta como «cerca del tope».
   analisis: { pasoSubida: 1, cercaDelTope: 0.5 },

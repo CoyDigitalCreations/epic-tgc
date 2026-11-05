@@ -24,9 +24,10 @@ const ajusteSintetico = (id: string, antes: [number, number], despues: [number, 
 })
 
 describe('exportación JSON', () => {
-  it('S3.1: Isolde sale con id, antes, después y motivo en español', () => {
-    const cambio = aExportacion(ajustes).cambios.find((c) => c.id === 'FB-014')
-    expect(cambio?.antes).toEqual({ poder: 3, resistencia: 7 })
+  // Isolde (ahora 3/6 coste 4) ya no se ajusta; el caso lo toma Draven (DS-012, 4/4 coste 2 sobre el máximo), con las mismas aserciones.
+  it('S3.1: Draven sale con id, antes, después y motivo en español', () => {
+    const cambio = aExportacion(ajustes).cambios.find((c) => c.id === 'DS-012')
+    expect(cambio?.antes).toEqual({ poder: 4, resistencia: 4 })
     expect(cambio?.despues.poder).toBeLessThan(10)
     expect(cambio?.motivo).toMatch(/suma/)
   })

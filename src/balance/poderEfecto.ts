@@ -50,14 +50,23 @@ export interface ComponentesEfecto {
   multiplicador: number
   /** Keywords concedidas ya multiplicadas por el objetivo. */
   keywords: number
-  /** Costo del efecto (resta). */
+  /**
+   * Veces que cuenta el buff de un efecto con `buffPerBlockedEther`: un buff por cada Éter bloqueado,
+   * hasta N Éter (la cantidad del costo). Es 1 si el efecto no lo declara.
+   */
+  escala: number
+  /** Poder bruto del efecto: base × multiplicador × escala (antes de keywords y costo). */
+  bruto: number
+  /** Costo tal como lo declara la config, ya multiplicado por la cantidad, sin tope. */
+  costoCrudo: number
+  /** Costo que de verdad resta: `max(costoCrudo, −topeCostoProporcion × bruto)`. */
   costo: number
   poder: number
 }
 
 export function componentesDeEfecto(e: EfectoBalance, cfg: ConfigBalance = CONFIG_V1): ComponentesEfecto {
   if (e.sinVerbo) {
-    return { base: 0, tipo: 0, trigger: 0, activacion: 0, duracion: 0, objetivo: 0, multiplicador: 1, keywords: 0, costo: 0, poder: 0 }
+    return { base: 0, tipo: 0, trigger: 0, activacion: 0, duracion: 0, objetivo: 0, multiplicador: 1, keywords: 0, escala: 1, bruto: 0, costoCrudo: 0, costo: 0, poder: 0 }
   }
 
   const objetivo = e.objetivoTipo === null ? 1 : (cfg.poder.objetivo[e.objetivoTipo] ?? 1)
@@ -69,15 +78,28 @@ export function componentesDeEfecto(e: EfectoBalance, cfg: ConfigBalance = CONFI
   const multiplicador = tipo * trigger * activacion * duracion * objetivo
 
   const keywords = e.keywordsConcedidas.reduce((n, k) => n + pesoKeyword(k, cfg), 0) * objetivo
-  const costo = e.costoTipo === null ? 0 : (cfg.poder.costo[e.costoTipo] ?? 0) * Math.max(1, e.costoCantidad)
+  const costoCrudo = e.costoTipo === null ? 0 : (cfg.poder.costo[e.costoTipo] ?? 0) * Math.max(1, e.costoCantidad)
   const base = baseDe(e, cfg)
 
-  return { base, tipo, trigger, activacion, duracion, objetivo, multiplicador, keywords, costo, poder: base * multiplicador + keywords + costo }
+  // buffPerBlockedEther: el buff se aplica una vez por cada Éter bloqueado y el costo permite bloquear
+  // hasta `costoCantidad` Éter, así que el poder bruto del buff cuenta como máximo N veces.
+  const escala = e.buffPorEterBloqueado === true ? Math.max(1, e.costoCantidad) : 1
+  const bruto = base * multiplicador * escala
+
+  // Tope del costo, POR EFECTO: un costo no puede borrar más de `topeCostoProporcion` del poder bruto
+  // de ESE efecto. Por efecto (y no por carta) porque el costo pertenece a un efecto concreto: topar
+  // por carta dejaría que el poder de un efecto barato "pague" el costo de otro y haría que el
+  // desglose de un efecto dejara de explicar su propio poder. Así el efecto con costo alto nunca
+  // queda en 0 si tiene base, y la suma de componentes por efecto sigue igualando el índice.
+  const costo = Math.max(costoCrudo, -cfg.poder.topeCostoProporcion * bruto)
+
+  return { base, tipo, trigger, activacion, duracion, objetivo, multiplicador, keywords, escala, bruto, costoCrudo, costo, poder: bruto + keywords + costo }
 }
 
 /**
- * poder = base × tipo × trigger × activación × duración × objetivo
- *         + (keywords concedidas × objetivo) + costo
+ * bruto  = base × tipo × trigger × activación × duración × objetivo × escala
+ * costo   = max(costoCrudo, −topeCostoProporcion × bruto)
+ * poder   = bruto + (keywords concedidas × objetivo) + costo
  *
  * Un trigger, tipo o duración que la config no conoce pesa `poder.fallback`.
  * Sin activación o sin duración declaradas no hay multiplicador.

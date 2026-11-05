@@ -40,8 +40,8 @@ function hayNoFinitos(x: unknown): boolean {
 const sinResultados = filtrarCartas(cartas, { ...FILTROS_VACIOS, coste: 99 })
 
 describe('filtrarCartas', () => {
-  it('sin filtros devuelve las 65 cartas del seed', () => {
-    expect(filtrarCartas(cartas, FILTROS_VACIOS)).toHaveLength(65)
+  it('sin filtros devuelve las 66 cartas del seed', () => {
+    expect(filtrarCartas(cartas, FILTROS_VACIOS)).toHaveLength(66)
   })
 
   it('S7.1: mazo=disonancia y coste=3 solo deja cartas de Disonancia de coste 3', () => {
@@ -61,14 +61,15 @@ describe('filtrarCartas', () => {
 
   it('R11: la referencia queda fuera por defecto y entra si se pide', () => {
     const mezcla = [...cartas, ...referencia]
-    expect(filtrarCartas(mezcla, FILTROS_VACIOS)).toHaveLength(65)
-    expect(filtrarCartas(mezcla, FILTROS_VACIOS, { incluirReferencia: true })).toHaveLength(65 + 58)
+    expect(filtrarCartas(mezcla, FILTROS_VACIOS)).toHaveLength(66)
+    expect(filtrarCartas(mezcla, FILTROS_VACIOS, { incluirReferencia: true })).toHaveLength(66 + 58)
   })
 })
 
 describe('semáforo y evaluación por carta', () => {
   it('un Campeón dentro de banda es verde', () => {
-    expect(evaluarCarta(carta('FB-011')).semaforo).toBe('verde')
+    expect(evaluarCarta(carta('FB-013')).presupuesto?.estado).toBe('dentro')
+    expect(evaluarCarta(carta('FB-013')).semaforo).toBe('verde')
   })
 
   it('un Campeón sobre su suma objetivo es más que verde y marca rota si pasa el máximo', () => {
@@ -79,7 +80,9 @@ describe('semáforo y evaluación por carta', () => {
   })
 
   it('un Campeón por debajo de la banda no es rota', () => {
-    const elena = evaluarCarta(carta('FB-015'))
+    // La Elena real (4/2, suma 6) ya está dentro de banda: el caso «bajo» usa su versión de antes (3/2, suma 5)
+    expect(evaluarCarta(carta('FB-015')).presupuesto?.estado).toBe('dentro')
+    const elena = evaluarCarta({ ...carta('FB-015'), stats: { atq: 3, res: 2 } })
     expect(elena.presupuesto?.estado).toBe('bajo')
     expect(elena.rota).toBe(false)
     expect(elena.semaforo).toBe('verde')
@@ -109,9 +112,9 @@ describe('semáforo y evaluación por carta', () => {
 describe('resumenPorMazo', () => {
   const r = resumenPorMazo(cartas)
 
-  it('devuelve Estásis y Disonancia con 32 y 33 cartas', () => {
+  it('devuelve Estásis y Disonancia con 33 y 33 cartas', () => {
     expect(r.map((m) => m.mazo)).toEqual(['estasis', 'disonancia'])
-    expect(r.map((m) => m.cartas)).toEqual([32, 33])
+    expect(r.map((m) => m.cartas)).toEqual([33, 33])
   })
 
   it('trae el porcentaje de identidad en [0,100] y los Campeones fuera de banda', () => {
@@ -119,7 +122,9 @@ describe('resumenPorMazo', () => {
       expect(m.identidad.porcentaje).toBeGreaterThanOrEqual(0)
       expect(m.identidad.porcentaje).toBeLessThanOrEqual(100)
     }
-    expect(r[0].fueraDeBanda + r[1].fueraDeBanda).toBe(8)
+    // Bandas v1.1 tras el rediseño de Estásis: tres de coste 2 sobre el máximo (Disonancia), más Marek. Elena (4/2) ya está dentro.
+    // Con el tope de costo del 50 % se suma Isolde (índice 4.75, impuesto 1.4: su suma 9 pasa el máximo 8.6).
+    expect(r[0].fueraDeBanda + r[1].fueraDeBanda).toBe(5)
   })
 
   it('las cartas rotas son las que pasan su presupuesto', () => {
@@ -140,16 +145,16 @@ describe('agruparPor (suma por coste, rareza y mazo)', () => {
     expect(tres?.conteo).toBeGreaterThan(0)
     expect(tres?.promedioSuma).not.toBeNull()
     expect(tres?.fueraDeBanda).toBeGreaterThan(0)
-    expect(g.reduce((n, x) => n + x.conteo, 0)).toBe(65)
+    expect(g.reduce((n, x) => n + x.conteo, 0)).toBe(66)
   })
 
   it('por rareza: la suma de conteos es el total', () => {
-    expect(agruparPor(cartas, 'rareza').reduce((n, x) => n + x.conteo, 0)).toBe(65)
+    expect(agruparPor(cartas, 'rareza').reduce((n, x) => n + x.conteo, 0)).toBe(66)
   })
 
-  it('por mazo: Estásis 32 y Disonancia 33', () => {
+  it('por mazo: Estásis 33 y Disonancia 33', () => {
     const g = agruparPor(cartas, 'mazo')
-    expect(g.find((x) => x.clave === 'estasis')?.conteo).toBe(32)
+    expect(g.find((x) => x.clave === 'estasis')?.conteo).toBe(33)
     expect(g.find((x) => x.clave === 'disonancia')?.conteo).toBe(33)
   })
 
@@ -170,7 +175,7 @@ describe('curvaCoste', () => {
   it('cuenta las cartas por coste y rareza y ordena por coste', () => {
     const curva = curvaCoste(cartas)
     expect(curva.map((c) => c.coste)).toEqual([...curva.map((c) => c.coste)].sort((a, b) => a - b))
-    expect(curva.reduce((n, c) => n + c.total, 0)).toBe(65)
+    expect(curva.reduce((n, c) => n + c.total, 0)).toBe(66)
     for (const c of curva) expect(Object.values(c.porRareza).reduce((n, x) => n + x, 0)).toBe(c.total)
   })
 
@@ -208,7 +213,7 @@ describe('rankingPoder', () => {
   const r = rankingPoder(cartas)
 
   it('ordena por índice descendente e incluye todas las cartas', () => {
-    expect(r).toHaveLength(65)
+    expect(r).toHaveLength(66)
     for (let i = 1; i < r.length; i++) expect(r[i - 1].indice).toBeGreaterThanOrEqual(r[i].indice)
   })
 
@@ -226,7 +231,7 @@ describe('espejo Estásis vs Disonancia', () => {
     const e = espejo(cartas)
     expect(Object.keys(e)).toEqual(['estasis', 'disonancia'])
     expect(Object.keys(e.estasis)).toEqual(Object.keys(e.disonancia))
-    expect(e.estasis.conteo).toBe(32)
+    expect(e.estasis.conteo).toBe(33)
     expect(e.disonancia.conteo).toBe(33)
     expect(e.estasis.sumaMedia).not.toBeNull()
     expect(e.disonancia.poderMedio).not.toBeNull()
@@ -240,13 +245,14 @@ describe('espejo Estásis vs Disonancia', () => {
 })
 
 describe('promedioPorCoste (antes y después)', () => {
-  it('S2.2: la suma media de coste 3 después del ajuste queda dentro de la banda 8-10', () => {
+  it('S2.2: la suma media de coste 2 después del ajuste queda dentro de la banda 5-6', () => {
+    // Con las bandas v1.1 el coste 3 ya parte dentro (media 7.3 en 6-8); el coste 2 (media 7.7 > 6) es el que el ajuste corrige.
     const despues = aplicarAjustes(cartas, simularAjustes(cartas).ajustes)
-    const antes = promedioPorCoste(cartas).find((p) => p.coste === 3)
-    const luego = promedioPorCoste(despues).find((p) => p.coste === 3)
-    expect(antes?.sumaMedia).toBeLessThan(CONFIG_V1.bandas[3].sumaMin)
-    expect(luego?.sumaMedia).toBeGreaterThanOrEqual(CONFIG_V1.bandas[3].sumaMin)
-    expect(luego?.sumaMedia).toBeLessThanOrEqual(CONFIG_V1.bandas[3].sumaMax)
+    const antes = promedioPorCoste(cartas).find((p) => p.coste === 2)
+    const luego = promedioPorCoste(despues).find((p) => p.coste === 2)
+    expect(antes?.sumaMedia).toBeGreaterThan(CONFIG_V1.bandas[2].sumaMax)
+    expect(luego?.sumaMedia).toBeGreaterThanOrEqual(CONFIG_V1.bandas[2].sumaMin)
+    expect(luego?.sumaMedia).toBeLessThanOrEqual(CONFIG_V1.bandas[2].sumaMax)
   })
 
   it('solo promedia Campeones y no tiene NaN con filtros vacíos', () => {

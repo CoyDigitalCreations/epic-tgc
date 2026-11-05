@@ -23,8 +23,8 @@ describe('CurvaCoste', () => {
     const filas = within(tabla).getAllByRole('row').slice(1)
     const celdas = filas.map((r) => within(r).getAllByRole('cell').map((c) => c.textContent))
     expect(celdas).toHaveLength(5)
-    expect(celdas.find((f) => f[0] === '1')).toEqual(['1', '22', '12', '4', '4', '2', '0'])
-    expect(celdas.find((f) => f[0] === '4')).toEqual(['4', '7', '3', '2', '0', '0', '2'])
+    expect(celdas.find((f) => f[0] === '1')).toEqual(['1', '21', '11', '4', '4', '2', '0'])
+    expect(celdas.find((f) => f[0] === '4')).toEqual(['4', '10', '4', '4', '0', '0', '2'])
   })
 
   it('solo muestra las rarezas presentes', () => {

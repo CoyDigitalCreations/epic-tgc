@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { render, screen, within } from '@testing-library/react'
 import { ALTO_PRUEBA, ANCHO_PRUEBA, instalarEntornoGraficas } from '../test/entornoGraficas'
-import { CARTAS } from '../test/cartasReales'
+import { CARTAS, CARTAS_ELENA_32, carta } from '../test/cartasReales'
 import { Comparador } from './Comparador'
 
 describe('Comparador', () => {
@@ -26,47 +26,68 @@ describe('Comparador', () => {
     expect(screen.getByRole('note')).toHaveTextContent(/no cambia/i)
   })
 
-  it('lista los ajustes con stats antes y después, letalidad y aviso de techo', () => {
+  it('la Elena real (4/2, suma 6) ya cabe en banda: los ajustes son los 4 de Disonancia más Isolde', () => {
     montar()
     const tabla = filas(/ajustes propuestos/i)
-    expect(tabla).toHaveLength(8)
+    // Isolde entra con el tope de costo del 50 % (índice 4.75, máximo 8.6 contra su suma 9)
+    expect(tabla).toHaveLength(5)
+    expect(tabla.find((f) => f[0].startsWith('Elena'))).toBeUndefined()
+  })
+
+  it('lista los ajustes con stats antes y después, letalidad y aviso de techo', () => {
+    // Se usa la Elena de antes (3/2, bajo banda) para conservar el caso de un ajuste de Estásis.
+    montar(CARTAS_ELENA_32, CARTAS_ELENA_32)
+    const tabla = filas(/ajustes propuestos/i)
+    // Con la Elena de antes hay 6 ajustes (Elena, Isolde y cuatro de Disonancia); Isolde (3/6, coste 4) ya no cabe con el índice nuevo.
+    // Su caso «baja y conserva RES > ATQ» lo ilustra Draven (DS-012, 4/4 -> 2/3).
+    expect(tabla).toHaveLength(6)
     const elena = tabla.find((f) => f[0].startsWith('Elena'))!
-    expect(elena.slice(0, 5)).toEqual(['Elena, Despertar del Éter', '3 / 0', '6 / 2', '6 → 16 de 17', 'Supera el techo del pool'])
+    // Con las bandas v1.1 el ATQ de Elena (4) no supera el techo del pool (5).
+    expect(elena.slice(0, 5)).toEqual(['Elena, Despertar del Éter', '3 / 2', '4 / 2', '6 → 10 de 17', '—'])
     expect(elena[5]).toMatch(/por debajo del mínimo/)
-    const isolde = tabla.find((f) => f[0].startsWith('Isolde'))!
-    expect(isolde.slice(1, 3)).toEqual(['3 / 7', '3 / 6'])
-    expect(isolde[4]).toBe('—')
+    expect(tabla.find((f) => f[0].startsWith('Isolde'))?.slice(1, 3)).toEqual(['3 / 6', '3 / 5'])
+    const draven = tabla.find((f) => f[0].startsWith('Draven'))!
+    expect(draven.slice(1, 3)).toEqual(['4 / 4', '2 / 3'])
+    expect(draven[4]).toBe('—')
+  })
+
+  it('con las cartas reales y las bandas v1.1 ningún ajuste supera el techo y no hay avisos', () => {
+    montar()
+    expect(screen.queryByRole('list', { name: 'Avisos del ajuste' })).not.toBeInTheDocument()
+    expect(screen.getByText(/sin avisos/i)).toBeInTheDocument()
   })
 
   it('muestra los avisos de forma visible y con texto', () => {
-    montar()
+    // Un Campeón de coste 5 con 2/0 sube a la suma mínima 10 (tope 8): ATQ 8 pasa el ATQ máximo del pool (5).
+    const sintetica = { ...carta('Elena'), id: 'T-099', nombre: 'Sintética', coste: 5, stats: { atq: 2, res: 0 } }
+    montar([...CARTAS, sintetica], [...CARTAS, sintetica])
     const lista = screen.getByRole('list', { name: 'Avisos del ajuste' })
     const items = within(lista).getAllByRole('listitem')
     expect(items).toHaveLength(1)
-    expect(items[0]).toHaveTextContent('FB-015: ATQ 6 pasa el ATQ máximo del pool (5) y mataría a 16 de 17 rivales')
+    expect(items[0]).toHaveTextContent('T-099: ATQ 8 pasa el ATQ máximo del pool (5) y mataría a 18 de 18 rivales')
   })
 
   it('compara la suma media por coste antes y después', () => {
     montar()
     expect(screen.getByRole('img', { name: /suma media por coste/i })).toBeInTheDocument()
     expect(filas(/suma media por coste, antes y después/i)).toEqual([
-      ['2', '7.67', '7.33', '7 a 8'],
-      ['3', '7.29', '8.29', '8 a 10'],
-      ['4', '8.8', '9', '9 a 11'],
+      ['2', '7.25', '5.5', '5 a 6'],
+      ['3', '7.25', '7', '6 a 8'],
+      ['4', '8.83', '8.67', '8 a 10'],
     ])
   })
 
   it('pone en espejo Estásis y Disonancia antes y después', () => {
     montar()
     const espejo = filas(/espejo/i)
-    expect(espejo.find((f) => f[0] === 'Suma media')).toEqual(['Suma media', '8.7', '9.3', '9', '9'])
-    expect(espejo.find((f) => f[0] === 'Cartas')).toEqual(['Cartas', '32', '32', '33', '33'])
+    expect(espejo.find((f) => f[0] === 'Suma media')).toEqual(['Suma media', '8.6', '8.5', '9', '8.1'])
+    expect(espejo.find((f) => f[0] === 'Cartas')).toEqual(['Cartas', '33', '33', '33', '33'])
   })
 
   it('con filtro solo muestra los ajustes visibles pero simula con todo el pool', () => {
     montar(CARTAS.filter((c) => c.mazo === 'disonancia'))
     const tabla = filas(/ajustes propuestos/i)
-    expect(tabla.map((f) => f[0].split(',')[0])).toEqual(['Kael', 'Draven', 'Varek', 'Thane'])
+    expect(tabla.map((f) => f[0].split(',')[0])).toEqual(['Kael', 'Draven', 'Marek', 'Emisario del Nudo'])
     expect(screen.queryByRole('list', { name: 'Avisos del ajuste' })).not.toBeInTheDocument()
     expect(screen.getByText(/sin avisos/i)).toBeInTheDocument()
   })

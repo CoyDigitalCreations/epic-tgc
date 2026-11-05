@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { render, screen, waitFor, within } from '@testing-library/react'
+import { cleanup, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { AVISOS, CARTAS, carta } from '../test/cartasReales'
+import { AVISOS, CARTAS, CARTAS_ANTES, CARTAS_ELENA_32, carta } from '../test/cartasReales'
 import { Auditoria } from './Auditoria'
 
 describe('Auditoria', () => {
@@ -15,16 +15,25 @@ describe('Auditoria', () => {
     render(<Auditoria cartas={CARTAS} avisos={AVISOS} />)
     expect(screen.getByRole('heading', { level: 2, name: 'Auditoría' })).toBeInTheDocument()
     expect(within(tabla()).getAllByRole('columnheader').map((c) => c.textContent)).toEqual([
-      'ID', 'Carta', 'Tipo', 'Rareza', 'Coste', 'ATQ', 'RES', 'Suma', 'Suma objetivo', 'Impuesto', 'Índice', 'Estado', 'Semáforo',
+      'ID', 'Carta', 'Tipo', 'Rareza', 'Coste', 'ATQ', 'RES', 'Suma', 'Suma objetivo', 'Impuesto', 'Índice', 'Estado', 'Semáforo', 'Efecto por coste',
     ])
-    expect(within(tabla()).getAllByRole('row')).toHaveLength(66)
+    expect(within(tabla()).getAllByRole('row')).toHaveLength(67)
   })
 
-  it('marca fuera de banda a Elena e Isolde y no a Aurora ni Ragnar', () => {
+  // Rediseño de Estásis: Elena es 3/2 (sigue por debajo) e Isolde 3/6 coste 4 (ya dentro); «por encima» lo ilustra Draven (DS-012).
+  it('marca fuera de banda a Elena (por debajo) y a Draven (por encima), deja dentro a Isolde y no marca a Aurora ni Ragnar', () => {
+    // Elena real (4/2, suma 6) ya está dentro de banda; el caso «por debajo» usa la Elena de antes (3/2, suma 5).
     render(<Auditoria cartas={CARTAS} avisos={AVISOS} />)
     expect(celdas(/^FB-015/).slice(0, 12)).toEqual([
-      'FB-015', 'Elena, Despertar del Éter', 'Campeón', 'Poco Común', '3', '3', '0', '3', '10', '0', '0.85', 'Fuera de banda: por debajo',
+      'FB-015', 'Elena, Despertar del Éter', 'Campeón', 'Poco Común', '3', '4', '2', '6', '7.9', '0.1', '2.3', 'Dentro de banda',
     ])
+    cleanup()
+    render(<Auditoria cartas={CARTAS_ELENA_32} avisos={AVISOS} />)
+    expect(celdas(/^FB-015/).slice(0, 12)).toEqual([
+      'FB-015', 'Elena, Despertar del Éter', 'Campeón', 'Poco Común', '3', '3', '2', '5', '7.9', '0.1', '2.3', 'Fuera de banda: por debajo',
+    ])
+    expect(celdas(/^DS-012/)[11]).toBe('Fuera de banda: por encima')
+    // Intención cambiada con el tope de costo del 50 %: Isolde (3/6, suma 9) ya no cabe con su impuesto 1.4 (máximo 8.6)
     expect(celdas(/^FB-014/)[11]).toBe('Fuera de banda: por encima')
     expect(celdas(/^FB-010/)[11]).toBe('Exenta: dentro de su tope propio')
     expect(celdas(/^DS-010/)[11]).toBe('Exenta: dentro de su tope propio')
@@ -35,6 +44,24 @@ describe('Auditoria', () => {
     const mistica = celdas(/^FB-021/)
     expect(mistica.slice(5, 10)).toEqual(['—', '—', '—', '—', '0'])
     expect(mistica[12]).toBe('Verde')
+  })
+
+  it('la columna «Efecto por coste» dice OK o el motivo corto, y una carta que falla no sale verde', () => {
+    // El Éter del Despertar de antes del rediseño (Inmortal mientras bloqueado, índice 3.5) conserva el caso del tope de efecto.
+    render(<Auditoria cartas={CARTAS_ANTES} avisos={AVISOS} />)
+    // Tope de efecto estricto: Éter del Despertar (semáforo amarillo) pasa a rojo con su motivo.
+    const despertar = celdas(/^FB-008/)
+    expect(despertar[12]).toBe('Rojo')
+    expect(despertar[13]).toBe('índice 3.5 > tope 2')
+    // Coste mínimo por verbo: Éter de la Sangre Eterna (semáforo verde) no se muestra verde.
+    const sangre = celdas(/^FB-003/)
+    expect(sangre[12]).toBe('Rojo')
+    expect(sangre[13]).toBe('verbo draw pide coste 2')
+    // Una carta que pasa dice OK y conserva su semáforo.
+    const rowena = celdas(/^FB-021/)
+    expect(rowena[12]).toBe('Verde')
+    expect(rowena[13]).toBe('OK')
+    expect(within(tabla()).getByLabelText('Efecto por coste: índice 3.5 > tope 2')).toBeInTheDocument()
   })
 
   it('muestra los avisos del cargador', () => {
@@ -60,7 +87,7 @@ describe('Auditoria', () => {
       const alAnalizar = vi.fn()
       render(<Auditoria cartas={CARTAS} avisos={AVISOS} onAnalizar={alAnalizar} />)
       expect(within(tabla()).getAllByRole('columnheader').at(-1)).toHaveTextContent('Analizar')
-      expect(within(tabla()).getAllByRole('button', { name: /^Analizar / })).toHaveLength(65)
+      expect(within(tabla()).getAllByRole('button', { name: /^Analizar / })).toHaveLength(66)
       await userEvent.click(screen.getByRole('button', { name: /^Analizar Elena/ }))
       expect(alAnalizar).toHaveBeenCalledExactlyOnceWith('FB-015')
     })
@@ -96,7 +123,8 @@ describe('Auditoria', () => {
     })
 
     it('descarga un Blob JSON con el formato de simulación', async () => {
-      render(<Auditoria cartas={CARTAS} avisos={AVISOS} />)
+      // Con la Elena de antes (3/2) hay 6 ajustes (Elena, Isolde y cuatro de Disonancia); con la real (4/2) serían 5.
+      render(<Auditoria cartas={CARTAS_ELENA_32} avisos={AVISOS} />)
       await userEvent.click(screen.getByRole('button', { name: 'Exportar JSON' }))
       expect(blobs).toHaveLength(1)
       expect(blobs[0].type).toBe('application/json')
@@ -105,22 +133,22 @@ describe('Auditoria', () => {
       const texto = await blobs[0].text()
       const json = JSON.parse(texto) as { version: string; cambios: { id: string; antes: unknown; despues: unknown; motivo: string }[] }
       expect(json.version).toBe('v1')
-      expect(json.cambios).toHaveLength(8)
+      expect(json.cambios).toHaveLength(6)
       expect(json.cambios[0].id).toBe('DS-011')
       expect(json.cambios.find((c) => c.id === 'FB-015')).toMatchObject({
-        antes: { poder: 3, resistencia: 0 },
-        despues: { poder: 6, resistencia: 2 },
+        antes: { poder: 3, resistencia: 2 },
+        despues: { poder: 4, resistencia: 2 },
       })
     })
 
     it('exporta todo lo publicado aunque haya filtros, y nunca la referencia', async () => {
       const referencia = { ...carta('Elena'), id: 'PR-999', esReferencia: true }
-      const soloEstasis = CARTAS.filter((c) => c.mazo === 'estasis')
-      render(<Auditoria cartas={soloEstasis} publicadas={[...CARTAS, referencia]} avisos={AVISOS} />)
+      const soloEstasis = CARTAS_ELENA_32.filter((c) => c.mazo === 'estasis')
+      render(<Auditoria cartas={soloEstasis} publicadas={[...CARTAS_ELENA_32, referencia]} avisos={AVISOS} />)
       await userEvent.click(screen.getByRole('button', { name: 'Exportar JSON' }))
       await waitFor(() => expect(blobs).toHaveLength(1))
       const json = JSON.parse(await blobs[0].text()) as { cambios: { id: string }[] }
-      expect(json.cambios.map((c) => c.id)).toHaveLength(8)
+      expect(json.cambios.map((c) => c.id)).toHaveLength(6)
       expect(json.cambios.map((c) => c.id)).toContain('DS-011')
       expect(json.cambios.map((c) => c.id)).not.toContain('PR-999')
     })

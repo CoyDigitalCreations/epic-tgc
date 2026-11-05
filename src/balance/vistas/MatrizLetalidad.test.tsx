@@ -20,7 +20,7 @@ describe('MatrizLetalidad', () => {
     ])
     expect(tabla.find((f) => f[0].startsWith('Vorlag'))?.at(-1)).toBe('Dominante')
     expect(tabla.find((f) => f[0].startsWith('Isolde'))).toEqual([
-      'Isolde, Última Casa', '3 / 7', '7 de 17', '0 de 17', '41.2', '0', 'Invulnerable',
+      'Isolde, Última Casa', '3 / 6', '7 de 17', '0 de 17', '41.2', '0', 'Invulnerable',
     ])
     expect(tabla.find((f) => f[0].startsWith('Vaela'))?.at(-1)).toBe('—')
     expect(tabla.filter((f) => f.at(-1) === 'Invulnerable')).toHaveLength(3)
@@ -41,7 +41,7 @@ describe('MatrizLetalidad', () => {
     render(<MatrizLetalidad cartas={CARTAS} />)
     const res = filas(/escalones por RES/i)
     expect(res.find((f) => f[0] === '3')).toEqual(['3', '18', '100', 'Igual que RES 2'])
-    expect(res.find((f) => f[0] === '4')).toEqual(['4', '11', '61.1', '—'])
+    expect(res.find((f) => f[0] === '4')).toEqual(['4', '10', '55.6', '—'])
     expect(res.find((f) => f[0] === '5')?.slice(0, 2)).toEqual(['5', '3'])
     expect(res.find((f) => f[0] === '6')?.slice(0, 2)).toEqual(['6', '0'])
     const atq = filas(/escalones por ATQ/i)

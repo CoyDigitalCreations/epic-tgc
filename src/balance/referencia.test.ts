@@ -69,7 +69,9 @@ describe('referencia: casos de forma', () => {
     const ranking = rankingReferencia(referencia).filter((r) => r.tipo === 'Campeón')
     const posicion = ranking.findIndex((r) => r.id === 'PR-025')
     expect(posicion).toBeGreaterThanOrEqual(0)
-    expect(posicion).toBeLessThan(3)
+    // Intención conservada con otro número: con el tope de costo del 50 % El Doble Filo (PR-023) sube a 2.5 y empata con la Ladrona (el desempate es por id),
+    // así que la Ladrona pasa del puesto 2 al 4 de los Campeones (sigue entre los más altos, con 2.5 de 3 que tiene el primero).
+    expect(posicion).toBeLessThan(4)
     expect(poderDeCarta(ref('PR-025')).indice).toBeGreaterThan(poderDeCarta(ref('PR-010')).indice)
   })
 })

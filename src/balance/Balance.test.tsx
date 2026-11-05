@@ -52,7 +52,7 @@ describe('Balance', () => {
     expect(tabs.map((t) => t.textContent)).toEqual(PESTANAS.map(([, nombre]) => nombre))
     expect(screen.getByRole('tab', { name: 'Resumen por mazo' })).toHaveAttribute('aria-selected', 'true')
     expect(screen.getByRole('heading', { level: 2, name: 'Resumen por mazo' })).toBeInTheDocument()
-    expect(within(screen.getByRole('row', { name: /^Estásis/ })).getAllByRole('cell')[1]).toHaveTextContent('32')
+    expect(within(screen.getByRole('row', { name: /^Estásis/ })).getAllByRole('cell')[1]).toHaveTextContent('33')
   })
 
   it.each(PESTANAS)('la pestaña «%s» muestra su vista y guarda el parámetro vista', async (vista, nombre) => {
@@ -191,24 +191,25 @@ describe('Balance', () => {
       try {
         montar('/balance?vista=auditoria')
         const filas = () => within(screen.getByRole('table', { name: /auditoría de las cartas/i })).getAllByRole('row')
-        expect(filas()).toHaveLength(66)
+        expect(filas()).toHaveLength(67)
 
         await userEvent.click(screen.getByRole('switch', { name: NOMBRE_INTERRUPTOR }))
         const tabla = await screen.findByRole('table', { name: /cartas de referencia/i })
         expect(within(tabla).getAllByText('Referencia (no publicadas)').length).toBeGreaterThan(0)
 
-        // Ninguna vista cambia: 65 cartas, pool de 18, y la exportación solo trae lo publicado.
-        expect(filas()).toHaveLength(66)
+        // Ninguna vista cambia: 66 cartas, pool de 18, y la exportación solo trae lo publicado.
+        expect(filas()).toHaveLength(67)
         await userEvent.click(screen.getByRole('button', { name: 'Exportar JSON' }))
         const json = JSON.parse(await blobs[0].text()) as { cambios: { id: string }[] }
-        expect(json.cambios).toHaveLength(8)
+        // Los 4 ajustes de Disonancia más Isolde (con el índice nuevo excede su suma); Elena (4/2) ya cabe en banda
+        expect(json.cambios).toHaveLength(5)
         expect(json.cambios.some((c) => c.id.startsWith('PR-'))).toBe(false)
 
         await userEvent.click(screen.getByRole('tab', { name: 'Matriz de letalidad' }))
         const letalidad = await screen.findByRole('table', { name: /letalidad por campeón/i })
         expect(within(letalidad).getAllByRole('row')).toHaveLength(19)
         await userEvent.click(screen.getByRole('tab', { name: 'Resumen por mazo' }))
-        await waitFor(() => expect(screen.getByRole('row', { name: /^Estásis/ })).toHaveTextContent('32'))
+        await waitFor(() => expect(screen.getByRole('row', { name: /^Estásis/ })).toHaveTextContent('33'))
         expect(screen.getByRole('row', { name: /^Disonancia/ })).toHaveTextContent('33')
       } finally {
         URL.createObjectURL = original.crear

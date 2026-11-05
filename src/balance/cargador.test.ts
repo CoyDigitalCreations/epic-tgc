@@ -1,25 +1,28 @@
 import { describe, it, expect } from 'vitest'
 import { ALL_CARDS } from '../shared/data/paquetes'
 import type { AnyCard } from '../shared/types'
+import { efectosComandante } from '../shared/efectoComandante'
 import { cargarCartas } from './cargador'
+import { CONFIG_V1 } from './config'
 
 const carga = cargarCartas(ALL_CARDS)
 
 describe('cargarCartas con el seed real', () => {
-  it('carga las 65 cartas separadas por mazo', () => {
-    expect(carga.cartas).toHaveLength(65)
-    expect(carga.estasis).toHaveLength(32)
+  it('carga las 66 cartas separadas por mazo', () => {
+    // Rediseño de Estásis: +1 carta (FB-033 Runa de Ancla)
+    expect(carga.cartas).toHaveLength(66)
+    expect(carga.estasis).toHaveLength(33)
     expect(carga.disonancia).toHaveLength(33)
-    expect(carga.estasis.length + carga.disonancia.length).toBe(65)
+    expect(carga.estasis.length + carga.disonancia.length).toBe(66)
   })
 
   it('cuenta los efectos de la lista y los comandantes', () => {
     const delSeed = ALL_CARDS.reduce(
-      (n, c) => n + (c.efectos?.length ?? 0) + (c.type === 'Campeón' && c.efectoComandante ? 1 : 0),
+      (n, c) => n + (c.efectos?.length ?? 0) + (c.type === 'Campeón' ? efectosComandante(c.efectoComandante).length : 0),
       0,
     )
     expect(carga.totalEfectos).toBe(delSeed)
-    expect(carga.cartas.flatMap((c) => c.efectos).filter((e) => e.esComandante)).toHaveLength(2)
+    expect(carga.cartas.flatMap((c) => c.efectos).filter((e) => e.esComandante)).toHaveLength(3)
   })
 
   it('extrae los 20 Campeones con stats numéricos', () => {
@@ -30,9 +33,19 @@ describe('cargarCartas con el seed real', () => {
       expect(typeof c.stats?.res).toBe('number')
     }
     const elena = carga.campeones.find((c) => c.id === 'FB-015')
-    expect(elena?.stats).toEqual({ atq: 3, res: 0 })
+    expect(elena?.stats).toEqual({ atq: 4, res: 2 })
     expect(elena?.coste).toBe(3)
     expect(elena?.mazo).toBe('estasis')
+  })
+
+  it('Aurora lleva DOS efectos de Comandante (arreglo) y todos los verbos del seed tienen peso, sin avisos de duración nueva', () => {
+    const aurora = carga.cartas.find((c) => c.id === 'FB-010')
+    expect(aurora?.efectos.filter((e) => e.esComandante).map((e) => e.verbo)).toEqual(['buff', 'modificar_regla'])
+    expect(aurora?.efectos.map((e) => e.verbo)).toEqual(['activar_disparo', 'modificar_regla', 'buff', 'modificar_regla'])
+    const verbos = new Set(carga.cartas.flatMap((c) => c.efectos.flatMap((e) => (e.verbo ? [e.verbo] : e.verbosTramos))))
+    expect(verbos).toContain('anclar_eter')
+    for (const v of verbos) expect(CONFIG_V1.poder.verbo, v).toHaveProperty(v)
+    expect(carga.avisos.filter((a) => a.includes('mientras_tenga_eter_bloqueado'))).toEqual([])
   })
 
   it('conserva roles y rareza', () => {

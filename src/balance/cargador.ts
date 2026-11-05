@@ -1,4 +1,5 @@
 import type { AnyCard, EfectoData } from '../shared/types'
+import { efectosComandante } from '../shared/efectoComandante'
 import { CONFIG_V1 } from './config'
 import type {
   CargaBalance,
@@ -39,6 +40,7 @@ function normalizarEfecto(e: EfectoData, esComandante: boolean): EfectoBalance {
     duracion: (e.duracion as string | undefined) ?? null,
     costoTipo: e.costo?.tipo ?? null,
     costoCantidad: e.costo?.cantidad ?? 0,
+    ...(e.buffPerBlockedEther ? { buffPorEterBloqueado: true } : {}),
     activacion: e.activacion ?? null,
     keywordsConcedidas: keywordsConcedidas(e),
     esComandante,
@@ -54,8 +56,8 @@ function statsDe(c: AnyCard): StatsCampeon | null {
 
 function efectosDe(c: AnyCard): EfectoBalance[] {
   const lista = (c.efectos ?? []).map((e) => normalizarEfecto(e, false))
-  if (c.type === 'Campeón' && c.efectoComandante) {
-    lista.push(normalizarEfecto(c.efectoComandante, true))
+  if (c.type === 'Campeón') {
+    for (const e of efectosComandante(c.efectoComandante)) lista.push(normalizarEfecto(e, true))
   }
   return lista
 }

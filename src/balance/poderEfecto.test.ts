@@ -130,9 +130,81 @@ describe('poderDeCarta', () => {
     expect(poderDeCarta(carta()).indice).toBe(0)
   })
 
+  // Intención conservada, mecanismo nuevo: con el tope del 50 % un efecto con base ya no puede hundirse a 0 (scry con exile_self ×3 vale 0.25,
+  // la mitad de su bruto 0.5), así que el piso de 0 se prueba con una config que lo permite (tope 2: el costo supera al bruto) y con un verbo de peso 0.
   it('el índice nunca es negativo', () => {
     const costoso = efecto({ verbo: 'scry', costoTipo: 'exile_self', costoCantidad: 3 })
-    expect(poderDeCarta(carta([costoso])).indice).toBe(0)
+    const sinTope = conPeso((c) => { c.poder.topeCostoProporcion = 100 })
+    expect(poderDeEfecto(costoso, sinTope).poder).toBeLessThan(0)
+    expect(poderDeCarta(carta([costoso]), sinTope).indice).toBe(0)
+    const sinBase = conPeso((c) => { c.poder.verbo.scry = 0 })
+    expect(poderDeCarta(carta([costoso]), sinBase).indice).toBe(0)
+  })
+
+  describe('tope del costo (topeCostoProporcion)', () => {
+    // scry: bruto = base × multiplicadores del efecto; se toma de los componentes para no depender de los pesos exactos.
+    const caro = efecto({ verbo: 'scry', costoTipo: 'exile_self', costoCantidad: 3 })
+    const bruto = componentesDeEfecto(caro).bruto
+
+    it('un costo enorme resta como máximo el 50 % del bruto: el índice es el 50 % de la base más las keywords', () => {
+      const c = componentesDeEfecto(caro)
+      expect(c.costoCrudo).toBe(-3)
+      expect(c.costo).toBe(-0.5 * bruto)
+      expect(poderDeEfecto(caro).poder).toBe(0.5 * bruto)
+      const conKeyword = poderDeCarta(carta([caro], ['Fugaz']))
+      expect(conKeyword.indice).toBe(0.5 * bruto + CONFIG_V1.poder.keyword.Fugaz)
+    })
+
+    it('un costo menor que el tope no se toca', () => {
+      const barato = efecto({ verbo: 'destroy', costoTipo: 'eter', costoCantidad: 1 })
+      const c = componentesDeEfecto(barato)
+      expect(c.costo).toBe(c.costoCrudo)
+      expect(c.costo).toBe(-0.5)
+    })
+
+    it('el tope se puede cambiar por config y el resultado cambia', () => {
+      const ochenta = conPeso((c) => { c.poder.topeCostoProporcion = 0.8 })
+      const cero = conPeso((c) => { c.poder.topeCostoProporcion = 0 })
+      expect(poderDeEfecto(caro, ochenta).poder).toBeCloseTo(0.2 * bruto, 10)
+      expect(poderDeEfecto(caro, cero).poder).toBe(bruto)
+      expect(poderDeEfecto(caro, ochenta).poder).not.toBe(poderDeEfecto(caro).poder)
+    })
+
+    it('el tope es por efecto: el costo de un efecto no se paga con el poder de otro', () => {
+      const barato = efecto({ verbo: 'destroy' })
+      const total = poderDeCarta(carta([caro, barato])).indice
+      expect(total).toBe(poderDeEfecto(caro).poder + poderDeEfecto(barato).poder)
+    })
+
+    it('las cartas reales con efecto de costo alto ya no valen 0', () => {
+      for (const id of ['FB-017', 'FB-020', 'FB-023', 'FB-032', 'DS-016', 'DS-017', 'DS-018']) {
+        expect(poderDeCarta(real(id)).indice, id).toBeGreaterThan(0)
+      }
+    })
+  })
+
+  describe('buffPorEterBloqueado (buffPerBlockedEther)', () => {
+    const buff = efecto({ verbo: 'buff', tipo: 'hechizo', objetivoTipo: 'equipped_champion', costoTipo: 'eter_bloqueado', costoCantidad: 3 })
+
+    it('el cargador lee buffPerBlockedEther del efecto (Lamento de las Casas sí, Marek no lo declara)', () => {
+      expect(real('FB-020').efectos[0].buffPorEterBloqueado).toBe(true)
+      expect(real('DS-015').efectos.some((e) => e.buffPorEterBloqueado === true)).toBe(false)
+    })
+
+    it('un buff por Éter bloqueado hasta N Éter escala el bruto ×3 con costo 3', () => {
+      const unico = componentesDeEfecto(buff)
+      const porEter = componentesDeEfecto({ ...buff, buffPorEterBloqueado: true })
+      expect(unico.escala).toBe(1)
+      expect(porEter.escala).toBe(3)
+      expect(porEter.bruto).toBe(unico.bruto * 3)
+      expect(porEter.poder).toBe(porEter.bruto + porEter.costo)
+      expect(porEter.poder).toBeGreaterThan(unico.poder)
+    })
+
+    it('sin el flag no escala aunque el costo sea 3, y con costo 0 escala ×1', () => {
+      expect(componentesDeEfecto(buff).escala).toBe(1)
+      expect(componentesDeEfecto({ ...buff, buffPorEterBloqueado: true, costoCantidad: 0 }).escala).toBe(1)
+    })
   })
 
   it('las keywords propias suman su peso', () => {
@@ -177,9 +249,9 @@ describe('poderDeCarta', () => {
 describe('componentesDeEfecto', () => {
   const todos = cartas.flatMap((c) => c.efectos.map((e) => ({ id: c.id, e })))
 
-  it('S5.1: el poder de los componentes es EXACTAMENTE el de poderDeEfecto en los efectos de las 65 cartas', () => {
-    expect(cartas).toHaveLength(65)
-    expect(todos).toHaveLength(71)
+  it('S5.1: el poder de los componentes es EXACTAMENTE el de poderDeEfecto en los efectos de las 66 cartas', () => {
+    expect(cartas).toHaveLength(66)
+    expect(todos).toHaveLength(75)
     for (const { id, e } of todos) {
       const c = componentesDeEfecto(e)
       expect(c.poder, id).toBe(poderDeEfecto(e).poder)
@@ -192,7 +264,9 @@ describe('componentesDeEfecto', () => {
       const c = componentesDeEfecto(e)
       const producto = c.tipo * c.trigger * c.activacion * c.duracion * c.objetivo
       expect(c.multiplicador, id).toBe(producto)
-      expect(c.base * c.multiplicador + c.keywords + c.costo, id).toBe(c.poder)
+      // Con el tope de costo, el poder es bruto (base × multiplicador × escala) + keywords + costo ya topado.
+      expect(c.bruto, id).toBe(c.base * c.multiplicador * c.escala)
+      expect(c.bruto + c.keywords + c.costo, id).toBe(c.poder)
     }
   })
 
@@ -221,7 +295,7 @@ describe('componentesDeEfecto', () => {
 
   it('S9.3: un efecto sin verbo da todo 0 y multiplicador 1; Cassandra (verbos en tramos) no se marca sin verbo', () => {
     const c = componentesDeEfecto(efecto({ verbo: null, sinVerbo: true }))
-    expect(c).toEqual({ base: 0, tipo: 0, trigger: 0, activacion: 0, duracion: 0, objetivo: 0, multiplicador: 1, keywords: 0, costo: 0, poder: 0 })
+    expect(c).toEqual({ base: 0, tipo: 0, trigger: 0, activacion: 0, duracion: 0, objetivo: 0, multiplicador: 1, keywords: 0, escala: 1, bruto: 0, costoCrudo: 0, costo: 0, poder: 0 })
     const cassandra = real('FB-016').efectos.map((e) => componentesDeEfecto(e))
     expect(cassandra.some((x) => x.base > 0)).toBe(true)
   })

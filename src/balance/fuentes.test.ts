@@ -15,6 +15,13 @@ export function encontrarImportsDeFuenteArte(texto: string): string[] {
   return sinComentarios.match(patron) ?? []
 }
 
+/**
+ * Cartas que ya existen en el seed pero cuya ilustración aún no se ha entregado (el usuario la sube después). La guardia sigue
+ * exigiendo arte para todas las demás; si una de estas YA tiene su .webp la guardia falla para obligar a sacarla de la lista.
+ * FB-033 «Runa de Ancla» (rediseño de Estásis): sin imageUrl en FuenteArte.json ni public/cartas/FB-033.webp.
+ */
+export const SIN_ARTE_PENDIENTE: readonly string[] = ['FB-033']
+
 const RAIZ = resolve(__dirname, '../..')
 const DIR_SRC = join(RAIZ, 'src')
 const DIR_CARTAS = join(RAIZ, 'public', 'cartas')
@@ -56,7 +63,7 @@ describe('guardia de fuentes (siempre)', () => {
       .filter((f) => f.endsWith('.webp'))
       .map((f) => f.replace(/\.webp$/, ''))
       .sort()
-    expect(enDisco).toEqual([...CARD_ART_IDS].sort())
+    expect(enDisco).toEqual([...CARD_ART_IDS].filter((id) => !SIN_ARTE_PENDIENTE.includes(id)).sort())
   })
 })
 
@@ -167,7 +174,7 @@ describe.skipIf(!hayArte)(
       .filter((f) => f.endsWith('.webp'))
       .map((f) => f.replace(/\.webp$/, ''))
       .sort()
-    expect(enDisco).toEqual(arte.map((c) => String(c.id)).sort())
+    expect(enDisco).toEqual(arte.map((c) => String(c.id)).filter((id) => !SIN_ARTE_PENDIENTE.includes(id)).sort())
   })
 
   it('las ilustraciones data:image/webp son idénticas a los archivos', () => {

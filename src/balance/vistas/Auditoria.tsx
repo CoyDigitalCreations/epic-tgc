@@ -4,6 +4,7 @@ import { BotonAnalizar } from '../componentes/BotonAnalizar'
 import { Semaforo } from '../componentes/Semaforo'
 import { SinCartas } from '../componentes/SinCartas'
 import { TituloVista } from '../componentes/TituloVista'
+import { motivoEfectoPorCoste, evaluarEfectoPorCoste } from '../efectoPorCoste'
 import { aJson } from '../exportacion'
 import { evaluarCarta } from '../metricas'
 import type { CartaBalance } from '../tipos'
@@ -11,7 +12,7 @@ import { num, veredictoDe } from './formato'
 import type { PropsConAnalizar, PropsVistaConPool } from './props'
 
 const COLUMNAS = [
-  'ID', 'Carta', 'Tipo', 'Rareza', 'Coste', 'ATQ', 'RES', 'Suma', 'Suma objetivo', 'Impuesto', 'Índice', 'Estado', 'Semáforo',
+  'ID', 'Carta', 'Tipo', 'Rareza', 'Coste', 'ATQ', 'RES', 'Suma', 'Suma objetivo', 'Impuesto', 'Índice', 'Estado', 'Semáforo', 'Efecto por coste',
 ]
 const TH = 'whitespace-nowrap border-b border-card-border px-2 py-1 font-display text-xs text-ether-200'
 const TD = 'border-b border-card-border/40 px-2 py-1'
@@ -39,7 +40,7 @@ export function Auditoria({
   onAnalizar,
 }: PropsVistaConPool & PropsConAnalizar & { avisos?: string[] }) {
   const columnas = onAnalizar === undefined ? COLUMNAS : [...COLUMNAS, 'Analizar']
-  const evaluaciones = useMemo(() => cartas.map((c) => ({ carta: c, ev: evaluarCarta(c) })), [cartas])
+  const evaluaciones = useMemo(() => cartas.map((c) => ({ carta: c, ev: evaluarCarta(c), motivo: motivoEfectoPorCoste(evaluarEfectoPorCoste(c)) })), [cartas])
   return (
     <section>
       <TituloVista
@@ -83,7 +84,7 @@ export function Auditoria({
               </tr>
             </thead>
             <tbody>
-              {evaluaciones.map(({ carta, ev }) => (
+              {evaluaciones.map(({ carta, ev, motivo }) => (
                 <tr key={carta.id} className="odd:bg-surface/50">
                   <td className={`${TD} font-mono`}>{carta.id}</td>
                   <td className={TD}>{carta.nombre}</td>
@@ -97,7 +98,14 @@ export function Auditoria({
                   <td className={TD}>{num(ev.impuesto)}</td>
                   <td className={TD}>{num(ev.indice)}</td>
                   <td className={TD}>{ev.presupuesto === null ? '—' : veredictoDe(ev.presupuesto)}</td>
-                  <td className={TD}><Semaforo valor={ev.semaforo} /></td>
+                  <td className={TD}><Semaforo valor={motivo === null ? ev.semaforo : 'rojo'} /></td>
+                  <td className={TD}>
+                    {motivo === null ? (
+                      <span aria-label="Efecto por coste: correcto">OK</span>
+                    ) : (
+                      <span aria-label={`Efecto por coste: ${motivo}`} className="font-semibold text-red-300">{motivo}</span>
+                    )}
+                  </td>
                   {onAnalizar !== undefined && (
                     <td className={TD}><BotonAnalizar id={carta.id} nombre={carta.nombre} onAnalizar={onAnalizar} /></td>
                   )}

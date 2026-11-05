@@ -42,6 +42,8 @@ export interface ConfigBalance {
     keyword: Record<Keyword, number>
     /** Resta de poder según el tipo de costo del efecto. */
     costo: Record<string, number>
+    /** Tope del descuento por costo de un efecto, como fracción de su poder bruto (0.5 = nunca resta más de la mitad). */
+    topeCostoProporcion: number
     /** Peso por defecto cuando falta el trigger, o el verbo o la duración no se conocen. */
     fallback: number
   }
@@ -59,6 +61,11 @@ export interface ConfigBalance {
   semaforo: { verde: number; amarillo: number }
   /** Poder esperado de una carta que no es Campeón = coste * este valor. */
   poderPorCoste: number
+  /**
+   * Overrides explícitos del coste mínimo por verbo. Si un verbo aparece aquí, gana sobre
+   * la fórmula por defecto ceil(peso del verbo en `poder.verbo`).
+   */
+  costeMinimoVerbo: Record<string, number>
   /** Análisis de carta: cuánto se sube un stat al evaluar «puede subir» y cuándo se avisa «cerca del tope». */
   analisis: { pasoSubida: number; cercaDelTope: number }
 }
@@ -78,6 +85,8 @@ export interface EfectoBalance {
   duracion: string | null
   costoTipo: string | null
   costoCantidad: number
+  /** `buffPerBlockedEther` del efecto: el buff cuenta una vez por cada Éter bloqueado, hasta `costoCantidad`. */
+  buffPorEterBloqueado?: boolean
   activacion: string | null
   /** Keywords que concede el efecto (grant_keyword, también por tramo). */
   keywordsConcedidas: string[]

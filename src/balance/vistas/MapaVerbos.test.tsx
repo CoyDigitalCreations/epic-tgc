@@ -13,7 +13,7 @@ describe('MapaVerbos', () => {
     render(<MapaVerbos cartas={CARTAS} />)
     expect(screen.getByRole('heading', { level: 2, name: 'Mapa de verbos' })).toBeInTheDocument()
     expect(screen.getByRole('table', { name: /verbos por mazo/i })).toBeInTheDocument()
-    expect(celdas('destroy')).toEqual(['destroy', '2', '4', 'Fuera de identidad', 'Identidad'])
+    expect(celdas('destroy')).toEqual(['destroy', '0', '4', 'Fuera de identidad', 'Identidad'])
     expect(celdas('buff')).toEqual(['buff', '7', '8', 'Neutral', 'Neutral'])
   })
 
