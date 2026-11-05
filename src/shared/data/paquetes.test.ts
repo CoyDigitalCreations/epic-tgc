@@ -60,9 +60,9 @@ describe('Paquetes', () => {
     })
 
     it('todas tienen nombre, flavor text y límite de copias válido', () => {
-      // Excepción explícita: Runa de Ancla (FB-033) está pendiente de flavor text.
-      // Cuando se escriba su flavor, este test fallará hasta que quites el id de la lista.
-      const FLAVOR_PENDIENTE = ['FB-033']
+      // Lista de cartas con flavor text pendiente. Hoy vacía: si una carta nueva nace sin flavor, agrégala aquí;
+      // cuando se escriba, este test fallará hasta que quites el id de la lista.
+      const FLAVOR_PENDIENTE: string[] = []
       for (const card of ESTASIS_CARDS) {
         expect(card.name.trim().length).toBeGreaterThan(0)
         if (FLAVOR_PENDIENTE.includes(card.id)) {

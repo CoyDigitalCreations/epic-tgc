@@ -18,9 +18,9 @@ export function encontrarImportsDeFuenteArte(texto: string): string[] {
 /**
  * Cartas que ya existen en el seed pero cuya ilustración aún no se ha entregado (el usuario la sube después). La guardia sigue
  * exigiendo arte para todas las demás; si una de estas YA tiene su .webp la guardia falla para obligar a sacarla de la lista.
- * FB-033 «Runa de Ancla» (rediseño de Estásis): sin imageUrl en FuenteArte.json ni public/cartas/FB-033.webp.
+ * Hoy vacía: FB-033 «Runa de Ancla» ya tiene su arte en FuenteArte.json y en public/cartas/FB-033.webp.
  */
-export const SIN_ARTE_PENDIENTE: readonly string[] = ['FB-033']
+export const SIN_ARTE_PENDIENTE: readonly string[] = []
 
 const RAIZ = resolve(__dirname, '../..')
 const DIR_SRC = join(RAIZ, 'src')
