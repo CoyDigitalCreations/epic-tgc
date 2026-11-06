@@ -15,7 +15,7 @@ describe('Auditoria', () => {
     render(<Auditoria cartas={CARTAS} avisos={AVISOS} />)
     expect(screen.getByRole('heading', { level: 2, name: 'Auditoría' })).toBeInTheDocument()
     expect(within(tabla()).getAllByRole('columnheader').map((c) => c.textContent)).toEqual([
-      'ID', 'Carta', 'Tipo', 'Rareza', 'Coste', 'ATQ', 'RES', 'Suma', 'Suma objetivo', 'Impuesto', 'Índice', 'Estado', 'Semáforo', 'Efecto por coste',
+      'ID', 'Carta', 'Tipo', 'Rareza', 'Coste', 'ATQ', 'RES', 'Suma', 'Suma objetivo', 'Impuesto', 'Índice', 'Estado', 'Semáforo', 'Efecto por coste', 'Tabú',
     ])
     expect(within(tabla()).getAllByRole('row')).toHaveLength(67)
   })
@@ -64,6 +64,23 @@ describe('Auditoria', () => {
     expect(rowena[12]).toBe('Verde')
     expect(rowena[13]).toBe('OK')
     expect(within(tabla()).getByLabelText('Efecto por coste: índice 3.5 > tope 2')).toBeInTheDocument()
+  })
+
+  it('la columna «Tabú» dice puntos, nivel máximo y veredicto en palabras, sin cambiar las demás', () => {
+    render(<Auditoria cartas={CARTAS} avisos={AVISOS} />)
+    const tabu = (id: RegExp) => celdas(id)[14]
+    expect(tabu(/^FB-015/)).toBe('2 · nivel 2 · En el límite') // Elena declara 2 ataques
+    expect(tabu(/^FB-010/)).toBe('6 · nivel 2 · Exenta') // Aurora: Única
+    expect(tabu(/^DS-007/)).toBe('1 · nivel 1 · Excede') // Éter de coste 1 que arrebata Éter
+    expect(tabu(/^FB-021/)).toBe('0 · nivel 0 · Dentro')
+    expect(tabu(/^FB-025/)).toBe('0 · nivel 0 · Sin veredicto') // Vínculo de coste 0
+    expect(celdas(/^FB-015/)[12]).toBe('Verde') // el semáforo de siempre
+  })
+
+  it('el tabú que excede se marca en rojo y con texto', () => {
+    render(<Auditoria cartas={CARTAS} avisos={AVISOS} />)
+    const celda = within(within(tabla()).getByRole('row', { name: /^DS-008/ })).getByText(/Excede/)
+    expect(celda).toHaveClass('text-red-300')
   })
 
   it('muestra los avisos del cargador', () => {

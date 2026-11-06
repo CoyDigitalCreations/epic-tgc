@@ -7,12 +7,13 @@ import { TituloVista } from '../componentes/TituloVista'
 import { motivoEfectoPorCoste, evaluarEfectoPorCoste } from '../efectoPorCoste'
 import { aJson } from '../exportacion'
 import { evaluarCarta } from '../metricas'
+import { evaluarTabu } from '../tabu'
 import type { CartaBalance } from '../tipos'
-import { num, veredictoDe } from './formato'
+import { num, textoTabu, veredictoDe } from './formato'
 import type { PropsConAnalizar, PropsVistaConPool } from './props'
 
 const COLUMNAS = [
-  'ID', 'Carta', 'Tipo', 'Rareza', 'Coste', 'ATQ', 'RES', 'Suma', 'Suma objetivo', 'Impuesto', 'Índice', 'Estado', 'Semáforo', 'Efecto por coste',
+  'ID', 'Carta', 'Tipo', 'Rareza', 'Coste', 'ATQ', 'RES', 'Suma', 'Suma objetivo', 'Impuesto', 'Índice', 'Estado', 'Semáforo', 'Efecto por coste', 'Tabú',
 ]
 const TH = 'whitespace-nowrap border-b border-card-border px-2 py-1 font-display text-xs text-ether-200'
 const TD = 'border-b border-card-border/40 px-2 py-1'
@@ -40,7 +41,7 @@ export function Auditoria({
   onAnalizar,
 }: PropsVistaConPool & PropsConAnalizar & { avisos?: string[] }) {
   const columnas = onAnalizar === undefined ? COLUMNAS : [...COLUMNAS, 'Analizar']
-  const evaluaciones = useMemo(() => cartas.map((c) => ({ carta: c, ev: evaluarCarta(c), motivo: motivoEfectoPorCoste(evaluarEfectoPorCoste(c)) })), [cartas])
+  const evaluaciones = useMemo(() => cartas.map((c) => ({ carta: c, ev: evaluarCarta(c), motivo: motivoEfectoPorCoste(evaluarEfectoPorCoste(c)), tabu: evaluarTabu(c) })), [cartas])
   return (
     <section>
       <TituloVista
@@ -84,7 +85,7 @@ export function Auditoria({
               </tr>
             </thead>
             <tbody>
-              {evaluaciones.map(({ carta, ev, motivo }) => (
+              {evaluaciones.map(({ carta, ev, motivo, tabu }) => (
                 <tr key={carta.id} className="odd:bg-surface/50">
                   <td className={`${TD} font-mono`}>{carta.id}</td>
                   <td className={TD}>{carta.nombre}</td>
@@ -105,6 +106,9 @@ export function Auditoria({
                     ) : (
                       <span aria-label={`Efecto por coste: ${motivo}`} className="font-semibold text-red-300">{motivo}</span>
                     )}
+                  </td>
+                  <td className={TD}>
+                    <span className={tabu.estado === 'excede' ? 'font-semibold text-red-300' : undefined}>{textoTabu(tabu)}</span>
                   </td>
                   {onAnalizar !== undefined && (
                     <td className={TD}><BotonAnalizar id={carta.id} nombre={carta.nombre} onAnalizar={onAnalizar} /></td>

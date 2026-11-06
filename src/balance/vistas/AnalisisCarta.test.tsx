@@ -339,3 +339,75 @@ describe('AnalisisCarta: contenido', () => {
     }
   })
 })
+
+describe('AnalisisCarta: tabú', () => {
+  const porId = (id: string) => CARTAS.find((c) => c.id === id)?.nombre ?? id
+
+  it('Aurora (Única): puntos, nivel máximo, reglas que rompe con la regla del manual y veredicto exenta', () => {
+    render(<Arnes inicial="FB-010" />)
+    const tabu = bloque('Tabú')
+    expect(within(tabu).getByRole('heading', { level: 4, name: 'Tabú' })).toBeInTheDocument()
+    const valorDe = (etiqueta: string) => within(tabu).getByText(etiqueta, { selector: 'dt' }).nextElementSibling?.textContent
+    expect([valorDe('Puntos de tabú'), valorDe('Nivel máximo'), valorDe('Máximo por coste 4')]).toEqual(['6', '2', '3'])
+    expect(within(tabu).getByText('Exenta del presupuesto de tabú')).toBeInTheDocument()
+    expect(within(tabu).getByText(/sin ella se pasaría por 3/)).toBeInTheDocument()
+    const reglas = within(tabu).getByRole('list', { name: 'Reglas que rompe' })
+    expect(within(reglas).getAllByRole('listitem')).toHaveLength(5)
+    expect(within(reglas).getByText('sin_pagar_costo').closest('li')).toHaveTextContent(/\(nivel 2\): §8\.3a: un Disparo se activa pagando su costo/)
+  })
+
+  it('un Éter de coste 1 que arrebata Éter (DS-007) excede su presupuesto de tabú y dice por cuánto', () => {
+    render(<Arnes inicial="DS-007" />)
+    const tabu = bloque('Tabú')
+    expect(within(tabu).getByText('Excede el presupuesto de tabú')).toBeInTheDocument()
+    expect(within(tabu).getByText(/1 punto de tabú contra un máximo de 0 para coste 1: se pasa por 1/)).toBeInTheDocument()
+    expect(within(within(tabu).getByRole('list', { name: 'Reglas que rompe' })).getByText('steal_ether')).toBeInTheDocument()
+  })
+
+  it('el tabú es un eje aparte: no cambia el estado general ni las razones de la carta', () => {
+    render(<Arnes inicial="DS-007" />)
+    expect(screen.getByText(/Estado:/)).not.toHaveTextContent(/tabú/i)
+    expect(within(screen.getByRole('region', { name: 'Por qué' })).queryByText(/tabú/i)).not.toBeInTheDocument()
+  })
+
+  it('Elena agota su presupuesto: «En el límite»', () => {
+    render(<Arnes inicial="FB-015" />)
+    const tabu = bloque('Tabú')
+    expect(within(tabu).getByText('En el límite del presupuesto de tabú')).toBeInTheDocument()
+    expect(within(tabu).getByText(/usa todo su presupuesto/)).toBeInTheDocument()
+  })
+
+  it('una carta que no rompe nada lo dice y queda dentro del presupuesto', () => {
+    render(<Arnes inicial="FB-021" />)
+    const tabu = bloque('Tabú')
+    expect(within(tabu).getByText('No rompe ninguna regla del manual.')).toBeInTheDocument()
+    expect(within(tabu).getByText('Dentro del presupuesto de tabú')).toBeInTheDocument()
+    expect(within(tabu).queryByRole('list', { name: 'Reglas que rompe' })).not.toBeInTheDocument()
+  })
+
+  it('un Vínculo de coste 0 no tiene presupuesto ni veredicto, pero sí su tabú', () => {
+    render(<Arnes inicial="DS-028" />)
+    const tabu = bloque('Tabú')
+    expect(within(tabu).getByText('Sin presupuesto de tabú')).toBeInTheDocument()
+    expect(within(tabu).getByText(/no tienen presupuesto de tabú/)).toBeInTheDocument()
+    expect(within(tabu).getByText('steal_ether')).toBeInTheDocument()
+  })
+
+  it('el veredicto siempre tiene texto además del color y explica la escala de niveles', () => {
+    for (const id of ['FB-010', 'DS-007', 'FB-015', 'FB-021', 'DS-028']) {
+      const { unmount } = render(<Arnes inicial={id} />)
+      const tabu = bloque('Tabú')
+      expect(tabu.textContent, porId(id)).toMatch(/Dentro del presupuesto|En el límite|Excede el presupuesto|Exenta del presupuesto|Sin presupuesto de tabú/)
+      expect(tabu).toHaveTextContent(/Niveles: 0 no rompe ninguna regla; 1 cambia una regla con hueco previsto/)
+      unmount()
+    }
+  })
+
+  it('una carta de referencia también muestra su tabú', async () => {
+    render(<Arnes />)
+    await userEvent.click(screen.getByRole('button', { name: 'Alternar referencia' }))
+    await waitFor(() => expect(opciones('Referencia (no publicadas)')).toHaveLength(58))
+    await userEvent.selectOptions(selector(), 'PR-023')
+    expect(bloque('Tabú')).toBeInTheDocument()
+  })
+})

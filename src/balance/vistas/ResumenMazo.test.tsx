@@ -3,10 +3,13 @@ import { render, screen, within } from '@testing-library/react'
 import { CARTAS } from '../test/cartasReales'
 import { ResumenMazo } from './ResumenMazo'
 
-const celdas = (nombre: string) =>
-  within(screen.getByRole('row', { name: new RegExp(`^${nombre}`) }))
+// La vista trae dos tablas con una fila por mazo (resumen y tabú): cada ayudante mide la suya.
+const celdasDe = (tabla: RegExp, nombre: string) =>
+  within(within(screen.getByRole('table', { name: tabla })).getByRole('row', { name: new RegExp(`^${nombre}`) }))
     .getAllByRole('cell')
     .map((c) => c.textContent)
+const celdas = (nombre: string) => celdasDe(/^resumen por mazo/i, nombre)
+const celdasTabu = (nombre: string) => celdasDe(/^tabú por mazo/i, nombre)
 
 describe('ResumenMazo', () => {
   it('muestra por mazo cartas, Campeones, identidad, fuera de banda y rotas', () => {
@@ -38,8 +41,37 @@ describe('ResumenMazo', () => {
 
   it('con un solo mazo visible no muestra el otro', () => {
     render(<ResumenMazo cartas={CARTAS.filter((c) => c.mazo === 'estasis')} />)
-    expect(screen.getByRole('row', { name: /^Estásis/ })).toBeInTheDocument()
+    expect(screen.getAllByRole('row', { name: /^Estásis/ })).toHaveLength(2)
     expect(screen.queryByRole('row', { name: /^Disonancia/ })).not.toBeInTheDocument()
+  })
+
+  describe('tabú por mazo', () => {
+    it('muestra por mazo el tabú total, el medio, las cartas por nivel y las que exceden su presupuesto', () => {
+      render(<ResumenMazo cartas={CARTAS} />)
+      expect(screen.getByRole('heading', { level: 3, name: 'Tabú por mazo' })).toBeInTheDocument()
+      expect(
+        within(screen.getByRole('table', { name: /^tabú por mazo/i }))
+          .getAllByRole('columnheader')
+          .map((c) => c.textContent),
+      ).toEqual(['Mazo', 'Tabú total', 'Tabú medio', 'Cartas de nivel 0', 'Cartas de nivel 1', 'Cartas de nivel 2', 'Cartas de nivel 3', 'Exceden su presupuesto de tabú'])
+      // Estásis: 18 puntos, 0.55 por carta, 23/6/4/0 por nivel y ninguna excede. Aurora (6 puntos) es la más cargada y está exenta.
+      expect(celdasTabu('Estásis')).toEqual(['Estásis', '18', '0.55', '23', '6', '4', '0', '0'])
+      // Disonancia: 17 puntos, 0.52 por carta, 21/11/1/0 por nivel y 3 exceden (los Éteres de coste 1 DS-006, DS-007 y DS-008).
+      expect(celdasTabu('Disonancia')).toEqual(['Disonancia', '17', '0.52', '21', '11', '1', '0', '3'])
+    })
+
+    it('explica la escala y que las Únicas y los Soberanos quedan exentos pero los Éteres no', () => {
+      render(<ResumenMazo cartas={CARTAS} />)
+      expect(screen.getByText(/mide cuántas reglas del manual rompen/i, { selector: 'p' })).toHaveTextContent(/invariante del motor/)
+      expect(screen.getByText(/mide cuántas reglas del manual rompen/i, { selector: 'p' })).toHaveTextContent(/los Éteres no/)
+    })
+
+    it('con un solo mazo visible no muestra el otro en la tabla de tabú', () => {
+      render(<ResumenMazo cartas={CARTAS.filter((c) => c.mazo === 'disonancia')} />)
+      const tabla = screen.getByRole('table', { name: /^tabú por mazo/i })
+      expect(within(tabla).getByRole('row', { name: /^Disonancia/ })).toBeInTheDocument()
+      expect(within(tabla).queryByRole('row', { name: /^Estásis/ })).not.toBeInTheDocument()
+    })
   })
 
   it('sin cartas muestra el estado vacío y ninguna tabla', () => {

@@ -13,6 +13,8 @@ import { componentesDeEfecto, poderDeCarta } from './poderEfecto'
 import { efectosComandante } from '../shared/efectoComandante'
 import type { ComponentesEfecto, PoderKeyword } from './poderEfecto'
 import { evaluarConImpuesto } from './presupuesto'
+import { evaluarTabu } from './tabu'
+import type { EvaluacionTabu } from './tabu'
 import type { CartaBalance, ConfigBalance, EvaluacionPresupuesto } from './tipos'
 
 /** Estado de un stat dentro del análisis. `Semaforo` y `semaforoDe` no cambian: este tipo vive solo aquí. */
@@ -354,6 +356,8 @@ export interface AnalisisCarta {
   presupuesto: EvaluacionPresupuesto | null
   margenes: MargenStat[]
   desglose: DesglosePoder
+  /** Índice de tabú contra el presupuesto de su coste: eje aparte, no cambia el estado ni las razones. */
+  tabu: EvaluacionTabu
   letalidad: Letalidad | null
   ajuste: Ajuste | null
   etiquetaAjuste: string | null
@@ -396,6 +400,7 @@ export function analizarCarta(
     presupuesto: evaluarConImpuesto(carta, cfg),
     margenes,
     desglose,
+    tabu: evaluarTabu(carta, cfg),
     letalidad: letalidad(carta, ctx.pool, cfg),
     ajuste,
     etiquetaAjuste: ajuste === null ? null : 'Exploratorio',

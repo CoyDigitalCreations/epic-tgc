@@ -8,10 +8,12 @@ import { TituloVista } from '../componentes/TituloVista'
 import { CONFIG_V1 } from '../config'
 import { filtrarCartas, FILTROS_VACIOS } from '../metricas'
 import type { FiltrosBalance } from '../metricas'
+import { ETIQUETA_ESTADO_TABU, nombreDeInfraccion } from '../tabu'
+import type { EstadoTabu, EvaluacionTabu } from '../tabu'
 import type { CartaBalance } from '../tipos'
 import type { Referencia } from '../useReferencia'
 import { ALTO_ARTE, ANCHO_ARTE } from './constantesUi'
-import { NOMBRE_MAZO, num } from './formato'
+import { ESCALA_TABU, NOMBRE_MAZO, num } from './formato'
 
 export interface PropsAnalisisCarta {
   /** Publicadas visibles (ya filtradas). */
@@ -44,6 +46,15 @@ const COLOR_ESTADO: Record<SemaforoStat, { barra: string; insignia: string }> = 
   rojo: { barra: 'bg-red-500', insignia: 'border-red-500/50 bg-red-500/15 text-red-300' },
   bajo: { barra: 'bg-sky-500', insignia: 'border-sky-500/50 bg-sky-500/15 text-sky-300' },
   exenta: { barra: 'bg-violet-500', insignia: 'border-violet-500/50 bg-violet-500/15 text-violet-300' },
+}
+
+/** Color del veredicto de tabú; el texto del veredicto siempre se muestra al lado, nunca solo el color. */
+const COLOR_TABU: Record<EstadoTabu, string> = {
+  dentro: 'border-green-500/50 bg-green-500/15 text-green-300',
+  'en-limite': 'border-yellow-500/50 bg-yellow-500/15 text-yellow-300',
+  excede: 'border-red-500/50 bg-red-500/15 text-red-300',
+  exenta: 'border-violet-500/50 bg-violet-500/15 text-violet-300',
+  'sin-presupuesto': 'border-card-border bg-surface-2 text-gray-300',
 }
 
 /** Minúsculas y sin acentos, para buscar «elen» y encontrar «Elena» sin pensar en tildes. */
@@ -231,6 +242,68 @@ function PoderDeLaCarta({ analisis }: { analisis: Analisis }) {
           </div>
         ))}
       </dl>
+    </section>
+  )
+}
+
+/** Frase del veredicto de tabú contra el presupuesto de su coste. */
+function veredictoDeTabu(t: EvaluacionTabu, coste: number): string {
+  if (t.max === null) return 'Las cartas de coste 0 no tienen presupuesto de tabú, así que no hay veredicto.'
+  const base = `${t.puntos} ${plural(t.puntos, 'punto', 'puntos')} de tabú contra un máximo de ${t.max} para coste ${coste}`
+  if (t.estado === 'excede') return `${base}: se pasa por ${t.exceso}. Para arreglarlo hay que subir el coste o quitarle una regla rota.`
+  if (t.estado === 'exenta') {
+    return t.excederiaSinExencion
+      ? `${base}: la exención de Soberano, Emperador o Única la libera; sin ella se pasaría por ${t.exceso}.`
+      : `${base}: exenta, aunque cabría de todos modos.`
+  }
+  if (t.estado === 'en-limite') return `${base}: usa todo su presupuesto.`
+  return `${base}: dentro de su presupuesto.`
+}
+
+function Tabu({ analisis, carta }: { analisis: Analisis; carta: CartaBalance }) {
+  const { tabu } = analisis
+  const rompe = tabu.detalle.filter((d) => d.nivel > 0)
+  const filas: [string, string][] = [
+    ['Puntos de tabú', String(tabu.puntos)],
+    ['Nivel máximo', String(tabu.nivelMax)],
+    [`Máximo por coste ${carta.coste}`, num(tabu.max)],
+  ]
+  return (
+    <section aria-label="Tabú" className={BLOQUE}>
+      <h4 className={SUBTITULO}>Tabú</h4>
+      <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm sm:grid-cols-4">
+        {filas.map(([etiqueta, valor]) => (
+          <div key={etiqueta}>
+            <dt className="text-xs text-gray-500">{etiqueta}</dt>
+            <dd className="text-gray-100">{valor}</dd>
+          </div>
+        ))}
+      </dl>
+      <p className="mt-2 text-xs">
+        <span className={`rounded-full border px-2 py-0.5 font-semibold ${COLOR_TABU[tabu.estado]}`}>{ETIQUETA_ESTADO_TABU[tabu.estado]}</span>
+      </p>
+      <p className="mt-2 text-sm text-gray-300">{veredictoDeTabu(tabu, carta.coste)}</p>
+      {rompe.length === 0 ? (
+        <p className="mt-2 text-sm text-gray-400">No rompe ninguna regla del manual.</p>
+      ) : (
+        <ul aria-label="Reglas que rompe" className="mt-2 list-disc space-y-1 pl-5 text-sm text-gray-300">
+          {rompe.map((d) => (
+            <li key={d.efecto}>
+              <span className="font-semibold text-gray-100">{nombreDeInfraccion(d.efecto)}</span> (nivel {d.nivel}): {d.regla}
+            </li>
+          ))}
+        </ul>
+      )}
+      {tabu.sinClasificar.length > 0 && (
+        <ul aria-label="Efectos sin clasificar en el tabú" className="mt-2 list-disc space-y-1 pl-5 text-sm text-amber-200">
+          {tabu.sinClasificar.map((c) => (
+            <li key={c}>{c} no está en el catálogo de tabú: cuenta como nivel 0.</li>
+          ))}
+        </ul>
+      )}
+      <p className="mt-2 text-xs text-gray-500">
+        Niveles: {ESCALA_TABU}
+      </p>
     </section>
   )
 }
@@ -514,6 +587,7 @@ export function AnalisisCarta({
             <Estadisticas carta={seleccion} analisis={analisis} />
             {analisis.margenes.length > 0 && <Margenes margenes={analisis.margenes} />}
             <PoderDeLaCarta analisis={analisis} />
+            <Tabu analisis={analisis} carta={seleccion} />
             <Razones analisis={analisis} />
             <Letalidad analisis={analisis} />
             <Desglose analisis={analisis} />

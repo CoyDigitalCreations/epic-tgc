@@ -73,6 +73,30 @@ export interface ConfigBalance {
   costeMinimoExento: { tipos: string[] }
   /** Análisis de carta: cuánto se sube un stat al evaluar «puede subir» y cuándo se avisa «cerca del tope». */
   analisis: { pasoSubida: number; cercaDelTope: number }
+  /** Índice de tabú: qué reglas del manual rompe cada efecto y cuánto tabú permite cada coste. Eje independiente del poder. */
+  tabu: ConfigTabu
+}
+
+/** Una infracción del catálogo de tabú: su nivel (0-3) y la regla del manual que rompe, en texto corto. */
+export interface ReglaTabu {
+  nivel: number
+  regla: string
+}
+
+/**
+ * Catálogo de tabú. Las claves salen del seed: `verbo` (campo `efecto`), `regla` (`reglaEnumerada` y `regla.id`),
+ * `opcion` (banderas como `sinPagarCosto`) y `keyword`. `contexto` afina un verbo según sobre qué actúa.
+ */
+export interface ConfigTabu {
+  /** Niveles de la escala, de menor a mayor: 0 no rompe nada, 3 rompe un invariante del motor. */
+  niveles: number[]
+  verbo: Record<string, ReglaTabu>
+  contexto: Record<string, ReglaTabu>
+  regla: Record<string, ReglaTabu>
+  opcion: Record<string, ReglaTabu>
+  keyword: Record<Keyword, ReglaTabu>
+  /** Puntos de tabú máximos que permite cada coste (a mayor tabú, mayor coste). */
+  tabuMaxPorCoste: Record<number, number>
 }
 
 /** Efecto normalizado del seed. */
@@ -96,6 +120,20 @@ export interface EfectoBalance {
   /** Keywords que concede el efecto (grant_keyword, también por tramo). */
   keywordsConcedidas: string[]
   esComandante: boolean
+  /** `reglaEnumerada` del efecto (solo `modificar_regla`); solo se rellena cuando existe. */
+  reglaEnumerada?: string
+  /** Id de la regla del catálogo REGLAS que modifica (`regla.id`); solo cuando existe. */
+  reglaCatalogo?: string
+  /** `objetivo.controlador` (quién controla lo que el efecto toca); solo cuando existe. */
+  objetivoControlador?: string
+  /** `objetivo.controladorDestino` (a quién va lo movido); solo cuando existe. */
+  controladorDestino?: string
+  /** `activar_disparo` sin pagar el costo del Disparo. */
+  sinPagarCosto?: boolean
+  /** `activar_disparo` sin agotar al Campeón. */
+  sinAgotar?: boolean
+  /** Alcance del reagrupe del efecto (`todo` = todo el Éter bloqueado en la carta); solo cuando existe. */
+  reagruparAlcance?: string
 }
 
 export interface StatsCampeon {

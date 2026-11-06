@@ -40,6 +40,15 @@ describe('Balance', () => {
   })
   afterEach(() => limpiar())
 
+  /** La tabla del resumen por mazo (la vista trae otra de tabú con filas del mismo mazo). */
+  const tablaResumen = () => screen.getByRole('table', { name: /^Resumen por mazo/ })
+
+  it('trae un enlace para regresar al menú de inicio', () => {
+    montar()
+    const enlace = screen.getByRole('link', { name: /inicio/i })
+    expect(enlace).toHaveAttribute('href', '/')
+  })
+
   it('muestra el encabezado y un texto de propósito en español neutro', () => {
     montar()
     expect(screen.getByRole('heading', { level: 1, name: 'Tablero de balance' })).toBeInTheDocument()
@@ -52,7 +61,8 @@ describe('Balance', () => {
     expect(tabs.map((t) => t.textContent)).toEqual(PESTANAS.map(([, nombre]) => nombre))
     expect(screen.getByRole('tab', { name: 'Resumen por mazo' })).toHaveAttribute('aria-selected', 'true')
     expect(screen.getByRole('heading', { level: 2, name: 'Resumen por mazo' })).toBeInTheDocument()
-    expect(within(screen.getByRole('row', { name: /^Estásis/ })).getAllByRole('cell')[1]).toHaveTextContent('33')
+    // El resumen ahora trae dos tablas con fila de Estásis (resumen y tabú): se mide la del resumen.
+    expect(within(within(tablaResumen()).getByRole('row', { name: /^Estásis/ })).getAllByRole('cell')[1]).toHaveTextContent('33')
   })
 
   it.each(PESTANAS)('la pestaña «%s» muestra su vista y guarda el parámetro vista', async (vista, nombre) => {
@@ -82,7 +92,8 @@ describe('Balance', () => {
   it('los filtros de la URL recortan las vistas', () => {
     montar('/balance?mazo=estasis')
     expect(screen.getByRole('form', { name: 'Filtros del tablero' })).toBeInTheDocument()
-    expect(screen.getByRole('row', { name: /^Estásis/ })).toBeInTheDocument()
+    expect(within(tablaResumen()).getByRole('row', { name: /^Estásis/ })).toBeInTheDocument()
+    expect(within(tablaResumen()).queryByRole('row', { name: /^Disonancia/ })).not.toBeInTheDocument()
     expect(screen.queryByRole('row', { name: /^Disonancia/ })).not.toBeInTheDocument()
   })
 
@@ -209,8 +220,8 @@ describe('Balance', () => {
         const letalidad = await screen.findByRole('table', { name: /letalidad por campeón/i })
         expect(within(letalidad).getAllByRole('row')).toHaveLength(19)
         await userEvent.click(screen.getByRole('tab', { name: 'Resumen por mazo' }))
-        await waitFor(() => expect(screen.getByRole('row', { name: /^Estásis/ })).toHaveTextContent('33'))
-        expect(screen.getByRole('row', { name: /^Disonancia/ })).toHaveTextContent('33')
+        await waitFor(() => expect(within(tablaResumen()).getByRole('row', { name: /^Estásis/ })).toHaveTextContent('33'))
+        expect(within(tablaResumen()).getByRole('row', { name: /^Disonancia/ })).toHaveTextContent('33')
       } finally {
         URL.createObjectURL = original.crear
         URL.revokeObjectURL = original.revocar

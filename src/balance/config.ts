@@ -162,4 +162,118 @@ export const CONFIG_V1: ConfigBalance = {
 
   // Análisis de carta (BORRADOR): paso de la simulación «subir +1» y holgura que cuenta como «cerca del tope».
   analisis: { pasoSubida: 1, cercaDelTope: 0.5 },
+
+  // ÍNDICE DE TABÚ (BORRADOR calibrable): cuántas reglas del manual rompe una carta. A mayor tabú, más poderoso es el efecto y más
+  // tendría que costar. Es un EJE NUEVO e independiente: no cambia el poder, los stats ni el semáforo.
+  //   Nivel 0  no rompe ninguna regla del manual.
+  //   Nivel 1  cambia una regla que ya tiene hueco previsto (el manual o el catálogo REGLAS del motor nombran la excepción).
+  //   Nivel 2  rompe una regla escrita del manual, sin excepción nombrada.
+  //   Nivel 3  rompe un invariante del motor (p. ej. «el Éter nunca va al Cementerio ni al Exilio»).
+  // Cada entrada lleva el nivel y la regla del manual que rompe. Los verbos de poder (`poder.verbo`) no cambian con esto.
+  tabu: {
+    niveles: [0, 1, 2, 3],
+
+    // Una entrada por verbo del seed y de `poder.verbo` (campo `efecto`). Los que no rompen nada van en nivel 0 de forma explícita.
+    verbo: {
+      buff: { nivel: 0, regla: 'Ninguna: modificar ATQ y RES es lo normal en el juego' },
+      debuff: { nivel: 0, regla: 'Ninguna: modificar ATQ y RES es lo normal en el juego' },
+      destroy: { nivel: 0, regla: 'Ninguna: la remoción es parte del juego (§9.4, §10)' },
+      exile: { nivel: 0, regla: 'Ninguna: exiliar es un efecto normal; Inexiliable ya lo cubre (§10)' },
+      return_hand: { nivel: 0, regla: 'Ninguna: devolver a la mano es un efecto normal' },
+      draw: { nivel: 0, regla: 'Ninguna: robar cartas es un efecto normal' },
+      steal_champion: { nivel: 1, regla: '§7.8: tomar el control de un Campeón rival; el manual ya prevé su Éter y su regreso' },
+      steal_ether: { nivel: 1, regla: '§7.1 y §7.3: cada jugador paga con su Éter; el arrebato (§7.6) lo presta hasta el Alba de su dueño' },
+      block_ether: { nivel: 0, regla: 'Ninguna: bloquear Éter en un Campeón es la mecánica normal (§7.2)' },
+      free_ether: { nivel: 0, regla: 'Ninguna: liberar Éter bloqueado es la mecánica normal (§7.2)' },
+      return_ether: { nivel: 1, regla: '§7.4: el Éter pagado vuelve a la Reserva hasta tu próximo Alba; Recarga ya nombra una excepción' },
+      toggle_exhaust: { nivel: 0, regla: 'Ninguna: agotar o enderezar es un estado que el manual ya maneja (§9.2)' },
+      prevent_destroy: { nivel: 1, regla: '§9.4: la Ruptura destruye un Vínculo; Inmortal e Indestructible ya nombran excepciones (§10)' },
+      fix_exhaust: { nivel: 2, regla: '§8.2: el Alba endereza a tus Campeones; fijar el agotamiento lo impide' },
+      scry: { nivel: 0, regla: 'Ninguna: mirar el mazo es un efecto normal (§8.2)' },
+      tutor: { nivel: 0, regla: 'Ninguna: buscar una carta es un efecto normal' },
+      copy: { nivel: 0, regla: 'Ninguna: copiar atributos es un efecto normal (el Comandante es inmutable, §10)' },
+      redirect: { nivel: 0, regla: 'Ninguna: redirigir una activación es un efecto de cadena normal' },
+      double_attack: { nivel: 2, regla: '§9.2: un Campeón declara un solo ataque y se agota al declararlo' },
+      direct_attack: { nivel: 1, regla: '§9.3: el defensor puede bloquear; el manual ya nombra al Campeón que no puede ser bloqueado' },
+      change_type: { nivel: 0, regla: 'Ninguna: cambiar el tipo de un Campeón es un efecto normal' },
+      grant_keyword: { nivel: 0, regla: 'Ninguna: conceder una keyword es normal; el tabú lo pone la keyword (ver keyword)' },
+      recuperar_campo: { nivel: 0, regla: 'Ninguna: recuperar del Cementerio es un efecto normal' },
+      recuperar_mano: { nivel: 0, regla: 'Ninguna: recuperar a la mano es un efecto normal' },
+      recuperar_mazo: { nivel: 0, regla: 'Ninguna: recuperar al mazo es un efecto normal' },
+      recuperar_mazo_barajar: { nivel: 0, regla: 'Ninguna: recuperar al mazo es un efecto normal' },
+      recuperar_mazo_top: { nivel: 0, regla: 'Ninguna: recuperar al mazo es un efecto normal' },
+      recuperar_mazo_bottom: { nivel: 0, regla: 'Ninguna: recuperar al mazo es un efecto normal' },
+      recuperar_exilio: { nivel: 0, regla: 'Ninguna: recuperar del Exilio es un efecto normal' },
+      invocar: { nivel: 0, regla: 'Ninguna: invocar por efecto es un efecto normal' },
+      invocar_y_equipar: { nivel: 0, regla: 'Ninguna: invocar y equipar es un efecto normal' },
+      mover: { nivel: 0, regla: 'Ninguna cuando mueve Éter propio; si mueve Éter del rival aplica el contexto mover_eter_ajeno' },
+      negar: { nivel: 0, regla: 'Ninguna: negar es parte de la cadena de efectos' },
+      rival_discard: { nivel: 0, regla: 'Ninguna: hacer descartar al rival es un efecto normal' },
+      modificar_regla: { nivel: 0, regla: 'Es solo el vehículo: el tabú está en la regla que modifica (ver regla)' },
+      activar_disparo: { nivel: 1, regla: '§8.3a: cada Campeón activa sus propios Disparos; aquí uno activa el de otro' },
+      anclar_eter: { nivel: 2, regla: '§8.2: todo el Éter fuera de la Reserva se reagrupa en el Alba; el ancla lo impide' },
+    },
+
+    // El mismo verbo con otro objetivo: la clave de contexto SUSTITUYE a la del verbo.
+    contexto: {
+      mover_eter_ajeno: { nivel: 1, regla: '§7.3: solo tú mueves tu Éter de la Reserva; aquí se mueve el Éter del rival sin que él pague' },
+      recuperar_mano_al_dueno: { nivel: 1, regla: '§7.8: el Campeón robado regresa a su dueño; aquí lo hace a su mano' },
+    },
+
+    // Reglas enumeradas del Card-Maker (`reglaEnumerada`) y reglas del catálogo REGLAS del motor (`regla.id`).
+    regla: {
+      disparo_sin_agotar: { nivel: 1, regla: '§8.3a: un Disparo con Éter pagado agota al Campeón; Tirador ya nombra la excepción' },
+      coste_campeones_rival_mas: { nivel: 1, regla: '§7.3: invocar cuesta lo que dice la carta; el catálogo prevé el Éter extra (costeCampeonesExtra)' },
+      olvido_rival: { nivel: 1, regla: '§9.4: lo que muere va al Cementerio; el catálogo prevé el Exilio en su lugar (cementerioAlExilio)' },
+      peaje_bloqueo: { nivel: 2, regla: '§9.3: bloquear es gratis y forzoso; el Peaje lo cobra y suspende el bloqueo forzoso' },
+      primerTurnoSinAtaques: { nivel: 2, regla: '§8.6: nadie ataca en el primer turno de la partida' },
+      limiteMano: { nivel: 1, regla: '§7.1 y §8.5: el límite de mano es 6; el catálogo lo prevé' },
+      cartasPorAlba: { nivel: 2, regla: '§8.2: robas 1 carta en el Alba' },
+      rupturasPorTurno: { nivel: 1, regla: '§9.4: una sola Ruptura por turno; el manual nombra la excepción (Embestida del Sur)' },
+      atacarTrasRuptura: { nivel: 1, regla: '§9.4: tras la Ruptura no se declara otro ataque; el manual nombra la excepción' },
+      derrotaPorVinculos: { nivel: 3, regla: '§13: pierdes al quedarte sin Vínculos; es un invariante del motor' },
+      costeCampeonesExtra: { nivel: 1, regla: '§7.3: invocar cuesta lo que dice la carta; el catálogo prevé el Éter extra' },
+      cementerioAlExilio: { nivel: 1, regla: '§9.4: lo que muere va al Cementerio; el catálogo prevé el Exilio en su lugar' },
+      costeBloqueo: { nivel: 2, regla: '§9.3: bloquear es gratis y forzoso' },
+      agotadoPuedeBloquear: { nivel: 2, regla: '§9.3: un Campeón agotado no puede bloquear' },
+      invocacionCansada: { nivel: 1, regla: '§9.2: no ataca el turno en que se invoca; Carga ya nombra la excepción' },
+      atacarAgota: { nivel: 1, regla: '§9.2: atacar agota al Campeón; Vigor ya nombra la excepción' },
+      disparoAgota: { nivel: 1, regla: '§8.3a: un Disparo con Éter pagado agota al Campeón; Tirador ya nombra la excepción' },
+      ataquesPorTurno: { nivel: 2, regla: '§9.2: un Campeón declara un solo ataque por turno' },
+      bloqueosPorTurno: { nivel: 2, regla: '§9.3: un Campeón bloquea un solo ataque por turno' },
+      puedeSerBloqueado: { nivel: 1, regla: '§9.3: el atacante puede ser bloqueado; el manual nombra al que no puede serlo' },
+      puedeSerExiliada: { nivel: 1, regla: '§10: Inexiliable ya nombra la excepción' },
+      puedeSerDestruidaPorEfecto: { nivel: 1, regla: '§10: Inmortal ya nombra la excepción' },
+      puedeSerDestruidaEnBatalla: { nivel: 1, regla: '§10: Indestructible ya nombra la excepción' },
+      efectosActivos: { nivel: 1, regla: '§10: negar un efecto activo; el Comandante es inmutable y las keywords quedan fuera' },
+      puedeSerNegada: { nivel: 1, regla: '§10: Inegable ya nombra la excepción' },
+      eterBloqueadoExtra: { nivel: 2, regla: '§7.7: el efecto bloquea exactamente su Éter' },
+    },
+
+    // Banderas de un efecto que rompen una regla por sí solas.
+    opcion: {
+      sin_pagar_costo: { nivel: 2, regla: '§8.3a: un Disparo se activa pagando su costo' },
+      reagrupar_todo: { nivel: 1, regla: '§7.6: reagrupa todo el Éter bloqueado en la carta; el manual nombra ese alcance (Aurora y Ragnar)' },
+    },
+
+    // Las keywords son el vocabulario de excepciones del propio manual (§10) y su peso ya está en `poder.keyword`: nivel 0 explícito.
+    keyword: {
+      Carga: { nivel: 0, regla: 'Keyword del manual (§10): la excepción a la invocación cansada ya está nombrada' },
+      Vigor: { nivel: 0, regla: 'Keyword del manual (§10): la excepción a «atacar agota» ya está nombrada' },
+      Tirador: { nivel: 0, regla: 'Keyword del manual (§10): la excepción a «el Disparo agota» ya está nombrada' },
+      Inmortal: { nivel: 0, regla: 'Keyword del manual (§10): la inmunidad a efectos ya está nombrada' },
+      Indestructible: { nivel: 0, regla: 'Keyword del manual (§10): la inmunidad a la batalla ya está nombrada' },
+      Inexiliable: { nivel: 0, regla: 'Keyword del manual (§10): la inmunidad al Exilio ya está nombrada' },
+      Inegable: { nivel: 0, regla: 'Keyword del manual (§10): la inmunidad a la negación ya está nombrada' },
+      Recarga: { nivel: 0, regla: 'Keyword del manual (§10): el regreso de Éter bloqueado ya está nombrado' },
+      Protector: { nivel: 0, regla: 'Keyword del manual (§10): la protección a los demás Campeones ya está nombrada' },
+      Artefacto: { nivel: 0, regla: 'Keyword del manual (§10): el equipamiento ya está nombrado' },
+      Presteza: { nivel: 0, regla: 'Keyword del manual (§10): la velocidad media ya está nombrada' },
+      Fugaz: { nivel: 0, regla: 'Keyword del manual (§10): la velocidad máxima ya está nombrada' },
+    },
+
+    // «A mayor tabú, mayor coste»: 1 punto de tabú por cada punto de coste por encima de 1. Un Éter (coste 1) no puede romper nada
+    // dentro de su presupuesto, porque no puede subir de coste; los costes 5-10 aún no tienen cartas reales (criterio para las que vengan).
+    tabuMaxPorCoste: { 1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 7: 6, 8: 7, 9: 8, 10: 9 },
+  },
 }

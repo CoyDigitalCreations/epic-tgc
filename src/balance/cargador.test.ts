@@ -158,3 +158,26 @@ describe('cargarCartas en los bordes', () => {
     expect(r.disonancia).toHaveLength(0)
   })
 })
+
+describe('cargarCartas: datos que alimentan el índice de tabú', () => {
+  const efectosDe = (id: string) => carga.cartas.find((c) => c.id === id)?.efectos ?? []
+
+  it('conserva la regla enumerada, la regla del catálogo y los controladores del objetivo', () => {
+    expect(efectosDe('DS-010').map((e) => e.reglaEnumerada)).toEqual([undefined, 'olvido_rival', undefined, 'peaje_bloqueo'])
+    expect(efectosDe('DS-033').map((e) => e.reglaCatalogo)).toEqual(['rupturasPorTurno', 'atacarTrasRuptura'])
+    expect(efectosDe('DS-006')[0]).toMatchObject({ objetivoControlador: 'rival' })
+    expect(efectosDe('FB-023')[0]).toMatchObject({ controladorDestino: 'dueno' })
+  })
+
+  it('conserva las opciones de Resonancia y el alcance del reagrupe de Aurora', () => {
+    expect(efectosDe('FB-010')[0]).toMatchObject({ sinPagarCosto: true, sinAgotar: true })
+    expect(efectosDe('FB-010')[1]).toMatchObject({ reagruparAlcance: 'todo' })
+  })
+
+  it('solo agrega los campos cuando el seed los declara (un efecto simple no cambia de forma)', () => {
+    const simple = efectosDe('FB-004')[0]
+    for (const campo of ['reglaEnumerada', 'reglaCatalogo', 'sinPagarCosto', 'sinAgotar', 'reagruparAlcance', 'controladorDestino']) {
+      expect(campo in simple, campo).toBe(false)
+    }
+  })
+})

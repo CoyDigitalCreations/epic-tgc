@@ -1,4 +1,5 @@
 import { useMemo, type KeyboardEvent, type ReactElement } from 'react'
+import { Link } from 'react-router'
 import { ALL_CARDS } from '../shared/data/paquetes'
 import { cargarCartas } from './cargador'
 import { FiltrosBalance } from './componentes/FiltrosBalance'
@@ -108,6 +109,9 @@ export default function Balance() {
     <div className="min-h-screen bg-[#0d0d14] font-body text-gray-100">
       <header className="border-b border-card-border/70 bg-surface/80">
         <div className="mx-auto max-w-7xl px-6 py-4">
+          <Link to="/" className="mb-2 inline-block text-sm text-gray-400 transition-colors hover:text-ether-200">
+            ← Inicio
+          </Link>
           <h1 className="font-display text-2xl font-bold tracking-wider text-gray-100">Tablero de balance</h1>
           <p className="mt-1 max-w-3xl text-sm text-gray-400">
             Mide si cada carta tiene el poder que le corresponde por su coste y si respeta la identidad de su mazo. Es de
