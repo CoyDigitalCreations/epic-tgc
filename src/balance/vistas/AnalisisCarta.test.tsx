@@ -283,7 +283,8 @@ describe('AnalisisCarta: contenido', () => {
     expect(within(poder).getByText('Índice de poder')).toBeInTheDocument()
     expect(within(poder).getByText(/Poder esperado/)).toBeInTheDocument()
     expect(within(poder).getByText(/Holgura/)).toBeInTheDocument()
-    expect(screen.queryByRole('meter')).not.toBeInTheDocument()
+    // Sin stats no hay barras de stats (la de tabú es otro eje y sí puede estar)
+    expect(screen.queryByRole('meter', { name: /^(ATQ|RES|Suma)$/ })).not.toBeInTheDocument()
   })
 
   it('las cartas de referencia son de solo lectura: sin ajuste ni exportación', async () => {
@@ -301,7 +302,7 @@ describe('AnalisisCarta: contenido', () => {
   it('cada estado tiene texto visible además del color', () => {
     for (const nombre of ['Elena', 'Isolde', 'Vaela', 'Aurora', 'Rowena']) {
       const { unmount } = render(<Arnes inicial={porNombre(nombre).id} />)
-      for (const m of screen.getAllByRole('meter')) {
+      for (const m of screen.getAllByRole('meter', { name: /^(ATQ|RES|Suma)$/ })) {
         const fila = m.closest('li')
         expect(fila?.textContent ?? '').toMatch(/Dentro del rango|Cerca del tope|Excede el tope|Bajo banda: puede subir|Exenta: tope propio/)
       }
@@ -391,6 +392,35 @@ describe('AnalisisCarta: tabú', () => {
     expect(within(tabu).getByText('Sin presupuesto de tabú')).toBeInTheDocument()
     expect(within(tabu).getByText(/no tienen presupuesto de tabú/)).toBeInTheDocument()
     expect(within(tabu).getByText('steal_ether')).toBeInTheDocument()
+  })
+
+  it('la barra de tabú muestra los puntos contra el máximo y usa el color de su veredicto', () => {
+    const casos: [string, string, string, string][] = [
+      ['FB-010', '6 de 3', 'bg-violet-500', 'exenta'], // Aurora: se pasa del máximo pero está exenta
+      ['DS-007', '1 de 0', 'bg-red-500', 'excede'],
+      ['FB-015', '', 'bg-yellow-500', 'en el límite'], // Elena: usa todo el presupuesto
+      ['FB-021', '', 'bg-green-500', 'dentro'],
+    ]
+    for (const [id, texto, color, estado] of casos) {
+      const { unmount } = render(<Arnes inicial={id} />)
+      const barra = within(bloque('Tabú')).getByRole('meter', { name: 'Tabú' })
+      if (texto !== '') expect(barra).toHaveAttribute('aria-valuetext', texto)
+      expect(barra.firstElementChild, `${id} (${estado})`).toHaveClass(color)
+      unmount()
+    }
+  })
+
+  it('la barra de tabú nunca pasa del 100 % aunque los puntos superen el máximo', () => {
+    render(<Arnes inicial="FB-010" />) // 6 puntos contra un máximo de 3
+    const barra = within(bloque('Tabú')).getByRole('meter', { name: 'Tabú' })
+    expect((barra.firstElementChild as HTMLElement).style.width).toBe('100%')
+    expect(barra).toHaveAttribute('aria-valuemax', '6')
+    expect(barra).toHaveAttribute('aria-valuenow', '6')
+  })
+
+  it('un Vínculo de coste 0 no tiene presupuesto, así que no dibuja barra de tabú', () => {
+    render(<Arnes inicial="DS-028" />)
+    expect(within(bloque('Tabú')).queryByRole('meter')).not.toBeInTheDocument()
   })
 
   it('el veredicto siempre tiene texto además del color y explica la escala de niveles', () => {

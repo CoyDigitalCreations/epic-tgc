@@ -57,6 +57,15 @@ const COLOR_TABU: Record<EstadoTabu, string> = {
   'sin-presupuesto': 'border-card-border bg-surface-2 text-gray-300',
 }
 
+/** Color de la barra de tabú, el mismo código que su insignia (verde dentro, amarillo en el límite, rojo excede, violeta exenta). */
+const COLOR_BARRA_TABU: Record<EstadoTabu, string> = {
+  dentro: 'bg-green-500',
+  'en-limite': 'bg-yellow-500',
+  excede: 'bg-red-500',
+  exenta: 'bg-violet-500',
+  'sin-presupuesto': 'bg-gray-500',
+}
+
 /** Minúsculas y sin acentos, para buscar «elen» y encontrar «Elena» sin pensar en tildes. */
 const normalizar = (texto: string): string => texto.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase()
 const coincide = (c: CartaBalance, busqueda: string): boolean =>
@@ -134,6 +143,34 @@ function Barra({ m }: { m: MargenStat }) {
       className="h-2 w-full overflow-hidden rounded-full bg-surface-2"
     >
       <div className={`h-full ${COLOR_ESTADO[m.estado].barra}`} style={{ width: `${porcentaje}%` }} />
+    </div>
+  )
+}
+
+/** Puntos de tabú contra el máximo de su coste. Sin presupuesto (coste 0) no hay con qué comparar, así que no se dibuja. */
+function BarraTabu({ tabu }: { tabu: EvaluacionTabu }) {
+  if (tabu.max === null) return null
+  const maximo = Math.max(tabu.max, tabu.puntos)
+  const porcentaje = maximo > 0 ? Math.min(100, Math.round((tabu.puntos / maximo) * 100)) : 0
+  return (
+    <div className="mt-3">
+      <div className="mb-1 flex flex-wrap items-baseline justify-between gap-2 text-sm">
+        <span className="font-semibold text-gray-100">Tabú</span>
+        <span className="text-gray-400">
+          {tabu.puntos} de {tabu.max}
+        </span>
+      </div>
+      <div
+        role="meter"
+        aria-label="Tabú"
+        aria-valuemin={0}
+        aria-valuemax={maximo}
+        aria-valuenow={tabu.puntos}
+        aria-valuetext={`${tabu.puntos} de ${tabu.max}`}
+        className="h-2 w-full overflow-hidden rounded-full bg-surface-2"
+      >
+        <div className={`h-full ${COLOR_BARRA_TABU[tabu.estado]}`} style={{ width: `${porcentaje}%` }} />
+      </div>
     </div>
   )
 }
@@ -279,6 +316,7 @@ function Tabu({ analisis, carta }: { analisis: Analisis; carta: CartaBalance }) 
           </div>
         ))}
       </dl>
+      <BarraTabu tabu={tabu} />
       <p className="mt-2 text-xs">
         <span className={`rounded-full border px-2 py-0.5 font-semibold ${COLOR_TABU[tabu.estado]}`}>{ETIQUETA_ESTADO_TABU[tabu.estado]}</span>
       </p>
