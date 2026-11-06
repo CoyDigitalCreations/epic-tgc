@@ -2025,7 +2025,7 @@ var FuenteEfectos_default = [
   },
   {
     id: "DS-018",
-    name: "Skarn, Rompev\xEDnculos",
+    name: "Skarn, Rompearcanas",
     type: "Campe\xF3n",
     rarity: "Com\xFAn",
     keywords: [],
@@ -2033,7 +2033,7 @@ var FuenteEfectos_default = [
     paqueteId: "disonancia",
     limiteCopias: "3",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-11-06T05:02:32.994Z",
+    updatedAt: "2026-11-06T18:07:38.291Z",
     facciones: [
       "Caos"
     ],
