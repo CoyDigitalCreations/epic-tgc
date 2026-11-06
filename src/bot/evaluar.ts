@@ -23,6 +23,17 @@ export interface Pesos {
   manoCoste: number
   /** Éter (reserva + pagado + bloqueado): recurso. */
   eter: number
+  /**
+   * Éter arrebatado (Disonancia): se mira el DUEÑO (`inst.owner`), no la zona, porque el motor lo devuelve a la Reserva de su
+   * dueño en el Alba de su dueño (`reagruparEter`). Fracción de su valor que conserva el dueño mientras el rival lo tiene prestado
+   * (1 = no pierde nada, porque vuelve). Antes se contaba por zona y el dueño lo daba por perdido (0).
+   */
+  eterRobado: number
+  /**
+   * Fracción del valor de un Éter que tienes PRESTADO (ajeno): solo lo puedes gastar, no activa sus efectos, no se bloquea y se te va
+   * en el Alba de su dueño. Antes valía como uno propio (1).
+   */
+  eterPrestado: number
   /** Cartas de soporte en el campo (Místicas/Arcanas colocadas). */
   soporte: number
   /** Mazo propio por debajo de `mazoBajoUmbral`: cada carta que falta penaliza (perder por mazo vacío). */
@@ -42,11 +53,16 @@ export const PESOS: Pesos = {
   mano: 1,
   manoCoste: 0.3,
   eter: 0.4,
+  eterRobado: 1,
+  eterPrestado: 0.25,
   soporte: 1.5,
   mazoBajo: 6,
   mazoBajoUmbral: 6,
   excesoMano: 50,
 }
+
+/** Los pesos de ANTES de valorar el Éter arrebatado por dueño: línea base para medir la mejora en la arena (`dificil-antes`). */
+export const PESOS_ANTES: Pesos = { ...PESOS, eterRobado: 0, eterPrestado: 1 }
 
 const VICTORIA = 1e6
 
@@ -71,9 +87,16 @@ function valorTablero(s: GameState, j: PlayerId, w: Pesos): number {
   return v
 }
 
-function eterDe(s: GameState, j: PlayerId): number {
+/**
+ * Éter de `j` en unidades de «Éter propio». Cuenta por DUEÑO: el prestado que tiene `j` pesa `eterPrestado`, y el suyo que tiene el
+ * rival en la Reserva o la zona de pago pesa `eterRobado` (vuelve en su Alba). Sin Éter arrebatado en juego da lo mismo que antes.
+ */
+function eterDe(s: GameState, j: PlayerId, w: Pesos): number {
   const p = s.players[j]
-  let n = p.eterReserva.length + p.eterPagado.length
+  const rival = s.players[j === 'A' ? 'B' : 'A']
+  let n = 0
+  for (const id of [...p.eterReserva, ...p.eterPagado]) n += (s.instances[id]?.owner ?? j) === j ? 1 : w.eterPrestado
+  for (const id of [...rival.eterReserva, ...rival.eterPagado]) if (s.instances[id]?.owner === j) n += w.eterRobado
   for (const id of p.campo.campeones) if (id) n += s.instances[id]?.eterBloqueado?.length ?? 0
   for (const id of [...p.campo.misticasTacticas, ...p.campo.arcanasCombate]) if (id) n += s.instances[id]?.eterBloqueado?.length ?? 0
   return n
@@ -100,7 +123,7 @@ export function evaluar(s: GameState, yo: PlayerId, w: Pesos = PESOS): number {
   if (suyos === 1) v += w.ultimoVinculo
 
   v += valorTablero(s, yo, w) - valorTablero(s, rival, w)
-  v += w.eter * (eterDe(s, yo) - eterDe(s, rival))
+  v += w.eter * (eterDe(s, yo, w) - eterDe(s, rival, w))
 
   // Mano: la mía por lo que valen mis cartas; la del rival solo por su tamaño (no sé qué tiene)
   for (const id of s.players[yo].mano) v += w.mano + w.manoCoste * costeDe(s, id)

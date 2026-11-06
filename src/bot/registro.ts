@@ -3,6 +3,7 @@ import { botBase } from './base'
 import { CONFIG } from './busqueda'
 import type { Config } from './busqueda'
 import { crearBotBusqueda } from './dificil'
+import { PESOS_ANTES } from './evaluar'
 import { botDificilNuevo, botFacilNuevo, botMedioNuevo } from './niveles'
 
 /** Todos los bots que la arena sabe enfrentar, por nombre. */
@@ -13,6 +14,8 @@ export const BOTS: Record<string, Bot> = {
   facil: botFacilNuevo,
   medio: botMedioNuevo,
   dificil: botDificilNuevo,
+  /** El Difícil con la valoración de Éter de ANTES de distinguir el arrebatado: línea base para medir esa mejora. */
+  'dificil-antes': crearBotBusqueda({ ...CONFIG, pesos: PESOS_ANTES }),
 }
 
 /**
