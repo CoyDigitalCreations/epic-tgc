@@ -13,6 +13,7 @@
 import { esCostoBloqueo, getCardMeta } from './cards'
 import { eteresPropios, etiquetarEter, marcarContinuoActivado } from './eter'
 import { hastaAlba, registrarEfectoPendiente } from './effectRegistry'
+import { dispararAlPagarEter } from './payments'
 import { disparoNoAgotaPorComandante, MARCA_DISPARO_SIN_AGOTAR, reglaBool } from './reglas'
 import { metaDeInstancia } from './efectosInstancia'
 import type { EfectoData } from '../../shared/types'
@@ -125,4 +126,8 @@ export function pagarHabilidad(
       inst.efectosUsadosEsteTurno = [...(inst.efectosUsadosEsteTurno ?? []), MARCA_DISPARO_SIN_AGOTAR]
     }
   }
+  // Los Éteres «Cuando pagues esta carta» se disparan también al pagar una HABILIDAD (antes solo al jugar una carta o en el
+  // Peaje). Va al FINAL: el coste ya está completo (pagado, agotado, 1/turno) cuando el gatillo se resuelve. Quien llama ya abrió
+  // su `marcarInicioAccion`, así que las elecciones del gatillo van antes de la ventana de la activación (F5d-1).
+  if (eterIds.length > 0) dispararAlPagarEter(s, ctx, jugador, [...eterIds], { tipo: 'habilidad', cardInstanceId: instId })
 }

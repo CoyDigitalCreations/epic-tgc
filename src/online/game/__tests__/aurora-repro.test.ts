@@ -26,7 +26,7 @@ import { AURORA_CLASICA, registrarAuroraClasica } from './helpers/auroraClasica'
 // Aurora (FB-010) se rediseñó; este bug de routing se reproduce con su diseño clásico (fixture).
 registrarAuroraClasica()
 
-const ETER_ORDEN = 'FB-001'
+const ETER_ORDEN = 'DS-002' // Éter neutro: sin gatillo al pagar (FB-001 abre una elección y este test no es de gatillos)
 const AURORA = AURORA_CLASICA // disparo destroy eter:2 + continuo steal_champion bloqueo_fijo:4
 const RIVAL = 'FB-011' // Vaela — campeón rival
 

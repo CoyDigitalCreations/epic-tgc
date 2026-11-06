@@ -24,7 +24,7 @@ import type { Action } from '../actions'
 import type { Ctx, GameState, PlayerId } from '../types'
 
 const TIRADOR = 'TEST-DISPARO'
-const ETER_ORDEN = 'FB-001'
+const ETER_ORDEN = 'DS-002' // Éter neutro: sin gatillo al pagar (FB-001 abre una elección y este test no es de gatillos)
 
 registrarCartas([{
   id: TIRADOR,

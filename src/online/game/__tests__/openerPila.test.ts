@@ -324,6 +324,9 @@ describe('Habilidad: el opener resuelve ÚLTIMO', () => {
     const s = estadoMinimo()
     conCampeon(s, 'A', 'cA0', CAMP_ROBA, 0)
     conEteres(s, 'A', 2)
+    // El Éter con que A paga la habilidad es INERTE (DS-002): FB-001 arma una elección al-pagar-eter, que desde que el pago de una
+    // habilidad dispara los gatillos también es de la acción y ensuciaría este escenario (que prueba el ORDEN de la pila)
+    for (const id of s.players.A.eterReserva) s.instances[id]!.cardId = 'DS-002'
     conMazo(s, 'A')
     conMazo(s, 'B')
     conMano(s, 'B', 'prest-1', PRESTEZA)

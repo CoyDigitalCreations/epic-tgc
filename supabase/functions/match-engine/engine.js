@@ -4594,6 +4594,7 @@ function pagarHabilidad(s, ctx, jugador, instId, efectoSel, eterIds) {
       inst.efectosUsadosEsteTurno = [...inst.efectosUsadosEsteTurno ?? [], MARCA_DISPARO_SIN_AGOTAR];
     }
   }
+  if (eterIds.length > 0) dispararAlPagarEter(s, ctx, jugador, [...eterIds], { tipo: "habilidad", cardInstanceId: instId });
 }
 
 // src/online/game/bloqueoAlJugar.ts

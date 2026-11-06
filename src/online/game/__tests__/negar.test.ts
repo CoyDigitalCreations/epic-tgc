@@ -153,6 +153,9 @@ function setupVentana(conMarcha: boolean): { s: GameState; victimaId: string; et
   const camp = conCampeon(estadoMinimo(), VICTIMA, 'B', 0)
   const eterB = conEteres(camp.s, 'B', 3)
   let s: GameState = { ...eterB.s, turno: 'B' }
+  // El Éter con que B paga la habilidad es INERTE (DS-002): FB-001 arma una elección al-pagar-eter, que desde que el pago de una
+  // habilidad dispara los gatillos también es de la acción y desviaría estos tests (que prueban la ventana de negación)
+  for (const id of eterB.ids) s.instances[id] = { ...s.instances[id]!, cardId: 'DS-002' }
   if (conMarcha) {
     s = conMano(s, 'A', { 'marcha-1': FB021 })
     s = conEteres(s, 'A', 3).s

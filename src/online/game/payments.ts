@@ -146,8 +146,12 @@ export function pagarPeaje(s: GameState, ctx: Ctx, jugador: PlayerId, cantidad: 
   return true
 }
 
-/** C2 (ADR-25): gatillos al-pagar-eter por cada Éter con trigger='al_pagar_eter' en sus efectos. */
-function dispararAlPagarEter(s: GameState, ctx: Ctx, jugador: PlayerId, eterIds: string[], contextoUso?: ContextoUso): void {
+/**
+ * C2 (ADR-25): gatillos al-pagar-eter por cada Éter con trigger='al_pagar_eter' en sus efectos.
+ * Lo llaman TODOS los caminos que pagan Éter a la zona de pago (`aplicarPago`, `pagarPeaje` y `pagarHabilidad`): un Éter «Cuando
+ * pagues esta carta» se dispara pagues lo que pagues, salvo que el propio Éter lo restrinja (DS-005: «para invocar un Campeón»).
+ */
+export function dispararAlPagarEter(s: GameState, ctx: Ctx, jugador: PlayerId, eterIds: string[], contextoUso?: ContextoUso): void {
   const gatillos = eterIds.filter((id) => {
     const inst = s.instances[id]
     const meta = inst?.cardId ? getCardMeta(inst.cardId) : null
