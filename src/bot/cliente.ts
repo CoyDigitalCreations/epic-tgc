@@ -9,6 +9,9 @@ import type { Peticion, Respuesta } from './worker'
 
 export type Nivel = 'facil' | 'medio' | 'dificil'
 
+/** Tiempo máximo que se espera al worker por jugada; pasado esto la interfaz usa el bot básico. */
+const PLAZO_JUGADA_MS = 30_000
+
 export interface MotorBot {
   jugar(estado: GameState, yo: PlayerId, dificultad: Nivel): Promise<Action | null>
   /** Partida nueva: olvida la memoria anti-bucle. */
@@ -37,6 +40,7 @@ export function crearMotorBot(): MotorBot {
   }
   const pendientes = new Map<number, (a: Action | null) => void>()
   let siguiente = 0
+  let muerto = false
   // Si el worker se cae, nadie se queda esperando: respuesta vacía (la interfaz decide qué hacer)
   const vaciar = () => {
     pendientes.forEach((resolver) => resolver(null))
@@ -46,13 +50,32 @@ export function crearMotorBot(): MotorBot {
     pendientes.get(e.data.id)?.(e.data.accion)
     pendientes.delete(e.data.id)
   }
-  worker.onerror = vaciar
-  const enviar = (p: Peticion) => worker.postMessage(p)
+  // Un worker caído no vuelve: las jugadas siguientes devuelven null al instante (sin esperar el plazo)
+  worker.onerror = () => {
+    muerto = true
+    vaciar()
+  }
+  const enviar = (p: Peticion) => {
+    try {
+      worker.postMessage(p)
+    } catch {
+      muerto = true
+      vaciar()
+    }
+  }
   return {
     jugar: (estado, yo, dificultad) =>
       new Promise((resolver) => {
+        if (muerto) return resolver(null)
         const id = ++siguiente
-        pendientes.set(id, resolver)
+        // Plazo: si el worker se cuelga o nunca contesta, la partida no se queda esperando para siempre
+        const reloj = setTimeout(() => {
+          if (pendientes.delete(id)) resolver(null)
+        }, PLAZO_JUGADA_MS)
+        pendientes.set(id, (accion) => {
+          clearTimeout(reloj)
+          resolver(accion)
+        })
         enviar({ tipo: 'jugar', id, estado, yo, dificultad })
       }),
     reiniciar: () => enviar({ tipo: 'reiniciar' }),
