@@ -281,7 +281,7 @@
   },
   {
     "id": "FB-010",
-    "name": "Aurora, La Primogénita",
+    "name": "Aurora de Casa Alba",
     "type": "Campeón",
     "rarity": "Única",
     "keywords": [
@@ -372,7 +372,7 @@
   },
   {
     "id": "FB-011",
-    "name": "Vaela, Sed de Alba",
+    "name": "Vaela de Casa Alba",
     "type": "Campeón",
     "rarity": "Común",
     "keywords": [
@@ -482,7 +482,7 @@
   },
   {
     "id": "FB-013",
-    "name": "Seraphina, Voz de las Casas",
+    "name": "Seraphina de Casa Serena",
     "type": "Campeón",
     "rarity": "Común",
     "keywords": [],
@@ -526,7 +526,7 @@
   },
   {
     "id": "FB-014",
-    "name": "Isolde, Última Casa",
+    "name": "Isolde de Casa Última",
     "type": "Campeón",
     "rarity": "Poco Común",
     "keywords": [
@@ -574,7 +574,7 @@
   },
   {
     "id": "FB-015",
-    "name": "Elena, Despertar del Éter",
+    "name": "Elena de Casa Serena",
     "type": "Campeón",
     "rarity": "Poco Común",
     "keywords": [
@@ -620,7 +620,7 @@
   },
   {
     "id": "FB-016",
-    "name": "Cassandra, Vigía del Reino Perdido",
+    "name": "Cassandra de Casa Vigía",
     "type": "Campeón",
     "rarity": "Común",
     "keywords": [],
@@ -681,7 +681,7 @@
   },
   {
     "id": "FB-017",
-    "name": "Nymeria, Conducto Roto",
+    "name": "Nymeria de Casa Eterna",
     "type": "Campeón",
     "rarity": "Poco Común",
     "keywords": [],
@@ -728,7 +728,7 @@
   },
   {
     "id": "FB-018",
-    "name": "Rowena, Vínculo Eterno",
+    "name": "Rowena de Casa Eterna",
     "type": "Campeón",
     "rarity": "Común",
     "keywords": [],

@@ -250,16 +250,16 @@ describe('Paquetes', () => {
   })
 
   describe('Convención de nomenclatura — Campeones con título adicional', () => {
-    it('todo Campeón de ambos mazos usa el formato "Nombre, Título"', () => {
+    it('todo Campeón de ambos mazos usa el formato "Nombre, Título" o "Nombre de Casa X"', () => {
       const campeones = ALL_CARDS.filter((c) => c.type === 'Campeón')
       expect(campeones.length).toBeGreaterThan(0)
       for (const card of campeones) {
         expect(
-          card.name.includes(', '),
+          card.name.includes(', ') || / de Casa \S+/.test(card.name),
           `Campeón ${card.id} sin título adicional: "${card.name}"`,
         ).toBe(true)
         // El título no debe repetir el nombre (ej. "Ragnar, Ragnar")
-        const [, titulo] = card.name.split(', ')
+        const [, titulo] = card.name.includes(', ') ? card.name.split(', ') : card.name.split(' de Casa ')
         expect(titulo?.trim().length ?? 0).toBeGreaterThan(0)
       }
     })

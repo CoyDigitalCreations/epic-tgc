@@ -171,7 +171,7 @@ export default function Lore() {
                   El Éter respira. Fluye desde la <B>Reserva</B> hacia el mundo cuando despierta el <B>Alba</B>; se <B>ancla</B> en los seres y las promesas que quieren sostener; se <B>gasta</B> en cada acto de poder; y al final <B>regresa</B>, porque nada de lo que fue Éter deja de serlo. Los sabios del norte llaman a este ciclo <em>el Gran Ciclo</em>: la forma que tiene la realidad de recordarse a sí misma. Quien aprende a leerlo, aprende a ganar.
                 </Cita>
                 <P>
-                  El Set Básico, <B>“El Despertar del Éter”</B>, presentará las mecánicas fundamentales del juego cuando sus cartas sean diseñadas para la v2.0. La primera entrega, <B color="#7070ff">LOS PRIMOGÉNITOS</B>, abre con el mazo temático <B color="#7070ff">ESTÁSIS</B> («El Ancla»): los Primogénitos del Éter, unidos por el Éter primigenio del polo norte.
+                  El Set Básico, <B>“El Despertar del Éter”</B>, presentará las mecánicas fundamentales del juego cuando sus cartas sean diseñadas para la v2.0. La primera entrega, <B color="#7070ff">LOS PRIMOGÉNITOS</B>, abre con el mazo temático <B color="#7070ff">ESTÁSIS</B> («La Calma»): los Primogénitos del Éter, unidos por el Éter primigenio del polo norte.
                 </P>
               </div>
             </section>
@@ -269,7 +269,7 @@ export default function Lore() {
                 <P>
                   Los reinos cayeron. Los tronos quedaron vacíos, y los vacíos aún exigen respuestas. Cada casa noble ordenó a su primogénita empuñar el cristal contra sus hermanas: <em>pelea por tu casa, es tu sangre</em>. Y por primera vez en la Edad de las Casas, las hijas del Éter dijeron <B>no</B>.
                 </P>
-                <Cita autor="— Seraphina, Voz de las Casas">
+                <Cita autor="— Seraphina de Casa Serena">
                   “Las casas nos dieron el cristal al nacer y nos pidieron la vida al crecer. Nos dieron un bando y nos exigieron un enemigo. Nosotras les dimos la espalda a los dos.”
                 </Cita>
               </div>
@@ -283,7 +283,7 @@ export default function Lore() {
                   Antes de la Escisión, cuando el Éter despertó en el norte, cada casa noble eligió al heredero de su linaje para un destino mayor: al nacer, el <B>primogénito</B> de la casa recibía un <B>cristal de Éter primigenio</B>, implantado en el pecho por los sabios del Eje. El vínculo los marcó para siempre: sus cuerpos se volvieron <B>conductos vivientes</B> por donde el Éter fluía como sangre, y su voluntad se volvió la fuerza que moldea la realidad. Ya no eran solo humanos: eran el Éter con forma de hija.
                 </P>
                 <P>
-                  El cristal no se entrega: se <B>hereda</B>, y solo al primogénito. Por eso, cuando las casas cayeron, las hijas que llevaban el cristal quedaron como la última memoria viva de cada linaje. En esta entrega, las primogénitas de Orden son <B>mujeres</B>; en el sur, donde el Nudo aprieta, los primogénitos de Caos son <B>hombres</B>, y el mundo aún no sabe cuál de los dos destinos es más pesado.
+                  El cristal no se entrega: se <B>hereda</B>, y solo al primogénito. Por eso, cuando las casas cayeron, las hijas que llevaban el cristal quedaron como la última memoria viva de cada linaje. En esta entrega, las primogénitas de Orden que conoce la hermandad son <B>mujeres</B>; en el sur, donde el Nudo aprieta, los primogénitos de Caos que han despertado son <B>hombres</B>. No es una ley del Éter, sino lo que han visto las casas hasta ahora: el Eje guarda herederos que aún no han abierto los ojos, y el mundo todavía no sabe cuál de los destinos es más pesado.
                 </P>
                 <P>
                   Reunidas en la ruina, las primogénitas del norte hicieron un pacto que ninguna casa firmó: <B>no elegir bando</B>. Ni Orden ni Caos, ni reino ni corona. Desde entonces vagan por el mundo como una sola hermandad, unidas por la sangre y por el Éter, buscando el origen de su poder y el propósito de su existencia. <em>«Cada hermana es la voz de una casa que ya no existe»</em>, y juntas, esas voces forman un reino nuevo, sin muros y sin trono.
@@ -299,7 +299,7 @@ export default function Lore() {
               <Encabezado n={5} id="casas" titulo="Las Casas Nobles" />
               <div className="mt-6">
                 <P>
-                  Cinco casas del norte levantaron sus reinos alrededor del cristal de sus primogénitas. Cada una canalizó el Éter a su manera; cada una cayó a su manera. De todas quedan las hijas, y de las hijas queda esta memoria:
+                  Muchas casas del norte levantaron sus reinos alrededor del cristal de sus primogénitas, y las crónicas apenas recuerdan a algunas; otras aún no han dicho su nombre. Cada una canalizó el Éter a su manera; cada una cayó a su manera. Estas son las que la hermandad lleva consigo, y de sus hijas queda esta memoria:
                 </P>
                 <div className="grid gap-4 sm:grid-cols-2">
                   {CASAS.map((c, i) => (
@@ -327,7 +327,7 @@ export default function Lore() {
                         <h3 className="font-display text-sm font-bold tracking-wider text-ether-300">{c.nombre}</h3>
                         <p className="mt-1.5 text-sm leading-relaxed text-gray-400">{c.texto}</p>
                         <p className="mt-2 text-xs text-gray-500">
-                          Primogénitas: <span className="text-gray-300">{c.primogenitas}</span>
+                          En la hermandad: <span className="text-gray-300">{c.primogenitas}</span>
                         </p>
                       </div>
                     </motion.article>
@@ -341,19 +341,22 @@ export default function Lore() {
               <Encabezado n={6} id="aurora" titulo="Aurora, La Primogénita" />
               <div className="mt-6 grid items-start gap-8 md:grid-cols-[minmax(0,16rem)_1fr]">
                 <div className="md:sticky md:top-8">
-                  <Arte id="FB-010" alt="Ilustración de Aurora, La Primogénita" ratio="aspect-[3/4]" />
+                  <Arte id="FB-010" alt="Ilustración de Aurora de Casa Alba" ratio="aspect-[3/4]" />
                 </div>
                 <div>
                   <P>
-                    Cuando el Éter latió por primera vez en el norte, la primera en abrir los ojos fue una niña de Casa Alba, y el alba entero se detuvo a mirarla. <B>Aurora</B> fue la primera en fusionarse, la que marcó el camino: la primera de todas, la que ningún cristal eligió porque fue el cristal quien la eligió a ella.
+                    Cuando el Éter latió por primera vez en el norte, la primera en abrir los ojos fue una niña de Casa Alba, y el alba entero se detuvo a mirarla. <B>Aurora</B> fue la primera en fusionarse de la que guardan memoria las casas, la que marcó el camino: la que ningún cristal eligió porque fue el cristal quien la eligió a ella.
                   </P>
                   <P>
-                    De su sangre se forjaron los cristales de las demás casas. Cada primogénita que vino después bebió, en un sentido antiguo y literal, de la misma promesa: por eso todas son hermanas, aunque ningún árbol genealógico las una. Cuando las casas cayeron, lo que cayó fue un reino hecho de su linaje, y el trono vacío que quedó en el norte es, en verdad, el trono de Aurora.
+                    Cuentan las casas que de su sangre se forjaron los cristales de las demás. Cada primogénita que vino después bebió, en un sentido antiguo y literal, de la misma promesa: por eso todas son hermanas, aunque ningún árbol genealógico las una. Cuando las casas cayeron, lo que cayó fue un reino hecho de su linaje, y el trono vacío que quedó en el norte es, para la hermandad, el trono de Aurora.
                   </P>
                   <P>
                     Su voluntad no se impone: <B>domina</B>. Los campeones que se enfrentan a ella sienten su cristal cantar en el pecho ajeno, y los que luchan a su lado se vuelven más de lo que eran. No necesita alzar la voz: el Éter la obedece antes de que pida. Y sin embargo, dicen que en las noches de luna muerta se la oye llorar por las hermanas perdidas y por las casas que no volverán: el lamento de la primera todavía se escucha, si uno sabe escuchar.
                   </P>
-                  <Cita autor="— Aurora, La Primogénita">“No somos hijos de ningún reino. Somos el Reino.”</Cita>
+                  <P>
+                    Lo que una hermana sabe hacer, Aurora lo puede hacer con ella: su cristal resuena con los de las demás casas y despierta, sin esfuerzo, el don que dormía en otra. Y el Reino, aunque no tenga muros, sabe cobrar: mientras Aurora sostenga el juramento, quien se alce contra ella paga una promesa de más.
+                  </P>
+                  <Cita autor="— Aurora de Casa Alba">“No somos hijos de ningún reino. Somos el Reino.”</Cita>
                   <P>
                     Ella es el ancla de la hermandad: la que mantiene unidas a las errantes cuando el camino se parte, la que recuerda por qué se negaron a elegir bando, la que sabe que el reino que juraron construir no tendrá muros ni corona, solo hermanas.
                   </P>
@@ -373,21 +376,37 @@ export default function Lore() {
                 </Reveal>
 
                 <Cita>
-                  Antes de la Gran Escisión, cuando las facciones de Orden y Caos aún no habían tomado sus nombres, los polos del Éter se llamaban <B>Estásis</B> y <B>Disonancia</B>: el Ancla y la Tormenta, unidos por el Eje. De la tensión entre ambos polos nacieron los <B>Primogénitos del Éter</B>: los primeros seres humanos en fusionarse con la energía primigenia. Cada uno era el primogénito de su casa noble, elegido al nacer para portar un cristal de Éter primigenio.
+                  Antes de la Gran Escisión, cuando las facciones de Orden y Caos aún no habían tomado sus nombres, los polos del Éter se llamaban <B>Estásis</B> y <B>Disonancia</B>: la Calma y la Tormenta, unidos por el Eje. De la tensión entre ambos polos nacieron los <B>Primogénitos del Éter</B>: los primeros seres humanos en fusionarse con la energía primigenia. Cada uno era el primogénito de su casa noble, elegido al nacer para portar un cristal de Éter primigenio.
                   <br />
                   <br />
-                  En esta primera entrega, las primogénitas de Orden son mujeres y los primogénitos de Caos, hombres. El vínculo los marcó para siempre: sus cuerpos se convirtieron en conductos vivientes del Éter, y su voluntad en la fuerza que moldea la realidad. Aurora, la Primogénita, fue la primera de todas, y su sangre se convirtió en la fuente del poder de las casas.
+                  En esta primera entrega, las primogénitas de Orden que conocemos son mujeres y los primogénitos de Caos, hombres: no por ley del Éter, sino porque así despertaron los primeros. El vínculo los marcó para siempre: sus cuerpos se convirtieron en conductos vivientes del Éter, y su voluntad en la fuerza que moldea la realidad. Aurora, la Primogénita, fue la primera que las casas recuerdan, y se cuenta que su sangre se convirtió en la fuente del poder de las casas.
                   <br />
                   <br />
                   Pero cuando las casas cayeron en la guerra, los Primogénitos se negaron a elegir bando. Ahora vagan por el mundo, unidos por la sangre y el Éter, buscando el origen de su poder y el propósito de su existencia.
                 </Cita>
 
                 <Sub>Los campeones del mazo</Sub>
-                <P>Nueve primogénitas, nueve historias que juegan como una sola hermandad:</P>
+                <P>Nueve primogénitas de casas distintas, nueve historias que juegan como una sola hermandad:</P>
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {CAMPEONAS.map((c, i) => (
                     <TarjetaCampeona key={c.id} c={c} i={i} />
                   ))}
+                </div>
+
+                <Sub>Reliquias del norte</Sub>
+                <div className="grid items-start gap-6 sm:grid-cols-2">
+                  <div>
+                    <Arte id="FB-023" alt="Ilustración de El Reino Perdido, reliquia del norte" ratio="aspect-[4/3]" />
+                    <P>
+                      <B>El Reino Perdido.</B> El trono vacío no olvida a quienes lo sirvieron: cuando una hija del Reino cae, el Reino paga dos promesas y la llama de vuelta. Y si la caída ocurrió en manos ajenas, la reclama para su dueña legítima: el Reino no deja huérfana a ninguna de sus voces.
+                    </P>
+                  </div>
+                  <div>
+                    <Arte id="FB-033" alt="Ilustración de la Runa de Ancla" ratio="aspect-[4/3]" />
+                    <P>
+                      <B>Runa de Ancla.</B> Las casas grabaron runas en las puertas del norte para sujetar el Éter que el alba quería arrastrar. Una runa no ata al cristal: le niega la mañana.
+                    </P>
+                  </div>
                 </div>
 
                 <Sub>El ciclo del Éter en el mazo</Sub>

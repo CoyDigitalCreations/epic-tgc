@@ -35,7 +35,7 @@ describe('RankingPoder', () => {
     expect(within(kael).getByLabelText('Semáforo: Rojo')).toHaveTextContent('Rojo')
     const marek = tabla.getByRole('row', { name: /Marek, Cosecha del Nudo/ })
     expect(within(marek).getByLabelText('Semáforo: Amarillo')).toHaveTextContent('Amarillo')
-    const aurora = tabla.getByRole('row', { name: /Aurora, La Primogénita/ })
+    const aurora = tabla.getByRole('row', { name: /Aurora de Casa Alba/ })
     expect(within(aurora).getByLabelText('Semáforo: Verde')).toHaveTextContent('Verde')
   })
 

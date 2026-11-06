@@ -668,7 +668,7 @@ describe('Sacrificio de Campeones (rol Soberano/Emperador)', () => {
 
     // Elegir Vaela como sacrificio (botón del selector con title=Vaela)
     const vaelaSelector = screen
-      .getAllByTitle('Vaela, Sed de Alba')
+      .getAllByTitle('Vaela de Casa Alba')
       .find((el) => el.closest('button'))
     expect(vaelaSelector).toBeDefined()
     await user.click(vaelaSelector!)

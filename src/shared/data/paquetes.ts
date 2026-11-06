@@ -34,15 +34,15 @@ export const PAQUETES: Paquete[] = [
     entrega: 'Primogénitos',
     distribucion: { eter: 15, principal: 45, vinculos: 6 },
     lore:
-      'Estásis ("El Ancla") es el mazo temático de la facción Orden y la primera ' +
+      'Estásis ("La Calma") es el mazo temático de la facción Orden y la primera ' +
       'entrega de Los Primogénitos. Antes de la Gran Escisión, cuando las facciones aún ' +
-      'no habían tomado sus nombres, el polo del norte se llamaba Estásis: el Ancla ' +
+      'no habían tomado sus nombres, el polo del norte se llamaba Estásis: la Calma' +
       'y el Eje de la realidad. De la tensión entre los polos del Éter nacieron ' +
       'los Primogénitos del Éter: los primeros seres humanos en fusionarse con la ' +
       'energía primigenia, cada uno elegido al nacer por su casa noble para portar ' +
-      'un cristal de Éter. En esta primera entrega, las primogénitas de Orden son ' +
+      'un cristal de Éter. En esta primera entrega, las primogénitas de Orden que conocemos son' +
       'mujeres y los primogénitos de Caos, hombres. Aurora, la Primogénita, fue la ' +
-      'primera de todas y su sangre se convirtió en la fuente del poder de las casas.\n\n' +
+      'primera que las casas recuerdan, y se cuenta que su sangre se convirtió en la fuente del poder de las casas.\n\n' +
       'Cuando la Gran Escisión partió el Eje y las casas cayeron en la guerra, las ' +
       'primogénitas del norte se negaron a elegir bando y formaron una hermandad ' +
       'errante, unidas por la sangre y el Éter: "No somos hijos de ningún reino. ' +
@@ -61,7 +61,7 @@ export const PAQUETES: Paquete[] = [
     lore:
       'Disonancia ("La Tormenta") es el mazo temático de la facción Caos y la segunda ' +
       'entrega de Los Primogénitos. En el sur, donde el Eje termina en un Nudo, los ' +
-      'primogénitos de Caos son hombres: despertaron con el cristal del Nudo clavado ' +
+      'primogénitos de Caos conocidos hasta ahora son hombres: despertaron con el cristal del Nudo clavado ' +
       'en el pecho, y el Nudo aprieta cada vez que el Eje tiembla. Mientras Estásis ' +
       'ancla, Disonancia aprieta: la Tormenta no retiene lo que toma, lo rompe y lo ' +
       'suelta. Ragnar, Voz del Nudo, es el primero de todos — el hombre que habla por ' +

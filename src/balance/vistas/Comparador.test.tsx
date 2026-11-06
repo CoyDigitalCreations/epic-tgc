@@ -43,7 +43,7 @@ describe('Comparador', () => {
     expect(tabla).toHaveLength(6)
     const elena = tabla.find((f) => f[0].startsWith('Elena'))!
     // Con las bandas v1.1 el ATQ de Elena (4) no supera el techo del pool (5).
-    expect(elena.slice(0, 5)).toEqual(['Elena, Despertar del Éter', '3 / 2', '4 / 2', '6 → 10 de 17', '—'])
+    expect(elena.slice(0, 5)).toEqual(['Elena de Casa Serena', '3 / 2', '4 / 2', '6 → 10 de 17', '—'])
     expect(elena[5]).toMatch(/por debajo del mínimo/)
     expect(tabla.find((f) => f[0].startsWith('Isolde'))?.slice(1, 3)).toEqual(['3 / 6', '3 / 5'])
     const draven = tabla.find((f) => f[0].startsWith('Draven'))!

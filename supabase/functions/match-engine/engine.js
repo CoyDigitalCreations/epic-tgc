@@ -294,7 +294,7 @@ var FuenteEfectos_default = [
   },
   {
     id: "FB-010",
-    name: "Aurora, La Primog\xE9nita",
+    name: "Aurora de Casa Alba",
     type: "Campe\xF3n",
     rarity: "\xDAnica",
     keywords: [
@@ -385,7 +385,7 @@ var FuenteEfectos_default = [
   },
   {
     id: "FB-011",
-    name: "Vaela, Sed de Alba",
+    name: "Vaela de Casa Alba",
     type: "Campe\xF3n",
     rarity: "Com\xFAn",
     keywords: [
@@ -495,7 +495,7 @@ var FuenteEfectos_default = [
   },
   {
     id: "FB-013",
-    name: "Seraphina, Voz de las Casas",
+    name: "Seraphina de Casa Serena",
     type: "Campe\xF3n",
     rarity: "Com\xFAn",
     keywords: [],
@@ -539,7 +539,7 @@ var FuenteEfectos_default = [
   },
   {
     id: "FB-014",
-    name: "Isolde, \xDAltima Casa",
+    name: "Isolde de Casa \xDAltima",
     type: "Campe\xF3n",
     rarity: "Poco Com\xFAn",
     keywords: [
@@ -587,7 +587,7 @@ var FuenteEfectos_default = [
   },
   {
     id: "FB-015",
-    name: "Elena, Despertar del \xC9ter",
+    name: "Elena de Casa Serena",
     type: "Campe\xF3n",
     rarity: "Poco Com\xFAn",
     keywords: [
@@ -633,7 +633,7 @@ var FuenteEfectos_default = [
   },
   {
     id: "FB-016",
-    name: "Cassandra, Vig\xEDa del Reino Perdido",
+    name: "Cassandra de Casa Vig\xEDa",
     type: "Campe\xF3n",
     rarity: "Com\xFAn",
     keywords: [],
@@ -694,7 +694,7 @@ var FuenteEfectos_default = [
   },
   {
     id: "FB-017",
-    name: "Nymeria, Conducto Roto",
+    name: "Nymeria de Casa Eterna",
     type: "Campe\xF3n",
     rarity: "Poco Com\xFAn",
     keywords: [],
@@ -741,7 +741,7 @@ var FuenteEfectos_default = [
   },
   {
     id: "FB-018",
-    name: "Rowena, V\xEDnculo Eterno",
+    name: "Rowena de Casa Eterna",
     type: "Campe\xF3n",
     rarity: "Com\xFAn",
     keywords: [],
@@ -1308,11 +1308,11 @@ var FuenteEfectos_default = [
     keywords: [
       "Presteza"
     ],
-    flavorText: "",
+    flavorText: "Lo que la runa sujeta no vuelve con el alba.",
     paqueteId: "estasis",
     limiteCopias: "2",
     createdAt: "2026-11-05T04:05:17.762Z",
-    updatedAt: "2026-11-05T04:05:17.762Z",
+    updatedAt: "2026-11-05T22:09:42.379Z",
     facciones: [
       "Orden"
     ],

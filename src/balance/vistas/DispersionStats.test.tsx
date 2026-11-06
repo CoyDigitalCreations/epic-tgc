@@ -38,9 +38,9 @@ describe('DispersionStats', () => {
     montar()
     // Rediseño de Estásis: Elena 4/2 (suma 6) ya está dentro (la de antes, 3/2, estaba por debajo); Isolde 3/6 (coste 4) y Vaela 5/2 (coste 3) ya están dentro de banda.
     // «Por encima» lo ilustra Kael (DS-011, coste 2, 5/3).
-    expect(celdas(/^Elena/)).toEqual(['Elena, Despertar del Éter', 'Estásis', '3', '4', '2', 'Dentro de banda'])
+    expect(celdas(/^Elena/)).toEqual(['Elena de Casa Serena', 'Estásis', '3', '4', '2', 'Dentro de banda'])
     // Intención cambiada con el tope de costo del 50 %: Isolde (índice 4.75, impuesto 1.4) ya no cabe, su suma 9 pasa el máximo 8.6.
-    expect(celdas(/^Isolde/)).toEqual(['Isolde, Última Casa', 'Estásis', '4', '3', '6', 'Fuera de banda: por encima'])
+    expect(celdas(/^Isolde/)).toEqual(['Isolde de Casa Última', 'Estásis', '4', '3', '6', 'Fuera de banda: por encima'])
     expect(celdas(/^Vaela/).at(-1)).toBe('Dentro de banda')
     expect(celdas(/^Kael/).at(-1)).toBe('Fuera de banda: por encima')
     expect(celdas(/^Seraphina/).at(-1)).toBe('Dentro de banda')
@@ -49,7 +49,7 @@ describe('DispersionStats', () => {
 
   it('la Elena de antes (3/2) lleva el veredicto «por debajo»', () => {
     montar(CARTAS_ELENA_32)
-    expect(celdas(/^Elena/)).toEqual(['Elena, Despertar del Éter', 'Estásis', '3', '3', '2', 'Fuera de banda: por debajo'])
+    expect(celdas(/^Elena/)).toEqual(['Elena de Casa Serena', 'Estásis', '3', '3', '2', 'Fuera de banda: por debajo'])
   })
 
   it('describe la banda sombreada y permite cambiar de coste', async () => {

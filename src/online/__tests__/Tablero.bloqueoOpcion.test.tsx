@@ -73,7 +73,7 @@ describe('Pasivo 1A: modal para elegir Campeón y Éter', () => {
     expect(within(modal).getByText('Elige el Campeón que recibe el Éter bloqueado')).toBeInTheDocument()
 
     // Las dos Cassandras son tiles distintos con el mismo nombre: el segundo es cass2
-    await user.click(within(modal).getAllByRole('button', { name: /Cassandra, Vigía del Reino Perdido/ })[1])
+    await user.click(within(modal).getAllByRole('button', { name: /Cassandra de Casa Vigía/ })[1])
     expect(within(modal).getByText(/Elige el Éter de tu Reserva que se bloquea sobre Cassandra/)).toBeInTheDocument()
 
     await user.click(within(modal).getByRole('button', { name: /Éter de la Sangre Eterna/ }))

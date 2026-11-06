@@ -23,7 +23,7 @@ export const POLOS: Faceta[] = [
   {
     nombre: 'ORDEN',
     faceta: 'Estásis',
-    runa: 'El Ancla / El Eje',
+    runa: 'La Calma / El Eje',
     posicion: 'Norte',
     descripcion: 'Disciplina, luz, protección. Paladines y ángeles.',
     color: '#22d3ee',
@@ -165,37 +165,37 @@ export const CASAS: Casa[] = [
   {
     nombre: 'CASA ALBA',
     texto: 'La primera casa, nacida del primer amanecer. Su heredad es el alba: lo que construye, lo reclama.',
-    primogenitas: 'Aurora y Vaela, Sed de Alba',
+    primogenitas: 'Aurora y Vaela',
     arte: 'FB-001',
   },
   {
     nombre: 'CASA SERENA',
     texto: 'La casa del consejo y de la palabra, donde las runas se hablaban antes de escribirse. El norte recuerda a sus hijas.',
-    primogenitas: 'Seraphina, la voz, y Elena, el despertar',
+    primogenitas: 'Seraphina y Elena',
     arte: 'FB-005',
   },
   {
     nombre: 'CASA VIGÍA',
     texto: 'Guardianes del Reino Perdido, centinelas del Eje que juraron no dormir jamás. Su primogénita vio caer su reino y juró que el próximo no caerá.',
-    primogenitas: 'Cassandra, Vigía del Reino Perdido',
+    primogenitas: 'Cassandra',
     arte: 'FB-002',
   },
   {
     nombre: 'CASA ETERNA',
     texto: 'La casa del vínculo y de la sangre, donde los pactos valían más que las espadas. Lo que corre por sus venas no es sangre: es promesa.',
-    primogenitas: 'Rowena, Vínculo Eterno, y Nymeria, Conducto Roto',
+    primogenitas: 'Rowena y Nymeria',
     arte: 'FB-003',
   },
   {
     nombre: 'CASA ÚLTIMA',
     texto: 'La casa que resistió hasta el final, la que no cayó por débil sino por tozuda. Su cristal fue el último en apagarse.',
-    primogenitas: 'Isolde, Última Casa',
+    primogenitas: 'Isolde',
     arte: 'FB-009',
   },
   {
-    nombre: 'LA HUÉRFANA',
-    texto: 'No toda primogénita tuvo casa que la reclamara. Mira despertó sobre las ruinas de un linaje sin nombre, y el Éter la reclamó a ella. Ninguna casa la recibió; la hermandad sí.',
-    primogenitas: 'Mira, Cristal Huérfano',
+    nombre: 'SIN CASA',
+    texto: 'No toda primogénita nació bajo un estandarte. Mira despertó sobre las ruinas de un linaje sin nombre, y el Éter la reclamó a ella. Ninguna casa la recibió; la hermandad sí.',
+    primogenitas: 'Mira',
     arte: 'FB-006',
   },
 ]
@@ -210,15 +210,15 @@ export interface Campeona {
 }
 
 export const CAMPEONAS: Campeona[] = [
-  { id: 'FB-010', nombre: 'Aurora', titulo: 'La Primogénita', linea: 'Casa Alba', rol: 'Soberana', texto: 'La primera de todas, el ancla. Su presencia domina el campo y arrebata la voluntad del rival.' },
+  { id: 'FB-010', nombre: 'Aurora', titulo: 'La Primogénita', linea: 'Casa Alba', rol: 'Soberana', texto: 'La primera que las casas recuerdan, el ancla de la hermandad. Lo que una hermana sabe hacer, ella lo puede hacer con ella; y el Reino cobra tributo a quien se le alza.' },
   { id: 'FB-011', nombre: 'Vaela', titulo: 'Sed de Alba', linea: 'Casa Alba', rol: 'Normal', texto: 'Ataca antes de que el alba termine de cantar; la urgencia del amanecer hecha guerrera.' },
-  { id: 'FB-012', nombre: 'Mira', titulo: 'Cristal Huérfano', linea: 'La Huérfana', rol: 'Éter', texto: 'Recupera lo que otros dan por perdido: cada Éter gastado vuelve a sus manos.' },
+  { id: 'FB-012', nombre: 'Mira', titulo: 'Cristal Huérfano', linea: 'Sin casa', rol: 'Éter', texto: 'Mira nació sin casa, y por eso sabe lo que pesa quedarse sin una. Donde otros ven ruinas, ella ve Éter que todavía quiere volver.' },
   { id: 'FB-013', nombre: 'Seraphina', titulo: 'Voz de las Casas', linea: 'Casa Serena', rol: 'Normal', texto: 'Sus palabras aún resuenan en las ruinas; con una frase cambia el orden del campo.' },
-  { id: 'FB-014', nombre: 'Isolde', titulo: 'Última Casa', linea: 'Casa Última', rol: 'Soporte', texto: 'Muro de carne, promesa de cristal: mientras ella resiste, las hermanas crecen.' },
-  { id: 'FB-015', nombre: 'Elena', titulo: 'Despertar del Éter', linea: 'Casa Serena', rol: 'Normal', texto: 'El Éter que la despierta también la alimenta: cada cristal anclado la vuelve más fuerte.' },
+  { id: 'FB-014', nombre: 'Isolde', titulo: 'Escudo de la Última Casa', linea: 'Casa Última', rol: 'Soporte', texto: 'Muro de carne, promesa de cristal: mientras ella resiste, las hermanas crecen.' },
+  { id: 'FB-015', nombre: 'Elena', titulo: 'Despertar del Éter', linea: 'Casa Serena', rol: 'Normal', texto: 'Elena despierta cada vez que el Éter la toca, y cada despertar la encuentra más rápida que el anterior. Mientras el cristal siga atado a ella, golpea una vez y vuelve a golpear antes de que el eco termine.' },
   { id: 'FB-016', nombre: 'Cassandra', titulo: 'Vigía del Reino Perdido', linea: 'Casa Vigía', rol: 'Soporte', texto: 'Vio caer su reino y juró que el próximo no caerá: sostiene la defensa de todas.' },
   { id: 'FB-017', nombre: 'Nymeria', titulo: 'Conducto Roto', linea: 'Casa Eterna', rol: 'Éter', texto: 'Su cristal se rompió en la guerra: ahora rompe lo que ata y libera lo que fue tomado.' },
-  { id: 'FB-018', nombre: 'Rowena', titulo: 'Vínculo Eterno', linea: 'Casa Eterna', rol: 'Soporte', texto: 'El vínculo es la vida: guardiana de los pactos, nadie tocará a sus hermanas.' },
+  { id: 'FB-018', nombre: 'Rowena', titulo: 'Vínculo Eterno', linea: 'Casa Eterna', rol: 'Soporte', texto: 'Rowena juró que ningún vínculo se rompería bajo su guardia, y lo cumple con lo único que tiene: ella misma. Y a quien cae a su lado, si el precio es justo, Rowena lo llama de vuelta.' },
 ]
 
 /**
@@ -254,9 +254,9 @@ export const ETER_SUR = [
 /** Norte frente a sur: las dos maneras de sostener el Eje. */
 export const NORTE_SUR = [
   { rasgo: 'Polo', norte: 'Estásis · Orden · Norte', sur: 'Disonancia · Caos · Sur' },
-  { rasgo: 'Runa', norte: 'El Ancla / El Eje', sur: 'La Tormenta / El Nudo' },
+  { rasgo: 'Runa', norte: 'La Calma / El Eje', sur: 'La Tormenta / El Nudo' },
   { rasgo: 'Se sostiene por', norte: 'Linaje: la sangre se hereda', sur: 'Deuda: el pacto se cobra' },
-  { rasgo: 'Primogénitos', norte: 'Mujeres, hijas de sus casas', sur: 'Hombres, marcados por el Nudo' },
+  { rasgo: 'Primogénitos (en esta entrega)', norte: 'Mujeres, hijas de sus casas', sur: 'Hombres, marcados por el Nudo' },
   { rasgo: 'Ante la Escisión', norte: 'Se negaron a elegir bando', sur: 'Su bando es el Nudo' },
   { rasgo: 'Su fuerza', norte: 'Constancia', sur: 'Presión' },
   { rasgo: 'En la mesa', norte: 'Anclar, devolver, reciclar, resistir', sur: 'Apretar, cobrar, arrebatar, avanzar' },

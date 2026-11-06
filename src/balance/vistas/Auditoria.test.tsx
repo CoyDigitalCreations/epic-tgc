@@ -25,12 +25,12 @@ describe('Auditoria', () => {
     // Elena real (4/2, suma 6) ya está dentro de banda; el caso «por debajo» usa la Elena de antes (3/2, suma 5).
     render(<Auditoria cartas={CARTAS} avisos={AVISOS} />)
     expect(celdas(/^FB-015/).slice(0, 12)).toEqual([
-      'FB-015', 'Elena, Despertar del Éter', 'Campeón', 'Poco Común', '3', '4', '2', '6', '7.9', '0.1', '2.3', 'Dentro de banda',
+      'FB-015', 'Elena de Casa Serena', 'Campeón', 'Poco Común', '3', '4', '2', '6', '7.9', '0.1', '2.3', 'Dentro de banda',
     ])
     cleanup()
     render(<Auditoria cartas={CARTAS_ELENA_32} avisos={AVISOS} />)
     expect(celdas(/^FB-015/).slice(0, 12)).toEqual([
-      'FB-015', 'Elena, Despertar del Éter', 'Campeón', 'Poco Común', '3', '3', '2', '5', '7.9', '0.1', '2.3', 'Fuera de banda: por debajo',
+      'FB-015', 'Elena de Casa Serena', 'Campeón', 'Poco Común', '3', '3', '2', '5', '7.9', '0.1', '2.3', 'Fuera de banda: por debajo',
     ])
     expect(celdas(/^DS-012/)[11]).toBe('Fuera de banda: por encima')
     // Intención cambiada con el tope de costo del 50 %: Isolde (3/6, suma 9) ya no cabe con su impuesto 1.4 (máximo 8.6)

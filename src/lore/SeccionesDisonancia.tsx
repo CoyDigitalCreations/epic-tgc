@@ -101,7 +101,7 @@ export function SeccionesDisonancia() {
             <Arte id="DS-023" alt="Ilustración de El Nudo: la Tormenta enrollada sobre sí misma" ratio="aspect-[4/5]" />
             <div>
               <P>
-                Donde el norte tiene el Ancla, el sur tiene el Nudo. En el extremo austral del Eje la línea de fuerza no termina: se anuda. El <B color={ROJO}>Nudo</B> es el punto donde la Tormenta se enrolla sobre sí misma, y cada vez que el Eje tiembla, aprieta un poco más. Los sabios del norte lo llamaron castigo; en el sur lo llaman memoria: <em>«El Nudo no olvida lo que se le debe»</em>.
+                Donde el norte tiene el Eje tenso y recto, el sur tiene el Nudo. En el extremo austral del Eje la línea de fuerza no termina: se anuda. El <B color={ROJO}>Nudo</B> es el punto donde la Tormenta se enrolla sobre sí misma, y cada vez que el Eje tiembla, aprieta un poco más. Los sabios del norte lo llamaron castigo; en el sur lo llaman memoria: <em>«El Nudo no olvida lo que se le debe»</em>.
               </P>
               <P>
                 Antes de la Escisión, el sur no tuvo Casas. Nada se heredaba: todo se <B>pactaba</B>. Los reinos del sur eran deudas encadenadas, cada juramento un cabo atado a otro, y quien rompía su palabra pagaba con lo que el Nudo eligiera cobrar. Los heraldos del norte se burlaban, <em>«el sur no hereda: arrebata»</em>, y el sur adoptó la burla como lema.
@@ -113,7 +113,7 @@ export function SeccionesDisonancia() {
             Cuando la Gran Escisión partió el Eje, los reinos del norte se quebraron. Los del sur no cayeron: se <B>apretaron</B>. La Tormenta no retiene lo que toma, lo rompe y lo suelta; el Nudo, en cambio, no devuelve lo que cobra. Mientras las casas del norte lloraban sus tronos vacíos, el sur cobraba cada deuda que la guerra dejó abierta. <em>«Lo que el sur toma, el norte lo llora.»</em>
           </P>
           <P>
-            Los primogénitos del sur son hombres, y ningún sabio les entregó su cristal: el Nudo se lo <B>clavó</B> en el pecho al despertar. No hubo ceremonia ni linaje que los reclamara; el cristal los eligió porque algo se les debía. Mientras las primogénitas del norte se negaron a elegir bando, los primogénitos del sur no tienen bando que rechazar: su bando es el Nudo. Ellos no vagan buscando el origen de su poder. Ellos <B color={ROJO}>cobran</B>.
+            Los primogénitos del sur que han despertado hasta ahora son hombres, y ningún sabio les entregó su cristal: el Nudo se lo <B>clavó</B> en el pecho al despertar. No hubo ceremonia ni linaje que los reclamara; el cristal los eligió porque algo se les debía. Mientras las primogénitas del norte se negaron a elegir bando, los primogénitos del sur no tienen bando que rechazar: su bando es el Nudo. Ellos no vagan buscando el origen de su poder. Ellos <B color={ROJO}>cobran</B>.
           </P>
 
           <Cita color={ROJO_OSCURO} autor="— Ragnar, Voz del Nudo">

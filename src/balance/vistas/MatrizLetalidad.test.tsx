@@ -16,11 +16,11 @@ describe('MatrizLetalidad', () => {
     const tabla = filas(/letalidad por campeón/i)
     expect(tabla).toHaveLength(18)
     expect(tabla.find((f) => f[0].startsWith('Nymeria'))).toEqual([
-      'Nymeria, Conducto Roto', '4 / 5', '11 de 17', '3 de 17', '64.7', '17.6', 'Dominante',
+      'Nymeria de Casa Eterna', '4 / 5', '11 de 17', '3 de 17', '64.7', '17.6', 'Dominante',
     ])
     expect(tabla.find((f) => f[0].startsWith('Vorlag'))?.at(-1)).toBe('Dominante')
     expect(tabla.find((f) => f[0].startsWith('Isolde'))).toEqual([
-      'Isolde, Última Casa', '3 / 6', '7 de 17', '0 de 17', '41.2', '0', 'Invulnerable',
+      'Isolde de Casa Última', '3 / 6', '7 de 17', '0 de 17', '41.2', '0', 'Invulnerable',
     ])
     expect(tabla.find((f) => f[0].startsWith('Vaela'))?.at(-1)).toBe('—')
     expect(tabla.filter((f) => f.at(-1) === 'Invulnerable')).toHaveLength(3)
@@ -34,7 +34,7 @@ describe('MatrizLetalidad', () => {
     const celdas = within(fila).getAllByRole('cell')
     expect(celdas).toHaveLength(18)
     expect(celdas.filter((c) => c.textContent === '●Mata')).toHaveLength(11)
-    expect(within(matriz).getByRole('columnheader', { name: 'Vaela, Sed de Alba' })).toBeInTheDocument()
+    expect(within(matriz).getByRole('columnheader', { name: 'Vaela de Casa Alba' })).toBeInTheDocument()
   })
 
   it('muestra los escalones por RES y por ATQ', () => {
