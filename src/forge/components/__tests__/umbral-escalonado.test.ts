@@ -35,7 +35,7 @@ describe('Tramos escalonados de Éter bloqueado (Card-Maker)', () => {
     // Cada cláusula con su umbral — sin repetir el prefijo de bloqueo
     expect(texto).toContain('con 2 Éteres bloqueados, cambia el agotamiento de')
     expect(texto).toContain('con 4 Éteres bloqueados, fija el agotamiento de')
-    expect(texto).toContain('que esté agotado')
+    expect(texto).toContain('un Campeón agotado que controla el rival')
     expect(texto).toContain('mientras ese Éter esté bloqueado')
     // El prefijo NO se repite por tramo
     expect(texto.match(/bloquear hasta un máximo/g)?.length).toBe(1)

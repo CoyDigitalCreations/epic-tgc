@@ -32,7 +32,7 @@ import {
 import { condicionCumple, condicionEsCandado, dispararTrigger, velocidadDe } from './efectos'
 import { interpretEffect } from './effectInterpreter'
 import { aplicarPago, etersParaPagar, validarPago, type ContextoUso } from './payments'
-import { enviarAlCementerio } from './replacements'
+import { enviarAlCementerio, zonaDeCementerio } from './replacements'
 import { efectosNegados } from './reglas'
 import { eterIdsParaHabilidad, habilidadUsadaEsteTurno, pagarHabilidad } from './habilidadPago'
 import { aplicarBloqueoAlJugar, bloqueoParaJugar, motivoBloqueoAlJugar } from './bloqueoAlJugar'
@@ -498,7 +498,7 @@ function sinReceptor(s: GameState, ctx: Ctx, id: string): void {
     if (idx === -1) continue
     ctx.emit({ type: 'carta_salida_de_zona', cardInstanceId: id, zona: slotAZona(grupo, idx) ?? '3A', jugador: inst.owner })
     enviarAlCementerio(s, ctx, id)
-    ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: id, zona: '2G', jugador: inst.owner, bocaArriba: true })
+    ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: id, zona: zonaDeCementerio(s, id), jugador: inst.owner, bocaArriba: true })
     return
   }
 }
@@ -543,7 +543,7 @@ function resolverRespuesta(s: GameState, ctx: Ctx, id: string, datos: RespuestaA
     if (esPermanenteEnMesa(meta)) return // F5f: Artefacto / efecto continuo: ya tomó su slot al jugarse y permanece
     if (p.exilio.includes(id)) return // su propio efecto la exilió («va al Exilio», §5.3): no pasa por el Cementerio
     enviarAlCementerio(s, ctx, id)
-    ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: id, zona: '2G', jugador: inst.owner, bocaArriba: true })
+    ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: id, zona: zonaDeCementerio(s, id), jugador: inst.owner, bocaArriba: true })
     return
   }
   if (esArcana(meta)) {
@@ -561,7 +561,7 @@ function resolverRespuesta(s: GameState, ctx: Ctx, id: string, datos: RespuestaA
       ctx.emit({ type: 'carta_salida_de_zona', cardInstanceId: id, zona, jugador: inst.owner })
       // C5 (change 4): 2G con trigger al-ser-enviado-al-cementerio
       enviarAlCementerio(s, ctx, id)
-      ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: id, zona: '2G', jugador: inst.owner, bocaArriba: true })
+      ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: id, zona: zonaDeCementerio(s, id), jugador: inst.owner, bocaArriba: true })
     }
     trigger()
     return
@@ -829,5 +829,5 @@ function resolverOpener(s: GameState, ctx: Ctx, opener: OpenerCadena): void {
   const zonaSlot = slotAZona(opener.tipo === 'mistica' ? 'misticasTacticas' : 'arcanasCombate', slotIdx) ?? (opener.tipo === 'mistica' ? '3A' : '3D')
   ctx.emit({ type: 'carta_salida_de_zona', cardInstanceId: opener.cardInstanceId, zona: zonaSlot, jugador: opener.jugador })
   enviarAlCementerio(s, ctx, opener.cardInstanceId)
-  ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: opener.cardInstanceId, zona: '2G', jugador: opener.jugador, bocaArriba: true })
+  ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: opener.cardInstanceId, zona: zonaDeCementerio(s, opener.cardInstanceId), jugador: opener.jugador, bocaArriba: true })
 }

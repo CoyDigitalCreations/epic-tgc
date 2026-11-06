@@ -5,6 +5,9 @@
  * Recorre FuenteEfectos.json (y FuenteArte.json cuando existe en esta PC) y CartasPrueba.json: efectos[] y
  * efectoComandante (objeto o arreglo). Falla si algún `texto` difiere del generado, SALVO la deriva histórica conocida
  * (DERIVA_CONOCIDA): textos de cartas fuera del rediseño de Estásis que se escribieron con un generador anterior.
+ * Lote 1 de Disonancia: salieron FB-028, DS-011 y DS-025 (defecto «puedes» en tercera persona corregido en el generador) y entró DS-028.
+ * Lote 2 de Disonancia: las 33 cartas DS-* se reescribieron y regeneraron con `--ids`; ya no queda deriva de Disonancia (solo Estásis, FB-*).
+ * Lote 5A de Disonancia: entró FB-016 (Estásis): el filtro «agotado» ya no genera el doble «que» («Campeón agotado que controla el rival»).
  * La lista está exacta: si una de esas cartas se corrige (o aparece una deriva nueva) el test también falla, así la lista
  * solo puede encogerse.
  */
@@ -32,28 +35,16 @@ function cargar(archivo: string): CartaJson[] {
 }
 
 /**
- * Deriva histórica conocida de FuenteEfectos.json (cartas que el rediseño de Estásis NO tocó y Disonancia, congelada hasta su
- * propio rediseño). Cada entrada es un texto viejo que el generador actual escribiría distinto (acentos, «+1» → «1»,
+ * Deriva histórica conocida de FuenteEfectos.json (cartas de Estásis que el rediseño NO tocó; Disonancia ya no tiene deriva). Cada entrada es un texto viejo que el generador actual escribiría distinto (acentos, «+1» → «1»,
  * «puedes» automático, etc.). Al rediseñar esa carta se regenera con `npm run regenerar:textos -- --ids=...` y se borra de aquí.
  */
 export const DERIVA_CONOCIDA: readonly string[] = [
   'FB-007 efectos[0]',
+  'FB-016 efectos[0]',
   'FB-017 efectos[0]',
   'FB-025 efectos[0]',
   'FB-026 efectos[0]',
   'FB-027 efectos[0]',
-  'FB-028 efectos[0]',
-  'DS-002 efectos[0]',
-  'DS-003 efectos[0]',
-  'DS-004 efectos[0]',
-  'DS-005 efectos[0]',
-  'DS-007 efectos[0]',
-  'DS-011 efectos[0]',
-  'DS-025 efectos[0]',
-  'DS-026 efectos[0]',
-  'DS-031 efectos[0]',
-  'DS-032 efectos[0]',
-  'DS-033 efectos[0]',
 ]
 
 /** Deriva histórica conocida de CartasPrueba.json (nunca se modifica ni se publica). */
@@ -62,21 +53,12 @@ export const DERIVA_CARTAS_PRUEBA: readonly string[] = [
   'PR-006 efectos[0]',
   'PR-008 efectos[0]',
   'PR-009 efectos[0]',
-  'PR-013 efectos[0]',
-  'PR-014 efectos[0]',
-  'PR-015 efectos[0]',
-  'PR-019 efectos[0]',
-  'PR-020 efectos[0]',
   'PR-021 efectos[0]',
+  'PR-024 efectos[0]',
   'PR-025 efectos[0]',
-  'PR-028 efectos[0]',
   'PR-030 efectos[0]',
-  'PR-045 efectos[0]',
   'PR-053 efectos[0]',
-  'PR-060 efectos[0]',
-  'PR-062 efectos[0]',
   'PR-074 efectos[0]',
-  'PR-075 efectos[0]',
 ]
 
 describe('textos del seed = generateEffectText(efecto)', () => {

@@ -845,6 +845,13 @@ export function triggersQueMatchean(
         if (quiereRival !== esDelRival) return
         if (efecto.objetivo?.excluyeEsta && opts.victimaId === id) return
       }
+      // «Al inicio del Alba / del Choque del RIVAL» (`controladorTrigger: 'rival'`; FB-028, DS-027): solo en el turno del rival de
+      // quien declara el efecto. Y al revés: sin la marca solo en el turno propio. Antes no se filtraba: un Vínculo «del rival»
+      // disparaba en el Alba PROPIA de su dueño. (Al resolver una elección ya armada no se vuelve a filtrar, como la zona de origen.)
+      if ((trigger === 'al-inicio-alba' || trigger === 'al-inicio-choque') && !opts?.ignorarZonaOrigen) {
+        const quiereRival = efecto.controladorTrigger === 'rival'
+        if (quiereRival !== (s.turno !== jugador)) return
+      }
       // «Al ser enviada al Cementerio DESDE el campo / la mano»: solo si venía de esa zona (antes se ignoraba y Titania
       // —«desde el campo»— también disparaba al descartarla de la mano). Sin `triggerZona` o «desde cualquier zona»: siempre.
       // La zona se decide al ARMAR el gatillo (como la `condicion`); al resolver una elección ya armada no se vuelve a filtrar.

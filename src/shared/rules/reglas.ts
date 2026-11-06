@@ -37,6 +37,10 @@ export const REGLAS = {
   derrotaPorVinculos: { etiqueta: 'Pierde la partida al quedarse sin Vínculos', manual: '§13', ambito: 'jugador', base: true },
   // Éter que se suma al coste de invocar a CADA Campeón del jugador (lo fija, p. ej., el tributo de Aurora al rival).
   costeCampeonesExtra: { etiqueta: 'Éter extra que cuestan sus Campeones', manual: '§7.3', ambito: 'jugador', base: 0, min: 0 },
+  // Las cartas del jugador que irían a su Cementerio se exilian en su lugar (el Olvido de Disonancia: lo fija su Comandante o una Mística al rival).
+  cementerioAlExilio: { etiqueta: 'Sus cartas que irían al Cementerio se exilian en su lugar', manual: '§10', ambito: 'jugador', base: false },
+  // Éter que paga el jugador por CADA Campeón con que bloquea (lo fija, p. ej., el Peaje de Ragnar al rival).
+  costeBloqueo: { etiqueta: 'Éter que paga por cada Campeón que bloquea', manual: '§9.3', ambito: 'jugador', base: 0, min: 0 },
 
   /* ── campeón ── */
   agotadoPuedeBloquear: { etiqueta: 'Un Campeón agotado puede bloquear', manual: '§9.3', ambito: 'campeon', base: false },

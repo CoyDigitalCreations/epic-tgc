@@ -23,7 +23,7 @@ import type { EfectoData, AnyCard } from '../../../shared/types/cards'
 // Usamos cartas reales para que getCardMeta() funcione, pero los tests
 // NO dependen de los efectos de estas cartas — usan EfectoData mock.
 const CAMPEON_A = 'FB-011' // Vaela 5/2
-const CAMPEON_B = 'DS-011' // Kael 5/3 (rival — different ID for unique matching)
+const CAMPEON_B = 'DS-011' // Kael 4/2 tras el rediseño de Disonancia (Lote 2; antes 5/3) (rival — different ID for unique matching)
 const CAMPEON_PROTECTOR = 'FB-014' // Isolde 3/6 Protector
 const CAMPEON_INMORTAL = 'FB-010' // Aurora 9/9 Inmortal
 const CAMPEON_COST2 = 'FB-011' // Vaela cost 3
@@ -389,8 +389,8 @@ describe('C3b: modificadores continuos desde el JSON (Fase 1) + Protector (D3)',
     expect(statsDe(s, otro)).toEqual({ poder: 6, resistencia: 2 })
     // La fuente NO se buffea a sí misma (convención "otros")
     expect(statsDe(s, fuente)).toEqual({ poder: 3, resistencia: 3 })
-    // Rival sin aura
-    expect(statsDe(s, rival)).toEqual({ poder: 5, resistencia: 3 })
+    // Rival sin aura (Kael 4/2; antes 5/3)
+    expect(statsDe(s, rival)).toEqual({ poder: 4, resistencia: 2 })
   })
 
   it('efectoComandante buff: +2/+2 a TODOS los campeones propios INCLUYENDO self', () => {
@@ -428,8 +428,8 @@ describe('C3b: modificadores continuos desde el JSON (Fase 1) + Protector (D3)',
     expect(statsDe(s, comandante)).toEqual({ poder: 7, resistencia: 7 })
     // Otro campeón propio (Vaela 5/2) también: 7/4
     expect(statsDe(s, otro)).toEqual({ poder: 7, resistencia: 4 })
-    // Rival (Kael 5/3) sin aura
-    expect(statsDe(s, rival)).toEqual({ poder: 5, resistencia: 3 })
+    // Rival (Kael 4/2) sin aura
+    expect(statsDe(s, rival)).toEqual({ poder: 4, resistencia: 2 })
   })
 
   it('efectoComandante SOLO afecta campeones de la MISMA facción (manual §10)', () => {
@@ -464,7 +464,7 @@ describe('C3b: modificadores continuos desde el JSON (Fase 1) + Protector (D3)',
     // Campeón Orden propio (Vaela FB-011 — Orden, 5/2)
     const { s: s2, id: ordenPropio } = conCampeon(s, CAMPEON_A, 1, 'A')
     s = s2
-    // Campeón Caos propio (Kael DS-011 — Caos, 5/3)
+    // Campeón Caos propio (Kael DS-011 — Caos, 4/2)
     const { s: s3, id: caosPropio } = conCampeon(s, CAMPEON_B, 2, 'A')
     s = s3
 
@@ -472,8 +472,8 @@ describe('C3b: modificadores continuos desde el JSON (Fase 1) + Protector (D3)',
     expect(statsDe(s, comandante)).toEqual({ poder: 7, resistencia: 7 })
     // Campeón Orden propio: 5/2 +2/+2 = 7/4 (SÍ recibe el buff)
     expect(statsDe(s, ordenPropio)).toEqual({ poder: 7, resistencia: 4 })
-    // Campeón Caos propio: 5/3 SIN buff (NO comparte facción con el comandante)
-    expect(statsDe(s, caosPropio)).toEqual({ poder: 5, resistencia: 3 })
+    // Campeón Caos propio: 4/2 SIN buff (NO comparte facción con el comandante)
+    expect(statsDe(s, caosPropio)).toEqual({ poder: 4, resistencia: 2 })
   })
 
   it('efectoComandante es INMUTABLE: la negación no toca auras derivadas (manual §10)', () => {
@@ -592,8 +592,8 @@ describe('C3b: modificadores continuos desde el JSON (Fase 1) + Protector (D3)',
     const { s: s2, id: campeonB } = conCampeon(s, CAMPEON_B, 0, 'B')
     s = s2
 
-    // Rival de A (= B) pierde 1 ATQ: base 5 - 1 = 4
-    expect(statsDe(s, campeonB)).toEqual({ poder: 4, resistencia: 3 })
+    // Rival de A (= B) pierde 1 ATQ: base 4 - 1 = 3 (Kael 4/2)
+    expect(statsDe(s, campeonB)).toEqual({ poder: 3, resistencia: 2 })
     // Propio de A sin cambio
     expect(statsDe(s, campeonA)).toEqual({ poder: 5, resistencia: 2 })
   })

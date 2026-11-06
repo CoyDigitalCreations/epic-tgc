@@ -102,7 +102,7 @@ describe('Lore del sur (Disonancia)', () => {
     expect(screen.getByText(/Coste 4 · ATQ 9 \/ RES 9/)).toBeInTheDocument()
   })
 
-  it('las nueve cartas de Éter del sur muestran su frase y los cuatro tiempos del Aprieto su ilustración', () => {
+  it('las nueve cartas de Éter del sur muestran su frase y los cinco tiempos del Aprieto su ilustración', () => {
     renderLore()
     expect(ETER_SUR).toHaveLength(9)
     for (const e of ETER_SUR) {
@@ -112,6 +112,16 @@ describe('Lore del sur (Disonancia)', () => {
     for (const [i, c] of CICLO_DISONANCIA.entries()) {
       expect(screen.getByAltText(`Arte del paso ${i + 1}: ${c.titulo}`)).toHaveAttribute('src', `/cartas/${c.arte}.webp`)
     }
+  })
+
+  it('el Aprieto tiene cinco tiempos y el quinto, El Nudo olvida, cierra el ciclo con su ilustración', () => {
+    renderLore()
+    expect(CICLO_DISONANCIA).toHaveLength(5)
+    const quinto = CICLO_DISONANCIA[4]
+    expect(quinto.titulo).toBe('El Nudo olvida')
+    expect(quinto.cartas).toBe('Maldición del Sur · Grito del Primogénito · El Nudo Olvida · Marek · Voz del Nudo')
+    expect(screen.getByRole('heading', { name: 'El Nudo olvida' })).toBeInTheDocument()
+    expect(screen.getByAltText('Arte del paso 5: El Nudo olvida')).toHaveAttribute('src', '/cartas/' + quinto.arte + '.webp')
   })
 
   it('la tabla norte/sur tiene una fila por rasgo', () => {

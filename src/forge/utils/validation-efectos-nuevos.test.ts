@@ -67,6 +67,39 @@ describe('validateCard — efectos nuevos del Card-Maker (Aurora, Memoria del Re
     })
   })
 
+  describe('efectoComandante (se valida con las mismas reglas que los efectos)', () => {
+    const conComandante = (efectoComandante: unknown) => ({
+      id: 'T-5', name: 'Soberano', type: 'Campeón', rarity: 'Única', keywords: [], flavorText: '', paqueteId: 'test', limiteCopias: '1',
+      createdAt: '', updatedAt: '', facciones: ['Caos'], stats: { cost: 4, poder: 9, resistencia: 9 }, efectos: [], efectoComandante,
+    }) as never
+    const cmd = (efectoComandante: unknown) => validateCard(conComandante(efectoComandante)).filter((e) => e.field === 'efectos').map((e) => e.message)
+    const BUFF = { tipo: 'comandante', efecto: 'buff', stats: { ATQ: 2 }, objetivo: { tipo: 'todos_campeones_propios', controlador: 'propio', zona: 'campo' } }
+    const PEAJE = { tipo: 'comandante', efecto: 'modificar_regla', reglaEnumerada: 'peaje_bloqueo', reglaValor: 1 }
+    it('el Comandante de Ragnar (arreglo: +3 ATQ y Peaje de 1) es válido', () => expect(cmd([BUFF, PEAJE])).toEqual([]))
+    it('un Comandante en objeto suelto también se valida', () => {
+      expect(cmd(PEAJE)).toEqual([])
+      expect(cmd({ ...PEAJE, reglaValor: undefined })).toEqual(['Comandante: indica cuánto Éter paga el rival por bloquear (mínimo 1)'])
+    })
+    it('peaje_bloqueo exige reglaValor entero ≥ 1 y nombra el efecto del arreglo', () => {
+      const error = ['Comandante 2: indica cuánto Éter paga el rival por bloquear (mínimo 1)']
+      expect(cmd([BUFF, { ...PEAJE, reglaValor: undefined }])).toEqual(error)
+      expect(cmd([BUFF, { ...PEAJE, reglaValor: 0 }])).toEqual(error)
+      expect(cmd([BUFF, { ...PEAJE, reglaValor: 1.5 }])).toEqual(error)
+    })
+    it('Aurora (disparo_sin_agotar + Tributo en el Continuo) sigue siendo válida', () => {
+      const AURORA_CMD = [
+        { tipo: 'comandante', efecto: 'buff', stats: { ATQ: 2, RES: 2 }, objetivo: { tipo: 'todos_campeones_propios', controlador: 'propio', zona: 'campo' } },
+        { tipo: 'comandante', efecto: 'modificar_regla', reglaEnumerada: 'disparo_sin_agotar', activacion: 'una_por_turno' },
+      ]
+      expect(cmd(AURORA_CMD)).toEqual([])
+    })
+    it('las demás reglas aplican al Comandante (regla enumerada inexistente, regla del manual incompleta)', () => {
+      expect(cmd([{ ...PEAJE, reglaEnumerada: 'inventada' }])).toEqual(['Comandante: la regla enumerada no existe'])
+      expect(cmd({ tipo: 'comandante', efecto: 'modificar_regla' })).toEqual(['Comandante: elige qué regla del manual modifica'])
+    })
+    it('sin Comandante no cambia nada', () => expect(cmd(undefined)).toEqual([]))
+  })
+
   describe('trigger «Cuando un Campeón va al Cementerio» y objetivo «El Campeón del trigger»', () => {
     const MEMORIA = {
       tipo: 'hechizo', trigger: 'cuando_campeon_propio_al_cementerio', efecto: 'recuperar_mano', costo: { tipo: 'bloqueo_fijo', cantidad: 2 }, activacion: 'una_por_turno',
@@ -93,5 +126,24 @@ describe('validateCard — efectos nuevos del Card-Maker (Aurora, Memoria del Re
       } as never
       expect(validateCard(carta).filter((e) => e.field === 'efectos')).toEqual([])
     })
+  })
+})
+
+describe('validateCard — reglas enumeradas de Disonancia (Lote 1)', () => {
+  const comandante = (efecto: object) => ({
+    id: 'T-5', name: 'Ragnar', type: 'Campeón', rarity: 'Única', keywords: [], flavorText: '', paqueteId: 'test', limiteCopias: '1',
+    createdAt: '', updatedAt: '', facciones: ['Caos'], stats: { cost: 4, poder: 9, resistencia: 9 }, efectos: [efecto],
+  }) as never
+  const msj = (efecto: object) => validateCard(comandante(efecto)).filter((e) => e.field === 'efectos').map((e) => e.message)
+
+  it('olvido_rival no necesita valor', () => {
+    expect(msj({ tipo: 'comandante', efecto: 'modificar_regla', reglaEnumerada: 'olvido_rival' })).toEqual([])
+  })
+  it('peaje_bloqueo necesita su valor ≥ 1', () => {
+    const PEAJE = { tipo: 'comandante', efecto: 'modificar_regla', reglaEnumerada: 'peaje_bloqueo', reglaValor: 1 }
+    expect(msj(PEAJE)).toEqual([])
+    const error = ['Efecto 1: indica cuánto Éter paga el rival por bloquear (mínimo 1)']
+    expect(msj({ ...PEAJE, reglaValor: undefined })).toEqual(error)
+    expect(msj({ ...PEAJE, reglaValor: 0 })).toEqual(error)
   })
 })

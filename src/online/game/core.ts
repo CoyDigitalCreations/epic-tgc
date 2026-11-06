@@ -152,7 +152,11 @@ function validarAccion(state: GameState, action: Action): string | null {
   // responde o se pasa prioridad; cualquier otra acción espera a que cierre.
   // F5e: una respuesta eligiendo objetivos convive con la cadena abierta; la declaración ya
   // restringió las acciones (arriba), así que elegir_objetivo pasa.
-  if (cadenaActiva(state) && !state.declaracionEnEleccion && !ACCIONES_CON_CADENA_ABIERTA.has(action.type)) {
+  // Orden determinista de pendientes: equipar -> elecciones -> scry -> cadena. Si el equipar de un Artefacto abrió la cadena
+  // mientras el dueño ajeno aún tenía una elección en cola (electorAjeno), esa elección va ANTES que la cadena (actorActual y
+  // getValidActions ya la ofrecen primero): la cadena abierta no la bloquea. Sin esto: «elegir_objetivo falló: hay una cadena abierta».
+  const eleccionAntesDeCadena = action.type === 'elegir_objetivo' && !!electorAjeno(state)
+  if (cadenaActiva(state) && !state.declaracionEnEleccion && !eleccionAntesDeCadena && !ACCIONES_CON_CADENA_ABIERTA.has(action.type)) {
     return 'hay una cadena abierta: solo se puede responder o pasar prioridad'
   }
   switch (action.type) {

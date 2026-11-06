@@ -164,6 +164,45 @@ describe('evaluarEfectoPorCoste: coste mínimo por verbo', () => {
   })
 })
 
+describe('exención del coste mínimo para Éteres (Lote 3)', () => {
+  // debuff pesa 1.5 (coste mínimo 2): un Éter de coste 1 lo llevaría en rojo sin la exención.
+  const debuff = efecto({ verbo: 'debuff' })
+
+  it('un Éter de coste 1 con un verbo de coste mínimo 2 ya no incumple el coste mínimo', () => {
+    const ev = evaluarEfectoPorCoste(carta({ tipo: 'Éter', stats: null, coste: 1, efectos: [debuff] }))
+    expect(ev.verbosBajoCosto).toEqual([])
+    expect(ev.ok).toBe(true)
+  })
+
+  it('un Campeón de coste 1 con ese mismo verbo SÍ lo incumple', () => {
+    const ev = evaluarEfectoPorCoste(carta({ tipo: 'Campeón', coste: 1, efectos: [debuff] }))
+    expect(ev.verbosBajoCosto).toEqual([{ verbo: 'debuff', costeMinimo: 2 }])
+    expect(ev.ok).toBe(false)
+  })
+
+  it('una Mística de coste 1 con ese verbo también lo incumple (la exención es solo de Éteres)', () => {
+    const ev = evaluarEfectoPorCoste(carta({ tipo: 'Mística', stats: null, coste: 1, efectos: [debuff] }))
+    expect(ev.verbosBajoCosto).toEqual([{ verbo: 'debuff', costeMinimo: 2 }])
+  })
+
+  it('el tope de efecto coste × 2 sigue aplicando al Éter: índice 3 con coste 1 falla', () => {
+    const ev = evaluarEfectoPorCoste(carta({ tipo: 'Éter', stats: null, coste: 1, efectos: conIndice(3) }))
+    expect(ev.verbosBajoCosto).toEqual([])
+    expect(ev.aplicaTope).toBe(true)
+    expect(ev.excesoIndice).toBe(1)
+    expect(ev.ok).toBe(false)
+    expect(motivoEfectoPorCoste(ev)).toBe('índice 3 > tope 2')
+  })
+
+  it('la exención sale de la config: sin tipos exentos el Éter vuelve a incumplir', () => {
+    const cfg = conCfg((c) => {
+      c.costeMinimoExento = { tipos: [] }
+    })
+    const ev = evaluarEfectoPorCoste(carta({ tipo: 'Éter', stats: null, coste: 1, efectos: [debuff] }), cfg)
+    expect(ev.verbosBajoCosto).toEqual([{ verbo: 'debuff', costeMinimo: 2 }])
+  })
+})
+
 describe('motivoEfectoPorCoste', () => {
   it('es null si la carta pasa, está exenta o no tiene coste', () => {
     expect(motivoEfectoPorCoste(evaluarEfectoPorCoste(carta({ coste: 2, efectos: conIndice(3) })))).toBeNull()

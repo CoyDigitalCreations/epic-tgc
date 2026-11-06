@@ -80,20 +80,23 @@ describe('letalidad de una carta', () => {
     expect(letalidad(campeon('A', 0, 0, { stats: null }), pool)).toBeNull()
   })
 
-  it('R10: Nymeria y Vorlag (4/5) son dominantes: matan 11 y los matan 3', () => {
+  // Rediseño de Disonancia (Lote 2): Kael 4/2, Draven 3/3, Marek 4/3, Korr 4/4: el pool tiene un ATQ 5 menos (solo Vaela) y un RES 5 menos
+  // (Korr 3/5 pasó a 4/4), así que Nymeria y Vorlag matan a 12 y solo Vaela (ATQ 5) los mata a ellos.
+  it('R10: Nymeria y Vorlag (4/5) son dominantes: matan 12 y los mata 1', () => {
     for (const id of ['FB-017', 'DS-017']) {
       const l = letalidad(carta(id), pool)
-      expect(l).toMatchObject({ mata: 11, loMatan: 3, total: 17, dominante: true })
+      expect(l).toMatchObject({ mata: 12, loMatan: 1, total: 17, dominante: true })
     }
   })
 
-  it('R10: Vaela y Kael (5/3) matan a casi todos y mueren ante todos, no son dominantes', () => {
-    for (const id of ['FB-011', 'DS-011']) {
-      const l = letalidad(carta(id), pool)
-      expect(l?.mata).toBeGreaterThanOrEqual(14)
-      expect(l?.loMatan).toBe(l?.total)
-      expect(l?.dominante).toBe(false)
-    }
+  it('R10: Vaela (5/2) mata a casi todos y muere ante todos, no es dominante', () => {
+    // Kael ya no es 5/3: con el rediseño de Disonancia es 4/2 (mata a 11 y muere ante todos; tampoco es dominante)
+    const l = letalidad(carta('FB-011'), pool)
+    expect(l?.mata).toBeGreaterThanOrEqual(14)
+    expect(l?.loMatan).toBe(l?.total)
+    expect(l?.dominante).toBe(false)
+    const kael = letalidad(carta('DS-011'), pool)
+    expect(kael).toMatchObject({ mata: 11, loMatan: 17, dominante: false })
   })
 
   it('R10: Isolde, Rowena y Skarn (RES 6-7) son invulnerables en combate', () => {
@@ -147,15 +150,16 @@ describe('umbralesPorStat (escalones)', () => {
   })
 
   // Rediseño de Estásis: Isolde pasó de RES 7 a 6 y Rowena y Vaela cambiaron de perfil; el pool ya no llega a RES 7. Elena sube a ATQ 4, así que un RES 4 ahora lo matan 10.
-  it('RES 4 la matan 10, RES 5 la matan 3 y RES 6 o más no la mata nadie', () => {
-    expect(lm(4)).toBe(10)
-    expect(lm(5)).toBe(3)
+  // Rediseño de Disonancia: Kael 4/2 y Marek 4/3 ya no son de ATQ 5, Korr pasó a 4/4: un RES 4 lo matan 9 y un RES 5 solo Vaela (1).
+  it('RES 4 la matan 9, RES 5 la mata 1 y RES 6 o más no la mata nadie', () => {
+    expect(lm(4)).toBe(9)
+    expect(lm(5)).toBe(1)
     expect(lm(6)).toBe(0)
     expect(lm(7)).toBeUndefined()
   })
 
-  it('ATQ 4 mata a 11, ATQ 5 a 15', () => {
-    expect(mt(4)).toBe(11)
+  it('ATQ 4 mata a 12, ATQ 5 a 15', () => {
+    expect(mt(4)).toBe(12)
     expect(mt(5)).toBe(15)
   })
 

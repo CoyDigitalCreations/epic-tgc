@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { evaluarConImpuesto } from '../presupuesto'
-import { carta, legado } from '../test/cartasReales'
+import { carta, legado, legadoDS } from '../test/cartasReales'
 import { NOMBRE_MAZO, num, veredictoDe } from './formato'
 
 const ev = (nombre: string) => {
@@ -37,7 +37,11 @@ describe('formato de las vistas', () => {
     // Isolde pasa a «por encima» con el tope de costo del 50 % (índice 4.75, impuesto 1.4); Vaela sigue dentro.
     expect(veredictoDe(ev('Isolde'))).toBe('Fuera de banda: por encima')
     expect(veredictoDe(ev('Vaela'))).toBe('Dentro de banda')
-    expect(veredictoDe(ev('Kael'))).toBe('Fuera de banda: por encima')
+    // «Por encima» lo ilustraba Kael 5/3; con el rediseño de Disonancia (Lote 2) Kael es 4/2 y cabe: el caso usa la Kael de antes
+    const kaelAntes = evaluarConImpuesto(legadoDS('Kael'))
+    if (kaelAntes === null) throw new Error('sin evaluación')
+    expect(veredictoDe(kaelAntes)).toBe('Fuera de banda: por encima')
+    expect(veredictoDe(ev('Kael'))).toBe('Dentro de banda')
     expect(veredictoDe(ev('Seraphina'))).toBe('Dentro de banda')
     expect(veredictoDe(ev('Aurora'))).toBe('Exenta: dentro de su tope propio')
   })

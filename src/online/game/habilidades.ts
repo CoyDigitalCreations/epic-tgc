@@ -7,14 +7,14 @@ import { faccionesDe } from './atributos'
 import { getCardMeta, efectoActivableDe, esCostoBloqueo, esArtefactoEquipable, campeonElegibleBloqueoEter, faccionesCompartidas } from './cards'
 import type { AnyCard, EfectoData } from '../../shared/types'
 import { validarPago, aplicarPago, type ContextoUso } from './payments'
-import { etiquetarEterExterno } from './eter'
+import { esEterAjeno, etiquetarEterExterno } from './eter'
 import { dispararTrigger, pasivosBloqueo1A, type TriggerEfecto } from './efectos'
 import { interpretEffect, ejecutarTramo, resolverUmbralElegido } from './effectInterpreter'
 import { electorAjeno, opcionesVigentes } from './pendientes'
 import { tieneKeyword } from './combat'
 import { efectosNegados } from './reglas'
 import { metaDeInstancia } from './efectosInstancia'
-import { liberarEterBloqueado, enviarAlCementerio } from './replacements'
+import { liberarEterBloqueado, enviarAlCementerio, zonaDeCementerio } from './replacements'
 import { slotAZona } from './zones'
 import { validarBloqueo } from './payments'
 import { habilidadUsadaEsteTurno, pagarHabilidad } from './habilidadPago'
@@ -102,6 +102,8 @@ export function validarActivarHabilidad(state: GameState, action: Extract<Action
       const eterInst = state.instances[eterId]
       const eterMeta = eterInst?.cardId ? getCardMeta(eterInst.cardId) : null
       if (!eterMeta) return `Éter desconocido: ${eterId}`
+      // R1: el Éter arrebatado se puede gastar, pero no bloquear
+      if (esEterAjeno(state, eterId, state.turno)) return `el Éter ${eterId} es arrebatado: no se puede bloquear`
     }
   } else {
     // Patrón "Paga y Agota"/Continuo pago: eterIds de la Reserva → pagados (1A).
@@ -349,7 +351,7 @@ export function ejecutarUsarTransmutar(s: GameState, action: Extract<Action, { t
   liberarEterBloqueado(s, ctx, id, '1A')
   // C5 (change 4): auto-sacrificio → 2G del dueño con trigger
   enviarAlCementerio(s, ctx, id, 'campo')
-  ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: id, zona: '2G', jugador: inst.owner, bocaArriba: true })
+  ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: id, zona: zonaDeCementerio(s, id), jugador: inst.owner, bocaArriba: true })
 }
 
 /** C2: ejecutar elegir_opcion — la pareja del jugador (ya validada) o, sin ella, la primera legal (greedy determinista). */

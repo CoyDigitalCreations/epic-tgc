@@ -34,3 +34,15 @@ describe('limpiarCamposAjenos — campos de los efectos nuevos', () => {
     expect(limpiarCamposAjenos(s)).toBe(s)
   })
 })
+
+describe('limpiarCamposAjenos — alAzar (Lote 1 de Disonancia)', () => {
+  it('alAzar se conserva en rival_discard y se quita si el efecto cambia', () => {
+    const e: EfectoData = { tipo: 'pago', efecto: 'rival_discard', alAzar: true }
+    expect(limpiarCamposAjenos(e)).toBe(e)
+    expect(limpiarCamposAjenos({ tipo: 'pago', efecto: 'draw', alAzar: true }).alAzar).toBeUndefined()
+  })
+  it('peaje_bloqueo conserva su reglaValor', () => {
+    const e: EfectoData = { tipo: 'comandante', efecto: 'modificar_regla', reglaEnumerada: 'peaje_bloqueo', reglaValor: 1 }
+    expect(limpiarCamposAjenos(e)).toBe(e)
+  })
+})

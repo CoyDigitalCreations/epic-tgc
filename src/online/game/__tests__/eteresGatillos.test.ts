@@ -68,12 +68,13 @@ describe('Éteres «Cuando pagues esta carta» (tipo pago)', () => {
     expect(s.players.A.eterReserva).toEqual([previo])
     expect(s.players.A.eterPagado).toHaveLength(1) // queda solo el PR-009 recién pagado
   })
-  it('DS-007: mueve 1 Éter (a elección) de la Reserva del rival a la zona de pago del rival', () => {
-    const { s: s0, ctx } = pagarCon('DS-007', (e) => { conEteres(e, 'B', 2) })
-    expect(s0.objetivosPendientes?.[0].opciones).toEqual(['eter-B-0', 'eter-B-1'])
-    const s = elegir(s0, ctx, 'eter-B-1')
-    expect(s.players.B.eterReserva).toEqual(['eter-B-0'])
-    expect(s.players.B.eterPagado).toEqual(['eter-B-1'])
+  // Rediseño de Disonancia (Lote 2): el «mover de la Reserva del rival a su zona de pago» pasó de DS-007 a DS-006 (hasta 2); DS-007 ahora
+  // arrebata (steal_ether: regla del Éter arrebatado, Lote 4).
+  it('DS-006: mueve hasta 2 Éter de la Reserva del rival a su zona de pago (el «hasta N» de mover se resuelve solo, sin elegir)', () => {
+    const { s } = pagarCon('DS-006', (e) => { conEteres(e, 'B', 3) })
+    expect(s.objetivosPendientes ?? []).toEqual([]) // determinista: se mueven los primeros 2 (mover + esHasta, effectInterpreter)
+    expect(s.players.B.eterReserva).toEqual(['eter-B-2'])
+    expect(s.players.B.eterPagado).toEqual(['eter-B-0', 'eter-B-1'])
     expect(s.players.A.eterPagado).toHaveLength(1) // el suyo no se toca
   })
   it('DS-004: el rival pierde 1 carta de su mano al azar', () => {

@@ -67,6 +67,19 @@ describe('coverageMap — mapa de cobertura motor vs fuente de verdad', () => {
     expect(ok).toBeGreaterThanOrEqual(0)
   })
 
+  it('Lote 4B: ninguna carta de la fuente de verdad queda con HUECO (NOOP, TRIGGER ni SIN_RUTA)', () => {
+    const huecos = reporte.items.filter((i) => i.estado.startsWith('HUECO')).map((i) => `${i.cardId}:${i.estado}`)
+    expect(huecos).toEqual([])
+  })
+
+  it('Lote 4B: el Comandante de Ragnar (buff +3 ATQ y Peaje) y el Choque del rival de Vorlag están cubiertos', () => {
+    const ragnar = reporte.items.filter((i) => i.cardId === 'DS-010' && i.origen === 'efectoComandante')
+    expect(ragnar.map((i) => i.estado)).toEqual(['OK_AURA_JSON', 'OK_AURA_JSON'])
+    const vorlag = reporte.items.filter((i) => i.cardId === 'DS-017')
+    expect(vorlag.length).toBeGreaterThan(0)
+    for (const it of vorlag) expect(it.estado.startsWith('HUECO')).toBe(false)
+  })
+
   it('el registro de handlers del mapa coincide con los archivos de handlers/ y effects-guards.ts', () => {
     // Post-Fase 2: SIN handlers por cardId y SIN guards hardcodeados —
     // todo se resuelve desde el JSON (auras, hechizos, block_ether, Pasivo 1A,

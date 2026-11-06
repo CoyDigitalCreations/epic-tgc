@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { AVISOS, CARTAS, CARTAS_ANTES, CARTAS_ELENA_32, carta } from '../test/cartasReales'
+import { AVISOS, CARTAS, CARTAS_ANTES, CARTAS_ELENA_32_DS_ANTES, carta } from '../test/cartasReales'
 import { Auditoria } from './Auditoria'
 
 describe('Auditoria', () => {
@@ -28,7 +28,8 @@ describe('Auditoria', () => {
       'FB-015', 'Elena de Casa Serena', 'Campeón', 'Poco Común', '3', '4', '2', '6', '7.9', '0.1', '2.3', 'Dentro de banda',
     ])
     cleanup()
-    render(<Auditoria cartas={CARTAS_ELENA_32} avisos={AVISOS} />)
+    // Draven de antes (4/4, «por encima»): con el rediseño de Disonancia (Lote 2) la real es 3/3 y cabe en banda, así que este caso usa la Disonancia de antes
+    render(<Auditoria cartas={CARTAS_ELENA_32_DS_ANTES} avisos={AVISOS} />)
     expect(celdas(/^FB-015/).slice(0, 12)).toEqual([
       'FB-015', 'Elena de Casa Serena', 'Campeón', 'Poco Común', '3', '3', '2', '5', '7.9', '0.1', '2.3', 'Fuera de banda: por debajo',
     ])
@@ -53,10 +54,11 @@ describe('Auditoria', () => {
     const despertar = celdas(/^FB-008/)
     expect(despertar[12]).toBe('Rojo')
     expect(despertar[13]).toBe('índice 3.5 > tope 2')
-    // Coste mínimo por verbo: Éter de la Sangre Eterna (semáforo verde) no se muestra verde.
+    // Lote 3: el Éter de la Sangre Eterna (draw, coste 1) queda exento del coste mínimo por verbo y ya no sale en rojo
+    // (el caso «verbo bajo su coste» para un Campeón se prueba en efectoPorCoste.test.ts).
     const sangre = celdas(/^FB-003/)
-    expect(sangre[12]).toBe('Rojo')
-    expect(sangre[13]).toBe('verbo draw pide coste 2')
+    expect(sangre[12]).toBe('Verde')
+    expect(sangre[13]).toBe('OK')
     // Una carta que pasa dice OK y conserva su semáforo.
     const rowena = celdas(/^FB-021/)
     expect(rowena[12]).toBe('Verde')
@@ -123,8 +125,8 @@ describe('Auditoria', () => {
     })
 
     it('descarga un Blob JSON con el formato de simulación', async () => {
-      // Con la Elena de antes (3/2) hay 6 ajustes (Elena, Isolde y cuatro de Disonancia); con la real (4/2) serían 5.
-      render(<Auditoria cartas={CARTAS_ELENA_32} avisos={AVISOS} />)
+      // Con la Elena de antes (3/2) y la Disonancia de antes hay 6 ajustes (Elena, Isolde y cuatro de Disonancia); con las reales (Lote 2) solo queda Isolde.
+      render(<Auditoria cartas={CARTAS_ELENA_32_DS_ANTES} avisos={AVISOS} />)
       await userEvent.click(screen.getByRole('button', { name: 'Exportar JSON' }))
       expect(blobs).toHaveLength(1)
       expect(blobs[0].type).toBe('application/json')
@@ -143,8 +145,8 @@ describe('Auditoria', () => {
 
     it('exporta todo lo publicado aunque haya filtros, y nunca la referencia', async () => {
       const referencia = { ...carta('Elena'), id: 'PR-999', esReferencia: true }
-      const soloEstasis = CARTAS_ELENA_32.filter((c) => c.mazo === 'estasis')
-      render(<Auditoria cartas={soloEstasis} publicadas={[...CARTAS_ELENA_32, referencia]} avisos={AVISOS} />)
+      const soloEstasis = CARTAS_ELENA_32_DS_ANTES.filter((c) => c.mazo === 'estasis')
+      render(<Auditoria cartas={soloEstasis} publicadas={[...CARTAS_ELENA_32_DS_ANTES, referencia]} avisos={AVISOS} />)
       await userEvent.click(screen.getByRole('button', { name: 'Exportar JSON' }))
       await waitFor(() => expect(blobs).toHaveLength(1))
       const json = JSON.parse(await blobs[0].text()) as { cambios: { id: string }[] }

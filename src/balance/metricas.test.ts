@@ -19,6 +19,7 @@ import {
   semaforoDe,
 } from './metricas'
 import { cargarReferencia } from './referencia'
+import { CARTAS_DS_ANTES, legadoDS } from './test/cartasReales'
 import type { CartaBalance } from './tipos'
 
 const { cartas } = cargarCartas(ALL_CARDS)
@@ -73,7 +74,8 @@ describe('semáforo y evaluación por carta', () => {
   })
 
   it('un Campeón sobre su suma objetivo es más que verde y marca rota si pasa el máximo', () => {
-    const draven = evaluarCarta(carta('DS-012'))
+    // La Draven de antes (4/4, coste 2): hoy es 3/3 y cabe en banda (Lote 2 del rediseño de Disonancia)
+    const draven = evaluarCarta(legadoDS('Draven'))
     expect(draven.presupuesto?.estado).toBe('sobre')
     expect(draven.rota).toBe(true)
     expect(draven.semaforo).not.toBe('verde')
@@ -103,7 +105,8 @@ describe('semáforo y evaluación por carta', () => {
   })
 
   it('trae el índice y el impuesto de la carta', () => {
-    const e = evaluarCarta(carta('DS-012'))
+    // Marek (exile coste 3: impuesto 0.5). Draven ya no paga impuesto con el rediseño de Disonancia (3/3, steal_ether)
+    const e = evaluarCarta(carta('DS-015'))
     expect(e.indice).toBeGreaterThan(0)
     expect(e.impuesto).toBeGreaterThan(0)
   })
@@ -122,9 +125,11 @@ describe('resumenPorMazo', () => {
       expect(m.identidad.porcentaje).toBeGreaterThanOrEqual(0)
       expect(m.identidad.porcentaje).toBeLessThanOrEqual(100)
     }
-    // Bandas v1.1 tras el rediseño de Estásis: tres de coste 2 sobre el máximo (Disonancia), más Marek. Elena (4/2) ya está dentro.
-    // Con el tope de costo del 50 % se suma Isolde (índice 4.75, impuesto 1.4: su suma 9 pasa el máximo 8.6).
-    expect(r[0].fueraDeBanda + r[1].fueraDeBanda).toBe(5)
+    // Con el rediseño de Disonancia (Lote 2) solo queda fuera Isolde (índice 4.75, impuesto 1.4: su suma 9 pasa el máximo 8.6).
+    expect(r[0].fueraDeBanda + r[1].fueraDeBanda).toBe(1)
+    // Antes: tres de coste 2 sobre el máximo (Kael, Draven, Emisario), Marek y además Isolde = 5
+    const antes = resumenPorMazo(CARTAS_DS_ANTES)
+    expect(antes[0].fueraDeBanda + antes[1].fueraDeBanda).toBe(5)
   })
 
   it('las cartas rotas son las que pasan su presupuesto', () => {
@@ -141,10 +146,11 @@ describe('resumenPorMazo', () => {
 describe('agruparPor (suma por coste, rareza y mazo)', () => {
   it('por coste: cada grupo trae conteo, promedios y fuera de banda', () => {
     const g = agruparPor(cartas, 'coste')
-    const tres = g.find((x) => x.clave === '3')
-    expect(tres?.conteo).toBeGreaterThan(0)
-    expect(tres?.promedioSuma).not.toBeNull()
-    expect(tres?.fueraDeBanda).toBeGreaterThan(0)
+    // Coste 4: Isolde (3/6, índice 4.75) es la única fuera de banda del seed rediseñado
+    const cuatro = g.find((x) => x.clave === '4')
+    expect(cuatro?.conteo).toBeGreaterThan(0)
+    expect(cuatro?.promedioSuma).not.toBeNull()
+    expect(cuatro?.fueraDeBanda).toBeGreaterThan(0)
     expect(g.reduce((n, x) => n + x.conteo, 0)).toBe(66)
   })
 
@@ -217,8 +223,10 @@ describe('rankingPoder', () => {
     for (let i = 1; i < r.length; i++) expect(r[i - 1].indice).toBeGreaterThanOrEqual(r[i].indice)
   })
 
-  it('Ragnar encabeza el ranking de poder', () => {
-    expect(r[0].id).toBe('DS-010')
+  // Rediseño de Disonancia (Lote 2): Ragnar bajó de índice 10.4 (destroy + Indestructible a todos) a 7.10 y Aurora (FB-010) lo supera.
+  it('Aurora y Ragnar, los dos Soberanos exentos, encabezan el ranking de poder', () => {
+    expect(r[0].id).toBe('FB-010')
+    expect(r[1].id).toBe('DS-010')
   })
 
   it('cada fila trae semáforo', () => {
@@ -247,8 +255,9 @@ describe('espejo Estásis vs Disonancia', () => {
 describe('promedioPorCoste (antes y después)', () => {
   it('S2.2: la suma media de coste 2 después del ajuste queda dentro de la banda 5-6', () => {
     // Con las bandas v1.1 el coste 3 ya parte dentro (media 7.3 en 6-8); el coste 2 (media 7.7 > 6) es el que el ajuste corrige.
-    const despues = aplicarAjustes(cartas, simularAjustes(cartas).ajustes)
-    const antes = promedioPorCoste(cartas).find((p) => p.coste === 2)
+    // Con la Disonancia rediseñada el coste 2 ya parte dentro (media 6): el caso se conserva con la Disonancia de antes (CARTAS_DS_ANTES).
+    const despues = aplicarAjustes(CARTAS_DS_ANTES, simularAjustes(CARTAS_DS_ANTES).ajustes)
+    const antes = promedioPorCoste(CARTAS_DS_ANTES).find((p) => p.coste === 2)
     const luego = promedioPorCoste(despues).find((p) => p.coste === 2)
     expect(antes?.sumaMedia).toBeGreaterThan(CONFIG_V1.bandas[2].sumaMax)
     expect(luego?.sumaMedia).toBeGreaterThanOrEqual(CONFIG_V1.bandas[2].sumaMin)

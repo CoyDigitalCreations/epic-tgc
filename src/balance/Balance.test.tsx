@@ -201,8 +201,8 @@ describe('Balance', () => {
         expect(filas()).toHaveLength(67)
         await userEvent.click(screen.getByRole('button', { name: 'Exportar JSON' }))
         const json = JSON.parse(await blobs[0].text()) as { cambios: { id: string }[] }
-        // Los 4 ajustes de Disonancia más Isolde (con el índice nuevo excede su suma); Elena (4/2) ya cabe en banda
-        expect(json.cambios).toHaveLength(5)
+        // Solo Isolde (con el índice nuevo excede su suma). Elena (4/2) y, tras el rediseño de Disonancia (Lote 2), toda la Disonancia ya caben en banda
+        expect(json.cambios).toHaveLength(1)
         expect(json.cambios.some((c) => c.id.startsWith('PR-'))).toBe(false)
 
         await userEvent.click(screen.getByRole('tab', { name: 'Matriz de letalidad' }))

@@ -127,7 +127,7 @@ export function SeccionesDisonancia() {
           <NorteYSur />
 
           <Cita color={ROJO_OSCURO}>
-            Su poder no es la constancia: es la <B>presión</B>. El sur no gana anclando: gana porque nada se le escapa. Cada Éter que le arrebatan al rival es una deuda cobrada; cada Campeón que rompen, una promesa que el norte ya no podrá cumplir; cada carta que el rival pierde, una voz menos para la hermandad. El Aprieto es su estrategia y su sentencia.
+            Su poder no es la constancia: es la <B>presión</B>. El sur no gana anclando: gana porque nada se le escapa. Cada Éter que le arrebatan al rival es una deuda cobrada, aunque hasta ahora el cristal ajeno siempre vuelve a su dueño en el Alba; cada Campeón que rompen, una promesa que el norte ya no podrá cumplir; cada carta que el rival pierde, una voz menos para la hermandad, porque lo que cae en el sur no vuelve. El Aprieto es su estrategia y su sentencia.
           </Cita>
         </div>
       </section>
@@ -144,7 +144,7 @@ export function SeccionesDisonancia() {
               Por eso lo llaman la <B>Voz del Nudo</B>: habla por el sur, y cuando habla, el sur aprieta. Los demás primogénitos de Caos lo siguen sin que él lo pida, como el trueno sigue al relámpago. Y es el único capaz de mirar a Aurora sin pestañear: dos primeros, dos polos, dos maneras de sostener el mismo Eje.
             </P>
             <P>
-              Nada rompe lo que él aprieta: con una palabra vuelve Indestructible a quien lo rodea, y con otra destruye a quien se le planta enfrente. No necesita alzar la mano: el Nudo cobra por él.
+              Nada rompe lo que él aprieta, y lo que él aprieta, no se queda con nada. Con una palabra <B color={ROJO}>arrebata</B> el Éter que el rival guardaba, y mientras lo sostiene en su pecho, lo que el rival pierde no va al Cementerio: se <B>olvida</B>. Quien se le planta enfrente paga el <B>Peaje</B>: defenderse cuesta. No necesita alzar la mano: el Nudo cobra por él.
             </P>
             <Cita color={ROJO_OSCURO} autor="— Ragnar, Voz del Nudo">“No heredamos ningún trono. Los cobramos todos.”</Cita>
             <P>
@@ -174,7 +174,7 @@ export function SeccionesDisonancia() {
             Disonancia («La Tormenta») es el mazo temático de la facción Caos. En el sur, donde el Eje termina en un Nudo, los primogénitos de Caos despertaron con el cristal clavado en el pecho, y el Nudo aprieta cada vez que el Eje tiembla. Mientras Estásis ancla, Disonancia aprieta: la Tormenta no retiene lo que toma, lo rompe y lo suelta. Ragnar, Voz del Nudo, es el primero de todos: el hombre que habla por el sur y el único capaz de mirar a Aurora sin pestañear.
             <br />
             <br />
-            El mazo juega con la presión y la destrucción: romper a los Campeones del rival y estrangular su economía de Éter mientras los Campeones de Caos avanzan como la tormenta que no se detiene.
+            El mazo juega con la presión y el olvido: arrebatar y cobrar el Éter del rival para que no pueda defenderse, cobrarle cada bloqueo con el Peaje y borrar lo que cae, mientras los Campeones de Caos avanzan como la tormenta que no se detiene.
           </Cita>
 
           <Sub color={CIAN}>Los campeones del mazo</Sub>
@@ -191,7 +191,7 @@ export function SeccionesDisonancia() {
           </P>
           <Ciclo pasos={CICLO_DISONANCIA} acento={ROJO_OSCURO} />
           <Cita color={ROJO_OSCURO}>
-            Así juega el sur: apretando, cobrando, arrebatando, avanzando. El rival puede anclar todo lo que quiera, pero el Nudo siempre cierra. Esa es la estrategia de la Tormenta: que nada se le escape.
+            Así juega el sur: apretando, cobrando, arrebatando, avanzando y olvidando. El rival puede anclar todo lo que quiera, pero el Nudo siempre cierra. Esa es la estrategia de la Tormenta: que nada se le escape.
           </Cita>
 
           <Sub color={CIAN}>Lo que dice el Éter del sur</Sub>

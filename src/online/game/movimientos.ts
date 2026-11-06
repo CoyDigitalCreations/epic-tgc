@@ -11,7 +11,7 @@ import { SLOTS_CAMPEONES, SLOTS_MISTICAS_TACTICAS, SLOTS_ARCANAS_COMBATE, slotAZ
 import { dispararTrigger, condicionCumple } from './efectos'
 import { armarTriggers, construirTriggers } from './triggers'
 import { reiniciarCampeon } from './reglasTemporales'
-import { liberarEterBloqueado, enviarAlCementerio } from './replacements'
+import { liberarEterBloqueado, enviarAlCementerio, zonaDeCementerio } from './replacements'
 import { aplicarBloqueoAlJugar, bloqueoParaJugar, motivoBloqueoAlJugar } from './bloqueoAlJugar'
 import { declararOpener, declararVentana, marcarInicioAccion } from './chain'
 import type { Action } from './core'
@@ -182,7 +182,7 @@ export function ejecutarJugarCampeon(s: GameState, action: Extract<Action, { typ
     liberarEterBloqueado(s, ctx, sacId, '2A')
     // C5 (change 4): sacrificio → 2G con trigger al-ser-enviado-al-cementerio
     enviarAlCementerio(s, ctx, sacId, 'campo')
-    ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: sacId, zona: '2G', jugador: s.turno, bocaArriba: true })
+    ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: sacId, zona: zonaDeCementerio(s, sacId), jugador: s.turno, bocaArriba: true })
   }
   // 3. Invocar: mano → slot, ENDEREZADO con invocación cansada (§5.2): no ataca este turno
   //    (entradaEsteTurno), pero SÍ bloquea y puede activar habilidades. Cansado ≠ agotado.

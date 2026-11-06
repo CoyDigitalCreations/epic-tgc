@@ -1,5 +1,7 @@
 import { ALL_CARDS } from '../../shared/data/paquetes'
 import { cargarCartas } from '../cargador'
+import type { AnyCard } from '../../shared/types'
+import disonanciaLegadoJson from './disonancia-legado.json'
 import type { CartaBalance } from '../tipos'
 
 /** Las 65 cartas publicadas ya normalizadas, para los tests de las vistas. */
@@ -87,3 +89,21 @@ export const CARTAS_ELENA_32: CartaBalance[] = CARTAS.map((c) => (c.id === 'FB-0
 
 /** Texto del efecto viejo de Isolde (el que citaban las razones del análisis). */
 export const TEXTO_ISOLDE_LEGADO = 'Puedes pagar 2 Éter, destruye 1 Mística o Arcana que controla el rival.'
+
+/**
+ * Las 33 cartas de Disonancia COMO ERAN antes del rediseño (Lote 2: Kael 5/3, Draven 4/4, Marek 5/4 con copy, Ragnar con destroy e
+ * Indestructible a todos, etc.), tomadas del seed de entonces (`disonancia-legado.json`; datos de prueba, NO son el seed).
+ * Los tests de intención del balance («cuatro Campeones de coste 2 sobre el máximo», «Draven baja a la suma objetivo», la matriz de
+ * letalidad con Kael 5/3…) se apoyaban en esas cartas; tras el rediseño las reales ya caben en banda, así que esos casos se conservan con este
+ * pool (mismo criterio que `CARTAS_ANTES` para Estásis). El resto del seed (Estásis) es el actual.
+ */
+const DS_LEGADO = new Map((disonanciaLegadoJson as unknown as AnyCard[]).map((c) => [c.id, c]))
+export const CARTAS_DS_ANTES: CartaBalance[] = cargarCartas(ALL_CARDS.map((c) => DS_LEGADO.get(c.id) ?? c)).cartas
+/** Elena 3/2 (bajo banda) y la Disonancia de antes: la combinación sobre la que se escribieron los tests de ajustes (6 ajustes: Elena, Isolde y cuatro de Disonancia). */
+export const CARTAS_ELENA_32_DS_ANTES: CartaBalance[] = CARTAS_DS_ANTES.map((c) => (c.id === 'FB-015' ? legado('Elena 3/2') : c))
+
+export function legadoDS(prefijo: string): CartaBalance {
+  const c = CARTAS_DS_ANTES.find((x) => x.nombre.startsWith(prefijo))
+  if (!c) throw new Error(`Falta la carta legada ${prefijo}`)
+  return c
+}

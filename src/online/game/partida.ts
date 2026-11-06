@@ -5,6 +5,7 @@
 import type { GameState, Ctx, PlayerId, FaseNombre } from './types'
 import { purgarEfectosTemporales, purgarKeywordsTemporales, purgarHastaFase, dispararTrigger, evaluarCandadosArcanas } from './efectos'
 import { getCardMeta } from './cards'
+import { eteresPropios } from './eter'
 import { reglaNumero } from './reglas'
 import { resolverFaseEfectos } from './effectRegistry'
 import { limpiarCombate, resolverAlba } from './phases'
@@ -123,7 +124,8 @@ export function ejecutarPasarTurno(s: GameState, ctx: Ctx): void {
       // fix A7-choque (2026-10-22): las Místicas también declaran "Al inicio
       // del Choque" — antes quedaban fuera del snapshot (mismo hueco que el
       // Alba con ALBA_SOLO_TIPOS).
-      const choqueInstances = [...p.eterReserva, ...campeones, ...misticas, ...arcanas, ...vinculos]
+      // R1: el Éter arrebatado no activa sus efectos para quien lo tiene (solo el propio dispara)
+      const choqueInstances = [...eteresPropios(s, p.eterReserva, s.turno), ...campeones, ...misticas, ...arcanas, ...vinculos]
       if (choqueInstances.length > 0) {
         dispararTrigger(s, ctx, 'al-inicio-choque', s.turno, choqueInstances)
       }
@@ -132,18 +134,23 @@ export function ejecutarPasarTurno(s: GameState, ctx: Ctx): void {
       // dispatchan con jugador=DUEÑO del vínculo para que "rival" resuelva
       // al activo (perspectiva correcta del efecto).
       // §5.5: solo bocaArriba (destruidos) — los vivos boca-abajo no firean.
+      // Lote 4B (R2): lo mismo para los CAMPEONES en campo del rival (Vorlag, DS-017). Solo Vínculos rotos y Campeones.
       const rival: PlayerId = s.turno === 'A' ? 'B' : 'A'
-      const vinculosRivales = s.players[rival].vinculos.filter((x): x is string => {
+      const tieneInicioChoqueDelRival = (x: string | null, soloBocaArriba: boolean): x is string => {
         if (!x) return false
         const vInst = s.instances[x]
-        if (!vInst || vInst.bocaArriba !== true) return false
+        if (!vInst || (soloBocaArriba && vInst.bocaArriba !== true)) return false
         const vMeta = vInst.cardId ? getCardMeta(vInst.cardId) : null
         return !!vMeta && 'efectos' in vMeta && !!vMeta.efectos?.some(
           (e) => e.trigger === 'inicio_choque' && e.controladorTrigger === 'rival',
         )
-      })
-      if (vinculosRivales.length > 0) {
-        dispararTrigger(s, ctx, 'al-inicio-choque', rival, vinculosRivales)
+      }
+      const delRival = [
+        ...s.players[rival].vinculos.filter((x) => tieneInicioChoqueDelRival(x, true)),
+        ...s.players[rival].campo.campeones.filter((x) => tieneInicioChoqueDelRival(x, false)),
+      ] as string[]
+      if (delRival.length > 0) {
+        dispararTrigger(s, ctx, 'al-inicio-choque', rival, delRival)
       }
     }
     s.fase = siguiente

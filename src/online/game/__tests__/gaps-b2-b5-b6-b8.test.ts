@@ -23,10 +23,15 @@ import { resolveTargets } from '../targetResolver'
 import type { AnyCard } from '../cards'
 import type { Action } from '../actions'
 import type { Ctx, GameState, PlayerId } from '../types'
+import disonanciaLegado from '../../../balance/test/disonancia-legado.json'
 
 const ETER_ORDEN = 'DS-002' // Éter del Nudo — trigger 'ninguno' (INERTE: sin pendientes al pagar; FB-001 crea D1 al-pagar-eter)
 const VINCULO = 'DS-028' // Cristal del Nudo — Vínculo real (para B2/B6)
 const TEST_DESTRUYE = 'TEST-DESTRUYE-VINCULO'
+// El Cristal del Nudo de ANTES del rediseño de Disonancia (Lote 2): «Indestructible hasta la próxima Forja del rival» (duracion hasta_fase).
+// DS-028 ahora arrebata Éter; ningún Vínculo real conserva `hasta_fase`, así que B6 usa este fixture (tomado del seed de entonces).
+const TEST_CRISTAL_HASTA_FORJA = 'TEST-CRISTAL-HASTA-FORJA'
+registrarCartas([{ ...(disonanciaLegado as unknown as AnyCard[]).find((c) => c.id === 'DS-028')!, id: TEST_CRISTAL_HASTA_FORJA } as AnyCard])
 const TEST_MOVER_TUYO = 'TEST-MOVER-PROPIO' // controladorDestino 'propio' → TRANSFIERE al lanzador
 const TEST_MOVER_DUENO = 'TEST-MOVER-DUENO' // SIN campo → default 'dueno' (inst.owner)
 const TEST_MOVER_RIVAL = 'TEST-MOVER-RIVAL' // controladorDestino 'rival'
@@ -222,10 +227,10 @@ function conCampeon(s: GameState, cardId: string, owner: PlayerId, slot: number)
 }
 
 /** Vínculos de `owner` en 4A-4F (boca abajo = vivos salvo que extra diga lo contrario). */
-function conVinculos(s: GameState, owner: PlayerId, ids: string[], bocaArriba = false): GameState {
+function conVinculos(s: GameState, owner: PlayerId, ids: string[], bocaArriba = false, cardId = VINCULO): GameState {
   let out = conInstancias(
     s,
-    Object.fromEntries(ids.map((id) => [id, { cardId: VINCULO, owner, extra: { bocaArriba } }])),
+    Object.fromEntries(ids.map((id) => [id, { cardId, owner, extra: { bocaArriba } }])),
   )
   const slots: (string | null)[] = [null, null, null, null, null, null]
   ids.forEach((id, i) => { slots[i] = id })
@@ -397,13 +402,13 @@ describe('B6 — duracion hasta_fase expira al entrar la fase del dueño', () =>
     expect(statsDe(s, camp.id).poder).toBe(2)
   })
 
-  it('DS-028 (Vínculo): Indestructible hasta la próxima Forja del RIVAL — sobrevive al Ocaso propio', () => {
+  it('Cristal del Nudo de antes (Vínculo): Indestructible hasta la próxima Forja del RIVAL — sobrevive al Ocaso propio', () => {
     const ctx = crearCtx()
     let s = estadoMinimo()
     const camp = conCampeon(s, 'TEST-TRIGGER-PAGO', 'A', 0)
     s = camp.s
     // Vínculo DESTRUIDO de A (bocaArriba) → su efecto inicio_alba está vigente (§5.5)
-    s = conVinculos(s, 'A', ['v-a1'], true)
+    s = conVinculos(s, 'A', ['v-a1'], true, TEST_CRISTAL_HASTA_FORJA)
     // Mazo con cartas para que el Alba no deck-outee
     s = conInstancias(s, { 'mazo-a0': { cardId: ETER_ORDEN, owner: 'A' }, 'mazo-a1': { cardId: ETER_ORDEN, owner: 'A' } })
     s = { ...s, players: { ...s.players, A: { ...s.players.A, mazo: ['mazo-a0', 'mazo-a1'] } } }
@@ -415,7 +420,7 @@ describe('B6 — duracion hasta_fase expira al entrar la fase del dueño', () =>
     expect(s.objetivosPendientes![0].opciones).toContain(camp.id)
     s = aplicar(s, { type: 'elegir_objetivo', objetivoId: camp.id }, ctx)
 
-    // DS-028 otorga Indestructible 'hasta la próxima Forja del rival' → dueño = B
+    // El Cristal otorga Indestructible 'hasta la próxima Forja del rival' → dueño = B
     expect(keywordsDe(s, camp.id)).toContain('Indestructible')
     const registro = s.instances[camp.id].keywordsHastaFase ?? []
     expect(registro).toEqual([{ keyword: 'Indestructible', fase: 'forja', jugador: 'B' }])

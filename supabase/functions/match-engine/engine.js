@@ -1348,7 +1348,7 @@ var FuenteEfectos_default = [
     paqueteId: "disonancia",
     limiteCopias: "1",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-10-24T18:15:35.033Z",
+    updatedAt: "2026-11-06T01:18:09.009Z",
     facciones: [
       "Caos"
     ],
@@ -1368,52 +1368,63 @@ var FuenteEfectos_default = [
     efectos: [
       {
         tipo: "disparo",
-        efecto: "destroy",
-        objetivo: {
-          tipo: "campeon",
-          controlador: "rival",
-          zona: "campo"
-        },
-        texto: "Puedes pagar 4 \xC9ter, destruye 1 Campe\xF3n que controla el rival.",
+        efecto: "steal_ether",
         costo: {
           tipo: "eter",
-          cantidad: 4
+          cantidad: 2
         },
-        cantidad: 1
+        activacion: "una_por_turno",
+        objetivo: {
+          tipo: "eter",
+          controlador: "rival",
+          zona: "reserva",
+          zonaDestino: "reserva",
+          controladorDestino: "propio"
+        },
+        cantidad: 2,
+        esHasta: true,
+        texto: "Puedes pagar 2 \xC9ter, una vez por turno, arrebata hasta 2 \xC9ter de la Reserva del rival y puedes usarlos desde tu Reserva hasta el inicio del Alba del rival."
       },
       {
         tipo: "continuo",
-        efecto: "grant_keyword",
+        efecto: "modificar_regla",
+        reglaEnumerada: "olvido_rival",
+        costo: {
+          tipo: "bloqueo_fijo",
+          cantidad: 3
+        },
+        activacion: "una_por_turno",
+        duracion: "mientras_tenga_eter_bloqueado",
+        reagrupar: {
+          fase: "alba",
+          turno: "propio",
+          alcance: "todo"
+        },
+        texto: "Una vez por turno, bloquea 3 \xC9ter, las cartas del rival que ir\xEDan a su Cementerio se exilian en su lugar, mientras tenga \xC9ter bloqueado. Al inicio de tu Alba reagrupa todo el \xC9ter bloqueado en esta carta."
+      }
+    ],
+    efectoComandante: [
+      {
+        tipo: "comandante",
+        efecto: "buff",
+        stats: {
+          ATQ: 3
+        },
         objetivo: {
-          tipo: "campeon",
+          tipo: "todos_campeones_propios",
           controlador: "propio",
           zona: "campo"
         },
-        texto: "Una vez por turno, bloquea 2 \xC9ter, un Campe\xF3n que controles gana Indestructible, mientras ese \xC9ter est\xE9 bloqueado. Al inicio de tu Alba reagrupa el \xC9ter usado por este efecto.",
-        keyword: "Indestructible",
-        costo: {
-          tipo: "bloqueo_fijo",
-          cantidad: 2
-        },
-        duracion: "mientras_ester_bloqueado",
-        reagrupar: {
-          fase: "alba",
-          turno: "propio"
-        },
-        activacion: "una_por_turno"
-      }
-    ],
-    efectoComandante: {
-      tipo: "pasivo",
-      efecto: "grant_keyword",
-      objetivo: {
-        tipo: "todos_campeones_propios",
-        controlador: "propio",
-        zona: "campo"
+        texto: "Incremento de 3 de ATQ."
       },
-      texto: "Todos tus Campeones ganan Indestructible.",
-      keyword: "Indestructible"
-    }
+      {
+        tipo: "comandante",
+        efecto: "modificar_regla",
+        reglaEnumerada: "peaje_bloqueo",
+        reglaValor: 1,
+        texto: "Para bloquear a tus Campeones, el rival paga 1 \xC9ter por cada uno."
+      }
+    ]
   },
   {
     id: "DS-002",
@@ -1425,7 +1436,7 @@ var FuenteEfectos_default = [
     paqueteId: "disonancia",
     limiteCopias: "2",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-09-21T00:00:00.000Z",
+    updatedAt: "2026-11-06T01:18:09.009Z",
     stats: {
       cost: 1
     },
@@ -1440,9 +1451,15 @@ var FuenteEfectos_default = [
         objetivo: {
           tipo: "campeon",
           controlador: "rival",
-          zona: "campo"
+          zona: "campo",
+          filtros: {
+            seleccionar: {
+              stat: "poder",
+              orden: "mayor"
+            }
+          }
         },
-        texto: "Mientras est\xE9 en tu Reserva, los Campeones que controla el rival pierden 1 de ATQ."
+        texto: "Mientras est\xE9 en tu Reserva, el Campe\xF3n con mayor ATQ que controla el rival pierde 1 de ATQ."
       }
     ]
   },
@@ -1456,7 +1473,7 @@ var FuenteEfectos_default = [
     paqueteId: "disonancia",
     limiteCopias: "1",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-09-21T00:00:00.000Z",
+    updatedAt: "2026-11-06T01:18:09.009Z",
     stats: {
       cost: 1
     },
@@ -1471,7 +1488,7 @@ var FuenteEfectos_default = [
           controlador: "propio",
           zona: "campo"
         },
-        texto: "Al inicio de tu Choque, si est\xE1 en tu Reserva, un Campe\xF3n que controlas gana Carga hasta el final del turno.",
+        texto: "Mientras est\xE9 en tu Reserva, al inicio de tu Choque, un Campe\xF3n que controles gana Carga, hasta el final del turno.",
         duracion: "turno"
       }
     ]
@@ -1486,7 +1503,7 @@ var FuenteEfectos_default = [
     paqueteId: "disonancia",
     limiteCopias: "2",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-09-21T00:00:00.000Z",
+    updatedAt: "2026-11-06T01:18:09.009Z",
     stats: {
       cost: 1
     },
@@ -1501,7 +1518,8 @@ var FuenteEfectos_default = [
           zona: "mano"
         },
         cantidad: 1,
-        texto: "Cuando pagues esta carta, el rival pierde 1 carta de su mano al azar."
+        alAzar: true,
+        texto: "Cuando pagues esta carta, el rival descarta 1 carta de su mano al azar."
       }
     ]
   },
@@ -1515,7 +1533,7 @@ var FuenteEfectos_default = [
     paqueteId: "disonancia",
     limiteCopias: "2",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-09-21T00:00:00.000Z",
+    updatedAt: "2026-11-06T01:18:09.009Z",
     stats: {
       cost: 1
     },
@@ -1532,7 +1550,7 @@ var FuenteEfectos_default = [
           controlador: "propio",
           zona: "campo"
         },
-        texto: "Cuando pagues esta carta para invocar un Campe\xF3n, ese Campe\xF3n gana 1 de ATQ hasta el final del pr\xF3ximo turno.",
+        texto: "Cuando pagues esta carta, el Campe\xF3n que se est\xE1 invocando gana 1 de ATQ, por 2 turnos.",
         duracion: "n_turnos",
         duracionTurnos: 2,
         contextoUso: "invocar"
@@ -1549,24 +1567,25 @@ var FuenteEfectos_default = [
     paqueteId: "disonancia",
     limiteCopias: "2",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-09-22T04:22:48.600Z",
+    updatedAt: "2026-11-06T01:18:09.009Z",
     stats: {
       cost: 1
     },
     efectos: [
       {
         tipo: "pago",
-        efecto: "block_ether",
+        trigger: "al_pagar_eter",
+        efecto: "mover",
         objetivo: {
-          tipo: "campeon",
-          controlador: "propio",
-          zona: "campo",
-          filtros: {
-            puedeBloquearEter: true
-          }
+          tipo: "eter",
+          controlador: "rival",
+          zona: "reserva",
+          zonaDestino: "pagado",
+          controladorDestino: "rival"
         },
-        texto: "Bloquea 1 \xC9ter de tu Reserva sobre un Campe\xF3n que pueda recibir \xE9ter bloqueado que controles, una vez por turno.",
-        duracion: "1_por_turno"
+        cantidad: 2,
+        esHasta: true,
+        texto: "Cuando pagues esta carta, mueve hasta 2 \xC9ter que controla el rival de la Reserva a la zona de pago del rival."
       }
     ]
   },
@@ -1580,23 +1599,24 @@ var FuenteEfectos_default = [
     paqueteId: "disonancia",
     limiteCopias: "1",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-09-22T05:28:16.218Z",
+    updatedAt: "2026-11-06T01:18:09.009Z",
     stats: {
       cost: 1
     },
     efectos: [
       {
         tipo: "pago",
-        efecto: "mover",
+        trigger: "al_pagar_eter",
+        efecto: "steal_ether",
         objetivo: {
           tipo: "eter",
           controlador: "rival",
           zona: "reserva",
-          zonaDestino: "pagado",
-          controladorDestino: "rival"
+          zonaDestino: "reserva",
+          controladorDestino: "propio"
         },
-        texto: "Cuando pagues esta carta, mueve 1 \xC9ter de la Reserva a la zona de pago del rival.",
-        trigger: "al_pagar_eter"
+        cantidad: 1,
+        texto: "Cuando pagues esta carta, arrebata 1 \xC9ter de la Reserva del rival y puedes usarlo desde tu Reserva hasta el inicio del Alba del rival."
       }
     ]
   },
@@ -1610,23 +1630,20 @@ var FuenteEfectos_default = [
     paqueteId: "disonancia",
     limiteCopias: "1",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-09-22T18:49:22.302Z",
+    updatedAt: "2026-11-06T01:18:09.009Z",
     stats: {
       cost: 1
     },
     efectos: [
       {
         tipo: "bloqueo",
-        efecto: "buff",
+        efecto: "direct_attack",
         objetivo: {
           tipo: "campeon",
           controlador: "propio",
           zona: "campo"
         },
-        stats: {
-          RES: 1
-        },
-        texto: "Mientras est\xE9 bloqueado, el Campe\xF3n que tenga este \xC9ter gana 1 de RES."
+        texto: "Mientras est\xE9 bloqueado, el Campe\xF3n que tenga este \xC9ter no puede ser bloqueado."
       }
     ]
   },
@@ -1636,11 +1653,11 @@ var FuenteEfectos_default = [
     type: "\xC9ter",
     rarity: "Poco Com\xFAn",
     keywords: [],
-    flavorText: "Nada rompe lo que el Nudo aprieta.",
+    flavorText: "El sur no descansa entre un golpe y otro.",
     paqueteId: "disonancia",
     limiteCopias: "2",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-09-22T18:48:41.813Z",
+    updatedAt: "2026-11-06T05:02:32.994Z",
     stats: {
       cost: 1
     },
@@ -1648,13 +1665,13 @@ var FuenteEfectos_default = [
       {
         tipo: "bloqueo",
         efecto: "grant_keyword",
+        keyword: "Tirador",
         objetivo: {
           tipo: "campeon",
           controlador: "propio",
           zona: "campo"
         },
-        texto: "Mientras est\xE9 bloqueado, el Campe\xF3n que tenga este \xC9ter gana Indestructible.",
-        keyword: "Indestructible"
+        texto: "Mientras est\xE9 bloqueado, el Campe\xF3n que tenga este \xC9ter gana Tirador."
       }
     ]
   },
@@ -1668,24 +1685,25 @@ var FuenteEfectos_default = [
     paqueteId: "disonancia",
     limiteCopias: "2",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-09-22T18:49:47.863Z",
+    updatedAt: "2026-11-06T01:18:09.009Z",
     stats: {
       cost: 1
     },
     efectos: [
       {
-        tipo: "bloqueo",
-        efecto: "buff",
+        tipo: "pago",
+        trigger: "al_pagar_eter",
+        efecto: "debuff",
+        stats: {
+          RES: 2
+        },
         objetivo: {
           tipo: "campeon",
-          controlador: "propio",
+          controlador: "rival",
           zona: "campo"
         },
-        stats: {
-          ATQ: 1,
-          RES: 0
-        },
-        texto: "Mientras est\xE9 bloqueado, el Campe\xF3n que tenga este \xC9ter gana 1 de ATQ."
+        duracion: "turno",
+        texto: "Cuando pagues esta carta, un Campe\xF3n que controla el rival pierde 2 de RES, hasta el final del turno."
       }
     ]
   },
@@ -1701,7 +1719,7 @@ var FuenteEfectos_default = [
     paqueteId: "disonancia",
     limiteCopias: "3",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-09-22T19:36:31.857Z",
+    updatedAt: "2026-11-06T01:18:09.009Z",
     facciones: [
       "Caos"
     ],
@@ -1714,24 +1732,24 @@ var FuenteEfectos_default = [
     ],
     stats: {
       cost: 2,
-      poder: 5,
-      resistencia: 3
+      poder: 4,
+      resistencia: 2
     },
     efectos: [
       {
         tipo: "pasivo",
+        trigger: "al_atacar",
         efecto: "debuff",
+        stats: {
+          ATQ: 1
+        },
         objetivo: {
           tipo: "campeon",
           controlador: "rival",
           zona: "campo"
         },
-        stats: {
-          ATQ: 1,
-          RES: 0
-        },
-        texto: "Al atacar, un Campe\xF3n que controla el rival pierde 1 de ATQ.",
-        trigger: "al_atacar"
+        duracion: "turno",
+        texto: "Al atacar, un Campe\xF3n que controla el rival pierde 1 de ATQ, hasta el final del turno."
       }
     ]
   },
@@ -1745,7 +1763,7 @@ var FuenteEfectos_default = [
     paqueteId: "disonancia",
     limiteCopias: "3",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-10-27T00:26:09.195Z",
+    updatedAt: "2026-11-06T01:18:09.009Z",
     facciones: [
       "Caos"
     ],
@@ -1758,38 +1776,23 @@ var FuenteEfectos_default = [
     ],
     stats: {
       cost: 2,
-      poder: 4,
-      resistencia: 4
+      poder: 3,
+      resistencia: 3
     },
     efectos: [
       {
         tipo: "pasivo",
         trigger: "al_matar_en_combate",
-        efecto: "return_ether",
+        efecto: "steal_ether",
         objetivo: {
           tipo: "eter",
           controlador: "rival",
           zona: "reserva",
-          zonaDestino: "pagado",
-          controladorDestino: "rival"
+          zonaDestino: "reserva",
+          controladorDestino: "propio"
         },
-        zonaDestino: "reserva",
         cantidad: 1,
-        texto: "Al matar en combate, puedes devolver 1 \xC9ter de la Reserva a la zona de pago del rival."
-      },
-      {
-        tipo: "disparo",
-        costo: {
-          tipo: "eter",
-          cantidad: 2
-        },
-        efecto: "destroy",
-        objetivo: {
-          tipo: "mistica",
-          controlador: "rival",
-          zona: "campo"
-        },
-        texto: "Puedes pagar 2 \xC9ter, destruye 1 M\xEDstica que controla el rival."
+        texto: "Al matar en combate, puedes arrebatar 1 \xC9ter de la Reserva del rival y usarlo desde tu Reserva hasta el inicio del Alba del rival."
       }
     ]
   },
@@ -1803,7 +1806,7 @@ var FuenteEfectos_default = [
     paqueteId: "disonancia",
     limiteCopias: "3",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-10-24T18:16:38.370Z",
+    updatedAt: "2026-11-06T01:18:09.009Z",
     facciones: [
       "Caos"
     ],
@@ -1832,10 +1835,11 @@ var FuenteEfectos_default = [
           controlador: "rival",
           zona: "campo",
           filtros: {
-            resMax: 3
+            agotado: true
           }
         },
-        texto: "Puedes pagar 4 \xC9ter, destruye 1 Campe\xF3n RES 3 o menos que controla el rival."
+        cantidad: 1,
+        texto: "Puedes pagar 4 \xC9ter, destruye 1 Campe\xF3n agotado que controla el rival."
       }
     ]
   },
@@ -1851,7 +1855,7 @@ var FuenteEfectos_default = [
     paqueteId: "disonancia",
     limiteCopias: "2",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-10-27T03:39:56.365Z",
+    updatedAt: "2026-11-06T01:18:09.009Z",
     facciones: [
       "Caos"
     ],
@@ -1869,21 +1873,23 @@ var FuenteEfectos_default = [
     },
     efectos: [
       {
-        tipo: "disparo",
-        trigger: "ninguno",
-        efecto: "negar",
+        tipo: "continuo",
+        efecto: "debuff",
+        stats: {
+          ATQ: 1
+        },
         objetivo: {
-          tipo: "campeon",
+          tipo: "todos_campeones_rivales",
           controlador: "rival",
           zona: "campo"
         },
-        texto: "Puedes pagar 3 \xC9ter, Niega el efecto activo de un Campe\xF3n que controla el rival, hasta el final del turno.",
-        duracion: "turno",
-        tipoNegacion: "efecto_activo",
         costo: {
-          tipo: "eter",
-          cantidad: 3
-        }
+          tipo: "bloqueo_fijo",
+          cantidad: 2
+        },
+        duracion: "mientras_ester_bloqueado",
+        activacion: "una_mientras_bloqueado",
+        texto: "Bloquea 2 \xC9ter (solo una vez mientras siga bloqueado), todos los Campeones que controla el rival pierden 1 de ATQ, mientras ese \xC9ter est\xE9 bloqueado."
       }
     ]
   },
@@ -1892,14 +1898,12 @@ var FuenteEfectos_default = [
     name: "Marek, Cosecha del Nudo",
     type: "Campe\xF3n",
     rarity: "Poco Com\xFAn",
-    keywords: [
-      "Recarga"
-    ],
+    keywords: [],
     flavorText: "Cada nudo que aprieta el norte lo alimenta.",
     paqueteId: "disonancia",
     limiteCopias: "2",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-10-08T05:31:28.150Z",
+    updatedAt: "2026-11-06T01:18:09.009Z",
     facciones: [
       "Caos"
     ],
@@ -1912,24 +1916,21 @@ var FuenteEfectos_default = [
     ],
     stats: {
       cost: 3,
-      poder: 5,
-      resistencia: 4
+      poder: 4,
+      resistencia: 3
     },
     efectos: [
       {
         tipo: "pasivo",
         trigger: "al_invocar",
-        efecto: "copy",
+        efecto: "exile",
         objetivo: {
           tipo: "campeon",
           controlador: "rival",
-          zona: "campo"
+          zona: "cementerio"
         },
-        texto: "Al ser invocada, puedes copiar el ATQ de un Campe\xF3n que controla el rival, hasta el final del turno.",
-        duracion: "turno",
-        copyAttributes: [
-          "atq"
-        ]
+        cantidad: 1,
+        texto: "Al ser invocada, puedes exiliar 1 Campe\xF3n del Cementerio del rival."
       }
     ]
   },
@@ -1939,11 +1940,11 @@ var FuenteEfectos_default = [
     type: "Campe\xF3n",
     rarity: "Com\xFAn",
     keywords: [],
-    flavorText: "El sur empuja a los suyos hacia adelante.",
+    flavorText: "Donde pasa el viento del sur, el norte se queda sin \xC9ter.",
     paqueteId: "disonancia",
     limiteCopias: "3",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-10-27T00:26:22.051Z",
+    updatedAt: "2026-11-06T05:02:32.994Z",
     facciones: [
       "Caos"
     ],
@@ -1956,25 +1957,24 @@ var FuenteEfectos_default = [
     ],
     stats: {
       cost: 3,
-      poder: 3,
-      resistencia: 5
+      poder: 4,
+      resistencia: 4
     },
     efectos: [
       {
-        tipo: "disparo",
-        costo: {
-          tipo: "eter",
-          cantidad: 2
-        },
-        efecto: "buff",
-        stats: {
-          ATQ: 1
-        },
+        tipo: "pasivo",
+        trigger: "al_atacar",
+        efecto: "mover",
         objetivo: {
-          tipo: "todos_campeones_propios"
+          tipo: "eter",
+          controlador: "rival",
+          zona: "reserva",
+          zonaDestino: "pagado",
+          controladorDestino: "rival"
         },
-        texto: "Puedes pagar 2 \xC9ter, todos tus Campeones ganan 1 de ATQ, hasta el final del turno.",
-        duracion: "turno"
+        cantidad: 2,
+        esHasta: true,
+        texto: "Al atacar, puedes mover hasta 2 \xC9ter que controla el rival de la Reserva a la zona de pago del rival."
       }
     ]
   },
@@ -1988,7 +1988,7 @@ var FuenteEfectos_default = [
     paqueteId: "disonancia",
     limiteCopias: "2",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-10-24T18:14:00.175Z",
+    updatedAt: "2026-11-06T01:18:09.009Z",
     facciones: [
       "Caos"
     ],
@@ -2006,19 +2006,20 @@ var FuenteEfectos_default = [
     },
     efectos: [
       {
-        tipo: "disparo",
+        tipo: "pasivo",
+        trigger: "inicio_choque",
+        controladorTrigger: "rival",
         efecto: "mover",
         objetivo: {
           tipo: "eter",
           controlador: "rival",
-          zona: "pagado",
-          zonaDestino: "reserva"
+          zona: "reserva",
+          zonaDestino: "pagado",
+          controladorDestino: "rival"
         },
-        texto: "Puedes pagar 2 \xC9ter, mueve 1 \xC9ter que controla el rival de la zona de pago a la Reserva de su due\xF1o.",
-        costo: {
-          tipo: "eter",
-          cantidad: 2
-        }
+        cantidad: 2,
+        esHasta: true,
+        texto: "Al inicio del Choque del rival, puedes mover hasta 2 \xC9ter que controla el rival de la Reserva a la zona de pago del rival."
       }
     ]
   },
@@ -2028,11 +2029,11 @@ var FuenteEfectos_default = [
     type: "Campe\xF3n",
     rarity: "Com\xFAn",
     keywords: [],
-    flavorText: "Los v\xEDnculos del norte se rompen como el hielo.",
+    flavorText: "Las Arcanas del norte se rompen como el hielo.",
     paqueteId: "disonancia",
     limiteCopias: "3",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-10-24T18:17:02.675Z",
+    updatedAt: "2026-11-06T05:02:32.994Z",
     facciones: [
       "Caos"
     ],
@@ -2051,17 +2052,18 @@ var FuenteEfectos_default = [
     efectos: [
       {
         tipo: "disparo",
-        efecto: "return_hand",
+        costo: {
+          tipo: "eter",
+          cantidad: 2
+        },
+        efecto: "destroy",
         objetivo: {
-          tipo: "campeon",
+          tipo: "mistica_arcana",
           controlador: "rival",
           zona: "campo"
         },
-        texto: "Puedes pagar 3 \xC9ter, devuelve a la mano de su due\xF1o 1 Campe\xF3n que controla el rival.",
-        costo: {
-          tipo: "eter",
-          cantidad: 3
-        }
+        cantidad: 1,
+        texto: "Puedes pagar 2 \xC9ter, destruye 1 M\xEDstica o Arcana que controla el rival."
       }
     ]
   },
@@ -2075,12 +2077,12 @@ var FuenteEfectos_default = [
     paqueteId: "disonancia",
     limiteCopias: "3",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-09-22T21:06:01.065Z",
+    updatedAt: "2026-11-06T01:18:09.009Z",
     facciones: [
       "Caos"
     ],
     stats: {
-      cost: 2
+      cost: 3
     },
     efectos: [
       {
@@ -2103,14 +2105,16 @@ var FuenteEfectos_default = [
     name: "Grito del Nudo",
     type: "M\xEDstica",
     rarity: "Com\xFAn",
-    keywords: [],
+    keywords: [
+      "Presteza"
+    ],
     flavorText: "El Nudo aprieta: el aliento del rival se acorta.",
     paqueteId: "disonancia",
     limiteCopias: "3",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-09-22T21:06:58.050Z",
+    updatedAt: "2026-11-06T01:18:09.009Z",
     stats: {
-      cost: 1
+      cost: 2
     },
     efectos: [
       {
@@ -2168,35 +2172,23 @@ var FuenteEfectos_default = [
     type: "M\xEDstica",
     rarity: "Com\xFAn",
     keywords: [
-      "Artefacto"
+      "Presteza"
     ],
-    flavorText: "El sur no llora a sus muertos: los cobra.",
+    flavorText: "El norte recuerda. El sur olvida.",
     paqueteId: "disonancia",
     limiteCopias: "3",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-10-13T05:16:59.993Z",
+    updatedAt: "2026-11-06T05:02:32.994Z",
     stats: {
-      cost: 3
+      cost: 2
     },
     efectos: [
       {
         tipo: "hechizo",
-        efecto: "invocar_y_equipar",
-        objetivo: {
-          tipo: "campeon",
-          controlador: "propio",
-          zona: "exilio",
-          filtros: {
-            faccion: "Caos",
-            costeMax: 3
-          }
-        },
-        texto: "Puedes pagar 3 \xC9ter, invoca un Campe\xF3n de facci\xF3n Caos de coste 3 \xE9ter o menos del Exilio de su due\xF1o y equipa esta carta a ese Campe\xF3n.",
-        zonaOrigen: "exilio",
-        costo: {
-          tipo: "eter",
-          cantidad: 3
-        }
+        efecto: "modificar_regla",
+        reglaEnumerada: "olvido_rival",
+        duracion: "turno",
+        texto: "Las cartas del rival que ir\xEDan a su Cementerio se exilian en su lugar, hasta el final del turno."
       }
     ]
   },
@@ -2206,11 +2198,11 @@ var FuenteEfectos_default = [
     type: "Arcana",
     rarity: "Rara",
     keywords: [],
-    flavorText: "El Nudo aprieta cuando el Eje tiembla. Y el Eje siempre tiembla.",
+    flavorText: "El Nudo aprieta cuando el norte ya pag\xF3 de m\xE1s.",
     paqueteId: "disonancia",
     limiteCopias: "3",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-09-22T21:43:48.000Z",
+    updatedAt: "2026-11-06T05:02:32.994Z",
     facciones: [
       "Caos"
     ],
@@ -2221,19 +2213,16 @@ var FuenteEfectos_default = [
       trigger: "inicio_choque",
       condiciones: [
         {
-          tipo: "rival_controla_minimo",
-          cantidad: 3,
+          tipo: "tener_eter_pagado",
+          cantidad: 4,
           objetivo: {
             tipo: "campeon",
-            controlador: "rival",
-            filtros: {
-              conEterBloqueado: true
-            }
+            controlador: "rival"
           }
         }
       ]
     },
-    recompensa: "Un Campe\xF3n que controla el rival pierde 3 de RES de forma permanente. Roba 1 carta.",
+    recompensa: "Un Campe\xF3n que controla el rival pierde 3 de RES, de forma permanente. Descarta 1 carta de su mano al azar.",
     efectos: [
       {
         tipo: "hechizo",
@@ -2251,12 +2240,15 @@ var FuenteEfectos_default = [
       },
       {
         tipo: "hechizo",
-        efecto: "draw",
-        cantidad: 1,
+        efecto: "rival_discard",
         objetivo: {
-          tipo: "carta"
+          tipo: "mano",
+          controlador: "rival",
+          zona: "mano"
         },
-        texto: "Roba 1 carta."
+        cantidad: 1,
+        alAzar: true,
+        texto: "El rival descarta 1 carta de su mano al azar."
       }
     ]
   },
@@ -2340,30 +2332,32 @@ var FuenteEfectos_default = [
   },
   {
     id: "DS-026",
-    name: "Heredad de Caos",
+    name: "Deuda de Caos",
     type: "V\xEDnculo",
     rarity: "Com\xFAn",
     keywords: [],
-    flavorText: "El sur no hereda: arrebata.",
+    flavorText: "El sur olvida a sus muertos, nunca a sus deudas.",
     paqueteId: "disonancia",
     limiteCopias: "1",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-10-01T23:56:39.123Z",
+    updatedAt: "2026-11-06T05:02:32.994Z",
     stats: {
       cost: 0
     },
     efectos: [
       {
         tipo: "vinculo",
+        trigger: "inicio_alba",
         efecto: "rival_discard",
         objetivo: {
           tipo: "carta",
           controlador: "rival",
           zona: "mano"
         },
-        texto: "Al inicio de tu Alba, puedes descartar una carta de la mano del rival, una vez por turno.",
+        cantidad: 1,
         duracion: "1_por_turno",
-        trigger: "inicio_alba"
+        alAzar: true,
+        texto: "Al inicio de tu Alba, puedes hacer que el rival descarte 1 carta de su mano al azar, una vez por turno."
       }
     ]
   },
@@ -2408,29 +2402,29 @@ var FuenteEfectos_default = [
     type: "V\xEDnculo",
     rarity: "Poco Com\xFAn",
     keywords: [],
-    flavorText: "El cristal del sur no brilla: aguanta.",
+    flavorText: "El cristal del sur no brilla: cobra.",
     paqueteId: "disonancia",
     limiteCopias: "1",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-09-29T00:49:28.982Z",
+    updatedAt: "2026-11-06T05:02:32.994Z",
     stats: {
       cost: 0
     },
     efectos: [
       {
         tipo: "vinculo",
-        efecto: "grant_keyword",
+        trigger: "inicio_alba",
+        efecto: "steal_ether",
         objetivo: {
-          tipo: "campeon",
-          controlador: "propio",
-          zona: "campo"
+          tipo: "eter",
+          controlador: "rival",
+          zona: "reserva",
+          zonaDestino: "reserva",
+          controladorDestino: "propio"
         },
-        texto: "Al inicio de tu Alba, un Campe\xF3n que controles puedes ganar Indestructible, hasta la pr\xF3xima Forja del rival.",
-        duracion: "hasta_fase",
-        duracionFase: "forja",
-        duracionControlador: "rival",
-        keyword: "Indestructible",
-        trigger: "inicio_alba"
+        cantidad: 1,
+        duracion: "1_por_turno",
+        texto: "Al inicio de tu Alba, puedes arrebatar 1 \xC9ter de la Reserva del rival y usarlo desde tu Reserva hasta el inicio del Alba del rival, una vez por turno."
       }
     ]
   },
@@ -2469,34 +2463,21 @@ var FuenteEfectos_default = [
     type: "V\xEDnculo",
     rarity: "Rara",
     keywords: [],
-    flavorText: "El primer grito del sur todav\xEDa rompe.",
+    flavorText: "Quien rompi\xF3 el primer grito no vuelve a ser recordado.",
     paqueteId: "disonancia",
     limiteCopias: "1",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-10-02T00:21:14.360Z",
+    updatedAt: "2026-11-06T05:02:32.994Z",
     stats: {
       cost: 0
     },
     efectos: [
       {
         tipo: "vinculo",
-        efecto: "buff",
-        stats: {
-          RES: 4
-        },
+        efecto: "modificar_regla",
+        reglaEnumerada: "olvido_rival",
         duracion: "mientras_en_campo",
-        objetivo: {
-          tipo: "campeon",
-          controlador: "propio",
-          zona: "campo",
-          filtros: {
-            seleccionar: {
-              stat: "resistencia",
-              orden: "menor"
-            }
-          }
-        },
-        texto: "El Campe\xF3n con menor RES gana 4 de RES, mientras esta carta est\xE9 en el campo."
+        texto: "Las cartas del rival que ir\xEDan a su Cementerio se exilian en su lugar, mientras esta carta est\xE9 en el campo."
       }
     ]
   },
@@ -2510,7 +2491,7 @@ var FuenteEfectos_default = [
     paqueteId: "disonancia",
     limiteCopias: "2",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-09-23T04:37:25.717Z",
+    updatedAt: "2026-11-06T01:18:09.009Z",
     facciones: [
       "Caos"
     ],
@@ -2523,7 +2504,7 @@ var FuenteEfectos_default = [
     ],
     stats: {
       cost: 2,
-      poder: 4,
+      poder: 3,
       resistencia: 3
     },
     efectos: [
@@ -2543,21 +2524,21 @@ var FuenteEfectos_default = [
           zonaDestino: "mano"
         },
         zonaDestino: "mano",
-        texto: "Al ser enviada al Cementerio desde cualquier zona, puedes buscar 1 Campe\xF3n coste 2 o menos de tu mazo y agregalo a tu mano."
+        texto: "Al ser enviada al Cementerio desde cualquier zona, puedes buscar 1 Campe\xF3n coste 2 o menos de tu mazo y agr\xE9galo a tu mano."
       }
     ]
   },
   {
     id: "DS-032",
-    name: "El Nudo Desata",
+    name: "El Nudo Olvida",
     type: "Arcana",
     rarity: "Poco Com\xFAn",
     keywords: [],
-    flavorText: "El Nudo se desata cuando la tormenta aprieta.",
+    flavorText: "El norte entierra a sus muertos. El Nudo los borra.",
     paqueteId: "disonancia",
     limiteCopias: "2",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-09-23T04:40:37.001Z",
+    updatedAt: "2026-11-06T05:02:32.994Z",
     stats: {
       cost: 3
     },
@@ -2565,49 +2546,42 @@ var FuenteEfectos_default = [
       trigger: "inicio_choque",
       condiciones: [
         {
-          tipo: "controlar_minimo",
-          cantidad: 2,
+          tipo: "tener_mano_maximo",
+          cantidad: 3,
           objetivo: {
             tipo: "campeon",
-            controlador: "propio",
-            filtros: {
-              conEterBloqueado: true
-            }
+            controlador: "rival"
           }
         }
       ]
     },
-    recompensa: "Agrega de tu cementerio a tu mano 1 carta de coste 3 o menos.",
+    recompensa: "Exilia hasta 2 carta del Cementerio del rival.",
     efectos: [
       {
         tipo: "hechizo",
-        efecto: "tutor",
-        cantidad: 1,
+        efecto: "exile",
         objetivo: {
           tipo: "carta",
-          controlador: "propio",
-          zona: "cementerio",
-          filtros: {
-            costeMax: 3
-          },
-          zonaDestino: "mano"
+          controlador: "rival",
+          zona: "cementerio"
         },
-        zonaDestino: "mano",
-        texto: "Busca 1 carta coste 3 o menos de tu Cementerio y agregalo a tu mano."
+        cantidad: 2,
+        esHasta: true,
+        texto: "Exilia hasta 2 cartas del Cementerio del rival."
       }
     ]
   },
   {
     id: "DS-033",
-    name: "Invocaci\xF3n del Sur",
+    name: "Embestida del Sur",
     type: "M\xEDstica",
     rarity: "Rara",
     keywords: [],
-    flavorText: "El sur no llama dos veces.",
+    flavorText: "El sur rompe dos veces y no mira atr\xE1s.",
     paqueteId: "disonancia",
     limiteCopias: "1",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-10-10T01:30:30.657Z",
+    updatedAt: "2026-11-06T05:02:32.994Z",
     facciones: [
       "Caos"
     ],
@@ -2617,19 +2591,34 @@ var FuenteEfectos_default = [
     efectos: [
       {
         tipo: "hechizo",
-        efecto: "tutor",
-        cantidad: 1,
+        efecto: "modificar_regla",
         objetivo: {
-          tipo: "campeon",
+          tipo: "self",
           controlador: "propio",
-          zona: "mazo",
-          filtros: {
-            costeMax: 3
-          },
-          zonaDestino: "mano"
+          zona: "campo"
         },
-        zonaDestino: "mano",
-        texto: "Busca 1 Campe\xF3n coste 3 o menos de tu mazo y agregalo a tu mano."
+        regla: {
+          id: "rupturasPorTurno",
+          operacion: "sumar",
+          valor: 1
+        },
+        duracion: "turno",
+        texto: "Este turno puedes romper un V\xEDnculo m\xE1s con tus Rupturas."
+      },
+      {
+        tipo: "hechizo",
+        efecto: "modificar_regla",
+        objetivo: {
+          tipo: "self",
+          controlador: "propio",
+          zona: "campo"
+        },
+        regla: {
+          id: "atacarTrasRuptura",
+          operacion: "permitir"
+        },
+        duracion: "turno",
+        texto: "Este turno puedes seguir atacando despu\xE9s de romper un V\xEDnculo."
       }
     ]
   }
@@ -2648,7 +2637,7 @@ var PAQUETES = [
     facciones: ["Orden"],
     entrega: "Primog\xE9nitos",
     distribucion: { eter: 15, principal: 45, vinculos: 6 },
-    lore: 'Est\xE1sis ("El Ancla") es el mazo tem\xE1tico de la facci\xF3n Orden y la primera entrega de Los Primog\xE9nitos. Antes de la Gran Escisi\xF3n, cuando las facciones a\xFAn no hab\xEDan tomado sus nombres, el polo del norte se llamaba Est\xE1sis: el Ancla y el Eje de la realidad. De la tensi\xF3n entre los polos del \xC9ter nacieron los Primog\xE9nitos del \xC9ter: los primeros seres humanos en fusionarse con la energ\xEDa primigenia, cada uno elegido al nacer por su casa noble para portar un cristal de \xC9ter. En esta primera entrega, las primog\xE9nitas de Orden son mujeres y los primog\xE9nitos de Caos, hombres. Aurora, la Primog\xE9nita, fue la primera de todas y su sangre se convirti\xF3 en la fuente del poder de las casas.\n\nCuando la Gran Escisi\xF3n parti\xF3 el Eje y las casas cayeron en la guerra, las primog\xE9nitas del norte se negaron a elegir bando y formaron una hermandad errante, unidas por la sangre y el \xC9ter: "No somos hijos de ning\xFAn reino. Somos el Reino."\n\nEl mazo juega con la econom\xEDa de \xC9ter: bloquear, devolver y reciclar recursos mientras los Campeones se fortalecen con cada cristal anclado.'
+    lore: 'Est\xE1sis ("La Calma") es el mazo tem\xE1tico de la facci\xF3n Orden y la primera entrega de Los Primog\xE9nitos. Antes de la Gran Escisi\xF3n, cuando las facciones a\xFAn no hab\xEDan tomado sus nombres, el polo del norte se llamaba Est\xE1sis: la Calmay el Eje de la realidad. De la tensi\xF3n entre los polos del \xC9ter nacieron los Primog\xE9nitos del \xC9ter: los primeros seres humanos en fusionarse con la energ\xEDa primigenia, cada uno elegido al nacer por su casa noble para portar un cristal de \xC9ter. En esta primera entrega, las primog\xE9nitas de Orden que conocemos sonmujeres y los primog\xE9nitos de Caos, hombres. Aurora, la Primog\xE9nita, fue la primera que las casas recuerdan, y se cuenta que su sangre se convirti\xF3 en la fuente del poder de las casas.\n\nCuando la Gran Escisi\xF3n parti\xF3 el Eje y las casas cayeron en la guerra, las primog\xE9nitas del norte se negaron a elegir bando y formaron una hermandad errante, unidas por la sangre y el \xC9ter: "No somos hijos de ning\xFAn reino. Somos el Reino."\n\nEl mazo juega con la econom\xEDa de \xC9ter: bloquear, devolver y reciclar recursos mientras los Campeones se fortalecen con cada cristal anclado.'
   },
   {
     id: "disonancia",
@@ -2658,7 +2647,7 @@ var PAQUETES = [
     facciones: ["Caos"],
     entrega: "Primog\xE9nitos",
     distribucion: { eter: 15, principal: 45, vinculos: 6 },
-    lore: 'Disonancia ("La Tormenta") es el mazo tem\xE1tico de la facci\xF3n Caos y la segunda entrega de Los Primog\xE9nitos. En el sur, donde el Eje termina en un Nudo, los primog\xE9nitos de Caos son hombres: despertaron con el cristal del Nudo clavado en el pecho, y el Nudo aprieta cada vez que el Eje tiembla. Mientras Est\xE1sis ancla, Disonancia aprieta: la Tormenta no retiene lo que toma, lo rompe y lo suelta. Ragnar, Voz del Nudo, es el primero de todos \u2014 el hombre que habla por el sur y el \xFAnico capaz de mirar a Aurora sin pesta\xF1ear.\n\nEl mazo juega con la presi\xF3n y la destrucci\xF3n: romper los Campeones del rival y estrangular su econom\xEDa de \xC9ter mientras los Campeones de Caos avanzan como la tormenta que no se detiene.'
+    lore: 'Disonancia ("La Tormenta") es el mazo tem\xE1tico de la facci\xF3n Caos y la segunda entrega de Los Primog\xE9nitos. En el sur, donde el Eje termina en un Nudo, los primog\xE9nitos de Caos conocidos hasta ahora son hombres: despertaron con el cristal del Nudo clavado en el pecho, y el Nudo aprieta cada vez que el Eje tiembla. Mientras Est\xE1sis ancla, Disonancia aprieta: la Tormenta no retiene lo que toma, lo rompe y lo suelta. Ragnar, Voz del Nudo, es el primero de todos \u2014 el hombre que habla por el sur y el \xFAnico capaz de mirar a Aurora sin pesta\xF1ear.\n\nEl mazo juega con la presi\xF3n y la destrucci\xF3n: romper los Campeones del rival y estrangular su econom\xEDa de \xC9ter mientras los Campeones de Caos avanzan como la tormenta que no se detiene.'
   }
 ];
 var CARD_ART_IDS = /* @__PURE__ */ new Set([
@@ -3064,6 +3053,13 @@ function claveEfecto(fuenteId, indiceEfecto) {
 function claveExterno(fuenteId) {
   return `${fuenteId}#ext`;
 }
+function esEterAjeno(s, eterId, jugador) {
+  const owner = s.instances[eterId]?.owner;
+  return owner !== void 0 && owner !== jugador;
+}
+function eteresPropios(s, ids, jugador) {
+  return ids.filter((id) => !esEterAjeno(s, id, jugador));
+}
 function etiquetarEterExterno(s, eterIds, fuenteId, pagador) {
   for (const id of eterIds) {
     const inst = s.instances[id];
@@ -3216,6 +3212,10 @@ var REGLAS = {
   derrotaPorVinculos: { etiqueta: "Pierde la partida al quedarse sin V\xEDnculos", manual: "\xA713", ambito: "jugador", base: true },
   // Éter que se suma al coste de invocar a CADA Campeón del jugador (lo fija, p. ej., el tributo de Aurora al rival).
   costeCampeonesExtra: { etiqueta: "\xC9ter extra que cuestan sus Campeones", manual: "\xA77.3", ambito: "jugador", base: 0, min: 0 },
+  // Las cartas del jugador que irían a su Cementerio se exilian en su lugar (el Olvido de Disonancia: lo fija su Comandante o una Mística al rival).
+  cementerioAlExilio: { etiqueta: "Sus cartas que ir\xEDan al Cementerio se exilian en su lugar", manual: "\xA710", ambito: "jugador", base: false },
+  // Éter que paga el jugador por CADA Campeón con que bloquea (lo fija, p. ej., el Peaje de Ragnar al rival).
+  costeBloqueo: { etiqueta: "\xC9ter que paga por cada Campe\xF3n que bloquea", manual: "\xA79.3", ambito: "jugador", base: 0, min: 0 },
   /* ── campeón ── */
   agotadoPuedeBloquear: { etiqueta: "Un Campe\xF3n agotado puede bloquear", manual: "\xA79.3", ambito: "campeon", base: false },
   invocacionCansada: { etiqueta: "No ataca el turno en que es invocado", manual: "\xA79.2", ambito: "campeon", base: true },
@@ -3381,6 +3381,16 @@ var REGLAS_ENUMERADAS = {
   coste_campeones_rival_mas: {
     modificacion: (efecto) => ({ id: "costeCampeonesExtra", operacion: "sumar", valor: efecto.reglaValor ?? 1 }),
     jugadores: "rival"
+  },
+  /** «Las cartas del rival que irían a su Cementerio se exilian en su lugar» (Olvido de Disonancia). Solo el mapeo a la regla: el motor la lee en el Lote 4. */
+  olvido_rival: {
+    modificacion: () => ({ id: "cementerioAlExilio", operacion: "permitir" }),
+    jugadores: "rival"
+  },
+  /** «Para bloquear a tus Campeones, el rival paga N Éter por cada uno» (Peaje de Ragnar). Solo el mapeo: el pago al bloquear es del Lote 4. */
+  peaje_bloqueo: {
+    modificacion: (efecto) => ({ id: "costeBloqueo", operacion: "sumar", valor: efecto.reglaValor ?? 1 }),
+    jugadores: "rival"
   }
 };
 function reglaDeEfecto(efecto) {
@@ -3388,6 +3398,9 @@ function reglaDeEfecto(efecto) {
   if (efecto.efecto !== "modificar_regla") return void 0;
   if (efecto.reglaEnumerada) return REGLAS_ENUMERADAS[efecto.reglaEnumerada]?.modificacion(efecto);
   return efecto.regla;
+}
+function jugadoresForzadosDe(efecto) {
+  return efecto.reglaEnumerada ? REGLAS_ENUMERADAS[efecto.reglaEnumerada]?.jugadores : void 0;
 }
 var memoEfectosRegla = /* @__PURE__ */ new Map();
 function efectosReglaDe(cardId) {
@@ -3420,15 +3433,18 @@ function fuentesDeReglas(s) {
       if (tiene(inst)) fuentes.push({ inst, origen: "campo", controlador: j });
       for (const eterId of inst.eterBloqueado ?? []) {
         const eter = s.instances[eterId];
+        if (eter && eter.owner !== j) continue;
         if (tiene(eter)) fuentes.push({ inst: eter, origen: "bloqueo", controlador: j, anfitrion: id });
       }
     }
     for (const id of p.eterReserva) {
       const inst = s.instances[id];
+      if (inst && inst.owner !== j) continue;
       if (tiene(inst)) fuentes.push({ inst, origen: "reserva", controlador: j });
     }
     for (const id of p.eterPagado) {
       const inst = s.instances[id];
+      if (inst && inst.owner !== j) continue;
       if (tiene(inst)) fuentes.push({ inst, origen: "pagado", controlador: j });
     }
     for (const id of p.vinculos) {
@@ -3590,6 +3606,13 @@ function slotAZona(grupo, slot) {
 }
 
 // src/online/game/replacements.ts
+function caeAlExilio(s, cardInstanceId) {
+  const inst = s.instances[cardInstanceId];
+  if (!inst) return false;
+  const dueno = s.players[inst.owner];
+  if (dueno.cementerio.includes(cardInstanceId) || dueno.exilio.includes(cardInstanceId)) return false;
+  return reglaBool(s, "cementerioAlExilio", { jugador: inst.owner }) && esExiliable(s, cardInstanceId);
+}
 function moverAlCementerio(s, ctx, cardInstanceId) {
   const inst = s.instances[cardInstanceId];
   if (!inst) return "otra";
@@ -3616,8 +3639,23 @@ function moverAlCementerio(s, ctx, cardInstanceId) {
   }
   liberarEterBloqueadoCore(s, ctx, cardInstanceId, "1A");
   const p = s.players[inst.owner];
-  if (!p.cementerio.includes(cardInstanceId)) p.cementerio.push(cardInstanceId);
+  if (caeAlExilio(s, cardInstanceId)) {
+    if (!p.exilio.includes(cardInstanceId)) p.exilio.push(cardInstanceId);
+    ctx.emit({ type: "carta_exiliada", cardInstanceId, jugador: inst.owner });
+  } else if (!p.cementerio.includes(cardInstanceId) && !p.exilio.includes(cardInstanceId)) p.cementerio.push(cardInstanceId);
   return origen;
+}
+function ponerEnCaida(s, ctx, cardInstanceId) {
+  const inst = s.instances[cardInstanceId];
+  if (!inst) return false;
+  const p = s.players[inst.owner];
+  if (caeAlExilio(s, cardInstanceId)) {
+    if (!p.exilio.includes(cardInstanceId)) p.exilio.push(cardInstanceId);
+    ctx.emit({ type: "carta_exiliada", cardInstanceId, jugador: inst.owner });
+    return true;
+  }
+  if (!p.cementerio.includes(cardInstanceId) && !p.exilio.includes(cardInstanceId)) p.cementerio.push(cardInstanceId);
+  return false;
 }
 function controladorEnCampo(s, id) {
   for (const j of ["A", "B"]) if (s.players[j].campo.campeones.includes(id)) return j;
@@ -3631,6 +3669,10 @@ function dispararCampeonAlCementerio(s, ctx, cardInstanceId, controlador) {
   for (const j of orden) {
     dispararTrigger(s, ctx, "cuando-campeon-al-cementerio", j, instanciasEnCampo(s, j), { victimaId: cardInstanceId, controladorVictima: controlador });
   }
+}
+function zonaDeCementerio(s, cardInstanceId) {
+  const owner = s.instances[cardInstanceId]?.owner;
+  return owner !== void 0 && s.players[owner].exilio.includes(cardInstanceId) ? "1G" : "2G";
 }
 function enviarAlCementerio(s, ctx, cardInstanceId, desde) {
   const inst = s.instances[cardInstanceId];
@@ -3646,21 +3688,24 @@ function enviarAlCementerio(s, ctx, cardInstanceId, desde) {
       p.campo.campeones[slotIdx] = null;
       ctx.emit({ type: "carta_salida_de_zona", cardInstanceId: vinculadoId, zona: `2${String.fromCharCode(66 + slotIdx)}`, jugador: inst.owner });
       enviarAlCementerio(s, ctx, vinculadoId, "campo");
-      ctx.emit({ type: "carta_entrada_a_zona", cardInstanceId: vinculadoId, zona: "2G", jugador: inst.owner, bocaArriba: true });
+      ctx.emit({ type: "carta_entrada_a_zona", cardInstanceId: vinculadoId, zona: zonaDeCementerio(s, vinculadoId), jugador: inst.owner, bocaArriba: true });
     }
   }
   liberarArtefactosEquipados(s, ctx, cardInstanceId);
+  const alExilio = caeAlExilio(s, cardInstanceId) || s.players[inst.owner].exilio.includes(cardInstanceId);
   const origen = moverAlCementerio(s, ctx, cardInstanceId);
   liberarEterBloqueado(s, ctx, cardInstanceId, "1A");
-  dispararTrigger(s, ctx, "al-ser-enviado-al-cementerio", inst.owner, [cardInstanceId], { zonaOrigen: desde ?? origen });
-  dispararCampeonAlCementerio(s, ctx, cardInstanceId, controlador);
+  if (!alExilio) {
+    dispararTrigger(s, ctx, "al-ser-enviado-al-cementerio", inst.owner, [cardInstanceId], { zonaOrigen: desde ?? origen });
+    dispararCampeonAlCementerio(s, ctx, cardInstanceId, controlador);
+  }
   reiniciarEnCementerio(s, cardInstanceId);
 }
 function reiniciarEnCementerio(s, cardInstanceId) {
   const inst = s.instances[cardInstanceId];
   const meta = inst?.cardId ? getCardMeta(inst.cardId) : null;
   if (!inst || !meta || !esCampeon(meta)) return;
-  if (s.players[inst.owner].cementerio.includes(cardInstanceId)) reiniciarCampeon(s, cardInstanceId);
+  if (s.players[inst.owner].cementerio.includes(cardInstanceId) || s.players[inst.owner].exilio.includes(cardInstanceId)) reiniciarCampeon(s, cardInstanceId);
 }
 function liberarArtefactosEquipados(s, ctx, campeonId) {
   const inst = s.instances[campeonId];
@@ -3675,7 +3720,7 @@ function liberarArtefactosEquipados(s, ctx, campeonId) {
       const zonaSalida = arcIdx !== -1 ? slotAZona("arcanasCombate", arcIdx) ?? "3D" : "3A";
       moverAlCementerio(s, ctx, otherId);
       ctx.emit({ type: "carta_salida_de_zona", cardInstanceId: otherId, zona: zonaSalida, jugador: other.owner });
-      ctx.emit({ type: "carta_entrada_a_zona", cardInstanceId: otherId, zona: "2G", jugador: other.owner, bocaArriba: true });
+      ctx.emit({ type: "carta_entrada_a_zona", cardInstanceId: otherId, zona: zonaDeCementerio(s, otherId), jugador: other.owner, bocaArriba: true });
     }
   }
 }
@@ -3789,15 +3834,250 @@ function destruirCarta(s, ctx, cardInstanceId, causa) {
     return ejecutarDestruccionVinculo(s, ctx, cardInstanceId, causa);
   }
   const controlador = controladorEnCampo(s, cardInstanceId) ?? inst.owner;
+  const alExilio = caeAlExilio(s, cardInstanceId);
   const origen = moverAlCementerio(s, ctx, cardInstanceId);
   liberarEterBloqueado(s, ctx, cardInstanceId, "1A");
   liberarArtefactosEquipados(s, ctx, cardInstanceId);
-  dispararTrigger(s, ctx, "al-ser-enviado-al-cementerio", inst.owner, [cardInstanceId], { zonaOrigen: origen });
-  dispararCampeonAlCementerio(s, ctx, cardInstanceId, controlador);
+  if (!alExilio) {
+    dispararTrigger(s, ctx, "al-ser-enviado-al-cementerio", inst.owner, [cardInstanceId], { zonaOrigen: origen });
+    dispararCampeonAlCementerio(s, ctx, cardInstanceId, controlador);
+  }
   ctx.emit({ type: "carta_muerta", cardInstanceId, jugador: inst.owner, causa });
   ctx.emit({ type: "destruccion", cardInstanceId, jugador: inst.owner, causa });
   reiniciarEnCementerio(s, cardInstanceId);
   return true;
+}
+
+// src/online/game/payments.ts
+function aporteDe(eterCardId, _objetivoCardId) {
+  const eter = getCardMeta(eterCardId);
+  if (!eter) return 0;
+  return 1;
+}
+function costeDeCampeon(state, jugador, cardId) {
+  const meta = getCardMeta(cardId);
+  if (!meta) return 0;
+  if (meta.type !== "Campe\xF3n") return meta.stats.cost;
+  return meta.stats.cost + reglaNumero(state, "costeCampeonesExtra", { jugador });
+}
+function costeAPagar(state, jugador, cardId, invocacion) {
+  return invocacion ? costeDeCampeon(state, jugador, cardId) : getCardMeta(cardId)?.stats.cost ?? 0;
+}
+function validarPago(state, jugador, eterIds, objetivoCardId, invocacion = false) {
+  if (eterIds.length === 0) return { ok: false, error: "no indicaste \xC9teres para pagar" };
+  const objetivo = getCardMeta(objetivoCardId);
+  if (!objetivo) return { ok: false, error: `carta objetivo desconocida: ${objetivoCardId}` };
+  const p = state.players[jugador];
+  const vistos = /* @__PURE__ */ new Set();
+  let suma = 0;
+  for (const id of eterIds) {
+    if (vistos.has(id)) return { ok: false, error: `\xC9ter duplicado: ${id}` };
+    vistos.add(id);
+    const inst = state.instances[id];
+    const meta = inst?.cardId ? getCardMeta(inst.cardId) : null;
+    if (!inst || !meta || !esEter(meta)) return { ok: false, error: `no es un \xC9ter: ${id}` };
+    if (!p.eterReserva.includes(id)) return { ok: false, error: `el \xC9ter no est\xE1 en tu Reserva: ${id}` };
+    suma += aporteDe(meta.id, objetivoCardId);
+  }
+  const coste = costeAPagar(state, jugador, objetivoCardId, invocacion);
+  if (suma < coste) return { ok: false, error: "pago insuficiente" };
+  if (suma > coste) return { ok: false, error: "sobrepago no permitido \u2014 selecciona exactamente el coste" };
+  return { ok: true, aportado: suma };
+}
+function aplicarPago(s, ctx, jugador, eterIds, objetivoCardId, contextoUso) {
+  const invocacion = contextoUso?.tipo === "invocar";
+  const validado = validarPago(s, jugador, eterIds, objetivoCardId, invocacion);
+  if (!validado.ok || validado.aportado === void 0) return s;
+  const objetivo = getCardMeta(objetivoCardId);
+  if (!objetivo) return s;
+  const p = s.players[jugador];
+  for (const id of eterIds) {
+    const idx = p.eterReserva.indexOf(id);
+    if (idx !== -1) p.eterReserva.splice(idx, 1);
+    p.eterPagado.push(id);
+  }
+  ctx.emit({
+    type: "eter_pagado",
+    jugador,
+    eterIds,
+    costo: costeAPagar(s, jugador, objetivoCardId, invocacion),
+    aportado: validado.aportado
+  });
+  dispararAlPagarEter(s, ctx, jugador, eterIds, contextoUso);
+  return s;
+}
+function pagarPeaje(s, ctx, jugador, cantidad) {
+  if (cantidad <= 0) return true;
+  const eterIds = eteresPropios(s, s.players[jugador].eterReserva, jugador).slice(0, cantidad);
+  if (eterIds.length < cantidad) return false;
+  const p = s.players[jugador];
+  for (const id of eterIds) {
+    p.eterReserva.splice(p.eterReserva.indexOf(id), 1);
+    p.eterPagado.push(id);
+  }
+  ctx.emit({ type: "eter_pagado", jugador, eterIds, costo: cantidad, aportado: cantidad });
+  dispararAlPagarEter(s, ctx, jugador, eterIds, { tipo: "combate" });
+  return true;
+}
+function dispararAlPagarEter(s, ctx, jugador, eterIds, contextoUso) {
+  const gatillos = eterIds.filter((id) => {
+    const inst = s.instances[id];
+    const meta = inst?.cardId ? getCardMeta(inst.cardId) : null;
+    if (!meta || !esEter(meta)) return false;
+    if (esEterAjeno(s, id, jugador)) return false;
+    if ("efectos" in meta && meta.efectos) {
+      return meta.efectos.some((e) => e.trigger === "al_pagar_eter");
+    }
+    return false;
+  });
+  for (const id of gatillos) {
+    dispararTrigger(s, ctx, "al-pagar-eter", jugador, [id], {
+      contextoUso: contextoUso?.tipo,
+      objetivoId: contextoUso?.cardInstanceId
+    });
+  }
+}
+function etersParaPagar(state, jugador, objetivoCardId, invocacion = false) {
+  const objetivo = getCardMeta(objetivoCardId);
+  if (!objetivo) return null;
+  const p = state.players[jugador];
+  const coste = costeAPagar(state, jugador, objetivoCardId, invocacion);
+  const eteres = [];
+  for (const id of p.eterReserva) {
+    const inst = state.instances[id];
+    const meta = inst?.cardId ? getCardMeta(inst.cardId) : null;
+    if (!meta) continue;
+    eteres.push({ id, contrib: aporteDe(meta.id, objetivoCardId) });
+  }
+  function buscar(start, sumaActual, seleccionados) {
+    if (sumaActual === coste) return seleccionados;
+    if (sumaActual > coste) return null;
+    for (let i = start; i < eteres.length; i++) {
+      const resultado = buscar(i + 1, sumaActual + eteres[i].contrib, [...seleccionados, eteres[i].id]);
+      if (resultado) return resultado;
+    }
+    return null;
+  }
+  return buscar(0, 0, []);
+}
+function validarBloqueo(state, jugador, eterIds, targetInstanceId, efectoIdx, opciones) {
+  const externo = opciones?.externo === true;
+  const inst = state.instances[targetInstanceId];
+  if (!inst) return "la carta no existe";
+  const p = state.players[jugador];
+  const enCampo = p.campo.campeones.includes(targetInstanceId) || p.campo.misticasTacticas.includes(targetInstanceId) || p.campo.arcanasCombate.includes(targetInstanceId);
+  if (!enCampo) return "la carta no est\xE1 en tu campo";
+  const meta = inst.cardId ? getCardMeta(inst.cardId) : null;
+  if (!meta) return "carta desconocida";
+  if (efectosNegados(state, targetInstanceId)) return "los efectos de esta carta est\xE1n negados";
+  if (!p.campo.campeones.includes(targetInstanceId)) {
+    if (!cartaNecesitaEterBloqueado(meta)) {
+      return "esta carta no tiene efecto que use \xC9ter bloqueado";
+    }
+  }
+  if (eterIds.length === 0) return "no indicaste \xC9teres para bloquear";
+  const fuente = efectoIdx !== void 0 && "efectos" in meta && meta.efectos?.[efectoIdx] ? { efecto: meta.efectos[efectoIdx], indice: efectoIdx } : efectoBloqueoAccion(meta);
+  const maxEter = fuente?.efecto.costo?.cantidad ?? 1;
+  const fijo = fuente?.efecto.costo?.tipo === "bloqueo_fijo";
+  const actuales = fuente ? eterDeEfecto(state, targetInstanceId, fuente.indice).length : inst.eterBloqueado?.length ?? 0;
+  const total = actuales + eterIds.length;
+  if (!externo) {
+    if (fijo) {
+      if (eterIds.length !== maxEter) {
+        return `bloqueo fijo: debes bloquear exactamente ${maxEter} \xC9ter(es) por activaci\xF3n (seleccionaste ${eterIds.length})`;
+      }
+      if (fuente && fuente.efecto.activacion === "una_por_turno" && (inst.efectosUsadosEsteTurno ?? []).includes(fuente.indice)) {
+        return "ya usaste este efecto este turno (una vez por turno)";
+      }
+      if (fuente && fuente.efecto.activacion === "una_mientras_bloqueado" && actuales > 0) {
+        return "este efecto ya est\xE1 activo: su \xC9ter sigue bloqueado (solo una vez mientras siga bloqueado)";
+      }
+    } else if (total > maxEter) {
+      return `m\xE1ximo ${maxEter} \xC9ter(es) bloqueado(s) en esta carta (ya tiene ${actuales})`;
+    }
+  }
+  for (const id of eterIds) {
+    const eterInst = state.instances[id];
+    const eterMeta = eterInst?.cardId ? getCardMeta(eterInst.cardId) : null;
+    if (!eterInst || !eterMeta || !esEter(eterMeta)) return `no es un \xC9ter: ${id}`;
+    if (esEterAjeno(state, id, jugador)) return `el \xC9ter ${id} es arrebatado: no se puede bloquear`;
+    const origenPagado = !externo && fuente?.efecto.costo?.origen === "pagado";
+    const zonaOrigen = origenPagado ? p.eterPagado : p.eterReserva;
+    if (!zonaOrigen.includes(id)) {
+      return origenPagado ? `el \xC9ter no est\xE1 en tu \xC9ter Pagado (1A): ${id}` : `el \xC9ter no est\xE1 en tu Reserva: ${id}`;
+    }
+    if (inst.eterBloqueado?.includes(id)) return `el \xC9ter ya est\xE1 bloqueado en esta carta`;
+    for (const grupo of ["campeones", "misticasTacticas", "arcanasCombate"]) {
+      for (const cid of p.campo[grupo]) {
+        if (cid && cid !== targetInstanceId) {
+          const ci = state.instances[cid];
+          if (ci?.eterBloqueado?.includes(id)) return `el \xC9ter ya est\xE1 bloqueado en otra carta`;
+        }
+      }
+    }
+  }
+  return null;
+}
+function maxEterBloqueado(card) {
+  if ("efectos" in card && card.efectos) {
+    for (const e of card.efectos) {
+      if (e.costo?.tipo === "eter_bloqueado" && e.costo.cantidad !== void 0) {
+        return e.costo.cantidad;
+      }
+      if (e.costo?.tipo === "bloqueo_fijo" && e.costo.cantidad !== void 0) {
+        return e.costo.cantidad;
+      }
+    }
+  }
+  return 1;
+}
+function esBloqueoFijo(card) {
+  if ("efectos" in card && card.efectos) {
+    return card.efectos.some((e) => e.costo?.tipo === "bloqueo_fijo");
+  }
+  return false;
+}
+function bloquearEter(s, ctx, jugador, eterIds, targetInstanceId, efectoIdx) {
+  const error = validarBloqueo(s, jugador, eterIds, targetInstanceId, efectoIdx);
+  if (error) return error;
+  const p = s.players[jugador];
+  const instTarget = s.instances[targetInstanceId];
+  instTarget.eterBloqueado = [...instTarget.eterBloqueado ?? [], ...eterIds];
+  const meta = instTarget.cardId ? getCardMeta(instTarget.cardId) : null;
+  const fuente = efectoIdx !== void 0 && meta && "efectos" in meta && meta.efectos?.[efectoIdx] ? { efecto: meta.efectos[efectoIdx], indice: efectoIdx } : meta ? efectoBloqueoAccion(meta) : null;
+  const zonaOrigen = fuente?.efecto.costo?.origen === "pagado" ? p.eterPagado : p.eterReserva;
+  for (const id of eterIds) {
+    const idx = zonaOrigen.indexOf(id);
+    if (idx !== -1) zonaOrigen.splice(idx, 1);
+  }
+  etiquetarEter(s, eterIds, targetInstanceId, fuente?.indice ?? -1, jugador);
+  if (fuente) marcarContinuoActivado(s, targetInstanceId, fuente.indice);
+  if (fuente?.efecto.costo?.tipo === "bloqueo_fijo" && fuente.efecto.activacion === "una_por_turno") {
+    instTarget.efectosUsadosEsteTurno = [...instTarget.efectosUsadosEsteTurno ?? [], fuente.indice];
+  }
+  ctx.emit({ type: "eter_bloqueado", jugador, eterIds, campeonId: targetInstanceId });
+  return null;
+}
+function reagruparEter(s, ctx, jugador) {
+  const p = s.players[jugador];
+  const anclados = new Set(p.eterAnclado ?? []);
+  delete p.eterAnclado;
+  const reagrupados = p.eterPagado.filter((id) => !anclados.has(id));
+  if (reagrupados.length > 0) {
+    for (const id of reagrupados) delete s.instances[id]?.opcionUsadaEsteTurno;
+    p.eterReserva.push(...reagrupados);
+    p.eterPagado = p.eterPagado.filter((id) => anclados.has(id));
+    ctx.emit({ type: "eter_reagrupado", jugador, eterIds: reagrupados });
+  }
+  const rival = s.players[jugador === "A" ? "B" : "A"];
+  const devueltos = [...rival.eterReserva, ...rival.eterPagado].filter((id) => s.instances[id]?.owner === jugador);
+  if (devueltos.length > 0) {
+    rival.eterReserva = rival.eterReserva.filter((id) => !devueltos.includes(id));
+    rival.eterPagado = rival.eterPagado.filter((id) => !devueltos.includes(id));
+    for (const id of devueltos) delete s.instances[id]?.opcionUsadaEsteTurno;
+    p.eterReserva.push(...devueltos);
+    ctx.emit({ type: "eter_reagrupado", jugador, eterIds: devueltos });
+  }
 }
 
 // src/online/game/combat.ts
@@ -3864,12 +4144,22 @@ function ataquesSinBloquear(state) {
 function ataquesBloqueables(state) {
   return ataquesSinBloquear(state).filter((id) => reglaBool(state, "puedeSerBloqueado", { instId: id }));
 }
+function costePeajeBloqueo(state) {
+  return reglaNumero(state, "costeBloqueo", { jugador: rivalDe(state) });
+}
+function bloqueosMaximos(state) {
+  const k = Math.min(bloqueadoresDisponibles(state).length, ataquesBloqueables(state).length);
+  const peaje = costePeajeBloqueo(state);
+  if (peaje <= 0) return k;
+  const defensor = rivalDe(state);
+  return Math.min(k, Math.floor(eteresPropios(state, state.players[defensor].eterReserva, defensor).length / peaje));
+}
 function asignacionForzada(state) {
   const combate = state.combate;
   if (!combate || combate.paso !== "bloqueo") return null;
   const disponibles = bloqueadoresDisponibles(state);
   const sinBloquear = ataquesBloqueables(state);
-  const k = Math.min(disponibles.length, sinBloquear.length);
+  const k = bloqueosMaximos(state);
   if (k === 0) return null;
   const asignaciones = {};
   for (let i = 0; i < k; i++) asignaciones[sinBloquear[i]] = disponibles[i];
@@ -3934,7 +4224,7 @@ function abrirVentanaAtaque(s, ctx) {
   if (!depurarAtacantes(s)) return;
   const combate = s.combate;
   if (abrirCadena(s, rivalDe(s))) return;
-  if (bloqueadoresDisponibles(s).length === 0 || ataquesBloqueables(s).length === 0) {
+  if (bloqueosMaximos(s) === 0) {
     combate.paso = "resolucion";
     resolverCombate(s, ctx);
     cerrarCombateSiDoubleAttack(s);
@@ -3945,12 +4235,16 @@ function validarDeclararBloqueo(state, asignaciones) {
   const combate = state.combate;
   if (!combate || combate.paso !== "bloqueo") return "no hay bloqueo pendiente";
   const pares = Object.entries(asignaciones);
-  if (pares.length === 0) return "no asignaste bloqueadores";
   const disponibles = bloqueadoresDisponibles(state);
   const sinBloquear = ataquesBloqueables(state);
-  const k = Math.min(disponibles.length, sinBloquear.length);
-  if (pares.length !== k) {
-    return `el bloqueo es forzoso: asigna exactamente ${k} bloqueador(es) (9.3)`;
+  const k = bloqueosMaximos(state);
+  if (costePeajeBloqueo(state) > 0) {
+    if (pares.length > k) return `con el Peaje solo alcanzas a pagar ${k} bloqueo(s) (9.3)`;
+  } else {
+    if (pares.length === 0) return "no asignaste bloqueadores";
+    if (pares.length !== k) {
+      return `el bloqueo es forzoso: asigna exactamente ${k} bloqueador(es) (9.3)`;
+    }
   }
   const bloqueadoresUsados = /* @__PURE__ */ new Set();
   for (const [atacanteId, bloqueadorId] of pares) {
@@ -3963,6 +4257,8 @@ function validarDeclararBloqueo(state, asignaciones) {
 }
 function ejecutarDeclararBloqueo(s, asignaciones, ctx) {
   const combate = s.combate;
+  const peaje = costePeajeBloqueo(s);
+  if (peaje > 0) for (let i = 0; i < Object.keys(asignaciones).length; i++) pagarPeaje(s, ctx, rivalDe(s), peaje);
   combate.bloqueos = { ...combate.bloqueos, ...asignaciones };
   for (const bloqueadorId of Object.values(asignaciones)) {
     const b = s.instances[bloqueadorId];
@@ -4026,7 +4322,7 @@ function continuarCombateTrasCadena(s, ctx) {
     return;
   }
   if (combate.paso === "bloqueo" && !depurarAtacantes(s)) return;
-  if (combate.paso === "bloqueo" && (bloqueadoresDisponibles(s).length === 0 || ataquesBloqueables(s).length === 0)) {
+  if (combate.paso === "bloqueo" && bloqueosMaximos(s) === 0) {
     combate.paso = "resolucion";
     resolverCombate(s, ctx);
     cerrarCombateSiDoubleAttack(s);
@@ -4058,211 +4354,6 @@ function ejecutarElegirRuptura(s, atacanteId, vinculoSlot, ctx) {
   s.rupturasEsteTurno = rupturasHechas(s) + 1;
   if (s.combate) s.combate.rupturaUsadaEsteTurno = rupturasAgotadas(s);
   cerrarCombateSiDoubleAttack(s);
-}
-
-// src/online/game/payments.ts
-function aporteDe(eterCardId, _objetivoCardId) {
-  const eter = getCardMeta(eterCardId);
-  if (!eter) return 0;
-  return 1;
-}
-function costeDeCampeon(state, jugador, cardId) {
-  const meta = getCardMeta(cardId);
-  if (!meta) return 0;
-  if (meta.type !== "Campe\xF3n") return meta.stats.cost;
-  return meta.stats.cost + reglaNumero(state, "costeCampeonesExtra", { jugador });
-}
-function costeAPagar(state, jugador, cardId, invocacion) {
-  return invocacion ? costeDeCampeon(state, jugador, cardId) : getCardMeta(cardId)?.stats.cost ?? 0;
-}
-function validarPago(state, jugador, eterIds, objetivoCardId, invocacion = false) {
-  if (eterIds.length === 0) return { ok: false, error: "no indicaste \xC9teres para pagar" };
-  const objetivo = getCardMeta(objetivoCardId);
-  if (!objetivo) return { ok: false, error: `carta objetivo desconocida: ${objetivoCardId}` };
-  const p = state.players[jugador];
-  const vistos = /* @__PURE__ */ new Set();
-  let suma = 0;
-  for (const id of eterIds) {
-    if (vistos.has(id)) return { ok: false, error: `\xC9ter duplicado: ${id}` };
-    vistos.add(id);
-    const inst = state.instances[id];
-    const meta = inst?.cardId ? getCardMeta(inst.cardId) : null;
-    if (!inst || !meta || !esEter(meta)) return { ok: false, error: `no es un \xC9ter: ${id}` };
-    if (!p.eterReserva.includes(id)) return { ok: false, error: `el \xC9ter no est\xE1 en tu Reserva: ${id}` };
-    suma += aporteDe(meta.id, objetivoCardId);
-  }
-  const coste = costeAPagar(state, jugador, objetivoCardId, invocacion);
-  if (suma < coste) return { ok: false, error: "pago insuficiente" };
-  if (suma > coste) return { ok: false, error: "sobrepago no permitido \u2014 selecciona exactamente el coste" };
-  return { ok: true, aportado: suma };
-}
-function aplicarPago(s, ctx, jugador, eterIds, objetivoCardId, contextoUso) {
-  const invocacion = contextoUso?.tipo === "invocar";
-  const validado = validarPago(s, jugador, eterIds, objetivoCardId, invocacion);
-  if (!validado.ok || validado.aportado === void 0) return s;
-  const objetivo = getCardMeta(objetivoCardId);
-  if (!objetivo) return s;
-  const p = s.players[jugador];
-  for (const id of eterIds) {
-    const idx = p.eterReserva.indexOf(id);
-    if (idx !== -1) p.eterReserva.splice(idx, 1);
-    p.eterPagado.push(id);
-  }
-  ctx.emit({
-    type: "eter_pagado",
-    jugador,
-    eterIds,
-    costo: costeAPagar(s, jugador, objetivoCardId, invocacion),
-    aportado: validado.aportado
-  });
-  const gatillos = eterIds.filter((id) => {
-    const inst = s.instances[id];
-    const meta = inst?.cardId ? getCardMeta(inst.cardId) : null;
-    if (!meta || !esEter(meta)) return false;
-    if ("efectos" in meta && meta.efectos) {
-      return meta.efectos.some((e) => e.trigger === "al_pagar_eter");
-    }
-    return false;
-  });
-  for (const id of gatillos) {
-    dispararTrigger(s, ctx, "al-pagar-eter", jugador, [id], {
-      contextoUso: contextoUso?.tipo,
-      objetivoId: contextoUso?.cardInstanceId
-    });
-  }
-  return s;
-}
-function etersParaPagar(state, jugador, objetivoCardId, invocacion = false) {
-  const objetivo = getCardMeta(objetivoCardId);
-  if (!objetivo) return null;
-  const p = state.players[jugador];
-  const coste = costeAPagar(state, jugador, objetivoCardId, invocacion);
-  const eteres = [];
-  for (const id of p.eterReserva) {
-    const inst = state.instances[id];
-    const meta = inst?.cardId ? getCardMeta(inst.cardId) : null;
-    if (!meta) continue;
-    eteres.push({ id, contrib: aporteDe(meta.id, objetivoCardId) });
-  }
-  function buscar(start, sumaActual, seleccionados) {
-    if (sumaActual === coste) return seleccionados;
-    if (sumaActual > coste) return null;
-    for (let i = start; i < eteres.length; i++) {
-      const resultado = buscar(i + 1, sumaActual + eteres[i].contrib, [...seleccionados, eteres[i].id]);
-      if (resultado) return resultado;
-    }
-    return null;
-  }
-  return buscar(0, 0, []);
-}
-function validarBloqueo(state, jugador, eterIds, targetInstanceId, efectoIdx, opciones) {
-  const externo = opciones?.externo === true;
-  const inst = state.instances[targetInstanceId];
-  if (!inst) return "la carta no existe";
-  const p = state.players[jugador];
-  const enCampo = p.campo.campeones.includes(targetInstanceId) || p.campo.misticasTacticas.includes(targetInstanceId) || p.campo.arcanasCombate.includes(targetInstanceId);
-  if (!enCampo) return "la carta no est\xE1 en tu campo";
-  const meta = inst.cardId ? getCardMeta(inst.cardId) : null;
-  if (!meta) return "carta desconocida";
-  if (efectosNegados(state, targetInstanceId)) return "los efectos de esta carta est\xE1n negados";
-  if (!p.campo.campeones.includes(targetInstanceId)) {
-    if (!cartaNecesitaEterBloqueado(meta)) {
-      return "esta carta no tiene efecto que use \xC9ter bloqueado";
-    }
-  }
-  if (eterIds.length === 0) return "no indicaste \xC9teres para bloquear";
-  const fuente = efectoIdx !== void 0 && "efectos" in meta && meta.efectos?.[efectoIdx] ? { efecto: meta.efectos[efectoIdx], indice: efectoIdx } : efectoBloqueoAccion(meta);
-  const maxEter = fuente?.efecto.costo?.cantidad ?? 1;
-  const fijo = fuente?.efecto.costo?.tipo === "bloqueo_fijo";
-  const actuales = fuente ? eterDeEfecto(state, targetInstanceId, fuente.indice).length : inst.eterBloqueado?.length ?? 0;
-  const total = actuales + eterIds.length;
-  if (!externo) {
-    if (fijo) {
-      if (eterIds.length !== maxEter) {
-        return `bloqueo fijo: debes bloquear exactamente ${maxEter} \xC9ter(es) por activaci\xF3n (seleccionaste ${eterIds.length})`;
-      }
-      if (fuente && fuente.efecto.activacion === "una_por_turno" && (inst.efectosUsadosEsteTurno ?? []).includes(fuente.indice)) {
-        return "ya usaste este efecto este turno (una vez por turno)";
-      }
-      if (fuente && fuente.efecto.activacion === "una_mientras_bloqueado" && actuales > 0) {
-        return "este efecto ya est\xE1 activo: su \xC9ter sigue bloqueado (solo una vez mientras siga bloqueado)";
-      }
-    } else if (total > maxEter) {
-      return `m\xE1ximo ${maxEter} \xC9ter(es) bloqueado(s) en esta carta (ya tiene ${actuales})`;
-    }
-  }
-  for (const id of eterIds) {
-    const eterInst = state.instances[id];
-    const eterMeta = eterInst?.cardId ? getCardMeta(eterInst.cardId) : null;
-    if (!eterInst || !eterMeta || !esEter(eterMeta)) return `no es un \xC9ter: ${id}`;
-    const origenPagado = !externo && fuente?.efecto.costo?.origen === "pagado";
-    const zonaOrigen = origenPagado ? p.eterPagado : p.eterReserva;
-    if (!zonaOrigen.includes(id)) {
-      return origenPagado ? `el \xC9ter no est\xE1 en tu \xC9ter Pagado (1A): ${id}` : `el \xC9ter no est\xE1 en tu Reserva: ${id}`;
-    }
-    if (inst.eterBloqueado?.includes(id)) return `el \xC9ter ya est\xE1 bloqueado en esta carta`;
-    for (const grupo of ["campeones", "misticasTacticas", "arcanasCombate"]) {
-      for (const cid of p.campo[grupo]) {
-        if (cid && cid !== targetInstanceId) {
-          const ci = state.instances[cid];
-          if (ci?.eterBloqueado?.includes(id)) return `el \xC9ter ya est\xE1 bloqueado en otra carta`;
-        }
-      }
-    }
-  }
-  return null;
-}
-function maxEterBloqueado(card) {
-  if ("efectos" in card && card.efectos) {
-    for (const e of card.efectos) {
-      if (e.costo?.tipo === "eter_bloqueado" && e.costo.cantidad !== void 0) {
-        return e.costo.cantidad;
-      }
-      if (e.costo?.tipo === "bloqueo_fijo" && e.costo.cantidad !== void 0) {
-        return e.costo.cantidad;
-      }
-    }
-  }
-  return 1;
-}
-function esBloqueoFijo(card) {
-  if ("efectos" in card && card.efectos) {
-    return card.efectos.some((e) => e.costo?.tipo === "bloqueo_fijo");
-  }
-  return false;
-}
-function bloquearEter(s, ctx, jugador, eterIds, targetInstanceId, efectoIdx) {
-  const error = validarBloqueo(s, jugador, eterIds, targetInstanceId, efectoIdx);
-  if (error) return error;
-  const p = s.players[jugador];
-  const instTarget = s.instances[targetInstanceId];
-  instTarget.eterBloqueado = [...instTarget.eterBloqueado ?? [], ...eterIds];
-  const meta = instTarget.cardId ? getCardMeta(instTarget.cardId) : null;
-  const fuente = efectoIdx !== void 0 && meta && "efectos" in meta && meta.efectos?.[efectoIdx] ? { efecto: meta.efectos[efectoIdx], indice: efectoIdx } : meta ? efectoBloqueoAccion(meta) : null;
-  const zonaOrigen = fuente?.efecto.costo?.origen === "pagado" ? p.eterPagado : p.eterReserva;
-  for (const id of eterIds) {
-    const idx = zonaOrigen.indexOf(id);
-    if (idx !== -1) zonaOrigen.splice(idx, 1);
-  }
-  etiquetarEter(s, eterIds, targetInstanceId, fuente?.indice ?? -1, jugador);
-  if (fuente) marcarContinuoActivado(s, targetInstanceId, fuente.indice);
-  if (fuente?.efecto.costo?.tipo === "bloqueo_fijo" && fuente.efecto.activacion === "una_por_turno") {
-    instTarget.efectosUsadosEsteTurno = [...instTarget.efectosUsadosEsteTurno ?? [], fuente.indice];
-  }
-  ctx.emit({ type: "eter_bloqueado", jugador, eterIds, campeonId: targetInstanceId });
-  return null;
-}
-function reagruparEter(s, ctx, jugador) {
-  const p = s.players[jugador];
-  const anclados = new Set(p.eterAnclado ?? []);
-  delete p.eterAnclado;
-  if (p.eterPagado.length === 0) return;
-  const reagrupados = p.eterPagado.filter((id) => !anclados.has(id));
-  if (reagrupados.length === 0) return;
-  for (const id of reagrupados) delete s.instances[id]?.opcionUsadaEsteTurno;
-  p.eterReserva.push(...reagrupados);
-  p.eterPagado = p.eterPagado.filter((id) => anclados.has(id));
-  ctx.emit({ type: "eter_reagrupado", jugador, eterIds: reagrupados });
 }
 
 // src/online/game/effectRegistry.ts
@@ -4337,7 +4428,7 @@ function ejecutarAccionEfecto(s, ctx, ep) {
         p.campo.campeones[slotIdx] = null;
         ctx.emit({ type: "carta_salida_de_zona", cardInstanceId: accion.objetivo, zona: `2${String.fromCharCode(66 + slotIdx)}`, jugador: inst.owner });
         enviarAlCementerio(s, ctx, accion.objetivo, "campo");
-        ctx.emit({ type: "carta_entrada_a_zona", cardInstanceId: accion.objetivo, zona: "2G", jugador: inst.owner, bocaArriba: true });
+        ctx.emit({ type: "carta_entrada_a_zona", cardInstanceId: accion.objetivo, zona: zonaDeCementerio(s, accion.objetivo), jugador: inst.owner, bocaArriba: true });
       }
       break;
     }
@@ -4371,8 +4462,7 @@ function ejecutarAccionEfecto(s, ctx, ep) {
         const zona = `3${String.fromCharCode(65 + slotMT)}`;
         ctx.emit({ type: "carta_salida_de_zona", cardInstanceId: accion.objetivo, zona, jugador: inst.owner });
         p.campo.misticasTacticas[slotMT] = null;
-        p.cementerio.push(accion.objetivo);
-        ctx.emit({ type: "carta_entrada_a_zona", cardInstanceId: accion.objetivo, zona: "2G", jugador: inst.owner, bocaArriba: true });
+        if (!ponerEnCaida(s, ctx, accion.objetivo)) ctx.emit({ type: "carta_entrada_a_zona", cardInstanceId: accion.objetivo, zona: zonaDeCementerio(s, accion.objetivo), jugador: inst.owner, bocaArriba: true });
         break;
       }
       const slotAC = p.campo.arcanasCombate.indexOf(accion.objetivo);
@@ -4380,8 +4470,7 @@ function ejecutarAccionEfecto(s, ctx, ep) {
         const zona = `3${String.fromCharCode(68 + slotAC)}`;
         ctx.emit({ type: "carta_salida_de_zona", cardInstanceId: accion.objetivo, zona, jugador: inst.owner });
         p.campo.arcanasCombate[slotAC] = null;
-        p.cementerio.push(accion.objetivo);
-        ctx.emit({ type: "carta_entrada_a_zona", cardInstanceId: accion.objetivo, zona: "2G", jugador: inst.owner, bocaArriba: true });
+        if (!ponerEnCaida(s, ctx, accion.objetivo)) ctx.emit({ type: "carta_entrada_a_zona", cardInstanceId: accion.objetivo, zona: zonaDeCementerio(s, accion.objetivo), jugador: inst.owner, bocaArriba: true });
         break;
       }
       const slotCP = p.campo.campeones.indexOf(accion.objetivo);
@@ -4390,7 +4479,7 @@ function ejecutarAccionEfecto(s, ctx, ep) {
         ctx.emit({ type: "carta_salida_de_zona", cardInstanceId: accion.objetivo, zona, jugador: inst.owner });
         p.campo.campeones[slotCP] = null;
         enviarAlCementerio(s, ctx, accion.objetivo, "campo");
-        ctx.emit({ type: "carta_entrada_a_zona", cardInstanceId: accion.objetivo, zona: "2G", jugador: inst.owner, bocaArriba: true });
+        ctx.emit({ type: "carta_entrada_a_zona", cardInstanceId: accion.objetivo, zona: zonaDeCementerio(s, accion.objetivo), jugador: inst.owner, bocaArriba: true });
       }
       break;
     }
@@ -4439,7 +4528,7 @@ function eterIdsParaHabilidad(state, jugador, efecto) {
   const p = state.players[jugador];
   const costo = efecto.costo?.cantidad ?? 0;
   if (esCostoBloqueo(efecto.costo)) {
-    const zona = efecto.costo?.origen === "pagado" ? p.eterPagado : p.eterReserva;
+    const zona = eteresPropios(state, efecto.costo?.origen === "pagado" ? p.eterPagado : p.eterReserva, jugador);
     if (costo <= 0 || zona.length < costo) return null;
     return zona.slice(0, costo);
   }
@@ -4521,7 +4610,7 @@ function bloqueoParaJugar(state, jugador, meta, eterIdsPago) {
   const requisito = bloqueoAlJugar(meta);
   if (!requisito) return void 0;
   if (!hayCartaQueCopiar(state, jugador)) return null;
-  const libres = state.players[jugador].eterReserva.filter((id) => !eterIdsPago.includes(id));
+  const libres = eteresPropios(state, state.players[jugador].eterReserva, jugador).filter((id) => !eterIdsPago.includes(id));
   return libres.length >= requisito.cantidad ? libres.slice(0, requisito.cantidad) : null;
 }
 function motivoBloqueoAlJugar(state, jugador, meta, eterIdsPago, bloqueoEterIds) {
@@ -4537,6 +4626,7 @@ function motivoBloqueoAlJugar(state, jugador, meta, eterIdsPago, bloqueoEterIds)
   for (const id of ids) {
     if (!reserva.includes(id)) return `el \xC9ter ${id} a bloquear no est\xE1 en tu Reserva`;
     if (eterIdsPago.includes(id)) return "un \xC9ter no puede pagar y bloquear a la vez";
+    if (esEterAjeno(state, id, jugador)) return `el \xC9ter ${id} es arrebatado: no se puede bloquear`;
   }
   return null;
 }
@@ -4828,7 +4918,7 @@ function sinReceptor(s, ctx, id) {
     if (idx === -1) continue;
     ctx.emit({ type: "carta_salida_de_zona", cardInstanceId: id, zona: slotAZona(grupo, idx) ?? "3A", jugador: inst.owner });
     enviarAlCementerio(s, ctx, id);
-    ctx.emit({ type: "carta_entrada_a_zona", cardInstanceId: id, zona: "2G", jugador: inst.owner, bocaArriba: true });
+    ctx.emit({ type: "carta_entrada_a_zona", cardInstanceId: id, zona: zonaDeCementerio(s, id), jugador: inst.owner, bocaArriba: true });
     return;
   }
 }
@@ -4859,7 +4949,7 @@ function resolverRespuesta(s, ctx, id, datos) {
     if (esPermanenteEnMesa(meta)) return;
     if (p.exilio.includes(id)) return;
     enviarAlCementerio(s, ctx, id);
-    ctx.emit({ type: "carta_entrada_a_zona", cardInstanceId: id, zona: "2G", jugador: inst.owner, bocaArriba: true });
+    ctx.emit({ type: "carta_entrada_a_zona", cardInstanceId: id, zona: zonaDeCementerio(s, id), jugador: inst.owner, bocaArriba: true });
     return;
   }
   if (esArcana(meta)) {
@@ -4873,7 +4963,7 @@ function resolverRespuesta(s, ctx, id, datos) {
       const zona = slotAZona("arcanasCombate", idx) ?? "3D";
       ctx.emit({ type: "carta_salida_de_zona", cardInstanceId: id, zona, jugador: inst.owner });
       enviarAlCementerio(s, ctx, id);
-      ctx.emit({ type: "carta_entrada_a_zona", cardInstanceId: id, zona: "2G", jugador: inst.owner, bocaArriba: true });
+      ctx.emit({ type: "carta_entrada_a_zona", cardInstanceId: id, zona: zonaDeCementerio(s, id), jugador: inst.owner, bocaArriba: true });
     }
     trigger();
     return;
@@ -5048,7 +5138,7 @@ function resolverOpener(s, ctx, opener) {
   const zonaSlot = slotAZona(opener.tipo === "mistica" ? "misticasTacticas" : "arcanasCombate", slotIdx) ?? (opener.tipo === "mistica" ? "3A" : "3D");
   ctx.emit({ type: "carta_salida_de_zona", cardInstanceId: opener.cardInstanceId, zona: zonaSlot, jugador: opener.jugador });
   enviarAlCementerio(s, ctx, opener.cardInstanceId);
-  ctx.emit({ type: "carta_entrada_a_zona", cardInstanceId: opener.cardInstanceId, zona: "2G", jugador: opener.jugador, bocaArriba: true });
+  ctx.emit({ type: "carta_entrada_a_zona", cardInstanceId: opener.cardInstanceId, zona: zonaDeCementerio(s, opener.cardInstanceId), jugador: opener.jugador, bocaArriba: true });
 }
 
 // src/online/game/triggers.ts
@@ -5432,7 +5522,7 @@ function interpretEffect(s, ctx, inst, efectoData, payload) {
     }
   }
   const isTriggered = payload.fromTrigger === true;
-  const autoResolver = (efecto === "mover" || efecto === "return_ether") && efectoData.esHasta === true || efecto === "anclar_eter";
+  const autoResolver = (efecto === "mover" || efecto === "return_ether" || efecto === "steal_ether") && efectoData.esHasta === true || efecto === "anclar_eter";
   const mergedFiltros = efectoData.filtros ? { ...objetivo?.filtros, ...efectoData.filtros } : objetivo?.filtros;
   const hasAutoSelect = mergedFiltros?.seleccionar != null;
   const needsPending = isTriggered ? targetIds.length > 0 && !hasAutoSelect : targetIds.length > 1;
@@ -5462,7 +5552,7 @@ function cobrarCostoDeTrigger(s, ctx, inst, efectoData, jugador) {
   const idx = meta && "efectos" in meta && meta.efectos ? meta.efectos.indexOf(efectoData) : -1;
   const cant = costo.cantidad ?? 0;
   const p = s.players[jugador];
-  const zona = costo.origen === "pagado" ? p.eterPagado : p.eterReserva;
+  const zona = eteresPropios(s, costo.origen === "pagado" ? p.eterPagado : p.eterReserva, jugador);
   if (idx === -1 || cant <= 0 || zona.length < cant) return false;
   return bloquearEter(s, ctx, jugador, zona.slice(0, cant), inst.cardInstanceId, idx) === null;
 }
@@ -5562,7 +5652,7 @@ function executeEffect(s, ctx, inst, efecto, targetIds, jugador, efectoData) {
       executeStealChampion(s, ctx, targetIds, jugador, inst);
       break;
     case "steal_ether":
-      executeStealEther(s, ctx, targetIds, jugador);
+      executeStealEther(s, ctx, cantidad ? targetIds.slice(0, cantidad) : targetIds, jugador);
       break;
     case "free_ether":
       executeFreeEther(s, ctx, targetIds, jugador);
@@ -6031,7 +6121,7 @@ function executeTutor(s, ctx, targetIds, jugador, efectoData) {
       }
     } else if (zonaDestino === "cementerio") {
       enviarAlCementerio(s, ctx, targetId);
-      ctx.emit({ type: "carta_entrada_a_zona", cardInstanceId: targetId, zona: "2G", jugador, bocaArriba: true });
+      ctx.emit({ type: "carta_entrada_a_zona", cardInstanceId: targetId, zona: zonaDeCementerio(s, targetId), jugador, bocaArriba: true });
     } else if (zonaDestino === "exilio") {
       p.exilio.push(targetId);
       ctx.emit({ type: "carta_exiliada", cardInstanceId: targetId, jugador });
@@ -6101,7 +6191,7 @@ function executeModificarRegla(s, targetIds, jugador, efectoData) {
   if (def.ambito === "partida") {
     aplicarReglaTemporal(s, { ...comunes, sujeto: { tipo: "partida" } });
   } else if (def.ambito === "jugador") {
-    const c = efectoData.objetivo?.controlador ?? "propio";
+    const c = jugadoresForzadosDe(efectoData) ?? efectoData.objetivo?.controlador ?? "propio";
     const afectados = c === "ambos" ? ["A", "B"] : c === "rival" ? [rival] : [jugador];
     for (const j of afectados) aplicarReglaTemporal(s, { ...comunes, sujeto: { tipo: "jugador", jugador: j } });
   } else {
@@ -6512,6 +6602,7 @@ function validarActivarHabilidad(state, action) {
       const eterInst = state.instances[eterId];
       const eterMeta = eterInst?.cardId ? getCardMeta(eterInst.cardId) : null;
       if (!eterMeta) return `\xC9ter desconocido: ${eterId}`;
+      if (esEterAjeno(state, eterId, state.turno)) return `el \xC9ter ${eterId} es arrebatado: no se puede bloquear`;
     }
   } else {
     if (inst.agotado) return "la carta ya est\xE1 agotada";
@@ -6660,7 +6751,7 @@ function ejecutarUsarTransmutar(s, action, ctx) {
   p.campo.campeones[slotIdx] = null;
   liberarEterBloqueado(s, ctx, id, "1A");
   enviarAlCementerio(s, ctx, id, "campo");
-  ctx.emit({ type: "carta_entrada_a_zona", cardInstanceId: id, zona: "2G", jugador: inst.owner, bocaArriba: true });
+  ctx.emit({ type: "carta_entrada_a_zona", cardInstanceId: id, zona: zonaDeCementerio(s, id), jugador: inst.owner, bocaArriba: true });
 }
 function ejecutarElegirOpcion(s, action, ctx) {
   const j = s.turno;
@@ -7135,6 +7226,10 @@ function triggersQueMatchean(s, trigger, jugador, ids, opts) {
         const esDelRival = opts.controladorVictima !== void 0 && opts.controladorVictima !== jugador;
         if (quiereRival !== esDelRival) return;
         if (efecto.objetivo?.excluyeEsta && opts.victimaId === id) return;
+      }
+      if ((trigger === "al-inicio-alba" || trigger === "al-inicio-choque") && !opts?.ignorarZonaOrigen) {
+        const quiereRival = efecto.controladorTrigger === "rival";
+        if (quiereRival !== (s.turno !== jugador)) return;
       }
       if (trigger === "al-ser-enviado-al-cementerio" && !opts?.ignorarZonaOrigen && efecto.triggerZona && efecto.triggerZona !== "cualquier_zona" && efecto.triggerZona !== opts?.zonaOrigen) return;
       const triggerDelEfecto = efecto.trigger === "ninguno" ? void 0 : efecto.trigger;
@@ -7689,6 +7784,15 @@ function resolverAlba(s, ctx, jugador) {
   if (albaInstances.length > 0) {
     dispararTrigger(s, ctx, "al-inicio-alba", jugador, albaInstances);
   }
+  const duenoRival = jugador === "A" ? "B" : "A";
+  const vinculosDelRival = s.players[duenoRival].vinculos.filter((id) => {
+    const v = id ? s.instances[id] : void 0;
+    const meta = v?.cardId ? getCardMeta(v.cardId) : null;
+    return !!v && v.bocaArriba === true && !!meta && "efectos" in meta && !!meta.efectos?.some((e) => e.trigger === "inicio_alba" && e.controladorTrigger === "rival");
+  });
+  if (vinculosDelRival.length > 0) {
+    dispararTrigger(s, ctx, "al-inicio-alba", duenoRival, vinculosDelRival);
+  }
   if (scryActual(s)) {
     s.albaPendiente = jugador;
     return;
@@ -7858,7 +7962,7 @@ function ejecutarJugarCampeon(s, action, ctx) {
     p.campo.campeones[slotIdx] = null;
     liberarEterBloqueado(s, ctx, sacId, "2A");
     enviarAlCementerio(s, ctx, sacId, "campo");
-    ctx.emit({ type: "carta_entrada_a_zona", cardInstanceId: sacId, zona: "2G", jugador: s.turno, bocaArriba: true });
+    ctx.emit({ type: "carta_entrada_a_zona", cardInstanceId: sacId, zona: zonaDeCementerio(s, sacId), jugador: s.turno, bocaArriba: true });
   }
   const manoIdx = p.mano.indexOf(id);
   if (manoIdx !== -1) p.mano.splice(manoIdx, 1);
@@ -8090,22 +8194,26 @@ function ejecutarPasarTurno(s, ctx) {
       const misticas = p.campo.misticasTacticas.filter((x) => x !== null);
       const arcanas = p.campo.arcanasCombate.filter((x) => x !== null);
       const vinculos = p.vinculos.filter((x) => x !== null && s.instances[x]?.bocaArriba === true);
-      const choqueInstances = [...p.eterReserva, ...campeones, ...misticas, ...arcanas, ...vinculos];
+      const choqueInstances = [...eteresPropios(s, p.eterReserva, s.turno), ...campeones, ...misticas, ...arcanas, ...vinculos];
       if (choqueInstances.length > 0) {
         dispararTrigger(s, ctx, "al-inicio-choque", s.turno, choqueInstances);
       }
       const rival2 = s.turno === "A" ? "B" : "A";
-      const vinculosRivales = s.players[rival2].vinculos.filter((x) => {
+      const tieneInicioChoqueDelRival = (x, soloBocaArriba) => {
         if (!x) return false;
         const vInst = s.instances[x];
-        if (!vInst || vInst.bocaArriba !== true) return false;
+        if (!vInst || soloBocaArriba && vInst.bocaArriba !== true) return false;
         const vMeta = vInst.cardId ? getCardMeta(vInst.cardId) : null;
         return !!vMeta && "efectos" in vMeta && !!vMeta.efectos?.some(
           (e) => e.trigger === "inicio_choque" && e.controladorTrigger === "rival"
         );
-      });
-      if (vinculosRivales.length > 0) {
-        dispararTrigger(s, ctx, "al-inicio-choque", rival2, vinculosRivales);
+      };
+      const delRival = [
+        ...s.players[rival2].vinculos.filter((x) => tieneInicioChoqueDelRival(x, true)),
+        ...s.players[rival2].campo.campeones.filter((x) => tieneInicioChoqueDelRival(x, false))
+      ];
+      if (delRival.length > 0) {
+        dispararTrigger(s, ctx, "al-inicio-choque", rival2, delRival);
       }
     }
     s.fase = siguiente;
@@ -8187,7 +8295,8 @@ function validarAccion(state, action) {
   if (scryActual(state) && !state.declaracionEnEleccion && !electorAjeno(state) && !equipando && action.type !== "ordenar_mazo" && action.type !== "rendirse") {
     return "hay un mazo por ordenar antes de continuar";
   }
-  if (cadenaActiva(state) && !state.declaracionEnEleccion && !ACCIONES_CON_CADENA_ABIERTA.has(action.type)) {
+  const eleccionAntesDeCadena = action.type === "elegir_objetivo" && !!electorAjeno(state);
+  if (cadenaActiva(state) && !state.declaracionEnEleccion && !eleccionAntesDeCadena && !ACCIONES_CON_CADENA_ABIERTA.has(action.type)) {
     return "hay una cadena abierta: solo se puede responder o pasar prioridad";
   }
   switch (action.type) {
@@ -8391,7 +8500,7 @@ function accionesBloqueoEter(state, playerId, enCadena = false) {
       const fuentes = t.meta.efectos.map((efecto, i) => ({ efecto, i })).filter(({ efecto }) => esEfectoDeBloqueoManual(efecto));
       if (fuentes.length === 0) continue;
       for (const { efecto, i } of fuentes) {
-        const zonaOrigen = efecto.costo?.origen === "pagado" ? p.eterPagado : p.eterReserva;
+        const zonaOrigen = eteresPropios(state, efecto.costo?.origen === "pagado" ? p.eterPagado : p.eterReserva, playerId);
         const disponibles = zonaOrigen.filter((id) => {
           const meta = state.instances[id]?.cardId ? getCardMeta(state.instances[id].cardId) : null;
           return meta !== null;
@@ -8429,7 +8538,7 @@ function accionesBloqueoEter(state, playerId, enCadena = false) {
 }
 function asignacionesMaximales(state) {
   const ataques = ataquesBloqueables(state);
-  const k = Math.min(bloqueadoresDisponibles(state).length, ataques.length);
+  const k = bloqueosMaximos(state);
   if (k === 0) return [];
   const disponibles = bloqueadoresDisponibles(state);
   const perms = (arr, largo) => {
@@ -8582,7 +8691,7 @@ function getValidActions(state, playerId) {
       if (efectoAct && inst) {
         const costoBloqueo = esCostoBloqueo(efectoAct.costo);
         const costo = efectoAct.costo?.cantidad ?? 0;
-        const zonaAct = costoBloqueo && efectoAct.costo?.origen === "pagado" ? p.eterPagado : p.eterReserva;
+        const zonaAct = costoBloqueo ? eteresPropios(state, efectoAct.costo?.origen === "pagado" ? p.eterPagado : p.eterReserva, playerId) : p.eterReserva;
         const eteresValidos = zonaAct.filter((id) => {
           const eterMeta = state.instances[id]?.cardId ? getCardMeta(state.instances[id].cardId) : null;
           return eterMeta !== null;
@@ -8702,6 +8811,7 @@ function getValidActions(state, playerId) {
     for (const asig of asignacionesMaximales(state)) {
       acciones.push({ type: "declarar_bloqueo", asignaciones: asig });
     }
+    if (costePeajeBloqueo(state) > 0 && bloqueosMaximos(state) > 0) acciones.push({ type: "declarar_bloqueo", asignaciones: {} });
   }
   return acciones;
 }
@@ -9283,12 +9393,12 @@ function botTonto(state, playerId, dificultad = "facil") {
     if (actorActual(state) !== playerId) return null;
     return getValidActions(state, playerId).find((a) => a.type === "elegir_objetivo") ?? null;
   }
-  if (electorAjeno(state)) {
+  const equipar = state.equiparPendiente;
+  const equiparVigente = !!equipar && !state.instances[equipar.artefactoId]?.equipadoA;
+  if (electorAjeno(state) && !equiparVigente) {
     if (actorActual(state) !== playerId) return null;
     return getValidActions(state, playerId).find((a) => a.type === "elegir_objetivo") ?? null;
   }
-  const equipar = state.equiparPendiente;
-  const equiparVigente = !!equipar && !state.instances[equipar.artefactoId]?.equipadoA;
   if (scryActual(state) && !equiparVigente) {
     if (actorActual(state) !== playerId) return null;
     return getValidActions(state, playerId).find((a) => a.type === "ordenar_mazo") ?? null;

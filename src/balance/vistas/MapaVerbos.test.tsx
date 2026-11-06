@@ -13,8 +13,10 @@ describe('MapaVerbos', () => {
     render(<MapaVerbos cartas={CARTAS} />)
     expect(screen.getByRole('heading', { level: 2, name: 'Mapa de verbos' })).toBeInTheDocument()
     expect(screen.getByRole('table', { name: /verbos por mazo/i })).toBeInTheDocument()
-    expect(celdas('destroy')).toEqual(['destroy', '0', '4', 'Fuera de identidad', 'Identidad'])
-    expect(celdas('buff')).toEqual(['buff', '7', '8', 'Neutral', 'Neutral'])
+    // Rediseño de Disonancia (Lote 2): Ragnar y Draven dejaron de destruir (arrebatan Éter); quedan Varek, Tormenta del Sur y Skarn
+    expect(celdas('destroy')).toEqual(['destroy', '0', '3', 'Fuera de identidad', 'Identidad'])
+    // buff de Disonancia: DS-005, Comandante de Ragnar (+3 ATQ), DS-021, DS-024 y DS-025 (antes 8: también Éter del Último Trueno, Éter del Primogénito, Korr y Grito del Primogénito)
+    expect(celdas('buff')).toEqual(['buff', '7', '5', 'Neutral', 'Neutral'])
   })
 
   it('las columnas dicen de qué mazo es cada cantidad y cada clase', () => {

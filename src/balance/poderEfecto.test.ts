@@ -4,6 +4,7 @@ import { cargarCartas } from './cargador'
 import { CONFIG_V1 } from './config'
 import { componentesDeEfecto, poderDeCarta, poderDeEfecto } from './poderEfecto'
 import type { CartaBalance, ConfigBalance, EfectoBalance } from './tipos'
+import { legadoDS } from './test/cartasReales'
 
 const { cartas, campeones } = cargarCartas(ALL_CARDS)
 const real = (id: string): CartaBalance => {
@@ -251,7 +252,8 @@ describe('componentesDeEfecto', () => {
 
   it('S5.1: el poder de los componentes es EXACTAMENTE el de poderDeEfecto en los efectos de las 66 cartas', () => {
     expect(cartas).toHaveLength(66)
-    expect(todos).toHaveLength(75)
+    // 76: el Comandante nuevo de Ragnar son 2 efectos (+3 ATQ y Peaje) y su Continuo (olvido) más el Disparo (arrebato) suman 4 con él (antes 3)
+    expect(todos).toHaveLength(76)
     for (const { id, e } of todos) {
       const c = componentesDeEfecto(e)
       expect(c.poder, id).toBe(poderDeEfecto(e).poder)
@@ -287,7 +289,8 @@ describe('componentesDeEfecto', () => {
   })
 
   it('S5.4: Ragnar concede Indestructible (2) a todos los campeones propios (×1.5) y Aurora imprime Inmortal (2.5)', () => {
-    const ragnar = real('DS-010').efectos.map((e) => componentesDeEfecto(e))
+    // El Ragnar de antes (Lote 2): su Comandante concedía Indestructible a todos. El nuevo no concede keywords.
+    const ragnar = legadoDS('Ragnar').efectos.map((e) => componentesDeEfecto(e))
     expect(ragnar.some((c) => c.keywords === 2 * 1.5)).toBe(true)
     const aurora = poderDeCarta(real('FB-010')).keywords
     expect(aurora).toContainEqual({ keyword: 'Inmortal', peso: 2.5 })

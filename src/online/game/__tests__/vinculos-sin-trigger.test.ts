@@ -14,11 +14,17 @@ import { describe, it, expect } from 'vitest'
 import { applyAction } from '../actions'
 import type { Action } from '../actions'
 import { statsDe, dispararTrigger } from '../efectos'
-import { getCardMeta } from '../cards'
+import { getCardMeta, registrarCartas } from '../cards'
+import type { AnyCard } from '../../../shared/types'
 import type { Ctx, GameState, PlayerId } from '../types'
+import disonanciaLegado from '../../../balance/test/disonancia-legado.json'
 
 const FB030 = 'FB-030' // Vínculo debuff rival mayor RES -2/-2, mientras_en_campo
-const DS030 = 'DS-030' // Vínculo buff propio menor RES +4, mientras_en_campo
+// El Grito del Primogénito de ANTES del rediseño de Disonancia (Lote 2): buff propio menor RES +4, mientras_en_campo. El DS-030 real ahora
+// activa el Olvido (modificar_regla `olvido_rival`, Lote 4); la mecánica del aura de Vínculo con `seleccionar` sigue vigente y se prueba con
+// este fixture (tomado del seed de entonces).
+const DS030 = 'TEST-GRITO-PRIMOGENITO-LEGADO'
+registrarCartas([{ ...(disonanciaLegado as unknown as AnyCard[]).find((c) => c.id === 'DS-030')!, id: DS030 } as AnyCard])
 const DS026 = 'DS-026' // Vínculo rival_discard, inicio_alba, 1_por_turno
 const DS027 = 'DS-027' // Vínculo mover éter rival, inicio_choque, controladorTrigger rival
 const CAMPEON = 'FB-011' // Vaela 5/2
@@ -154,7 +160,7 @@ describe('FB-030 Lamento de la Primogénita — aura vínculo (Fase 3d)', () => 
   })
 })
 
-describe('DS-030 Grito del Primogénito — aura vínculo buff propio (Fase 3d)', () => {
+describe('Grito del Primogénito de antes (DS-030) — aura vínculo buff propio (Fase 3d)', () => {
   /**
    * "El Campeón con menor RES gana 4 de RES, mientras esta carta esté en el campo."
    * Aura: buff +4 RES al campeón PROPIO de MENOR RES. Vaela base 5/2.
@@ -194,7 +200,7 @@ describe('DS-030 Grito del Primogénito — aura vínculo buff propio (Fase 3d)'
   })
 })
 
-describe('DS-026 Heredad de Caos — inicio_alba discard (Fase 3d)', () => {
+describe('DS-026 Deuda de Caos (antes Heredad de Caos) — inicio_alba discard (Fase 3d)', () => {
   /**
    * "Al inicio de tu Alba, puedes descartar una carta de la mano del rival,
    * una vez por turno." trigger inicio_alba — patrón FB-025 existente.

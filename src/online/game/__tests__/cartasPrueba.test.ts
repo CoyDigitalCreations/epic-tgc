@@ -81,7 +81,7 @@ const TEXTO_MODIFICAR_REGLA_A_MANO = new Set(['PR-030', 'PR-053'])
  * cartas reales del seed (DS-011, DS-014, FB-010...) tienen ese texto corregido a mano; aquí se hace igual.
  */
 const TEXTO_CORREGIDO_A_MANO = new Set([
-  'PR-005', 'PR-006', 'PR-013', 'PR-014', 'PR-015', 'PR-019', 'PR-020', 'PR-021', 'PR-025', 'PR-028', 'PR-045',
+  'PR-005', 'PR-006', 'PR-013', 'PR-014', 'PR-015', 'PR-019', 'PR-020', 'PR-021', 'PR-024', 'PR-025', 'PR-028', 'PR-045',
   'PR-060', 'PR-062', 'PR-074', 'PR-075', 'PR-008', 'PR-009',
 ])
 

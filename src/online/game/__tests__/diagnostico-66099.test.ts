@@ -4,7 +4,7 @@ import { describe, it } from 'vitest'
 import { ESTASIS_CARDS, DISONANCIA_CARDS } from '../../../shared/data/paquetes'
 import { simularPartida, botTonto } from '../bot'
 import { expandirMazo } from './helpers'
-import { getValidActions } from '../validActions'
+import { actorActual, getValidActions } from '../validActions'
 import { applyAction } from '../actions'
 import { createInitialState } from '../initialState'
 import { getCardMeta } from '../cards'
@@ -24,13 +24,10 @@ describe('Diagnóstico seed 66099 v2', () => {
     const maxIteraciones = 200
 
     while (estado.fase !== 'terminada' && iteraciones < maxIteraciones) {
-      const cadena = estado.cadena
-      const actor: 'A' | 'B' =
-        cadena
-          ? cadena.prioridad
-          : estado.fase === 'choque' && estado.combate?.paso === 'bloqueo'
-            ? (estado.turno === 'A' ? 'B' : 'A')
-            : estado.turno
+      // El actor vive en el motor (mismo criterio que simularPartida): con un scry o una elección pendiente del rival el actor no es el del turno.
+      // Antes se calculaba a mano (cadena / bloqueo / turno) y, con el mazo de Disonancia rediseñado (Lote 2), la partida llegaba a un scry de
+      // Elena durante la Forja del rival y el test se quedaba «sin acción».
+      const actor: 'A' | 'B' = actorActual(estado) ?? estado.turno
 
       // Log acciones disponibles ANTES de que el bot decida
       if (iteraciones < 100 && estado.fase === 'forja') {

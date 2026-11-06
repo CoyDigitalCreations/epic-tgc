@@ -1,5 +1,5 @@
 import { esEter, getCardMeta, cartaNecesitaEterBloqueado, efectoBloqueoAccion } from './cards'
-import { etiquetarEter, eterDeEfecto, marcarContinuoActivado } from './eter'
+import { etiquetarEter, eterDeEfecto, esEterAjeno, eteresPropios, marcarContinuoActivado } from './eter'
 import type { AnyCard } from '../../shared/types'
 import { dispararTrigger } from './efectos'
 import { efectosNegados, reglaNumero } from './reglas'
@@ -21,7 +21,7 @@ import type { Ctx, GameState, PlayerId } from './types'
 
 /** Contexto de uso del Éter pagado (C2): gatillos dependen de cómo se pagó. */
 export interface ContextoUso {
-  tipo: 'invocar' | 'jugar' | 'habilidad'
+  tipo: 'invocar' | 'jugar' | 'habilidad' | 'combate'
   /** Instancia del Campeón/Mística/Arcana que se está invocando/jugando. */
   cardInstanceId?: string
 }
@@ -122,11 +122,38 @@ export function aplicarPago(
     aportado: validado.aportado,
   })
 
-  // C2 (ADR-25): gatillos al-pagar-eter por cada Éter con trigger='al_pagar_eter' en sus efectos
+  dispararAlPagarEter(s, ctx, jugador, eterIds, contextoUso)
+  return s
+}
+
+/**
+ * Lote 4B · Peaje (regla `costeBloqueo`, Ragnar): Éter que `jugador` paga al DECLARAR el bloqueo, por cada Campeón que bloquea.
+ * Es un pago normal: el Éter va de la Reserva a la zona de pago (1A), emite `eter_pagado` y dispara los «al pagar» de ese Éter
+ * (contexto 'combate'). Sale de los PRIMEROS Éteres PROPIOS de la Reserva, sin selector: el Éter arrebatado no sirve para el Peaje.
+ * Devuelve false (sin tocar nada) si no hay suficientes.
+ */
+export function pagarPeaje(s: GameState, ctx: Ctx, jugador: PlayerId, cantidad: number): boolean {
+  if (cantidad <= 0) return true
+  const eterIds = eteresPropios(s, s.players[jugador].eterReserva, jugador).slice(0, cantidad)
+  if (eterIds.length < cantidad) return false
+  const p = s.players[jugador]
+  for (const id of eterIds) {
+    p.eterReserva.splice(p.eterReserva.indexOf(id), 1)
+    p.eterPagado.push(id)
+  }
+  ctx.emit({ type: 'eter_pagado', jugador, eterIds, costo: cantidad, aportado: cantidad })
+  dispararAlPagarEter(s, ctx, jugador, eterIds, { tipo: 'combate' })
+  return true
+}
+
+/** C2 (ADR-25): gatillos al-pagar-eter por cada Éter con trigger='al_pagar_eter' en sus efectos. */
+function dispararAlPagarEter(s: GameState, ctx: Ctx, jugador: PlayerId, eterIds: string[], contextoUso?: ContextoUso): void {
   const gatillos = eterIds.filter((id) => {
     const inst = s.instances[id]
     const meta = inst?.cardId ? getCardMeta(inst.cardId) : null
     if (!meta || !esEter(meta)) return false
+    // R1 (Éter arrebatado): se gasta como cualquiera, pero NO activa sus efectos para quien lo arrebató
+    if (esEterAjeno(s, id, jugador)) return false
     // Check efectos[] with trigger='al_pagar_eter' (JSON interpreter path)
     if ('efectos' in meta && meta.efectos) {
       return meta.efectos.some((e) => e.trigger === 'al_pagar_eter')
@@ -139,7 +166,6 @@ export function aplicarPago(
       objetivoId: contextoUso?.cardInstanceId,
     })
   }
-  return s
 }
 
 /**
@@ -261,6 +287,8 @@ export function validarBloqueo(
     const eterInst = state.instances[id]
     const eterMeta = eterInst?.cardId ? getCardMeta(eterInst.cardId) : null
     if (!eterInst || !eterMeta || !esEter(eterMeta)) return `no es un Éter: ${id}`
+    // R1 (Éter arrebatado): el Éter de otro jugador se puede gastar, pero no bloquear
+    if (esEterAjeno(state, id, jugador)) return `el Éter ${id} es arrebatado: no se puede bloquear`
     // Fase 2 (c): zona de ORIGEN del pago — 'reserva' (2A) o 'pagado' (1A)
     // El externo lo paga el Pasivo 1A desde la Reserva (nunca desde 1A)
     const origenPagado = !externo && fuente?.efecto.costo?.origen === 'pagado'
@@ -351,7 +379,11 @@ export function bloquearEter(
   return null
 }
 
-/** Alba del dueño: 1A → 2A (eter_reagrupado). El Éter bloqueado permanece en el Campeón. */
+/**
+ * Alba del dueño: 1A → 2A (eter_reagrupado). El Éter bloqueado permanece en el Campeón.
+ * R1 (Éter arrebatado): ADEMÁS vuelve a la Reserva de su dueño todo su Éter que esté en las zonas del otro jugador (Reserva o zona de
+ * pago): es el «todo el Éter fuera de la Reserva se reagrupa» de §8.2. Lo arrebatado es prestado hasta el Alba de su dueño.
+ */
 export function reagruparEter(s: GameState, ctx: Ctx, jugador: PlayerId): void {
   const p = s.players[jugador]
   // Lote 3 (Runa de Ancla): el Éter ANCLADO se queda en 1A esta Alba. El ancla dura UNA sola Alba: se vacía siempre aquí
@@ -359,12 +391,22 @@ export function reagruparEter(s: GameState, ctx: Ctx, jugador: PlayerId): void {
   // ANTES de reagruparEter (resolverAlba) y el ancla no habría protegido nada.
   const anclados = new Set(p.eterAnclado ?? [])
   delete p.eterAnclado
-  if (p.eterPagado.length === 0) return
   const reagrupados = p.eterPagado.filter((id) => !anclados.has(id))
-  if (reagrupados.length === 0) return
-  // El Pasivo 1A de una carta de Éter (una vez por turno) se estrena de nuevo la próxima vez que se pague
-  for (const id of reagrupados) delete s.instances[id]?.opcionUsadaEsteTurno
-  p.eterReserva.push(...reagrupados)
-  p.eterPagado = p.eterPagado.filter((id) => anclados.has(id))
-  ctx.emit({ type: 'eter_reagrupado', jugador, eterIds: reagrupados })
+  if (reagrupados.length > 0) {
+    // El Pasivo 1A de una carta de Éter (una vez por turno) se estrena de nuevo la próxima vez que se pague
+    for (const id of reagrupados) delete s.instances[id]?.opcionUsadaEsteTurno
+    p.eterReserva.push(...reagrupados)
+    p.eterPagado = p.eterPagado.filter((id) => anclados.has(id))
+    ctx.emit({ type: 'eter_reagrupado', jugador, eterIds: reagrupados })
+  }
+  // R1: lo que arrebató el rival (en su Reserva o en su zona de pago) regresa a MI Reserva
+  const rival = s.players[jugador === 'A' ? 'B' : 'A']
+  const devueltos = [...rival.eterReserva, ...rival.eterPagado].filter((id) => s.instances[id]?.owner === jugador)
+  if (devueltos.length > 0) {
+    rival.eterReserva = rival.eterReserva.filter((id) => !devueltos.includes(id))
+    rival.eterPagado = rival.eterPagado.filter((id) => !devueltos.includes(id))
+    for (const id of devueltos) delete s.instances[id]?.opcionUsadaEsteTurno
+    p.eterReserva.push(...devueltos)
+    ctx.emit({ type: 'eter_reagrupado', jugador, eterIds: devueltos })
+  }
 }

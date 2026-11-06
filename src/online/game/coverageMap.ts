@@ -89,7 +89,7 @@ export const DISPATCH: Record<string, {
   },
   inicio_choque: {
     llamado: true,
-    nota: 'partida.ts:112-116 — instancias = eterReserva + arcanas + vínculos (NO campeones ni místicas)',
+    nota: 'partida.ts:112-150 — instancias = Éter propio en Reserva + campo propio + vínculos rotos; además, del RIVAL del activo, sus vínculos rotos y sus Campeones con controladorTrigger rival (Lote 4B: Vorlag)',
     instanciasOk: true,
   },
   cuando_vinculo_seria_destruido: {
@@ -281,6 +281,15 @@ export function clasificarEfecto(
           estado: 'OK_AURA_JSON',
           ruta: 'esAuraVinculo + modificadoresJSONDe (efectos.ts) — aura derivada de Vínculo (Fase 3d)',
           notas: [...notas, 'Vínculo aura: mientras_en_campo = permanente (diseño usuario — vínculos siempre en campo).'],
+        }
+      }
+      // Lote 4A (Disonancia): un Vínculo ROTO que modifica una regla (DS-030 Grito del Primogénito → olvido_rival) la deriva reglas.ts
+      if (accion === 'modificar_regla' || accion === 'direct_attack') {
+        return {
+          ...base,
+          estado: 'OK_AURA_JSON',
+          ruta: 'reglas.ts modificadoresReglaDe (origen vinculo) — regla modificada mientras el Vínculo esté ROTO (boca arriba, §5.5)',
+          notas: [...notas, 'Estado derivado en reglaBool/reglaNumero: sin handlers ni estado que limpiar.'],
         }
       }
       notas.push('Vínculo sin trigger: el JSON no especifica cuándo corre (¿continuo mientras esté en campo = estado derivado? ¿periódico = falta el trigger?). Requiere decisión de diseño o corrección en Card-Maker.')

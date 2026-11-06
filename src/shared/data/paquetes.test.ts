@@ -223,7 +223,7 @@ describe('Paquetes', () => {
       expect(ragnar.keywords).toEqual(['Indestructible'])
     })
 
-    it('las keywords complementarias de Estásis tienen su espejo en Disonancia', () => {
+    it('las keywords complementarias de Estásis: Aurora Inmortal y Ragnar Indestructible conservan su contraste (Lote 2: sin espejo en Éteres y Vínculos)', () => {
       // Helper: find effect text by tipo from efectos array
       const findEfectoTexto = (card: AnyCard, tipo: string): string | undefined => {
         if (!('efectos' in card) || !card.efectos) return undefined
@@ -232,13 +232,13 @@ describe('Paquetes', () => {
       // Éter bloqueado: el espejo FB-008 ↔ DS-009 ya no existe (tras el rediseño, FB-008 da Carga
       // al pagarse y no tiene efecto de bloqueo). Queda documentado: ningún Éter de Estásis da
       // Inmortal por bloqueo, la fuente vigente de Inmortal por efecto es Isolde (FB-014, disparo)
-      // y DS-009 conserva su Indestructible por bloqueo.
+      // y DS-009 (rediseño de Disonancia, Lote 2) da Tirador por bloqueo (antes Indestructible: índice 3.0 sobre el tope 2.0).
       expect(findEfectoTexto(ESTASIS_CARDS.find((c) => c.id === 'FB-008')!, 'bloqueo')).toBeUndefined()
       expect(findEfectoTexto(ESTASIS_CARDS.find((c) => c.id === 'FB-014')!, 'disparo')).toContain('Inmortal')
-      expect(findEfectoTexto(DISONANCIA_CARDS.find((c) => c.id === 'DS-009')!, 'bloqueo')).toContain('Indestructible')
-      // Vínculos: FB-028 da Inmortal permanente ↔ DS-028 da Indestructible permanente
+      expect(findEfectoTexto(DISONANCIA_CARDS.find((c) => c.id === 'DS-009')!, 'bloqueo')).toContain('Tirador')
+      // Vínculos: FB-028 da Inmortal (proteger = Estásis); DS-028 ya no protege con Indestructible: arrebata 1 Éter cada Alba (Lote 2)
       expect(findEfectoTexto(ESTASIS_CARDS.find((c) => c.id === 'FB-028')!, 'vinculo')).toContain('Inmortal')
-      expect(findEfectoTexto(DISONANCIA_CARDS.find((c) => c.id === 'DS-028')!, 'vinculo')).toContain('Indestructible')
+      expect(findEfectoTexto(DISONANCIA_CARDS.find((c) => c.id === 'DS-028')!, 'vinculo')).toContain('arrebatar 1 Éter')
     })
 
     it('la colección completa del paquete alcanza las 66 copias (mazo jugable)', () => {

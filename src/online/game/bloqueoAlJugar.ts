@@ -8,6 +8,7 @@
  */
 import type { AnyCard } from './cards'
 import { esArtefactoEquipable, esMistica } from './cards'
+import { esEterAjeno, eteresPropios } from './eter'
 import { bloquearEter } from './payments'
 import type { Ctx, GameState, PlayerId } from './types'
 
@@ -32,7 +33,7 @@ export function bloqueoParaJugar(state: GameState, jugador: PlayerId, meta: AnyC
   const requisito = bloqueoAlJugar(meta)
   if (!requisito) return undefined
   if (!hayCartaQueCopiar(state, jugador)) return null
-  const libres = state.players[jugador].eterReserva.filter((id) => !eterIdsPago.includes(id))
+  const libres = eteresPropios(state, state.players[jugador].eterReserva, jugador).filter((id) => !eterIdsPago.includes(id)) // R1: el arrebatado no se bloquea
   return libres.length >= requisito.cantidad ? libres.slice(0, requisito.cantidad) : null
 }
 
@@ -56,6 +57,7 @@ export function motivoBloqueoAlJugar(
   for (const id of ids) {
     if (!reserva.includes(id)) return `el Éter ${id} a bloquear no está en tu Reserva`
     if (eterIdsPago.includes(id)) return 'un Éter no puede pagar y bloquear a la vez'
+    if (esEterAjeno(state, id, jugador)) return `el Éter ${id} es arrebatado: no se puede bloquear`
   }
   return null
 }

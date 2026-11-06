@@ -18,7 +18,7 @@
  */
 
 import type { Ctx, GameState, PlayerId, Zona } from './types'
-import { enviarAlCementerio } from './replacements'
+import { enviarAlCementerio, ponerEnCaida, zonaDeCementerio } from './replacements'
 import { robarCarta } from './draw'
 import { quitarEteres, liberarEterA, evaluarFinSteal } from './eter'
 
@@ -200,7 +200,7 @@ function ejecutarAccionEfecto(s: GameState, ctx: Ctx, ep: EfectoPendiente): void
         p.campo.campeones[slotIdx] = null
         ctx.emit({ type: 'carta_salida_de_zona', cardInstanceId: accion.objetivo, zona: `2${String.fromCharCode(66 + slotIdx)}` as Zona, jugador: inst.owner })
         enviarAlCementerio(s, ctx, accion.objetivo, 'campo')
-        ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: accion.objetivo, zona: '2G', jugador: inst.owner, bocaArriba: true })
+        ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: accion.objetivo, zona: zonaDeCementerio(s, accion.objetivo), jugador: inst.owner, bocaArriba: true })
       }
       break
     }
@@ -240,8 +240,7 @@ function ejecutarAccionEfecto(s: GameState, ctx: Ctx, ep: EfectoPendiente): void
         const zona = `3${String.fromCharCode(65 + slotMT)}` as Zona
         ctx.emit({ type: 'carta_salida_de_zona', cardInstanceId: accion.objetivo, zona, jugador: inst.owner })
         p.campo.misticasTacticas[slotMT] = null
-        p.cementerio.push(accion.objetivo)
-        ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: accion.objetivo, zona: '2G', jugador: inst.owner, bocaArriba: true })
+        if (!ponerEnCaida(s, ctx, accion.objetivo)) ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: accion.objetivo, zona: zonaDeCementerio(s, accion.objetivo), jugador: inst.owner, bocaArriba: true })
         break
       }
       // Buscar en arcanas/combate (3D-3F)
@@ -250,8 +249,7 @@ function ejecutarAccionEfecto(s: GameState, ctx: Ctx, ep: EfectoPendiente): void
         const zona = `3${String.fromCharCode(68 + slotAC)}` as Zona
         ctx.emit({ type: 'carta_salida_de_zona', cardInstanceId: accion.objetivo, zona, jugador: inst.owner })
         p.campo.arcanasCombate[slotAC] = null
-        p.cementerio.push(accion.objetivo)
-        ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: accion.objetivo, zona: '2G', jugador: inst.owner, bocaArriba: true })
+        if (!ponerEnCaida(s, ctx, accion.objetivo)) ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: accion.objetivo, zona: zonaDeCementerio(s, accion.objetivo), jugador: inst.owner, bocaArriba: true })
         break
       }
       // Buscar en campeones (2B-2F)
@@ -261,7 +259,7 @@ function ejecutarAccionEfecto(s: GameState, ctx: Ctx, ep: EfectoPendiente): void
         ctx.emit({ type: 'carta_salida_de_zona', cardInstanceId: accion.objetivo, zona, jugador: inst.owner })
         p.campo.campeones[slotCP] = null
         enviarAlCementerio(s, ctx, accion.objetivo, 'campo')
-        ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: accion.objetivo, zona: '2G', jugador: inst.owner, bocaArriba: true })
+        ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: accion.objetivo, zona: zonaDeCementerio(s, accion.objetivo), jugador: inst.owner, bocaArriba: true })
       }
       break
     }

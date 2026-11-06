@@ -32,15 +32,18 @@ import {
 } from '../eter'
 import type { Ctx, GameState, PlayerId } from '../types'
 import { AURORA_CLASICA, registrarAuroraClasica } from './helpers/auroraClasica'
+import { ETER_BLOQUEA_CLASICO, registrarEterBloqueaClasico } from './helpers/eterBloqueaClasico'
 
 // Aurora (FB-010) dejó de robar y FB-005 pasó a pago/grant_keyword: se usan la Aurora clásica
 // (fixture sintético) y DS-006, que conserva el Pasivo 1A de bloquear 1 Éter.
 registrarAuroraClasica()
+// DS-006 ya no bloquea Éter (rediseño de Disonancia, Lote 2): se usa su versión clásica como fixture
+registrarEterBloqueaClasico()
 
 const CASSANDRA = 'FB-016'
 const AURORA = AURORA_CLASICA
 const VAELA = 'FB-011'
-const PASIVO = 'DS-006'
+const PASIVO = ETER_BLOQUEA_CLASICO // Éter del Viento clásico (antes DS-006)
 const ETER = 'FB-001'
 
 function crearCtx(): Ctx {

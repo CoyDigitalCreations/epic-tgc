@@ -1,5 +1,5 @@
 import { CARD_TYPES, RARITIES, KEYWORDS } from '../../shared/types'
-import type { CardType, AnyCard } from '../../shared/types'
+import type { CardType, AnyCard, EfectoData } from '../../shared/types'
 import { FORM_CONFIGS } from '../types/form-config'
 import { REGLA_IDS, esReglaNumerica, operacionesDe } from '../../shared/rules/reglas'
 import { activacionConSentido } from './limpiar-efecto'
@@ -7,7 +7,7 @@ import { activacionConSentido } from './limpiar-efecto'
 /** Tipos de negación que el motor ejecuta (el resto se jugaría como «activacion»). Ver executeEffect `negar`. */
 const TIPOS_NEGACION_IMPLEMENTADOS: readonly string[] = ['activacion', 'efecto_activo']
 
-const REGLAS_ENUMERADAS: readonly string[] = ['disparo_sin_agotar', 'coste_campeones_rival_mas']
+const REGLAS_ENUMERADAS: readonly string[] = ['disparo_sin_agotar', 'coste_campeones_rival_mas', 'olvido_rival', 'peaje_bloqueo']
 
 /** Fields that live inside `stats` sub-object instead of flat on the card */
 const STATS_FIELDS = new Set(['cost', 'poder', 'resistencia', 'duracion'])
@@ -72,9 +72,16 @@ export function validateCard(card: Partial<AnyCard>): ValidationError[] {
  */
 function validarEfectos(card: Partial<AnyCard>): ValidationError[] {
   const efectos = 'efectos' in card && Array.isArray(card.efectos) ? card.efectos : []
+  // El efectoComandante (objeto suelto o arreglo) pasa por las MISMAS reglas que los efectos de la carta: un Comandante
+  // sin su dato obligatorio (p. ej. un Peaje sin valor) se juega sin hacer nada. Se le rotula «Comandante N» en el mensaje.
+  const cmdRaw = 'efectoComandante' in card ? (card as { efectoComandante?: unknown }).efectoComandante : undefined
+  const comandante = (Array.isArray(cmdRaw) ? cmdRaw : cmdRaw && typeof cmdRaw === 'object' ? [cmdRaw] : []) as EfectoData[]
   const errors: ValidationError[] = []
-  efectos.forEach((e, i) => {
-    const donde = `Efecto ${i + 1}`
+  const todos: { e: EfectoData; donde: string }[] = [
+    ...efectos.map((e, i) => ({ e, donde: `Efecto ${i + 1}` })),
+    ...comandante.map((e, i) => ({ e, donde: comandante.length > 1 ? `Comandante ${i + 1}` : 'Comandante' })),
+  ]
+  todos.forEach(({ e, donde }) => {
     const falta = (message: string) => errors.push({ field: 'efectos', message: `${donde}: ${message}` })
     // Ese trigger solo lo lee el sistema de prevención de destrucción: con cualquier otro efecto nunca se dispara
     if (e.trigger === 'cuando_vinculo_seria_destruido' && e.efecto !== 'prevent_destroy') {
@@ -117,6 +124,7 @@ function validarEfectos(card: Partial<AnyCard>): ValidationError[] {
           if (e.regla) return falta('elige una regla del manual O una regla enumerada, no las dos')
           if (!REGLAS_ENUMERADAS.includes(e.reglaEnumerada)) return falta('la regla enumerada no existe')
           if (e.reglaEnumerada === 'coste_campeones_rival_mas' && !(Number.isInteger(e.reglaValor) && (e.reglaValor as number) >= 1)) return falta('indica cuántos Éter más cuestan (mínimo 1)')
+          if (e.reglaEnumerada === 'peaje_bloqueo' && !(Number.isInteger(e.reglaValor) && (e.reglaValor as number) >= 1)) return falta('indica cuánto Éter paga el rival por bloquear (mínimo 1)')
           if (e.reglaEnumerada === 'disparo_sin_agotar' && e.tipo !== 'comandante') return falta('«El efecto Disparo no agota» es una regla de Comandante (aplica a los Campeones de su facción)')
           return
         }

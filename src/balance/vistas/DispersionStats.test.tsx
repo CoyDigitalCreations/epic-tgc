@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { ALTO_PRUEBA, ANCHO_PRUEBA, instalarEntornoGraficas } from '../test/entornoGraficas'
-import { CARTAS, CARTAS_ELENA_32 } from '../test/cartasReales'
+import { CARTAS, CARTAS_DS_ANTES, CARTAS_ELENA_32 } from '../test/cartasReales'
 import { DispersionStats } from './DispersionStats'
 
 describe('DispersionStats', () => {
@@ -42,9 +42,14 @@ describe('DispersionStats', () => {
     // Intención cambiada con el tope de costo del 50 %: Isolde (índice 4.75, impuesto 1.4) ya no cabe, su suma 9 pasa el máximo 8.6.
     expect(celdas(/^Isolde/)).toEqual(['Isolde de Casa Última', 'Estásis', '4', '3', '6', 'Fuera de banda: por encima'])
     expect(celdas(/^Vaela/).at(-1)).toBe('Dentro de banda')
-    expect(celdas(/^Kael/).at(-1)).toBe('Fuera de banda: por encima')
+    expect(celdas(/^Kael/).at(-1)).toBe('Dentro de banda') // Kael 4/2 tras el rediseño de Disonancia (Lote 2)
     expect(celdas(/^Seraphina/).at(-1)).toBe('Dentro de banda')
     expect(celdas(/^Aurora/).at(-1)).toBe('Exenta: dentro de su tope propio')
+  })
+
+  it('la Kael de antes (5/3, coste 2) lleva el veredicto «por encima»', () => {
+    montar(CARTAS_DS_ANTES)
+    expect(celdas(/^Kael/).at(-1)).toBe('Fuera de banda: por encima')
   })
 
   it('la Elena de antes (3/2) lleva el veredicto «por debajo»', () => {

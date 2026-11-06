@@ -32,15 +32,16 @@ export function botTonto(state: GameState, playerId: PlayerId, dificultad: Dific
     if (actorActual(state) !== playerId) return null
     return getValidActions(state, playerId).find((a) => a.type === 'elegir_objetivo') ?? null
   }
+  // Un equipar pendiente (vigente) va ANTES que cualquier elección ajena y que el scry (orden determinista de pendientes del
+  // motor, igual en actorActual / validarAccion / getValidActions: equipar -> elecciones -> scry): se deja pasar al flujo normal.
+  const equipar = state.equiparPendiente
+  const equiparVigente = !!equipar && !state.instances[equipar.artefactoId]?.equipadoA
   // H4: pendiente del dueño ajeno al turno (tutor del rival al morir) — lo elige ÉL, ya, aunque no sea su turno
-  if (electorAjeno(state)) {
+  if (electorAjeno(state) && !equiparVigente) {
     if (actorActual(state) !== playerId) return null
     return getValidActions(state, playerId).find((a) => a.type === 'elegir_objetivo') ?? null
   }
   // F9c: scry — el bot conserva el orden y no manda nada al fondo (la jugada canónica de getValidActions)
-  // Un equipar pendiente (vigente) va ANTES que el scry (mismo orden que actorActual): se deja pasar al flujo normal del bot.
-  const equipar = state.equiparPendiente
-  const equiparVigente = !!equipar && !state.instances[equipar.artefactoId]?.equipadoA
   if (scryActual(state) && !equiparVigente) {
     if (actorActual(state) !== playerId) return null
     return getValidActions(state, playerId).find((a) => a.type === 'ordenar_mazo') ?? null

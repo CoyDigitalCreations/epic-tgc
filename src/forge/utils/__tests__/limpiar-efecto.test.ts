@@ -84,11 +84,11 @@ describe('limpiarCamposAjenos', () => {
 describe('camposAjenosVacios (el parche del formulario al cambiar de efecto)', () => {
   it('al pasar a negar vacía todo lo ajeno, pero NO tipoNegacion', () => {
     const parche = camposAjenosVacios('negar')
-    expect(Object.keys(parche).sort()).toEqual(['buffPerBlockedEther', 'cambioTipo', 'copyAttributes', 'keyword', 'opcionFondo', 'regla', 'reglaEnumerada', 'reglaValor', 'sinAgotar', 'sinPagarCosto', 'stats'])
+    expect(Object.keys(parche).sort()).toEqual(['alAzar', 'buffPerBlockedEther', 'cambioTipo', 'copyAttributes', 'keyword', 'opcionFondo', 'regla', 'reglaEnumerada', 'reglaValor', 'sinAgotar', 'sinPagarCosto', 'stats'])
     expect(Object.values(parche).every((v) => v === undefined)).toBe(true)
   })
   it('al pasar a copy conserva copyAttributes y vacía el resto', () => {
-    expect(Object.keys(camposAjenosVacios('copy')).sort()).toEqual(['buffPerBlockedEther', 'cambioTipo', 'keyword', 'opcionFondo', 'regla', 'reglaEnumerada', 'reglaValor', 'sinAgotar', 'sinPagarCosto', 'stats', 'tipoNegacion'])
+    expect(Object.keys(camposAjenosVacios('copy')).sort()).toEqual(['alAzar', 'buffPerBlockedEther', 'cambioTipo', 'keyword', 'opcionFondo', 'regla', 'reglaEnumerada', 'reglaValor', 'sinAgotar', 'sinPagarCosto', 'stats', 'tipoNegacion'])
   })
   it('buff y debuff comparten stats y buffPerBlockedEther: pasar de uno a otro NO los borra', () => {
     for (const efecto of ['buff', 'debuff'] as const) {
@@ -103,7 +103,7 @@ describe('camposAjenosVacios (el parche del formulario al cambiar de efecto)', (
     expect(claves).toContain('stats')
   })
   it('sin efecto vacía todos', () => {
-    expect(Object.keys(camposAjenosVacios(undefined)).sort()).toEqual(['buffPerBlockedEther', 'cambioTipo', 'copyAttributes', 'keyword', 'opcionFondo', 'regla', 'reglaEnumerada', 'reglaValor', 'sinAgotar', 'sinPagarCosto', 'stats', 'tipoNegacion'])
+    expect(Object.keys(camposAjenosVacios(undefined)).sort()).toEqual(['alAzar', 'buffPerBlockedEther', 'cambioTipo', 'copyAttributes', 'keyword', 'opcionFondo', 'regla', 'reglaEnumerada', 'reglaValor', 'sinAgotar', 'sinPagarCosto', 'stats', 'tipoNegacion'])
   })
 })
 

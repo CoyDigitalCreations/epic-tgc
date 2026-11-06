@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { ALTO_PRUEBA, ANCHO_PRUEBA, instalarEntornoGraficas } from '../test/entornoGraficas'
-import { CARTAS } from '../test/cartasReales'
+import { CARTAS, CARTAS_DS_ANTES } from '../test/cartasReales'
 import { RankingPoder } from './RankingPoder'
 
 describe('RankingPoder', () => {
@@ -21,13 +21,23 @@ describe('RankingPoder', () => {
     const filas = within(tabla).getAllByRole('row').slice(1)
     expect(filas).toHaveLength(66)
     const primera = within(filas[0]).getAllByRole('cell').map((c) => c.textContent)
+    // Rediseño de Disonancia (Lote 2): Ragnar baja de 10.4 (destroy + Indestructible a todos) a 7.1 (arrebato + olvido + Comandante) y Aurora lo supera
+    expect(primera.slice(0, 2)).toEqual(['1', 'Aurora de Casa Alba'])
+    const ragnar = within(filas[1]).getAllByRole('cell').map((c) => c.textContent)
+    expect(ragnar.slice(0, 2)).toEqual(['2', 'Ragnar, Voz del Nudo'])
+    expect(ragnar).toContain('7.1')
+  })
+
+  it('con la Disonancia de antes Ragnar encabezaba el ranking con 10.4 (tope de costo del 50 %)', () => {
+    montar(CARTAS_DS_ANTES)
+    const primera = within(within(screen.getByRole('table', { name: /ranking del índice de poder de todas/i })).getAllByRole('row')[1]).getAllByRole('cell').map((c) => c.textContent)
     expect(primera.slice(0, 2)).toEqual(['1', 'Ragnar, Voz del Nudo'])
-    // Ragnar sube de 8.8 a 10.4 con el tope de costo del 50 % (su efecto con costo ya no se descuenta completo)
     expect(primera).toContain('10.4')
   })
 
   it('el semáforo lleva texto además del color', () => {
-    montar()
+    // Se usa la Disonancia de antes: con el rediseño (Lote 2) Kael es 4/2 y Marek 4/3 y ya no pasan su suma objetivo
+    montar(CARTAS_DS_ANTES)
     const tabla = within(screen.getByRole('table', { name: /ranking del índice de poder de todas/i }))
     // Bandas v1.1: Kael (5/3, coste 2) pasa su suma objetivo por 2.3 (> 1.5), así que sale Rojo;
     // Marek (5/4, coste 3) la pasa por 1.3 y sigue Amarillo.

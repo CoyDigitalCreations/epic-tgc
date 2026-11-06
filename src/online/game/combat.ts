@@ -4,6 +4,8 @@ import { destruirCarta } from './replacements'
 import { evaluarFinSteal } from './eter'
 import { armarTriggers, construirTriggers } from './triggers'
 import { reglaBool, reglaNumero } from './reglas'
+import { pagarPeaje } from './payments'
+import { eteresPropios } from './eter'
 import type { Ctx, GameState, PlayerId } from './types'
 
 /**
@@ -144,6 +146,27 @@ export function ataquesBloqueables(state: GameState): string[] {
 }
 
 /**
+ * Peaje (Lote 4B, regla `costeBloqueo`; Ragnar): Éter que el DEFENSOR paga por CADA Campeón con que bloquea. 0 si ninguna regla
+ * lo cobra. La regla es de ámbito jugador y alcanza al rival de quien controla la fuente, así que solo el defensor del
+ * controlador del Peaje lo paga (el propio controlador, cuando defiende, no).
+ */
+export function costePeajeBloqueo(state: GameState): number {
+  return reglaNumero(state, 'costeBloqueo', { jugador: rivalDe(state) })
+}
+
+/**
+ * Cuántos bloqueos puede (y, sin Peaje, DEBE) declarar el defensor: mín(bloqueadores, ataques bloqueables) y, con Peaje, los
+ * que alcanza a pagar con su Éter PROPIO en la Reserva (§9.3: un Campeón que no puede pagar no cuenta para el bloqueo forzoso).
+ */
+export function bloqueosMaximos(state: GameState): number {
+  const k = Math.min(bloqueadoresDisponibles(state).length, ataquesBloqueables(state).length)
+  const peaje = costePeajeBloqueo(state)
+  if (peaje <= 0) return k
+  const defensor = rivalDe(state)
+  return Math.min(k, Math.floor(eteresPropios(state, state.players[defensor].eterReserva, defensor).length / peaje))
+}
+
+/**
  * Asignación greedy forzada (9.3, ADR-19): los primeros k bloqueadores
  * disponibles (orden 2B-2F) cubren los primeros k ataques bloqueables,
  * con k = mín(disponibles, ataques). getValidActions emite SOLO esta
@@ -154,7 +177,7 @@ export function asignacionForzada(state: GameState): Record<string, string> | nu
   if (!combate || combate.paso !== 'bloqueo') return null
   const disponibles = bloqueadoresDisponibles(state)
   const sinBloquear = ataquesBloqueables(state)
-  const k = Math.min(disponibles.length, sinBloquear.length)
+  const k = bloqueosMaximos(state)
   if (k === 0) return null
   const asignaciones: Record<string, string> = {}
   for (let i = 0; i < k; i++) asignaciones[sinBloquear[i]] = disponibles[i]
@@ -250,7 +273,8 @@ export function abrirVentanaAtaque(s: GameState, ctx: Ctx): void {
   // Auto-avance (9.3, ADR-11): defensor sin enderezados → resolución sin
   // evento bloqueo_declarado (los ataques quedan sin bloquear)
   // (o ningún ataque es bloqueable: todos directos)
-  if (bloqueadoresDisponibles(s).length === 0 || ataquesBloqueables(s).length === 0) {
+  // (o el Peaje del atacante deja al defensor sin Éter para pagar ningún bloqueo)
+  if (bloqueosMaximos(s) === 0) {
     combate.paso = 'resolucion'
     resolverCombate(s, ctx) // sin pares: sin muertes
     // Fase 2b: doble ataque activo → cerrar combate para permitir 2da ola
@@ -265,12 +289,17 @@ export function validarDeclararBloqueo(state: GameState, asignaciones: Record<st
   const combate = state.combate
   if (!combate || combate.paso !== 'bloqueo') return 'no hay bloqueo pendiente'
   const pares = Object.entries(asignaciones)
-  if (pares.length === 0) return 'no asignaste bloqueadores'
   const disponibles = bloqueadoresDisponibles(state)
   const sinBloquear = ataquesBloqueables(state)
-  const k = Math.min(disponibles.length, sinBloquear.length)
-  if (pares.length !== k) {
-    return `el bloqueo es forzoso: asigna exactamente ${k} bloqueador(es) (9.3)`
+  const k = bloqueosMaximos(state)
+  if (costePeajeBloqueo(state) > 0) {
+    // Con Peaje nadie está obligado a pagar: se puede bloquear con 0..k Campeones
+    if (pares.length > k) return `con el Peaje solo alcanzas a pagar ${k} bloqueo(s) (9.3)`
+  } else {
+    if (pares.length === 0) return 'no asignaste bloqueadores'
+    if (pares.length !== k) {
+      return `el bloqueo es forzoso: asigna exactamente ${k} bloqueador(es) (9.3)`
+    }
   }
   const bloqueadoresUsados = new Set<string>()
   for (const [atacanteId, bloqueadorId] of pares) {
@@ -284,6 +313,9 @@ export function validarDeclararBloqueo(state: GameState, asignaciones: Record<st
 
 export function ejecutarDeclararBloqueo(s: GameState, asignaciones: Record<string, string>, ctx: Ctx): void {
   const combate = s.combate!
+  // Peaje (Lote 4B): cada bloqueador cuesta N Éter, pago normal ANTES de declarar (validarDeclararBloqueo ya comprobó que alcanza)
+  const peaje = costePeajeBloqueo(s)
+  if (peaje > 0) for (let i = 0; i < Object.keys(asignaciones).length; i++) pagarPeaje(s, ctx, rivalDe(s), peaje)
   combate.bloqueos = { ...combate.bloqueos, ...asignaciones }
   for (const bloqueadorId of Object.values(asignaciones)) {
     const b = s.instances[bloqueadorId]
@@ -384,7 +416,7 @@ export function continuarCombateTrasCadena(s: GameState, ctx: Ctx): void {
   // F5c: el ataque sigue vigente solo con los atacantes que siguen en el campo;
   // si una respuesta los sacó a todos, el ataque se anula y el combate se cierra.
   if (combate.paso === 'bloqueo' && !depurarAtacantes(s)) return
-  if (combate.paso === 'bloqueo' && (bloqueadoresDisponibles(s).length === 0 || ataquesBloqueables(s).length === 0)) {
+  if (combate.paso === 'bloqueo' && bloqueosMaximos(s) === 0) {
     combate.paso = 'resolucion'
     resolverCombate(s, ctx) // sin pares: sin muertes
     // Fase 2b: doble ataque activo → cerrar combate para permitir 2da ola

@@ -1,12 +1,12 @@
 import { getCardMeta, esArcana, efectoActivableDe, esCostoBloqueo, esEfectoDeBloqueoManual } from './cards'
 import { candidatosActivarDisparo } from './resonancia'
-import { eterDeEfecto } from './eter'
+import { eterDeEfecto, eteresPropios } from './eter'
 import { hayParejaBloqueo, pasivosBloqueo1A } from './efectos'
 import { bloqueoParaJugar } from './bloqueoAlJugar'
 import type { AnyCard } from '../../shared/types'
 import type { Action } from './actions'
 import { generarAccionesForja, validarActivarArcana } from './actions'
-import { atacantesElegibles, asignacionForzada, ataquesBloqueables, ataquesSinBloquear, bloqueadoresDisponibles, rivalDe, tieneKeyword } from './combat'
+import { atacantesElegibles, asignacionForzada, ataquesBloqueables, ataquesSinBloquear, bloqueadoresDisponibles, bloqueosMaximos, costePeajeBloqueo, rivalDe, tieneKeyword } from './combat'
 import { cadenaActiva, disparoDeRespuesta, respondiblesDe, respuestasDeMano } from './chain'
 import { eterIdsParaHabilidad, habilidadUsadaEsteTurno } from './habilidadPago'
 import { metaDeInstancia } from './efectosInstancia'
@@ -85,7 +85,8 @@ function accionesBloqueoEter(state: GameState, playerId: PlayerId, enCadena = fa
       if (fuentes.length === 0) continue
       for (const { efecto, i } of fuentes) {
         // Fase 2 (c): la ZONA de origen del pago define los éteres disponibles
-        const zonaOrigen = efecto.costo?.origen === 'pagado' ? p.eterPagado : p.eterReserva
+        // R1: el Éter arrebatado no se puede bloquear
+        const zonaOrigen = eteresPropios(state, efecto.costo?.origen === 'pagado' ? p.eterPagado : p.eterReserva, playerId)
         const disponibles = zonaOrigen.filter((id) => {
           const meta = state.instances[id]?.cardId ? getCardMeta(state.instances[id]!.cardId!) : null
           return meta !== null
@@ -142,7 +143,7 @@ function accionesBloqueoEter(state: GameState, playerId: PlayerId, enCadena = fa
  */
 function asignacionesMaximales(state: GameState): Record<string, string>[] {
   const ataques = ataquesBloqueables(state)
-  const k = Math.min(bloqueadoresDisponibles(state).length, ataques.length)
+  const k = bloqueosMaximos(state)
   if (k === 0) return []
   const disponibles = bloqueadoresDisponibles(state)
 
@@ -390,7 +391,8 @@ export function getValidActions(state: GameState, playerId: PlayerId): Action[] 
         // Fase 2 (c): el patrón Bloqueado paga desde la zona de ORIGEN del
         // costo ('pagado' 1A / default 'reserva' 2A); el patrón Agota (else)
         // sigue pagando desde Reserva → 1A por diseño.
-        const zonaAct = costoBloqueo && efectoAct.costo?.origen === 'pagado' ? p.eterPagado : p.eterReserva
+        // R1: el patrón «Bloqueado» no usa Éter arrebatado (el de «Paga y Agota» sí lo puede gastar)
+        const zonaAct = costoBloqueo ? eteresPropios(state, efectoAct.costo?.origen === 'pagado' ? p.eterPagado : p.eterReserva, playerId) : p.eterReserva
         const eteresValidos = zonaAct.filter((id) => {
           const eterMeta = state.instances[id]?.cardId ? getCardMeta(state.instances[id]!.cardId!) : null
           return eterMeta !== null
@@ -547,6 +549,9 @@ export function getValidActions(state: GameState, playerId: PlayerId): Action[] 
     for (const asig of asignacionesMaximales(state)) {
       acciones.push({ type: 'declarar_bloqueo', asignaciones: asig })
     }
+    // Peaje (Lote 4B): bloquear cuesta Éter, así que el defensor también puede NO pagar y dejar pasar el ataque. Va al final: los
+    // bots toman la primera declaración (la maximal) y no cambian de comportamiento.
+    if (costePeajeBloqueo(state) > 0 && bloqueosMaximos(state) > 0) acciones.push({ type: 'declarar_bloqueo', asignaciones: {} })
   }
 
   return acciones

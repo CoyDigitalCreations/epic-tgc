@@ -66,6 +66,11 @@ export interface ConfigBalance {
    * la fórmula por defecto ceil(peso del verbo en `poder.verbo`).
    */
   costeMinimoVerbo: Record<string, number>
+  /**
+   * Tipos de carta exentos del coste mínimo por verbo (p. ej. los Éteres, que cuestan 1 por diseño y
+   * no pueden costar más). NO exime del tope de efecto por coste (coste × poderPorCoste).
+   */
+  costeMinimoExento: { tipos: string[] }
   /** Análisis de carta: cuánto se sube un stat al evaluar «puede subir» y cuándo se avisa «cerca del tope». */
   analisis: { pasoSubida: number; cercaDelTope: number }
 }

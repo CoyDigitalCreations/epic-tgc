@@ -57,9 +57,12 @@ export function evaluarEfectoPorCoste(carta: CartaBalance, cfg: ConfigBalance = 
 
   const indiceMax = carta.coste * cfg.poderPorCoste
   const excesoIndice = redondear(Math.max(0, indice - indiceMax))
-  const verbosBajoCosto = verbosDeCarta(carta)
-    .map((verbo) => ({ verbo, costeMinimo: costeMinimoDeVerbo(verbo, cfg) }))
-    .filter((v) => carta.coste < v.costeMinimo)
+  const exentoCosteMinimo = cfg.costeMinimoExento.tipos.includes(carta.tipo)
+  const verbosBajoCosto = exentoCosteMinimo
+    ? []
+    : verbosDeCarta(carta)
+        .map((verbo) => ({ verbo, costeMinimo: costeMinimoDeVerbo(verbo, cfg) }))
+        .filter((v) => carta.coste < v.costeMinimo)
   const aplicaTope = !exento
 
   const incumple = (aplicaTope && excesoIndice > 0) || verbosBajoCosto.length > 0

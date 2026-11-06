@@ -4,6 +4,7 @@ import type { AnyCard } from '../shared/types'
 import { efectosComandante } from '../shared/efectoComandante'
 import { cargarCartas } from './cargador'
 import { CONFIG_V1 } from './config'
+import { CARTAS_DS_ANTES } from './test/cartasReales'
 
 const carga = cargarCartas(ALL_CARDS)
 
@@ -22,7 +23,8 @@ describe('cargarCartas con el seed real', () => {
       0,
     )
     expect(carga.totalEfectos).toBe(delSeed)
-    expect(carga.cartas.flatMap((c) => c.efectos).filter((e) => e.esComandante)).toHaveLength(3)
+    // Aurora (2: +2/+2 y Disparo sin agotar) y Ragnar (2: +3 ATQ y Peaje). Antes Ragnar tenía 1 (Indestructible a todos): eran 3.
+    expect(carga.cartas.flatMap((c) => c.efectos).filter((e) => e.esComandante)).toHaveLength(4)
   })
 
   it('extrae los 20 Campeones con stats numéricos', () => {
@@ -69,9 +71,12 @@ describe('cargarCartas con el seed real', () => {
   })
 
   it('expone la keyword concedida por grant_keyword (también en el comandante)', () => {
-    const ragnar = carga.cartas.find((c) => c.id === 'DS-010')
-    const concedidas = ragnar?.efectos.flatMap((e) => e.keywordsConcedidas)
-    expect(concedidas).toEqual(['Indestructible', 'Indestructible'])
+    // Ragnar de antes (Lote 2): su continuo y su Comandante daban Indestructible. El nuevo ya no concede keywords; la concedida por un
+    // efecto de Éter bloqueado la ilustra DS-009 (Tirador).
+    const ragnarAntes = CARTAS_DS_ANTES.find((c) => c.id === 'DS-010')
+    expect(ragnarAntes?.efectos.flatMap((e) => e.keywordsConcedidas)).toEqual(['Indestructible', 'Indestructible'])
+    expect(carga.cartas.find((c) => c.id === 'DS-010')?.efectos.flatMap((e) => e.keywordsConcedidas)).toEqual([])
+    expect(carga.cartas.find((c) => c.id === 'DS-009')?.efectos.flatMap((e) => e.keywordsConcedidas)).toEqual(['Tirador'])
     const vigor = carga.cartas.find((c) => c.id === 'FB-002')
     expect(vigor?.efectos[0].keywordsConcedidas).toEqual(['Vigor'])
     expect(carga.cartas.find((c) => c.id === 'FB-012')?.efectos.every((e) => e.keywordsConcedidas.length === 0)).toBe(true)

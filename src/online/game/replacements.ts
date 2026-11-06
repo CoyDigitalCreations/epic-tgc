@@ -14,11 +14,27 @@ import { reiniciarCampeon } from './reglasTemporales'
 import { dispararTrigger, instanciasEnCampo, keywordsDe } from './efectos'
 import { liberarEterA, evaluarFinSteal } from './eter'
 import { esExiliable, permitirExilio } from './exilio'
+import { reglaBool } from './reglas'
 import type { CausaDestruccion, Ctx, GameState, PlayerId } from './types'
 import { slotAZona } from './zones'
 
 /**
- * Mueve una instancia a 2G (cementerio de su dueño). Remueve del grupo de
+ * N1 · Olvido (Disonancia, regla `cementerioAlExilio`): ¿esta carta, que iba a caer al Cementerio de su dueño, se EXILIA en su lugar?
+ * La regla se lee con el DUEÑO como sujeto (`olvido_rival` solo alcanza al rival de quien la declara). Una carta Inexiliable
+ * (`puedeSerExiliada` prohibida) cae al Cementerio normal, sin aviso de `exilio_prevenido` (no es un exilio pedido por un efecto).
+ * Cubre todo lo que cae: Campeones destruidos, Místicas y Arcanas resueltas o destruidas, descartes y sacrificios.
+ * Una carta que ya está en el Cementerio (doble llamada) no se mueve.
+ */
+export function caeAlExilio(s: GameState, cardInstanceId: string): boolean {
+  const inst = s.instances[cardInstanceId]
+  if (!inst) return false
+  const dueno = s.players[inst.owner]
+  if (dueno.cementerio.includes(cardInstanceId) || dueno.exilio.includes(cardInstanceId)) return false
+  return reglaBool(s, 'cementerioAlExilio', { jugador: inst.owner }) && esExiliable(s, cardInstanceId)
+}
+
+/**
+ * Mueve una instancia a 2G (cementerio de su dueño). Con el Olvido activo para su dueño (caeAlExilio) va al Exilio (1G). Remueve del grupo de
  * campo donde esté (Campeones/Místicas-Tácticas/Arcanas-Combate); defensivo
  * contra dobles llamadas (no duplica en 2G).
  *
@@ -64,8 +80,28 @@ export function moverAlCementerio(s: GameState, ctx: Ctx, cardInstanceId: string
   // (manual §7.2). Los sacrificios ya liberaron a '2A' antes — no-op aquí.
   liberarEterBloqueadoCore(s, ctx, cardInstanceId, '1A')
   const p = s.players[inst.owner]
-  if (!p.cementerio.includes(cardInstanceId)) p.cementerio.push(cardInstanceId)
+  if (caeAlExilio(s, cardInstanceId)) {
+    if (!p.exilio.includes(cardInstanceId)) p.exilio.push(cardInstanceId)
+    ctx.emit({ type: 'carta_exiliada', cardInstanceId, jugador: inst.owner })
+  } else if (!p.cementerio.includes(cardInstanceId) && !p.exilio.includes(cardInstanceId)) p.cementerio.push(cardInstanceId) // ya exiliada por el Olvido (doble llamada): no vuelve
   return origen
+}
+
+/**
+ * Para quien YA sacó la carta de su zona y solo falta ponerla donde cae (Místicas y Arcanas destruidas por un efecto pendiente):
+ * Cementerio, o Exilio si el Olvido está activo para su dueño (N1). Devuelve true si se exilió (sin gatillos de Cementerio).
+ */
+export function ponerEnCaida(s: GameState, ctx: Ctx, cardInstanceId: string): boolean {
+  const inst = s.instances[cardInstanceId]
+  if (!inst) return false
+  const p = s.players[inst.owner]
+  if (caeAlExilio(s, cardInstanceId)) {
+    if (!p.exilio.includes(cardInstanceId)) p.exilio.push(cardInstanceId)
+    ctx.emit({ type: 'carta_exiliada', cardInstanceId, jugador: inst.owner })
+    return true
+  }
+  if (!p.cementerio.includes(cardInstanceId) && !p.exilio.includes(cardInstanceId)) p.cementerio.push(cardInstanceId)
+  return false
 }
 
 /**
@@ -98,6 +134,15 @@ function dispararCampeonAlCementerio(s: GameState, ctx: Ctx, cardInstanceId: str
 }
 
 /**
+ * Zona REAL en que quedó una carta tras `enviarAlCementerio`: '2G' (Cementerio) o '1G' si el Olvido (`cementerioAlExilio`) la exilió.
+ * Los llamadores que emiten `carta_entrada_a_zona` lo usan para que el evento de UI no mienta (el estado ya era correcto).
+ */
+export function zonaDeCementerio(s: GameState, cardInstanceId: string): '2G' | '1G' {
+  const owner = s.instances[cardInstanceId]?.owner
+  return owner !== undefined && s.players[owner].exilio.includes(cardInstanceId) ? '1G' : '2G'
+}
+
+/**
  * Primitiva C5 (change 4): envía una instancia a 2G (cementerio de su dueño)
  * y dispara `al-ser-enviado-al-cementerio` con la carta YA en 2G (glosario). Es la vía ÚNICA de descarte/sacrificio/coste/consumo → 2G con
  * trigger. NO consulta overrides (Inmortal/Indestructible): eso es
@@ -123,18 +168,23 @@ export function enviarAlCementerio(s: GameState, ctx: Ctx, cardInstanceId: strin
       p.campo.campeones[slotIdx] = null
       ctx.emit({ type: 'carta_salida_de_zona', cardInstanceId: vinculadoId, zona: `2${String.fromCharCode(66 + slotIdx)}` as any, jugador: inst.owner })
       enviarAlCementerio(s, ctx, vinculadoId, 'campo')
-      ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: vinculadoId, zona: '2G', jugador: inst.owner, bocaArriba: true })
+      ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: vinculadoId, zona: zonaDeCementerio(s, vinculadoId), jugador: inst.owner, bocaArriba: true })
     }
   }
   // ARTEFACTO: si esta carta es un Campeón, los artefactos equipados van con él (§10)
   liberarArtefactosEquipados(s, ctx, cardInstanceId)
+  // N1: se decide ANTES de mover (después ya no se puede ver). Una carta que ya estaba en el Exilio (doble llamada) tampoco dispara nada
+  const alExilio = caeAlExilio(s, cardInstanceId) || s.players[inst.owner].exilio.includes(cardInstanceId)
   const origen = moverAlCementerio(s, ctx, cardInstanceId)
   // Fase 3a: carta va a 2G → Éter bloqueado liberado a 1A (reagrupa próximo Alba).
   // No-op si no tiene eterBloqueado (liberarEterBloqueado lo chequea).
   // Los sacrificios ya liberaron a '2A' antes de llegar aquí — segundo call es no-op.
   liberarEterBloqueado(s, ctx, cardInstanceId, '1A')
-  dispararTrigger(s, ctx, 'al-ser-enviado-al-cementerio', inst.owner, [cardInstanceId], { zonaOrigen: desde ?? origen })
-  dispararCampeonAlCementerio(s, ctx, cardInstanceId, controlador)
+  // N1: lo que se exilia por el Olvido NO fue «enviado al Cementerio»: no dispara ninguno de sus gatillos
+  if (!alExilio) {
+    dispararTrigger(s, ctx, 'al-ser-enviado-al-cementerio', inst.owner, [cardInstanceId], { zonaOrigen: desde ?? origen })
+    dispararCampeonAlCementerio(s, ctx, cardInstanceId, controlador)
+  }
   reiniciarEnCementerio(s, cardInstanceId)
 }
 
@@ -147,7 +197,7 @@ function reiniciarEnCementerio(s: GameState, cardInstanceId: string): void {
   const inst = s.instances[cardInstanceId]
   const meta = inst?.cardId ? getCardMeta(inst.cardId) : null
   if (!inst || !meta || !esCampeon(meta)) return
-  if (s.players[inst.owner].cementerio.includes(cardInstanceId)) reiniciarCampeon(s, cardInstanceId)
+  if (s.players[inst.owner].cementerio.includes(cardInstanceId) || s.players[inst.owner].exilio.includes(cardInstanceId)) reiniciarCampeon(s, cardInstanceId)
 }
 
 /**
@@ -172,7 +222,7 @@ export function liberarArtefactosEquipados(s: GameState, ctx: Ctx, campeonId: st
       const zonaSalida = arcIdx !== -1 ? (slotAZona('arcanasCombate', arcIdx) ?? '3D') : '3A'
       moverAlCementerio(s, ctx, otherId)
       ctx.emit({ type: 'carta_salida_de_zona', cardInstanceId: otherId, zona: zonaSalida, jugador: other.owner })
-      ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: otherId, zona: '2G', jugador: other.owner, bocaArriba: true })
+      ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: otherId, zona: zonaDeCementerio(s, otherId), jugador: other.owner, bocaArriba: true })
     }
   }
 }
@@ -378,14 +428,18 @@ export function destruirCarta(s: GameState, ctx: Ctx, cardInstanceId: string, ca
 
   // Campeón: → 2G + Éter 1A + carta_muerta + destruccion (ADR-14)
   const controlador = controladorEnCampo(s, cardInstanceId) ?? inst.owner // Lote 3: quién lo controlaba al morir
+  const alExilio = caeAlExilio(s, cardInstanceId) // N1 · Olvido
   const origen = moverAlCementerio(s, ctx, cardInstanceId)
   liberarEterBloqueado(s, ctx, cardInstanceId, '1A')
   // §10: los artefactos equipados van con el Campeón que sale (antes del trigger
   // del Campeón para que sus eventos queden en orden — cleanup sin trigger propio)
   liberarArtefactosEquipados(s, ctx, cardInstanceId)
   // C5 (change 4): trigger al-ser-enviado-al-cementerio (carta YA en 2G)
-  dispararTrigger(s, ctx, 'al-ser-enviado-al-cementerio', inst.owner, [cardInstanceId], { zonaOrigen: origen })
-  dispararCampeonAlCementerio(s, ctx, cardInstanceId, controlador)
+  // N1: con el Olvido el Campeón muere (carta_muerta/destruccion) pero va al Exilio: sin gatillos de Cementerio
+  if (!alExilio) {
+    dispararTrigger(s, ctx, 'al-ser-enviado-al-cementerio', inst.owner, [cardInstanceId], { zonaOrigen: origen })
+    dispararCampeonAlCementerio(s, ctx, cardInstanceId, controlador)
+  }
   ctx.emit({ type: 'carta_muerta', cardInstanceId, jugador: inst.owner, causa })
   ctx.emit({ type: 'destruccion', cardInstanceId, jugador: inst.owner, causa })
   reiniciarEnCementerio(s, cardInstanceId)

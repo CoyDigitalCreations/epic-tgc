@@ -6,7 +6,7 @@ import { cardArtPath } from '../../shared/data/paquetes'
 import type { FiltrosBalance } from '../metricas'
 import { FILTROS_VACIOS, filtrarCartas } from '../metricas'
 import type { CartaBalance } from '../tipos'
-import { CARTAS, CARTAS_ANTES, CARTAS_ELENA_32 } from '../test/cartasReales'
+import { CARTAS, CARTAS_ANTES, CARTAS_DS_ANTES, CARTAS_ELENA_32 } from '../test/cartasReales'
 import { useReferencia } from '../useReferencia'
 import { AnalisisCarta } from './AnalisisCarta'
 import FUENTE_VISTA from './AnalisisCarta.tsx?raw'
@@ -205,7 +205,8 @@ describe('AnalisisCarta: contenido', () => {
   })
 
   it('Marek en el tope de ATQ (5 del coste 3): «Cerca del tope», «No puede subir» y aviso de techo del pool sin bloquear', () => {
-    render(<Arnes inicial={porNombre('Marek').id} />)
+    // La Marek de antes (5/4); hoy es 4/3 (Lote 2 del rediseño de Disonancia) y ya no toca el tope
+    render(<Arnes inicial={porNombre('Marek').id} base={CARTAS_DS_ANTES} />)
     const margenes = bloque('Márgenes de los stats')
     expect(within(margenes).getAllByText('Cerca del tope').length).toBeGreaterThan(0)
     expect(within(margenes).getAllByText('No puede subir').length).toBeGreaterThan(0)

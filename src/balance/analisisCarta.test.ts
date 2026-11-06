@@ -9,14 +9,18 @@ import { evaluarEfectoPorCoste } from './efectoPorCoste'
 import { poderDeCarta } from './poderEfecto'
 import { esExento } from './presupuesto'
 import type { CartaBalance } from './tipos'
-import { CARTAS, CARTAS_ANTES, CARTAS_ELENA_32, TEXTO_ISOLDE_LEGADO, carta, legado } from './test/cartasReales'
+import { CARTAS, CARTAS_ANTES, CARTAS_DS_ANTES, CARTAS_ELENA_32, TEXTO_ISOLDE_LEGADO, carta, legado, legadoDS } from './test/cartasReales'
 import { efectosComandante } from '../shared/efectoComandante'
 
 const pool = poolLetalidad(CARTAS)
 const ctx: ContextoAnalisis = { pool, techos: techosDelPool(pool), ajustes: new Map() }
+// Pool con la Disonancia de ANTES del rediseño (Lote 2): los casos «Marek pegado al tope», «Draven sobre el máximo», «Ragnar con Indestructible»
+// se apoyaban en esas cartas; tras el rediseño las reales ya caben en banda (mismo criterio que legado() para Estásis)
+const poolDS = poolLetalidad(CARTAS_DS_ANTES)
+const ctxDS: ContextoAnalisis = { pool: poolDS, techos: techosDelPool(poolDS), ajustes: new Map() }
 
-const porStat = (nombre: string | CartaBalance, cfg = CONFIG_V1): Record<MargenStat['stat'], MargenStat> => {
-  const m = margenesDeStats(typeof nombre === 'string' ? carta(nombre) : nombre, ctx, cfg)
+const porStat = (nombre: string | CartaBalance, cfg = CONFIG_V1, contexto = ctx): Record<MargenStat['stat'], MargenStat> => {
+  const m = margenesDeStats(typeof nombre === 'string' ? carta(nombre) : nombre, contexto, cfg)
   const buscar = (s: MargenStat['stat']) => {
     const x = m.find((y) => y.stat === s)
     if (!x) throw new Error(`Falta el margen ${s} de ${nombre}`)
@@ -81,7 +85,7 @@ describe('margenesDeStats: estados', () => {
   })
 
   it('S1.6: un stat con holgura <= cercaDelTope es amarillo con «Cerca del tope» (Marek, ATQ 5 con tope 5 del coste 3)', () => {
-    const { atq } = porStat('Marek')
+    const { atq } = porStat(legadoDS('Marek'), CONFIG_V1, ctxDS) // la Marek de antes (5/4); hoy es 4/3
     expect(atq.holgura).toBe(0)
     expect(atq.estado).toBe('amarillo')
     expect(atq.texto).toBe('Cerca del tope')
@@ -154,14 +158,14 @@ describe('margenesDeStats: puede subir', () => {
   })
 
   it('S2.2: una carta pegada al tope no puede subir', () => {
-    const { atq, suma } = porStat('Marek')
+    const { atq, suma } = porStat(legadoDS('Marek'), CONFIG_V1, ctxDS)
     expect(atq.holgura).toBe(0)
     expect(atq.puedeSubir).toBe(0)
     expect(suma.puedeSubir).toBe(0)
   })
 
   it('S2.3: el impuesto rebaja la suma máxima (Draven, 4/4, impuesto 0.8): se pasa y no puede subir', () => {
-    const { atq, suma } = porStat('Draven')
+    const { atq, suma } = porStat(legadoDS('Draven'), CONFIG_V1, ctxDS) // la Draven de antes (4/4); hoy es 3/3
     expect(suma.tope).toBe(5.2)
     expect(suma.holgura).toBe(-2.8)
     expect(suma.estado).toBe('rojo')
@@ -170,7 +174,7 @@ describe('margenesDeStats: puede subir', () => {
   })
 
   it('redondea a 2 decimales antes de comparar (Marek, impuesto 0.3: 7.7 - 9 sería -1.2999999999999998, queda -1.3)', () => {
-    expect(porStat('Marek').suma.holgura).toBe(-1.3)
+    expect(porStat(legadoDS('Marek'), CONFIG_V1, ctxDS).suma.holgura).toBe(-1.3)
   })
 })
 
@@ -191,8 +195,10 @@ describe('desgloseDePoder', () => {
   })
 
   it('S5.4: Ragnar muestra el peso de Indestructible por 1.5 como keyword concedida', () => {
-    const d = desgloseDePoder(carta('Ragnar'), [])
+    // Ragnar de antes: su Comandante daba Indestructible a todos. El nuevo (+3 ATQ y Peaje) ya no concede keywords.
+    const d = desgloseDePoder(legadoDS('Ragnar'), [])
     expect(d.efectos.some((e) => e.componentes.keywords === 3)).toBe(true)
+    expect(desgloseDePoder(carta('Ragnar'), []).efectos.some((e) => e.componentes.keywords > 0)).toBe(false)
   })
 
   it('S5.2: el trigger se muestra con el peso por defecto', () => {
@@ -314,7 +320,8 @@ describe('contextoDeAnalisis', () => {
     expect(contextoDeAnalisis(CARTAS_ELENA_32).ajustes.get('FB-015')?.despues).toEqual({ poder: 4, resistencia: 2 })
     // Vaela (5/2, coste 3) ya cabe; una carta sobre el máximo (Draven) sí tiene ajuste
     expect(c.ajustes.has('FB-011')).toBe(false)
-    expect(c.ajustes.has('DS-012')).toBe(true)
+    expect(contextoDeAnalisis(CARTAS_DS_ANTES).ajustes.has('DS-012')).toBe(true) // la Draven de antes (4/4)
+    expect(c.ajustes.has('DS-012')).toBe(false) // la de hoy (3/3) ya cabe
     expect(c.ajustes.has('FB-013')).toBe(false)
   })
 
@@ -389,11 +396,12 @@ describe('margenesDeStats: letalidad como aviso', () => {
     expect(de(sintetica(2, 5), 'res').techoPool).toBe(6)
   })
 
-  it('S3.2: Nymeria (ATQ 4) mata a 3 rivales más con ATQ 5 (los de RES 5, sin contarse a sí misma)', () => {
+  it('S3.2: Nymeria (ATQ 4) mata a 2 rivales más con ATQ 5 (los de RES 5, sin contarse a sí misma)', () => {
     // La spec decía 11 -> 15 (+4): contaba a Nymeria (4/5) contra sí misma. Aquí no se cuenta a sí misma.
+    // Rediseño de Disonancia: Korr pasó de 3/5 a 4/4, así que ya no es de RES 5 (eran 3 rivales, ahora 2).
     const rivalesConRes5 = ctx.pool.filter((o) => o.id !== carta('Nymeria').id && o.stats?.res === 5)
-    expect(rivalesConRes5).toHaveLength(3)
-    expect(de(carta('Nymeria'), 'atq').ganancia).toEqual({ mata: 3, loMatan: 0 })
+    expect(rivalesConRes5).toHaveLength(2)
+    expect(de(carta('Nymeria'), 'atq').ganancia).toEqual({ mata: 2, loMatan: 0 })
   })
 
   it('S3.3: subir RES de 0 a 1 no cambia a quién la mata (escalón plano)', () => {
@@ -454,7 +462,8 @@ describe('razonesDeCarta', () => {
   })
 
   it('un stat cerca del tope es solo informativo (Korr, RES 5 con tope 5 del coste 3 y suma 8 en el máximo)', () => {
-    const r = razones(carta('Korr'))
+    // Korr de antes (3/5); hoy es 4/4 y su RES ya no está pegada al tope
+    const r = razones(legadoDS('Korr'), [null], contextoDeAnalisis(CARTAS_DS_ANTES))
     expect(r.length).toBeGreaterThan(0)
     expect(r.every((x) => x.nivel === 'info')).toBe(true)
     expect(r.some((x) => x.texto.includes('RES 5'))).toBe(true)
@@ -502,9 +511,13 @@ describe('razonesDeCarta', () => {
     expect(estadoDe(despertar).estado).toBe('excede')
     expect(estadoDe(despertar).etiqueta).toBe('Excede el presupuesto')
     expect(razones(despertar).filter((x) => x.nivel === 'error')).toHaveLength(1)
+    // Lote 3: FB-003 (Éter con draw, coste 1) queda exento del coste mínimo por verbo: ya no excede por eso.
     const sangre = CARTAS.find((c) => c.id === 'FB-003')!
-    expect(estadoDe(sangre).estado).toBe('excede')
-    expect(razones(sangre).map((x) => x.texto)).toContain('El verbo draw exige coste mínimo 2, pero la carta cuesta 1.')
+    expect(estadoDe(sangre).estado).not.toBe('excede')
+    expect(razones(sangre).map((x) => x.texto).join(' ')).not.toMatch(/exige coste mínimo/)
+    // Un Campeón de coste 1 con ese mismo verbo SÍ incumple el coste mínimo.
+    const campeon: CartaBalance = { ...CARTAS.find((c) => c.tipo === 'Campeón' && c.stats !== null && !esExento(c))!, id: 'T-021', coste: 1, efectos: sangre.efectos }
+    expect(razones(campeon).map((x) => x.texto)).toContain('El verbo draw exige coste mínimo 2, pero la carta cuesta 1.')
   })
 
   it('razona el tope de efecto de un Campeón y el coste mínimo de un verbo', () => {

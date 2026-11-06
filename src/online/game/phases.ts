@@ -1,5 +1,6 @@
 import { reagruparEter } from './payments'
 import { robarCarta } from './draw'
+import { getCardMeta } from './cards'
 import { purgarEfectosTemporales, purgarHastaFase, dispararTrigger, evaluarCandadosArcanas } from './efectos'
 import { resolverFaseEfectos } from './effectRegistry'
 import { reagruparEfectosBloqueoAlba, exhaustFijado } from './effectInterpreter'
@@ -79,6 +80,17 @@ export function resolverAlba(s: GameState, ctx: Ctx, jugador: PlayerId): void {
   const albaInstances = [...vinculosSnapshot, ...enCampoJugador]
   if (albaInstances.length > 0) {
     dispararTrigger(s, ctx, 'al-inicio-alba', jugador, albaInstances)
+  }
+  // «Al inicio de la Alba del RIVAL» (FB-028): los Vínculos rotos del rival con `controladorTrigger: 'rival'` disparan en ESTA Alba, con
+  // el rival como dueño del efecto (mismo patrón que «Al inicio del Choque del rival» en partida.ts). §5.5: solo boca arriba.
+  const duenoRival: PlayerId = jugador === 'A' ? 'B' : 'A'
+  const vinculosDelRival = s.players[duenoRival].vinculos.filter((id): id is string => {
+    const v = id ? s.instances[id] : undefined
+    const meta = v?.cardId ? getCardMeta(v.cardId) : null
+    return !!v && v.bocaArriba === true && !!meta && 'efectos' in meta && !!meta.efectos?.some((e) => e.trigger === 'inicio_alba' && e.controladorTrigger === 'rival')
+  })
+  if (vinculosDelRival.length > 0) {
+    dispararTrigger(s, ctx, 'al-inicio-alba', duenoRival, vinculosDelRival)
   }
 
   // 3b. Un efecto de inicio de Alba pudo MIRAR el mazo (Scry): el jugador ordena ANTES de robar. El Alba espera (es el único

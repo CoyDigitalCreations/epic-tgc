@@ -23,7 +23,8 @@ describe('CurvaCoste', () => {
     const filas = within(tabla).getAllByRole('row').slice(1)
     const celdas = filas.map((r) => within(r).getAllByRole('cell').map((c) => c.textContent))
     expect(celdas).toHaveLength(5)
-    expect(celdas.find((f) => f[0] === '1')).toEqual(['1', '21', '11', '4', '4', '2', '0'])
+    // Rediseño de Disonancia (Lote 2): Grito del Nudo (Común) pasó de coste 1 a 2, así que el coste 1 pierde un Común
+    expect(celdas.find((f) => f[0] === '1')).toEqual(['1', '20', '10', '4', '4', '2', '0'])
     expect(celdas.find((f) => f[0] === '4')).toEqual(['4', '10', '4', '4', '0', '0', '2'])
   })
 

@@ -137,7 +137,8 @@ export const CONFIG_V1: ConfigBalance = {
       neutral: ['buff', 'grant_keyword', 'mover', 'tutor', 'copy', 'draw', 'invocar_y_equipar'],
     },
     disonancia: {
-      identidad: ['destroy', 'debuff', 'rival_discard', 'exile'],
+      // v1.2: steal_ether es la firma de Disonancia (roba Éter del rival); antes contaba como neutral.
+      identidad: ['destroy', 'debuff', 'rival_discard', 'exile', 'steal_ether'],
       neutral: ['buff', 'grant_keyword', 'mover', 'tutor', 'copy', 'draw', 'invocar_y_equipar'],
     },
   },
@@ -151,6 +152,13 @@ export const CONFIG_V1: ConfigBalance = {
   // Coste mínimo por verbo: por defecto ceil(peso del verbo en poder.verbo). Aquí solo van
   // los OVERRIDES explícitos { verbo: costeMinimo }; si un verbo aparece, gana sobre la fórmula.
   costeMinimoVerbo: {},
+
+  // v1.2 (Lote 3 de Disonancia): los Éteres no pagan el coste mínimo por verbo. Todos cuestan 1 y no
+  // pueden costar más, así que se baja el peso del efecto (el tope coste × 2 sigue aplicando) en vez
+  // de subir el coste. Un Campeón o Mística con ese verbo sí lo incumple.
+  // NOTA DE CALIBRACIÓN: los pesos de `mover` (0.5) y `steal_ether` (2) están por validar; la fórmula
+  // probablemente subestima ambos en la mesa. Se contrastará con simulación (Lote 4), sin tocarlos antes.
+  costeMinimoExento: { tipos: ['Éter'] },
 
   // Análisis de carta (BORRADOR): paso de la simulación «subir +1» y holgura que cuenta como «cerca del tope».
   analisis: { pasoSubida: 1, cercaDelTope: 0.5 },

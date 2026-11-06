@@ -18,6 +18,7 @@ import { liberarEterBloqueado } from '../replacements'
 import { getValidActions } from '../validActions'
 import type { AnyCard } from '../../../shared/types'
 import type { Ctx, GameState } from '../types'
+import disonanciaLegado from '../../../balance/test/disonancia-legado.json'
 import { PR, aplicar, cargarCartasPrueba, conCampeon, conEteres, conMazo, conMistica, crearCtx, escenaVacia } from './helpers/cartasPrueba'
 
 const base = {
@@ -28,12 +29,17 @@ const PROPIO = { tipo: 'campeon', controlador: 'propio', zona: 'campo' }
 const RIVAL = { tipo: 'campeon', controlador: 'rival', zona: 'campo' }
 const MIST = { tipo: 'mistica', controlador: 'rival', zona: 'campo' }
 const FIJO = (n: number) => ({ tipo: 'bloqueo_fijo', cantidad: n })
+// El Ragnar de ANTES del rediseño de Disonancia (Lote 2): su Continuo «bloquea 2 Éter, un Campeón que controles gana Indestructible» era la
+// carta real que tenía el efecto muerto. El Ragnar nuevo bloquea 3 Éter para `olvido_rival` (Lote 4); este fixture conserva el caso original.
+const RAGNAR_LEGADO = 'T-RAGNAR-LEGADO'
+const ragnarLegado = { ...(disonanciaLegado as unknown as AnyCard[]).find((c) => c.id === 'DS-010')!, id: RAGNAR_LEGADO } as AnyCard
 const continuo = (id: string, efecto: Record<string, unknown>): AnyCard =>
   ({ ...base, id, name: id, type: 'Campeón', keywords: [], facciones: ['Orden'], stats: { cost: 2, poder: 2, resistencia: 2 }, efectos: [{ tipo: 'continuo', ...efecto }] }) as never
 
 beforeAll(() => {
   cargarCartasPrueba()
   registrarCartas([
+    ragnarLegado,
     continuo('T-RAGNAR', { efecto: 'grant_keyword', keyword: 'Indestructible', objetivo: PROPIO, costo: FIJO(2), duracion: 'mientras_ester_bloqueado' }),
     continuo('T-AURA-SELF', { efecto: 'buff', stats: { ATQ: 2, RES: 0 }, objetivo: { tipo: 'self' }, costo: FIJO(1), duracion: 'mientras_ester_bloqueado' }),
     continuo('T-AURA-TODOS', { efecto: 'buff', stats: { ATQ: 1, RES: 0 }, objetivo: { tipo: 'todos_campeones_propios', controlador: 'propio', zona: 'campo' }, costo: FIJO(1), duracion: 'mientras_ester_bloqueado' }),
@@ -180,9 +186,9 @@ describe('fix_exhaust como efecto RAÍZ (antes solo valía como tramo)', () => {
   })
 })
 
-describe('Ragnar, Voz del Nudo (DS-010) — la carta REAL que tenía este efecto muerto', () => {
+describe('Ragnar, Voz del Nudo (DS-010 de antes del Lote 2) — la carta REAL que tenía este efecto muerto', () => {
   it('«Bloquea 2 Éter, un Campeón que controles gana Indestructible mientras ese Éter esté bloqueado»', () => {
-    const { s: s0, ctx } = escena('DS-010'); conCampeon(s0, 'A', 'amigo', PR.PEON, 1)
+    const { s: s0, ctx } = escena(RAGNAR_LEGADO); conCampeon(s0, 'A', 'amigo', PR.PEON, 1)
     expect(keywordsDe(s0, 'amigo')).not.toContain('Indestructible')
     let s = bloquear(s0, ctx, 'src') // un solo bloqueo fijo de 2 Éter
     expect(s.instances.src.eterBloqueado).toHaveLength(2)
@@ -193,7 +199,7 @@ describe('Ragnar, Voz del Nudo (DS-010) — la carta REAL que tenía este efecto
     expect(keywordsDe(s, 'amigo')).not.toContain('Indestructible')
   })
   it('solo concede la keyword: NADA de ATQ (ni por su Comandante ni por el 2.º efecto; eran `stats` escondidos de otro diseño)', () => {
-    const { s: s0, ctx } = escena('DS-010'); conCampeon(s0, 'A', 'amigo', PR.PEON, 1)
+    const { s: s0, ctx } = escena(RAGNAR_LEGADO); conCampeon(s0, 'A', 'amigo', PR.PEON, 1)
     const impreso = getCardMeta(PR.PEON)!
     const poderImpreso = 'stats' in impreso && impreso.stats && 'poder' in impreso.stats ? (impreso.stats.poder as number) : -1
     expect(statsDe(s0, 'amigo').poder).toBe(poderImpreso) // el Comandante de Ragnar ya NO da +3

@@ -276,17 +276,37 @@ describe('objetivo.controlador: rival cuenta a los Campeones del rival (FB-024)'
     expect(s.instances['filo'].condicionHabilitada).toBe(false)
   })
 
-  it('las condiciones `propio` y rival_* siguen contando a quien decían (Reino Perdido clásico, DS-023)', () => {
+  it('las condiciones `propio` y rival_* siguen contando a quien decían (Reino Perdido clásico, DS-023 de antes del rediseño)', () => {
     const s = escena('A')
     conBloqueados(s, 'A', 'c1', 0)
     conBloqueados(s, 'A', 'c2', 1)
     conBloqueados(s, 'B', 'b0', 0)
     expect(condicionCumple(s, (getCardMeta(FB023) as { condicion?: CondicionEfecto }).condicion, 'A')).toBeNull()
     expect(condicionCumple(s, (getCardMeta(FB023) as { condicion?: CondicionEfecto }).condicion, 'B')).not.toBeNull()
-    const ds023 = (getCardMeta('DS-023') as { condicion?: CondicionEfecto }).condicion // rival con >=3 Campeones con Éter
+    // La condición que tenía DS-023 antes del rediseño de Disonancia (Lote 2): rival con >=3 Campeones con Éter. La carta real ya usa
+    // la deuda del rival (`tener_eter_pagado` ≥4, ver el test siguiente); se conserva aquí la forma `rival_controla_minimo` con su fixture.
+    const ds023: CondicionEfecto = {
+      trigger: 'inicio_choque',
+      condiciones: [{ tipo: 'rival_controla_minimo', cantidad: 3, objetivo: { tipo: 'campeon', controlador: 'rival', filtros: { conEterBloqueado: true } } }],
+    }
     expect(condicionCumple(s, ds023, 'B')).not.toBeNull() // A tiene 2
     conBloqueados(s, 'A', 'c3', 2)
     expect(condicionCumple(s, ds023, 'B')).toBeNull()
+  })
+})
+
+describe('DS-023 El Nudo (rediseño de Disonancia): la condición cuenta la deuda del rival', () => {
+  it('se cumple cuando el RIVAL ya pagó 4+ Éter (zona de pago 1A), no por los del dueño', () => {
+    const s = escena('A')
+    const cond = (getCardMeta('DS-023') as { condicion?: CondicionEfecto }).condicion
+    expect(cond?.condiciones[0]).toMatchObject({ tipo: 'tener_eter_pagado', cantidad: 4, objetivo: { controlador: 'rival' } })
+    expect(condicionCumple(s, cond, 'A')).not.toBeNull()
+    s.players.A.eterPagado = ['a1', 'a2', 'a3', 'a4'] // los Éter del propio dueño no cuentan
+    expect(condicionCumple(s, cond, 'A')).not.toBeNull()
+    s.players.B.eterPagado = ['b1', 'b2', 'b3']
+    expect(condicionCumple(s, cond, 'A')).not.toBeNull()
+    s.players.B.eterPagado = ['b1', 'b2', 'b3', 'b4']
+    expect(condicionCumple(s, cond, 'A')).toBeNull()
   })
 })
 

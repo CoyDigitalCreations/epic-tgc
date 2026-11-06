@@ -23,10 +23,13 @@ import { tieneDoubleAttackActivo } from '../efectos'
 import { claveEfecto, claveExterno } from '../eter'
 import type { Ctx, GameState, PlayerId } from '../types'
 import { AURORA_CLASICA, registrarAuroraClasica } from './helpers/auroraClasica'
+import { ETER_BLOQUEA_CLASICO, registrarEterBloqueaClasico } from './helpers/eterBloqueaClasico'
 
 // Aurora (FB-010) dejó de robar Campeones: estos tests usan la Aurora clásica (fixture sintético:
 // steal por bloqueo_fijo 4, una vez por turno). Debe registrarse antes de armar las copias de abajo.
 registrarAuroraClasica()
+// DS-006 ya no bloquea Éter (rediseño de Disonancia, Lote 2): se usa su versión clásica como fixture
+registrarEterBloqueaClasico()
 
 const AURORA = AURORA_CLASICA
 const ELENA = 'FB-015'
@@ -300,9 +303,9 @@ describe('Elena (sostenido sin elección): repetir la activación NO apila el ef
 })
 
 describe('(e) Aurora real: Éter externo + dos robos en turnos distintos; al salir Aurora regresan todos', () => {
-  it('externo (DS-006) + 4 propios → robo 1 → Alba → 4 propios más → robo 2 → Aurora sale → ambos vuelven', () => {
+  it('externo (Éter del Viento clásico) + 4 propios → robo 1 → Alba → 4 propios más → robo 2 → Aurora sale → ambos vuelven', () => {
     let s = escenarioAurora(9)
-    s = poner(s, 'pasivo', 'DS-006')
+    s = poner(s, 'pasivo', ETER_BLOQUEA_CLASICO)
     s = { ...s, players: { ...s.players, A: { ...s.players.A, eterPagado: ['pasivo'] } } }
     // Externo: el Pasivo 1A bloquea x8 sobre Aurora (no cuenta para el pago exacto)
     s = aplicar(s, { type: 'elegir_opcion', opcionId: 'pasivo', campeonId: 'aur', eterId: 'x8' })

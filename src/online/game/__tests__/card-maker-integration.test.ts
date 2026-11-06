@@ -183,27 +183,29 @@ describe('Card-Maker JSON → engine integration', () => {
   })
 
   it('FB-005 block_ether with puedeBloquearEter filter works', () => {
-    // DS-006: "Bloquea 1 Éter sobre un Campeón que pueda recibir éter bloqueado" (FB-005 pasó a pago/grant_keyword)
-    const card = jsonCards.find(c => c.id === 'DS-006')
+    // FB-025: bloquea Éter sobre un Campeón que pueda recibir Éter bloqueado. (Antes lo ilustraba DS-006, que con el rediseño de
+    // Disonancia (Lote 2) pasó a «mover hasta 2 Éter de la Reserva del rival a su zona de pago» y ya no bloquea Éter.)
+    const card = jsonCards.find(c => c.id === 'FB-025')
     expect(card).toBeDefined()
-    const meta = getCardMeta('DS-006')
+    const meta = getCardMeta('FB-025')
     expect(meta).not.toBeNull()
 
-    // DS-006 is an Ether, not a champion — verify it has the correct structure
+    // FB-025 is an Ether, not a champion — verify it has the correct structure
     const efecto = meta!.efectos![0]
     expect(efecto.objetivo?.filtros?.puedeBloquearEter).toBe(true)
   })
 
-  it('DS-022 invocar_y_equipar with faccion+costeMax filter works', () => {
-    // DS-022: "Invoca un Campeón de facción Caos de coste 3 o menos del Exilio"
-    const card = jsonCards.find(c => c.id === 'DS-022')
+  it('tutor with faccion+esencia+costeMax filter works (FB-031)', () => {
+    // FB-031: busca un Campeón de facción Orden, esencia Céleste y coste 4 o menos. (Antes lo ilustraba DS-022 con invocar_y_equipar
+    // de facción Caos y coste 3; con el rediseño de Disonancia (Lote 2) esa Mística pasó a modificar_regla `olvido_rival`.)
+    const card = jsonCards.find(c => c.id === 'FB-031')
     expect(card).toBeDefined()
-    const meta = getCardMeta('DS-022')
+    const meta = getCardMeta('FB-031')
     expect(meta).not.toBeNull()
 
     const efecto = meta!.efectos![0]
-    expect(efecto.objetivo?.filtros?.faccion).toBe('Caos')
-    expect(efecto.objetivo?.filtros?.costeMax).toBe(3)
+    expect(efecto.objetivo?.filtros?.faccion).toBe('Orden')
+    expect(efecto.objetivo?.filtros?.costeMax).toBe(4)
   })
 
   it('draw effect works via interpreter with JSON card data', () => {

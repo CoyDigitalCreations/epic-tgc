@@ -8,6 +8,7 @@ import { Modal } from '../../shared/ui/Modal'
 import { Seccion } from '../../shared/ui/Seccion'
 import { TileCarta } from '../../shared/ui/TileCarta'
 import { getCardMeta } from '../game/cards'
+import { bloqueosMaximos, costePeajeBloqueo } from '../game/combat'
 import type { GameState, PlayerId } from '../game'
 import { statsComparativos } from '../game/stats'
 import { MiniCard } from './MiniCard'
@@ -49,7 +50,10 @@ export function BlockingInterface({ s, defensor, atacantes, onBloquear, onCancel
   // Bloqueo forzoso (§9.3): hay que cubrir k = min(disponibles, ataques) —
   // la elección es QUÉ pares, no CUÁNTOS (A5: el defensor elige con qué
   // Campeón(es) bloquear, pero debe bloquear el máximo posible).
-  const kMaximo = Math.min(disponibles.length, atacantes.length)
+  // Peaje (Lote 4B): con la regla `costeBloqueo` (Ragnar) cada bloqueador cuesta N Éter, que se pagan solos de los primeros N de tu
+  // Reserva (sin selector). Nadie está obligado a pagar: el máximo baja a lo que alcanzas a pagar y puedes no bloquear.
+  const peaje = costePeajeBloqueo(s)
+  const kMaximo = peaje > 0 ? bloqueosMaximos(s) : Math.min(disponibles.length, atacantes.length)
 
   const seleccionarBloqueador = (atacanteId: string, bloqueadorId: string) => {
     setAsignaciones((prev) => {
@@ -96,7 +100,11 @@ export function BlockingInterface({ s, defensor, atacantes, onBloquear, onCancel
   return (
     <Modal
       titulo="Elige tus bloqueadores"
-      subtitulo={`Bloqueo forzoso (§9.3): tienes que bloquear con ${kMaximo} Campeón${kMaximo === 1 ? '' : 'es'}; eliges con cuál${kMaximo === 1 ? '' : 'es'}.`}
+      subtitulo={
+        peaje > 0
+          ? `Peaje: bloquear cuesta ${peaje} Éter por Campeón (se paga solo de tu Reserva). Puedes bloquear con hasta ${kMaximo} Campeón${kMaximo === 1 ? '' : 'es'}, o no bloquear.`
+          : `Bloqueo forzoso (§9.3): tienes que bloquear con ${kMaximo} Campeón${kMaximo === 1 ? '' : 'es'}; eliges con cuál${kMaximo === 1 ? '' : 'es'}.`
+      }
       icono="⚔"
       tono="rival"
       ancho="lg"
@@ -105,9 +113,13 @@ export function BlockingInterface({ s, defensor, atacantes, onBloquear, onCancel
           <Boton onClick={() => setAsignaciones({})} disabled={Object.keys(asignaciones).length === 0}>
             Limpiar
           </Boton>
-          <Boton onClick={onCancelar}>No bloquear</Boton>
-          <Boton variante="primario" onClick={confirmar} disabled={Object.keys(asignaciones).length !== kMaximo}>
-            Confirmar bloqueo ({Object.keys(asignaciones).length}/{kMaximo})
+          <Boton onClick={peaje > 0 ? () => onBloquear({}) : onCancelar}>No bloquear</Boton>
+          <Boton
+            variante="primario"
+            onClick={confirmar}
+            disabled={peaje > 0 ? Object.keys(asignaciones).length === 0 || Object.keys(asignaciones).length > kMaximo : Object.keys(asignaciones).length !== kMaximo}
+          >
+            Confirmar bloqueo ({Object.keys(asignaciones).length}/{kMaximo}){peaje > 0 ? ` · paga ${peaje * Object.keys(asignaciones).length} Éter` : ''}
           </Boton>
         </>
       }

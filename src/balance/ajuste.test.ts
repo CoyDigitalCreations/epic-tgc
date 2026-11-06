@@ -4,7 +4,7 @@ import { aplicarAjustes, simularAjustes } from './ajuste'
 import { cargarCartas } from './cargador'
 import { CONFIG_V1 } from './config'
 import { evaluarConImpuesto } from './presupuesto'
-import { CARTAS_ELENA_32 } from './test/cartasReales'
+import { CARTAS_DS_ANTES, CARTAS_ELENA_32 } from './test/cartasReales'
 import type { CartaBalance } from './tipos'
 
 const { cartas } = cargarCartas(ALL_CARDS)
@@ -13,6 +13,9 @@ const ajuste = (id: string) => resultado.ajustes.find((a) => a.id === id)
 // Con la Elena de antes (3/2, bajo banda por 1 punto): conserva los casos de ajuste sobre una carta real bajo banda
 const resultadoAntes = simularAjustes(CARTAS_ELENA_32)
 const ajusteAntes = (id: string) => resultadoAntes.ajustes.find((a) => a.id === id)
+// Con la Disonancia de ANTES del rediseño (Lote 2: Draven 4/4 coste 2 sobre el máximo): el caso «una carta sobre el máximo baja» ya no existe en el seed
+const resultadoDS = simularAjustes(CARTAS_DS_ANTES)
+const ajusteDS = (id: string) => resultadoDS.ajustes.find((a) => a.id === id)
 
 const campeon = (id: string, coste: number, atq: number, res: number, extra: Partial<CartaBalance> = {}): CartaBalance => ({
   id,
@@ -59,11 +62,12 @@ describe('simularAjustes: quién se ajusta', () => {
 
 describe('simularAjustes: reparto', () => {
   // Rediseño de Estásis: Isolde pasó a 3/6 coste 4 y ya está dentro de banda, así que deja de ser el caso de «baja».
-  // El caso lo toma Draven (DS-012, coste 2, 4/4 sobre el máximo): misma aserción de intención con otra carta real.
+  // El caso lo tomó Draven (DS-012, coste 2, 4/4 sobre el máximo). Con el rediseño de Disonancia (Draven 3/3) ya cabe en banda: la
+  // aserción de intención se conserva con la Draven de antes (CARTAS_DS_ANTES).
   it('S1.1: una carta sobre el máximo (Draven) baja a la suma objetivo y su RES queda por encima del ATQ', () => {
-    const a = ajuste('DS-012')
+    const a = ajusteDS('DS-012')
     expect(a?.antes).toEqual({ poder: 4, resistencia: 4 })
-    const ev = evaluarConImpuesto(cartas.find((c) => c.id === 'DS-012') as CartaBalance)
+    const ev = evaluarConImpuesto(CARTAS_DS_ANTES.find((c) => c.id === 'DS-012') as CartaBalance)
     expect((a?.despues.poder ?? 0) + (a?.despues.resistencia ?? 0)).toBe(Math.floor(ev?.objetivoSuma ?? 0))
     expect(a?.despues.resistencia).toBeGreaterThan(a?.despues.poder ?? 0)
     expect(a?.despues.resistencia).toBeLessThanOrEqual(CONFIG_V1.bandas[2].topeRes)
@@ -144,7 +148,9 @@ describe('simularAjustes: motivo y marcas', () => {
       expect(a.motivo).not.toMatch(/\bvos\b|\bsos\b|\btenés\b/)
     }
     expect(ajusteAntes('FB-015')?.motivo).toMatch(/sube/)
-    expect(ajuste('DS-012')?.motivo).toMatch(/baja/)
+    expect(ajusteDS('DS-012')?.motivo).toMatch(/baja/)
+    // Rediseño de Disonancia: ninguna Disonancia necesita ajuste (todas caben en banda)
+    expect(ajuste('DS-012')).toBeUndefined()
   })
 
   it('S1.5: un efecto fuera de identidad se marca y no se reescribe', () => {

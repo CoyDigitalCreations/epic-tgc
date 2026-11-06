@@ -16,6 +16,7 @@ const CAMPO_DE_EFECTO: ReadonlyArray<readonly [keyof EfectoData, readonly string
   ['sinPagarCosto', ['activar_disparo']],
   ['sinAgotar', ['activar_disparo']],
   ['opcionFondo', ['scry']],
+  ['alAzar', ['rival_discard']],
   // El formulario los muestra solo con estos efectos (`showStats` / `showKeyword` en EffectField.tsx): con cualquier otro
   // quedan escondidos y no se pueden borrar desde la UI (así quedaron el ATQ de Thane y el de Ragnar)
   ['stats', ['buff', 'debuff']],

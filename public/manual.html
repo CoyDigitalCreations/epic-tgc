@@ -893,7 +893,7 @@
       <table>
         <tr><td style="width:60px"><span class="highlight">1A</span></td><td>Éter pagado</td><td style="color:var(--text-muted)">el Éter usado para pagar costes; vuelve a tu Reserva (2A) en tu próximo Alba</td></tr>
         <tr><td><span class="highlight">1B-1F</span></td><td>Éter bloqueado</td><td style="color:var(--text-muted)">encima del Campeón correspondiente (habilidades continuas)</td></tr>
-        <tr><td><span class="highlight">1G</span></td><td>Exilio</td><td style="color:var(--text-muted)">cartas fuera del juego (el Éter nunca va aquí)</td></tr>
+        <tr><td><span class="highlight">1G</span></td><td>Exilio</td><td style="color:var(--text-muted)">cartas fuera del juego (el Éter nunca va aquí; ver <strong>Olvido</strong> abajo)</td></tr>
         <tr><td><span class="highlight">2A</span></td><td>Reserva de ÉTER</td><td style="color:var(--text-muted)">las 15 cartas de Éter inician aquí, boca arriba</td></tr>
         <tr><td><span class="highlight">2B-2F</span></td><td>Campeones</td><td style="color:var(--text-muted)">hasta 5 Campeones en juego</td></tr>
         <tr><td><span class="highlight">2G</span></td><td>Cementerio</td><td style="color:var(--text-muted)">cartas destruidas, descartadas o resueltas</td></tr>
@@ -902,6 +902,7 @@
         <tr><td><span class="highlight">3G</span></td><td>Mazo PRINCIPAL</td><td style="color:var(--text-muted)">boca abajo, se roba de aqu&iacute;</td></tr>
         <tr><td><span class="highlight" style="color:var(--purple)">4A-4F</span></td><td>Vínculos</td><td style="color:var(--text-muted)">6 Vínculos boca abajo; se voltean al ser destruidos</td></tr>
       </table>
+      <p><strong>Olvido.</strong> Un efecto puede hacer que las cartas que <strong>irían al Cementerio</strong> de un jugador se <strong>exilien</strong> en su lugar (1G), mientras dure ese efecto. Las cartas <strong>INEXILIABLES</strong> no se exilian: van al Cementerio como siempre. Una carta que se exilia por el Olvido <strong>no dispara</strong> los efectos de «al ser enviada al Cementerio», porque nunca llega a él. El Éter no cambia: sigue sin ir al Cementerio ni al Exilio.</p>
 
       <div class="section-header sub" id="s6-1"><span class="num">6.1</span><h3>DISTRIBUCIÓN DE SLOTS DE SOPORTE</h3></div>
       <ul>
@@ -1022,6 +1023,16 @@
       <p>
       <p><strong>Éter propio y Éter externo.</strong> El Éter que bloqueaste pagando el efecto de la carta es <strong>propio</strong> de ese efecto: se reagrupa al inicio de tu Alba. El Éter que otra carta bloquea sobre ella (por ejemplo "Bloquea 1 Éter de tu Reserva sobre un Campeón que pueda recibir Éter bloqueado") es <strong>externo</strong>: no lo libera el Alba y no ocupa el cupo del efecto, pero <strong>sí cuenta</strong> para los umbrales y escalas de los efectos de "hasta N". Mientras la carta tenga Éter bloqueado de cualquier origen, el Campeón que robó se queda contigo; cuando se queda sin Éter o sale del campo, regresa a su dueño.</p>
       <p><strong>Reagrupar «todo el Éter bloqueado en esta carta».</strong> Algunos efectos (hoy, el de Aurora) no reagrupan solo su Éter propio: al inicio de tu Alba liberan <strong>todo</strong> el Éter bloqueado en la carta, incluido el externo. Cada Éter regresa a la Reserva de quien lo pagó. Es un alcance aparte del «Éter usado por este efecto», que no cambia.</p>
+      <p><strong>Éter arrebatado.</strong> Un efecto puede <strong>arrebatar</strong> Éter: mover Éter de la Reserva del rival a <strong>tu</strong> Reserva. Ese Éter <strong>sigue siendo de su dueño</strong>; solo lo tienes prestado:</p>
+      <ul>
+        <li><strong class="highlight-red">VUELVE EN EL ALBA DE SU DUEÑO:</strong> al inicio del Alba de su dueño, el Éter arrebatado regresa a la Reserva de su dueño (es el mismo reagrupe del 8.2). Un arrebato dura, como máximo, hasta ese Alba.</li>
+        <li>No activa sus efectos para quien lo tiene: las habilidades de esa carta de Éter no hacen nada mientras esté en tu Reserva.</li>
+        <li>No puedes <strong>bloquearlo</strong> ni usarlo para pagar el <strong>Peaje</strong> (ver 9.3). Sí puedes gastarlo en otros pagos: al gastarse va a la zona de pago como cualquier Éter pagado.</li>
+      </ul>
+      <div class="example">
+        <div class="ex-title">EJEMPLO — Arrebatar Éter</div>
+        Ragnar paga 2 Éter y arrebata 2 Éter de la Reserva del rival. Esos 2 Éter aparecen en tu Reserva y puedes gastarlos este turno para invocar un Campeón. En el Alba del rival, todo el Éter suyo que esté fuera de su Reserva regresa a ella.
+      </div>
 
       <div class="section-header sub" id="s7-7"><span class="num">7.7</span><h3>EFECTOS DE LAS CARTAS DE ÉTER</h3></div>
       <p>Las cartas de Éter pueden tener habilidades propias, y <strong>solo se activan en la zona donde la carta está</strong> (Reserva, pagada o bloqueada). Según la zona que exijan, se dividen en:</p>
@@ -1159,6 +1170,7 @@
         <li><strong>Bloquear NO agota</strong> al Campeón: el bloqueador permanece enderezado tras el combate.</li>
         <li>Cada Campeón solo puede bloquear <strong>UN ATAQUE</strong> por turno. Cada atacante puede recibir <strong>UN</strong> bloqueador.</li>
         <li>Un Campeón que <strong>no puede ser bloqueado</strong> (por un efecto de ataque directo) queda sin bloquear aunque el defensor tenga Campeones disponibles; no cuenta para el bloqueo forzoso y puede realizar la Ruptura como cualquier atacante sin bloquear.</li>
+        <li><strong class="highlight-red">PEAJE:</strong> si una carta que controla el atacante dice «para bloquear a tus Campeones, el rival paga N Éter por cada uno» (hoy, el efecto de Comandante de Ragnar), bloquear con un Campeón cuesta <strong>N Éter de tu Reserva</strong> por <strong>cada Campeón bloqueador</strong>. Es un pago normal: el Éter va a la zona de pago (1A) y dispara los efectos de «al pagar». No puedes usar para el Peaje el Éter arrebatado (ver 7.6). Si no puedes o no quieres pagar, ese Campeón <strong>no bloquea</strong>; y con Peaje el bloqueo <strong>deja de ser forzoso</strong> para los Campeones cuyo Peaje no pagas.</li>
       </ul>
 
       <div class="section-header sub" id="s9-4"><span class="num">9.4</span><h3>PASO 3: RESOLUCIÓN DE COMBATE</h3></div>
@@ -1170,7 +1182,7 @@
           <li>La Ruptura destruye <strong>1 VÍNCULO</strong> del jugador defensor: el <strong>ATACANTE elige cuál</strong> (posición 4A-4F), a ciegas, ya que los Vínculos del defensor están boca abajo y solo su dueño los conoce.</li>
           <li>El Vínculo destruido se voltea <strong>BOCA ARRIBA</strong> y su efecto <strong>PERMANENTE</strong> se activa <strong>A FAVOR DEL JUGADOR QUE RECIBIÓ EL DAÑO</strong>.</li>
           <li>El valor de <strong>PODER no modifica la Ruptura</strong>: un Campeón con Poder 2 y otro con Poder 10 rompen exactamente 1 Vínculo.</li>
-          <li><strong class="highlight-red">UNA SOLA RUPTURA POR TURNO</strong>, sin importar cuántos Campeones ataquen sin bloqueo. Una vez realizada la Ruptura <strong>no se puede declarar ningún ataque más</strong> en ese turno, así que un segundo ataque nunca puede producir una segunda Ruptura.</li>
+          <li><strong class="highlight-red">UNA SOLA RUPTURA POR TURNO</strong>, sin importar cuántos Campeones ataquen sin bloqueo. Una vez realizada la Ruptura <strong>no se puede declarar ningún ataque más</strong> en ese turno, así que un segundo ataque nunca puede producir una segunda Ruptura. <em>Excepción:</em> un efecto como la Embestida del Sur permite, hasta el final del turno, romper <strong>un Vínculo adicional</strong> y seguir atacando después de la primera Ruptura.</li>
         </ul>
       </div>
 
@@ -1324,7 +1336,7 @@
         <div class="cartas"><figure class="carta"><img src="/manual/cartas/FB-021.webp" alt="Carta FB-021: Marcha de las Primeras" width="744" height="1038" decoding="sync"><figcaption><span class="rol">PRESTEZA</span><b>Marcha de las Primeras</b>FB-021</figcaption></figure></div>
         <div class="ex-cuerpo">
           <div class="ex-title">NEGAR LA ACTIVACIÓN DE UN EFECTO</div>
-          Negar la <strong>activación</strong> de un efecto no es lo mismo que negar un efecto que <strong>ya está activo</strong>. Cuando un efecto tiene coste, primero se <strong>paga el coste</strong> y luego se <strong>activa</strong> el efecto: en ese momento se puede responder para negar la activación (por ejemplo con <strong>Marcha de las Primeras</strong>, que niega la activación del efecto de un Campeón del rival).<br><br>→ Si la activación es negada, el efecto no ocurre, pero <strong>el coste ya pagado NO se devuelve</strong>: se niega la activación, no el pago.<br><br><strong>Negar los efectos activos de un Campeón</strong> (por ejemplo, con <strong>Thane</strong>) es distinto: el Campeón elegido tiene todos sus efectos <strong>negados hasta el final del turno</strong>. No puede activar sus habilidades (ni Disparo ni Continuo, aunque no las haya usado); los efectos Continuos que ya tenía activados dejan de aplicar (el Éter bloqueado se queda donde está), y sus efectos pasivos, auras y efectos disparados no hacen nada. <strong>No se niegan</strong> sus palabras clave (son parte de la identidad de la carta) ni su efecto de Comandante. Un Campeón con <strong>INEGABLE</strong> no puede ser negado.<br><br>Negar los efectos activos <strong>cancela</strong> lo que sus efectos ya habían dejado en curso: un Campeón que robó con un efecto Continuo vuelve a su dueño y un agotamiento fijado por un tramo se suelta (no se reanudan al terminar el turno; el Éter bloqueado se queda donde está). Un robo permanente ya está hecho y no se deshace. Si se alcanza un umbral de Éter bloqueado mientras el Campeón está negado, ese efecto <strong>se pierde</strong>.
+          Negar la <strong>activación</strong> de un efecto no es lo mismo que negar un efecto que <strong>ya está activo</strong>. Cuando un efecto tiene coste, primero se <strong>paga el coste</strong> y luego se <strong>activa</strong> el efecto: en ese momento se puede responder para negar la activación (por ejemplo con <strong>Marcha de las Primeras</strong>, que niega la activación del efecto de un Campeón del rival).<br><br>→ Si la activación es negada, el efecto no ocurre, pero <strong>el coste ya pagado NO se devuelve</strong>: se niega la activación, no el pago.<br><br><strong>Negar los efectos activos de un Campeón</strong> (con un efecto que lo diga expresamente) es distinto: el Campeón elegido tiene todos sus efectos <strong>negados hasta el final del turno</strong>. No puede activar sus habilidades (ni Disparo ni Continuo, aunque no las haya usado); los efectos Continuos que ya tenía activados dejan de aplicar (el Éter bloqueado se queda donde está), y sus efectos pasivos, auras y efectos disparados no hacen nada. <strong>No se niegan</strong> sus palabras clave (son parte de la identidad de la carta) ni su efecto de Comandante. Un Campeón con <strong>INEGABLE</strong> no puede ser negado.<br><br>Negar los efectos activos <strong>cancela</strong> lo que sus efectos ya habían dejado en curso: un Campeón que robó con un efecto Continuo vuelve a su dueño y un agotamiento fijado por un tramo se suelta (no se reanudan al terminar el turno; el Éter bloqueado se queda donde está). Un robo permanente ya está hecho y no se deshace. Si se alcanza un umbral de Éter bloqueado mientras el Campeón está negado, ese efecto <strong>se pierde</strong>.
         </div>
       </div>
     </div>

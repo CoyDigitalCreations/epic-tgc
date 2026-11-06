@@ -5,6 +5,7 @@ import { CONFIG_V1 } from './config'
 import { evaluarConImpuesto, evaluarPresupuesto, impuestoDe } from './presupuesto'
 import { poderDeCarta } from './poderEfecto'
 import type { CartaBalance, ConfigBalance } from './tipos'
+import { legadoDS } from './test/cartasReales'
 
 const { cartas } = cargarCartas(ALL_CARDS)
 const carta = (id: string): CartaBalance => {
@@ -47,7 +48,8 @@ describe('evaluarPresupuesto con el seed real', () => {
       expect(ev?.estado).toBe('dentro')
       expect(ev?.fueraDeBanda).toBe(false)
     }
-    const kael = evaluarPresupuesto(carta('DS-011'))
+    // Kael de antes (5/3, coste 2): con el rediseño de Disonancia (Lote 2) es 4/2 (suma 6) y ya cabe en banda
+    const kael = evaluarPresupuesto(legadoDS('Kael'))
     expect(kael?.suma).toBe(8)
     expect(kael?.banda.sumaMax).toBe(6)
     expect(kael?.estado).toBe('sobre')

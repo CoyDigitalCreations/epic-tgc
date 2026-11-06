@@ -76,6 +76,16 @@ const REGLAS_ENUMERADAS: Record<ReglaEnumerada, ReglaEnumeradaMotor> = {
     modificacion: (efecto) => ({ id: 'costeCampeonesExtra', operacion: 'sumar', valor: efecto.reglaValor ?? 1 }),
     jugadores: 'rival',
   },
+  /** «Las cartas del rival que irían a su Cementerio se exilian en su lugar» (Olvido de Disonancia). Solo el mapeo a la regla: el motor la lee en el Lote 4. */
+  olvido_rival: {
+    modificacion: () => ({ id: 'cementerioAlExilio', operacion: 'permitir' }),
+    jugadores: 'rival',
+  },
+  /** «Para bloquear a tus Campeones, el rival paga N Éter por cada uno» (Peaje de Ragnar). Solo el mapeo: el pago al bloquear es del Lote 4. */
+  peaje_bloqueo: {
+    modificacion: (efecto) => ({ id: 'costeBloqueo', operacion: 'sumar', valor: efecto.reglaValor ?? 1 }),
+    jugadores: 'rival',
+  },
 }
 
 /**
@@ -88,6 +98,15 @@ export function reglaDeEfecto(efecto: EfectoData): ModificacionRegla | undefined
   if (efecto.efecto !== 'modificar_regla') return undefined
   if (efecto.reglaEnumerada) return REGLAS_ENUMERADAS[efecto.reglaEnumerada]?.modificacion(efecto)
   return efecto.regla
+}
+
+/**
+ * A qué jugadores alcanza una regla enumerada con independencia del `controlador` del objetivo (`olvido_rival` y `peaje_bloqueo`:
+ * siempre el RIVAL de quien declara el efecto), o undefined si el efecto no la fuerza. La usa también la versión TEMPORAL de la regla
+ * (un hechizo como la Maldición del Sur): sin esto el hechizo se la aplicaba a su propio lanzador.
+ */
+export function jugadoresForzadosDe(efecto: EfectoData): 'propio' | 'rival' | undefined {
+  return efecto.reglaEnumerada ? REGLAS_ENUMERADAS[efecto.reglaEnumerada]?.jugadores : undefined
 }
 
 /** Efectos `modificar_regla` de una carta (memo por cardId: el catálogo no cambia durante la partida). */
@@ -155,15 +174,18 @@ function fuentesDeReglas(s: GameState): FuenteRegla[] {
       // Los Éteres bloqueados aportan aunque el anfitrión no tenga efectos propios
       for (const eterId of inst.eterBloqueado ?? []) {
         const eter = s.instances[eterId]
+        if (eter && eter.owner !== j) continue // Lote 4B (R1): un Éter ajeno/arrebatado no da reglas aunque figure bloqueado
         if (tiene(eter)) fuentes.push({ inst: eter, origen: 'bloqueo', controlador: j, anfitrion: id })
       }
     }
     for (const id of p.eterReserva) {
       const inst = s.instances[id]
+      if (inst && inst.owner !== j) continue // R1: el Éter arrebatado no activa sus efectos para quien lo tiene
       if (tiene(inst)) fuentes.push({ inst, origen: 'reserva', controlador: j })
     }
     for (const id of p.eterPagado) {
       const inst = s.instances[id]
+      if (inst && inst.owner !== j) continue // R1
       if (tiene(inst)) fuentes.push({ inst, origen: 'pagado', controlador: j })
     }
     // §5.5: solo los Vínculos DESTRUIDOS (boca arriba) tienen efectos vigentes; el efecto es de quien recibió el daño

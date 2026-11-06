@@ -226,16 +226,16 @@ export const CAMPEONAS: Campeona[] = [
  * palabra clave; el texto describe el efecto real de la carta (seed/FuenteEfectos.json) con voz del lore.
  */
 export const CAMPEONES_DISONANCIA: Campeona[] = [
-  { id: 'DS-010', nombre: 'Ragnar', titulo: 'Voz del Nudo', linea: 'Coste 4 · ATQ 9 / RES 9', rol: 'Indestructible', texto: 'El primero de todos y la voz del sur. Con 4 Éter destruye a un Campeón rival; bloqueando 2 Éter, vuelve Indestructible a un Campeón tuyo.' },
-  { id: 'DS-011', nombre: 'Kael', titulo: 'Filo del Nudo', linea: 'Coste 2 · ATQ 5 / RES 3', rol: 'Carga', texto: 'El Nudo corta lo que toca: carga al frente y, al atacar, le resta 1 de ATQ a un Campeón del rival.' },
-  { id: 'DS-012', nombre: 'Draven', titulo: 'Rompecadenas', linea: 'Coste 2 · ATQ 4 / RES 4', rol: 'Normal', texto: 'Lo que rompe, lo cobra: al matar en combate puede devolver 1 Éter de la Reserva rival a su zona de pago, y por 2 Éter destruye una Mística del rival.' },
-  { id: 'DS-013', nombre: 'Varek', titulo: 'Cazador de Agotados', linea: 'Coste 3 · ATQ 4 / RES 3', rol: 'Normal', texto: 'El agotado ya está muerto: solo falta cobrar. Por 4 Éter destruye a un Campeón rival de RES 3 o menos.' },
-  { id: 'DS-014', nombre: 'Thane', titulo: 'Voz del Trueno', linea: 'Coste 3 · ATQ 3 / RES 4', rol: 'Protector', texto: 'El trueno abre paso a los suyos: por 3 Éter niega el efecto activo de un Campeón rival hasta el final del turno.' },
-  { id: 'DS-015', nombre: 'Marek', titulo: 'Cosecha del Nudo', linea: 'Coste 3 · ATQ 5 / RES 4', rol: 'Recarga', texto: 'Cada nudo que aprieta el norte lo alimenta: al invocarlo copia el ATQ de un Campeón del rival hasta el final del turno.' },
-  { id: 'DS-016', nombre: 'Korr', titulo: 'Viento del Sur', linea: 'Coste 3 · ATQ 3 / RES 5', rol: 'Normal', texto: 'El sur empuja a los suyos hacia adelante: por 2 Éter, todos tus Campeones ganan 1 de ATQ hasta el final del turno.' },
-  { id: 'DS-017', nombre: 'Vorlag', titulo: 'El Que Aprieta', linea: 'Coste 4 · ATQ 4 / RES 5', rol: 'Normal', texto: 'El Nudo cobra lo que el norte bloquea: por 2 Éter mueve 1 Éter del rival de su zona de pago a su Reserva.' },
-  { id: 'DS-018', nombre: 'Skarn', titulo: 'Rompevínculos', linea: 'Coste 4 · ATQ 3 / RES 6', rol: 'Normal', texto: 'Los vínculos del norte se rompen como el hielo: por 3 Éter devuelve a la mano de su dueño a un Campeón del rival.' },
-  { id: 'DS-031', nombre: 'Emisario del Nudo', titulo: 'Voz del Sur', linea: 'Coste 2 · ATQ 4 / RES 3', rol: 'Normal', texto: 'El Nudo cobra, y el Nudo reparte: al ser enviado al Cementerio desde cualquier zona, busca en tu mazo un Campeón de coste 2 o menos.' },
+  { id: 'DS-010', nombre: 'Ragnar', titulo: 'Voz del Nudo', linea: 'Coste 4 · ATQ 9 / RES 9', rol: 'Indestructible', texto: 'El primero de todos y la voz del sur. Pagando 2 Éter arrebata hasta 2 de la Reserva del rival; mientras sostiene 3 Éter, todo lo que el rival pierde se exilia: el Olvido. Como Comandante da +3 ATQ a tus Campeones y el rival paga 1 Éter por cada bloqueador: el Peaje.' },
+  { id: 'DS-011', nombre: 'Kael', titulo: 'Filo del Nudo', linea: 'Coste 2 · ATQ 4 / RES 2', rol: 'Carga', texto: 'El Nudo corta lo que toca: carga al frente y, al atacar, un Campeón del rival pierde 1 de ATQ hasta el final del turno.' },
+  { id: 'DS-012', nombre: 'Draven', titulo: 'Rompecadenas', linea: 'Coste 2 · ATQ 3 / RES 3', rol: 'Normal', texto: 'Lo que rompe, lo cobra: al matar en combate puede arrebatar 1 Éter de la Reserva del rival.' },
+  { id: 'DS-013', nombre: 'Varek', titulo: 'Cazador de Agotados', linea: 'Coste 3 · ATQ 4 / RES 3', rol: 'Normal', texto: 'El agotado ya está muerto: solo falta cobrar. Por 4 Éter destruye a un Campeón agotado del rival.' },
+  { id: 'DS-014', nombre: 'Thane', titulo: 'Voz del Trueno', linea: 'Coste 3 · ATQ 3 / RES 4', rol: 'Protector', texto: 'El trueno abre paso a los suyos: sostiene 2 Éter y, mientras los sostenga, todos los Campeones del rival pierden 1 de ATQ.' },
+  { id: 'DS-015', nombre: 'Marek', titulo: 'Cosecha del Nudo', linea: 'Coste 3 · ATQ 4 / RES 3', rol: 'Normal', texto: 'Cada nudo que aprieta el norte lo alimenta: al invocarlo puede exiliar a un Campeón del Cementerio del rival. Lo que cae en el sur no vuelve.' },
+  { id: 'DS-016', nombre: 'Korr', titulo: 'Viento del Sur', linea: 'Coste 3 · ATQ 4 / RES 4', rol: 'Normal', texto: 'El sur empuja a los suyos hacia adelante: al atacar, manda hasta 2 Éter de la Reserva del rival a su zona de pago.' },
+  { id: 'DS-017', nombre: 'Vorlag', titulo: 'El Que Aprieta', linea: 'Coste 4 · ATQ 4 / RES 5', rol: 'Normal', texto: 'El Nudo cobra lo que el norte guarda: al inicio del Choque del rival, le manda hasta 2 Éter de la Reserva a su zona de pago.' },
+  { id: 'DS-018', nombre: 'Skarn', titulo: 'Rompevínculos', linea: 'Coste 4 · ATQ 3 / RES 6', rol: 'Normal', texto: 'Los vínculos del norte se rompen como el hielo: por 2 Éter destruye una Mística o una Arcana del rival.' },
+  { id: 'DS-031', nombre: 'Emisario del Nudo', titulo: 'Voz del Sur', linea: 'Coste 2 · ATQ 3 / RES 3', rol: 'Normal', texto: 'El Nudo cobra, y el Nudo reparte: al ser enviado al Cementerio desde cualquier zona, busca en tu mazo un Campeón de coste 2 o menos.' },
 ]
 
 /** Las nueve cartas de Éter de Disonancia con su frase (el *flavor* de la carta, tal cual). */
@@ -248,7 +248,7 @@ export const ETER_SUR = [
   { id: 'DS-006', nombre: 'Éter del Viento', frase: 'El viento no pide permiso para moverse.' },
   { id: 'DS-007', nombre: 'Éter del Desgarro', frase: 'Lo que el sur toma, el norte lo llora.' },
   { id: 'DS-008', nombre: 'Éter del Primogénito', frase: 'El primero del sur despertó con el Nudo en el pecho.' },
-  { id: 'DS-009', nombre: 'Éter de la Ruptura', frase: 'Nada rompe lo que el Nudo aprieta.' },
+  { id: 'DS-009', nombre: 'Éter de la Ruptura', frase: 'El sur no descansa entre un golpe y otro.' },
 ] as const
 
 /** Norte frente a sur: las dos maneras de sostener el Eje. */
@@ -259,38 +259,45 @@ export const NORTE_SUR = [
   { rasgo: 'Primogénitos (en esta entrega)', norte: 'Mujeres, hijas de sus casas', sur: 'Hombres, marcados por el Nudo' },
   { rasgo: 'Ante la Escisión', norte: 'Se negaron a elegir bando', sur: 'Su bando es el Nudo' },
   { rasgo: 'Su fuerza', norte: 'Constancia', sur: 'Presión' },
-  { rasgo: 'En la mesa', norte: 'Anclar, devolver, reciclar, resistir', sur: 'Apretar, cobrar, arrebatar, avanzar' },
+  { rasgo: 'En la mesa', norte: 'Anclar, devolver, reciclar, resistir', sur: 'Apretar, cobrar, arrebatar, avanzar, olvidar' },
 ] as const
 
-/** Los cuatro tiempos del Aprieto, con la carta de arte que mejor lo representa. */
+/** Los cinco tiempos del Aprieto, con la carta de arte que mejor lo representa. */
 export const CICLO_DISONANCIA = [
   {
     titulo: 'El Nudo aprieta',
     texto:
-      'Antes de golpear, el Nudo cierra el puño: el Éter en la Reserva y el filo de Kael le quitan ATQ al rival, y el Grito del Nudo lo deja sin aliento. Lo que el Nudo marca, no vuelve a ser tan fuerte.',
-    cartas: 'Éter del Nudo · Kael · Grito del Nudo · El Nudo',
+      'Antes de golpear, el Nudo cierra el puño: el Éter en la Reserva, el filo de Kael y la voz de Thane le quitan ATQ al rival, y el Grito del Nudo lo deja sin aliento. Lo que el Nudo marca, no vuelve a ser tan fuerte.',
+    cartas: 'Éter del Nudo · Kael · Thane · Grito del Nudo · El Nudo',
     arte: 'DS-002',
   },
   {
     titulo: 'El Nudo cobra',
     texto:
-      'Lo que el sur toma, el norte lo llora: el Éter del rival se arrastra de su Reserva a la zona de pago y su mano se vacía carta a carta. El norte ancla; el sur cobra la deuda.',
-    cartas: 'Éter del Desgarro · Refugio del Nudo · Heredad de Caos · Éter del Trueno',
-    arte: 'DS-007',
+      'Lo que el sur toma, el norte lo llora: el Éter del rival se arrastra de su Reserva a la zona de pago, justo cuando más lo necesita, y su mano se vacía carta a carta. El norte ancla; el sur cobra la deuda.',
+    cartas: 'Éter del Viento · Korr · Vorlag · Refugio del Nudo · Deuda de Caos · Éter del Trueno',
+    arte: 'DS-006',
   },
   {
     titulo: 'La Tormenta arrebata',
     texto:
-      'La tormenta no negocia: destruye Campeones y Místicas, devuelve a la mano a quien se creía a salvo y exilia lo que cae al Cementerio. El Nudo no devuelve lo que cobra.',
-    cartas: 'Tormenta del Sur · Varek · Skarn · Voz del Nudo',
+      'La tormenta no negocia: arrebata el Éter que el rival guardaba, destruye a los Campeones agotados y rompe Místicas y Arcanas. Y defenderse sale caro: el Peaje cobra un Éter por cada bloqueador. Lo que el Nudo arrebata solo se le presta: el dueño lo recupera en su Alba.',
+    cartas: 'Ragnar · Draven · Éter del Desgarro · Cristal del Nudo · Varek · Skarn · Tormenta del Sur',
     arte: 'DS-019',
   },
   {
     titulo: 'El Sur avanza',
     texto:
-      'Nada rompe lo que el Nudo aprieta: Carga, ATQ de más e Indestructible para los suyos, y el sur no llora a sus muertos, los cobra: vuelven del Exilio a seguir golpeando.',
-    cartas: 'Éter de la Tormenta · Korr · Golpe del Nudo · Cristal del Nudo · Maldición del Sur',
+      'Nada rompe lo que el Nudo aprieta: Carga, ATQ de más y ataques que nadie puede bloquear. El sur no se detiene tras la primera Ruptura: la Embestida abre un segundo Vínculo y sigue golpeando.',
+    cartas: 'Éter de la Tormenta · Éter de la Marea · Éter del Primogénito · Golpe del Nudo · Embestida del Sur',
     arte: 'DS-009',
+  },
+  {
+    titulo: 'El Nudo olvida',
+    texto:
+      'Lo que cae en el sur no vuelve: lo que el rival pierde se exilia en vez de ir al Cementerio, y los muertos que guardaba se borran uno a uno. Sin memoria, el norte no tiene nada que reciclar. El Nudo no olvida lo que se le debe; lo que el Nudo cobra, el mundo lo olvida.',
+    cartas: 'Maldición del Sur · Grito del Primogénito · El Nudo Olvida · Marek · Voz del Nudo',
+    arte: 'DS-022',
   },
 ]
 

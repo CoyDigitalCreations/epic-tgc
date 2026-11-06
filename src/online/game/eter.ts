@@ -44,6 +44,21 @@ export function claveExterno(fuenteId: string): string {
 }
 
 /**
+ * Éter arrebatado (Disonancia, R1): un Éter cuyo DUEÑO (`inst.owner`, nunca cambia) no es quien lo tiene en su Reserva o su zona de
+ * pago. Se puede gastar para pagar, pero NO activa sus efectos para quien lo tiene y NO se puede bloquear; vuelve a la Reserva de su
+ * dueño en el Alba de su dueño (reagruparEter). Reutiliza el dueño de la instancia: no hay contadores ni etiquetas nuevas.
+ */
+export function esEterAjeno(s: GameState, eterId: string, jugador: PlayerId): boolean {
+  const owner = s.instances[eterId]?.owner
+  return owner !== undefined && owner !== jugador
+}
+
+/** Los Éteres de `ids` que son propios de `jugador` (descarta los arrebatados), en el mismo orden. */
+export function eteresPropios(s: GameState, ids: readonly string[], jugador: PlayerId): string[] {
+  return ids.filter((id) => !esEterAjeno(s, id, jugador))
+}
+
+/**
  * Etiqueta los Éteres EXTERNOS recién bloqueados sobre `fuenteId` (el Campeón).
  * Conserva `pagadoPor` (§7.8: la liberación se la devuelve a quien lo pagó).
  */

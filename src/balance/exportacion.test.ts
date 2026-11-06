@@ -4,10 +4,13 @@ import type { Ajuste } from './ajuste'
 import { simularAjustes } from './ajuste'
 import { cargarCartas } from './cargador'
 import { CONFIG_V1 } from './config'
+import { CARTAS_DS_ANTES } from './test/cartasReales'
 import { aExportacion, aJson } from './exportacion'
 
 const { cartas } = cargarCartas(ALL_CARDS)
 const { ajustes } = simularAjustes(cartas)
+// Disonancia de ANTES del rediseño (Lote 2): Draven 4/4 de coste 2 sobre el máximo; hoy (3/3) ya cabe en banda
+const { ajustes: ajustesDS } = simularAjustes(CARTAS_DS_ANTES)
 
 const ajusteSintetico = (id: string, antes: [number, number], despues: [number, number]): Ajuste => ({
   id,
@@ -24,9 +27,10 @@ const ajusteSintetico = (id: string, antes: [number, number], despues: [number, 
 })
 
 describe('exportación JSON', () => {
-  // Isolde (ahora 3/6 coste 4) ya no se ajusta; el caso lo toma Draven (DS-012, 4/4 coste 2 sobre el máximo), con las mismas aserciones.
+  // Isolde (ahora 3/6 coste 4) ya no se ajusta; el caso lo tomó Draven (DS-012, 4/4 coste 2 sobre el máximo) y con el rediseño de
+  // Disonancia (3/3) tampoco: se conserva con la Draven de antes (CARTAS_DS_ANTES), con las mismas aserciones.
   it('S3.1: Draven sale con id, antes, después y motivo en español', () => {
-    const cambio = aExportacion(ajustes).cambios.find((c) => c.id === 'DS-012')
+    const cambio = aExportacion(ajustesDS).cambios.find((c) => c.id === 'DS-012')
     expect(cambio?.antes).toEqual({ poder: 4, resistencia: 4 })
     expect(cambio?.despues.poder).toBeLessThan(10)
     expect(cambio?.motivo).toMatch(/suma/)

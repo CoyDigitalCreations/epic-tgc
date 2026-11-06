@@ -34,6 +34,11 @@ describe('clasificarVerbo', () => {
     expect(clasificarVerbo('fix_exhaust', 'estasis')).toBe('identidad')
   })
 
+  it('Lote 3: steal_ether es identidad en Disonancia y fuera de identidad en Estásis (como destroy)', () => {
+    expect(clasificarVerbo('steal_ether', 'disonancia')).toBe('identidad')
+    expect(clasificarVerbo('steal_ether', 'estasis')).toBe('fuera')
+  })
+
   it('block_ether es fuera de identidad en Disonancia', () => {
     expect(clasificarVerbo('block_ether', 'disonancia')).toBe('fuera')
   })
@@ -99,6 +104,13 @@ describe('resumenIdentidad', () => {
     ]
     const r = resumenIdentidad(cartas, 'disonancia')
     expect(r).toMatchObject({ identidad: 2, neutral: 1, fuera: 1, total: 4, porcentaje: 50 })
+  })
+
+  it('Lote 3: el seed de Disonancia tiene 19 de 38 efectos de identidad (50 %) y 0 fuera con steal_ether como identidad', () => {
+    expect(resumenIdentidad(carga.disonancia, 'disonancia')).toEqual({ identidad: 19, neutral: 19, fuera: 0, total: 38, porcentaje: 50 })
+    const sinSteal = structuredClone(CONFIG_V1)
+    sinSteal.identidad.disonancia.identidad = sinSteal.identidad.disonancia.identidad.filter((v) => v !== 'steal_ether')
+    expect(resumenIdentidad(carga.disonancia, 'disonancia', sinSteal)).toMatchObject({ identidad: 15, neutral: 23, fuera: 0, porcentaje: 39.5 })
   })
 
   it('un mazo sin efectos da 0 por ciento, sin NaN', () => {

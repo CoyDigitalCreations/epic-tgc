@@ -151,6 +151,8 @@ const OBJETIVO_TIPO_OPTIONS = [
 const REGLA_ENUMERADA_OPTIONS = [
   { value: 'disparo_sin_agotar', label: 'El efecto Disparo no agota' },
   { value: 'coste_campeones_rival_mas', label: 'Los Campeones del rival cuestan N Éter más' },
+  { value: 'olvido_rival', label: 'Lo del rival que iría al Cementerio se exilia' },
+  { value: 'peaje_bloqueo', label: 'El rival paga N Éter por bloquear a tus Campeones' },
 ]
 const CONTROLADOR_OPTIONS = [
   { value: 'propio', label: 'Propio' }, { value: 'rival', label: 'Rival' },
@@ -584,13 +586,20 @@ export function EffectField({ label, value, onChange, cardType }: EffectFieldPro
       )}
 
       {/* Opciones sueltas: scry puede enviar al fondo; un efecto con trigger y sin coste puede ser obligatorio (sin «puedes») */}
-      {(data.efecto === 'scry' || (data.trigger && data.trigger !== 'ninguno' && (!data.costo || data.costo.tipo === 'ninguno'))) && (
+      {(data.efecto === 'scry' || data.efecto === 'rival_discard' || (data.trigger && data.trigger !== 'ninguno' && (!data.costo || data.costo.tipo === 'ninguno'))) && (
         <div className="flex flex-wrap items-center gap-4 mt-2">
           {data.efecto === 'scry' && (
             <label className="flex items-center gap-2 text-[10px] uppercase tracking-wider text-gray-400">
               <input type="checkbox" checked={data.opcionFondo ?? false} onChange={(e) => update({ opcionFondo: e.target.checked || undefined })}
                 className="rounded border-gray-600 bg-gray-800 text-ether-500 focus:ring-ether-500" />
               Puede enviarla al fondo
+            </label>
+          )}
+          {data.efecto === 'rival_discard' && (
+            <label className="flex items-center gap-2 text-[10px] uppercase tracking-wider text-gray-400">
+              <input type="checkbox" checked={data.alAzar ?? false} onChange={(e) => update({ alAzar: e.target.checked || undefined })}
+                className="rounded border-gray-600 bg-gray-800 text-ether-500 focus:ring-ether-500" />
+              Al azar
             </label>
           )}
           {data.trigger && data.trigger !== 'ninguno' && (!data.costo || data.costo.tipo === 'ninguno') && (
@@ -701,13 +710,16 @@ export function EffectField({ label, value, onChange, cardType }: EffectFieldPro
                 update({
                   reglaEnumerada: v as ReglaEnumerada,
                   regla: undefined,
-                  reglaValor: v === 'coste_campeones_rival_mas' ? 1 : undefined,
+                  reglaValor: v === 'coste_campeones_rival_mas' || v === 'peaje_bloqueo' ? 1 : undefined,
                   ...(v === 'disparo_sin_agotar' ? { activacion: 'una_por_turno' as const } : {}),
                 })
               }}
             />
             {data.reglaEnumerada === 'coste_campeones_rival_mas' && (
               <NumberInput label="Éter más" value={data.reglaValor} onChange={(v) => update({ reglaValor: v })} min={1} max={10} />
+            )}
+            {data.reglaEnumerada === 'peaje_bloqueo' && (
+              <NumberInput label="Éter por bloqueo" value={data.reglaValor} onChange={(v) => update({ reglaValor: v })} min={1} max={10} />
             )}
             {data.reglaEnumerada === 'disparo_sin_agotar' && (
               <SelectField

@@ -5,7 +5,7 @@
  *
  * Estructura: trigger (cuándo se verifica) + condiciones[] (qué se evalúa).
  */
-import type { CondicionEfecto, CondicionItem } from '../../../shared/types/cards'
+import { CONDICION_TIPOS, type CondicionEfecto, type CondicionItem } from '../../../shared/types/cards'
 
 interface CondicionArcanaFieldProps {
   value?: CondicionEfecto
@@ -26,12 +26,21 @@ const CONTROLADOR_TRIGGER_OPTIONS = [
   { value: 'rival', label: 'Rival' },
 ]
 
-const CONDICION_TIPO_OPTIONS = [
-  { value: 'controlar_minimo', label: 'Controlar N+ unidades' },
-  { value: 'rival_controla_minimo', label: 'Rival controla N+ unidades' },
-  { value: 'tener_mano_minimo', label: 'Tener N+ cartas en mano' },
-  { value: 'tener_eter_bloqueado', label: 'Tener éter bloqueado' },
-]
+const CONDICION_TIPO_LABELS: Record<(typeof CONDICION_TIPOS)[number], string> = {
+  controlar_minimo: 'Controlar N+ unidades',
+  controlar_maximo: 'Controlar N o menos unidades',
+  rival_controla_minimo: 'Rival controla N+ unidades',
+  rival_controla_maximo: 'Rival controla N o menos unidades',
+  tener_mano_minimo: 'Tener N+ cartas en mano',
+  tener_mano_maximo: 'Tener N o menos cartas en mano',
+  tener_eter_bloqueado: 'Tener éter bloqueado',
+  tener_eter_pagado: 'Tener N+ Éter en la zona de pago',
+}
+
+const CONDICION_TIPO_OPTIONS = CONDICION_TIPOS.map((value) => ({ value, label: CONDICION_TIPO_LABELS[value] }))
+
+/** Condiciones que cuentan cartas de la mano, Éter pagado o Campeones con Éter bloqueado: solo importa QUIÉN (el motor no mira el tipo de objetivo) */
+const esCondicionDeJugador = (tipo: CondicionItem['tipo']) => tipo === 'tener_mano_minimo' || tipo === 'tener_mano_maximo' || tipo === 'tener_eter_pagado' || tipo === 'tener_eter_bloqueado'
 
 function SelectField({ label, value, options, onChange }: { label: string; value?: string; options: { value: string; label: string }[]; onChange: (v: string | undefined) => void }) {
   return (
@@ -56,26 +65,51 @@ function NumberInput({ label, value, onChange, min, max }: { label: string; valu
   )
 }
 
-/** Texto legible de una condición individual */
-function condicionItemTexto(c: CondicionItem, trigger?: string): string {
+/**
+ * Texto legible de una condición individual. Se escribe según lo que EVALÚA `condicionCumple` (src/online/game/efectos.ts):
+ * a quién se cuenta (los tipos rival_* siempre al rival; si no, `objetivo.controlador`; sin él, `controladorTrigger`),
+ * `tener_mano_maximo` = mano <= N, `tener_mano_minimo` = mano >= N, `tener_eter_pagado` = Éter en la zona de pago >= N.
+ */
+function condicionItemTexto(c: CondicionItem, trigger?: string, controladorTrigger?: 'propio' | 'rival'): string {
   const usaSubjuntivo = trigger === 'activacion'
   const esRival = c.objetivo?.controlador === 'rival'
+  const cantidad = c.cantidad ?? c.objetivo?.cantidad ?? 1
 
+  // Mismo criterio que condicionCumple para decidir a quién se cuenta
+  const cuentaAlRival = c.tipo === 'rival_controla_minimo' || c.tipo === 'rival_controla_maximo' ||
+    (c.objetivo?.controlador !== undefined ? esRival : controladorTrigger === 'rival')
+  const tiene = cuentaAlRival ? (usaSubjuntivo ? 'el rival tenga' : 'el rival tiene') : (usaSubjuntivo ? 'tengas' : 'tienes')
+  const controla = cuentaAlRival ? (usaSubjuntivo ? 'el rival controle' : 'el rival controla') : (usaSubjuntivo ? 'controles' : 'controlas')
+  const su = cuentaAlRival ? 'su' : 'tu'
+  const plural = (n: number, singular: string, pl: string) => (n === 1 ? singular : pl)
+
+  switch (c.tipo) {
+    case 'tener_eter_pagado':
+      return `${tiene} ${cantidad} o más Éter en ${su} zona de pago`
+    case 'tener_mano_maximo':
+      return `${tiene} ${cantidad} ${plural(cantidad, 'carta', 'cartas')} o menos en ${cuentaAlRival ? 'la' : 'tu'} mano`
+    case 'tener_mano_minimo':
+      return `${tiene} ${cantidad} o más ${plural(cantidad, 'carta', 'cartas')} en ${cuentaAlRival ? 'la' : 'tu'} mano`
+    case 'tener_eter_bloqueado':
+      // condicionCumple: cuenta Campeones con al menos 1 Éter bloqueado y exige >= cantidad (por defecto 1)
+      return `${tiene} ${cantidad} o más Campeones con Éter bloqueado`
+    case 'controlar_maximo':
+    case 'rival_controla_maximo': {
+      const unidad = c.objetivo?.tipo === 'mistica' ? plural(cantidad, 'Mística', 'Místicas') : c.objetivo?.tipo === 'arcana' ? plural(cantidad, 'Arcana', 'Arcanas') : plural(cantidad, 'Campeón', 'Campeones')
+      return `${controla} ${cantidad} ${unidad} o menos`
+    }
+  }
+
+  // controlar_minimo / rival_controla_minimo: el subjuntivo («controle») solo va con el trigger «activacion»
+  // (Mientras…); con un trigger de evento («Al inicio de tu Alba, si…») va el indicativo («controla»).
   const tipoTexts: Record<string, string> = {
-    'controlar_minimo': esRival ? 'el rival controle' : (usaSubjuntivo ? 'controles' : 'controlas'),
-    'rival_controla_minimo': esRival ? 'el rival controle' : 'el rival controla',
-    'tener_mano_minimo': 'tienes',
-    'tener_eter_bloqueado': 'tienes',
+    'controlar_minimo': controla,
+    'rival_controla_minimo': controla,
   }
   const tipo = tipoTexts[c.tipo] || c.tipo
-
-  if (c.tipo === 'tener_eter_bloqueado') return 'tienes éter bloqueado'
-
   const objetivoTipo = c.objetivo?.tipo === 'campeon' ? 'Campeones' : c.objetivo?.tipo === 'mistica' ? 'Místicas' : 'unidades'
   const filtro = c.objetivo?.filtros?.conEterBloqueado === true ? ' con éter bloqueado' : ''
-  const cantidad = c.cantidad ?? 1
-
-  return `${tipo} ${cantidad} o más ${objetivoTipo}${filtro}`
+  return `${tipo} ${c.cantidad ?? 1} o más ${objetivoTipo}${filtro}`
 }
 
 /** Texto completo de la condición (para preview) */
@@ -96,7 +130,7 @@ export function condicionArcanaTexto(condicion: CondicionEfecto): string {
     return trigger
   }
 
-  const partes = condicion.condiciones.map((c) => condicionItemTexto(c, condicion.trigger))
+  const partes = condicion.condiciones.map((c) => condicionItemTexto(c, condicion.trigger, condicion.controladorTrigger))
   const condicionStr = partes.join(' y ')
 
   // 'activacion' usa "Mientras..." en vez de "Al..., si..."
@@ -174,15 +208,13 @@ export function CondicionArcanaField({ value, onChange }: CondicionArcanaFieldPr
                 options={CONDICION_TIPO_OPTIONS}
                 onChange={(v) => updateCondicionItem(i, { tipo: v as CondicionItem['tipo'] })}
               />
-              {c.tipo?.includes('minimo') && (
-                <NumberInput
-                  label="Cantidad"
-                  value={c.cantidad}
-                  onChange={(v) => updateCondicionItem(i, { cantidad: v })}
-                  min={1}
-                  max={10}
-                />
-              )}
+              <NumberInput
+                label="Cantidad"
+                value={c.cantidad}
+                onChange={(v) => updateCondicionItem(i, { cantidad: v })}
+                min={1}
+                max={10}
+              />
               <button
                 onClick={() => removeCondicionItem(i)}
                 className="text-xs text-red-400 hover:text-red-300 px-1 mb-1"
@@ -191,8 +223,25 @@ export function CondicionArcanaField({ value, onChange }: CondicionArcanaFieldPr
               </button>
             </div>
 
+            {/* Quién: en mano / Éter pagado el motor solo mira el controlador (no el tipo de objetivo) */}
+            {esCondicionDeJugador(c.tipo) && (
+              <div className="grid grid-cols-2 gap-2 mt-2">
+                <SelectField
+                  label="Controlador"
+                  value={c.objetivo?.controlador}
+                  options={[
+                    { value: 'propio', label: 'Propio' },
+                    { value: 'rival', label: 'Rival' },
+                  ]}
+                  onChange={(v) => updateCondicionItem(i, {
+                    objetivo: { ...c.objetivo!, controlador: v as any, tipo: c.objetivo?.tipo ?? 'campeon' },
+                  })}
+                />
+              </div>
+            )}
+
             {/* Target config */}
-            {c.tipo !== 'tener_eter_bloqueado' && c.tipo !== 'tener_mano_minimo' && (
+            {c.tipo !== 'tener_eter_bloqueado' && !esCondicionDeJugador(c.tipo) && (
               <div className="grid grid-cols-2 gap-2 mt-2">
                 <SelectField
                   label="Tipo objetivo"
@@ -221,7 +270,7 @@ export function CondicionArcanaField({ value, onChange }: CondicionArcanaFieldPr
             )}
 
             {/* Filtros de campeón */}
-            {c.objetivo?.tipo === 'campeon' && (
+            {c.objetivo?.tipo === 'campeon' && !esCondicionDeJugador(c.tipo) && (
               <div className="grid grid-cols-2 gap-2 mt-2">
                 <SelectField
                   label="Éter bloqueado"

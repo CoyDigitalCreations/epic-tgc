@@ -233,7 +233,7 @@ function labelAccion(a: Action, fase?: string): string {
       if (fase === 'ocaso') return 'Terminar Turno'
       return 'Pasar turno'
     case 'declarar_ataque': return a.atacanteIds.length > 1 ? 'Atacar con todos' : 'Atacar'
-    case 'declarar_bloqueo': return 'Bloquear (automático)'
+    case 'declarar_bloqueo': return Object.keys(a.asignaciones).length === 0 ? 'No bloquear (no pagar el Peaje)' : 'Bloquear (automático)'
     case 'elegir_ruptura': return 'Romper Vínculo'
     case 'responder_prevenicion': return a.prevenir ? 'Prevenir destrucción' : 'Permitir destrucción'
     case 'pasar_prioridad': return 'Pasar prioridad'

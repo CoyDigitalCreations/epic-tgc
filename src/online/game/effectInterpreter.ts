@@ -12,15 +12,15 @@ import { construirTriggers, resolverTriggersDeEfecto } from './triggers'
 import { aplicarCambioAtributo, aplicarEfectosPrestados, aplicarReglaTemporal, reiniciarCampeon } from './reglasTemporales'
 import { faccionesDe } from './atributos'
 import { claseDeContinuo, eligeObjetivo, esEfectoCopiable, metaDeInstancia, umbralDeBloqueo } from './efectosInstancia'
-import { efectosNegados, reglaBool, reglaDeEfecto } from './reglas'
+import { efectosNegados, jugadoresForzadosDe, reglaBool, reglaDeEfecto } from './reglas'
 import { iniciarScry } from './scry'
 import { ejecutarRedirect } from './redirect'
 import { REGLAS } from '../../shared/rules/reglas'
 import { aplicarPago, bloquearEter } from './payments'
 import { candidatosActivarDisparo, ejecutarActivarDisparo } from './resonancia'
-import { enviarAlCementerio, destruirCarta, liberarEterBloqueado, liberarArtefactosEquipados } from './replacements'
+import { enviarAlCementerio, zonaDeCementerio, destruirCarta, liberarEterBloqueado, liberarArtefactosEquipados } from './replacements'
 import { esExiliable, permitirExilio } from './exilio'
-import { eterDeEfecto, contarEterUmbral, quitarEteres, liberarEterA, limpiarFlagsUmbralSiVacia, evaluarFinSteal, retornarCampeonesRobados } from './eter'
+import { eteresPropios, eterDeEfecto, contarEterUmbral, quitarEteres, liberarEterA, limpiarFlagsUmbralSiVacia, evaluarFinSteal, retornarCampeonesRobados } from './eter'
 import { esCampeon, getCardMeta, type AnyCard } from './cards'
 import type { EfectoData } from '../../shared/types'
 import type { CardInstance, Ctx, ExpiraModificador, GameState, PlayerId } from './types'
@@ -133,7 +133,8 @@ export function interpretEffect(
   // Lote 0: return_ether + esHasta igual (decisión del usuario: se resuelven los primeros N; Mira devuelve 2, no 1).
   const isTriggered = payload.fromTrigger === true
   // Lote 3: anclar_eter («hasta N Éter del rival») también se resuelve solo: los primeros N de su 1A, sin elección
-  const autoResolver = ((efecto === 'mover' || efecto === 'return_ether') && efectoData.esHasta === true) || efecto === 'anclar_eter'
+  // Lote 4A (Disonancia): steal_ether + esHasta («arrebata hasta 2 Éter») igual: se arrebatan los primeros N sin elegir
+  const autoResolver = ((efecto === 'mover' || efecto === 'return_ether' || efecto === 'steal_ether') && efectoData.esHasta === true) || efecto === 'anclar_eter'
   const mergedFiltros = efectoData.filtros
     ? { ...objetivo?.filtros, ...efectoData.filtros }
     : objetivo?.filtros
@@ -181,7 +182,8 @@ export function cobrarCostoDeTrigger(s: GameState, ctx: Ctx, inst: CardInstance,
   const idx = meta && 'efectos' in meta && meta.efectos ? meta.efectos.indexOf(efectoData) : -1
   const cant = costo.cantidad ?? 0
   const p = s.players[jugador]
-  const zona = costo.origen === 'pagado' ? p.eterPagado : p.eterReserva
+  // R1: el Éter arrebatado no se puede bloquear: solo cuenta el propio
+  const zona = eteresPropios(s, costo.origen === 'pagado' ? p.eterPagado : p.eterReserva, jugador)
   if (idx === -1 || cant <= 0 || zona.length < cant) return false
   return bloquearEter(s, ctx, jugador, zona.slice(0, cant), inst.cardInstanceId, idx) === null
 }
@@ -362,7 +364,8 @@ function executeEffect(
       break
 
     case 'steal_ether':
-      executeStealEther(s, ctx, targetIds, jugador)
+      // Respeta cantidad («arrebata 1» / «hasta 2»): solo los primeros N
+      executeStealEther(s, ctx, cantidad ? targetIds.slice(0, cantidad) : targetIds, jugador)
       break
 
     case 'free_ether':
@@ -1099,7 +1102,7 @@ function executeTutor(
       // Ya removida de la origen: enviarAlCementerio solo inserta en 2G (idempotente)
       // + libera Éter + dispara al-ser-enviado-al-cementerio (capa C5 correcta).
       enviarAlCementerio(s, ctx, targetId)
-      ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: targetId, zona: '2G', jugador, bocaArriba: true })
+      ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: targetId, zona: zonaDeCementerio(s, targetId), jugador, bocaArriba: true })
     } else if (zonaDestino === 'exilio') {
       p.exilio.push(targetId)
       ctx.emit({ type: 'carta_exiliada', cardInstanceId: targetId, jugador })
@@ -1213,7 +1216,8 @@ function executeModificarRegla(s: GameState, targetIds: string[], jugador: Playe
   if (def.ambito === 'partida') {
     aplicarReglaTemporal(s, { ...comunes, sujeto: { tipo: 'partida' } })
   } else if (def.ambito === 'jugador') {
-    const c = efectoData.objetivo?.controlador ?? 'propio'
+    // Regla enumerada que fuerza a quién alcanza (olvido_rival / peaje_bloqueo → el rival), como en reglas.ts jugadoresAfectados
+    const c = jugadoresForzadosDe(efectoData) ?? efectoData.objetivo?.controlador ?? 'propio'
     const afectados: PlayerId[] = c === 'ambos' ? ['A', 'B'] : c === 'rival' ? [rival] : [jugador]
     for (const j of afectados) aplicarReglaTemporal(s, { ...comunes, sujeto: { tipo: 'jugador', jugador: j } })
   } else {
@@ -1606,7 +1610,10 @@ function executeStealChampion(
 }
 
 /**
- * Execute steal_ether effect.
+ * Execute steal_ether effect (R1 · Éter arrebatado, Disonancia).
+ * El Éter pasa de la Reserva del rival a la TUYA, pero su dueño (`inst.owner`) NO cambia: es prestado. Lo puedes gastar para
+ * pagar, pero no activa sus efectos para ti y no se puede bloquear (esEterAjeno); en el Alba de su dueño regresa a la Reserva de
+ * su dueño (reagruparEter). Antes el robo era permanente.
  */
 function executeStealEther(
   s: GameState,

@@ -153,6 +153,8 @@ export interface EfectoData {
   // ── activar_disparo / anclar_eter ──
   /** `scry`: el texto dice «y puedes enviarla al fondo» (el motor ya deja mandar cartas al fondo; esto solo lo declara en el texto) */
   opcionFondo?: boolean
+  /** `rival_discard`: el rival descarta AL AZAR (solo el texto: «…de su mano al azar»; el motor ya descarta al azar) */
+  alAzar?: boolean
   /** El efecto NO es opcional: con trigger y sin coste el texto no lleva «puedes» (p. ej. «Al matar en combate, devuelve 1 Éter…») */
   obligatorio?: boolean
 
@@ -207,8 +209,10 @@ export type CopyAttribute =
  * Reglas enumeradas que el Card-Maker ofrece a `modificar_regla` además del catálogo `REGLAS` (que es de reglas del manual).
  * - `disparo_sin_agotar`: «el efecto Disparo no agota» (requiere `activacion: 'una_por_turno'` → «Una vez por turno por Campeón»)
  * - `coste_campeones_rival_mas`: «los Campeones del rival cuestan N Éter más» (`reglaValor` = N ≥ 1)
+ * - `olvido_rival`: «las cartas del rival que irían a su Cementerio se exilian en su lugar» (Disonancia)
+ * - `peaje_bloqueo`: «para bloquear a tus Campeones, el rival paga N Éter por cada uno» (`reglaValor` = N ≥ 1)
  */
-export type ReglaEnumerada = 'disparo_sin_agotar' | 'coste_campeones_rival_mas'
+export type ReglaEnumerada = 'disparo_sin_agotar' | 'coste_campeones_rival_mas' | 'olvido_rival' | 'peaje_bloqueo'
 
 /** Cost structure — what the player pays */
 export interface CostoEfecto {
@@ -363,11 +367,16 @@ export interface CondicionEfecto {
   condiciones: CondicionItem[]
 }
 
+/** Tipos de condición que evalúa `condicionCumple` (src/online/game/efectos.ts); la guarda de textos del Card-Maker los recorre todos */
+export const CONDICION_TIPOS = [
+  'controlar_minimo', 'controlar_maximo', 'rival_controla_minimo', 'rival_controla_maximo',
+  'tener_mano_minimo', 'tener_mano_maximo', 'tener_eter_bloqueado', 'tener_eter_pagado',
+] as const
+
 /** Individual condition item */
 export interface CondicionItem {
   /** Condition type */
-  tipo: 'controlar_minimo' | 'controlar_maximo' | 'rival_controla_minimo' | 'rival_controla_maximo'
-       | 'tener_mano_minimo' | 'tener_mano_maximo' | 'tener_eter_bloqueado' | 'tener_eter_pagado'
+  tipo: (typeof CONDICION_TIPOS)[number]
   /** Target of the condition */
   objetivo?: {
     tipo: 'campeon' | 'mistica' | 'arcana' | 'campeon_con_eter' | 'campeon_agotado'

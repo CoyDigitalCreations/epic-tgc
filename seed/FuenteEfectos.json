@@ -1335,7 +1335,7 @@
     "paqueteId": "disonancia",
     "limiteCopias": "1",
     "createdAt": "2026-08-03T00:00:00.000Z",
-    "updatedAt": "2026-10-24T18:15:35.033Z",
+    "updatedAt": "2026-11-06T01:18:09.009Z",
     "facciones": [
       "Caos"
     ],
@@ -1355,52 +1355,63 @@
     "efectos": [
       {
         "tipo": "disparo",
-        "efecto": "destroy",
-        "objetivo": {
-          "tipo": "campeon",
-          "controlador": "rival",
-          "zona": "campo"
-        },
-        "texto": "Puedes pagar 4 Éter, destruye 1 Campeón que controla el rival.",
+        "efecto": "steal_ether",
         "costo": {
           "tipo": "eter",
-          "cantidad": 4
+          "cantidad": 2
         },
-        "cantidad": 1
+        "activacion": "una_por_turno",
+        "objetivo": {
+          "tipo": "eter",
+          "controlador": "rival",
+          "zona": "reserva",
+          "zonaDestino": "reserva",
+          "controladorDestino": "propio"
+        },
+        "cantidad": 2,
+        "esHasta": true,
+        "texto": "Puedes pagar 2 Éter, una vez por turno, arrebata hasta 2 Éter de la Reserva del rival y puedes usarlos desde tu Reserva hasta el inicio del Alba del rival."
       },
       {
         "tipo": "continuo",
-        "efecto": "grant_keyword",
+        "efecto": "modificar_regla",
+        "reglaEnumerada": "olvido_rival",
+        "costo": {
+          "tipo": "bloqueo_fijo",
+          "cantidad": 3
+        },
+        "activacion": "una_por_turno",
+        "duracion": "mientras_tenga_eter_bloqueado",
+        "reagrupar": {
+          "fase": "alba",
+          "turno": "propio",
+          "alcance": "todo"
+        },
+        "texto": "Una vez por turno, bloquea 3 Éter, las cartas del rival que irían a su Cementerio se exilian en su lugar, mientras tenga Éter bloqueado. Al inicio de tu Alba reagrupa todo el Éter bloqueado en esta carta."
+      }
+    ],
+    "efectoComandante": [
+      {
+        "tipo": "comandante",
+        "efecto": "buff",
+        "stats": {
+          "ATQ": 3
+        },
         "objetivo": {
-          "tipo": "campeon",
+          "tipo": "todos_campeones_propios",
           "controlador": "propio",
           "zona": "campo"
         },
-        "texto": "Una vez por turno, bloquea 2 Éter, un Campeón que controles gana Indestructible, mientras ese Éter esté bloqueado. Al inicio de tu Alba reagrupa el Éter usado por este efecto.",
-        "keyword": "Indestructible",
-        "costo": {
-          "tipo": "bloqueo_fijo",
-          "cantidad": 2
-        },
-        "duracion": "mientras_ester_bloqueado",
-        "reagrupar": {
-          "fase": "alba",
-          "turno": "propio"
-        },
-        "activacion": "una_por_turno"
-      }
-    ],
-    "efectoComandante": {
-      "tipo": "pasivo",
-      "efecto": "grant_keyword",
-      "objetivo": {
-        "tipo": "todos_campeones_propios",
-        "controlador": "propio",
-        "zona": "campo"
+        "texto": "Incremento de 3 de ATQ."
       },
-      "texto": "Todos tus Campeones ganan Indestructible.",
-      "keyword": "Indestructible"
-    }
+      {
+        "tipo": "comandante",
+        "efecto": "modificar_regla",
+        "reglaEnumerada": "peaje_bloqueo",
+        "reglaValor": 1,
+        "texto": "Para bloquear a tus Campeones, el rival paga 1 Éter por cada uno."
+      }
+    ]
   },
   {
     "id": "DS-002",
@@ -1412,7 +1423,7 @@
     "paqueteId": "disonancia",
     "limiteCopias": "2",
     "createdAt": "2026-08-03T00:00:00.000Z",
-    "updatedAt": "2026-09-21T00:00:00.000Z",
+    "updatedAt": "2026-11-06T01:18:09.009Z",
     "stats": {
       "cost": 1
     },
@@ -1427,9 +1438,15 @@
         "objetivo": {
           "tipo": "campeon",
           "controlador": "rival",
-          "zona": "campo"
+          "zona": "campo",
+          "filtros": {
+            "seleccionar": {
+              "stat": "poder",
+              "orden": "mayor"
+            }
+          }
         },
-        "texto": "Mientras esté en tu Reserva, los Campeones que controla el rival pierden 1 de ATQ."
+        "texto": "Mientras esté en tu Reserva, el Campeón con mayor ATQ que controla el rival pierde 1 de ATQ."
       }
     ]
   },
@@ -1443,7 +1460,7 @@
     "paqueteId": "disonancia",
     "limiteCopias": "1",
     "createdAt": "2026-08-03T00:00:00.000Z",
-    "updatedAt": "2026-09-21T00:00:00.000Z",
+    "updatedAt": "2026-11-06T01:18:09.009Z",
     "stats": {
       "cost": 1
     },
@@ -1458,7 +1475,7 @@
           "controlador": "propio",
           "zona": "campo"
         },
-        "texto": "Al inicio de tu Choque, si está en tu Reserva, un Campeón que controlas gana Carga hasta el final del turno.",
+        "texto": "Mientras esté en tu Reserva, al inicio de tu Choque, un Campeón que controles gana Carga, hasta el final del turno.",
         "duracion": "turno"
       }
     ]
@@ -1473,7 +1490,7 @@
     "paqueteId": "disonancia",
     "limiteCopias": "2",
     "createdAt": "2026-08-03T00:00:00.000Z",
-    "updatedAt": "2026-09-21T00:00:00.000Z",
+    "updatedAt": "2026-11-06T01:18:09.009Z",
     "stats": {
       "cost": 1
     },
@@ -1488,7 +1505,8 @@
           "zona": "mano"
         },
         "cantidad": 1,
-        "texto": "Cuando pagues esta carta, el rival pierde 1 carta de su mano al azar."
+        "alAzar": true,
+        "texto": "Cuando pagues esta carta, el rival descarta 1 carta de su mano al azar."
       }
     ]
   },
@@ -1502,7 +1520,7 @@
     "paqueteId": "disonancia",
     "limiteCopias": "2",
     "createdAt": "2026-08-03T00:00:00.000Z",
-    "updatedAt": "2026-09-21T00:00:00.000Z",
+    "updatedAt": "2026-11-06T01:18:09.009Z",
     "stats": {
       "cost": 1
     },
@@ -1519,7 +1537,7 @@
           "controlador": "propio",
           "zona": "campo"
         },
-        "texto": "Cuando pagues esta carta para invocar un Campeón, ese Campeón gana 1 de ATQ hasta el final del próximo turno.",
+        "texto": "Cuando pagues esta carta, el Campeón que se está invocando gana 1 de ATQ, por 2 turnos.",
         "duracion": "n_turnos",
         "duracionTurnos": 2,
         "contextoUso": "invocar"
@@ -1536,24 +1554,25 @@
     "paqueteId": "disonancia",
     "limiteCopias": "2",
     "createdAt": "2026-08-03T00:00:00.000Z",
-    "updatedAt": "2026-09-22T04:22:48.600Z",
+    "updatedAt": "2026-11-06T01:18:09.009Z",
     "stats": {
       "cost": 1
     },
     "efectos": [
       {
         "tipo": "pago",
-        "efecto": "block_ether",
+        "trigger": "al_pagar_eter",
+        "efecto": "mover",
         "objetivo": {
-          "tipo": "campeon",
-          "controlador": "propio",
-          "zona": "campo",
-          "filtros": {
-            "puedeBloquearEter": true
-          }
+          "tipo": "eter",
+          "controlador": "rival",
+          "zona": "reserva",
+          "zonaDestino": "pagado",
+          "controladorDestino": "rival"
         },
-        "texto": "Bloquea 1 Éter de tu Reserva sobre un Campeón que pueda recibir éter bloqueado que controles, una vez por turno.",
-        "duracion": "1_por_turno"
+        "cantidad": 2,
+        "esHasta": true,
+        "texto": "Cuando pagues esta carta, mueve hasta 2 Éter que controla el rival de la Reserva a la zona de pago del rival."
       }
     ]
   },
@@ -1567,23 +1586,24 @@
     "paqueteId": "disonancia",
     "limiteCopias": "1",
     "createdAt": "2026-08-03T00:00:00.000Z",
-    "updatedAt": "2026-09-22T05:28:16.218Z",
+    "updatedAt": "2026-11-06T01:18:09.009Z",
     "stats": {
       "cost": 1
     },
     "efectos": [
       {
         "tipo": "pago",
-        "efecto": "mover",
+        "trigger": "al_pagar_eter",
+        "efecto": "steal_ether",
         "objetivo": {
           "tipo": "eter",
           "controlador": "rival",
           "zona": "reserva",
-          "zonaDestino": "pagado",
-          "controladorDestino": "rival"
+          "zonaDestino": "reserva",
+          "controladorDestino": "propio"
         },
-        "texto": "Cuando pagues esta carta, mueve 1 Éter de la Reserva a la zona de pago del rival.",
-        "trigger": "al_pagar_eter"
+        "cantidad": 1,
+        "texto": "Cuando pagues esta carta, arrebata 1 Éter de la Reserva del rival y puedes usarlo desde tu Reserva hasta el inicio del Alba del rival."
       }
     ]
   },
@@ -1597,23 +1617,20 @@
     "paqueteId": "disonancia",
     "limiteCopias": "1",
     "createdAt": "2026-08-03T00:00:00.000Z",
-    "updatedAt": "2026-09-22T18:49:22.302Z",
+    "updatedAt": "2026-11-06T01:18:09.009Z",
     "stats": {
       "cost": 1
     },
     "efectos": [
       {
         "tipo": "bloqueo",
-        "efecto": "buff",
+        "efecto": "direct_attack",
         "objetivo": {
           "tipo": "campeon",
           "controlador": "propio",
           "zona": "campo"
         },
-        "stats": {
-          "RES": 1
-        },
-        "texto": "Mientras esté bloqueado, el Campeón que tenga este Éter gana 1 de RES."
+        "texto": "Mientras esté bloqueado, el Campeón que tenga este Éter no puede ser bloqueado."
       }
     ]
   },
@@ -1623,11 +1640,11 @@
     "type": "Éter",
     "rarity": "Poco Común",
     "keywords": [],
-    "flavorText": "Nada rompe lo que el Nudo aprieta.",
+    "flavorText": "El sur no descansa entre un golpe y otro.",
     "paqueteId": "disonancia",
     "limiteCopias": "2",
     "createdAt": "2026-08-03T00:00:00.000Z",
-    "updatedAt": "2026-09-22T18:48:41.813Z",
+    "updatedAt": "2026-11-06T05:02:32.994Z",
     "stats": {
       "cost": 1
     },
@@ -1635,13 +1652,13 @@
       {
         "tipo": "bloqueo",
         "efecto": "grant_keyword",
+        "keyword": "Tirador",
         "objetivo": {
           "tipo": "campeon",
           "controlador": "propio",
           "zona": "campo"
         },
-        "texto": "Mientras esté bloqueado, el Campeón que tenga este Éter gana Indestructible.",
-        "keyword": "Indestructible"
+        "texto": "Mientras esté bloqueado, el Campeón que tenga este Éter gana Tirador."
       }
     ]
   },
@@ -1655,24 +1672,25 @@
     "paqueteId": "disonancia",
     "limiteCopias": "2",
     "createdAt": "2026-08-03T00:00:00.000Z",
-    "updatedAt": "2026-09-22T18:49:47.863Z",
+    "updatedAt": "2026-11-06T01:18:09.009Z",
     "stats": {
       "cost": 1
     },
     "efectos": [
       {
-        "tipo": "bloqueo",
-        "efecto": "buff",
+        "tipo": "pago",
+        "trigger": "al_pagar_eter",
+        "efecto": "debuff",
+        "stats": {
+          "RES": 2
+        },
         "objetivo": {
           "tipo": "campeon",
-          "controlador": "propio",
+          "controlador": "rival",
           "zona": "campo"
         },
-        "stats": {
-          "ATQ": 1,
-          "RES": 0
-        },
-        "texto": "Mientras esté bloqueado, el Campeón que tenga este Éter gana 1 de ATQ."
+        "duracion": "turno",
+        "texto": "Cuando pagues esta carta, un Campeón que controla el rival pierde 2 de RES, hasta el final del turno."
       }
     ]
   },
@@ -1688,7 +1706,7 @@
     "paqueteId": "disonancia",
     "limiteCopias": "3",
     "createdAt": "2026-08-03T00:00:00.000Z",
-    "updatedAt": "2026-09-22T19:36:31.857Z",
+    "updatedAt": "2026-11-06T01:18:09.009Z",
     "facciones": [
       "Caos"
     ],
@@ -1701,24 +1719,24 @@
     ],
     "stats": {
       "cost": 2,
-      "poder": 5,
-      "resistencia": 3
+      "poder": 4,
+      "resistencia": 2
     },
     "efectos": [
       {
         "tipo": "pasivo",
+        "trigger": "al_atacar",
         "efecto": "debuff",
+        "stats": {
+          "ATQ": 1
+        },
         "objetivo": {
           "tipo": "campeon",
           "controlador": "rival",
           "zona": "campo"
         },
-        "stats": {
-          "ATQ": 1,
-          "RES": 0
-        },
-        "texto": "Al atacar, un Campeón que controla el rival pierde 1 de ATQ.",
-        "trigger": "al_atacar"
+        "duracion": "turno",
+        "texto": "Al atacar, un Campeón que controla el rival pierde 1 de ATQ, hasta el final del turno."
       }
     ]
   },
@@ -1732,7 +1750,7 @@
     "paqueteId": "disonancia",
     "limiteCopias": "3",
     "createdAt": "2026-08-03T00:00:00.000Z",
-    "updatedAt": "2026-10-27T00:26:09.195Z",
+    "updatedAt": "2026-11-06T01:18:09.009Z",
     "facciones": [
       "Caos"
     ],
@@ -1745,38 +1763,23 @@
     ],
     "stats": {
       "cost": 2,
-      "poder": 4,
-      "resistencia": 4
+      "poder": 3,
+      "resistencia": 3
     },
     "efectos": [
       {
         "tipo": "pasivo",
         "trigger": "al_matar_en_combate",
-        "efecto": "return_ether",
+        "efecto": "steal_ether",
         "objetivo": {
           "tipo": "eter",
           "controlador": "rival",
           "zona": "reserva",
-          "zonaDestino": "pagado",
-          "controladorDestino": "rival"
+          "zonaDestino": "reserva",
+          "controladorDestino": "propio"
         },
-        "zonaDestino": "reserva",
         "cantidad": 1,
-        "texto": "Al matar en combate, puedes devolver 1 Éter de la Reserva a la zona de pago del rival."
-      },
-      {
-        "tipo": "disparo",
-        "costo": {
-          "tipo": "eter",
-          "cantidad": 2
-        },
-        "efecto": "destroy",
-        "objetivo": {
-          "tipo": "mistica",
-          "controlador": "rival",
-          "zona": "campo"
-        },
-        "texto": "Puedes pagar 2 Éter, destruye 1 Mística que controla el rival."
+        "texto": "Al matar en combate, puedes arrebatar 1 Éter de la Reserva del rival y usarlo desde tu Reserva hasta el inicio del Alba del rival."
       }
     ]
   },
@@ -1790,7 +1793,7 @@
     "paqueteId": "disonancia",
     "limiteCopias": "3",
     "createdAt": "2026-08-03T00:00:00.000Z",
-    "updatedAt": "2026-10-24T18:16:38.370Z",
+    "updatedAt": "2026-11-06T01:18:09.009Z",
     "facciones": [
       "Caos"
     ],
@@ -1819,10 +1822,11 @@
           "controlador": "rival",
           "zona": "campo",
           "filtros": {
-            "resMax": 3
+            "agotado": true
           }
         },
-        "texto": "Puedes pagar 4 Éter, destruye 1 Campeón RES 3 o menos que controla el rival."
+        "cantidad": 1,
+        "texto": "Puedes pagar 4 Éter, destruye 1 Campeón agotado que controla el rival."
       }
     ]
   },
@@ -1838,7 +1842,7 @@
     "paqueteId": "disonancia",
     "limiteCopias": "2",
     "createdAt": "2026-08-03T00:00:00.000Z",
-    "updatedAt": "2026-10-27T03:39:56.365Z",
+    "updatedAt": "2026-11-06T01:18:09.009Z",
     "facciones": [
       "Caos"
     ],
@@ -1856,21 +1860,23 @@
     },
     "efectos": [
       {
-        "tipo": "disparo",
-        "trigger": "ninguno",
-        "efecto": "negar",
+        "tipo": "continuo",
+        "efecto": "debuff",
+        "stats": {
+          "ATQ": 1
+        },
         "objetivo": {
-          "tipo": "campeon",
+          "tipo": "todos_campeones_rivales",
           "controlador": "rival",
           "zona": "campo"
         },
-        "texto": "Puedes pagar 3 Éter, Niega el efecto activo de un Campeón que controla el rival, hasta el final del turno.",
-        "duracion": "turno",
-        "tipoNegacion": "efecto_activo",
         "costo": {
-          "tipo": "eter",
-          "cantidad": 3
-        }
+          "tipo": "bloqueo_fijo",
+          "cantidad": 2
+        },
+        "duracion": "mientras_ester_bloqueado",
+        "activacion": "una_mientras_bloqueado",
+        "texto": "Bloquea 2 Éter (solo una vez mientras siga bloqueado), todos los Campeones que controla el rival pierden 1 de ATQ, mientras ese Éter esté bloqueado."
       }
     ]
   },
@@ -1879,14 +1885,12 @@
     "name": "Marek, Cosecha del Nudo",
     "type": "Campeón",
     "rarity": "Poco Común",
-    "keywords": [
-      "Recarga"
-    ],
+    "keywords": [],
     "flavorText": "Cada nudo que aprieta el norte lo alimenta.",
     "paqueteId": "disonancia",
     "limiteCopias": "2",
     "createdAt": "2026-08-03T00:00:00.000Z",
-    "updatedAt": "2026-10-08T05:31:28.150Z",
+    "updatedAt": "2026-11-06T01:18:09.009Z",
     "facciones": [
       "Caos"
     ],
@@ -1899,24 +1903,21 @@
     ],
     "stats": {
       "cost": 3,
-      "poder": 5,
-      "resistencia": 4
+      "poder": 4,
+      "resistencia": 3
     },
     "efectos": [
       {
         "tipo": "pasivo",
         "trigger": "al_invocar",
-        "efecto": "copy",
+        "efecto": "exile",
         "objetivo": {
           "tipo": "campeon",
           "controlador": "rival",
-          "zona": "campo"
+          "zona": "cementerio"
         },
-        "texto": "Al ser invocada, puedes copiar el ATQ de un Campeón que controla el rival, hasta el final del turno.",
-        "duracion": "turno",
-        "copyAttributes": [
-          "atq"
-        ]
+        "cantidad": 1,
+        "texto": "Al ser invocada, puedes exiliar 1 Campeón del Cementerio del rival."
       }
     ]
   },
@@ -1926,11 +1927,11 @@
     "type": "Campeón",
     "rarity": "Común",
     "keywords": [],
-    "flavorText": "El sur empuja a los suyos hacia adelante.",
+    "flavorText": "Donde pasa el viento del sur, el norte se queda sin Éter.",
     "paqueteId": "disonancia",
     "limiteCopias": "3",
     "createdAt": "2026-08-03T00:00:00.000Z",
-    "updatedAt": "2026-10-27T00:26:22.051Z",
+    "updatedAt": "2026-11-06T05:02:32.994Z",
     "facciones": [
       "Caos"
     ],
@@ -1943,25 +1944,24 @@
     ],
     "stats": {
       "cost": 3,
-      "poder": 3,
-      "resistencia": 5
+      "poder": 4,
+      "resistencia": 4
     },
     "efectos": [
       {
-        "tipo": "disparo",
-        "costo": {
-          "tipo": "eter",
-          "cantidad": 2
-        },
-        "efecto": "buff",
-        "stats": {
-          "ATQ": 1
-        },
+        "tipo": "pasivo",
+        "trigger": "al_atacar",
+        "efecto": "mover",
         "objetivo": {
-          "tipo": "todos_campeones_propios"
+          "tipo": "eter",
+          "controlador": "rival",
+          "zona": "reserva",
+          "zonaDestino": "pagado",
+          "controladorDestino": "rival"
         },
-        "texto": "Puedes pagar 2 Éter, todos tus Campeones ganan 1 de ATQ, hasta el final del turno.",
-        "duracion": "turno"
+        "cantidad": 2,
+        "esHasta": true,
+        "texto": "Al atacar, puedes mover hasta 2 Éter que controla el rival de la Reserva a la zona de pago del rival."
       }
     ]
   },
@@ -1975,7 +1975,7 @@
     "paqueteId": "disonancia",
     "limiteCopias": "2",
     "createdAt": "2026-08-03T00:00:00.000Z",
-    "updatedAt": "2026-10-24T18:14:00.175Z",
+    "updatedAt": "2026-11-06T01:18:09.009Z",
     "facciones": [
       "Caos"
     ],
@@ -1993,19 +1993,20 @@
     },
     "efectos": [
       {
-        "tipo": "disparo",
+        "tipo": "pasivo",
+        "trigger": "inicio_choque",
+        "controladorTrigger": "rival",
         "efecto": "mover",
         "objetivo": {
           "tipo": "eter",
           "controlador": "rival",
-          "zona": "pagado",
-          "zonaDestino": "reserva"
+          "zona": "reserva",
+          "zonaDestino": "pagado",
+          "controladorDestino": "rival"
         },
-        "texto": "Puedes pagar 2 Éter, mueve 1 Éter que controla el rival de la zona de pago a la Reserva de su dueño.",
-        "costo": {
-          "tipo": "eter",
-          "cantidad": 2
-        }
+        "cantidad": 2,
+        "esHasta": true,
+        "texto": "Al inicio del Choque del rival, puedes mover hasta 2 Éter que controla el rival de la Reserva a la zona de pago del rival."
       }
     ]
   },
@@ -2015,11 +2016,11 @@
     "type": "Campeón",
     "rarity": "Común",
     "keywords": [],
-    "flavorText": "Los vínculos del norte se rompen como el hielo.",
+    "flavorText": "Las Arcanas del norte se rompen como el hielo.",
     "paqueteId": "disonancia",
     "limiteCopias": "3",
     "createdAt": "2026-08-03T00:00:00.000Z",
-    "updatedAt": "2026-10-24T18:17:02.675Z",
+    "updatedAt": "2026-11-06T05:02:32.994Z",
     "facciones": [
       "Caos"
     ],
@@ -2038,17 +2039,18 @@
     "efectos": [
       {
         "tipo": "disparo",
-        "efecto": "return_hand",
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 2
+        },
+        "efecto": "destroy",
         "objetivo": {
-          "tipo": "campeon",
+          "tipo": "mistica_arcana",
           "controlador": "rival",
           "zona": "campo"
         },
-        "texto": "Puedes pagar 3 Éter, devuelve a la mano de su dueño 1 Campeón que controla el rival.",
-        "costo": {
-          "tipo": "eter",
-          "cantidad": 3
-        }
+        "cantidad": 1,
+        "texto": "Puedes pagar 2 Éter, destruye 1 Mística o Arcana que controla el rival."
       }
     ]
   },
@@ -2062,12 +2064,12 @@
     "paqueteId": "disonancia",
     "limiteCopias": "3",
     "createdAt": "2026-08-03T00:00:00.000Z",
-    "updatedAt": "2026-09-22T21:06:01.065Z",
+    "updatedAt": "2026-11-06T01:18:09.009Z",
     "facciones": [
       "Caos"
     ],
     "stats": {
-      "cost": 2
+      "cost": 3
     },
     "efectos": [
       {
@@ -2090,14 +2092,16 @@
     "name": "Grito del Nudo",
     "type": "Mística",
     "rarity": "Común",
-    "keywords": [],
+    "keywords": [
+      "Presteza"
+    ],
     "flavorText": "El Nudo aprieta: el aliento del rival se acorta.",
     "paqueteId": "disonancia",
     "limiteCopias": "3",
     "createdAt": "2026-08-03T00:00:00.000Z",
-    "updatedAt": "2026-09-22T21:06:58.050Z",
+    "updatedAt": "2026-11-06T01:18:09.009Z",
     "stats": {
-      "cost": 1
+      "cost": 2
     },
     "efectos": [
       {
@@ -2155,35 +2159,23 @@
     "type": "Mística",
     "rarity": "Común",
     "keywords": [
-      "Artefacto"
+      "Presteza"
     ],
-    "flavorText": "El sur no llora a sus muertos: los cobra.",
+    "flavorText": "El norte recuerda. El sur olvida.",
     "paqueteId": "disonancia",
     "limiteCopias": "3",
     "createdAt": "2026-08-03T00:00:00.000Z",
-    "updatedAt": "2026-10-13T05:16:59.993Z",
+    "updatedAt": "2026-11-06T05:02:32.994Z",
     "stats": {
-      "cost": 3
+      "cost": 2
     },
     "efectos": [
       {
         "tipo": "hechizo",
-        "efecto": "invocar_y_equipar",
-        "objetivo": {
-          "tipo": "campeon",
-          "controlador": "propio",
-          "zona": "exilio",
-          "filtros": {
-            "faccion": "Caos",
-            "costeMax": 3
-          }
-        },
-        "texto": "Puedes pagar 3 Éter, invoca un Campeón de facción Caos de coste 3 éter o menos del Exilio de su dueño y equipa esta carta a ese Campeón.",
-        "zonaOrigen": "exilio",
-        "costo": {
-          "tipo": "eter",
-          "cantidad": 3
-        }
+        "efecto": "modificar_regla",
+        "reglaEnumerada": "olvido_rival",
+        "duracion": "turno",
+        "texto": "Las cartas del rival que irían a su Cementerio se exilian en su lugar, hasta el final del turno."
       }
     ]
   },
@@ -2193,11 +2185,11 @@
     "type": "Arcana",
     "rarity": "Rara",
     "keywords": [],
-    "flavorText": "El Nudo aprieta cuando el Eje tiembla. Y el Eje siempre tiembla.",
+    "flavorText": "El Nudo aprieta cuando el norte ya pagó de más.",
     "paqueteId": "disonancia",
     "limiteCopias": "3",
     "createdAt": "2026-08-03T00:00:00.000Z",
-    "updatedAt": "2026-09-22T21:43:48.000Z",
+    "updatedAt": "2026-11-06T05:02:32.994Z",
     "facciones": [
       "Caos"
     ],
@@ -2208,19 +2200,16 @@
       "trigger": "inicio_choque",
       "condiciones": [
         {
-          "tipo": "rival_controla_minimo",
-          "cantidad": 3,
+          "tipo": "tener_eter_pagado",
+          "cantidad": 4,
           "objetivo": {
             "tipo": "campeon",
-            "controlador": "rival",
-            "filtros": {
-              "conEterBloqueado": true
-            }
+            "controlador": "rival"
           }
         }
       ]
     },
-    "recompensa": "Un Campeón que controla el rival pierde 3 de RES de forma permanente. Roba 1 carta.",
+    "recompensa": "Un Campeón que controla el rival pierde 3 de RES, de forma permanente. Descarta 1 carta de su mano al azar.",
     "efectos": [
       {
         "tipo": "hechizo",
@@ -2238,12 +2227,15 @@
       },
       {
         "tipo": "hechizo",
-        "efecto": "draw",
-        "cantidad": 1,
+        "efecto": "rival_discard",
         "objetivo": {
-          "tipo": "carta"
+          "tipo": "mano",
+          "controlador": "rival",
+          "zona": "mano"
         },
-        "texto": "Roba 1 carta."
+        "cantidad": 1,
+        "alAzar": true,
+        "texto": "El rival descarta 1 carta de su mano al azar."
       }
     ]
   },
@@ -2327,30 +2319,32 @@
   },
   {
     "id": "DS-026",
-    "name": "Heredad de Caos",
+    "name": "Deuda de Caos",
     "type": "Vínculo",
     "rarity": "Común",
     "keywords": [],
-    "flavorText": "El sur no hereda: arrebata.",
+    "flavorText": "El sur olvida a sus muertos, nunca a sus deudas.",
     "paqueteId": "disonancia",
     "limiteCopias": "1",
     "createdAt": "2026-08-03T00:00:00.000Z",
-    "updatedAt": "2026-10-01T23:56:39.123Z",
+    "updatedAt": "2026-11-06T05:02:32.994Z",
     "stats": {
       "cost": 0
     },
     "efectos": [
       {
         "tipo": "vinculo",
+        "trigger": "inicio_alba",
         "efecto": "rival_discard",
         "objetivo": {
           "tipo": "carta",
           "controlador": "rival",
           "zona": "mano"
         },
-        "texto": "Al inicio de tu Alba, puedes descartar una carta de la mano del rival, una vez por turno.",
+        "cantidad": 1,
         "duracion": "1_por_turno",
-        "trigger": "inicio_alba"
+        "alAzar": true,
+        "texto": "Al inicio de tu Alba, puedes hacer que el rival descarte 1 carta de su mano al azar, una vez por turno."
       }
     ]
   },
@@ -2395,29 +2389,29 @@
     "type": "Vínculo",
     "rarity": "Poco Común",
     "keywords": [],
-    "flavorText": "El cristal del sur no brilla: aguanta.",
+    "flavorText": "El cristal del sur no brilla: cobra.",
     "paqueteId": "disonancia",
     "limiteCopias": "1",
     "createdAt": "2026-08-03T00:00:00.000Z",
-    "updatedAt": "2026-09-29T00:49:28.982Z",
+    "updatedAt": "2026-11-06T05:02:32.994Z",
     "stats": {
       "cost": 0
     },
     "efectos": [
       {
         "tipo": "vinculo",
-        "efecto": "grant_keyword",
+        "trigger": "inicio_alba",
+        "efecto": "steal_ether",
         "objetivo": {
-          "tipo": "campeon",
-          "controlador": "propio",
-          "zona": "campo"
+          "tipo": "eter",
+          "controlador": "rival",
+          "zona": "reserva",
+          "zonaDestino": "reserva",
+          "controladorDestino": "propio"
         },
-        "texto": "Al inicio de tu Alba, un Campeón que controles puedes ganar Indestructible, hasta la próxima Forja del rival.",
-        "duracion": "hasta_fase",
-        "duracionFase": "forja",
-        "duracionControlador": "rival",
-        "keyword": "Indestructible",
-        "trigger": "inicio_alba"
+        "cantidad": 1,
+        "duracion": "1_por_turno",
+        "texto": "Al inicio de tu Alba, puedes arrebatar 1 Éter de la Reserva del rival y usarlo desde tu Reserva hasta el inicio del Alba del rival, una vez por turno."
       }
     ]
   },
@@ -2456,34 +2450,21 @@
     "type": "Vínculo",
     "rarity": "Rara",
     "keywords": [],
-    "flavorText": "El primer grito del sur todavía rompe.",
+    "flavorText": "Quien rompió el primer grito no vuelve a ser recordado.",
     "paqueteId": "disonancia",
     "limiteCopias": "1",
     "createdAt": "2026-08-03T00:00:00.000Z",
-    "updatedAt": "2026-10-02T00:21:14.360Z",
+    "updatedAt": "2026-11-06T05:02:32.994Z",
     "stats": {
       "cost": 0
     },
     "efectos": [
       {
         "tipo": "vinculo",
-        "efecto": "buff",
-        "stats": {
-          "RES": 4
-        },
+        "efecto": "modificar_regla",
+        "reglaEnumerada": "olvido_rival",
         "duracion": "mientras_en_campo",
-        "objetivo": {
-          "tipo": "campeon",
-          "controlador": "propio",
-          "zona": "campo",
-          "filtros": {
-            "seleccionar": {
-              "stat": "resistencia",
-              "orden": "menor"
-            }
-          }
-        },
-        "texto": "El Campeón con menor RES gana 4 de RES, mientras esta carta esté en el campo."
+        "texto": "Las cartas del rival que irían a su Cementerio se exilian en su lugar, mientras esta carta esté en el campo."
       }
     ]
   },
@@ -2497,7 +2478,7 @@
     "paqueteId": "disonancia",
     "limiteCopias": "2",
     "createdAt": "2026-08-03T00:00:00.000Z",
-    "updatedAt": "2026-09-23T04:37:25.717Z",
+    "updatedAt": "2026-11-06T01:18:09.009Z",
     "facciones": [
       "Caos"
     ],
@@ -2510,7 +2491,7 @@
     ],
     "stats": {
       "cost": 2,
-      "poder": 4,
+      "poder": 3,
       "resistencia": 3
     },
     "efectos": [
@@ -2530,21 +2511,21 @@
           "zonaDestino": "mano"
         },
         "zonaDestino": "mano",
-        "texto": "Al ser enviada al Cementerio desde cualquier zona, puedes buscar 1 Campeón coste 2 o menos de tu mazo y agregalo a tu mano."
+        "texto": "Al ser enviada al Cementerio desde cualquier zona, puedes buscar 1 Campeón coste 2 o menos de tu mazo y agrégalo a tu mano."
       }
     ]
   },
   {
     "id": "DS-032",
-    "name": "El Nudo Desata",
+    "name": "El Nudo Olvida",
     "type": "Arcana",
     "rarity": "Poco Común",
     "keywords": [],
-    "flavorText": "El Nudo se desata cuando la tormenta aprieta.",
+    "flavorText": "El norte entierra a sus muertos. El Nudo los borra.",
     "paqueteId": "disonancia",
     "limiteCopias": "2",
     "createdAt": "2026-08-03T00:00:00.000Z",
-    "updatedAt": "2026-09-23T04:40:37.001Z",
+    "updatedAt": "2026-11-06T05:02:32.994Z",
     "stats": {
       "cost": 3
     },
@@ -2552,49 +2533,42 @@
       "trigger": "inicio_choque",
       "condiciones": [
         {
-          "tipo": "controlar_minimo",
-          "cantidad": 2,
+          "tipo": "tener_mano_maximo",
+          "cantidad": 3,
           "objetivo": {
             "tipo": "campeon",
-            "controlador": "propio",
-            "filtros": {
-              "conEterBloqueado": true
-            }
+            "controlador": "rival"
           }
         }
       ]
     },
-    "recompensa": "Agrega de tu cementerio a tu mano 1 carta de coste 3 o menos.",
+    "recompensa": "Exilia hasta 2 carta del Cementerio del rival.",
     "efectos": [
       {
         "tipo": "hechizo",
-        "efecto": "tutor",
-        "cantidad": 1,
+        "efecto": "exile",
         "objetivo": {
           "tipo": "carta",
-          "controlador": "propio",
-          "zona": "cementerio",
-          "filtros": {
-            "costeMax": 3
-          },
-          "zonaDestino": "mano"
+          "controlador": "rival",
+          "zona": "cementerio"
         },
-        "zonaDestino": "mano",
-        "texto": "Busca 1 carta coste 3 o menos de tu Cementerio y agregalo a tu mano."
+        "cantidad": 2,
+        "esHasta": true,
+        "texto": "Exilia hasta 2 cartas del Cementerio del rival."
       }
     ]
   },
   {
     "id": "DS-033",
-    "name": "Invocación del Sur",
+    "name": "Embestida del Sur",
     "type": "Mística",
     "rarity": "Rara",
     "keywords": [],
-    "flavorText": "El sur no llama dos veces.",
+    "flavorText": "El sur rompe dos veces y no mira atrás.",
     "paqueteId": "disonancia",
     "limiteCopias": "1",
     "createdAt": "2026-08-03T00:00:00.000Z",
-    "updatedAt": "2026-10-10T01:30:30.657Z",
+    "updatedAt": "2026-11-06T05:02:32.994Z",
     "facciones": [
       "Caos"
     ],
@@ -2604,19 +2578,34 @@
     "efectos": [
       {
         "tipo": "hechizo",
-        "efecto": "tutor",
-        "cantidad": 1,
+        "efecto": "modificar_regla",
         "objetivo": {
-          "tipo": "campeon",
+          "tipo": "self",
           "controlador": "propio",
-          "zona": "mazo",
-          "filtros": {
-            "costeMax": 3
-          },
-          "zonaDestino": "mano"
+          "zona": "campo"
         },
-        "zonaDestino": "mano",
-        "texto": "Busca 1 Campeón coste 3 o menos de tu mazo y agregalo a tu mano."
+        "regla": {
+          "id": "rupturasPorTurno",
+          "operacion": "sumar",
+          "valor": 1
+        },
+        "duracion": "turno",
+        "texto": "Este turno puedes romper un Vínculo más con tus Rupturas."
+      },
+      {
+        "tipo": "hechizo",
+        "efecto": "modificar_regla",
+        "objetivo": {
+          "tipo": "self",
+          "controlador": "propio",
+          "zona": "campo"
+        },
+        "regla": {
+          "id": "atacarTrasRuptura",
+          "operacion": "permitir"
+        },
+        "duracion": "turno",
+        "texto": "Este turno puedes seguir atacando después de romper un Vínculo."
       }
     ]
   }

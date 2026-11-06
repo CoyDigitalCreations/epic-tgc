@@ -11,7 +11,7 @@
  * Módulo sin dependencias de la cadena (evita el ciclo chain ↔ habilidades).
  */
 import { esCostoBloqueo, getCardMeta } from './cards'
-import { etiquetarEter, marcarContinuoActivado } from './eter'
+import { eteresPropios, etiquetarEter, marcarContinuoActivado } from './eter'
 import { hastaAlba, registrarEfectoPendiente } from './effectRegistry'
 import { disparoNoAgotaPorComandante, MARCA_DISPARO_SIN_AGOTAR, reglaBool } from './reglas'
 import { metaDeInstancia } from './efectosInstancia'
@@ -27,7 +27,8 @@ export function eterIdsParaHabilidad(state: GameState, jugador: PlayerId, efecto
   const p = state.players[jugador]
   const costo = efecto.costo?.cantidad ?? 0
   if (esCostoBloqueo(efecto.costo)) {
-    const zona = efecto.costo?.origen === 'pagado' ? p.eterPagado : p.eterReserva
+    // R1: el Éter arrebatado no se puede bloquear
+    const zona = eteresPropios(state, efecto.costo?.origen === 'pagado' ? p.eterPagado : p.eterReserva, jugador)
     if (costo <= 0 || zona.length < costo) return null
     return zona.slice(0, costo)
   }
