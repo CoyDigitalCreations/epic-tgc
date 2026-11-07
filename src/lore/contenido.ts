@@ -235,7 +235,7 @@ export const CAMPEONES_DISONANCIA: Campeona[] = [
   { id: 'DS-016', nombre: 'Korr', titulo: 'Viento del Sur', linea: 'Coste 3 · ATQ 4 / RES 4', rol: 'Normal', texto: 'El sur empuja a los suyos hacia adelante: al atacar, manda hasta 2 Éter de la Reserva del rival a su zona de pago.' },
   { id: 'DS-017', nombre: 'Vorlag', titulo: 'El Que Aprieta', linea: 'Coste 4 · ATQ 4 / RES 5', rol: 'Normal', texto: 'El Nudo cobra lo que el norte guarda: al inicio del Choque del rival, le manda hasta 2 Éter de la Reserva a su zona de pago.' },
   { id: 'DS-018', nombre: 'Skarn', titulo: 'Rompearcanas', linea: 'Coste 4 · ATQ 3 / RES 6', rol: 'Normal', texto: 'Los vínculos del norte se rompen como el hielo: por 2 Éter destruye una Mística o una Arcana del rival.' },
-  { id: 'DS-031', nombre: 'Emisario del Nudo', titulo: 'Voz del Sur', linea: 'Coste 2 · ATQ 3 / RES 3', rol: 'Normal', texto: 'El Nudo cobra, y el Nudo reparte: al ser enviado al Cementerio desde cualquier zona, busca en tu mazo un Campeón de coste 2 o menos.' },
+  { id: 'DS-031', nombre: 'Emisario del Nudo', titulo: 'Voz del Sur', linea: 'Coste 3 · ATQ 4 / RES 3', rol: 'Normal', texto: 'El Nudo cobra, y el Nudo reparte: al ser enviado al Cementerio desde cualquier zona, busca en tu mazo un Campeón de coste 4 o menos.' },
 ]
 
 /** Las nueve cartas de Éter de Disonancia con su frase (el *flavor* de la carta, tal cual). */

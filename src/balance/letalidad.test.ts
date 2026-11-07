@@ -151,8 +151,9 @@ describe('umbralesPorStat (escalones)', () => {
 
   // Rediseño de Estásis: Isolde pasó de RES 7 a 6 y Rowena y Vaela cambiaron de perfil; el pool ya no llega a RES 7. Elena sube a ATQ 4, así que un RES 4 ahora lo matan 10.
   // Rediseño de Disonancia: Kael 4/2 y Marek 4/3 ya no son de ATQ 5, Korr pasó a 4/4: un RES 4 lo matan 9 y un RES 5 solo Vaela (1).
-  it('RES 4 la matan 9, RES 5 la mata 1 y RES 6 o más no la mata nadie', () => {
-    expect(lm(4)).toBe(9)
+  // Emisario (DS-031) pasó a coste 3 y 4/3 (su tutor llega a Ragnar): ahora tiene ATQ 4, así que un RES 4 lo matan 10.
+  it('RES 4 la matan 10, RES 5 la mata 1 y RES 6 o más no la mata nadie', () => {
+    expect(lm(4)).toBe(10)
     expect(lm(5)).toBe(1)
     expect(lm(6)).toBe(0)
     expect(lm(7)).toBeUndefined()

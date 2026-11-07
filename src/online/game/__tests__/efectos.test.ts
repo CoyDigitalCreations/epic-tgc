@@ -187,19 +187,20 @@ describe('registro y dispatch de efectos (F1, ADR-20)', () => {
         ...s.instances,
         'm-kael': { cardInstanceId: 'm-kael', cardId: 'DS-011', owner: 'A' },
         'm-aurora': { cardInstanceId: 'm-aurora', cardId: 'FB-010', owner: 'A' },
+        'm-mistica': { cardInstanceId: 'm-mistica', cardId: 'FB-032', owner: 'A' }, // Mística: no es Campeón
       },
       players: {
         ...s.players,
-        A: { ...s.players.A, mazo: ['m-kael', 'm-aurora'] },
+        A: { ...s.players.A, mazo: ['m-kael', 'm-aurora', 'm-mistica'] },
       },
     }
 
     // Fire al-ser-enviado-al-cementerio — JSON interpreter should create pending
     dispararTrigger(s, ctx, 'al-ser-enviado-al-cementerio', 'A', [ds031])
 
-    // Should have pending objective with only Kael (cost ≤ 2 champion; Aurora cuesta 4)
+    // DS-031 busca Campeones de coste ≤ 4: Kael (2) y Aurora (4) cumplen; el filtro de TIPO deja fuera a una Mística
     expect(s.objetivosPendientes).toBeDefined()
-    expect(s.objetivosPendientes![0].opciones).toEqual(['m-kael'])
+    expect(s.objetivosPendientes![0].opciones).toEqual(['m-kael', 'm-aurora'])
   })
 })
 

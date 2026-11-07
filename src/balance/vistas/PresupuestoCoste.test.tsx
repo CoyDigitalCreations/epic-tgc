@@ -32,9 +32,10 @@ describe('PresupuestoCoste', () => {
       'Banda máxima',
     ])
     expect(filas()).toEqual([
-      // Rediseño de Disonancia (Lote 2): Kael 4/2, Draven 3/3, Emisario 3/3 (coste 2, suma 6) y Marek 4/3, Korr 4/4 (coste 3)
-      ['Coste 2', '4', '6', '5', '6'],
-      ['Coste 3', '8', '7', '6', '8'],
+      // Rediseño de Disonancia (Lote 2): Kael 4/2, Draven 3/3 (coste 2) y Marek 4/3, Korr 4/4 (coste 3).
+      // Emisario (DS-031) pasó a coste 3 y 4/3 (suma 7, dentro de la banda 6-8): sale del 2 y entra al 3.
+      ['Coste 2', '3', '6', '5', '6'],
+      ['Coste 3', '9', '7', '6', '8'],
       ['Coste 4', '6', '8.83', '8', '10'],
     ])
   })
@@ -43,7 +44,7 @@ describe('PresupuestoCoste', () => {
     montar()
     await userEvent.selectOptions(screen.getByRole('combobox', { name: /agrupar por/i }), 'mazo')
     expect(filas()).toEqual([
-      ['Disonancia', '10', '8.3', '—', '—'],
+      ['Disonancia', '10', '8.4', '—', '—'],
       ['Estásis', '10', '8.6', '—', '—'],
     ])
   })

@@ -42,7 +42,7 @@ describe('MatrizLetalidad', () => {
     render(<MatrizLetalidad cartas={CARTAS} />)
     const res = filas(/escalones por RES/i)
     expect(res.find((f) => f[0] === '3')).toEqual(['3', '18', '100', 'Igual que RES 2'])
-    expect(res.find((f) => f[0] === '4')).toEqual(['4', '9', '50', '—'])
+    expect(res.find((f) => f[0] === '4')).toEqual(['4', '10', '55.6', '—'])
     expect(res.find((f) => f[0] === '5')?.slice(0, 2)).toEqual(['5', '1'])
     expect(res.find((f) => f[0] === '6')?.slice(0, 2)).toEqual(['6', '0'])
     const atq = filas(/escalones por ATQ/i)

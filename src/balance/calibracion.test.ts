@@ -98,11 +98,12 @@ describe('calibración de CONFIG_V1 con impuesto de efecto', () => {
     // mínimos de 6 y 8. Se conserva la misma intención: un piso más alto mete cartas a «bajo».
     const conPiso = structuredClone(CONFIG_V1)
     conPiso.bandas[3].sumaMin = 8
-    // Con la Disonancia rediseñada (Kael, Draven y Emisario de coste 2 ya no salen; Marek 4/3 es de coste 3, suma 7)
+    // Con la Disonancia rediseñada (Kael y Draven de coste 2 ya no salen; Marek 4/3 y Emisario 4/3 son de coste 3, suma 7)
     expect(idsFuera(conPiso)).toEqual([
       'DS-013',
       'DS-014',
       'DS-015',
+      'DS-031',
       'FB-011',
       'FB-012',
       'FB-013',

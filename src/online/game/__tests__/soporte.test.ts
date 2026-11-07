@@ -14,7 +14,7 @@ registrarReinoPerdidoClasico()
 
 // Cartas reales del catálogo (fuente de verdad: seed/FuenteEfectos.json):
 // FB-031 Campeón Orden/Céleste cost 2 — tutor al morir: Campeones Orden+Céleste coste ≤ 4 del mazo
-// DS-031 Campeón Caos cost 2 — tutor al morir: Campeones coste ≤ 2 del mazo
+// DS-031 Campeón Caos cost 3 — tutor al morir: Campeones coste ≤ 4 del mazo (llega a Ragnar)
 // FB-032 Mística Rito del Alba — hoy: hechizo/invocar_y_equipar SIN trigger (hueco de Fase 2)
 // DS-033 Mística — hoy: hechizo/tutor SIN trigger (hueco de Fase 2)
 // DS-032 Arcana — hoy: hechizo/tutor SIN trigger + condicion inicio_choque (recompensa sin ruta)
@@ -22,7 +22,7 @@ registrarReinoPerdidoClasico()
 // DS-010 Ragnar · FB-012 Mira · FB-024 Combate · FB-001 Éter Orden ·
 // DS-002 Éter Caos · FB-002 Éter · DS-004 Éter descarte rival.
 const FB031 = 'FB-031' // tutor al morir: Campeones Orden/Céleste coste ≤ 4 del mazo
-const DS031 = 'DS-031' // tutor al morir: Campeones coste ≤ 2 del mazo
+const DS031 = 'DS-031' // tutor al morir: Campeones coste ≤ 4 del mazo
 const FB032 = 'FB-032' // portador de tests de dispatch (su JSON hoy es invocar_y_equipar sin trigger)
 const DS032 = 'DS-032' // portador de tests de dispatch (su JSON hoy es hechizo/tutor sin trigger)
 const AURORA = 'FB-010' // Orden/Céleste cost 4 — AHORA cumple el filtro de FB-031
@@ -402,12 +402,15 @@ describe('soporte C5: mecánica TUTOR (D1 interactivo)', () => {
     expect(r.objetivosPendientes).toHaveLength(0)
   })
 
-  it('DS-031: filtro Campeón ≤ 2 (cualquier facción) con su propio JSON', () => {
+  // DS-031 busca Campeones de coste ≤ 4: hoy ningún Campeón del seed cuesta más, así que el filtro que se puede probar con
+  // cartas reales es el de TIPO (una Mística de coste 4 no es Campeón); el tope de coste lo cubre el test sintético de la Mística.
+  it('DS-031: filtro Campeón ≤ 4 (cualquier facción, solo Campeones) con su propio JSON', () => {
     let s = estadoMinimo()
     const { s: s1, id: ds031 } = conCampeon(s, DS031, 0, 'A')
     s = s1
-    s = conCartaEnMazo(s, 'm-fb031', FB031, 'A') // cost 2 ✓
-    s = conCartaEnMazo(s, 'm-aurora', AURORA, 'A') // cost 4 ✗
+    s = conCartaEnMazo(s, 'm-fb031', FB031, 'A') // Campeón cost 2 ✓
+    s = conCartaEnMazo(s, 'm-aurora', AURORA, 'A') // Campeón cost 4 ✓ (antes ✗: el tope era 2)
+    s = conCartaEnMazo(s, 'm-fb032', FB032, 'A') // Mística cost 4 ✗ (no es Campeón)
 
     const ctx = crearCtx()
     destruirCarta(s, ctx, ds031, 'efecto')
@@ -415,7 +418,7 @@ describe('soporte C5: mecánica TUTOR (D1 interactivo)', () => {
       jugador: 'A',
       instId: ds031,
       trigger: 'al-ser-enviado-al-cementerio',
-      opciones: ['m-fb031'],
+      opciones: ['m-fb031', 'm-aurora'],
     })
   })
 
@@ -430,17 +433,17 @@ describe('soporte C5: mecánica TUTOR (D1 interactivo)', () => {
     s = conCartaEnMazo(s, 'm-fb031', FB031, 'A') // cost 2 ✓
     s = conCartaEnMazo(s, 'm-aurora', AURORA, 'A') // cost 4 ✗
     s = conCartaEnMazo(s, 'm-mistica2', TUTOR_MISTICA_COSTE2.id, 'A') // cost 2 ✓ (tipo carta)
-    s = conCartaEnMazo(s, 'm-ds031', DS031, 'A') // cost 2 ✓ (tipo carta)
+    s = conCartaEnMazo(s, 'm-kael', KAEL, 'A') // Kael cost 2 ✓ (tipo carta)
 
     const ctx = crearCtx()
     const r = aplicar(s, { type: 'jugar_mistica', cardInstanceId: mistica, slot: 0, eterIds: ids }, ctx)
     // F5d-3: el trigger se arma con el patrón de declaración (F5d-1) — el pendiente lleva `opener: {efectoIdx}`
     expect(r.objetivosPendientes).toEqual([
-      { jugador: 'A', instId: mistica, trigger: 'al-jugar-mistica', opciones: ['m-fb031', 'm-mistica2', 'm-ds031'], opener: { efectoIdx: 0 } },
+      { jugador: 'A', instId: mistica, trigger: 'al-jugar-mistica', opciones: ['m-fb031', 'm-mistica2', 'm-kael'], opener: { efectoIdx: 0 } },
     ])
 
     const r2 = aplicar(r, { type: 'elegir_objetivo', objetivoId: 'm-mistica2' }, ctx)
-    expect(r2.players.A.mazo).toEqual(['m-fb031', 'm-aurora', 'm-ds031'])
+    expect(r2.players.A.mazo).toEqual(['m-fb031', 'm-aurora', 'm-kael'])
     expect(r2.players.A.mano).toEqual(['m-mistica2'])
     expect(ctx.events).toContainEqual({ type: 'carta_robada', jugador: 'A', cardInstanceId: 'm-mistica2' })
   })

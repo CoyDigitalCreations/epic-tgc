@@ -2491,7 +2491,7 @@ var FuenteEfectos_default = [
     paqueteId: "disonancia",
     limiteCopias: "2",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-11-06T01:18:09.009Z",
+    updatedAt: "2026-11-07T01:10:12.221Z",
     facciones: [
       "Caos"
     ],
@@ -2503,8 +2503,8 @@ var FuenteEfectos_default = [
       "Efecto"
     ],
     stats: {
-      cost: 2,
-      poder: 3,
+      cost: 3,
+      poder: 4,
       resistencia: 3
     },
     efectos: [
@@ -2519,12 +2519,12 @@ var FuenteEfectos_default = [
           controlador: "propio",
           zona: "mazo",
           filtros: {
-            costeMax: 2
+            costeMax: 4
           },
           zonaDestino: "mano"
         },
         zonaDestino: "mano",
-        texto: "Al ser enviada al Cementerio desde cualquier zona, puedes buscar 1 Campe\xF3n coste 2 o menos de tu mazo y agr\xE9galo a tu mano."
+        texto: "Al ser enviada al Cementerio desde cualquier zona, puedes buscar 1 Campe\xF3n coste 4 o menos de tu mazo y agr\xE9galo a tu mano."
       }
     ]
   },
