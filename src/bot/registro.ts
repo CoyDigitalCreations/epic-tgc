@@ -3,7 +3,7 @@ import { botBase } from './base'
 import { CONFIG } from './busqueda'
 import type { Config } from './busqueda'
 import { crearBotBusqueda } from './dificil'
-import { PESOS_ANTES } from './evaluar'
+import { PESOS_ANTES, PESOS_SIN_ARCANA } from './evaluar'
 import { botDificilNuevo, botFacilNuevo, botMedioNuevo } from './niveles'
 
 /** Todos los bots que la arena sabe enfrentar, por nombre. */
@@ -16,6 +16,8 @@ export const BOTS: Record<string, Bot> = {
   dificil: botDificilNuevo,
   /** El Difícil con la valoración de Éter de ANTES de distinguir el arrebatado: línea base para medir esa mejora. */
   'dificil-antes': crearBotBusqueda({ ...CONFIG, pesos: PESOS_ANTES }),
+  /** El Difícil sin el bonus por Arcana colocada: línea base para medir ESE cambio por separado (conserva la valoración nueva del Éter). */
+  'dificil-sin-arcana': crearBotBusqueda({ ...CONFIG, pesos: PESOS_SIN_ARCANA }),
 }
 
 /**

@@ -36,6 +36,12 @@ export interface Pesos {
   eterPrestado: number
   /** Cartas de soporte en el campo (Místicas/Arcanas colocadas). */
   soporte: number
+  /**
+   * Bonus por cada Arcana colocada. Al bajarla deja de contar en la mano (`mano + manoCoste × coste`, hasta 1.9) y su efecto es
+   * futuro, así que el tablero solo la veía como `soporte`: el saldo salía negativo y el bot nunca las colocaba (FB-023/024: 0 de
+   * ~70 veces vistas). Plano a propósito: la Arcana rival está boca abajo y su coste no se debe leer.
+   */
+  arcanaColocada: number
   /** Mazo propio por debajo de `mazoBajoUmbral`: cada carta que falta penaliza (perder por mazo vacío). */
   mazoBajo: number
   mazoBajoUmbral: number
@@ -56,13 +62,17 @@ export const PESOS: Pesos = {
   eterRobado: 1,
   eterPrestado: 0.25,
   soporte: 1.5,
+  arcanaColocada: 1,
   mazoBajo: 6,
   mazoBajoUmbral: 6,
   excesoMano: 50,
 }
 
 /** Los pesos de ANTES de valorar el Éter arrebatado por dueño: línea base para medir la mejora en la arena (`dificil-antes`). */
-export const PESOS_ANTES: Pesos = { ...PESOS, eterRobado: 0, eterPrestado: 1 }
+export const PESOS_ANTES: Pesos = { ...PESOS, eterRobado: 0, eterPrestado: 1, arcanaColocada: 0 }
+
+/** Los pesos de ANTES de bonificar la Arcana colocada: línea base de ese único cambio (`dificil-sin-arcana`). */
+export const PESOS_SIN_ARCANA: Pesos = { ...PESOS, arcanaColocada: 0 }
 
 const VICTORIA = 1e6
 
@@ -84,6 +94,7 @@ function valorTablero(s: GameState, j: PlayerId, w: Pesos): number {
     v += valor
   }
   for (const id of [...s.players[j].campo.misticasTacticas, ...s.players[j].campo.arcanasCombate]) if (id) v += w.soporte
+  for (const id of s.players[j].campo.arcanasCombate) if (id) v += w.arcanaColocada
   return v
 }
 

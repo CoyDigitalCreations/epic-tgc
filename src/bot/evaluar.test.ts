@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { createInitialState } from '../online/game'
 import type { GameState, PlayerId } from '../online/game'
 import { DISONANCIA_CARDS, ESTASIS_CARDS } from '../shared/data/paquetes'
-import { evaluar, PESOS, PESOS_ANTES } from './evaluar'
+import { evaluar, PESOS, PESOS_ANTES, PESOS_SIN_ARCANA } from './evaluar'
 
 const expandir = (cards: { id: string; limiteCopias?: string | number }[]) =>
   cards.flatMap((c) => Array.from({ length: Number(c.limiteCopias ?? 1) }, () => c.id))
@@ -47,5 +47,61 @@ describe('evaluar · Éter arrebatado (cuenta por dueño, no por zona)', () => {
     expect(evaluar(s, 'B', PESOS) - base).toBeLessThan(0.4 * 2) // menos de 2 Éter propios
     // A conserva lo suyo (vuelve en su Alba); solo cede el valor de gasto inmediato de los 2 prestados
     expect(evaluar(s, 'A', PESOS)).toBeCloseTo(evaluar(inicial(), 'A', PESOS) - 2 * PESOS.eterPrestado * PESOS.eter, 9)
+  })
+})
+
+/** Deja `cardId` en la mano de `j` (la saca del mazo si hace falta) y devuelve su instancia. */
+function enMano(s: GameState, j: PlayerId, cardId: string): string {
+  const p = s.players[j]
+  const enLaMano = p.mano.find((x) => s.instances[x]?.cardId === cardId)
+  if (enLaMano) return enLaMano
+  const id = p.mazo.find((x) => s.instances[x]?.cardId === cardId)!
+  p.mazo.splice(p.mazo.indexOf(id), 1)
+  p.mano.push(id)
+  return id
+}
+
+/** Baja esa carta de la mano a la primera casilla de Arcanas (como `colocar_arcana`). */
+function colocarArcana(s: GameState, j: PlayerId, id: string): GameState {
+  s.players[j].mano.splice(s.players[j].mano.indexOf(id), 1)
+  s.players[j].campo.arcanasCombate[0] = id
+  return s
+}
+
+/** Mismo estado dos veces: con la Arcana en la mano y con la Arcana colocada. */
+function parejas(j: PlayerId, cardId: string): { mano: GameState; puesta: GameState } {
+  const mano = inicial()
+  const id = enMano(mano, j, cardId)
+  const puesta = inicial()
+  enMano(puesta, j, cardId)
+  return { mano, puesta: colocarArcana(puesta, j, id) }
+}
+
+describe('evaluar · Arcana colocada (el bot ya no las deja atascadas en la mano)', () => {
+  // FB-023 es una Arcana de coste 3: en la mano vale 1 + 0.3 × 3 = 1.9, más que los 1.5 de soporte
+  it('con los pesos de antes colocar una Arcana de coste 3 EMPEORABA la evaluación (por eso no se colocaban)', () => {
+    const { mano, puesta } = parejas('A', 'FB-023')
+    expect(evaluar(puesta, 'A', PESOS_SIN_ARCANA) - evaluar(mano, 'A', PESOS_SIN_ARCANA)).toBeCloseTo(1.5 - 1.9, 9)
+  })
+
+  it('ahora colocarla mejora la evaluación', () => {
+    const { mano, puesta } = parejas('A', 'FB-023')
+    expect(evaluar(puesta, 'A', PESOS) - evaluar(mano, 'A', PESOS)).toBeCloseTo(1.5 + PESOS.arcanaColocada - 1.9, 9)
+    expect(evaluar(puesta, 'A', PESOS)).toBeGreaterThan(evaluar(mano, 'A', PESOS))
+  })
+
+  it('el bonus es plano: la Arcana boca abajo del rival no revela su coste', () => {
+    // Para A (que mira) solo cambia la mano del rival (−1 carta) y su soporte: no depende de lo que cueste la carta
+    const delta = (cardId: string) => {
+      const { mano, puesta } = parejas('B', cardId)
+      return evaluar(puesta, 'A', PESOS) - evaluar(mano, 'A', PESOS)
+    }
+    expect(delta('DS-024')).toBeCloseTo(delta('DS-023'), 9)
+  })
+
+  it('PESOS_ANTES conserva la valoración original (sin el bonus)', () => {
+    expect(PESOS_ANTES.arcanaColocada).toBe(0)
+    const { puesta } = parejas('A', 'FB-023')
+    expect(evaluar(puesta, 'A', PESOS_ANTES)).toBeCloseTo(evaluar(puesta, 'A', { ...PESOS, arcanaColocada: 0, eterRobado: 0, eterPrestado: 1 }), 9)
   })
 })
