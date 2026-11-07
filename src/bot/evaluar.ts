@@ -21,6 +21,11 @@ export interface Pesos {
   /** Cada carta de la mano propia, más su coste. */
   mano: number
   manoCoste: number
+  /**
+   * Por punto de ATQ + RES de un Campeón en la mano propia. Sin esto todos los Campeones del mismo coste valían igual en la mano y
+   * el bot no sabía elegir entre ellos al buscar en el mazo (el Emisario del Nudo traía a Ragnar 1 de cada 15 veces, siendo 9/9).
+   */
+  manoCampeon: number
   /** Éter (reserva + pagado + bloqueado): recurso. */
   eter: number
   /**
@@ -58,6 +63,7 @@ export const PESOS: Pesos = {
   agotado: 0.2,
   mano: 1,
   manoCoste: 0.3,
+  manoCampeon: 0.2,
   eter: 0.4,
   eterRobado: 1,
   eterPrestado: 0.25,
@@ -69,10 +75,13 @@ export const PESOS: Pesos = {
 }
 
 /** Los pesos de ANTES de valorar el Éter arrebatado por dueño: línea base para medir la mejora en la arena (`dificil-antes`). */
-export const PESOS_ANTES: Pesos = { ...PESOS, eterRobado: 0, eterPrestado: 1, arcanaColocada: 0 }
+export const PESOS_ANTES: Pesos = { ...PESOS, eterRobado: 0, eterPrestado: 1, arcanaColocada: 0, manoCampeon: 0 }
 
 /** Los pesos de ANTES de bonificar la Arcana colocada: línea base de ese único cambio (`dificil-sin-arcana`). */
-export const PESOS_SIN_ARCANA: Pesos = { ...PESOS, arcanaColocada: 0 }
+export const PESOS_SIN_ARCANA: Pesos = { ...PESOS, arcanaColocada: 0, manoCampeon: 0 }
+
+/** Los pesos de ANTES de valorar los stats de los Campeones en la mano: línea base de ese único cambio (`dificil-sin-mano-campeon`). */
+export const PESOS_SIN_MANO_CAMPEON: Pesos = { ...PESOS, manoCampeon: 0 }
 
 const VICTORIA = 1e6
 
@@ -119,6 +128,13 @@ function costeDe(s: GameState, id: string): number {
   return stats?.cost ?? 0
 }
 
+/** ATQ + RES base de una carta (0 si no es Campeón). */
+function statsSumaDe(s: GameState, id: string): number {
+  const meta = s.instances[id]?.cardId ? getCardMeta(s.instances[id]!.cardId!) : null
+  const stats = meta && 'stats' in meta ? (meta.stats as { poder?: number; resistencia?: number } | undefined) : undefined
+  return (stats?.poder ?? 0) + (stats?.resistencia ?? 0)
+}
+
 /** Valor de `s` para `yo` (la diferencia entre lo suyo y lo del rival). */
 export function evaluar(s: GameState, yo: PlayerId, w: Pesos = PESOS): number {
   const rival: PlayerId = yo === 'A' ? 'B' : 'A'
@@ -137,7 +153,7 @@ export function evaluar(s: GameState, yo: PlayerId, w: Pesos = PESOS): number {
   v += w.eter * (eterDe(s, yo, w) - eterDe(s, rival, w))
 
   // Mano: la mía por lo que valen mis cartas; la del rival solo por su tamaño (no sé qué tiene)
-  for (const id of s.players[yo].mano) v += w.mano + w.manoCoste * costeDe(s, id)
+  for (const id of s.players[yo].mano) v += w.mano + w.manoCoste * costeDe(s, id) + w.manoCampeon * statsSumaDe(s, id)
   v -= w.mano * s.players[rival].mano.length
 
   // Ocaso con la mano pasada del límite: el descarte es OBLIGATORIO. Sin esto «tener más cartas» parecía bueno y el bot

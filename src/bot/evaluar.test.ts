@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { createInitialState } from '../online/game'
 import type { GameState, PlayerId } from '../online/game'
 import { DISONANCIA_CARDS, ESTASIS_CARDS } from '../shared/data/paquetes'
-import { evaluar, PESOS, PESOS_ANTES, PESOS_SIN_ARCANA } from './evaluar'
+import { evaluar, PESOS, PESOS_ANTES, PESOS_SIN_ARCANA, PESOS_SIN_MANO_CAMPEON } from './evaluar'
 
 const expandir = (cards: { id: string; limiteCopias?: string | number }[]) =>
   cards.flatMap((c) => Array.from({ length: Number(c.limiteCopias ?? 1) }, () => c.id))
@@ -19,7 +19,7 @@ function arrebatar(s: GameState, ladron: PlayerId, victima: PlayerId, n: number)
 describe('evaluar · Éter arrebatado (cuenta por dueño, no por zona)', () => {
   it('sin Éter arrebatado en juego, los pesos nuevos y los de antes dan lo mismo', () => {
     const s = inicial()
-    expect(evaluar(s, 'A', PESOS)).toBeCloseTo(evaluar(s, 'A', PESOS_ANTES), 9)
+    expect(evaluar(s, 'A', PESOS_SIN_MANO_CAMPEON)).toBeCloseTo(evaluar(s, 'A', PESOS_ANTES), 9)
   })
 
   it('antes arrebatar Éter mejoraba la evaluación del ladrón por completo; ahora solo una fracción (es prestado)', () => {
@@ -102,6 +102,33 @@ describe('evaluar · Arcana colocada (el bot ya no las deja atascadas en la mano
   it('PESOS_ANTES conserva la valoración original (sin el bonus)', () => {
     expect(PESOS_ANTES.arcanaColocada).toBe(0)
     const { puesta } = parejas('A', 'FB-023')
-    expect(evaluar(puesta, 'A', PESOS_ANTES)).toBeCloseTo(evaluar(puesta, 'A', { ...PESOS, arcanaColocada: 0, eterRobado: 0, eterPrestado: 1 }), 9)
+    expect(evaluar(puesta, 'A', PESOS_ANTES)).toBeCloseTo(evaluar(puesta, 'A', { ...PESOS, arcanaColocada: 0, eterRobado: 0, eterPrestado: 1, manoCampeon: 0 }), 9)
+  })
+})
+
+describe('evaluar · Campeones en la mano (el tutor ya distingue a Ragnar de otro coste 4)', () => {
+  /** Mismo estado, pero `A` tiene en la mano a `cardId` (se le añade una instancia nueva). */
+  const conEnMano = (cardId: string): GameState => {
+    const s = structuredClone(createInitialState(expandir(ESTASIS_CARDS), expandir(DISONANCIA_CARDS), 7).state)
+    const id = `m-${cardId}`
+    s.instances[id] = { ...Object.values(s.instances)[0], cardInstanceId: id, cardId, owner: 'A', controller: 'A' } as GameState['instances'][string]
+    s.players.A.mano = [...s.players.A.mano, id]
+    return s
+  }
+
+  it('entre dos Campeones del mismo coste, prefiere al de más ATQ + RES (Ragnar 9/9 sobre Isolde 3/6)', () => {
+    expect(evaluar(conEnMano('DS-010'), 'A')).toBeGreaterThan(evaluar(conEnMano('FB-014'), 'A'))
+  })
+
+  it('sin el peso nuevo ambos valen igual (era el defecto: coste igual, valor igual)', () => {
+    expect(evaluar(conEnMano('DS-010'), 'A', PESOS_SIN_MANO_CAMPEON)).toBeCloseTo(evaluar(conEnMano('FB-014'), 'A', PESOS_SIN_MANO_CAMPEON), 9)
+  })
+
+  it('una Mística en la mano no suma stats', () => {
+    const base = conEnMano('FB-032')
+    const sin = structuredClone(base)
+    sin.players.A.mano = sin.players.A.mano.filter((id) => id !== 'm-FB-032')
+    const aporte = (w: typeof PESOS) => evaluar(base, 'A', w) - evaluar(sin, 'A', w)
+    expect(aporte(PESOS)).toBeCloseTo(aporte(PESOS_SIN_MANO_CAMPEON), 9)
   })
 })
