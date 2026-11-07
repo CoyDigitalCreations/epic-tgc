@@ -50,7 +50,8 @@ function contar(evs: readonly GameEvent[], mazoDe: Record<PlayerId, Mazo>, res: 
       case 'mazo_mirado': sumar(res[mazoDe[e.jugador]], 'Mazo mirado (scry/tutor)'); break
       case 'carta_descartada': sumar(res[mazoDe[e.jugador]], 'Cartas descartadas (propias)', e.cardInstanceIds.length); break
       case 'campeon_robado': sumar(res[mazoDe[e.jugador]], 'Campeones robados'); break
-      case 'eter_movido': sumar(res[mazoDe[e.jugador]], `Éter movido → ${e.destino}`); break
+      // OJO: `jugador` es el DUEÑO del Éter, no quien lo mueve. Contra el rival (DS-006/016/017/027) lo sufre su dueño.
+      case 'eter_movido': sumar(res[mazoDe[e.jugador]], `Éter propio movido → ${e.destino} (lo sufre su dueño)`); break
       case 'carta_salida_de_zona':
         if (e.zona === '1G' || e.zona === '2G' || e.zona === '3G') sumar(res[mazoDe[e.jugador]], `Cartas salen de ${e.zona}`)
         break
