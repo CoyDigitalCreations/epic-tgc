@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
-import { aporteDe, costeDeCampeon, atacantesElegibles, campeonesSacrificables, costeEterHabilidad, faccionesCompartidas, getCardMeta, sacrificiosRequeridos, esBloqueoFijo, maxEterBloqueado, efectoBloqueoAccion, parejasBloqueoOpcion, cadenaActiva, ordenResolucion } from '../game'
+import { aporteDe, costeDeCampeon, atacantesElegibles, campeonesSacrificables, costeEterHabilidad, getCardMeta, sacrificiosRequeridos, esBloqueoFijo, maxEterBloqueado, efectoBloqueoAccion, parejasBloqueoOpcion, cadenaActiva, ordenResolucion } from '../game'
 import type { Action, CardInstance, GameState, PlayerId } from '../game'
 import { disparoDeRespuesta } from '../game/chain'
 import { bloqueoAlJugar } from '../game/bloqueoAlJugar'
@@ -2084,20 +2084,14 @@ export function Tablero({
                         const cardId = inst?.cardId ?? ''
                         const meta = getCardMeta(cardId)
                         const elegido = elegidos.has(id)
-                        const bloqueable =
-                          seleccion.tipo === 'bloquear' &&
-                          meta !== null &&
-                          faccionesCompartidas(meta.facciones, getCardMeta(seleccion.objetivoCardId)?.facciones)
                         const aporte = seleccion.tipo === 'pagar' && meta ? aporteDe(meta.id, seleccion.objetivoCardId) : null
-                        const inhabil = seleccion.tipo === 'bloquear' && !bloqueable
                         return (
                           <TileCarta
                             key={id}
                             seleccionada={elegido}
-                            disabled={inhabil}
-                            onClick={() => !inhabil && toggleEter(id)}
+                            onClick={() => toggleEter(id)}
                             title={meta?.name}
-                            pie={aporte !== null ? `aporte ${aporte}` : bloqueable ? 'bloqueable' : 'no comparte'}
+                            pie={aporte !== null ? `aporte ${aporte}` : 'bloqueable'}
                           >
                             <MiniCard inst={inst} anchoPx={58} sinTooltip />
                           </TileCarta>

@@ -5,7 +5,6 @@ import { ESTASIS_CARDS } from '../../shared/data/paquetes'
 import {
   applyAction,
   createInitialState,
-  faccionesCompartidas,
   getCardMeta,
   getValidActions,
   visibleState,

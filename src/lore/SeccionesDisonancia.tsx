@@ -164,9 +164,9 @@ export function SeccionesDisonancia() {
           <Reveal>
             <div className="mb-6 rounded-r-lg border-l-[3px] bg-surface-2 px-5 py-3 text-sm text-gray-300" style={{ borderColor: ROJO }}>
               <p className="mb-1 text-xs font-semibold" style={{ color: ROJO }}>
-                NOTA v2.0 — MAZO IMPLEMENTADO
+                NOTA v1.0 — MAZO IMPLEMENTADO
               </p>
-              El mazo Disonancia, segunda entrega de Los Primogénitos, ya está implementado para la v2.0: <B>33 diseños / 66 cartas</B> (15 de Éter, 45 de Mazo Principal y 6 de Vínculos), disponibles en el constructor de cartas. Es la contraparte del polo sur del mazo Estásis.
+              El mazo Disonancia, segunda entrega de Los Primogénitos, ya está implementado para la v1.0: <B>33 diseños / 66 cartas</B> (15 de Éter, 45 de Mazo Principal y 6 de Vínculos), disponibles en el constructor de cartas. Es la contraparte del polo sur del mazo Estásis.
             </div>
           </Reveal>
 

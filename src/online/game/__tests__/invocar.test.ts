@@ -411,8 +411,8 @@ describe('colocar_arcana (boca abajo 3D-3F, gratis) + activar_arcana (paga coste
   })
 })
 
-describe('bloquear_eter (acción de forja, facción v2.1)', () => {
-  it('bloquea Éter con aura de bloqueo de facción compartida sobre un Campeón propio', () => {
+describe('bloquear_eter (acción de forja)', () => {
+  it('bloquea Éter con aura de bloqueo sobre un Campeón propio', () => {
     const ctx = crearCtx()
     const conCampo = conCampeonEnCampo(estadoMinimo(), CAMPEON, 0)
     const { s, ids } = conEteres(conCampo.s, ETER_BLOQUEO_ORDEN, 1)
@@ -434,7 +434,7 @@ describe('bloquear_eter (acción de forja, facción v2.1)', () => {
     expect(r2.ok).toBe(false)
     expect(bloquearEter(s, ctx, 'A', ids, 'no-existe')).toMatch(/no existe/)
 
-    // Éter sin aura de bloqueo se acepta si comparte facción (sin límite)
+    // Éter sin aura de bloqueo se acepta (sin límite)
     const { s: s3, ids: idsSinBloqueo } = conEteres(conCampo.s, ETER_ORDEN, 1)
     const r3 = applyAction(s3, { type: 'bloquear_eter', eterIds: idsSinBloqueo, targetInstanceId: conCampo.id }, ctx)
     expect(r3.ok).toBe(true)

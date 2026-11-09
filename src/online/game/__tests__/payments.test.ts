@@ -154,7 +154,7 @@ describe('pago de coste con Éter (R8)', () => {
   })
 })
 
-describe('bloqueo de Éter sobre Campeón (facción v2.1)', () => {
+describe('bloqueo de Éter sobre Campeón', () => {
   it('Éter con aura de bloqueo se bloquea: 2A → Campeón.eterBloqueado + evento eter_bloqueado', () => {
     const base = estadoMinimo()
     const { s, campeonId } = conCampeonEnCampo(base, SERAPHINA)
@@ -178,7 +178,7 @@ describe('bloqueo de Éter sobre Campeón (facción v2.1)', () => {
     expect(error).toMatch(/máximo/)
   })
 
-  it('Éter sin aura de bloqueo se acepta (sin facción, sin límite)', () => {
+  it('Éter sin aura de bloqueo se acepta (sin límite)', () => {
     const base = estadoMinimo()
     const { s, campeonId } = conCampeonEnCampo(base, SERAPHINA)
     const { s: s2, ids } = conEteresEnReserva(s, ETER_ORDEN, 1)

@@ -7,7 +7,7 @@ export interface BaseStats {
   cost: number
 }
 
-/** Stats for cards that can fight (solo Campeón en v2.0) */
+/** Stats for cards that can fight (solo Campeón en v1.0) */
 export interface CombatStats extends BaseStats {
   poder: number
   resistencia: number
@@ -450,7 +450,7 @@ export interface ArcanaCard extends CardMeta {
 
 export interface EterCard extends CardMeta {
   type: 'Éter'
-  /** No combaten: valen 1 en v2.0 (7.7). Sin Poder ni Resistencia */
+  /** No combaten: valen 1 en v1.0 (7.7). Sin Poder ni Resistencia */
   stats: BaseStats
   /** Unified effect list — up to 3 effects (reserva, pago, bloqueo) */
   efectos?: EfectoData[]

@@ -171,7 +171,7 @@ export default function Lore() {
                   El Éter respira. Fluye desde la <B>Reserva</B> hacia el mundo cuando despierta el <B>Alba</B>; se <B>ancla</B> en los seres y las promesas que quieren sostener; se <B>gasta</B> en cada acto de poder; y al final <B>regresa</B>, porque nada de lo que fue Éter deja de serlo. Los sabios del norte llaman a este ciclo <em>el Gran Ciclo</em>: la forma que tiene la realidad de recordarse a sí misma. Quien aprende a leerlo, aprende a ganar.
                 </Cita>
                 <P>
-                  El Set Básico, <B>“El Despertar del Éter”</B>, presentará las mecánicas fundamentales del juego cuando sus cartas sean diseñadas para la v2.0. La primera entrega, <B color="#7070ff">LOS PRIMOGÉNITOS</B>, abre con el mazo temático <B color="#7070ff">ESTÁSIS</B> («La Calma»): los Primogénitos del Éter, unidos por el Éter primigenio del polo norte.
+                  El Set Básico, <B>“El Despertar del Éter”</B>, presentará las mecánicas fundamentales del juego cuando sus cartas sean diseñadas para la v1.0. La primera entrega, <B color="#7070ff">LOS PRIMOGÉNITOS</B>, abre con el mazo temático <B color="#7070ff">ESTÁSIS</B> («La Calma»): los Primogénitos del Éter, unidos por el Éter primigenio del polo norte.
                 </P>
               </div>
             </section>
@@ -370,8 +370,8 @@ export default function Lore() {
               <div className="mt-6">
                 <Reveal>
                   <div className="mb-6 rounded-r-lg border-l-[3px] border-card-arcana bg-surface-2 px-5 py-3 text-sm text-gray-300">
-                    <p className="mb-1 text-xs font-semibold text-card-arcana">NOTA v2.0 — MAZO IMPLEMENTADO</p>
-                    El mazo Estásis, primera entrega de Los Primogénitos, ya está implementado para la v2.0: <B>33 diseños / 66 cartas</B> (15 de Éter, 45 de Mazo Principal y 6 de Vínculos), disponibles en el constructor de cartas. Su contraparte del polo sur, el mazo Disonancia, también está implementado: lo encuentras en la sección 10.
+                    <p className="mb-1 text-xs font-semibold text-card-arcana">NOTA v1.0 — MAZO IMPLEMENTADO</p>
+                    El mazo Estásis, primera entrega de Los Primogénitos, ya está implementado para la v1.0: <B>33 diseños / 66 cartas</B> (15 de Éter, 45 de Mazo Principal y 6 de Vínculos), disponibles en el constructor de cartas. Su contraparte del polo sur, el mazo Disonancia, también está implementado: lo encuentras en la sección 10.
                   </div>
                 </Reveal>
 
@@ -457,7 +457,7 @@ export default function Lore() {
           <p className="bg-gradient-to-br from-ether-200 to-ether-400 bg-clip-text font-display text-base font-bold text-transparent">ÉTER ENGINE TCG</p>
           <p className="mt-2 text-xs text-gray-500">Cosmología del Eje — “El Despertar del Éter”</p>
           <p className="text-xs text-gray-500">Mazos Temáticos: “Los Primogénitos” — Estásis (Orden) y Disonancia (Caos)</p>
-          <p className="mt-2 text-xs text-gray-600">Versión 2.0 — Julio 2026 · Creado con Éter Forge</p>
+          <p className="mt-2 text-xs text-gray-600">Versión 1.0 — Julio 2026 · Creado con Éter Forge</p>
           <Link to="/" className="mt-5 inline-block text-sm text-ether-300 transition-colors hover:text-ether-100">
             ← Volver al inicio
           </Link>

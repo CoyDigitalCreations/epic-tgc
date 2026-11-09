@@ -1,6 +1,6 @@
 import type { Zona } from './types'
 
-/** Constantes de slots del campo (manual v2.0 sección 6.1). */
+/** Constantes de slots del campo (manual v1.0 sección 6.1). */
 
 export const SLOTS_CAMPEONES = 5 // 2B-2F (máx 5 Campeones)
 export const SLOTS_MISTICAS_TACTICAS = 3 // 3A-3C

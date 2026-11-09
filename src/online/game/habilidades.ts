@@ -3,8 +3,7 @@
  * Extraído de actions.ts para separación de dominios (change: refactor-engine).
  */
 import type { GameState, Ctx, CardInstance, PlayerId } from './types'
-import { faccionesDe } from './atributos'
-import { getCardMeta, efectoActivableDe, esCostoBloqueo, esArtefactoEquipable, campeonElegibleBloqueoEter, faccionesCompartidas } from './cards'
+import { getCardMeta, efectoActivableDe, esCostoBloqueo, esArtefactoEquipable, campeonElegibleBloqueoEter } from './cards'
 import type { AnyCard, EfectoData } from '../../shared/types'
 import { validarPago, aplicarPago, type ContextoUso } from './payments'
 import { esEterAjeno, etiquetarEterExterno } from './eter'
@@ -151,7 +150,7 @@ export interface ParejaBloqueo {
 
 /**
  * Todas las parejas legales para el bloqueo de un Pasivo 1A (FB-005/DS-006): Campeón propio con
- * efecto continuo que usa Éter bloqueado + Éter de la Reserva de facción compartida, y que
+ * efecto continuo que usa Éter bloqueado + cualquier Éter de la Reserva (el Éter no tiene facción), y que
  * `validarBloqueo` acepta. Orden determinista (campo → reserva): la primera es la del greedy.
  * Fuente ÚNICA para el motor (validar/ejecutar) y la UI (modal de elección).
  */
@@ -164,7 +163,7 @@ export function parejasBloqueoOpcion(s: GameState, jugador: PlayerId): ParejaBlo
     if (!metaC || !campeonElegibleBloqueoEter(metaC)) continue
     for (const eterId of p.eterReserva) {
       const metaE = s.instances[eterId]?.cardId ? getCardMeta(s.instances[eterId]!.cardId!) : null
-      if (!metaE || !faccionesCompartidas(faccionesDe(s, eterId), faccionesDe(s, campeonId))) continue
+      if (!metaE) continue
       if (validarBloqueo(s, jugador, [eterId], campeonId, undefined, { externo: true }) !== null) continue
       parejas.push({ campeonId, eterId })
     }

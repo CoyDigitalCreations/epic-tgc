@@ -98,7 +98,7 @@ export interface EfectoPrestado {
 /** Pasos de la sub-máquina de combate en Choque (9.1, ADR-11). */
 export type CombatePaso = 'ataque' | 'bloqueo' | 'resolucion'
 
-/** Zonas del campo según manual.html v2.0 (sección 1). */
+/** Zonas del campo según manual.html v1.0 (sección 1). */
 export type Zona =
   | 'mano'
   | '1A'

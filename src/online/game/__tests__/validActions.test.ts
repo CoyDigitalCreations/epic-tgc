@@ -3,6 +3,7 @@ import { describe, it, expect } from 'vitest'
 import { applyAction } from '../actions'
 import type { Action } from '../actions'
 import { getValidActions } from '../validActions'
+import { registrarCartas } from '../cards'
 import type { Ctx, GameState, PlayerId } from '../types'
 
 const CAMPEON = 'FB-011' // cost 3
@@ -144,11 +145,28 @@ describe('getValidActions en Forja (5.5)', () => {
     expect(tipos).not.toContain('jugar_campeon')
   })
 
-  it('incluye bloquear_eter por Campeón propio con habilidad activa "bloqueado" y Éter de facción compartida en la Reserva', () => {
+  it('incluye bloquear_eter por Campeón propio con habilidad activa "bloqueado" y Éter en la Reserva', () => {
     let s = conInstancias(estadoMinimo(), { cam1: { cardId: CAMPEON_BLOQUEO, owner: 'A' } })
     s = { ...s, players: { ...s.players, A: { ...s.players.A, campo: { ...s.players.A.campo, campeones: ['cam1', null, null, null, null] } } } }
-    // FB-015 Elena: bloqueo_fijo:3 → necesita 3 Éteres Orden para generar la acción exacta
+    // FB-015 Elena: bloqueo_fijo:3 → necesita 3 Éteres para generar la acción exacta
     s = conEteres(s, 'FB-001', 3)
+
+    const bloqueos = getValidActions(s, 'A').filter((a) => a.type === 'bloquear_eter')
+    expect(bloqueos).toHaveLength(1)
+    if (bloqueos[0]?.type === 'bloquear_eter') {
+      expect(bloqueos[0].eterIds).toHaveLength(3)
+    }
+  })
+
+  it('el Éter NO tiene facción: un Éter con facciones ajenas al Campeón también bloquea', () => {
+    // Regla de diseño: todas las facciones usan el Éter por igual. Aunque una carta de Éter trajera `facciones`
+    // (el Forge no lo permite), el bloqueo no debe filtrar por ellas.
+    registrarCartas([
+      { id: 'T-ETER-CAOS', name: 'T-ETER-CAOS', type: 'Éter', rarity: 'Común', keywords: [], facciones: ['Caos'], stats: { cost: 1 } } as never,
+    ])
+    let s = conInstancias(estadoMinimo(), { cam1: { cardId: CAMPEON_BLOQUEO, owner: 'A' } }) // Elena es de Orden
+    s = { ...s, players: { ...s.players, A: { ...s.players.A, campo: { ...s.players.A.campo, campeones: ['cam1', null, null, null, null] } } } }
+    s = conEteres(s, 'T-ETER-CAOS', 3)
 
     const bloqueos = getValidActions(s, 'A').filter((a) => a.type === 'bloquear_eter')
     expect(bloqueos).toHaveLength(1)

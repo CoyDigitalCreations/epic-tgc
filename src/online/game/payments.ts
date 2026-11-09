@@ -6,11 +6,10 @@ import { efectosNegados, reglaNumero } from './reglas'
 import type { Ctx, GameState, PlayerId } from './types'
 
 /**
- * Economía de Éter (manual §7.3 + bloqueo facción v2.1):
- * - Aporte real: un Éter que comparte facción con la carta pagada vale 1,
- *   el de facción ajena vale ½. Se paga cuando Σ aporte ≥ coste.
+ * Economía de Éter (manual §7.3):
+ * - Aporte: cada Éter vale 1. El Éter NO tiene facción: todas las facciones lo usan por igual.
  * - NO hay sobrepago: el jugador debe seleccionar exactamente el coste.
- * - Bloquear (v2.1 + Fase 3a): 2A → targetInstanceId.eterBloqueado.
+ * - Bloquear (Fase 3a): 2A → targetInstanceId.eterBloqueado.
  *   Targets: Campeones (2B-2F) y — Fase 3a Phase B — Artefactos (3A-3F)
  *   con costo-bloqueado en efectos[]. Límite por carta según efecto.
  * - Reagrupar: en tu Alba, 1A → 2A; el Éter bloqueado permanece en la carta.
@@ -29,7 +28,7 @@ export interface ContextoUso {
 export interface ResultadoPago {
   ok: boolean
   error?: string
-  /** Σ aportes en unidades reales (1 propio / ½ ajeno). */
+  /** Σ aportes (cada Éter aporta 1). */
   aportado?: number
 }
 
@@ -37,11 +36,11 @@ export interface ResultadoPago {
 export interface ResultadoPago {
   ok: boolean
   error?: string
-  /** Σ aportes en unidades reales (1 propio / ½ ajeno). */
+  /** Σ aportes (cada Éter aporta 1). */
   aportado?: number
 }
 
-/** Aporte de un Éter: siempre 1 (v2.0 — sin reglas de facción). */
+/** Aporte de un Éter: siempre 1 (el Éter no tiene facción). */
 export function aporteDe(eterCardId: string, _objetivoCardId: string): number {
   const eter = getCardMeta(eterCardId)
   if (!eter) return 0
@@ -342,7 +341,7 @@ export function esBloqueoFijo(card: AnyCard): boolean {
 }
 
 /**
- * Bloqueo facción v2.1: valida TODO (sin mutar) y luego mueve 2A → target.eterBloqueado.
+ * Bloqueo de Éter: valida TODO (sin mutar) y luego mueve 2A → target.eterBloqueado.
  * Fase 3a: targetInstanceId — Campeón o (Phase B) Artefacto en campo.
  * Fase 2: etiqueta cada Éter con su fuente/efecto (`efectoIdx` o el primero
  * NO-disparo con costo-bloqueo) y su PAGADOR — la liberación le devolverá el

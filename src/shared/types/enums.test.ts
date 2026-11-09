@@ -32,7 +32,7 @@ describe('RARITIES', () => {
 })
 
 describe('KEYWORDS', () => {
-  it('contiene las 12 keywords oficiales (v2.0 + Tirador e Inexiliable)', () => {
+  it('contiene las 12 keywords oficiales (v1.0 + Tirador e Inexiliable)', () => {
     expect(KEYWORDS).toHaveLength(12)
     expect(KEYWORDS).toContain('Carga')
     expect(KEYWORDS).toContain('Vigor')
@@ -56,7 +56,7 @@ describe('KEYWORDS', () => {
 })
 
 describe('FACCIONES', () => {
-  it('contiene las 8 facciones v2.0', () => {
+  it('contiene las 8 facciones v1.0', () => {
     expect(FACCIONES).toHaveLength(8)
     expect(FACCIONES).toContain('Orden')
     expect(FACCIONES).toContain('Caos')

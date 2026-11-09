@@ -29,7 +29,8 @@ export function registrarCartas(cartas: AnyCard[]): void {
 }
 
 /** true si las facciones A y B comparten al menos una facción.
- *  Si alguno no tiene facciones (undefined/vacío), es compatible con todo (v2.0). */
+ *  Si alguno no tiene facciones (undefined/vacío), es compatible con todo.
+ *  Solo aplica entre Campeones (sacrificio, aura de Comandante, reglas de Comandante): el Éter NO tiene facción. */
 export function faccionesCompartidas(a?: Faccion[], b?: Faccion[]): boolean {
   // Si alguno no tiene facciones definidas, es compatible con cualquier otra
   if (!a || a.length === 0 || !b || b.length === 0) return true

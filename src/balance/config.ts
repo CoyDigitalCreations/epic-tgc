@@ -85,7 +85,7 @@ export const CONFIG_V1: ConfigBalance = {
     activacion: { una_por_turno: 0.8, una_mientras_bloqueado: 0.8 },
     duracion: { permanente: 1, turno: 0.5, n_turnos: 0.75, mientras_en_campo: 1, mientras_ester_bloqueado: 1, mientras_tenga_eter_bloqueado: 1, hasta_fase: 0.5, '1_por_turno': 0.8 },
     objetivo: { self: 1, campeon: 1, todos_campeones_propios: 1.5, todos_campeones_rivales: 1.5 },
-    // Peso de cada keyword (misma escala que el verbo). Fundamento según el manual v3.0:
+    // Peso de cada keyword (misma escala que el verbo). Fundamento según el manual v1.0:
     //  Carga 1       puede atacar al invocarse: tempo, pero una sola vez.
     //  Vigor 1.5     no se agota al atacar: ataca y además defiende cada turno.
     //  Tirador 1     no se agota al disparar: ventaja menor, solo sus efectos Disparo.

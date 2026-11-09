@@ -3,7 +3,7 @@
  *
  * La carta trae los suyos impresos; un `change_type` los SUSTITUYE mientras dure (el Rol y la Facción pasan a ser solo
  * el nuevo valor). El motor debe consultarlos SIEMPRE por aquí y nunca leer `meta.esencia / roles / facciones` de una
- * carta en juego: así un efecto que dependa de la Facción (filtros, sacrificios, Comandante, Éter compatible) ve la
+ * carta en juego: así un efecto que dependa de la Facción (filtros, sacrificios, Comandante) ve la
  * Facción de ahora, no la impresa. Módulo hoja: solo lee el catálogo y el estado.
  */
 import type { Esencia, Faccion, Rol } from '../../shared/types'

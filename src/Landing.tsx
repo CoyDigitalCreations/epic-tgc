@@ -145,7 +145,7 @@ export default function Landing() {
             <Destino
               href="/manual.html"
               titulo="Manual de reglas"
-              descripcion="Reglas completas de Éter TCG v2.0"
+              descripcion="Reglas completas de Éter TCG v1.0"
               glifo="❖"
               acento="text-card-arcana"
             />
@@ -168,7 +168,7 @@ export default function Landing() {
       </main>
 
       <footer className="relative border-t border-card-border/60 py-6 text-center text-xs text-gray-600">
-        Éter Engine TCG · Versión 2.0
+        Éter Engine TCG · Versión 1.0
       </footer>
     </div>
   )
