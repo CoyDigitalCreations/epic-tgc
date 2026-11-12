@@ -7,7 +7,7 @@ import { activacionConSentido } from './limpiar-efecto'
 /** Tipos de negación que el motor ejecuta (el resto se jugaría como «activacion»). Ver executeEffect `negar`. */
 const TIPOS_NEGACION_IMPLEMENTADOS: readonly string[] = ['activacion', 'efecto_activo']
 
-const REGLAS_ENUMERADAS: readonly string[] = ['disparo_sin_agotar', 'coste_campeones_rival_mas', 'olvido_rival', 'peaje_bloqueo']
+const REGLAS_ENUMERADAS: readonly string[] = ['disparo_sin_agotar', 'coste_campeones_rival_mas', 'olvido_rival', 'peaje_bloqueo', 'rival_sin_incrementos_res']
 
 /** Fields that live inside `stats` sub-object instead of flat on the card */
 const STATS_FIELDS = new Set(['cost', 'poder', 'resistencia', 'duracion'])
@@ -102,6 +102,16 @@ function validarEfectos(card: Partial<AnyCard>): ValidationError[] {
     if (e.trigger === 'cuando_campeon_propio_al_cementerio' && !e.objetivo) {
       return falta('el trigger «Cuando un Campeón va al Cementerio» necesita un objetivo (p. ej. «El Campeón del trigger»)')
     }
+    // La causa del envío y el coste «como el del Campeón…» solo tienen sentido con el trigger que los alimenta
+    if (e.causaEnvio && e.causaEnvio.length > 0 && e.trigger !== 'cuando_campeon_propio_al_cementerio') {
+      return falta('«Solo si llega por…» necesita el trigger «Cuando un Campeón va al Cementerio»')
+    }
+    if (e.objetivo?.filtros?.costeMaxDeReferencia === 'trigger' && e.trigger !== 'cuando_campeon_propio_al_cementerio') {
+      return falta('el filtro «Coste máx. como el del Campeón del trigger» necesita el trigger «Cuando un Campeón va al Cementerio»')
+    }
+    if (e.objetivo?.filtros?.costeMaxDeReferencia === 'sacrificado' && e.trigger !== 'al_invocar') {
+      return falta('el filtro «Coste máx. como el del Campeón sacrificado» necesita el trigger «Al invocar» (se sacrifica al invocar)')
+    }
     if (e.reglaEnumerada && e.efecto !== 'modificar_regla') return falta('la regla enumerada solo sirve con el efecto «Modificar una regla»')
     // Un Continuo con coste de Éter bloqueado actúa solo, sin jugada: no puede redirigir ni negar una activación, que necesitan
     // la cadena. Esos efectos van en una Mística o un Disparo que se responda.
@@ -117,6 +127,13 @@ function validarEfectos(card: Partial<AnyCard>): ValidationError[] {
     // el efecto se salta (o el bono lo recibiría quien no debe)
     if (e.objetivo?.tipo === 'invocado' && (e.trigger !== 'al_pagar_eter' || e.contextoUso !== 'invocar')) {
       return falta('el objetivo «El Campeón que se invoca» necesita el trigger «Al pagar Éter» y el contexto «invocar»')
+    }
+    // Requisito de campo («si controlas N o más Campeones de una misma Esencia») y filtro «de esa Esencia», que lo necesita
+    if (e.requisitoCampo && !(Number.isInteger(e.requisitoCampo.minimo) && e.requisitoCampo.minimo >= 2)) {
+      return falta('«Si controlas N o más Campeones de una misma Esencia» necesita N de al menos 2')
+    }
+    if (e.objetivo?.filtros?.esenciaDeLaCondicion && !e.requisitoCampo) {
+      return falta('el filtro «de esa Esencia» necesita el requisito «Si controlas N o más Campeones de una misma Esencia»')
     }
     switch (e.efecto) {
       case 'modificar_regla': {
@@ -142,7 +159,8 @@ function validarEfectos(card: Partial<AnyCard>): ValidationError[] {
         if (!(Number.isInteger(e.cantidad) && (e.cantidad as number) >= 1)) return falta('«Anclar Éter» necesita una cantidad de al menos 1')
         return
       case 'change_type':
-        if (!e.cambioTipo || !(e.cambioTipo.esencia || e.cambioTipo.rol || e.cambioTipo.faccion)) return falta('elige Facción, Esencia o Rol en que se convierte')
+        if (!e.cambioTipo || !(e.cambioTipo.esencia || e.cambioTipo.esenciaElegida || e.cambioTipo.rol || e.cambioTipo.faccion)) return falta('elige Facción, Esencia o Rol en que se convierte')
+        if (e.cambioTipo.esencia && e.cambioTipo.esenciaElegida) return falta('elige una Esencia fija O «la que elijas», no las dos')
         return
       case 'copy':
         if (!e.copyAttributes?.length) return falta('elige qué atributos copia')

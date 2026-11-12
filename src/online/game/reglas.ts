@@ -57,7 +57,9 @@ interface ReglaEnumeradaMotor {
   alcanza?: (s: GameState, f: FuenteRegla, instId: string) => boolean
 }
 
-const REGLAS_ENUMERADAS: Record<ReglaEnumerada, ReglaEnumeradaMotor> = {
+// Parcial a propósito: `rival_sin_incrementos_res` (Purga) ya se puede declarar en el Card-Maker, pero el motor todavía no la ejecuta
+// (pendiente de la etapa de motor). Sin entrada aquí, todos los usos devuelven `undefined` y la regla simplemente no hace nada.
+const REGLAS_ENUMERADAS: Partial<Record<ReglaEnumerada, ReglaEnumeradaMotor>> = {
   /**
    * «Una vez por turno por Campeón, el efecto Disparo no agota» (Aurora). La concede el efecto de COMANDANTE (§10), así que
    * alcanza solo a los Campeones de la facción del Comandante que su controlador tiene en el campo — no por el texto del

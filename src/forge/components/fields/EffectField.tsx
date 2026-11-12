@@ -35,6 +35,10 @@ const TRIGGER_OPTIONS = [
   { value: 'al_ser_enviado_al_cementerio', label: 'Al ir al cementerio' }, { value: 'al_ser_destruido_vinculo', label: 'Al destruir Vínculo' },
   { value: 'cuando_vinculo_seria_destruido', label: 'Cuando Vínculo sería destruido' },
   { value: 'cuando_campeon_propio_al_cementerio', label: 'Cuando un Campeón va al Cementerio' },
+  { value: 'cuando_juegas_mistica', label: 'Cuando juegas una Mística' },
+  { value: 'cuando_activas_arcana', label: 'Cuando activas una Arcana' },
+  { value: 'cuando_campeon_propio_cambia_esencia', label: 'Cuando un Campeón tuyo cambia de Esencia' },
+  { value: 'al_cambiar_de_esencia', label: 'Cuando esta carta cambia de Esencia' },
 ]
 const CONTROLADOR_TRIGGER_OPTIONS = [
   { value: '', label: 'Propio (tu turno)' },
@@ -44,6 +48,7 @@ const COSTO_OPTIONS = [
   { value: 'ninguno', label: 'Sin costo' }, { value: 'eter', label: 'Éter' },
   { value: 'eter_bloqueado', label: 'Éter bloqueado (hasta)' }, { value: 'bloqueo_fijo', label: 'Bloqueo fijo' },
   { value: 'exhaust', label: 'Agotar' },
+  { value: 'exilia_cementerio_propio', label: 'Exiliar Campeón(es) de tu Cementerio' },
 ]
 const REQUISITO_OPTIONS = [
   { value: 'ninguno', label: 'Sin requisito' },
@@ -54,7 +59,7 @@ const REQUISITO_OPTIONS = [
 export const EFFECT_CATEGORIES = [
   {
     nombre: 'Modificadores',
-    efectos: ['buff', 'debuff', 'grant_keyword', 'toggle_exhaust', 'fix_exhaust'] as const,
+    efectos: ['buff', 'debuff', 'grant_keyword', 'toggle_exhaust', 'fix_exhaust', 'quitar_buffs', 'igualar_stats_al_menor'] as const,
   },
   {
     nombre: 'Control',
@@ -78,7 +83,7 @@ export const EFFECT_CATEGORIES = [
   },
   {
     nombre: 'Robo',
-    efectos: ['draw', 'scry', 'tutor', 'rival_discard'] as const,
+    efectos: ['draw', 'scry', 'tutor', 'rival_discard', 'mill', 'draw_discard'] as const,
   },
   {
     nombre: 'Combate',
@@ -119,6 +124,10 @@ const EFECTO_OPTIONS = [
   { value: 'anclar_eter', label: 'Anclar Éter' },
   { value: 'invocar_y_equipar', label: 'Invocar y equipar' },
   { value: 'rival_discard', label: 'Descartar carta rival' },
+  { value: 'quitar_buffs', label: 'Quitar incrementos' },
+  { value: 'igualar_stats_al_menor', label: 'Igualar ATQ y RES al menor' },
+  { value: 'mill', label: 'Enviar mazo al Cementerio' },
+  { value: 'draw_discard', label: 'Robar y descartar' },
 ]
 const DURACION_OPTIONS = [
   { value: 'permanente', label: 'Permanente' }, { value: 'turno', label: 'Este turno' },
@@ -142,6 +151,7 @@ const OBJETIVO_TIPO_OPTIONS = [
   { value: 'vinculo', label: 'Vínculo' }, { value: 'carta', label: 'Carta' }, { value: 'mano', label: 'Mano' },
   { value: 'todos_campeones_propios', label: 'Todos tus Campeones' },
   { value: 'todos_campeones_rivales', label: 'Todos los rivales' },
+  { value: 'todos_campeones', label: 'Todos los Campeones (ambos lados)' },
   { value: 'rival_hand', label: 'Mano del rival' },
   { value: 'equipped_champion', label: 'Campeón equipado' },
   { value: 'invocado', label: 'El Campeón que se invoca' },
@@ -153,6 +163,7 @@ const REGLA_ENUMERADA_OPTIONS = [
   { value: 'coste_campeones_rival_mas', label: 'Los Campeones del rival cuestan N Éter más' },
   { value: 'olvido_rival', label: 'Lo del rival que iría al Cementerio se exilia' },
   { value: 'peaje_bloqueo', label: 'El rival paga N Éter por bloquear a tus Campeones' },
+  { value: 'rival_sin_incrementos_res', label: 'Los Campeones del rival no pueden recibir incrementos de RES' },
 ]
 const CONTROLADOR_OPTIONS = [
   { value: 'propio', label: 'Propio' }, { value: 'rival', label: 'Rival' },
@@ -287,12 +298,12 @@ export function EffectField({ label, value, onChange, cardType }: EffectFieldPro
   const showCost = data.tipo === 'disparo' || data.tipo === 'continuo' || data.tipo === 'hechizo' || data.tipo === 'vinculo'
     || data.efecto === 'invocar' || data.efecto === 'invocar_y_equipar'
   const showRequisito = data.tipo === 'pasivo'
-  const showTrigger = data.tipo !== 'comandante'
+  const showTrigger = true
   const showObjetivo = data.tipo !== 'comandante'
   const showStats = data.efecto === 'buff' || data.efecto === 'debuff'
-  const showCantidad = data.efecto === 'tutor' || (data.efecto ? ['draw', 'destroy', 'exile', 'scry', 'mover', 'return_ether', 'return_hand', 'steal_champion', 'steal_ether', 'block_ether', 'free_ether', 'invocar', 'invocar_y_equipar', 'toggle_exhaust', 'grant_keyword', 'recuperar_campo', 'anclar_eter'].includes(data.efecto) : false)
+  const showCantidad = data.efecto === 'tutor' || (data.efecto ? ['draw', 'destroy', 'exile', 'scry', 'mover', 'return_ether', 'return_hand', 'steal_champion', 'steal_ether', 'block_ether', 'free_ether', 'invocar', 'invocar_y_equipar', 'toggle_exhaust', 'grant_keyword', 'recuperar_campo', 'anclar_eter', 'mill', 'draw_discard'].includes(data.efecto) : false)
   const showKeyword = data.efecto === 'grant_keyword'
-  const showDuracion = data.tipo !== 'comandante'
+  const showDuracion = true
   const showReagrupar = (data.costo?.tipo === 'eter_bloqueado' || data.costo?.tipo === 'bloqueo_fijo') && (cardType === 'Campeón' || cardType === 'Éter')
   // Filtros del objetivo que tienen un valor puesto (el panel va plegado y lo muestra en su título)
   const filtrosPuestos = Object.values(data.objetivo?.filtros ?? {}).filter((v) => v !== undefined && v !== '').length
@@ -319,6 +330,22 @@ export function EffectField({ label, value, onChange, cardType }: EffectFieldPro
             { value: 'campo', label: 'Desde el campo' },
             { value: 'cualquier_zona', label: 'Desde cualquier zona' },
           ]} onChange={(v) => update({ triggerZona: v as any })} />
+        )}
+        {/* Capa 2b-bis: causa del envío (solo con «Cuando un Campeón va al Cementerio»; sin marcar = por cualquier causa) */}
+        {showTrigger && data.trigger === 'cuando_campeon_propio_al_cementerio' && (
+          <div className="col-span-3 flex flex-wrap items-center gap-4">
+            <span className="text-[10px] uppercase tracking-wider text-gray-400">Solo si llega por</span>
+            {([['destruccion', 'Destrucción'], ['combate', 'Combate'], ['sacrificio', 'Sacrificio']] as const).map(([causa, etiqueta]) => (
+              <label key={causa} className="flex items-center gap-2 text-[10px] uppercase tracking-wider text-gray-400">
+                <input type="checkbox" checked={data.causaEnvio?.includes(causa) ?? false} onChange={(e) => {
+                  const actuales = data.causaEnvio ?? []
+                  const siguientes = e.target.checked ? [...actuales, causa] : actuales.filter((c) => c !== causa)
+                  update({ causaEnvio: siguientes.length > 0 ? siguientes : undefined })
+                }} className="rounded border-gray-600 bg-gray-800 text-ether-500 focus:ring-ether-500" />
+                {etiqueta}
+              </label>
+            ))}
+          </div>
         )}
         {/* Capa 5: Efecto (oculto con tramos — los tramos definen sus efectos) */}
         {tramos.length === 0 ? (
@@ -546,6 +573,18 @@ export function EffectField({ label, value, onChange, cardType }: EffectFieldPro
         </div>
       )}
 
+      {/* Capa 11b: requisito de campo — «si controlas N o más Campeones de una misma Esencia» */}
+      {data.tipo !== 'comandante' && (
+        <div className="flex flex-wrap items-end gap-3 mt-2">
+          <label className="flex items-center gap-2 text-[10px] uppercase tracking-wider text-gray-400">
+            <input type="checkbox" checked={!!data.requisitoCampo} onChange={(e) => update({ requisitoCampo: e.target.checked ? { tipo: 'misma_esencia', minimo: 2 } : undefined })}
+              className="rounded border-gray-600 bg-gray-800 text-ether-500 focus:ring-ether-500" />
+            Solo si controlas N+ Campeones de una misma Esencia
+          </label>
+          {data.requisitoCampo && <NumberInput label="N (mínimo)" value={data.requisitoCampo.minimo} onChange={(v) => update({ requisitoCampo: { tipo: 'misma_esencia', minimo: v ?? 2 } })} min={2} max={5} />}
+        </div>
+      )}
+
       {/* Capa 4: Objetivo */}
       {showObjetivo && (
         <div className="grid grid-cols-3 gap-2 mt-2">
@@ -669,6 +708,15 @@ export function EffectField({ label, value, onChange, cardType }: EffectFieldPro
         </div>
       )}
 
+      {/* quitar_buffs: puede ser «por cada Éter bloqueado» (un Campeón por cada Éter del bloqueo) */}
+      {data.efecto === 'quitar_buffs' && (
+        <div className="mt-2 flex items-center gap-2">
+          <input type="checkbox" id="quitarBuffsPorEter" checked={data.buffPerBlockedEther ?? false} onChange={(e) => update({ buffPerBlockedEther: e.target.checked || undefined })}
+            className="rounded border-gray-600 bg-gray-800 text-ether-500 focus:ring-ether-500" />
+          <label htmlFor="quitarBuffsPorEter" className="text-[10px] uppercase tracking-wider text-gray-400">Por cada éter bloqueado</label>
+        </div>
+      )}
+
       {/* Capa 7: Cantidad */}
       {showCantidad && (
         <div className="flex items-center gap-4 mt-2">
@@ -772,7 +820,7 @@ export function EffectField({ label, value, onChange, cardType }: EffectFieldPro
           <p className="text-xs text-gray-400 mb-1">Se convierte en (lo que dejes vacío no cambia)</p>
           <div className="grid grid-cols-3 gap-2">
             <SelectField label="Facción" value={data.cambioTipo?.faccion} options={[{ value: '', label: 'Sin cambio' }, ...FACCIONES.map((f) => ({ value: f, label: f }))]} onChange={(v) => update({ cambioTipo: { ...data.cambioTipo, faccion: (v || undefined) as any } })} />
-            <SelectField label="Esencia" value={data.cambioTipo?.esencia} options={[{ value: '', label: 'Sin cambio' }, ...ESENCIAS.map((e) => ({ value: e, label: e }))]} onChange={(v) => update({ cambioTipo: { ...data.cambioTipo, esencia: (v || undefined) as any } })} />
+            <SelectField label="Esencia" value={data.cambioTipo?.esenciaElegida ? '__elegida' : data.cambioTipo?.esencia} options={[{ value: '', label: 'Sin cambio' }, { value: '__elegida', label: 'La que elijas' }, ...ESENCIAS.map((e) => ({ value: e, label: e }))]} onChange={(v) => update({ cambioTipo: { ...data.cambioTipo, esencia: v && v !== '__elegida' ? (v as any) : undefined, esenciaElegida: v === '__elegida' ? true : undefined } })} />
             <SelectField label="Rol" value={data.cambioTipo?.rol} options={[{ value: '', label: 'Sin cambio' }, ...ROLES.map((r) => ({ value: r, label: r }))]} onChange={(v) => update({ cambioTipo: { ...data.cambioTipo, rol: (v || undefined) as any } })} />
           </div>
         </div>
@@ -825,8 +873,30 @@ export function EffectField({ label, value, onChange, cardType }: EffectFieldPro
         </div>
       )}
 
+      {/* Filtros de «todos los Campeones…» (y del Comandante, cuyo objetivo es implícito): por Esencia */}
+      {(data.tipo === 'comandante' || ['todos_campeones_propios', 'todos_campeones_rivales', 'todos_campeones'].includes(data.objetivo?.tipo ?? '')) && (() => {
+        const base: ObjetivoEfecto = data.objetivo ?? { tipo: 'todos_campeones_propios', controlador: 'propio', zona: 'campo' }
+        const f = base.filtros ?? {}
+        const ponerFiltro = (patch: Partial<FiltroObjetivo>) => update({ objetivo: { ...base, filtros: { ...f, ...patch } } })
+        return (
+          <div className="flex flex-wrap items-end gap-3 mt-2 border border-gray-600/30 rounded p-2">
+            <SelectField label="Solo de la Esencia" value={f.esencia} options={[{ value: '', label: 'Cualquiera' }, ...ESENCIAS.map((e) => ({ value: e, label: e }))]} onChange={(v) => ponerFiltro({ esencia: (v || undefined) as any })} />
+            <label className="flex items-center gap-2 text-[10px] uppercase tracking-wider text-gray-400">
+              <input type="checkbox" checked={f.comparteEsenciaConOtro ?? false} onChange={(e) => ponerFiltro({ comparteEsenciaConOtro: e.target.checked || undefined })}
+                className="rounded border-gray-600 bg-gray-800 text-ether-500 focus:ring-ether-500" />
+              Que compartan Esencia con otro Campeón tuyo
+            </label>
+            <label className="flex items-center gap-2 text-[10px] uppercase tracking-wider text-gray-400">
+              <input type="checkbox" checked={f.esenciaDeLaCondicion ?? false} onChange={(e) => ponerFiltro({ esenciaDeLaCondicion: e.target.checked || undefined })}
+                className="rounded border-gray-600 bg-gray-800 text-ether-500 focus:ring-ether-500" />
+              De la Esencia de la condición («de esa Esencia»)
+            </label>
+          </div>
+        )
+      })()}
+
       {/* Filtros del objetivo — dynamic based on target type (no filters for Vínculo, equipped_champion) */}
-      {showObjetivo && data.objetivo?.tipo && !['self', 'todos_campeones_propios', 'todos_campeones_rivales', 'rival_hand', 'vinculo', 'equipped_champion', 'invocado', 'campeon_del_trigger'].includes(data.objetivo.tipo) && (
+      {showObjetivo && data.objetivo?.tipo && !['self', 'todos_campeones_propios', 'todos_campeones_rivales', 'todos_campeones', 'rival_hand', 'vinculo', 'equipped_champion', 'invocado', 'campeon_del_trigger'].includes(data.objetivo.tipo) && (
         <details className="mt-2 rounded border border-gray-600/30 p-2">
           <summary className="cursor-pointer text-[10px] uppercase tracking-wider text-gray-400 hover:text-gray-200">
             Filtros del objetivo
@@ -851,6 +921,7 @@ export function EffectField({ label, value, onChange, cardType }: EffectFieldPro
                 <SelectField label="Rol" value={data.objetivo?.filtros?.rol} options={[{ value: '', label: 'Cualquiera' }, ...ROLES.map((r) => ({ value: r, label: r }))]} onChange={(v) => updateFiltros({ rol: v as any })} />
                 <SelectField label="Categoría" value={data.objetivo?.filtros?.catHabilidad} options={[{ value: '', label: 'Cualquiera' }, ...CAT_HABILIDAD.map((c) => ({ value: c, label: c }))]} onChange={(v) => updateFiltros({ catHabilidad: v as any })} />
                 <NumberInput label="Coste min." value={data.objetivo?.filtros?.costeMin} onChange={(v) => updateFiltros({ costeMin: v })} min={0} max={20} />
+                <SelectField label="Coste máx. como el de" value={data.objetivo?.filtros?.costeMaxDeReferencia} options={[{ value: '', label: 'Ninguno' }, { value: 'sacrificado', label: 'El Campeón sacrificado' }, { value: 'trigger', label: 'El Campeón del trigger' }]} onChange={(v) => updateFiltros({ costeMaxDeReferencia: v === 'sacrificado' || v === 'trigger' ? v : undefined })} />
                 <NumberInput label="ATQ original max." value={data.objetivo?.filtros?.atqMax} onChange={(v) => updateFiltros({ atqMax: v })} min={0} max={99} />
                 <NumberInput label="RES original max." value={data.objetivo?.filtros?.resMax} onChange={(v) => updateFiltros({ resMax: v })} min={0} max={99} />
                 <NumberInput label="ATQ actual max." value={data.objetivo?.filtros?.atqActualMax} onChange={(v) => updateFiltros({ atqActualMax: v })} min={0} max={99} />

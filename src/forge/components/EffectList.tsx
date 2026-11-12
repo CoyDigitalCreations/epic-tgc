@@ -32,6 +32,7 @@ function isPluralTarget(objetivo: ObjetivoEfecto | undefined): boolean {
   // 'ambos' means "from either player" (singular target), NOT "all" — don't pluralize
   return objetivo.tipo === 'todos_campeones_propios'
     || objetivo.tipo === 'todos_campeones_rivales'
+    || objetivo.tipo === 'todos_campeones'
 }
 
 /** Conjugate verb to plural in Spanish */
@@ -49,6 +50,7 @@ function pluralize(verb: string): string {
     'invoca': 'invocan', 'devuelve a tu mano': 'devuelven a tu mano',
     'devuelve a tu mazo': 'devuelven a tu mazo', 'devuelve del Exilio': 'devuelven del Exilio',
     'activa': 'activan', 'selecciona': 'seleccionan', 'arrebata': 'arrebatan',
+    'pierde sus incrementos de ATQ y RES': 'pierden sus incrementos de ATQ y RES',
   }
   return plurals[verb] || verb
 }
@@ -71,6 +73,10 @@ function pluralizeTarget(text: string, qty: number): string {
     if (text.endsWith(singular)) {
       return text.slice(0, -singular.length) + plural
     }
+  }
+  // «Campeón coste 2 o menos que controla el rival»: el sustantivo va al inicio, seguido de sus filtros
+  for (const [singular, plural] of Object.entries(pluralTypes)) {
+    if (text.startsWith(`${singular} `)) return plural + text.slice(singular.length)
   }
   return text
 }
@@ -97,8 +103,12 @@ function generateTargetText(objetivo: ObjetivoEfecto, sinArticulo = false, sinZo
   if (objetivo.tipo === 'self') return 'esta carta'
   // El filtro de agotamiento se dice: «todos tus Campeones agotados» (antes se perdía en el texto)
   const sufijoAgotado = objetivo.filtros?.agotado === true ? ' agotados' : objetivo.filtros?.agotado === false ? ' que no estén agotados' : ''
-  if (objetivo.tipo === 'todos_campeones_propios') return `todos tus Campeones${sufijoAgotado}`
-  if (objetivo.tipo === 'todos_campeones_rivales') return `todos los Campeones que controla el rival${sufijoAgotado}`
+  // Filtros de Esencia sobre «todos…»: «de esencia Bestia», «que compartan Esencia con otro Campeón que controles», «de esa Esencia»
+  const fl = objetivo.filtros
+  const sufijoEsencia = (fl?.esencia ? ` de esencia ${fl.esencia}` : '') + (fl?.comparteEsenciaConOtro ? ' que compartan Esencia con otro Campeón que controles' : '') + (fl?.esenciaDeLaCondicion ? ' de esa Esencia' : '')
+  if (objetivo.tipo === 'todos_campeones_propios') return `todos tus Campeones${sufijoEsencia}${sufijoAgotado}`
+  if (objetivo.tipo === 'todos_campeones_rivales') return `todos los Campeones que controla el rival${sufijoEsencia}${sufijoAgotado}`
+  if (objetivo.tipo === 'todos_campeones') return `todos los Campeones${sufijoEsencia}${sufijoAgotado}`
   if (objetivo.tipo === 'rival_hand') return 'el rival'
   if (objetivo.tipo === 'equipped_champion') return 'el Campeón equipado con esta carta'
   if (objetivo.tipo === 'invocado') return 'el Campeón que se está invocando'
@@ -157,13 +167,13 @@ function generateTargetText(objetivo: ObjetivoEfecto, sinArticulo = false, sinZo
     // Common filters
     if (objetivo.filtros.faccion) filters.push(`de facción ${objetivo.filtros.faccion}`)
     if (objetivo.filtros.keyword) filters.push(`con keyword ${objetivo.filtros.keyword}`)
-    if (objetivo.filtros.costeMax !== undefined) filters.push(`coste ${objetivo.filtros.costeMax} o menos`)
+    if (objetivo.filtros.costeMax !== undefined) filters.push(objetivo.filtros.costeMin !== undefined ? `de coste ${objetivo.filtros.costeMin} a ${objetivo.filtros.costeMax}` : `coste ${objetivo.filtros.costeMax} o menos`)
     
     // Campeón-specific filters
     if (objetivo.filtros.esencia) filters.push(`de esencia ${objetivo.filtros.esencia}`)
     if (objetivo.filtros.rol) filters.push(`de rol ${objetivo.filtros.rol}`)
     if (objetivo.filtros.catHabilidad) filters.push(`de categoría ${objetivo.filtros.catHabilidad}`)
-    if (objetivo.filtros.costeMin !== undefined) filters.push(`de coste ${objetivo.filtros.costeMin} o más`)
+    if (objetivo.filtros.costeMin !== undefined && objetivo.filtros.costeMax === undefined) filters.push(`de coste ${objetivo.filtros.costeMin} o más`)
     if (objetivo.filtros.atqMax !== undefined) filters.push(`ATQ ${objetivo.filtros.atqMax} o menos`)
     if (objetivo.filtros.resMax !== undefined) filters.push(`RES ${objetivo.filtros.resMax} o menos`)
     if (objetivo.filtros.atqMin !== undefined) filters.push(`ATQ ${objetivo.filtros.atqMin} o más`)
@@ -214,6 +224,9 @@ function generateTargetText(objetivo: ObjetivoEfecto, sinArticulo = false, sinZo
     else if (zona) text += ` ${zona}`
   }
   if (zonaDestino && !sinZonaDestino && !text.includes('de su dueño')) text += ` ${zonaDestino}`
+  // «de coste igual o menor al del Campeón sacrificado / al de ese Campeón»: va al final, tras «que controla el rival»
+  if (objetivo.filtros?.costeMaxDeReferencia === 'sacrificado') text += ' de coste igual o menor al del Campeón sacrificado'
+  if (objetivo.filtros?.costeMaxDeReferencia === 'trigger') text += ' de coste igual o menor al de ese Campeón'
 
   return text || 'un objetivo'
 }
@@ -263,7 +276,8 @@ export function generateEffectText(data: EfectoData): string {
   if (data.tipo === 'bloqueo') addPart('Mientras esté bloqueado,')
 
   // Capa 2: Trigger
-  const unaVezAntesDelTrigger = data.activacion === 'una_por_turno' && data.trigger === 'cuando_campeon_propio_al_cementerio'
+  const TRIGGERS_CUANDO: readonly string[] = ['cuando_campeon_propio_al_cementerio', 'cuando_juegas_mistica', 'cuando_activas_arcana', 'cuando_campeon_propio_cambia_esencia', 'al_cambiar_de_esencia']
+  const unaVezAntesDelTrigger = data.activacion === 'una_por_turno' && TRIGGERS_CUANDO.includes(data.trigger ?? '')
   if (data.trigger && data.trigger !== 'ninguno') {
     const esRival = data.controladorTrigger === 'rival'
     const triggerTexts: Record<string, { propio: string; rival: string }> = {
@@ -279,6 +293,10 @@ export function generateEffectText(data: EfectoData): string {
       'al_ser_destruido_vinculo': { propio: 'Al ser destruido este Vínculo', rival: 'Al ser destruido este Vínculo por el rival' },
       'cuando_vinculo_seria_destruido': { propio: 'Cuando un Vínculo que controles fuera a ser destruido', rival: 'Cuando un Vínculo del rival fuera a ser destruido' },
       'cuando_campeon_propio_al_cementerio': { propio: 'Cuando un Campeón que controles sea enviado al Cementerio', rival: 'Cuando un Campeón del rival sea enviado al Cementerio' },
+      'cuando_juegas_mistica': { propio: 'Cuando juegues una Mística', rival: 'Cuando el rival juegue una Mística' },
+      'cuando_activas_arcana': { propio: 'Cuando actives una Arcana', rival: 'Cuando el rival active una Arcana' },
+      'cuando_campeon_propio_cambia_esencia': { propio: 'Cuando un Campeón que controles cambie de Esencia', rival: 'Cuando un Campeón del rival cambie de Esencia' },
+      'al_cambiar_de_esencia': { propio: 'Cuando esta carta cambie de Esencia', rival: 'Cuando esta carta cambie de Esencia' },
     }
     let triggerText = triggerTexts[data.trigger]?.[esRival ? 'rival' : 'propio'] ?? data.trigger
     // Add zone specification for al_ser_enviado_al_cementerio
@@ -291,6 +309,11 @@ export function generateEffectText(data: EfectoData): string {
         'cualquier_zona': 'desde cualquier zona',
       }
       triggerText += ` ${zonaTexts[data.triggerZona]}`
+    }
+    // «…sea enviado al Cementerio por destrucción o combate»
+    if (data.trigger === 'cuando_campeon_propio_al_cementerio' && data.causaEnvio && data.causaEnvio.length > 0) {
+      const causaTexts: Record<string, string> = { destruccion: 'destrucción', combate: 'combate', sacrificio: 'sacrificio' }
+      triggerText += ` por ${data.causaEnvio.map((c) => causaTexts[c] ?? c).join(' o ')}`
     }
     // «Una vez por turno» va ANTES de un trigger «Cuando…» (la condición ya es el cuerpo de la frase); con los demás triggers
     // sigue dentro de la cláusula del coste
@@ -328,6 +351,9 @@ export function generateEffectText(data: EfectoData): string {
       addPart('puedes enviar esta carta a tu exilio,')
     } else if (data.costo.tipo === 'cemetery_self') {
       addPart('puedes enviar esta carta a tu Cementerio,')
+    } else if (data.costo.tipo === 'exilia_cementerio_propio') {
+      const n = data.costo.cantidad ?? 1
+      addPart(`puedes exiliar ${n} Campeón${n > 1 ? 'es' : ''} de tu Cementerio,`)
     }
     // «Una vez por turno» con cualquier otro coste: se dice justo tras la cláusula del coste («Puedes pagar 1 Éter, una vez por turno, …»)
     if (data.activacion === 'una_por_turno' && data.costo.tipo !== 'bloqueo_fijo' && !unaVezAntesDelTrigger) addPart('una vez por turno,')
@@ -358,6 +384,9 @@ export function generateEffectText(data: EfectoData): string {
       addPart(`con ${tramo.umbral} ${plural}, ${lower},`)
     }
   }
+
+  // Capa 11b: requisito de campo — «si controlas 3 o más Campeones de una misma Esencia,»
+  if (data.requisitoCampo?.tipo === 'misma_esencia') addPart(`si controlas ${data.requisitoCampo.minimo} o más Campeones de una misma Esencia,`)
 
   // Capa 4+5: Objetivo + Efecto (sin tramos — el raíz no tiene efecto propio)
   let targetText = ''
@@ -404,6 +433,8 @@ export function generateEffectText(data: EfectoData): string {
       'recuperar_mazo_bottom': 'pone en la parte inferior del mazo de su dueño',
       'recuperar_exilio': 'devuelve del Exilio',
       'activar_disparo': 'activa', 'anclar_eter': 'selecciona',
+      'quitar_buffs': 'pierde sus incrementos de ATQ y RES', 'igualar_stats_al_menor': 'iguala',
+      'mill': 'envía', 'draw_discard': 'roba',
     }
 
     // Infinitive forms for "puedes" — conjugated verb → infinitive
@@ -423,6 +454,7 @@ export function generateEffectText(data: EfectoData): string {
       'devuelve al mazo de su dueño': 'devolver al mazo de su dueño',
       'devuelve al mazo de su dueño y baraja': 'devolver al mazo de su dueño y barajar',
       'activa': 'activar', 'selecciona': 'seleccionar', 'arrebata': 'arrebatar',
+      'envía': 'enviar',
     }
 
     // Special case: double_attack - "puede declarar 2 veces ataque"
@@ -438,6 +470,8 @@ export function generateEffectText(data: EfectoData): string {
         targetText = 'las cartas del rival que irían a su Cementerio se exilian en su lugar'
       } else if (data.reglaEnumerada === 'peaje_bloqueo') {
         targetText = `para bloquear a tus Campeones, el rival paga ${data.reglaValor ?? 1} Éter por cada uno`
+      } else if (data.reglaEnumerada === 'rival_sin_incrementos_res') {
+        targetText = 'los Campeones del rival no pueden recibir incrementos de RES'
       }
     } else if (data.efecto === 'modificar_regla') {
       // «Un Campeón que controlas: Límite de mano +2»; las reglas de jugador o de partida no nombran objetivo
@@ -491,7 +525,8 @@ export function generateEffectText(data: EfectoData): string {
       const baseVerb = esArrebato ? 'arrebata' : effectVerbs[data.efecto] || data.efecto
       effectVerb = baseVerb
       // En «cambia/fija el agotamiento de todos tus Campeones» el plural es el complemento, no el sujeto: el verbo no se pluraliza
-      if (plural && data.efecto !== 'toggle_exhaust' && data.efecto !== 'fix_exhaust') effectVerb = pluralize(effectVerb)
+      // Idem «destruye / exilia todos los Campeones…»: el plural es el complemento, no el sujeto
+      if (plural && data.efecto !== 'toggle_exhaust' && data.efecto !== 'fix_exhaust' && data.efecto !== 'destroy' && data.efecto !== 'exile') effectVerb = pluralize(effectVerb)
 
       // Add "puedes" for optional effects: trigger present + no cost — use infinitive
       // Skip when trigger already implies payment (al_pagar_eter → "Cuando pagues esta carta")
@@ -500,7 +535,7 @@ export function generateEffectText(data: EfectoData): string {
       const triggerImplicaPago = data.trigger === 'al_pagar_eter'
       // Efecto obligatorio (`obligatorio`): no es opcional aunque tenga trigger y no cueste nada
       // Si el objetivo es el SUJETO del verbo («un Campeón que controla el rival pierde 1 de ATQ») no lleva «puedes»: concordaría mal
-      const objetivoEsSujeto = ['buff', 'debuff', 'grant_keyword', 'change_type', 'direct_attack'].includes(data.efecto)
+      const objetivoEsSujeto = ['buff', 'debuff', 'grant_keyword', 'change_type', 'direct_attack', 'quitar_buffs', 'igualar_stats_al_menor'].includes(data.efecto)
       if (tieneTrigger && !tieneCosto && !triggerImplicaPago && !data.obligatorio && !objetivoEsSujeto) {
         const infinitive = infinitiveVerbs[baseVerb] || baseVerb
         effectVerb = `puedes ${infinitive}`
@@ -511,6 +546,13 @@ export function generateEffectText(data: EfectoData): string {
         // El pronombre se refiere al Campeón que activó el trigger: «devuélvelo a tu mano». Con `controladorDestino: 'dueno'`
         // (Reino Perdido: el Campeón puede estar robado) vuelve a la mano de su DUEÑO: «devuélvelo a la mano de su dueño»
         targetText = objetivo.controladorDestino === 'dueno' ? 'devuélvelo a la mano de su dueño' : 'devuélvelo a tu mano'
+      } else if (data.efecto === 'recuperar_campo' && objetivo.tipo === 'campeon_del_trigger') {
+        // «invócalo de tu Cementerio si su coste es de 1 a 3»: el pronombre se refiere al Campeón que activó el trigger
+        const { costeMin, costeMax } = objetivo.filtros ?? {}
+        const cond = costeMin !== undefined && costeMax !== undefined ? ` si su coste es de ${costeMin} a ${costeMax}`
+          : costeMax !== undefined ? ` si su coste es ${costeMax} o menos`
+          : costeMin !== undefined ? ` si su coste es ${costeMin} o más` : ''
+        targetText = `invócalo de tu Cementerio${cond}`
       } else if (data.efecto === 'scry' && data.opcionFondo) {
         // «Mira la carta superior de tu mazo y puedes enviarla al fondo»
         const qty = data.cantidad ?? 1
@@ -526,7 +568,7 @@ export function generateEffectText(data: EfectoData): string {
         // La duración («hasta la próxima Alba del rival») va dentro de la frase: no se repite como cláusula de duración
         const qty = data.cantidad ?? 1
         targetText = `${effectVerb} hasta ${qty} Éter que controla el rival en su zona de pago, estos no se reagrupan en su próxima Alba`
-      } else if (esComandante && (data.efecto === 'buff' || data.efecto === 'debuff') && objetivo.tipo === 'todos_campeones_propios') {
+      } else if (esComandante && (data.efecto === 'buff' || data.efecto === 'debuff') && objetivo.tipo === 'todos_campeones_propios' && !tieneTrigger && !objetivo.filtros?.esencia && !objetivo.filtros?.comparteEsenciaConOtro) {
         // Comandante: «Incremento de 2 de ATQ y 2 de RES» (el objetivo «Todos tus Campeones» es implícito)
         const statParts: string[] = []
         if (data.stats?.ATQ) statParts.push(`${Math.abs(data.stats.ATQ)} de ATQ`)
@@ -545,6 +587,18 @@ export function generateEffectText(data: EfectoData): string {
             targetText = `${targetText} ${effectVerb} ${statParts.join(' y ')}`
           }
         }
+      } else if (data.efecto === 'quitar_buffs') {
+        // El objetivo es el SUJETO: «[por cada Éter bloqueado,] un Campeón que controla el rival pierde sus incrementos de ATQ y RES»
+        targetText = `${data.buffPerBlockedEther ? 'por cada Éter bloqueado, ' : ''}${targetText} ${effectVerb}`
+      } else if (data.efecto === 'igualar_stats_al_menor') {
+        targetText = `el ATQ y la RES de ${targetText} se igualan al menor de los dos valores`
+      } else if (data.efecto === 'mill') {
+        const qty = data.cantidad ?? 1
+        targetText = `${effectVerb} ${qty === 1 ? 'la carta superior' : `las ${qty} cartas superiores`} de tu mazo a tu Cementerio`
+      } else if (data.efecto === 'draw_discard') {
+        const qty = data.cantidad ?? 1
+        const cartas = `${qty} carta${qty > 1 ? 's' : ''}`
+        targetText = `${effectVerb} ${cartas} de tu mazo y ${effectVerb.startsWith('puedes') ? 'descartar' : 'descarta'} ${cartas} de tu mano`
       } else if (data.efecto === 'rival_discard') {
         const qty = data.cantidad ?? 1
         // Quien descarta es el rival: «el rival descarta…» / «puedes hacer que el rival descarte…» (sin él, «su mano» no tiene antecedente)
@@ -558,9 +612,13 @@ export function generateEffectText(data: EfectoData): string {
         const origen = objetivo.zona === 'pagado' ? 'de la zona de pago del rival' : 'de la Reserva del rival'
         const usar = `${effectVerb.startsWith('puedes') ? '' : 'puedes '}usar${qty > 1 ? 'los' : 'lo'}`
         targetText = `${effectVerb} ${data.esHasta ? 'hasta ' : ''}${qty} Éter ${origen} y ${usar} desde tu Reserva hasta el inicio del Alba del rival`
+      } else if ((data.efecto === 'destroy' || data.efecto === 'exile') && isPluralTarget(objetivo)) {
+        // «destruye todos los Campeones de esa Esencia»: sin cantidad (son todos los que cumplan)
+        targetText = `${effectVerb} ${targetText}`
       } else if (data.efecto === 'change_type' && data.cambioTipo) {
-        const { faccion, esencia, rol } = data.cambioTipo
-        const partes = [faccion && `de facción ${faccion}`, esencia && `de esencia ${esencia}`, rol && `de rol ${rol}`].filter(Boolean) as string[]
+        const { faccion, esencia, esenciaElegida, rol } = data.cambioTipo
+        // «se convierte en esencia Bestia» / «… en la esencia que elijas» (sin «de»: «se convierte en de esencia…» no se dice)
+        const partes = [faccion && `facción ${faccion}`, esenciaElegida ? 'la esencia que elijas' : esencia && `esencia ${esencia}`, rol && `rol ${rol}`].filter(Boolean) as string[]
         const lista = partes.length > 1 ? `${partes.slice(0, -1).join(', ')} y ${partes[partes.length - 1]}` : partes[0] ?? ''
         targetText = `${targetText} ${effectVerb} ${lista}`.trim()
       } else if (data.efecto === 'grant_keyword' && data.keyword) {
@@ -571,6 +629,8 @@ export function generateEffectText(data: EfectoData): string {
         targetText = `${effectVerb} ${hasta}${qty} ${pluralizeTarget(targetText, qty)}`
         // Invocar desde el Cementerio: «invoca 1 Campeón de coste 3 o menos de tu Cementerio»
         if (data.efecto === 'recuperar_campo') targetText = targetText.replace(/ coste (\d+) o menos/, ' de coste $1 o menos')
+        // «devuelve del Exilio 1 Campeón…»: el verbo ya nombra la zona, no se repite al final
+        if (data.efecto === 'recuperar_exilio') targetText = targetText.replace(/ del Exilio$/, '')
         // tutor: agregar zona origen y destino
         if (data.efecto === 'tutor') {
           if (data.zonaOrigen) {
@@ -581,13 +641,16 @@ export function generateEffectText(data: EfectoData): string {
             targetText += ` ${zonaOrigenTexts[data.zonaOrigen] ?? ''}`
           }
           if (data.objetivo?.zonaDestino) {
+            // Una Mística o una Arcana es femenina: «agrégala», «invócala»
+            const fem = ['mistica', 'arcana', 'mistica_arcana'].includes(data.objetivo?.tipo ?? '')
+            const lo = fem ? 'la' : 'lo'
             const destinoTexts: Record<string, string> = {
-              'mano': 'y agrégalo a tu mano',
-              'campo': 'e invócalo al campo',
-              'cementerio': 'y envíalo a tu Cementerio',
-              'exilio': 'y envíalo a tu Exilio',
+              'mano': `y agréga${lo} a tu mano`,
+              'campo': `e invóca${lo} al campo`,
+              'cementerio': `y envía${lo} a tu Cementerio`,
+              'exilio': `y envía${lo} a tu Exilio`,
             }
-            targetText += ` ${destinoTexts[data.objetivo.zonaDestino] ?? `y envíalo a ${data.objetivo.zonaDestino}`}`
+            targetText += ` ${destinoTexts[data.objetivo.zonaDestino] ?? `y envía${lo} a ${data.objetivo.zonaDestino}`}`
           }
         }
       } else if (data.efecto === 'block_ether' && data.objetivo) {

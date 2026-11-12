@@ -32,6 +32,14 @@ export interface EfectoData {
           | 'al_ser_destruido_vinculo' | 'cuando_vinculo_seria_destruido'
           /** «Cuando un Campeón que controles sea enviado al Cementerio» (con `controladorTrigger: 'rival'`: «un Campeón del rival»). El Campeón enviado es `objetivo.tipo = 'campeon_del_trigger'`. */
           | 'cuando_campeon_propio_al_cementerio'
+          /** «Cuando un Campeón que controles cambie de Esencia» */
+          | 'cuando_campeon_propio_cambia_esencia'
+          /** «Cuando esta carta cambie de Esencia» */
+          | 'al_cambiar_de_esencia'
+          /** «Cuando juegues una Mística» (con `controladorTrigger: 'rival'`: «el rival»). Es OBSERVADOR: lo escribe una carta en juego (Arcana, Comandante), no la Mística misma (esa usa `al_jugar_mistica`). */
+          | 'cuando_juegas_mistica'
+          /** «Cuando actives una Arcana» (con `controladorTrigger: 'rival'`: «el rival»). Observador, como `cuando_juegas_mistica`. */
+          | 'cuando_activas_arcana'
           | 'ninguno'
 
   // ── Capa 2b: TRIGGER ZONA (opcional) ──
@@ -41,6 +49,11 @@ export interface EfectoData {
   // ── Capa 2c: TRIGGER CONTROLADOR (opcional) ──
   /** Whose turn the trigger applies to (default: propio) */
   controladorTrigger?: 'propio' | 'rival'
+
+  // ── Capa 2c-bis: CAUSA DEL ENVÍO (opcional) ──
+  /** Solo con `cuando_campeon_propio_al_cementerio`: el efecto se activa únicamente si el Campeón llega al Cementerio por alguna de estas
+   *  causas. Ausente = por cualquiera (comportamiento de siempre). */
+  causaEnvio?: CausaEnvio[]
 
   // ── Capa 2d: CONTEXTO DE USO (opcional) ──
   /** Restricts when this effect fires — e.g., 'invocar' means only when summoning a champion */
@@ -133,6 +146,10 @@ export interface EfectoData {
   /** Activation condition for Arcanas — CondicionEfecto estructurado (string legacy eliminado Fase 3e: 0 hits en JSON) */
   condicion?: CondicionEfecto
 
+  // ── Capa 11b: REQUISITO DE CAMPO (opcional) ──
+  /** «Si controlas N o más Campeones de una misma Esencia, …». Con el filtro `esenciaDeLaCondicion` el objetivo es «de esa Esencia». */
+  requisitoCampo?: RequisitoCampo
+
   // ── Capa 12: FILTROS A NIVEL RAÍZ (opcional) ──
   /** Root-level filters — merged with objetivo.filtros when resolving targets.
    *  Top-level takes precedence. Used by tutor and other filtered effects. */
@@ -168,7 +185,7 @@ export interface EfectoData {
    * En qué se convierte el Campeón objetivo. Cada atributo presente SUSTITUYE al de la carta (Facción incluida: queda
    * solo la nueva); el que falta no se toca. Dura lo que dure el efecto (`duracion`; sin duración, mientras exista).
    */
-  cambioTipo?: { esencia?: Esencia; rol?: Rol; faccion?: Faccion }
+  cambioTipo?: { esencia?: Esencia; /** «la esencia que elijas»: el jugador la elige al resolver (excluye `esencia`) */ esenciaElegida?: boolean; rol?: Rol; faccion?: Faccion }
 
   // ── Modificador: SIN ACTIVAR EFECTO ──
   /** When true, the moved/returned ether does NOT trigger its effects (until opponent's Alba) */
@@ -211,13 +228,16 @@ export type CopyAttribute =
  * - `coste_campeones_rival_mas`: «los Campeones del rival cuestan N Éter más» (`reglaValor` = N ≥ 1)
  * - `olvido_rival`: «las cartas del rival que irían a su Cementerio se exilian en su lugar» (Disonancia)
  * - `peaje_bloqueo`: «para bloquear a tus Campeones, el rival paga N Éter por cada uno» (`reglaValor` = N ≥ 1)
+ * - `rival_sin_incrementos_res`: «los Campeones del rival no pueden recibir incrementos de RES» (Purga)
  */
-export type ReglaEnumerada = 'disparo_sin_agotar' | 'coste_campeones_rival_mas' | 'olvido_rival' | 'peaje_bloqueo'
+export type ReglaEnumerada = 'disparo_sin_agotar' | 'coste_campeones_rival_mas' | 'olvido_rival' | 'peaje_bloqueo' | 'rival_sin_incrementos_res'
 
 /** Cost structure — what the player pays */
 export interface CostoEfecto {
   /** Cost type */
   tipo: 'ninguno' | 'eter' | 'eter_bloqueado' | 'bloqueo_fijo' | 'exhaust' | 'exile_self' | 'cemetery_self'
+    /** «Puedes exiliar N Campeón(es) de tu Cementerio» (`cantidad` = N, por defecto 1) */
+    | 'exilia_cementerio_propio'
   /** Amount (for ether costs) */
   cantidad?: number
   /** eter_bloqueado: umbral mínimo de Éter bloqueado para activar el efecto
@@ -274,12 +294,31 @@ export type EfectoAccion =
   | 'activar_disparo'
   /** «Selecciona hasta N Éter que controla el rival en su zona de pago, estos no se reagrupan en su próxima Alba» */
   | 'anclar_eter'
+  /** «Un Campeón pierde sus incrementos de ATQ y RES» (solo los Modificadores positivos; no toca keywords). Con `buffPerBlockedEther`: «por cada Éter bloqueado» (Purga). */
+  | 'quitar_buffs'
+  /** «El ATQ y la RES de un Campeón se igualan al menor de los dos valores» (Purga) */
+  | 'igualar_stats_al_menor'
+  /** «Envía la(s) carta(s) superior(es) de tu mazo a tu Cementerio» (Purga) */
+  | 'mill'
+  /** «Roba N carta(s) de tu mazo y descarta N carta(s) de tu mano» (Purga) */
+  | 'draw_discard'
+
+/** Por qué llega un Campeón al Cementerio (filtro `causaEnvio` de `cuando_campeon_propio_al_cementerio`). */
+export type CausaEnvio = 'destruccion' | 'combate' | 'sacrificio'
+
+/** Requisito sobre el propio campo: `misma_esencia` = «controlas `minimo` o más Campeones de una misma Esencia» (mínimo 2). */
+export interface RequisitoCampo {
+  tipo: 'misma_esencia'
+  minimo: number
+}
 
 /** Structured target — 4-layer system: type + controller + zone + filters + destination */
 export interface ObjetivoEfecto {
   /** Type of card targeted */
   tipo: 'self' | 'campeon' | 'mistica' | 'arcana' | 'mistica_arcana' | 'eter' | 'vinculo' | 'carta' | 'mano'
        | 'todos_campeones_propios' | 'todos_campeones_rivales' | 'rival_hand'
+       /** Todos los Campeones del campo, de ambos lados («todos los Campeones») */
+       | 'todos_campeones'
        | 'equipped_champion'
        /** El Campeón que se está invocando (solo con `contextoUso: 'invocar'`, p. ej. «Cuando pagues esta carta para invocar un Campeón, ese Campeón…»). No se elige. */
        | 'invocado'
@@ -313,6 +352,13 @@ export interface FiltroObjetivo {
   costeMin?: number
   /** Maximum cost */
   costeMax?: number
+  /** Coste máximo = el de OTRO Campeón: `'sacrificado'` (el que se sacrificó para invocar esta carta) o `'trigger'` (el que activó el trigger
+   *  `cuando_campeon_propio_al_cementerio`): «de coste igual o menor al del Campeón sacrificado / al de ese Campeón» */
+  costeMaxDeReferencia?: 'sacrificado' | 'trigger'
+  /** Campeones que comparten Esencia con OTRO Campeón que controlas */
+  comparteEsenciaConOtro?: boolean
+  /** Campeones de la Esencia que cumple el `requisitoCampo` del efecto («de esa Esencia») */
+  esenciaDeLaCondicion?: boolean
   /** Maximum ATQ ORIGINAL (Campeón): el impreso en la carta, sin buffs ni debuffs */
   atqMax?: number
   /** Maximum RES ORIGINAL (Campeón): la impresa en la carta, sin buffs ni debuffs */

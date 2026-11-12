@@ -20,7 +20,8 @@ const CAMPO_DE_EFECTO: ReadonlyArray<readonly [keyof EfectoData, readonly string
   // El formulario los muestra solo con estos efectos (`showStats` / `showKeyword` en EffectField.tsx): con cualquier otro
   // quedan escondidos y no se pueden borrar desde la UI (así quedaron el ATQ de Thane y el de Ragnar)
   ['stats', ['buff', 'debuff']],
-  ['buffPerBlockedEther', ['buff', 'debuff']],
+  // «por cada Éter bloqueado» también lo usa quitar_buffs (Idris, de Purga)
+  ['buffPerBlockedEther', ['buff', 'debuff', 'quitar_buffs']],
   ['keyword', ['grant_keyword']],
 ]
 
