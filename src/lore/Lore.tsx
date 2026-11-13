@@ -5,6 +5,7 @@ import { Arte, Cita, MapaEje, Reveal } from './animaciones'
 import { B, Ciclo, Encabezado, P, Sub, TarjetaCampeona } from './bloques'
 import { CAMPEONAS, CASAS, CICLO, FACETAS, MITO_FACETAS, POLOS, SECCIONES } from './contenido'
 import { SeccionesDisonancia } from './SeccionesDisonancia'
+import { MedallonFaccion } from '../forge/components/card-art/arte-codigo'
 
 /** Sección activa según el scroll (para resaltar el índice lateral). */
 function useSeccionActiva(): string {
@@ -193,7 +194,7 @@ export default function Lore() {
                     <Reveal key={p.nombre} delay={i * 0.1}>
                       <div className="h-full rounded-xl border bg-surface-2 p-5" style={{ borderColor: `${p.color}55` }}>
                         <div className="flex items-center gap-3">
-                          <img src={i === 0 ? '/facciones_cyan.png' : '/facciones_red.png'} alt="" aria-hidden="true" width={44} height={44} />
+                          <MedallonFaccion color={p.color} size={44} />
                           <div>
                             <p className="font-display text-lg font-bold tracking-wider" style={{ color: p.color }}>
                               {p.nombre}

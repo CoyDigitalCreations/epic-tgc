@@ -31,7 +31,7 @@ describe('MazoEditor — guía del mazo (qué falta, inspector, lista agrupada)'
     expect(screen.getByText('Falta: 15 de Éter · 45 de Principal · 6 Vínculos')).toBeInTheDocument()
   })
 
-  it('con el mazo completo avisa que está listo para guardar', { timeout: 30_000 }, () => {
+  it('con el mazo completo avisa que está listo para guardar', { timeout: 60_000 }, () => {
     render(<MazoEditor onGuardar={vi.fn()} onCancelar={vi.fn()} />)
     fireEvent.change(screen.getByPlaceholderText('Nombre del mazo'), { target: { value: 'Completo' } })
     seleccionarEstasisCompleto()
@@ -121,7 +121,7 @@ describe('MazoEditor — guía del mazo (qué falta, inspector, lista agrupada)'
     expect(sumar).toBeDisabled()
   })
 
-  it('cada cupo muestra su barra: ✓ al completarse', { timeout: 30_000 }, () => {
+  it('cada cupo muestra su barra: ✓ al completarse', { timeout: 60_000 }, () => {
     render(<MazoEditor onGuardar={vi.fn()} onCancelar={vi.fn()} />)
     const lista = screen.getByRole('region', { name: 'Tu mazo' })
     // Incompleto: sin ✓

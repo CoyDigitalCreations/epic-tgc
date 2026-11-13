@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import cartasPruebaJson from '../../seed/CartasPrueba.json'
 import type { AnyCard } from '../shared/types'
-import { ALL_CARDS } from '../shared/data/paquetes'
+import { ALL_CARDS } from './test/seedClasico'
 import { aplicarAjustes, simularAjustes } from './ajuste'
 import { cargarCartas } from './cargador'
 import { CONFIG_V1 } from './config'

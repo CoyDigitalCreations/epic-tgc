@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { ALL_CARDS } from '../shared/data/paquetes'
+import { ALL_CARDS } from './test/seedClasico'
 import type { Ajuste } from './ajuste'
 import { simularAjustes } from './ajuste'
 import { cargarCartas } from './cargador'

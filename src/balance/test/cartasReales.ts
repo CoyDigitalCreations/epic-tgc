@@ -1,4 +1,4 @@
-import { ALL_CARDS } from '../../shared/data/paquetes'
+import { ALL_CARDS } from './seedClasico'
 import { cargarCartas } from '../cargador'
 import type { AnyCard } from '../../shared/types'
 import disonanciaLegadoJson from './disonancia-legado.json'

@@ -1,13 +1,10 @@
 import { describe, it, expect } from 'vitest'
-import { existsSync } from 'node:fs'
-import { resolve } from 'node:path'
 import {
   CARD_TYPES,
   RARITIES,
   KEYWORDS,
   FACCIONES,
   FACCION_COLORS,
-  FACCION_IMAGES,
   ROLES,
   FACCION_LORE,
 } from './enums'
@@ -68,25 +65,15 @@ describe('FACCIONES', () => {
     expect(FACCIONES).toContain('Mutación')
   })
 
-  it('asigna el color alineado con el medallón de cada facción', () => {
+  it('asigna a cada facción su color oficial (Purga y Mutación, los del lore)', () => {
     expect(FACCION_COLORS.Orden).toBe('#e5e7eb')
     expect(FACCION_COLORS.Caos).toBe('#3b82f6')
     expect(FACCION_COLORS.Creación).toBe('#22c55e')
     expect(FACCION_COLORS.Destrucción).toBe('#ef4444')
     expect(FACCION_COLORS.Ley).toBe('#eab308')
-    expect(FACCION_COLORS.Purga).toBe('#f97316')
+    expect(FACCION_COLORS.Purga).toBe('#ec4899')
     expect(FACCION_COLORS.Entropía).toBe('#a855f7')
-    expect(FACCION_COLORS.Mutación).toBe('#22d3ee')
-  })
-
-  it('mapea cada facción a un medallón existente en public/', () => {
-    for (const faccion of FACCIONES) {
-      const file = FACCION_IMAGES[faccion]
-      expect(file).toMatch(/^\/facciones_[a-z]+\.png$/)
-      expect(
-        existsSync(resolve(process.cwd(), 'public', file.replace(/^\//, ''))),
-      ).toBe(true)
-    }
+    expect(FACCION_COLORS.Mutación).toBe('#84cc16')
   })
 })
 

@@ -17,6 +17,8 @@ export const ALL_CARDS: AnyCard[] = primerosEfectos as unknown as AnyCard[]
 
 export const ESTASIS_CARDS: AnyCard[] = ALL_CARDS.filter((c) => c.paqueteId === 'estasis')
 export const DISONANCIA_CARDS: AnyCard[] = ALL_CARDS.filter((c) => c.paqueteId === 'disonancia')
+export const PURGA_CARDS: AnyCard[] = ALL_CARDS.filter((c) => c.paqueteId === 'purga')
+export const MUTACION_CARDS: AnyCard[] = ALL_CARDS.filter((c) => c.paqueteId === 'mutacion')
 
 export const getCardById = (id?: string) => ALL_CARDS.find((c) => c.id === id)
 
@@ -69,6 +71,48 @@ export const PAQUETES: Paquete[] = [
       'El mazo juega con la presión y la destrucción: romper los Campeones del rival ' +
       'y estrangular su economía de Éter mientras los Campeones de Caos avanzan como ' +
       'la tormenta que no se detiene.',
+  },
+  {
+    id: 'purga',
+    nombre: 'Purga',
+    tipo: 'Mazo Temático',
+    color: FACCION_COLORS.Purga,
+    facciones: ['Purga'],
+    entrega: 'Primogénitos',
+    distribucion: { eter: 15, principal: 45, vinculos: 6 },
+    lore:
+      'Purga ("El Corte") es el mazo temático de la facción Purga y la tercera ' +
+      'entrega de Los Primogénitos. Cuando la Escisión derramó el Éter por los costados ' +
+      'del Eje, la Casa Raíz, jardinera del Eje, se dividió ante lo que el Derrame había ' +
+      'tocado. Idris, el mayor, vio lo que ve un jardinero en una rama infectada: algo que ' +
+      'se corta mientras el huerto todavía puede salvarse. Juró podar todo lo que el Derrame ' +
+      'tocara, empezando por lo que más amaba. Su cristal no brilla: afila.\n\n' +
+      'Idris no podó solo. A su lado se sentaron los Magos del Tribunal de la Poda, quienes ' +
+      'leen el Éter como una sentencia: cada Mística es un juicio y cada Arcana, una pena ' +
+      'que espera su hora. Son podadores, no verdugos: cortan lo que hay que cortar y nada más.\n\n' +
+      'El mazo juega con la precisión: sentenciar, negar, limpiar y destruir. Pocos Campeones, ' +
+      'muchos hechizos, y cada hechizo fabrica la carne que el Soberano sacrificará.',
+  },
+  {
+    id: 'mutacion',
+    nombre: 'Mutación',
+    tipo: 'Mazo Temático',
+    color: FACCION_COLORS.Mutación,
+    facciones: ['Mutación'],
+    entrega: 'Primogénitos',
+    distribucion: { eter: 15, principal: 45, vinculos: 6 },
+    lore:
+      'Mutación ("El Cambio") es el mazo temático de la facción Mutación y la cuarta ' +
+      'entrega de Los Primogénitos. Liora, la hermana menor de la Casa Raíz, miró lo que el ' +
+      'Derrame había tocado y vio lo que ve una jardinera en la primera hoja de una especie ' +
+      'que nadie ha visto: un brote. No cree que el cambio sea una enfermedad: cree que es ' +
+      'lo único que no muere. Para Mutación el Eje no se rompió: cambió.\n\n' +
+      'El Derrame no tocó solo a un niño. Tocó una manada, una orilla, un taller, una colina ' +
+      'entera. Lo que salió de ahí ya no tenía nombre en ninguna casa: bestias con voz, ' +
+      'elementales sin cauce, humanos que dejaron de parecerlo. Liora los reunió. Ninguno ' +
+      'nació así: todos cambiaron.\n\n' +
+      'El mazo juega con la transformación: cambiar de Esencia, copiar y crecer, ' +
+      'y el cambio se alimenta a sí mismo.',
   },
 ]
 export const getPaquete = (id?: string) => PAQUETES.find((p) => p.id === id)
@@ -134,10 +178,9 @@ export function progresoPaquete(
    Los WebP viven en public/cartas/{cardId}.webp.
    ───────────────────────────────────────────── */
 
-export const CARD_ART_IDS: ReadonlySet<string> = new Set([
-  ...ESTASIS_CARDS.map((c) => c.id),
-  ...DISONANCIA_CARDS.map((c) => c.id),
-])
+// Toda carta del seed tiene su .webp (lo garantiza `sync:fuentes` y el test de fuentes): así Purga y Mutación
+// muestran su arte aunque todavía no tengan entrada en PAQUETES.
+export const CARD_ART_IDS: ReadonlySet<string> = new Set(ALL_CARDS.map((c) => c.id))
 
 /** Ruta del arte oficial de una carta, o undefined si no tiene */
 export function cardArtPath(cardId: string | undefined): string | undefined {

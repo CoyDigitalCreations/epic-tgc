@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { ALL_CARDS } from '../shared/data/paquetes'
+import { ALL_CARDS } from './test/seedClasico'
 import { analizarCarta, contextoDeAnalisis, desgloseDePoder, estadoDeCarta, margenesDeStats, razonesDeCarta, textosDeEfectos } from './analisisCarta'
 import type { ContextoAnalisis, MargenStat } from './analisisCarta'
 import { CONFIG_V1 } from './config'

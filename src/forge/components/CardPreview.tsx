@@ -4,8 +4,9 @@ import { exportCardToPng, exportCardToWebp } from '../utils/export-png'
 import { fileToCompressedDataUrl, isValidImageFile } from '../utils/file-to-data-url'
 import { useCardImage } from '../hooks/useCardImage'
 import type { AnyCard } from '../../shared/types'
-import { FACCION_COLORS, FACCION_IMAGES, KEYWORDS } from '../../shared/types'
+import { FACCION_COLORS, KEYWORDS } from '../../shared/types'
 import { CardFrame, CostGem, EtherHexagon, NamePlate, RuneIcon, StatBadge, TextScroll } from './card-art'
+import { MedallonFaccion } from './card-art/arte-codigo'
 import { tamanoQueEntra } from './card-art/ajusteTexto'
 import { efectosComandante } from '../../shared/efectoComandante'
 import { condicionArcanaTexto } from './fields/CondicionArcanaField'
@@ -360,15 +361,14 @@ export function RenderCarta({
                   justifyContent: 'center',
                 }}
               >
-                <img
-                  src={FACCION_IMAGES[fac]}
-                  alt={fac}
+                <MedallonFaccion
+                  color={FACCION_COLORS[fac]}
+                  nombre={fac}
                   style={{
                     position: 'absolute',
                     inset: 0,
                     width: '100%',
                     height: '100%',
-                    objectFit: 'contain',
                     borderRadius: '50%',
                     filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.6))',
                   }}

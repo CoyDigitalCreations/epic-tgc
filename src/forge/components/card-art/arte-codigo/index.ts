@@ -1,0 +1,1 @@
+export { MedallonFaccion } from './MedallonFaccion'

@@ -2,7 +2,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, useLocation } from 'react-router'
+import { ALL_CARDS } from '../shared/data/paquetes'
 import Balance from './Balance'
+import { cargarCartas } from './cargador'
+import { poolLetalidad } from './letalidad'
 import { instalarEntornoGraficas } from './test/entornoGraficas'
 
 function Ubicacion() {
@@ -202,14 +205,14 @@ describe('Balance', () => {
       try {
         montar('/balance?vista=auditoria')
         const filas = () => within(screen.getByRole('table', { name: /auditoría de las cartas/i })).getAllByRole('row')
-        expect(filas()).toHaveLength(67)
+        expect(filas()).toHaveLength(ALL_CARDS.length + 1) // las cartas del seed completo + la fila de encabezado
 
         await userEvent.click(screen.getByRole('switch', { name: NOMBRE_INTERRUPTOR }))
         const tabla = await screen.findByRole('table', { name: /cartas de referencia/i })
         expect(within(tabla).getAllByText('Referencia (no publicadas)').length).toBeGreaterThan(0)
 
-        // Ninguna vista cambia: 66 cartas, pool de 18, y la exportación solo trae lo publicado.
-        expect(filas()).toHaveLength(67)
+        // Ninguna vista cambia: las cartas publicadas, el pool de letalidad, y la exportación solo trae lo publicado.
+        expect(filas()).toHaveLength(ALL_CARDS.length + 1) // las cartas del seed completo + la fila de encabezado
         await userEvent.click(screen.getByRole('button', { name: 'Exportar JSON' }))
         const json = JSON.parse(await blobs[0].text()) as { cambios: { id: string }[] }
         // Solo Isolde (con el índice nuevo excede su suma). Elena (4/2) y, tras el rediseño de Disonancia (Lote 2), toda la Disonancia ya caben en banda
@@ -218,7 +221,7 @@ describe('Balance', () => {
 
         await userEvent.click(screen.getByRole('tab', { name: 'Matriz de letalidad' }))
         const letalidad = await screen.findByRole('table', { name: /letalidad por campeón/i })
-        expect(within(letalidad).getAllByRole('row')).toHaveLength(19)
+        expect(within(letalidad).getAllByRole('row')).toHaveLength(poolLetalidad(cargarCartas(ALL_CARDS).cartas).length + 1) // el pool de Campeones + el encabezado
         await userEvent.click(screen.getByRole('tab', { name: 'Resumen por mazo' }))
         await waitFor(() => expect(within(tablaResumen()).getByRole('row', { name: /^Estásis/ })).toHaveTextContent('33'))
         expect(within(tablaResumen()).getByRole('row', { name: /^Disonancia/ })).toHaveTextContent('33')

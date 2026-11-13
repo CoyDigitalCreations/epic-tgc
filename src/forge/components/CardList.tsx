@@ -3,7 +3,7 @@ import { useCardStore } from '../store/useCardStore'
 import { exportCollectionToJson, importCollectionFromJson, exportCollectionSinArte, FUENTE_ARTE, FUENTE_EFECTOS } from '../utils/export-json'
 import { exportPaqueteToJson, importPaqueteFromJson } from '../utils/export-paquete'
 import { CARD_TYPES, RARITIES, KEYWORDS, FACCIONES, type CardType, type Faccion, type Keyword, type Rarity } from '../../shared/types'
-import { PAQUETES, ESTASIS_CARDS, DISONANCIA_CARDS, progresoPaquete } from '../../shared/data/paquetes'
+import { PAQUETES, ESTASIS_CARDS, DISONANCIA_CARDS, PURGA_CARDS, MUTACION_CARDS, progresoPaquete } from '../../shared/data/paquetes'
 import { RuneIcon } from './card-art'
 import { ConfirmModal } from './modals/ConfirmModal'
 import { ColeccionModal } from './modals/ColeccionModal'
@@ -15,6 +15,8 @@ import type { AnyCard } from '../../shared/types'
 const CARTAS_POR_PAQUETE: Record<string, AnyCard[]> = {
   estasis: ESTASIS_CARDS,
   disonancia: DISONANCIA_CARDS,
+  purga: PURGA_CARDS,
+  mutacion: MUTACION_CARDS,
 }
 
 /** Tamaño de las miniaturas: ancho mínimo de cada tarjeta en la rejilla (S/M/L). */

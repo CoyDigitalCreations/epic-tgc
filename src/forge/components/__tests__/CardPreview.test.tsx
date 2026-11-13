@@ -108,16 +108,15 @@ describe('CardPreview', () => {
       },
     })
     render(<CardPreview />)
-    // One medallón (image) per facción, con su src oficial
-    expect(screen.getByAltText('Orden')).toBeInTheDocument()
-    expect(screen.getByAltText('Caos')).toBeInTheDocument()
-    expect(screen.getByAltText('Orden').getAttribute('src')).toBe('/facciones_white.png')
-    expect(screen.getByAltText('Caos').getAttribute('src')).toBe('/facciones_blue.png')
+    // Un medallón (SVG dibujado en código) por facción
+    expect(screen.getByRole('img', { name: 'Orden' })).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: 'Caos' })).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: 'Orden' }).getAttribute('data-arte')).toBe('medallon-faccion')
     // La runa de la cosmología va superpuesta encima de cada medallón
     expect(screen.getByTestId('rune-Orden')).toBeInTheDocument()
     expect(screen.getByTestId('rune-Caos')).toBeInTheDocument()
     const runeOrden = screen.getByTestId('rune-Orden')
-    const medallonOrden = screen.getByAltText('Orden')
+    const medallonOrden = screen.getByRole('img', { name: 'Orden' })
     // La runa va DESPUÉS del medallón en el DOM (superpuesta, zIndex 2)
     expect(
       medallonOrden.compareDocumentPosition(runeOrden) &

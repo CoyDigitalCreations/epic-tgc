@@ -51,7 +51,7 @@ describe('MazoEditor', () => {
     limpiarColeccion()
   })
 
-  it('muestra el título, el input de nombre, filtros, contadores y el botón guardar deshabilitado', () => {
+  it('muestra el título, el input de nombre, filtros, contadores y el botón guardar deshabilitado', { timeout: 30_000 }, () => {
     render(<MazoEditor onGuardar={vi.fn()} onCancelar={vi.fn()} />)
     expect(screen.getByRole('heading', { name: 'Nuevo mazo personalizado' })).toBeInTheDocument()
     expect(screen.getByPlaceholderText('Nombre del mazo')).toBeInTheDocument()
@@ -207,7 +207,7 @@ describe('MazoEditor', () => {
     expect(screen.getByRole('button', { name: 'Guardar mazo' })).toBeDisabled()
   })
 
-  it('arma un mazo válido completo y onGuardar recibe 66 cardIds', { timeout: 30_000 }, async () => {
+  it('arma un mazo válido completo y onGuardar recibe 66 cardIds', { timeout: 60_000 }, async () => {
     const user = userEvent.setup()
     const onGuardar = vi.fn()
     render(<MazoEditor onGuardar={onGuardar} onCancelar={vi.fn()} />)

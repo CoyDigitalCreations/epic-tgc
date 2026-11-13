@@ -3,6 +3,9 @@ import {
   PAQUETES,
   ESTASIS_CARDS,
   DISONANCIA_CARDS,
+  PURGA_CARDS,
+  MUTACION_CARDS,
+  distribucionDe,
   ALL_CARDS,
   estasisDistribucion,
   disonanciaDistribucion,
@@ -32,6 +35,33 @@ describe('Paquetes', () => {
     expect(disonancia?.tipo).toBe('Mazo Temático')
     expect(disonancia?.facciones).toEqual(['Caos'])
     expect(disonancia?.distribucion).toEqual({ eter: 15, principal: 45, vinculos: 6 })
+  })
+
+  describe('Purga y Mutación (entrega Primogénitos)', () => {
+    it.each([
+      ['purga', 'Purga', 'PU-', 36, PURGA_CARDS],
+      ['mutacion', 'Mutación', 'MU-', 37, MUTACION_CARDS],
+    ] as const)('%s: se registra como mazo temático con la distribución oficial y sus cartas', (id, nombre, prefijo, diseños, cartas) => {
+      const paquete = PAQUETES.find((p) => p.id === id)
+      expect(paquete?.nombre).toBe(nombre)
+      expect(paquete?.entrega).toBe('Primogénitos')
+      expect(paquete?.tipo).toBe('Mazo Temático')
+      expect(paquete?.facciones).toEqual([nombre])
+      expect(paquete?.distribucion).toEqual({ eter: 15, principal: 45, vinculos: 6 })
+      expect(cartas).toHaveLength(diseños)
+      expect(cartas.every((c) => c.id.startsWith(prefijo) && c.paqueteId === id)).toBe(true)
+      // 66 copias jugables: 15 Éter + 45 Principal + 6 Vínculos
+      expect(distribucionDe(cartas)).toEqual({ eter: 15, principal: 45, vinculos: 6, total: 66 })
+    })
+
+    it('cada carta del seed pertenece a un paquete registrado', () => {
+      const ids = new Set(PAQUETES.map((p) => p.id))
+      expect(ALL_CARDS.filter((c) => !ids.has(String(c.paqueteId)))).toEqual([])
+    })
+
+    it('el lore de los paquetes nunca nombra al Nexo', () => {
+      for (const p of PAQUETES) expect(p.lore ?? '', p.id).not.toMatch(/nexo/i)
+    })
   })
 
   describe('Estásis (entrega Primogénitos) — 33 diseños / 66 cartas', () => {
@@ -250,8 +280,10 @@ describe('Paquetes', () => {
   })
 
   describe('Convención de nomenclatura — Campeones con título adicional', () => {
-    it('todo Campeón de ambos mazos usa el formato "Nombre, Título" o "Nombre de Casa X"', () => {
-      const campeones = ALL_CARDS.filter((c) => c.type === 'Campeón')
+    it('todo Campeón de Estásis y Disonancia usa el formato "Nombre, Título" o "Nombre de Casa X"', () => {
+      // Purga y Mutación quedan fuera a propósito: sus Campeones son oficios y criaturas («Pasante del Tribunal», «Raíz Inquieta»);
+      // solo los personajes con nombre propio (Idris, Yaron, Liora) llevan título.
+      const campeones = ALL_CARDS.filter((c) => c.type === 'Campeón' && (c.id.startsWith('FB-') || c.id.startsWith('DS-')))
       expect(campeones.length).toBeGreaterThan(0)
       for (const card of campeones) {
         expect(

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { ALL_CARDS } from '../shared/data/paquetes'
+import { ALL_CARDS } from './test/seedClasico'
 import { cargarCartas } from './cargador'
 import { CONFIG_V1 } from './config'
 import { componentesDeEfecto, poderDeCarta, poderDeEfecto } from './poderEfecto'

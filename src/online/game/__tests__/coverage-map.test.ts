@@ -67,9 +67,37 @@ describe('coverageMap — mapa de cobertura motor vs fuente de verdad', () => {
     expect(ok).toBeGreaterThanOrEqual(0)
   })
 
-  it('Lote 4B: ninguna carta de la fuente de verdad queda con HUECO (NOOP, TRIGGER ni SIN_RUTA)', () => {
-    const huecos = reporte.items.filter((i) => i.estado.startsWith('HUECO')).map((i) => `${i.cardId}:${i.estado}`)
-    expect(huecos).toEqual([])
+  // Huecos CONOCIDOS de Purga (PU-) y Mutación (MU-): el motor de esos dos mazos se hace al final, con el arte ya cerrado.
+  // Cada entrada es «idDeCarta:ESTADO». Al implementar el motor de una carta, BORRA su entrada: el test siguiente falla
+  // si una entrada ya no es un hueco, para que esta lista nunca quede desactualizada.
+  const PENDIENTES_MOTOR_PURGA_MUTACION = [
+    'PU-001:HUECO_NOOP',
+    'PU-004:HUECO_NOOP',
+    'PU-005:HUECO_NOOP',
+    'PU-010:HUECO_NOOP',
+    'PU-017:HUECO_NOOP',
+    'PU-028:HUECO_TRIGGER',
+    'PU-029:HUECO_NOOP',
+    'PU-032:HUECO_NOOP',
+    'PU-033:HUECO_NOOP',
+    'MU-004:HUECO_SIN_RUTA',
+    'MU-010:HUECO_TRIGGER',
+    'MU-013:HUECO_TRIGGER',
+    'MU-018:HUECO_TRIGGER',
+    'MU-027:HUECO_TRIGGER',
+    'MU-030:HUECO_TRIGGER',
+  ]
+  const huecosActuales = () => reporte.items.filter((i) => i.estado.startsWith('HUECO')).map((i) => `${i.cardId}:${i.estado}`)
+
+  it('Lote 4B: ninguna carta de Estásis ni Disonancia queda con HUECO (NOOP, TRIGGER ni SIN_RUTA), ni ninguna de Purga/Mutación fuera de la lista pendiente', () => {
+    const nuevos = huecosActuales().filter((h) => !PENDIENTES_MOTOR_PURGA_MUTACION.includes(h))
+    expect(nuevos).toEqual([])
+  })
+
+  it('la lista de pendientes de Purga y Mutación no tiene entradas que ya dejaron de ser huecos', () => {
+    const actuales = huecosActuales()
+    const resueltos = PENDIENTES_MOTOR_PURGA_MUTACION.filter((h) => !actuales.includes(h))
+    expect(resueltos, 'ya están cubiertas por el motor: bórralas de PENDIENTES_MOTOR_PURGA_MUTACION').toEqual([])
   })
 
   it('Lote 4B: el Comandante de Ragnar (buff +3 ATQ y Peaje) y el Choque del rival de Vorlag están cubiertos', () => {

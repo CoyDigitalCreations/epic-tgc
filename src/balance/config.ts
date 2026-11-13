@@ -79,6 +79,11 @@ export const CONFIG_V1: ConfigBalance = {
       // Verbos nuevos del rediseño de Estásis (peso propuesto 2 cada uno; BORRADOR calibrable)
       activar_disparo: 2,
       anclar_eter: 2,
+      // Verbos nuevos de Purga y Mutación (peso propuesto; BORRADOR calibrable con el pase de balance de ambos mazos)
+      quitar_buffs: 1.5,
+      igualar_stats_al_menor: 2,
+      mill: 1,
+      draw_discard: 1.5,
     },
     tipo: { pasivo: 1, disparo: 1, continuo: 1, comandante: 1, reserva: 1, pago: 1, bloqueo: 1, hechizo: 1, vinculo: 1 },
     trigger: {},
@@ -212,6 +217,11 @@ export const CONFIG_V1: ConfigBalance = {
       modificar_regla: { nivel: 0, regla: 'Es solo el vehículo: el tabú está en la regla que modifica (ver regla)' },
       activar_disparo: { nivel: 1, regla: '§8.3a: cada Campeón activa sus propios Disparos; aquí uno activa el de otro' },
       anclar_eter: { nivel: 2, regla: '§8.2: todo el Éter fuera de la Reserva se reagrupa en el Alba; el ancla lo impide' },
+      // Purga y Mutación (BORRADOR calibrable): ninguno rompe una regla del manual, son efectos de mesa normales
+      quitar_buffs: { nivel: 0, regla: 'Ninguna: quitar los bonos de un Campeón es un efecto normal, como debuff' },
+      igualar_stats_al_menor: { nivel: 0, regla: 'Ninguna: fijar ATQ y RES de un Campeón es un efecto normal' },
+      mill: { nivel: 0, regla: 'Ninguna: mandar cartas del mazo al Cementerio es un efecto normal' },
+      draw_discard: { nivel: 0, regla: 'Ninguna: robar y descartar es un efecto normal' },
     },
 
     // El mismo verbo con otro objetivo: la clave de contexto SUSTITUYE a la del verbo.
@@ -226,6 +236,7 @@ export const CONFIG_V1: ConfigBalance = {
       coste_campeones_rival_mas: { nivel: 1, regla: '§7.3: invocar cuesta lo que dice la carta; el catálogo prevé el Éter extra (costeCampeonesExtra)' },
       olvido_rival: { nivel: 1, regla: '§9.4: lo que muere va al Cementerio; el catálogo prevé el Exilio en su lugar (cementerioAlExilio)' },
       peaje_bloqueo: { nivel: 2, regla: '§9.3: bloquear es gratis y forzoso; el Peaje lo cobra y suspende el bloqueo forzoso' },
+      rival_sin_incrementos_res: { nivel: 2, regla: 'Los efectos que suben la RES de un Campeón funcionan siempre; esta regla lo impide al rival, sin excepción nombrada (BORRADOR calibrable)' },
       primerTurnoSinAtaques: { nivel: 2, regla: '§8.6: nadie ataca en el primer turno de la partida' },
       limiteMano: { nivel: 1, regla: '§7.1 y §8.5: el límite de mano es 6; el catálogo lo prevé' },
       cartasPorAlba: { nivel: 2, regla: '§8.2: robas 1 carta en el Alba' },
