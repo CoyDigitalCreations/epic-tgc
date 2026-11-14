@@ -199,7 +199,7 @@ export function SeccionesDisonancia() {
           <EterDelSur />
 
           <p className="mt-8 text-sm italic text-gray-500">
-            El mazo Disonancia está disponible en el constructor de cartas (33 diseños / 66 cartas). Norte y sur ya tienen voz: el Eje, por fin, está completo.
+            El mazo Disonancia está disponible en el constructor de cartas (33 diseños / 66 cartas). Norte y sur ya tienen voz. Más allá, en el noroeste y el sudeste, dos jardineros se disputan lo que el Derrame cambió.
           </p>
         </div>
       </section>

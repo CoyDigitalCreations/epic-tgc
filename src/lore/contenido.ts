@@ -2,6 +2,7 @@
  * Contenido del lore (entrega LOS PRIMOGÉNITOS). El texto viene del antiguo `primogenitos.html` (estático, ya retirado);
  * el arte es SOLO la ilustración (`/cartas/{id}.webp`, sin marco de carta).
  */
+import { DESCRIPCION_FACETA } from './contenidoPurgaMutacion'
 
 /** Ruta del arte puro de una carta (1024×1024, sin marco). */
 export const arte = (id: string) => `/cartas/${id}.webp`
@@ -58,7 +59,7 @@ export const FACETAS: Faceta[] = [
     faceta: 'Purga',
     runa: 'La Flecha / El Corte',
     posicion: 'Noroeste',
-    descripcion: 'La justicia implacable que arrasa lo corrupto.',
+    descripcion: DESCRIPCION_FACETA.Purga,
     color: '#ec4899',
     x: 76,
     y: 94,
@@ -76,7 +77,7 @@ export const FACETAS: Faceta[] = [
   {
     nombre: 'DESTRUCCIÓN',
     faceta: 'Vacío',
-    runa: 'La Cruz Rota',
+    runa: 'El Estallido',
     posicion: 'Oeste',
     descripcion: 'Fin, purga, renovación. Guerreros del apocalipsis.',
     color: '#f97316',
@@ -88,7 +89,7 @@ export const FACETAS: Faceta[] = [
     faceta: 'Mutación',
     runa: 'El Vórtice / El Cambio',
     posicion: 'Sudeste',
-    descripcion: 'La vida retorcida, la evolución sin reglas.',
+    descripcion: DESCRIPCION_FACETA.Mutación,
     color: '#84cc16',
     x: 284,
     y: 266,
@@ -118,7 +119,7 @@ export const MITO_FACETAS: PreguntaFaceta[] = [
   { pregunta: '¿Qué florece si se lo cuida?', respuesta: 'La Espiral que crece.', nombre: 'CREACIÓN', color: '#22c55e' },
   { pregunta: '¿Qué se deshace cuando nada lo sostiene?', respuesta: 'La Brecha que consume.', nombre: 'ENTROPÍA', color: '#a855f7' },
   { pregunta: '¿Qué cambia cuando las reglas mueren?', respuesta: 'El Vórtice sin ley.', nombre: 'MUTACIÓN', color: '#84cc16' },
-  { pregunta: '¿Qué termina para que algo comience?', respuesta: 'La Cruz Rota que renueva por el fuego.', nombre: 'DESTRUCCIÓN', color: '#f97316' },
+  { pregunta: '¿Qué termina para que algo comience?', respuesta: 'El Estallido que renueva por el fuego.', nombre: 'DESTRUCCIÓN', color: '#f97316' },
 ]
 
 /** Las etapas del Gran Ciclo, cada una con su carta de arte. */
@@ -313,4 +314,9 @@ export const SECCIONES = [
   { id: 'sur', titulo: 'El Sur y el Nudo' },
   { id: 'ragnar', titulo: 'Ragnar, Voz del Nudo' },
   { id: 'disonancia', titulo: 'El Mazo Disonancia' },
+  { id: 'arbol', titulo: 'El Árbol y el Derrame' },
+  { id: 'idris', titulo: 'Idris, El Podador' },
+  { id: 'purga', titulo: 'El Mazo Purga' },
+  { id: 'liora', titulo: 'Liora y Yaron' },
+  { id: 'mutacion', titulo: 'El Mazo Mutación' },
 ] as const

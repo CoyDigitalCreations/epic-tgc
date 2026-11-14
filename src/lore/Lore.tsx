@@ -5,6 +5,7 @@ import { Arte, Cita, MapaEje, Reveal } from './animaciones'
 import { B, Ciclo, Encabezado, P, Sub, TarjetaCampeona } from './bloques'
 import { CAMPEONAS, CASAS, CICLO, FACETAS, MITO_FACETAS, POLOS, SECCIONES } from './contenido'
 import { SeccionesDisonancia } from './SeccionesDisonancia'
+import { SeccionesPurgaMutacion } from './SeccionesPurgaMutacion'
 import { MedallonFaccion } from '../forge/components/card-art/arte-codigo'
 
 /** Sección activa según el scroll (para resaltar el índice lateral). */
@@ -78,7 +79,7 @@ function Hero() {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.9, delay: 0.9 }}
         >
-          Versión <span className="text-ether-300">2.0</span> — Lore y cosmología del Eje · Entrega Los Primogénitos
+          Versión <span className="text-ether-300">1.0</span> — Lore y cosmología del Eje · Entrega Los Primogénitos
         </motion.p>
         <motion.a
           href="#mundo"
@@ -451,13 +452,14 @@ export default function Lore() {
             </section>
 
             <SeccionesDisonancia />
+            <SeccionesPurgaMutacion />
           </main>
         </div>
 
         <footer className="border-t border-card-border py-10 text-center">
           <p className="bg-gradient-to-br from-ether-200 to-ether-400 bg-clip-text font-display text-base font-bold text-transparent">ÉTER ENGINE TCG</p>
           <p className="mt-2 text-xs text-gray-500">Cosmología del Eje — “El Despertar del Éter”</p>
-          <p className="text-xs text-gray-500">Mazos Temáticos: “Los Primogénitos” — Estásis (Orden) y Disonancia (Caos)</p>
+          <p className="text-xs text-gray-500">Mazos Temáticos: “Los Primogénitos” — Estásis (Orden), Disonancia (Caos), Purga y Mutación</p>
           <p className="mt-2 text-xs text-gray-600">Versión 1.0 — Julio 2026 · Creado con Éter Forge</p>
           <Link to="/" className="mt-5 inline-block text-sm text-ether-300 transition-colors hover:text-ether-100">
             ← Volver al inicio

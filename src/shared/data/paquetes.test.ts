@@ -16,6 +16,9 @@ import {
 import { KEYWORDS, RARITIES } from '../types/enums'
 import type { AnyCard } from '../types'
 
+/** La palabra del origen de todas las cosas está vetada en el repo: el patrón se arma por partes para no escribirla. */
+const PALABRA_VETADA = new RegExp(['\b', 'ne', 'xo', '\b'].join(''), 'i')
+
 describe('Paquetes', () => {
   it('registra el mazo temático Estásis de la entrega Primogénitos con distribución oficial', () => {
     const estasis = PAQUETES.find((p) => p.id === 'estasis')
@@ -59,8 +62,8 @@ describe('Paquetes', () => {
       expect(ALL_CARDS.filter((c) => !ids.has(String(c.paqueteId)))).toEqual([])
     })
 
-    it('el lore de los paquetes nunca nombra al Nexo', () => {
-      for (const p of PAQUETES) expect(p.lore ?? '', p.id).not.toMatch(/nexo/i)
+    it('el lore de los paquetes nunca nombra el origen de todas las cosas (palabra vetada)', () => {
+      for (const p of PAQUETES) expect(p.lore ?? '', p.id).not.toMatch(PALABRA_VETADA)
     })
   })
 

@@ -107,7 +107,7 @@ export const FACCION_LORE: Record<Faccion, { faceta: string; runa: string; posic
   Orden: { faceta: 'Estásis', runa: 'El Ancla / El Eje', posicion: 'Norte' },
   Caos: { faceta: 'Disonancia', runa: 'La Tormenta / El Nudo', posicion: 'Sur' },
   Creación: { faceta: 'Vitalidad', runa: 'La Espiral / El Crecimiento', posicion: 'Este' },
-  Destrucción: { faceta: 'Vacío', runa: 'La Cruz Rota', posicion: 'Oeste' },
+  Destrucción: { faceta: 'Vacío', runa: 'El Estallido', posicion: 'Oeste' },
   Ley: { faceta: 'Ley', runa: 'La Escuadra / El Cimiento', posicion: 'Noreste' },
   Purga: { faceta: 'Purga', runa: 'La Flecha / El Corte', posicion: 'Noroeste' },
   Entropía: { faceta: 'Entropía', runa: 'La Brecha / El Desgaste', posicion: 'Sudoeste' },
