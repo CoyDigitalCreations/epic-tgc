@@ -286,5 +286,12 @@ export const CONFIG_V1: ConfigBalance = {
     // «A mayor tabú, mayor coste»: 1 punto de tabú por cada punto de coste por encima de 1. Un Éter (coste 1) no puede romper nada
     // dentro de su presupuesto, porque no puede subir de coste; los costes 5-10 aún no tienen cartas reales (criterio para las que vengan).
     tabuMaxPorCoste: { 1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 7: 6, 8: 7, 9: 8, 10: 9 },
+
+    // Bono por déficit de stats (BORRADOR calibrable): los puntos de ATQ+RES que le faltan a un Campeón (contra la sumaMax de su coste, ya
+    // descontado el impuesto de efecto para no pagar dos veces los mismos puntos) se convierten en presupuesto de tabú. Como la banda crece
+    // con el coste, un coste 8 sin stats gana mucho más que un coste 1 sin stats sin necesitar un multiplicador aparte.
+    // Los exentos (Soberano, Emperador, Única) no lo reciben: su calibración queda pendiente.
+    bonoPorDeficit: 0.2,
+    bonoMax: 4,
   },
 }

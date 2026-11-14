@@ -7,11 +7,12 @@
  *   --n         semillas (cada una son 4 partidas: 2 asientos × 2 mazos)
  *   --desde     primera semilla (default 1)
  *   --procs     procesos en paralelo (default: núcleos - 1)
+ *   --mazos     par de mazos a enfrentar, p. ej. purga,mutacion (default estasis,disonancia)
  *   --json      imprime el resumen crudo (lo usan los procesos hijos)
  */
 import { spawn } from 'node:child_process'
 import os from 'node:os'
-import { ESTASIS_CARDS, DISONANCIA_CARDS } from '../src/shared/data/paquetes'
+import { ESTASIS_CARDS, DISONANCIA_CARDS, PURGA_CARDS, MUTACION_CARDS } from '../src/shared/data/paquetes'
 import { torneo, unir } from '../src/bot/arena'
 import type { ResumenTorneo } from '../src/bot/arena'
 import { BOTS, resolverBot } from '../src/bot/registro'
@@ -29,6 +30,18 @@ const ny = arg('y', 'base-dificil')
 const n = Number(arg('n', '40'))
 const desde = Number(arg('desde', '1'))
 const procs = Math.max(1, Math.min(n, Number(arg('procs', String(Math.max(1, os.cpus().length - 1))))))
+const MAZOS_DISPONIBLES: Record<string, { nombre: string; cartas: { id: string; limiteCopias?: string | number }[] }> = {
+  estasis: { nombre: 'Estasis', cartas: ESTASIS_CARDS },
+  disonancia: { nombre: 'Disonancia', cartas: DISONANCIA_CARDS },
+  purga: { nombre: 'Purga', cartas: PURGA_CARDS },
+  mutacion: { nombre: 'Mutacion', cartas: MUTACION_CARDS },
+}
+const nombresMazos = arg('mazos', 'estasis,disonancia')
+const [mazoA, mazoB] = nombresMazos.split(',').map((m) => MAZOS_DISPONIBLES[m.trim()])
+if (!mazoA || !mazoB) {
+  console.error(`--mazos inválido. Usa dos de: ${Object.keys(MAZOS_DISPONIBLES).join(', ')}`)
+  process.exit(1)
+}
 const soloJson = process.argv.includes('--json')
 
 const botX = resolverBot(nx), botY = resolverBot(ny)
@@ -39,14 +52,14 @@ if (!botX || !botY) {
 
 function correrAqui(d: number, cuantas: number): ResumenTorneo {
   return torneo(botX!, botY!, [
-    { nombre: 'Estasis', cartas: expandir(ESTASIS_CARDS) },
-    { nombre: 'Disonancia', cartas: expandir(DISONANCIA_CARDS) },
+    { nombre: mazoA!.nombre, cartas: expandir(mazoA!.cartas) },
+    { nombre: mazoB!.nombre, cartas: expandir(mazoB!.cartas) },
   ], cuantas, d)
 }
 
 function correrHijo(d: number, cuantas: number): Promise<ResumenTorneo> {
   return new Promise((ok, mal) => {
-    const hijo = spawn(process.execPath, [...process.execArgv, process.argv[1], '--x', nx, '--y', ny, '--n', String(cuantas), '--desde', String(d), '--procs', '1', '--json'], { stdio: ['ignore', 'pipe', 'inherit'] })
+    const hijo = spawn(process.execPath, [...process.execArgv, process.argv[1], '--x', nx, '--y', ny, '--mazos', nombresMazos, '--n', String(cuantas), '--desde', String(d), '--procs', '1', '--json'], { stdio: ['ignore', 'pipe', 'inherit'] })
     let salida = ''
     hijo.stdout.on('data', (b) => { salida += b })
     hijo.on('close', (code) => {

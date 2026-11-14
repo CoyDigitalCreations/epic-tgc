@@ -29,6 +29,10 @@ export interface ResumenMazo {
   arcanas: number
 }
 
+/** Colores del Principal por tipo de carta (los mismos con que el editor agrupa la lista del mazo). */
+export const COLOR_PRINCIPAL_BASE = '#7070ff'
+export const COLORES_PRINCIPAL = { campeones: '#ef4444', misticas: '#a855f7', arcanas: '#f59e0b' } as const
+
 /** Composición de un mazo: Éter / Principal / Vínculos y el desglose del Principal por tipo. */
 export function resumenMazo(cardIds: string[]): ResumenMazo {
   const base = conteosDe(cardIds)

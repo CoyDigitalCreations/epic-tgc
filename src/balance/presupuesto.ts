@@ -1,5 +1,6 @@
 import { CONFIG_V1 } from './config'
 import { poderDeCarta } from './poderEfecto'
+import { tabuDeCarta } from './tabu'
 import type { BandaCoste, CartaBalance, ConfigBalance, EvaluacionPresupuesto, EstadoSuma } from './tipos'
 
 /** Un Campeón está exento de la banda por coste si su rol o su rareza lo indica. */
@@ -72,10 +73,36 @@ export function impuestoDe(carta: CartaBalance, cfg: ConfigBalance = CONFIG_V1):
   return Math.min(cfg.impuesto.maxImpuesto, Math.round(crudo * 10) / 10)
 }
 
-/** Evalúa el presupuesto de un Campeón aplicando su impuesto de efecto (objetivoSuma = sumaMax - impuesto). */
+/**
+ * Bono de tabú por déficit de stats: cuántos puntos extra de tabú gana un Campeón que está por debajo de lo que su coste permite.
+ * Solo Campeones con banda por coste y no exentos; 0 en los demás casos. Se redondea a un decimal y no pasa de `bonoMax`.
+ * El déficit descuenta el impuesto de efecto para no pagar dos veces los mismos puntos de stats.
+ */
+export function bonoDeTabu(carta: CartaBalance, cfg: ConfigBalance = CONFIG_V1): number {
+  if (carta.tipo !== 'Campeón' || carta.stats === null || esExento(carta, cfg)) return 0
+  const banda = cfg.bandas[carta.coste]
+  if (banda === undefined) return 0
+  const deficit = Math.max(0, banda.sumaMax - impuestoDe(carta, cfg) - (carta.stats.atq + carta.stats.res))
+  return Math.min(cfg.tabu.bonoMax, Math.round(deficit * cfg.tabu.bonoPorDeficit * 10) / 10)
+}
+
+/** Una carta «usa su bono» cuando rompe más reglas de las que su coste permite por sí solo: sus stats bajos son un trato deliberado. */
+function usaBonoDeTabu(carta: CartaBalance, cfg: ConfigBalance): boolean {
+  const base = cfg.tabu.tabuMaxPorCoste[carta.coste]
+  return base !== undefined && bonoDeTabu(carta, cfg) > 0 && tabuDeCarta(carta, cfg).puntos > base
+}
+
+/**
+ * Evalúa el presupuesto de un Campeón aplicando su impuesto de efecto (objetivoSuma = sumaMax - impuesto).
+ * Una suma por debajo del mínimo NO es alarma si la carta usa su bono de tabú: cambió stats por efecto a propósito.
+ */
 export function evaluarConImpuesto(
   carta: CartaBalance,
   cfg: ConfigBalance = CONFIG_V1,
 ): EvaluacionPresupuesto | null {
-  return evaluarPresupuesto(carta, cfg, impuestoDe(carta, cfg))
+  const ev = evaluarPresupuesto(carta, cfg, impuestoDe(carta, cfg))
+  if (ev !== null && ev.estado === 'bajo' && usaBonoDeTabu(carta, cfg)) {
+    return { ...ev, estado: 'dentro', fueraDeBanda: ev.excesoAtq > 0 || ev.excesoRes > 0 }
+  }
+  return ev
 }

@@ -97,6 +97,13 @@ export interface ConfigTabu {
   keyword: Record<Keyword, ReglaTabu>
   /** Puntos de tabú máximos que permite cada coste (a mayor tabú, mayor coste). */
   tabuMaxPorCoste: Record<number, number>
+  /**
+   * Bono de tabú por déficit de stats: un Campeón con menos ATQ+RES de los que su coste permite puede romper más reglas.
+   * `bono = min(bonoMax, déficit × bonoPorDeficit)`, con déficit = sumaMax de su coste − impuesto de efecto − (ATQ+RES).
+   */
+  bonoPorDeficit: number
+  /** Tope del bono de tabú por déficit de stats. */
+  bonoMax: number
 }
 
 /** Efecto normalizado del seed. */

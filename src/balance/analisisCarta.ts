@@ -138,7 +138,8 @@ export function margenesDeStats(carta: CartaBalance, ctx: ContextoAnalisis, cfg:
   let estadoSuma: SemaforoStat
   if (ev.exento) estadoSuma = 'exenta'
   else if (holguraSuma < 0) estadoSuma = 'rojo'
-  else if (minimoSuma !== null && ev.suma < minimoSuma) estadoSuma = 'bajo'
+  // Si la carta usa su bono de tabú, evaluarConImpuesto ya la dejó en 'dentro': sus stats bajos son deliberados y no se avisan.
+    else if (minimoSuma !== null && ev.suma < minimoSuma && ev.estado !== 'dentro') estadoSuma = 'bajo'
   else estadoSuma = holguraSuma <= cfg.analisis.cercaDelTope ? 'amarillo' : 'verde'
 
   return [

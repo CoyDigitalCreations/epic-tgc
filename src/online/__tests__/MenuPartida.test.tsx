@@ -41,6 +41,18 @@ describe('MenuPartida: elegir mazo', () => {
     expect(screen.getAllByText(/66 cartas · Éter 15 · Principal 45 · Vínculos 6/)).toHaveLength(MAZOS.length)
   })
 
+  it('la barra del mazo parte el Principal en Campeones, Místicas y Arcanas, y no es igual en todos los sets', () => {
+    renderMenu()
+    const barras = Array.from(document.body.querySelectorAll('[aria-hidden="true"]')).filter((b) => b.querySelector('[data-segmento="campeones"]'))
+    expect(barras).toHaveLength(MAZOS.length)
+    const firmas = barras.map((b) => {
+      const flex = (t: string) => Number((b.querySelector(`[data-segmento="${t}"]`) as HTMLElement).style.flexGrow)
+      expect(flex('campeones') + flex('misticas') + flex('arcanas')).toBe(45)
+      return `${flex('campeones')}-${flex('misticas')}-${flex('arcanas')}`
+    })
+    expect(new Set(firmas).size).toBeGreaterThan(1)
+  })
+
   it('el clic en un set lo elige', async () => {
     const user = userEvent.setup()
     const props = renderMenu()

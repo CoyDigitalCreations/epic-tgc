@@ -19,11 +19,12 @@
  *   --n      semillas (cada una son 4 partidas: 2 asientos × 2 mazos)
  *   --desde  primera semilla (default 1)
  *   --procs  procesos en paralelo (default: núcleos - 1)
+ *   --mazos  par de mazos a enfrentar, p. ej. mutacion,estasis (default estasis,disonancia)
  *   --json   imprime el resumen crudo (lo usan los procesos hijos)
  */
 import { spawn } from 'node:child_process'
 import os from 'node:os'
-import { ESTASIS_CARDS, DISONANCIA_CARDS } from '../src/shared/data/paquetes'
+import { ESTASIS_CARDS, DISONANCIA_CARDS, PURGA_CARDS, MUTACION_CARDS } from '../src/shared/data/paquetes'
 import { actorActual, applyAction, createInitialState } from '../src/online/game'
 import type { GameState, PlayerId } from '../src/online/game'
 import { resolverBot } from '../src/bot/registro'
@@ -36,9 +37,14 @@ function arg(nombre: string, defecto: string): string {
 const expandir = (cards: { id: string; limiteCopias?: string | number }[]) =>
   cards.flatMap((c) => Array.from({ length: Number(c.limiteCopias ?? 1) }, () => c.id))
 
-const CARTAS = { Estasis: ESTASIS_CARDS, Disonancia: DISONANCIA_CARDS }
-const MAZOS = { Estasis: expandir(ESTASIS_CARDS), Disonancia: expandir(DISONANCIA_CARDS) }
-type Mazo = keyof typeof MAZOS
+const TODOS = { estasis: ['Estasis', ESTASIS_CARDS], disonancia: ['Disonancia', DISONANCIA_CARDS], purga: ['Purga', PURGA_CARDS], mutacion: ['Mutacion', MUTACION_CARDS] } as const
+const nombresMazos = arg('mazos', 'estasis,disonancia')
+const elegidos = nombresMazos.split(',').map((m) => TODOS[m.trim() as keyof typeof TODOS])
+if (elegidos.length !== 2 || elegidos.some((e) => !e)) { console.error(`--mazos inválido. Usa dos de: ${Object.keys(TODOS).join(', ')}`); process.exit(1) }
+type Mazo = string
+const [NOMBRE_1, NOMBRE_2] = elegidos.map((e) => e[0]) as [Mazo, Mazo]
+const CARTAS: Record<Mazo, readonly { id: string; limiteCopias?: string | number }[]> = Object.fromEntries(elegidos.map((e) => [e[0], e[1]]))
+const MAZOS: Record<Mazo, string[]> = Object.fromEntries(elegidos.map((e) => [e[0], expandir(e[1])]))
 
 /** Acciones que BAJAN una carta de la mano (o la usan desde la mano). */
 const ACCIONES_JUGAR = new Set(['jugar_campeon', 'jugar_mistica', 'jugar_respuesta', 'colocar_vinculo', 'colocar_arcana', 'equipar_artefacto', 'responder_cadena'])
@@ -51,16 +57,16 @@ interface Ficha {
   /** Eventos (todas las copias) */
   jugadas: number; activaciones: number; muertes: number; pagos: number
 }
-type Resumen = Record<Mazo, Record<string, Ficha>> & { partidas: Record<Mazo, number>; victorias: Record<Mazo, number> }
+type Resumen = { [mazo: string]: Record<string, Ficha> | Record<Mazo, number> } & { partidas: Record<Mazo, number>; victorias: Record<Mazo, number> }
 
 const ficha = (): Ficha => ({ copias: 0, vista: 0, jugada: 0, manoFin: 0, vicVista: 0, vicJugada: 0, jugadas: 0, activaciones: 0, muertes: 0, pagos: 0 })
-const vacio = (): Resumen => ({ Estasis: {}, Disonancia: {}, partidas: { Estasis: 0, Disonancia: 0 }, victorias: { Estasis: 0, Disonancia: 0 } })
-const de = (res: Resumen, m: Mazo, id: string): Ficha => (res[m][id] ??= ficha())
+const vacio = (): Resumen => ({ [NOMBRE_1]: {}, [NOMBRE_2]: {}, partidas: { [NOMBRE_1]: 0, [NOMBRE_2]: 0 }, victorias: { [NOMBRE_1]: 0, [NOMBRE_2]: 0 } }) as Resumen
+const de = (res: Resumen, m: Mazo, id: string): Ficha => ((res[m] as Record<string, Ficha>)[id] ??= ficha())
 
 function jugar(nombreBot: string, seed: number, mazoA: Mazo, res: Resumen): void {
   const crearBot = () => resolverBot(nombreBot)!
   const botA = crearBot(), botB = crearBot()
-  const mazoB: Mazo = mazoA === 'Estasis' ? 'Disonancia' : 'Estasis'
+  const mazoB: Mazo = mazoA === NOMBRE_1 ? NOMBRE_2 : NOMBRE_1
   const mazoDe = { A: mazoA, B: mazoB } as Record<PlayerId, Mazo>
   const { state, ctx } = createInitialState(MAZOS[mazoA], MAZOS[mazoB], seed)
   let estado: GameState = state
@@ -126,17 +132,17 @@ function jugar(nombreBot: string, seed: number, mazoA: Mazo, res: Resumen): void
 function correrAqui(nombreBot: string, desde: number, cuantas: number): Resumen {
   const res = vacio()
   for (let seed = desde; seed < desde + cuantas; seed++) {
-    jugar(nombreBot, seed, 'Estasis', res)
-    jugar(nombreBot, seed, 'Disonancia', res)
+    jugar(nombreBot, seed, NOMBRE_1, res)
+    jugar(nombreBot, seed, NOMBRE_2, res)
   }
   return res
 }
 
 const unir = (partes: Resumen[]): Resumen => {
   const r = vacio()
-  for (const p of partes) for (const m of ['Estasis', 'Disonancia'] as Mazo[]) {
+  for (const p of partes) for (const m of [NOMBRE_1, NOMBRE_2]) {
     r.partidas[m] += p.partidas[m]; r.victorias[m] += p.victorias[m]
-    for (const [cid, f] of Object.entries(p[m])) {
+    for (const [cid, f] of Object.entries(p[m] as Record<string, Ficha>)) {
       const t = de(r, m, cid)
       for (const k of Object.keys(t) as (keyof Ficha)[]) t[k] += f[k]
     }
@@ -153,7 +159,7 @@ if (!resolverBot(nombreBot)) { console.error(`Bot desconocido: ${nombreBot}`); p
 
 function correrHijo(d: number, cuantas: number): Promise<Resumen> {
   return new Promise((ok, mal) => {
-    const hijo = spawn(process.execPath, [...process.execArgv, process.argv[1], '--bot', nombreBot, '--n', String(cuantas), '--desde', String(d), '--procs', '1', '--json'], { stdio: ['ignore', 'pipe', 'inherit'] })
+    const hijo = spawn(process.execPath, [...process.execArgv, process.argv[1], '--bot', nombreBot, '--mazos', nombresMazos, '--n', String(cuantas), '--desde', String(d), '--procs', '1', '--json'], { stdio: ['ignore', 'pipe', 'inherit'] })
     let salida = ''
     hijo.stdout.on('data', (b) => { salida += b })
     hijo.on('close', (code) => {
@@ -209,8 +215,8 @@ async function main(): Promise<void> {
   }
   console.log(`\nTelemetría por carta · bot ${nombreBot} · espejo · ${((Date.now() - t0) / 1000).toFixed(1)} s`)
   console.log(`WR = victorias del mazo en esas partidas (solo con ≥ ${MIN_WR} partidas; es correlación, no causa)`)
-  imprimir(r, 'Estasis')
-  imprimir(r, 'Disonancia')
+  imprimir(r, NOMBRE_1)
+  imprimir(r, NOMBRE_2)
 }
 
 main()

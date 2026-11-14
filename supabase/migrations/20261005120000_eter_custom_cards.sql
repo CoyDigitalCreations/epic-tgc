@@ -3,7 +3,7 @@
 --
 -- Modelo Option C simplificado:
 --   - El dueño de la carta la sube al guardarla en el Forge (auto-upload)
---   - El curador (usuario del repo) valida antes de que lleguen acá
+--   - El curador (usuario del repo) valida antes de que lleguen aquí
 --   - Edge Function carga estas definiciones al crear/unirse a salas JvJ
 --   - registrarCartas() las registra en el motor antes de createInitialState
 --

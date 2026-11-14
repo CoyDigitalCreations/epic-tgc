@@ -303,7 +303,8 @@ function Tabu({ analisis, carta }: { analisis: Analisis; carta: CartaBalance }) 
   const filas: [string, string][] = [
     ['Puntos de tabú', String(tabu.puntos)],
     ['Nivel máximo', String(tabu.nivelMax)],
-    [`Máximo por coste ${carta.coste}`, num(tabu.max)],
+    [`Máximo por coste ${carta.coste}`, num(tabu.maxBase)],
+    ...(tabu.bono > 0 ? ([['Bono por stats bajos', `+${num(tabu.bono)}`]] as [string, string][]) : []),
   ]
   return (
     <section aria-label="Tabú" className={BLOQUE}>

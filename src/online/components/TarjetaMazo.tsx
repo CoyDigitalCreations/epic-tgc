@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import type { CSSProperties } from 'react'
 import { useCardImage } from '../../forge/hooks/useCardImage'
 import { getCardMeta } from '../game'
-import { cartasDePortada, resumenMazo } from '../resumenMazo'
+import { cartasDePortada, COLOR_PRINCIPAL_BASE, COLORES_PRINCIPAL, resumenMazo } from '../resumenMazo'
 
 /** Una carta del abanico de portada, con su arte real (diseño → /cartas, custom → IndexedDB). */
 function CartaPortada({ cardId, indice, total, color }: { cardId: string; indice: number; total: number; color: string }) {
@@ -49,6 +49,8 @@ export function TarjetaMazo({ nombre, color, etiqueta, cardIds, seleccionado, on
   const portada = useMemo(() => cartasDePortada(cardIds), [cardIds])
   const r = useMemo(() => resumenMazo(cardIds), [cardIds])
   const total = Math.max(1, r.eter + r.principal + r.vinculos)
+  // El Principal se parte por tipo (Campeones / Místicas / Arcanas); lo que no sea de esos tres (si lo hubiera) conserva el color base.
+  const otrosPrincipal = Math.max(0, r.principal - r.campeones - r.misticas - r.arcanas)
   return (
     <div className="relative">
       <button
@@ -86,17 +88,22 @@ export function TarjetaMazo({ nombre, color, etiqueta, cardIds, seleccionado, on
           </div>
           <p className="mt-0.5 text-[11px] text-gray-400">{etiqueta}</p>
 
-          {/* Composición: Éter / Principal / Vínculos */}
+          {/* Composición: Éter / Principal (Campeones, Místicas, Arcanas) / Vínculos */}
           <div className="mt-3 flex h-1.5 overflow-hidden rounded-full bg-white/10" aria-hidden="true">
-            <span style={{ flex: r.eter, background: '#22d3ee' }} />
-            <span style={{ flex: r.principal, background: '#7070ff' }} />
-            <span style={{ flex: r.vinculos, background: '#ec4899' }} />
+            <span data-segmento="eter" style={{ flex: r.eter, background: '#22d3ee' }} />
+            <span data-segmento="campeones" style={{ flex: r.campeones, background: COLORES_PRINCIPAL.campeones }} />
+            <span data-segmento="misticas" style={{ flex: r.misticas, background: COLORES_PRINCIPAL.misticas }} />
+            <span data-segmento="arcanas" style={{ flex: r.arcanas, background: COLORES_PRINCIPAL.arcanas }} />
+            {otrosPrincipal > 0 && <span data-segmento="otros" style={{ flex: otrosPrincipal, background: COLOR_PRINCIPAL_BASE }} />}
+            <span data-segmento="vinculos" style={{ flex: r.vinculos, background: '#ec4899' }} />
           </div>
           <p className="mt-1.5 font-mono text-[10px] text-gray-500">
             {`${total} cartas · Éter ${r.eter} · Principal ${r.principal} · Vínculos ${r.vinculos}`}
           </p>
           <p className="mt-0.5 text-[10px] text-gray-500">
-            {`${r.campeones} Campeones · ${r.misticas} Místicas · ${r.arcanas} Arcanas`}
+            <span style={{ color: COLORES_PRINCIPAL.campeones }}>●</span> {`${r.campeones} Campeones · `}
+            <span style={{ color: COLORES_PRINCIPAL.misticas }}>●</span> {`${r.misticas} Místicas · `}
+            <span style={{ color: COLORES_PRINCIPAL.arcanas }}>●</span> {`${r.arcanas} Arcanas`}
           </p>
         </div>
       </button>

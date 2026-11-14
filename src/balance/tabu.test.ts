@@ -8,8 +8,9 @@ import type { AnyCard } from '../shared/types'
 import { cargarCartas } from './cargador'
 import { CONFIG_V1 } from './config'
 import { evaluarCarta } from './metricas'
+import { evaluarConImpuesto } from './presupuesto'
 import { poderDeCarta } from './poderEfecto'
-import { clavesDeEfecto, ETIQUETA_ESTADO_TABU, evaluarTabu, nombreDeInfraccion, reglaDeTabu, resumenTabuPorMazo, tabuDeCarta } from './tabu'
+import { bonoDeTabu, clavesDeEfecto, ETIQUETA_ESTADO_TABU, evaluarTabu, nombreDeInfraccion, reglaDeTabu, resumenTabuPorMazo, tabuDeCarta } from './tabu'
 import { carta, CARTAS } from './test/cartasReales'
 import type { CartaBalance, ConfigBalance, EfectoBalance } from './tipos'
 
@@ -359,8 +360,8 @@ describe('evaluarTabu: presupuesto por coste', () => {
   it('lee la tabla de la config que recibe', () => {
     const cfg = clon()
     cfg.tabu.tabuMaxPorCoste[3] = 1
-    expect(evaluarTabu(carta('Elena'), cfg)).toMatchObject({ max: 1, estado: 'excede' })
-    expect(evaluarTabu(carta('Elena'))).toMatchObject({ max: 2, estado: 'en-limite' })
+    expect(evaluarTabu(carta('Elena'), cfg)).toMatchObject({ maxBase: 1, estado: 'excede' })
+    expect(evaluarTabu(carta('Elena'))).toMatchObject({ maxBase: 2, estado: 'en-limite' })
   })
 
   it('cada estado tiene su etiqueta en español', () => {
@@ -393,5 +394,82 @@ describe('calibración: Estásis y Disonancia con el catálogo y el presupuesto 
   it('un mazo sin cartas tiene total 0 y medio null (nunca NaN)', () => {
     const solo = resumenTabuPorMazo(CARTAS.filter((c) => c.mazo === 'estasis'))
     expect(solo.find((r) => r.mazo === 'disonancia')).toMatchObject({ cartas: 0, total: 0, medio: null, excede: 0 })
+  })
+})
+
+describe('bono de tabú por déficit de stats', () => {
+  const conStats = (coste: number, atq: number, res: number, p: Partial<CartaBalance> = {}) => cartaDe({ coste, stats: { atq, res }, ...p })
+
+  it('un Campeón sin déficit (suma en el máximo de su banda) no gana nada', () => {
+    expect(bonoDeTabu(conStats(4, 5, 5))).toBe(0)
+  })
+
+  it('el bono es el déficit contra la sumaMax × 0.2: coste 4 con 0/0 gana +2 y su máximo pasa de 3 a 5', () => {
+    expect(bonoDeTabu(conStats(4, 0, 0))).toBe(2)
+    expect(evaluarTabu(conStats(4, 0, 0))).toMatchObject({ maxBase: 3, bono: 2, max: 5 })
+  })
+
+  it('un coste 1 sin stats casi no gana (no llega a un punto): la banda pequeña limita el bono', () => {
+    expect(bonoDeTabu(conStats(1, 0, 0))).toBe(0.8)
+    expect(evaluarTabu(conStats(1, 0, 0)).max).toBe(0.8)
+  })
+
+  it('un coste 8 con 0/0 llega al tope de 4 y con 3/3 gana 3.8', () => {
+    expect(bonoDeTabu(conStats(8, 0, 0))).toBe(4)
+    expect(bonoDeTabu(conStats(8, 3, 3))).toBe(3.8)
+    expect(evaluarTabu(conStats(8, 0, 0)).max).toBe(11)
+  })
+
+  it('crece con el coste: los mismos stats vacíos dan más bono a un coste alto que a uno bajo', () => {
+    expect(bonoDeTabu(conStats(8, 0, 0))).toBeGreaterThan(bonoDeTabu(conStats(4, 0, 0)))
+    expect(bonoDeTabu(conStats(4, 0, 0))).toBeGreaterThan(bonoDeTabu(conStats(2, 0, 0)))
+  })
+
+  it('no se paga dos veces: el impuesto de efecto baja el déficit que se convierte en bono', () => {
+    const c = conStats(4, 5, 5, { efectos: [efecto({ verbo: 'destroy' }), efecto({ verbo: 'exile', tipo: 'disparo' })] })
+    expect(bonoDeTabu(c)).toBe(0)
+  })
+
+  it('una carta con puntos de tabú por encima de su coste deja de exceder gracias al bono', () => {
+    const efectos = [efecto({ verbo: 'steal_ether' }), efecto({ verbo: 'double_attack' })]
+    const sin = evaluarTabu(cartaDe({ coste: 3, efectos }))
+    expect(sin.estado).toBe('excede')
+    expect(evaluarTabu(conStats(3, 0, 0, { efectos })).estado).not.toBe('excede')
+  })
+
+  it('los exentos (Soberano, Emperador, Única) y lo que no es Campeón no reciben bono', () => {
+    expect(bonoDeTabu(conStats(4, 0, 0, { roles: ['Soberano'] }))).toBe(0)
+    expect(bonoDeTabu(conStats(4, 0, 0, { rareza: 'Única' }))).toBe(0)
+    expect(bonoDeTabu(conStats(4, 0, 0, { tipo: 'Mística' }))).toBe(0)
+  })
+
+  it('en el límite se mide contra el máximo entero: con bono fraccionario no puede sumar otro punto', () => {
+    const ev = evaluarTabu(conStats(3, 4, 3, { efectos: [efecto({ verbo: 'double_attack' })] }))
+    expect(ev.puntos).toBe(2)
+    expect(ev.max).toBeGreaterThanOrEqual(2)
+    expect(ev.estado).toBe('en-limite')
+  })
+
+  it('con el bono en cero el comportamiento es el de siempre (config sin déficit: sumaMax = suma)', () => {
+    const cfg = clon()
+    cfg.tabu.bonoPorDeficit = 0
+    expect(evaluarTabu(conStats(4, 0, 0), cfg)).toMatchObject({ bono: 0, max: 3 })
+  })
+})
+
+describe('bono de tabú: silencia el aviso «bajo banda»', () => {
+  const efectosTabu = () => [efecto({ verbo: 'steal_ether' }), efecto({ verbo: 'double_attack' })]
+  const campeon = (atq: number, res: number, efectos: EfectoBalance[]) => cartaDe({ coste: 3, stats: { atq, res }, efectos })
+
+  it('una carta bajo el mínimo que NO usa su bono sigue marcada como bajo banda', () => {
+    expect(evaluarConImpuesto(campeon(1, 1, []))).toMatchObject({ estado: 'bajo', fueraDeBanda: true })
+  })
+
+  it('una carta bajo el mínimo que rompe más reglas de las que su coste permite ya no es alarma', () => {
+    expect(evaluarConImpuesto(campeon(1, 1, efectosTabu()))).toMatchObject({ estado: 'dentro', fueraDeBanda: false })
+  })
+
+  it('un tope de ATQ/RES excedido sigue marcándose aunque use el bono', () => {
+    expect(evaluarConImpuesto(campeon(6, 0, efectosTabu()))?.fueraDeBanda).toBe(true)
   })
 })
