@@ -73,10 +73,15 @@ describe('activar_disparo — Aurora: Resonancia', () => {
   }
   const resonar = (s: GameState) => aplicar(s, { type: 'activar_habilidad', cardInstanceId: 'aurora', eterIds: s.players.A.eterReserva.slice(0, 2) }, crearCtx())
 
-  it('paga 2 Éter y ejecuta el Disparo de Mira SIN pagar su costo ni agotarla (devuelve 2 Éter de 1A a la Reserva)', () => {
+  it('paga 2 Éter y ejecuta el Disparo de Mira SIN pagar su costo ni agotarla (el jugador elige qué 2 Éter de 1A vuelven a la Reserva)', () => {
     const s0 = escena()
     const pagados = conEteres(s0, 'A', 2).map((id) => { s0.players.A.eterReserva.pop(); s0.players.A.eterPagado.push(id); return id })
-    const s = resonar(s0)
+    const ctx = crearCtx()
+    const s1 = resonar(s0)
+    // Resonancia dejó 4 Éter en 1A (2 que ya estaban + 2 que pagó): hay que ELEGIR cuáles 2 devuelve Mira
+    expect(s1.objetivosPendientes?.[0]).toMatchObject({ jugador: 'A', restantes: 1 })
+    const s2 = aplicar(s1, { type: 'elegir_objetivo', objetivoId: pagados[0] }, ctx)
+    const s = aplicar(s2, { type: 'elegir_objetivo', objetivoId: pagados[1] }, ctx)
     expect(s.players.A.eterPagado).toEqual([...s.players.A.eterPagado.filter((x) => !pagados.includes(x))]) // los 2 salieron de 1A
     for (const id of pagados) expect(s.players.A.eterReserva).toContain(id)
     // Resonancia costó 2 (Reserva 8 → 6 + 2 devueltos); el Disparo de Mira no cobró su 1 Éter

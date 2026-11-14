@@ -459,6 +459,11 @@ export interface PendienteObjetivo {
   efectoUmbralIdx?: number
   opener?: { efectoIdx: number }
   equipar?: boolean
+  /**
+   * «Devuelve hasta N Éter» (`return_ether` + `esHasta`): elecciones que faltan DESPUÉS de esta (N − 1 al abrirse). Al resolver cada
+   * elección se abre la siguiente con los candidatos que quedan; si ya no queda nada que elegir, el resto se devuelve solo.
+   */
+  restantes?: number
   /** Purga (`draw_discard`): la elección es qué carta de la MANO de `jugador` se descarta. Ver habilidades.ejecutarElegirObjetivo. */
   descartar?: boolean
 }

@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -51,6 +51,25 @@ describe('MenuPartida: elegir mazo', () => {
       return `${flex('campeones')}-${flex('misticas')}-${flex('arcanas')}`
     })
     expect(new Set(firmas).size).toBeGreaterThan(1)
+  })
+
+  it('sin elegir rival es Automático (el espejo) y se puede elegir cualquier set oficial, incluso el propio', async () => {
+    const user = userEvent.setup()
+    const props = renderMenu({ mazoHumano: { tipo: 'set', id: 'estasis' }, rivalElegido: 'auto', onRival: vi.fn() })
+    const grupo = screen.getByRole('group', { name: 'Mazo del rival' })
+    expect(within(grupo).getAllByRole('button')).toHaveLength(MAZOS.length + 1)
+    expect(within(grupo).getByRole('button', { name: /Automático/ })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByText(/Rival: Disonancia/, { selector: 'p' })).toBeInTheDocument()
+    await user.click(within(grupo).getByRole('button', { name: /Purga/ }))
+    expect(props.onRival).toHaveBeenCalledWith('purga')
+    await user.click(within(grupo).getByRole('button', { name: /Estásis/ }))
+    expect(props.onRival).toHaveBeenCalledWith('estasis')
+  })
+
+  it('con un rival elegido el panel muestra ese set', () => {
+    renderMenu({ mazoHumano: { tipo: 'set', id: 'estasis' }, rivalElegido: 'mutacion', onRival: vi.fn() })
+    expect(screen.getByText('Rival: Mutación', { selector: 'p' })).toBeInTheDocument()
+    expect(screen.getByText('Set oficial elegido por ti.')).toBeInTheDocument()
   })
 
   it('el clic en un set lo elige', async () => {

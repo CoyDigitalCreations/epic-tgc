@@ -69,6 +69,23 @@ describe('conteosDe / buildDeck', () => {
   })
 })
 
+describe('mazoParaBot con rival elegido a mano', () => {
+  it('un set elegido manda sobre el espejo, el seed y el mazo personalizado', () => {
+    expect(mazoParaBot(0, 'estasis', 'purga').id).toBe('purga')
+    expect(mazoParaBot(1, 'purga', 'estasis').id).toBe('estasis')
+    expect(mazoParaBot(5, 'custom', 'mutacion').id).toBe('mutacion')
+  })
+
+  it('puede ser el mismo set del humano (espejo exacto)', () => {
+    expect(mazoParaBot(0, 'disonancia', 'disonancia').id).toBe('disonancia')
+  })
+
+  it("'auto' conserva el comportamiento de siempre", () => {
+    expect(mazoParaBot(0, 'estasis', 'auto').id).toBe('disonancia')
+    expect(mazoParaBot(1, 'custom', 'auto').id).toBe('disonancia')
+  })
+})
+
 describe('mazoParaBot (elección determinista del mazo del bot)', () => {
   it('con humano custom usa MAZOS[seed % 2]', () => {
     expect(mazoParaBot(0, 'custom').id).toBe('estasis')

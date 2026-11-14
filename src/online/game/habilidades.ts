@@ -2,7 +2,7 @@
  * Habilidades y efectos — activar arcana, activar habilidad, transmutar, elegir.
  * Extraído de actions.ts para separación de dominios (change: refactor-engine).
  */
-import type { GameState, Ctx, CardInstance, PlayerId } from './types'
+import type { GameState, Ctx, CardInstance, PlayerId, PendienteObjetivo } from './types'
 import { getCardMeta, efectoActivableDe, esCostoBloqueo, esArtefactoEquipable, campeonElegibleBloqueoEter } from './cards'
 import type { AnyCard, EfectoData } from '../../shared/types'
 import { validarPago, aplicarPago, type ContextoUso } from './payments'
@@ -449,6 +449,25 @@ export function ejecutarElegirObjetivo(s: GameState, action: Extract<Action, { t
       contextoUso: 'objetivo-elegido',
       objetivoId: action.objetivoId,
     })
+    encadenarEleccionesHasta(s, ctx, pendiente, action.objetivoId)
   }
   if (enDeclaracion) continuarDeclaracion(s, ctx, previos)
+}
+
+/**
+ * «Devuelve hasta N Éter»: tras resolver una elección, abre la siguiente con los candidatos que quedan (la elegida ya no cuenta).
+ * Si los que quedan no pasan de las elecciones pendientes, no hay nada que decidir y se devuelven todos.
+ */
+function encadenarEleccionesHasta(s: GameState, ctx: Ctx, pendiente: PendienteObjetivo, elegido: string): void {
+  const restantes = pendiente.restantes ?? 0
+  if (restantes <= 0) return
+  const quedan = opcionesVigentes(s, { ...pendiente, opciones: pendiente.opciones.filter((id) => id !== elegido) })
+  if (quedan.length === 0) return
+  if (quedan.length <= restantes) {
+    for (const id of quedan) {
+      dispararTrigger(s, ctx, pendiente.trigger as TriggerEfecto, pendiente.jugador, [pendiente.instId], { contextoUso: 'objetivo-elegido', objetivoId: id })
+    }
+    return
+  }
+  s.objetivosPendientes = [{ ...pendiente, opciones: quedan, restantes: restantes - 1 }, ...(s.objetivosPendientes ?? [])]
 }

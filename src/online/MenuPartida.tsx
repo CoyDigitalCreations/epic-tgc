@@ -2,7 +2,7 @@ import { Link } from 'react-router'
 import { Boton } from '../shared/ui/Boton'
 import { Seccion } from '../shared/ui/Seccion'
 import type { Dificultad } from './game/bot'
-import { MAZOS, mazoParaBot, type SetId } from './mazos'
+import { MAZOS, mazoParaBot, type RivalElegido, type SetId } from './mazos'
 import { TarjetaMazo } from './components/TarjetaMazo'
 import type { MazoPersonalizado } from './useMazosStore'
 
@@ -21,6 +21,9 @@ export interface MenuProps {
   onSeed: (n: number) => void
   dificultad: Dificultad
   onDificultad: (d: Dificultad) => void
+  /** Mazo del bot: un set oficial o 'auto' (el espejo del tuyo). Opcional: sin él, siempre 'auto'. */
+  rivalElegido?: RivalElegido
+  onRival?: (r: RivalElegido) => void
   onEmpezar: () => void
 }
 
@@ -56,9 +59,11 @@ export function MenuPartida({
   onSeed,
   dificultad,
   onDificultad,
+  rivalElegido = 'auto',
+  onRival,
   onEmpezar,
 }: MenuProps) {
-  const rival = mazoParaBot(seed, mazoHumano.tipo === 'set' ? mazoHumano.id : 'custom')
+  const rival = mazoParaBot(seed, mazoHumano.tipo === 'set' ? mazoHumano.id : 'custom', rivalElegido)
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#0a0a12] font-body text-gray-100">
@@ -156,12 +161,35 @@ export function MenuPartida({
                 <div className="min-w-0">
                   <p className="font-display text-sm font-bold text-gray-100">{`Rival: ${rival.nombre}`}</p>
                   <p className="text-[11px] text-gray-500">
-                    {mazoHumano.tipo === 'custom'
-                      ? 'Con mazo personalizado el bot elige su set según la semilla.'
-                      : 'Bot con el otro set oficial.'}
+                    {rivalElegido !== 'auto'
+                      ? 'Set oficial elegido por ti.'
+                      : mazoHumano.tipo === 'custom'
+                        ? 'Con mazo personalizado el bot elige su set según la semilla.'
+                        : 'Automático: el set espejo del tuyo.'}
                   </p>
                 </div>
               </div>
+              {onRival && (
+                <div role="group" aria-label="Mazo del rival" className="-mt-2 mb-5 flex flex-wrap gap-1.5">
+                  {[{ id: 'auto' as const, nombre: 'Automático', color: '#9ca3af' }, ...MAZOS.map((m) => ({ id: m.id as SetId, nombre: m.nombre, color: m.color }))].map((op) => {
+                    const activo = rivalElegido === op.id
+                    return (
+                      <button
+                        key={op.id}
+                        type="button"
+                        aria-pressed={activo}
+                        onClick={() => onRival(op.id)}
+                        className={`cursor-pointer rounded-full border px-3 py-1 text-[11px] font-semibold transition-colors ${
+                          activo ? 'border-transparent text-[#0a0a12]' : 'border-white/15 text-gray-300 hover:border-white/35'
+                        }`}
+                        style={activo ? { background: op.color } : undefined}
+                      >
+                        {`Rival: ${op.nombre}`}
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
 
               {/* Dificultad */}
               <Seccion>Dificultad del bot</Seccion>

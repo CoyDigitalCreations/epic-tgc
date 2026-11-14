@@ -3,7 +3,7 @@ import { useCardStore } from '../forge/store/useCardStore'
 import { ALL_CARDS } from '../shared/data/paquetes'
 import { registrarCartas, visibleState } from './game'
 import type { Dificultad } from './game/bot'
-import { MAZOS, mazoParaBot } from './mazos'
+import { MAZOS, mazoParaBot, type RivalElegido } from './mazos'
 import { MenuPartida } from './MenuPartida'
 import type { MazoSeleccionado } from './MenuPartida'
 import { useMazosStore, type MazoPersonalizado } from './useMazosStore'
@@ -28,6 +28,7 @@ export default function OnlineApp() {
   const [mazoEditando, setMazoEditando] = useState<MazoPersonalizado | undefined>(undefined)
   const [seed, setSeed] = useState(() => Math.floor(Math.random() * 100_000))
   const [dificultad, setDificultad] = useState<Dificultad>('medio')
+  const [rivalElegido, setRivalElegido] = useState<RivalElegido>('auto')
   const coleccion = useCardStore((s) => s.cards)
   const mazosPersonalizados = useMazosStore((s) => s.mazosPersonalizados)
 
@@ -95,6 +96,8 @@ export default function OnlineApp() {
         onSeed={setSeed}
         dificultad={dificultad}
         onDificultad={setDificultad}
+        rivalElegido={rivalElegido}
+        onRival={setRivalElegido}
         onEmpezar={empezar}
       />
     )
@@ -105,9 +108,9 @@ export default function OnlineApp() {
     MAZOS.find((m) => m.id === mazoHumano.id)?.cardIds ??
     MAZOS[0].cardIds
   const setHumano = mazoHumano.tipo === 'custom' ? 'custom' : mazoHumano.id
-  const deckB = mazoParaBot(seed, setHumano).cardIds
+  const deckB = mazoParaBot(seed, setHumano, rivalElegido).cardIds
   const config: PartidaConfig = { deckA, deckB, seed, delayMs: 350, dificultad }
-  const keyPartida = `${mazoHumano.tipo}:${mazoHumano.id}-${seed}-${mazoCustomElegido?.cardIds.length ?? 0}`
+  const keyPartida = `${mazoHumano.tipo}:${mazoHumano.id}-${rivalElegido}-${seed}-${mazoCustomElegido?.cardIds.length ?? 0}`
   return (
     <Partida key={keyPartida} config={config} onAbandonar={salir} />
   )

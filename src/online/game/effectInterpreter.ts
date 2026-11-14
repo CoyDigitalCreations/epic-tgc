@@ -144,7 +144,14 @@ export function interpretEffect(
   const isTriggered = payload.fromTrigger === true
   // Lote 3: anclar_eter («hasta N Éter del rival») también se resuelve solo: los primeros N de su 1A, sin elección
   // Lote 4A (Disonancia): steal_ether + esHasta («arrebata hasta 2 Éter») igual: se arrebatan los primeros N sin elegir
-  const autoResolver = ((efecto === 'mover' || efecto === 'return_ether' || efecto === 'steal_ether') && efectoData.esHasta === true) || efecto === 'anclar_eter'
+  // return_ether + esHasta («devuelve hasta 2 Éter», Mira): se ELIGE cuáles cuando hay más candidatos que el tope; con N o menos,
+  // devolverlos todos es lo único que hay (sin elección). `restantes` encadena las N elecciones (ver habilidades.encadenarEleccionesHasta).
+  const topeHasta = efectoData.cantidad ?? 1
+  const eleccionEterHasta = efecto === 'return_ether' && efectoData.esHasta === true && targetIds.length > topeHasta
+  const autoResolver =
+    (((efecto === 'mover' || efecto === 'steal_ether') && efectoData.esHasta === true) ||
+      (efecto === 'return_ether' && efectoData.esHasta === true && !eleccionEterHasta)) ||
+    efecto === 'anclar_eter'
   const mergedFiltros = efectoData.filtros
     ? { ...objetivo?.filtros, ...efectoData.filtros }
     : objetivo?.filtros
@@ -166,6 +173,7 @@ export function interpretEffect(
       instId: inst.cardInstanceId,
       trigger: toHyphenTrigger(efectoData.trigger) ?? umbralTrigger(efectoData) ?? 'ninguno',
       opciones: targetIds,
+      ...(eleccionEterHasta && topeHasta > 1 ? { restantes: topeHasta - 1 } : {}),
       ...(payload.declararOpener ? { opener: payload.declararOpener } : {}),
     }]
     return

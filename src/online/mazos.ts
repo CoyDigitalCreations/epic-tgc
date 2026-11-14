@@ -51,13 +51,18 @@ const RIVAL_DE: Record<SetId, SetId> = { estasis: 'disonancia', disonancia: 'est
 
 export const mazoPorId = (id: string): MazoJugable | undefined => MAZOS.find((m) => m.id === id)
 
+/** Rival elegido a mano: un set oficial concreto, o 'auto' para dejar que el juego decida (ver `mazoParaBot`). */
+export type RivalElegido = SetId | 'auto'
+
 /**
  * Mazo del bot:
+ * - rival elegido a mano (cualquier set oficial, incluso el mismo del humano) → ese set.
  * - humano con set preestablecido → su pareja espejo (Estásis↔Disonancia, Purga↔Mutación).
  * - humano con mazo personalizado → Estásis o Disonancia, DETERMINISTA desde el seed
  *   (`seed % 2`): mismo seed → mismo rival (reproducibilidad).
  */
-export function mazoParaBot(seed: number, humano: SetId | 'custom'): MazoJugable {
+export function mazoParaBot(seed: number, humano: SetId | 'custom', rival: RivalElegido = 'auto'): MazoJugable {
+  if (rival !== 'auto') return mazoPorId(rival) ?? MAZOS[0]
   if (humano === 'custom') return MAZOS[seed % 2]
   return mazoPorId(RIVAL_DE[humano]) ?? MAZOS[0]
 }

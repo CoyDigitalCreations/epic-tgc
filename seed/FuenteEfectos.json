@@ -3002,7 +3002,7 @@
     "stats": {
       "cost": 2,
       "poder": 2,
-      "resistencia": 3
+      "resistencia": 4
     },
     "efectos": [
       {
@@ -3044,7 +3044,7 @@
     "stats": {
       "cost": 2,
       "poder": 3,
-      "resistencia": 2
+      "resistencia": 3
     },
     "efectos": [
       {
@@ -3088,7 +3088,7 @@
     "stats": {
       "cost": 2,
       "poder": 2,
-      "resistencia": 3
+      "resistencia": 4
     },
     "efectos": [
       {
@@ -3128,7 +3128,7 @@
     "stats": {
       "cost": 2,
       "poder": 2,
-      "resistencia": 3
+      "resistencia": 4
     },
     "efectos": [
       {

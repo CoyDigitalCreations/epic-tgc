@@ -3028,7 +3028,7 @@ var FuenteEfectos_default = [
     stats: {
       cost: 2,
       poder: 2,
-      resistencia: 3
+      resistencia: 4
     },
     efectos: [
       {
@@ -3070,7 +3070,7 @@ var FuenteEfectos_default = [
     stats: {
       cost: 2,
       poder: 3,
-      resistencia: 2
+      resistencia: 3
     },
     efectos: [
       {
@@ -3114,7 +3114,7 @@ var FuenteEfectos_default = [
     stats: {
       cost: 2,
       poder: 2,
-      resistencia: 3
+      resistencia: 4
     },
     efectos: [
       {
@@ -3154,7 +3154,7 @@ var FuenteEfectos_default = [
     stats: {
       cost: 2,
       poder: 2,
-      resistencia: 3
+      resistencia: 4
     },
     efectos: [
       {
@@ -8438,7 +8438,9 @@ function interpretEffect(s, ctx, inst, efectoData, payload) {
     }
   }
   const isTriggered = payload.fromTrigger === true;
-  const autoResolver = (efecto === "mover" || efecto === "return_ether" || efecto === "steal_ether") && efectoData.esHasta === true || efecto === "anclar_eter";
+  const topeHasta = efectoData.cantidad ?? 1;
+  const eleccionEterHasta = efecto === "return_ether" && efectoData.esHasta === true && targetIds.length > topeHasta;
+  const autoResolver = (efecto === "mover" || efecto === "steal_ether") && efectoData.esHasta === true || efecto === "return_ether" && efectoData.esHasta === true && !eleccionEterHasta || efecto === "anclar_eter";
   const mergedFiltros = efectoData.filtros ? { ...objetivo?.filtros, ...efectoData.filtros } : objetivo?.filtros;
   const hasAutoSelect = mergedFiltros?.seleccionar != null;
   if (usoPorTurno !== -1 && payload.contextoUso !== "objetivo-elegido" && !payload.declararOpener && (!objetivo || targetIds.length > 0 || objetivo.tipo === "self")) {
@@ -8455,6 +8457,7 @@ function interpretEffect(s, ctx, inst, efectoData, payload) {
       instId: inst.cardInstanceId,
       trigger: toHyphenTrigger(efectoData.trigger) ?? umbralTrigger(efectoData) ?? "ninguno",
       opciones: targetIds,
+      ...eleccionEterHasta && topeHasta > 1 ? { restantes: topeHasta - 1 } : {},
       ...payload.declararOpener ? { opener: payload.declararOpener } : {}
     }];
     return;
@@ -9840,8 +9843,22 @@ function ejecutarElegirObjetivo(s, action, ctx) {
       contextoUso: "objetivo-elegido",
       objetivoId: action.objetivoId
     });
+    encadenarEleccionesHasta(s, ctx, pendiente, action.objetivoId);
   }
   if (enDeclaracion) continuarDeclaracion(s, ctx, previos);
+}
+function encadenarEleccionesHasta(s, ctx, pendiente, elegido) {
+  const restantes = pendiente.restantes ?? 0;
+  if (restantes <= 0) return;
+  const quedan = opcionesVigentes(s, { ...pendiente, opciones: pendiente.opciones.filter((id) => id !== elegido) });
+  if (quedan.length === 0) return;
+  if (quedan.length <= restantes) {
+    for (const id of quedan) {
+      dispararTrigger(s, ctx, pendiente.trigger, pendiente.jugador, [pendiente.instId], { contextoUso: "objetivo-elegido", objetivoId: id });
+    }
+    return;
+  }
+  s.objetivosPendientes = [{ ...pendiente, opciones: quedan, restantes: restantes - 1 }, ...s.objetivosPendientes ?? []];
 }
 
 // src/online/game/efectos.ts

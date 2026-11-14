@@ -1,7 +1,7 @@
 // @vitest-environment node
 /**
  * Lote 0 del motor de Estásis — Disparo con coste PAGADO de Mira (FB-012, carta REAL):
- *  - «hasta 2»: devuelve los primeros 2 Éteres de la zona de pago (antes devolvía solo 1).
+ *  - «hasta 2»: el jugador ELIGE cuáles 2 Éteres de la zona de pago devuelve (antes devolvía solo 1, y luego los primeros 2 sin elegir).
  *  - `una_por_turno` aplica a un Disparo pagado: se consume al pagar y no se ofrece ni se acepta una segunda vez
  *    (sin esto, un Disparo que no agota se repetía en bucle de Éter).
  */
@@ -25,13 +25,36 @@ function escena(): GameState {
 const activar = (s: GameState) => getValidActions(s, 'A').find((a) => a.type === 'activar_habilidad' && a.cardInstanceId === 'mira')
 
 describe('Mira (FB-012) — Disparo pagado', () => {
-  it('«hasta 2»: devuelve 2 Éteres de la zona de pago a la Reserva', () => {
+  it('«hasta 2»: el jugador elige uno a uno qué 2 Éteres de la zona de pago vuelven a la Reserva', () => {
     const s0 = escena()
     const accion = activar(s0); expect(accion, 'debe poder activarse').toBeDefined()
-    const s = aplicar(s0, accion!, crearCtx())
-    // pagó 1 (Reserva → 1A): 3 + 1 = 4 pagados; devuelve 2 → 2 pagados; Reserva 2 + 2 = 4
-    expect(s.players.A.eterPagado).toHaveLength(2)
-    expect(s.players.A.eterReserva).toHaveLength(4)
+    const ctx = crearCtx()
+    const s1 = aplicar(s0, accion!, ctx)
+    // pagó 1 (Reserva → 1A): 4 pagados; aún no devolvió nada: espera la elección
+    expect(s1.players.A.eterPagado).toHaveLength(4)
+    expect(s1.objetivosPendientes?.[0]).toMatchObject({ jugador: 'A', restantes: 1 })
+    const opciones1 = [...s1.objetivosPendientes![0].opciones]
+    expect(opciones1).toHaveLength(4)
+    // elige el ÚLTIMO de la lista (no el primero): el motor respeta la elección
+    const primero = opciones1[3]
+    const s2 = aplicar(s1, { type: 'elegir_objetivo', objetivoId: primero }, ctx)
+    expect(s2.players.A.eterReserva).toContain(primero)
+    expect(s2.objetivosPendientes?.[0].opciones).not.toContain(primero)
+    expect(s2.objetivosPendientes?.[0].opciones).toHaveLength(3)
+    const segundo = s2.objetivosPendientes![0].opciones[2]
+    const s3 = aplicar(s2, { type: 'elegir_objetivo', objetivoId: segundo }, ctx)
+    expect(s3.objetivosPendientes ?? []).toEqual([])
+    // devolvió exactamente los 2 elegidos: 2 pagados; Reserva 2 + 2 = 4
+    expect(s3.players.A.eterPagado).toHaveLength(2)
+    expect(s3.players.A.eterReserva).toHaveLength(4)
+    expect(s3.players.A.eterReserva).toEqual(expect.arrayContaining([primero, segundo]))
+  })
+  it('con 2 o menos Éteres pagados no hay nada que elegir: devuelve los que haya', () => {
+    const s0 = escena()
+    s0.players.A.eterReserva.push(...s0.players.A.eterPagado.splice(0, 2)) // quedan 1 pagado + el que paga = 2
+    const s = aplicar(s0, activar(s0)!, crearCtx())
+    expect(s.objetivosPendientes ?? []).toEqual([])
+    expect(s.players.A.eterPagado).toHaveLength(0)
   })
   it('una_por_turno: aunque quede enderezada, no se ofrece ni se acepta otra activación en el mismo turno', () => {
     const s = aplicar(escena(), activar(escena())!, crearCtx())
