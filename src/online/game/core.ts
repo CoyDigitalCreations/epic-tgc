@@ -8,6 +8,7 @@ import { shuffleFisherYates } from './rng'
 import { descartarEquiparMuerto, descartarFrentesMuertos, electorAjeno } from './pendientes'
 import { confirmarFinDePartida } from './finPartida'
 import { descartarScryMuertos, ejecutarOrdenarMazo, scryActual, validarOrdenarMazo } from './scry'
+import { descartarEsenciaMuertas, ejecutarElegirEsencia, esenciaActual, validarElegirEsencia } from './esencia'
 import { reanudarAlba } from './phases'
 
 // Domain module imports (validators + executors)
@@ -84,6 +85,8 @@ export type Action =
   | { type: 'responder_prevenicion'; prevenir: boolean }
   /** Scry (F9c): `arriba` al tope en ese orden (la primera se roba primero), `fondo` al fondo. Juntas, exactamente las cartas miradas. */
   | { type: 'ordenar_mazo'; arriba: string[]; fondo: string[]; jugador?: PlayerId }
+  /** «La esencia que elijas» (Mutación): la Esencia que toman los Campeones objetivo del efecto. Ver esencia.ts. */
+  | { type: 'elegir_esencia'; esencia: string; jugador?: PlayerId }
 
 export type ApplyActionResult =
   | { ok: true; state: GameState; events: GameEvent[] }
@@ -105,6 +108,7 @@ export function applyAction(state: GameState, action: Action, ctx: Ctx): ApplyAc
   // F5h: un pendiente sin quién ni qué elegir no se queda al frente de la cola (pendientes.ts)
   descartarFrentesMuertos(s)
   descartarScryMuertos(s)
+  descartarEsenciaMuertas(s)
   // Un Alba que esperaba su Scry roba en cuanto ya no queda mazo por ordenar
   reanudarAlba(s, ctx)
   // F6: punto de control de fin de partida — confirma la derrota (o el EMPATE) cuando ya no queda nada obligatorio por resolver
@@ -118,7 +122,7 @@ export function applyAction(state: GameState, action: Action, ctx: Ctx): ApplyAc
  * rendirse y el checkpoint de prevención (que se atiende antes).
  */
 const ACCIONES_CON_CADENA_ABIERTA: ReadonlySet<Action['type']> = new Set<Action['type']>([
-  'responder_cadena', 'jugar_respuesta', 'pasar_prioridad', 'bloquear_eter', 'rendirse', 'responder_prevenicion', 'ordenar_mazo',
+  'responder_cadena', 'jugar_respuesta', 'pasar_prioridad', 'bloquear_eter', 'rendirse', 'responder_prevenicion', 'ordenar_mazo', 'elegir_esencia',
 ])
 
 function validarAccion(state: GameState, action: Action): string | null {
@@ -147,6 +151,10 @@ function validarAccion(state: GameState, action: Action): string | null {
   // `equipar_artefacto` no se bloquea por un scry a la vez (antes: interbloqueo, el actor era el que equipa y no podía equipar).
   if (scryActual(state) && !state.declaracionEnEleccion && !electorAjeno(state) && !equipando && action.type !== 'ordenar_mazo' && action.type !== 'rendirse') {
     return 'hay un mazo por ordenar antes de continuar'
+  }
+  // Mutación: una Esencia por elegir congela el juego igual que el scry (después de las elecciones y del scry; antes de la cadena)
+  if (esenciaActual(state) && !state.declaracionEnEleccion && !electorAjeno(state) && !equipando && !scryActual(state) && action.type !== 'elegir_esencia' && action.type !== 'rendirse') {
+    return 'hay una Esencia por elegir antes de continuar'
   }
   // Pila única (F5a): con la cadena abierta el turno queda congelado — solo se
   // responde o se pasa prioridad; cualquier otra acción espera a que cierre.
@@ -194,6 +202,8 @@ function validarAccion(state: GameState, action: Action): string | null {
       return validarElegirObjetivo(state, action)
     case 'ordenar_mazo':
       return validarOrdenarMazo(state, action)
+    case 'elegir_esencia':
+      return validarElegirEsencia(state, action)
     case 'usar_transmutar':
       return validarUsarTransmutar(state, action)
     case 'activar_habilidad':
@@ -292,6 +302,10 @@ function ejecutarAccion(s: GameState, action: Action, ctx: Ctx): void {
     }
     case 'ordenar_mazo': {
       ejecutarOrdenarMazo(s, action, ctx)
+      return
+    }
+    case 'elegir_esencia': {
+      ejecutarElegirEsencia(s, action, ctx)
       return
     }
     case 'usar_transmutar': {

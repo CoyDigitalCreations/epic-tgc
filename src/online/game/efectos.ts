@@ -1,10 +1,10 @@
-import { esCampeon, faccionesCompartidas, getCardMeta, type AnyCard } from './cards'
+import { esCampeon, esContinuoAuraDeCampo, faccionesCompartidas, getCardMeta, type AnyCard } from './cards'
 import type { CardInstance, Ctx, ExpiraModificador, GameState, PlayerId } from './types'
 import { interpretEffect } from './effectInterpreter'
 import { parejasBloqueoOpcion } from './habilidades'
 import { resolveTargets } from './targetResolver'
 import { purgarReglasHastaFase, purgarReglasTemporales } from './reglasTemporales'
-import { faccionesDe } from './atributos'
+import { comparteEsenciaConOtro, controladorDeCampeon, esenciaDe, faccionesDe, requisitoCampoCumple } from './atributos'
 import { efectosNegados } from './reglas'
 import { claseDeContinuo, eligeObjetivo, esContinuoDeBloqueo, metaDeInstancia, umbralDeBloqueo } from './efectosInstancia'
 import { contarEterUmbral } from './eter'
@@ -48,6 +48,14 @@ export type TriggerEfecto =
   | 'al-resolver-cadena'
   /** Lote 3: «cuando un Campeón (propio o del rival) sea enviado al Cementerio» (JSON `cuando_campeon_propio_al_cementerio`) */
   | 'cuando-campeon-al-cementerio'
+  /** Mutación: «cuando ESTA carta cambie de Esencia» (JSON `al_cambiar_de_esencia`). */
+  | 'al-cambiar-esencia'
+  /** Mutación: «cuando un Campeón que controles (o del rival) cambie de Esencia» (JSON `cuando_campeon_propio_cambia_esencia`). */
+  | 'cuando-campeon-cambia-esencia'
+  /** Purga: «cuando juegues (o el rival juegue) una Mística» (JSON `cuando_juegas_mistica`), observado por las cartas en juego. */
+  | 'cuando-juegas-mistica'
+  /** Purga: «cuando actives (o el rival active) una Arcana» (JSON `cuando_activas_arcana`), observado por las cartas en juego. */
+  | 'cuando-activas-arcana'
   | 'al-bloquear-eter'
   | 'activable'
 
@@ -61,6 +69,8 @@ export interface PayloadEfecto {
   victimaId?: string
   /** `cuando-campeon-al-cementerio`: quién CONTROLABA al Campeón al salir del campo (puede no ser su dueño si estaba robado). */
   controladorVictima?: PlayerId
+  /** `cuando-campeon-al-cementerio`: por qué llegó al Cementerio (filtro `causaEnvio` del efecto); undefined = otra causa (descarte, coste...). */
+  causaEnvio?: 'destruccion' | 'combate' | 'sacrificio'
   /** «Al ser enviada al Cementerio»: de dónde venía la carta (ver `triggerZona` de EfectoData y replacements.moverAlCementerio). */
   zonaOrigen?: 'mano' | 'campo' | 'otra'
   fromTrigger?: boolean
@@ -111,6 +121,8 @@ function esEfectoStat(efecto: EfectoData): boolean {
 /** Aura de zona: pasivo/reserva/bloqueo SIN trigger de evento (o trigger 'ninguno'). */
 export function esAuraZona(efecto: EfectoData): boolean {
   if (!esEfectoStat(efecto)) return false
+  // Un Continuo sin coste «mientras esta carta esté en el campo» (Pastor de Cenizas) es un aura, no una habilidad que se active
+  if (esContinuoAuraDeCampo(efecto)) return true
   const sinTriggerDeEvento = efecto.trigger === undefined || efecto.trigger === 'ninguno'
   return (efecto.tipo === 'pasivo' || efecto.tipo === 'reserva' || efecto.tipo === 'bloqueo') && sinTriggerDeEvento
 }
@@ -222,6 +234,9 @@ export interface ModificadoresJSON {
   poder: number
   resistencia: number
   keywords: string[]
+  /** Parte POSITIVA de `poder` / `resistencia` (los incrementos): es lo que anula `quitar_buffs` (Purga). */
+  poderPositivo?: number
+  resistenciaPositivo?: number
 }
 
 type OrigenAura = 'campo' | 'reserva' | 'bloqueo' | 'vinculo'
@@ -293,7 +308,7 @@ function evaluarAura(
       //   ("los Campeones que controlas ganen… mientras esté bloqueado")
       // - aura de zona estática (pasivo/reserva/bloqueo sin trigger) → EXCLUYE self
       //   ("Los OTROS Campeones que controlas ganan…")
-      excluirSelf = !esComandante && origen === 'campo' && esAuraZona(efecto) && !esAuraCondicionada(efecto)
+      excluirSelf = !esComandante && origen === 'campo' && esAuraZona(efecto) && !esAuraCondicionada(efecto) && !esContinuoAuraDeCampo(efecto)
       break
     case 'todos_campeones_rivales':
       aplica = !mismoDueno
@@ -341,6 +356,12 @@ function evaluarAura(
 
   if (!aplica) return null
   if (excluirSelf && objetivoId === fuente.cardInstanceId) return null
+
+  // Mutación: «de esencia X» / «que compartan Esencia con otro Campeón que controles» acotan a quién alcanza el aura, y
+  // «si controlas N o más Campeones de una misma Esencia» la enciende o la apaga. Antes se ignoraban y el aura era para todos.
+  if (objetivo.filtros?.esencia && esenciaDe(s, objetivoId) !== objetivo.filtros.esencia) return null
+  if (objetivo.filtros?.comparteEsenciaConOtro && !comparteEsenciaConOtro(s, objetivoId)) return null
+  if (efecto.requisitoCampo && !requisitoCampoCumple(s, fuente.owner, efecto.requisitoCampo)) return null
 
   // Guardas por origen
   if (origen === 'reserva') {
@@ -407,8 +428,8 @@ function contribucionDeEfecto(efecto: EfectoData, escala = 1): { poder?: number;
  * Lo que los efectos SOSTENIDOS sobre «un Campeón» (`sostenidos` de una fuente en el campo) aportan al Campeón `objetivoId`.
  * Valen mientras la fuente tenga Éter bloqueado ≥ umbral de ESE efecto, siga en el campo y sus efectos no estén negados.
  */
-function aportesSostenidos(s: GameState, objetivoId: string): { poder: number; resistencia: number; keywords: string[] } {
-  const total = { poder: 0, resistencia: 0, keywords: [] as string[] }
+function aportesSostenidos(s: GameState, objetivoId: string): { poder: number; resistencia: number; poderPositivo: number; resistenciaPositivo: number; keywords: string[] } {
+  const total = { poder: 0, resistencia: 0, poderPositivo: 0, resistenciaPositivo: 0, keywords: [] as string[] }
   for (const j of ['A', 'B'] as PlayerId[]) {
     for (const fuenteId of s.players[j].campo.campeones) {
       const fuente = fuenteId ? s.instances[fuenteId] : undefined
@@ -423,6 +444,8 @@ function aportesSostenidos(s: GameState, objetivoId: string): { poder: number; r
         const aporte = contribucionDeEfecto(efecto)
         total.poder += aporte.poder ?? 0
         total.resistencia += aporte.resistencia ?? 0
+        total.poderPositivo += Math.max(0, aporte.poder ?? 0)
+        total.resistenciaPositivo += Math.max(0, aporte.resistencia ?? 0)
         if (aporte.keywords) total.keywords.push(...aporte.keywords)
       }
     }
@@ -540,6 +563,8 @@ export function modificadoresJSONDe(s: GameState, id: string): ModificadoresJSON
 
   let poder = 0
   let resistencia = 0
+  let poderPos = 0
+  let resistenciaPos = 0
   const keywords: string[] = []
 
   for (const c of candidatos) {
@@ -547,7 +572,8 @@ export function modificadoresJSONDe(s: GameState, id: string): ModificadoresJSON
     // Negar un «efecto activo» apaga las auras del Campeón, NO su efecto de Comandante (§10: inmutable)
     const negada = c.origen === 'campo' && efectosNegados(s, c.inst.cardInstanceId)
     if (c.esComandante && c.meta.type === 'Campeón') {
-      efectos.push(...efectosComandante(c.meta.efectoComandante))
+      // Un efecto de Comandante CON trigger («cuando juegues una Mística…») es una reacción, no un aura permanente
+      efectos.push(...efectosComandante(c.meta.efectoComandante).filter((e) => !esComandanteConTrigger(e)))
     }
     if ('efectos' in c.meta && c.meta.efectos) {
       for (const e of c.meta.efectos) {
@@ -564,6 +590,8 @@ export function modificadoresJSONDe(s: GameState, id: string): ModificadoresJSON
       if (!resultado) continue
       poder += resultado.poder ?? 0
       resistencia += resultado.resistencia ?? 0
+      poderPos += Math.max(0, resultado.poder ?? 0)
+      resistenciaPos += Math.max(0, resultado.resistencia ?? 0)
       if (resultado.keywords) keywords.push(...resultado.keywords)
     }
   }
@@ -572,9 +600,11 @@ export function modificadoresJSONDe(s: GameState, id: string): ModificadoresJSON
   const sostenidos = aportesSostenidos(s, id)
   poder += sostenidos.poder
   resistencia += sostenidos.resistencia
+  poderPos += sostenidos.poderPositivo
+  resistenciaPos += sostenidos.resistenciaPositivo
   keywords.push(...sostenidos.keywords)
 
-  return { poder, resistencia, keywords: [...new Set(keywords)] }
+  return { poder, resistencia, poderPositivo: poderPos, resistenciaPositivo: resistenciaPos, keywords: [...new Set(keywords)] }
 }
 
 /**
@@ -780,6 +810,10 @@ const TRIGGER_A_JSON: Readonly<Record<string, string>> = {
   'al-ser-destruido-vinculo': 'al_ser_destruido_vinculo',
   'al-resolver-cadena': 'al_resolver_cadena',
   'cuando-campeon-al-cementerio': 'cuando_campeon_propio_al_cementerio',
+  'al-cambiar-esencia': 'al_cambiar_de_esencia',
+  'cuando-campeon-cambia-esencia': 'cuando_campeon_propio_cambia_esencia',
+  'cuando-juegas-mistica': 'cuando_juegas_mistica',
+  'cuando-activas-arcana': 'cuando_activas_arcana',
 }
 
 /** Efecto de efectos[] que matchea un trigger interno (con su índice), tal como lo ven dispararTrigger y el apilado. */
@@ -809,7 +843,7 @@ export function triggersQueMatchean(
   trigger: TriggerEfecto,
   jugador: PlayerId,
   ids: readonly string[],
-  opts?: { evaluarCondicion?: boolean; zonaOrigen?: 'mano' | 'campo' | 'otra'; ignorarZonaOrigen?: boolean; victimaId?: string; controladorVictima?: PlayerId },
+  opts?: { evaluarCondicion?: boolean; zonaOrigen?: 'mano' | 'campo' | 'otra'; ignorarZonaOrigen?: boolean; victimaId?: string; controladorVictima?: PlayerId; causaEnvio?: 'destruccion' | 'combate' | 'sacrificio' },
 ): TriggerMatch[] {
   const res: TriggerMatch[] = []
   const efectoTrigger = TRIGGER_A_JSON[trigger]
@@ -839,7 +873,13 @@ export function triggersQueMatchean(
       // Lote 3 — «cuando un Campeón que controles / del rival sea enviado al Cementerio»: el Campeón se compara con el
       // controlador del efecto (`jugador`) según `controladorTrigger` (por defecto propio). `excluyeEsta` (`otro Campeón`):
       // la propia carta no dispara con su envío. Sin víctima conocida (invocación a mano del trigger) no filtra.
-      if (trigger === 'cuando-campeon-al-cementerio' && opts?.victimaId !== undefined) {
+      // «Cuando un Campeón sea enviado al Cementerio POR DESTRUCCIÓN O COMBATE» (Purga): solo con esas causas. Sin `causaEnvio`: por cualquiera.
+      if (trigger === 'cuando-campeon-al-cementerio' && opts?.victimaId !== undefined && efecto.causaEnvio?.length) {
+        if (!opts.causaEnvio || !efecto.causaEnvio.includes(opts.causaEnvio)) return
+      }
+      // Lo mismo con «cuando un Campeón cambie de Esencia» (Mutación).
+      // y con «cuando juegues / actives una Mística / Arcana» (Purga): `victimaId` es la carta jugada y `controladorVictima` quien la jugó.
+      if ((trigger === 'cuando-campeon-al-cementerio' || trigger === 'cuando-campeon-cambia-esencia' || trigger === 'cuando-juegas-mistica' || trigger === 'cuando-activas-arcana') && opts?.victimaId !== undefined) {
         const quiereRival = efecto.controladorTrigger === 'rival'
         const esDelRival = opts.controladorVictima !== undefined && opts.controladorVictima !== jugador
         if (quiereRival !== esDelRival) return
@@ -848,6 +888,9 @@ export function triggersQueMatchean(
       // «Al inicio del Alba / del Choque del RIVAL» (`controladorTrigger: 'rival'`; FB-028, DS-027): solo en el turno del rival de
       // quien declara el efecto. Y al revés: sin la marca solo en el turno propio. Antes no se filtraba: un Vínculo «del rival»
       // disparaba en el Alba PROPIA de su dueño. (Al resolver una elección ya armada no se vuelve a filtrar, como la zona de origen.)
+      // «Al atacar el RIVAL» (Purga, Cadena de Custodia): `controladorTrigger: 'rival'` = solo cuando ataca el rival de quien lo declara
+      // (no dispara con el ataque propio). Sin la marca no se filtra: «al atacar» de siempre.
+      if (trigger === 'al-atacar' && !opts?.ignorarZonaOrigen && efecto.controladorTrigger === 'rival' && s.turno === jugador) return
       if ((trigger === 'al-inicio-alba' || trigger === 'al-inicio-choque') && !opts?.ignorarZonaOrigen) {
         const quiereRival = efecto.controladorTrigger === 'rival'
         if (quiereRival !== (s.turno !== jugador)) return
@@ -920,6 +963,7 @@ export function dispararTrigger(
       ignorarZonaOrigen: payload.contextoUso === 'objetivo-elegido', // resolución de una elección ya armada
       victimaId: payload.victimaId,
       controladorVictima: payload.controladorVictima,
+      causaEnvio: payload.causaEnvio,
     })[0]
     if (primero) {
       const { efecto, efectoIdx } = primero
@@ -989,6 +1033,55 @@ export function dispararTrigger(
   }
 }
 
+/** Un efecto de Comandante con trigger («cuando juegues una Mística…») es una reacción a un evento, no un aura permanente. */
+export function esComandanteConTrigger(efecto: EfectoData): boolean {
+  return !!efecto.trigger && efecto.trigger !== 'ninguno'
+}
+
+/**
+ * Purga: ¿el Campeón pierde sus incrementos de ATQ y RES ahora? Dos orígenes, ambos derivados del estado:
+ *  - un modificador `anulaIncrementos` (un efecto `quitar_buffs` de resolución, con su duración: «hasta el final del turno»);
+ *  - un `quitar_buffs` SOSTENIDO por una fuente con Éter bloqueado (Idris): la k-ésima entrada de un efecto vale solo si hay más de k
+ *    Éter bloqueados («por cada Éter bloqueado, un Campeón…, mientras ese Éter esté bloqueado»).
+ */
+export function incrementosAnulados(s: GameState, id: string): boolean {
+  if (s.instances[id]?.modificadores?.some((m) => m.anulaIncrementos)) return true
+  for (const j of ['A', 'B'] as PlayerId[]) {
+    for (const fuenteId of s.players[j].campo.campeones) {
+      const fuente = fuenteId ? s.instances[fuenteId] : undefined
+      if (!fuenteId || !fuente?.sostenidos?.length || !fuente.cardId) continue
+      const meta = getCardMeta(fuente.cardId)
+      if (!meta || !('efectos' in meta) || !meta.efectos) continue
+      if (efectosNegados(s, fuenteId)) continue
+      const vistos = new Map<number, number>()
+      for (const { efectoIdx, objetivoId } of fuente.sostenidos) {
+        const posicion = vistos.get(efectoIdx) ?? 0
+        vistos.set(efectoIdx, posicion + 1)
+        const efecto = meta.efectos[efectoIdx]
+        if (!efecto || efecto.efecto !== 'quitar_buffs' || objetivoId !== id) continue
+        if (contarEterUmbral(s, fuenteId, efectoIdx, efecto) > posicion) return true
+      }
+    }
+  }
+  return false
+}
+
+/**
+ * Purga (PU-036, Lamento de Idris): ¿el RIVAL de este Campeón tiene un Vínculo DESTRUIDO (boca arriba, §5.5) con la regla
+ * «los Campeones del rival no pueden recibir incrementos de RES»? Estado derivado, sin nada que limpiar.
+ */
+export function sinIncrementosDeRes(s: GameState, id: string): boolean {
+  const inst = s.instances[id]
+  if (!inst) return false
+  const controlador = controladorDeCampeon(s, id) ?? inst.owner
+  const rival: PlayerId = controlador === 'A' ? 'B' : 'A'
+  return s.players[rival].vinculos.some((vId) => {
+    const v = vId ? s.instances[vId] : undefined
+    const meta = v?.cardId ? getCardMeta(v.cardId) : null
+    return v?.bocaArriba === true && !!meta && 'efectos' in meta && !!meta.efectos?.some((e) => e.reglaEnumerada === 'rival_sin_incrementos_res')
+  })
+}
+
 /**
  * Stats efectivos (ADR-20/22): base del meta + override de instancia
  * (poder?/resistencia?) + Σ de modificadores + Σ de modificadoresJSONDe
@@ -1002,15 +1095,18 @@ export function statsDe(s: GameState, id: string): { poder: number; resistencia:
   const esCamp = !!meta && esCampeon(meta)
   let poder = inst?.poder ?? (esCamp && meta.stats ? meta.stats.poder : 0)
   let resistencia = inst?.resistencia ?? (esCamp && meta.stats ? meta.stats.resistencia : 0)
+  // Purga: `quitar_buffs` anula los incrementos de ATQ y RES; la regla de PU-036, solo los de RES (los decrementos se conservan)
+  const sinIncrementos = esCamp && incrementosAnulados(s, id)
+  const sinIncrementosRes = sinIncrementos || (esCamp && sinIncrementosDeRes(s, id))
   for (const m of inst?.modificadores ?? []) {
-    if (m.stat === 'poder') poder += m.valor
-    else resistencia += m.valor
+    if (m.stat === 'poder') poder += sinIncrementos && m.valor > 0 ? 0 : m.valor
+    else resistencia += sinIncrementosRes && m.valor > 0 ? 0 : m.valor
   }
   // Modificadores continuos desde el JSON (Fase 1): auras de campo/reserva/
   // bloqueo + efectoComandante, derivados de efectos[] — sin handlers.
   const mods = modificadoresJSONDe(s, id)
-  poder += mods.poder
-  resistencia += mods.resistencia
+  poder += mods.poder - (sinIncrementos ? (mods.poderPositivo ?? 0) : 0)
+  resistencia += mods.resistencia - (sinIncrementosRes ? (mods.resistenciaPositivo ?? 0) : 0)
   // ATQ y RES no pueden ser negativos (mínimo 0)
   return { poder: Math.max(0, poder), resistencia: Math.max(0, resistencia) }
 }

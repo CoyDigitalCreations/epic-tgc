@@ -15,6 +15,8 @@ import { descartarFrentesMuertos, electorAjeno, opcionesVigentes } from './pendi
 import { validarEquiparArtefacto } from './movimientos'
 import { efectosNegados, reglaNumero } from './reglas'
 import { cartasVigentesScry, scryActual } from './scry'
+import { ESENCIAS_ELEGIBLES, esenciaActual } from './esencia'
+import { requisitoCampoCumple } from './atributos'
 import type { GameState, PlayerId, CardInstance } from './types'
 
 /**
@@ -46,6 +48,9 @@ export function actorActual(estado: GameState): PlayerId | null {
   // F9c: el mazo por ordenar (scry) espera a quien lo mira, sea o no su turno
   const scry = scryActual(estado)
   if (scry) return scry.jugador
+  // Mutación: la Esencia por elegir espera a quien resuelve el efecto
+  const esencia = esenciaActual(estado)
+  if (esencia) return esencia.jugador
   // Cadena GLOBAL (state.cadena) o de combate: el actor es SIEMPRE prioridad —
   // aunque la fase sea Forja. Sin esto, cadena global en Forja congela al
   // humano (solo rendirse) y el bot nunca pasa prioridad → FREEZE (seed 66676).
@@ -288,6 +293,13 @@ export function getValidActions(state: GameState, playerId: PlayerId): Action[] 
     return acciones
   }
 
+  // Mutación: «la esencia que elijas» — solo quien resuelve el efecto elige; se ofrece una acción por Esencia
+  const esencia = esenciaActual(state)
+  if (esencia) {
+    if (esencia.jugador === playerId) for (const e of ESENCIAS_ELEGIBLES) acciones.push({ type: 'elegir_esencia', esencia: e })
+    return acciones
+  }
+
   if (state.turno === playerId && state.fase === 'pre_partida') {
     const p = state.players[playerId]
     // Mulligan opcional, 1 vez POR JUGADOR (manual §2) — el rival no afecta
@@ -386,6 +398,8 @@ export function getValidActions(state: GameState, playerId: PlayerId): Action[] 
       // llegan aquí: su acción es bloquear_eter (aura/umbral), nunca activar.
       const efectoAct = efectoActivableDe(meta, false)
       if (efectoAct && inst) {
+        // «Si controlas N o más Campeones de una misma Esencia» (Mutación): sin el requisito no se ofrece (el coste se perdería)
+        if (!requisitoCampoCumple(state, playerId, efectoAct.requisitoCampo)) continue
         const costoBloqueo = esCostoBloqueo(efectoAct.costo)
         const costo = efectoAct.costo?.cantidad ?? 0
         // Fase 2 (c): el patrón Bloqueado paga desde la zona de ORIGEN del

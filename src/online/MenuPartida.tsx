@@ -2,13 +2,13 @@ import { Link } from 'react-router'
 import { Boton } from '../shared/ui/Boton'
 import { Seccion } from '../shared/ui/Seccion'
 import type { Dificultad } from './game/bot'
-import { MAZOS, mazoParaBot } from './mazos'
+import { MAZOS, mazoParaBot, type SetId } from './mazos'
 import { TarjetaMazo } from './components/TarjetaMazo'
 import type { MazoPersonalizado } from './useMazosStore'
 
 /** Selección del humano: un set preestablecido o un mazo personalizado guardado. */
 export type MazoSeleccionado =
-  | { tipo: 'set'; id: 'estasis' | 'disonancia' }
+  | { tipo: 'set'; id: SetId }
   | { tipo: 'custom'; id: string }
 
 export interface MenuProps {

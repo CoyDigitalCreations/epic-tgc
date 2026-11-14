@@ -13,6 +13,8 @@ import { electorAjeno, opcionesVigentes } from './pendientes'
 import { tieneKeyword } from './combat'
 import { efectosNegados } from './reglas'
 import { metaDeInstancia } from './efectosInstancia'
+import { requisitoCampoCumple } from './atributos'
+import { dispararObservadoresJugada } from './observadores'
 import { liberarEterBloqueado, enviarAlCementerio, zonaDeCementerio } from './replacements'
 import { slotAZona } from './zones'
 import { validarBloqueo } from './payments'
@@ -73,6 +75,9 @@ export function validarActivarHabilidad(state: GameState, action: Extract<Action
     // vía bloquear_eter → aura/umbral. Nunca por pago.
     return 'esta carta se activa bloqueando Éter (usa la acción bloquear_eter)'
   }
+
+  // «Si controlas N o más Campeones de una misma Esencia» (Mutación): sin el requisito la habilidad no se puede activar
+  if (!requisitoCampoCumple(state, state.turno, efectoSel.requisitoCampo)) return 'no cumples el requisito de campo de esta habilidad'
 
   // Resonancia (activar_disparo): hace falta otro Campeón propio con un Disparo copiable (si no, el coste se pagaría en balde)
   if (efectoSel.efecto === 'activar_disparo' && candidatosActivarDisparo(state, state.turno, action.cardInstanceId, efectoSel).length === 0) {
@@ -250,6 +255,8 @@ export function ejecutarActivarArcana(s: GameState, action: Extract<Action, { ty
     s.equiparPendiente = { artefactoId: id, jugador: s.turno, contexto: 'activar_arcana' }
     return
   }
+  // Purga: las cartas en juego (y el Comandante propio) observan que se activó una Arcana
+  dispararObservadoresJugada(s, ctx, 'cuando-activas-arcana', s.turno, id)
   // F5b — modelo de activación: el costo y el volteo ya ocurrieron; la
   // recompensa (efectos tipo hechizo sin trigger) es el opener de la pila y
   // resuelve ÚLTIMO, tras las respuestas. El objetivo se elige antes de abrir
@@ -414,6 +421,15 @@ export function ejecutarElegirObjetivo(s: GameState, action: Extract<Action, { t
 
   if (!vigente) {
     // fizzle: nada que ejecutar
+  } else if (pendiente.descartar) {
+    // Purga (`draw_discard`): la carta elegida sale de la mano al Cementerio (con sus gatillos de «al ser enviada»)
+    const mano = s.players[pendiente.jugador].mano
+    const idx = mano.indexOf(action.objetivoId)
+    if (idx !== -1) {
+      mano.splice(idx, 1)
+      enviarAlCementerio(s, ctx, action.objetivoId, 'mano')
+      ctx.emit({ type: 'carta_descartada', jugador: pendiente.jugador, cardInstanceIds: [action.objetivoId] })
+    }
   } else if (pendiente.equipar) {
     // F5f: Campeón al que se equipa el ARTEFACTO de una respuesta (se asienta al elegir)
     equiparComoRespuesta(s, ctx, pendiente, action.objetivoId)

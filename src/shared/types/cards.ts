@@ -359,6 +359,8 @@ export interface FiltroObjetivo {
   comparteEsenciaConOtro?: boolean
   /** Campeones de la Esencia que cumple el `requisitoCampo` del efecto («de esa Esencia») */
   esenciaDeLaCondicion?: boolean
+  /** Interno del motor (no se escribe en el Card-Maker): el `minimo` del `requisitoCampo`, que `objetivoCompleto` copia aquí para resolver «de esa Esencia». */
+  esenciaDeLaCondicionMin?: number
   /** Maximum ATQ ORIGINAL (Campeón): el impreso en la carta, sin buffs ni debuffs */
   atqMax?: number
   /** Maximum RES ORIGINAL (Campeón): la impresa en la carta, sin buffs ni debuffs */

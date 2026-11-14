@@ -220,14 +220,9 @@ describe('(b) cobertura — coverageMap sobre el set', () => {
     // F9a cerró `invocar` y los `recuperar_*` (recuperar.test.ts), F9b `direct_attack` (ataqueDirecto.test.ts),
     // F9c `scry` (scry.test.ts), F9d `redirect` (redirect.test.ts), F9e `change_type` (cambioTipo.test.ts);
     // faltan los que salen de la lista conforme se implementen
-    // PURGA (borradores → Card-Maker → motor AL FINAL): los cuatro verbos de abajo están en el desplegable para poder ver y
-    // diseñar las cartas de Purga en el Card-Maker ANTES de construir el motor. Cuando se construyan, quitarlos de esta lista.
+    // PURGA: `draw_discard`, `igualar_stats_al_menor`, `mill` y `quitar_buffs` ya tienen case en executeEffect (purgaMotor.test.ts).
     expect(sinEjecutor).toEqual([
-      'draw_discard', /* Purga: robar y descartar (Éter del Alegato, Sala de Audiencias) — motor pendiente */
       'fix_exhaust', /* solo funciona como TRAMO (ejecutarTramo), no como efecto raíz */
-      'igualar_stats_al_menor', /* Purga: La Balanza — motor pendiente */
-      'mill', /* Purga: Éter de la Sala — motor pendiente */
-      'quitar_buffs', /* Purga: Idris, Amonestación, Cadena de Custodia, Pliego de Cargos, Éter de la Poda — motor pendiente */
     ])
   })
 

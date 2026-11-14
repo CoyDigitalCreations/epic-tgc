@@ -5,10 +5,23 @@ var FACCION_COLORS = {
   Creaci\u00F3n: "#22c55e",
   Destrucci\u00F3n: "#ef4444",
   Ley: "#eab308",
-  Purga: "#f97316",
+  // Purga y Mutación llevan los colores del lore (FACETAS en src/lore/contenido.ts)
+  Purga: "#ec4899",
   Entrop\u00EDa: "#a855f7",
-  Mutaci\u00F3n: "#22d3ee"
+  Mutaci\u00F3n: "#84cc16"
 };
+var ESENCIAS = [
+  "Mago",
+  "Guerrero",
+  "Bestia",
+  "Drag\xF3n",
+  "Espectro",
+  "C\xE9leste",
+  "Abisal",
+  "Elemental",
+  "Constructo",
+  "Humano"
+];
 
 // seed/FuenteEfectos.json
 var FuenteEfectos_default = [
@@ -22,7 +35,7 @@ var FuenteEfectos_default = [
     paqueteId: "estasis",
     limiteCopias: "2",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-09-29T05:03:05.407Z",
+    updatedAt: "2026-11-13T05:04:13.336Z",
     stats: {
       cost: 1
     },
@@ -55,7 +68,7 @@ var FuenteEfectos_default = [
     paqueteId: "estasis",
     limiteCopias: "1",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-09-29T05:03:18.487Z",
+    updatedAt: "2026-11-13T05:04:29.609Z",
     stats: {
       cost: 1
     },
@@ -85,7 +98,7 @@ var FuenteEfectos_default = [
     paqueteId: "estasis",
     limiteCopias: "1",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-11-05T04:05:17.762Z",
+    updatedAt: "2026-11-13T05:03:31.264Z",
     stats: {
       cost: 1
     },
@@ -115,7 +128,7 @@ var FuenteEfectos_default = [
     paqueteId: "estasis",
     limiteCopias: "3",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-09-29T05:04:09.856Z",
+    updatedAt: "2026-11-13T05:02:44.415Z",
     stats: {
       cost: 1
     },
@@ -149,7 +162,7 @@ var FuenteEfectos_default = [
     paqueteId: "estasis",
     limiteCopias: "2",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-11-05T04:05:17.762Z",
+    updatedAt: "2026-11-13T05:04:59.409Z",
     stats: {
       cost: 1
     },
@@ -180,7 +193,7 @@ var FuenteEfectos_default = [
     paqueteId: "estasis",
     limiteCopias: "1",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-11-05T04:05:17.762Z",
+    updatedAt: "2026-11-13T05:06:04.827Z",
     stats: {
       cost: 1
     },
@@ -211,7 +224,7 @@ var FuenteEfectos_default = [
     paqueteId: "estasis",
     limiteCopias: "1",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-09-03T23:46:08.738Z",
+    updatedAt: "2026-11-13T05:11:36.593Z",
     stats: {
       cost: 1
     },
@@ -242,7 +255,7 @@ var FuenteEfectos_default = [
     paqueteId: "estasis",
     limiteCopias: "2",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-11-05T04:05:17.762Z",
+    updatedAt: "2026-11-13T05:05:45.066Z",
     stats: {
       cost: 1
     },
@@ -272,7 +285,7 @@ var FuenteEfectos_default = [
     paqueteId: "estasis",
     limiteCopias: "2",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-09-29T05:06:06.106Z",
+    updatedAt: "2026-11-13T05:05:32.098Z",
     stats: {
       cost: 1
     },
@@ -811,7 +824,7 @@ var FuenteEfectos_default = [
     paqueteId: "estasis",
     limiteCopias: "3",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-09-24T05:20:42.139Z",
+    updatedAt: "2026-11-13T05:11:00.977Z",
     stats: {
       cost: 2
     },
@@ -843,7 +856,7 @@ var FuenteEfectos_default = [
     paqueteId: "estasis",
     limiteCopias: "3",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-11-05T04:05:17.762Z",
+    updatedAt: "2026-11-13T05:13:59.260Z",
     stats: {
       cost: 3
     },
@@ -881,7 +894,7 @@ var FuenteEfectos_default = [
     paqueteId: "estasis",
     limiteCopias: "3",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-09-20T04:23:33.301Z",
+    updatedAt: "2026-11-13T05:14:37.797Z",
     stats: {
       cost: 3
     },
@@ -911,7 +924,7 @@ var FuenteEfectos_default = [
     paqueteId: "estasis",
     limiteCopias: "3",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-11-05T04:05:17.762Z",
+    updatedAt: "2026-11-13T05:13:11.371Z",
     stats: {
       cost: 4
     },
@@ -941,7 +954,7 @@ var FuenteEfectos_default = [
     paqueteId: "estasis",
     limiteCopias: "3",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-11-05T04:05:17.762Z",
+    updatedAt: "2026-11-13T05:16:50.736Z",
     stats: {
       cost: 3
     },
@@ -983,7 +996,7 @@ var FuenteEfectos_default = [
     paqueteId: "estasis",
     limiteCopias: "3",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-09-24T05:25:15.643Z",
+    updatedAt: "2026-11-13T05:16:38.319Z",
     facciones: [
       "Orden"
     ],
@@ -1031,7 +1044,7 @@ var FuenteEfectos_default = [
     paqueteId: "estasis",
     limiteCopias: "1",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-09-20T04:25:45.232Z",
+    updatedAt: "2026-11-13T05:17:09.952Z",
     stats: {
       cost: 0
     },
@@ -1067,7 +1080,7 @@ var FuenteEfectos_default = [
     paqueteId: "estasis",
     limiteCopias: "1",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-09-20T03:46:49.106Z",
+    updatedAt: "2026-11-13T05:15:54.334Z",
     stats: {
       cost: 0
     },
@@ -1096,7 +1109,7 @@ var FuenteEfectos_default = [
     paqueteId: "estasis",
     limiteCopias: "1",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-09-20T04:45:14.270Z",
+    updatedAt: "2026-11-13T05:15:22.270Z",
     stats: {
       cost: 0
     },
@@ -1128,7 +1141,7 @@ var FuenteEfectos_default = [
     paqueteId: "estasis",
     limiteCopias: "1",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-09-20T04:52:52.280Z",
+    updatedAt: "2026-11-13T05:21:56.438Z",
     stats: {
       cost: 0
     },
@@ -1159,7 +1172,7 @@ var FuenteEfectos_default = [
     paqueteId: "estasis",
     limiteCopias: "1",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-11-05T04:05:17.762Z",
+    updatedAt: "2026-11-13T05:20:59.261Z",
     stats: {
       cost: 0
     },
@@ -1191,7 +1204,7 @@ var FuenteEfectos_default = [
     paqueteId: "estasis",
     limiteCopias: "1",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-11-05T04:05:17.762Z",
+    updatedAt: "2026-11-13T05:18:13.697Z",
     stats: {
       cost: 0
     },
@@ -1277,7 +1290,7 @@ var FuenteEfectos_default = [
     paqueteId: "estasis",
     limiteCopias: "2",
     createdAt: "2026-08-12T00:00:00.000Z",
-    updatedAt: "2026-11-05T04:05:17.762Z",
+    updatedAt: "2026-11-13T05:14:20.525Z",
     stats: {
       cost: 4
     },
@@ -1312,7 +1325,7 @@ var FuenteEfectos_default = [
     paqueteId: "estasis",
     limiteCopias: "2",
     createdAt: "2026-11-05T04:05:17.762Z",
-    updatedAt: "2026-11-05T22:09:42.379Z",
+    updatedAt: "2026-11-13T05:12:27.570Z",
     facciones: [
       "Orden"
     ],
@@ -1436,7 +1449,7 @@ var FuenteEfectos_default = [
     paqueteId: "disonancia",
     limiteCopias: "2",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-11-06T01:18:09.009Z",
+    updatedAt: "2026-11-13T05:33:48.356Z",
     stats: {
       cost: 1
     },
@@ -1473,7 +1486,7 @@ var FuenteEfectos_default = [
     paqueteId: "disonancia",
     limiteCopias: "1",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-11-06T01:18:09.009Z",
+    updatedAt: "2026-11-13T05:34:07.604Z",
     stats: {
       cost: 1
     },
@@ -1503,7 +1516,7 @@ var FuenteEfectos_default = [
     paqueteId: "disonancia",
     limiteCopias: "2",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-11-06T01:18:09.009Z",
+    updatedAt: "2026-11-13T05:35:11.374Z",
     stats: {
       cost: 1
     },
@@ -1533,7 +1546,7 @@ var FuenteEfectos_default = [
     paqueteId: "disonancia",
     limiteCopias: "2",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-11-06T01:18:09.009Z",
+    updatedAt: "2026-11-13T05:34:57.165Z",
     stats: {
       cost: 1
     },
@@ -1567,7 +1580,7 @@ var FuenteEfectos_default = [
     paqueteId: "disonancia",
     limiteCopias: "2",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-11-06T01:18:09.009Z",
+    updatedAt: "2026-11-13T05:36:45.384Z",
     stats: {
       cost: 1
     },
@@ -1599,7 +1612,7 @@ var FuenteEfectos_default = [
     paqueteId: "disonancia",
     limiteCopias: "1",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-11-06T01:18:09.009Z",
+    updatedAt: "2026-11-13T05:35:25.942Z",
     stats: {
       cost: 1
     },
@@ -1630,7 +1643,7 @@ var FuenteEfectos_default = [
     paqueteId: "disonancia",
     limiteCopias: "1",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-11-06T01:18:09.009Z",
+    updatedAt: "2026-11-13T05:37:04.784Z",
     stats: {
       cost: 1
     },
@@ -1657,7 +1670,7 @@ var FuenteEfectos_default = [
     paqueteId: "disonancia",
     limiteCopias: "2",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-11-06T05:02:32.994Z",
+    updatedAt: "2026-11-13T05:37:22.624Z",
     stats: {
       cost: 1
     },
@@ -1685,7 +1698,7 @@ var FuenteEfectos_default = [
     paqueteId: "disonancia",
     limiteCopias: "2",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-11-06T01:18:09.009Z",
+    updatedAt: "2026-11-13T05:34:38.525Z",
     stats: {
       cost: 1
     },
@@ -2077,7 +2090,7 @@ var FuenteEfectos_default = [
     paqueteId: "disonancia",
     limiteCopias: "3",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-11-06T01:18:09.009Z",
+    updatedAt: "2026-11-13T05:38:05.753Z",
     facciones: [
       "Caos"
     ],
@@ -2112,7 +2125,7 @@ var FuenteEfectos_default = [
     paqueteId: "disonancia",
     limiteCopias: "3",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-11-06T01:18:09.009Z",
+    updatedAt: "2026-11-13T05:39:11.699Z",
     stats: {
       cost: 2
     },
@@ -2145,7 +2158,7 @@ var FuenteEfectos_default = [
     paqueteId: "disonancia",
     limiteCopias: "3",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-09-22T21:30:39.855Z",
+    updatedAt: "2026-11-13T05:38:22.970Z",
     stats: {
       cost: 1
     },
@@ -2178,7 +2191,7 @@ var FuenteEfectos_default = [
     paqueteId: "disonancia",
     limiteCopias: "3",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-11-06T05:02:32.994Z",
+    updatedAt: "2026-11-13T05:39:30.459Z",
     stats: {
       cost: 2
     },
@@ -2202,7 +2215,7 @@ var FuenteEfectos_default = [
     paqueteId: "disonancia",
     limiteCopias: "3",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-11-06T05:02:32.994Z",
+    updatedAt: "2026-11-13T05:38:38.682Z",
     facciones: [
       "Caos"
     ],
@@ -2262,7 +2275,7 @@ var FuenteEfectos_default = [
     paqueteId: "disonancia",
     limiteCopias: "3",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-09-22T21:44:39.977Z",
+    updatedAt: "2026-11-13T05:41:32.517Z",
     stats: {
       cost: 1
     },
@@ -2308,7 +2321,7 @@ var FuenteEfectos_default = [
     paqueteId: "disonancia",
     limiteCopias: "1",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-09-22T22:00:25.165Z",
+    updatedAt: "2026-11-13T05:42:26.558Z",
     stats: {
       cost: 0
     },
@@ -2340,7 +2353,7 @@ var FuenteEfectos_default = [
     paqueteId: "disonancia",
     limiteCopias: "1",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-11-06T05:02:32.994Z",
+    updatedAt: "2026-11-13T05:41:18.517Z",
     stats: {
       cost: 0
     },
@@ -2371,7 +2384,7 @@ var FuenteEfectos_default = [
     paqueteId: "disonancia",
     limiteCopias: "1",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-10-01T23:57:22.156Z",
+    updatedAt: "2026-11-13T05:40:40.780Z",
     stats: {
       cost: 0
     },
@@ -2406,7 +2419,7 @@ var FuenteEfectos_default = [
     paqueteId: "disonancia",
     limiteCopias: "1",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-11-06T05:02:32.994Z",
+    updatedAt: "2026-11-13T05:42:41.967Z",
     stats: {
       cost: 0
     },
@@ -2438,7 +2451,7 @@ var FuenteEfectos_default = [
     paqueteId: "disonancia",
     limiteCopias: "1",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-09-23T04:29:18.291Z",
+    updatedAt: "2026-11-13T05:42:53.735Z",
     stats: {
       cost: 0
     },
@@ -2467,7 +2480,7 @@ var FuenteEfectos_default = [
     paqueteId: "disonancia",
     limiteCopias: "1",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-11-06T05:02:32.994Z",
+    updatedAt: "2026-11-13T05:44:33.689Z",
     stats: {
       cost: 0
     },
@@ -2538,7 +2551,7 @@ var FuenteEfectos_default = [
     paqueteId: "disonancia",
     limiteCopias: "2",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-11-06T05:02:32.994Z",
+    updatedAt: "2026-11-13T05:41:00.981Z",
     stats: {
       cost: 3
     },
@@ -2581,7 +2594,7 @@ var FuenteEfectos_default = [
     paqueteId: "disonancia",
     limiteCopias: "1",
     createdAt: "2026-08-03T00:00:00.000Z",
-    updatedAt: "2026-11-06T05:02:32.994Z",
+    updatedAt: "2026-11-13T05:40:18.924Z",
     facciones: [
       "Caos"
     ],
@@ -2621,6 +2634,2743 @@ var FuenteEfectos_default = [
         texto: "Este turno puedes seguir atacando despu\xE9s de romper un V\xEDnculo."
       }
     ]
+  },
+  {
+    id: "PU-001",
+    name: "\xC9ter de la Poda",
+    type: "\xC9ter",
+    rarity: "Com\xFAn",
+    keywords: [],
+    flavorText: "Lo que sobra, se corta.",
+    paqueteId: "purga",
+    limiteCopias: "3",
+    stats: {
+      cost: 1
+    },
+    efectos: [
+      {
+        tipo: "pago",
+        trigger: "al_pagar_eter",
+        efecto: "quitar_buffs",
+        duracion: "turno",
+        objetivo: {
+          tipo: "campeon",
+          controlador: "rival",
+          zona: "campo"
+        },
+        cantidad: 1,
+        texto: "Cuando pagues esta carta, un Campe\xF3n que controla el rival pierde sus incrementos de ATQ y RES, hasta el final del turno."
+      }
+    ],
+    createdAt: "2026-11-09T20:18:16.399Z",
+    updatedAt: "2026-11-13T00:55:32.935Z"
+  },
+  {
+    id: "PU-002",
+    name: "\xC9ter de la Sentencia",
+    type: "\xC9ter",
+    rarity: "Com\xFAn",
+    keywords: [],
+    flavorText: "Lo juzgado vuelve a juzgarse.",
+    paqueteId: "purga",
+    limiteCopias: "2",
+    stats: {
+      cost: 1
+    },
+    efectos: [
+      {
+        tipo: "pago",
+        trigger: "al_pagar_eter",
+        efecto: "recuperar_mazo",
+        objetivo: {
+          tipo: "mistica",
+          controlador: "propio",
+          zona: "cementerio"
+        },
+        cantidad: 1,
+        texto: "Cuando pagues esta carta, devuelve al mazo de su due\xF1o 1 M\xEDstica de tu Cementerio."
+      }
+    ],
+    createdAt: "2026-11-09T20:18:16.399Z",
+    updatedAt: "2026-11-13T00:56:04.903Z"
+  },
+  {
+    id: "PU-003",
+    name: "\xC9ter del Fuero",
+    type: "\xC9ter",
+    rarity: "Com\xFAn",
+    keywords: [],
+    flavorText: "Nadie desahucia al que el Tribunal ampara.",
+    paqueteId: "purga",
+    limiteCopias: "2",
+    stats: {
+      cost: 1
+    },
+    efectos: [
+      {
+        tipo: "pago",
+        trigger: "al_pagar_eter",
+        efecto: "grant_keyword",
+        keyword: "Inexiliable",
+        duracion: "turno",
+        objetivo: {
+          tipo: "campeon",
+          controlador: "propio",
+          zona: "campo"
+        },
+        cantidad: 1,
+        texto: "Cuando pagues esta carta, 1 Campe\xF3n que controles gana Inexiliable, hasta el final del turno."
+      }
+    ],
+    createdAt: "2026-11-09T20:18:16.399Z",
+    updatedAt: "2026-11-13T00:54:24.613Z"
+  },
+  {
+    id: "PU-004",
+    name: "\xC9ter de la Sala",
+    type: "\xC9ter",
+    rarity: "Com\xFAn",
+    keywords: [],
+    flavorText: "Lo que se archiva, queda a la vista.",
+    paqueteId: "purga",
+    limiteCopias: "2",
+    stats: {
+      cost: 1
+    },
+    efectos: [
+      {
+        tipo: "pago",
+        trigger: "al_pagar_eter",
+        efecto: "mill",
+        objetivo: {
+          tipo: "carta",
+          controlador: "propio",
+          zona: "mazo",
+          zonaDestino: "cementerio"
+        },
+        cantidad: 1,
+        texto: "Cuando pagues esta carta, env\xEDa la carta superior de tu mazo a tu Cementerio."
+      }
+    ],
+    createdAt: "2026-11-09T20:18:16.399Z",
+    updatedAt: "2026-11-13T01:08:00.245Z"
+  },
+  {
+    id: "PU-005",
+    name: "\xC9ter del Alegato",
+    type: "\xC9ter",
+    rarity: "Com\xFAn",
+    keywords: [],
+    flavorText: "Se defiende lo que se puede salvar.",
+    paqueteId: "purga",
+    limiteCopias: "1",
+    stats: {
+      cost: 1
+    },
+    efectos: [
+      {
+        tipo: "pago",
+        trigger: "al_pagar_eter",
+        efecto: "draw_discard",
+        objetivo: {
+          tipo: "carta",
+          controlador: "propio",
+          zona: "mazo"
+        },
+        cantidad: 1,
+        texto: "Cuando pagues esta carta, roba 1 carta de tu mazo y descarta 1 carta de tu mano."
+      }
+    ],
+    createdAt: "2026-11-09T20:18:16.399Z",
+    updatedAt: "2026-11-13T01:07:35.621Z"
+  },
+  {
+    id: "PU-006",
+    name: "\xC9ter de la C\xE1tedra",
+    type: "\xC9ter",
+    rarity: "Poco Com\xFAn",
+    keywords: [],
+    flavorText: "Ense\xF1a desde detr\xE1s de la barandilla.",
+    paqueteId: "purga",
+    limiteCopias: "2",
+    stats: {
+      cost: 1
+    },
+    efectos: [
+      {
+        tipo: "bloqueo",
+        efecto: "grant_keyword",
+        keyword: "Inexiliable",
+        objetivo: {
+          tipo: "campeon",
+          controlador: "propio",
+          zona: "campo"
+        },
+        texto: "Mientras est\xE9 bloqueado, el Campe\xF3n que tenga este \xC9ter gana Inexiliable."
+      }
+    ],
+    createdAt: "2026-11-09T20:18:16.399Z",
+    updatedAt: "2026-11-13T01:09:06.391Z"
+  },
+  {
+    id: "PU-007",
+    name: "\xC9ter del Escarnio",
+    type: "\xC9ter",
+    rarity: "Rara",
+    keywords: [],
+    flavorText: "Que se vea qui\xE9n cae primero.",
+    paqueteId: "purga",
+    limiteCopias: "1",
+    stats: {
+      cost: 1
+    },
+    efectos: [
+      {
+        tipo: "reserva",
+        trigger: "ninguno",
+        efecto: "debuff",
+        objetivo: {
+          tipo: "campeon",
+          controlador: "rival",
+          zona: "campo",
+          filtros: {
+            seleccionar: {
+              stat: "resistencia",
+              orden: "mayor"
+            }
+          }
+        },
+        texto: "Mientras est\xE9 en tu Reserva, el Campe\xF3n con mayor RES que controla el rival pierde 1 de RES.",
+        stats: {
+          RES: 1
+        }
+      }
+    ],
+    createdAt: "2026-11-09T20:18:16.399Z",
+    updatedAt: "2026-11-13T01:09:22.247Z"
+  },
+  {
+    id: "PU-008",
+    name: "\xC9ter del Sello",
+    type: "\xC9ter",
+    rarity: "Rara",
+    keywords: [],
+    flavorText: "Lo sellado no se mueve.",
+    paqueteId: "purga",
+    limiteCopias: "1",
+    stats: {
+      cost: 1
+    },
+    efectos: [
+      {
+        tipo: "pago",
+        trigger: "al_pagar_eter",
+        efecto: "toggle_exhaust",
+        objetivo: {
+          tipo: "campeon",
+          controlador: "rival",
+          zona: "campo",
+          filtros: {
+            agotado: false
+          }
+        },
+        cantidad: 1,
+        texto: "Cuando pagues esta carta, cambia el agotamiento de 1 Campe\xF3n que no est\xE9 agotado que controla el rival."
+      }
+    ],
+    createdAt: "2026-11-09T20:18:16.399Z",
+    updatedAt: "2026-11-13T01:06:56.188Z"
+  },
+  {
+    id: "PU-009",
+    name: "\xC9ter del Primog\xE9nito Podador",
+    type: "\xC9ter",
+    rarity: "\xC9pica",
+    keywords: [],
+    flavorText: "Poda, y de la poda, aprende.",
+    paqueteId: "purga",
+    limiteCopias: "1",
+    stats: {
+      cost: 1
+    },
+    efectos: [
+      {
+        tipo: "bloqueo",
+        trigger: "al_matar_en_combate",
+        efecto: "draw",
+        objetivo: {
+          tipo: "carta",
+          controlador: "propio",
+          zona: "mazo"
+        },
+        cantidad: 1,
+        texto: "Mientras est\xE9 bloqueado, al matar en combate, roba 1 carta de tu mazo.",
+        obligatorio: true
+      }
+    ],
+    createdAt: "2026-11-09T20:18:16.399Z",
+    updatedAt: "2026-11-13T01:09:38.696Z"
+  },
+  {
+    id: "PU-010",
+    name: "Idris, El Podador",
+    type: "Campe\xF3n",
+    rarity: "\xDAnica",
+    keywords: [],
+    flavorText: "Para que el huerto viva, se poda.",
+    paqueteId: "purga",
+    limiteCopias: "1",
+    facciones: [
+      "Purga"
+    ],
+    esencia: "Humano",
+    roles: [
+      "Soberano"
+    ],
+    catHabilidad: [
+      "Comandante",
+      "Singular"
+    ],
+    stats: {
+      cost: 0,
+      poder: 3,
+      resistencia: 3
+    },
+    efectos: [
+      {
+        tipo: "pasivo",
+        trigger: "al_invocar",
+        efecto: "destroy",
+        objetivo: {
+          tipo: "campeon",
+          controlador: "rival",
+          zona: "campo",
+          filtros: {
+            costeMaxDeReferencia: "sacrificado"
+          }
+        },
+        cantidad: 1,
+        texto: "Al ser invocada, puedes destruir 1 Campe\xF3n que controla el rival de coste igual o menor al del Campe\xF3n sacrificado."
+      },
+      {
+        tipo: "continuo",
+        efecto: "quitar_buffs",
+        duracion: "mientras_ester_bloqueado",
+        costo: {
+          tipo: "eter_bloqueado",
+          cantidad: 5
+        },
+        objetivo: {
+          tipo: "campeon",
+          controlador: "rival",
+          zona: "campo"
+        },
+        texto: "Puedes bloquear hasta un m\xE1ximo de 5 \xC9ter (Max. 5), por cada \xC9ter bloqueado, un Campe\xF3n que controla el rival pierde sus incrementos de ATQ y RES, mientras ese \xC9ter est\xE9 bloqueado.",
+        buffPerBlockedEther: true
+      }
+    ],
+    createdAt: "2026-11-09T20:18:16.399Z",
+    updatedAt: "2026-11-12T04:29:02.072Z",
+    efectoComandante: [
+      {
+        tipo: "comandante",
+        trigger: "cuando_juegas_mistica",
+        efecto: "buff",
+        stats: {
+          ATQ: 1,
+          RES: 0
+        },
+        objetivo: {
+          tipo: "todos_campeones_propios",
+          controlador: "propio",
+          zona: "campo"
+        },
+        duracion: "turno",
+        texto: "Cuando juegues una M\xEDstica, todos tus Campeones ganan 1 de ATQ, hasta el final del turno."
+      },
+      {
+        tipo: "comandante",
+        trigger: "cuando_activas_arcana",
+        efecto: "buff",
+        stats: {
+          ATQ: 1,
+          RES: 0
+        },
+        objetivo: {
+          tipo: "todos_campeones_propios",
+          controlador: "propio",
+          zona: "campo"
+        },
+        duracion: "turno",
+        texto: "Cuando actives una Arcana, todos tus Campeones ganan 1 de ATQ, hasta el final del turno."
+      }
+    ]
+  },
+  {
+    id: "PU-011",
+    name: "Pasante del Tribunal",
+    type: "Campe\xF3n",
+    rarity: "Com\xFAn",
+    keywords: [],
+    flavorText: "Aprende el oficio sirviendo a la sentencia.",
+    paqueteId: "purga",
+    limiteCopias: "3",
+    facciones: [
+      "Purga"
+    ],
+    esencia: "Humano",
+    roles: [
+      "Normal"
+    ],
+    catHabilidad: [
+      "Efecto"
+    ],
+    stats: {
+      cost: 2,
+      poder: 2,
+      resistencia: 3
+    },
+    efectos: [
+      {
+        tipo: "pasivo",
+        trigger: "al_ser_enviado_al_cementerio",
+        triggerZona: "campo",
+        efecto: "draw",
+        objetivo: {
+          tipo: "carta",
+          controlador: "propio",
+          zona: "mazo"
+        },
+        cantidad: 1,
+        texto: "Al ser enviada al Cementerio desde el campo, puedes robar 1 carta de tu mazo."
+      }
+    ],
+    createdAt: "2026-11-09T20:18:16.399Z",
+    updatedAt: "2026-11-12T04:39:33.266Z"
+  },
+  {
+    id: "PU-012",
+    name: "Alguacil de la Poda",
+    type: "Campe\xF3n",
+    rarity: "Com\xFAn",
+    keywords: [],
+    flavorText: "Lleva el expediente hasta el final.",
+    paqueteId: "purga",
+    limiteCopias: "3",
+    facciones: [
+      "Purga"
+    ],
+    esencia: "Humano",
+    roles: [
+      "Normal"
+    ],
+    catHabilidad: [
+      "Efecto"
+    ],
+    stats: {
+      cost: 2,
+      poder: 3,
+      resistencia: 2
+    },
+    efectos: [
+      {
+        tipo: "pasivo",
+        trigger: "al_ser_enviado_al_cementerio",
+        triggerZona: "campo",
+        efecto: "tutor",
+        zonaOrigen: "mazo",
+        objetivo: {
+          tipo: "mistica",
+          zonaDestino: "mano",
+          filtros: {
+            costeMax: 2
+          }
+        },
+        texto: "Al ser enviada al Cementerio desde el campo, puedes buscar 1 M\xEDstica coste 2 o menos de tu mazo y agr\xE9gala a tu mano."
+      }
+    ],
+    createdAt: "2026-11-09T20:18:16.399Z",
+    updatedAt: "2026-11-12T04:39:41.538Z"
+  },
+  {
+    id: "PU-013",
+    name: "Relator",
+    type: "Campe\xF3n",
+    rarity: "Com\xFAn",
+    keywords: [],
+    flavorText: "Lee en voz alta lo que el Tribunal ya decidi\xF3.",
+    paqueteId: "purga",
+    limiteCopias: "2",
+    facciones: [
+      "Purga"
+    ],
+    esencia: "Mago",
+    roles: [
+      "Normal"
+    ],
+    catHabilidad: [
+      "Efecto"
+    ],
+    stats: {
+      cost: 2,
+      poder: 2,
+      resistencia: 3
+    },
+    efectos: [
+      {
+        tipo: "pasivo",
+        trigger: "al_invocar",
+        efecto: "tutor",
+        zonaOrigen: "mazo",
+        objetivo: {
+          tipo: "mistica",
+          zonaDestino: "mano"
+        },
+        texto: "Al ser invocada, puedes buscar 1 M\xEDstica de tu mazo y agr\xE9gala a tu mano."
+      }
+    ],
+    createdAt: "2026-11-09T20:18:16.399Z",
+    updatedAt: "2026-11-12T04:47:46.251Z"
+  },
+  {
+    id: "PU-014",
+    name: "Escribana",
+    type: "Campe\xF3n",
+    rarity: "Com\xFAn",
+    keywords: [],
+    flavorText: "Nada se pierde mientras quede asentado.",
+    paqueteId: "purga",
+    limiteCopias: "2",
+    facciones: [
+      "Purga"
+    ],
+    esencia: "Mago",
+    roles: [
+      "Normal"
+    ],
+    catHabilidad: [
+      "Efecto"
+    ],
+    stats: {
+      cost: 2,
+      poder: 2,
+      resistencia: 3
+    },
+    efectos: [
+      {
+        tipo: "pasivo",
+        trigger: "al_invocar",
+        efecto: "recuperar_mano",
+        objetivo: {
+          tipo: "mistica",
+          controlador: "propio",
+          zona: "cementerio"
+        },
+        cantidad: 1,
+        texto: "Al ser invocada, puedes devolver a la mano de su due\xF1o 1 M\xEDstica de tu Cementerio."
+      }
+    ],
+    createdAt: "2026-11-09T20:18:16.399Z",
+    updatedAt: "2026-11-12T04:50:07.405Z"
+  },
+  {
+    id: "PU-015",
+    name: "Magistrada",
+    type: "Campe\xF3n",
+    rarity: "Rara",
+    keywords: [],
+    flavorText: "Su veredicto no admite recurso.",
+    paqueteId: "purga",
+    limiteCopias: "2",
+    facciones: [
+      "Purga"
+    ],
+    esencia: "Mago",
+    roles: [
+      "Normal"
+    ],
+    catHabilidad: [
+      "Efecto"
+    ],
+    stats: {
+      cost: 4,
+      poder: 3,
+      resistencia: 5
+    },
+    efectos: [
+      {
+        tipo: "disparo",
+        costo: {
+          tipo: "eter",
+          cantidad: 3
+        },
+        activacion: "una_por_turno",
+        efecto: "destroy",
+        objetivo: {
+          tipo: "campeon",
+          controlador: "rival",
+          zona: "campo",
+          filtros: {
+            atqMax: 3
+          }
+        },
+        cantidad: 1,
+        texto: "Puedes pagar 3 \xC9ter, una vez por turno, destruye 1 Campe\xF3n ATQ 3 o menos que controla el rival."
+      }
+    ],
+    createdAt: "2026-11-09T20:18:16.399Z",
+    updatedAt: "2026-11-12T04:51:42.879Z"
+  },
+  {
+    id: "PU-016",
+    name: "Centinela del Tribunal",
+    type: "Campe\xF3n",
+    rarity: "Com\xFAn",
+    keywords: [
+      "Protector"
+    ],
+    flavorText: "Nadie llega a la sala sin pasar por \xE9l.",
+    paqueteId: "purga",
+    limiteCopias: "2",
+    facciones: [
+      "Purga"
+    ],
+    esencia: "Guerrero",
+    roles: [
+      "Normal"
+    ],
+    catHabilidad: [
+      "Normal"
+    ],
+    stats: {
+      cost: 3,
+      poder: 3,
+      resistencia: 5
+    },
+    efectos: [],
+    createdAt: "2026-11-09T20:18:16.399Z",
+    updatedAt: "2026-11-12T04:53:40.801Z"
+  },
+  {
+    id: "PU-017",
+    name: "La Balanza",
+    type: "Campe\xF3n",
+    rarity: "Rara",
+    keywords: [],
+    flavorText: "Lo que pesa de m\xE1s, se corta.",
+    paqueteId: "purga",
+    limiteCopias: "1",
+    facciones: [
+      "Purga"
+    ],
+    esencia: "Constructo",
+    roles: [
+      "Normal"
+    ],
+    catHabilidad: [
+      "Efecto"
+    ],
+    stats: {
+      cost: 5,
+      poder: 4,
+      resistencia: 7
+    },
+    efectos: [
+      {
+        tipo: "disparo",
+        costo: {
+          tipo: "eter",
+          cantidad: 2
+        },
+        activacion: "una_por_turno",
+        efecto: "igualar_stats_al_menor",
+        objetivo: {
+          tipo: "campeon",
+          controlador: "rival",
+          zona: "campo"
+        },
+        cantidad: 1,
+        duracion: "turno",
+        texto: "Puedes pagar 2 \xC9ter, una vez por turno, el ATQ y la RES de un Campe\xF3n que controla el rival se igualan al menor de los dos valores, hasta el final del turno."
+      }
+    ],
+    createdAt: "2026-11-09T20:18:16.399Z",
+    updatedAt: "2026-11-12T04:53:50.297Z"
+  },
+  {
+    id: "PU-018",
+    name: "Citatoria",
+    type: "M\xEDstica",
+    rarity: "Com\xFAn",
+    keywords: [],
+    flavorText: "Quien es citado, comparece.",
+    paqueteId: "purga",
+    limiteCopias: "3",
+    stats: {
+      cost: 3
+    },
+    efectos: [
+      {
+        tipo: "hechizo",
+        efecto: "tutor",
+        zonaOrigen: "mazo",
+        objetivo: {
+          tipo: "campeon",
+          zonaDestino: "campo",
+          filtros: {
+            faccion: "Purga",
+            costeMin: 1,
+            costeMax: 3
+          }
+        },
+        texto: "Busca 1 Campe\xF3n de facci\xF3n Purga de coste 1 a 3 de tu mazo e inv\xF3calo al campo."
+      }
+    ],
+    createdAt: "2026-11-09T20:18:16.399Z",
+    updatedAt: "2026-11-13T01:42:22.153Z"
+  },
+  {
+    id: "PU-019",
+    name: "Revocaci\xF3n",
+    type: "M\xEDstica",
+    rarity: "Rara",
+    keywords: [],
+    flavorText: "Lo que se anula, se anula por completo.",
+    paqueteId: "purga",
+    limiteCopias: "2",
+    stats: {
+      cost: 2
+    },
+    efectos: [
+      {
+        tipo: "hechizo",
+        efecto: "recuperar_exilio",
+        objetivo: {
+          tipo: "campeon",
+          controlador: "propio",
+          zona: "exilio",
+          filtros: {
+            faccion: "Purga",
+            costeMin: 1
+          }
+        },
+        texto: "Devuelve del Exilio 1 Campe\xF3n de facci\xF3n Purga de coste 1 o m\xE1s."
+      }
+    ],
+    createdAt: "2026-11-09T20:18:16.399Z",
+    updatedAt: "2026-11-13T01:12:42.307Z"
+  },
+  {
+    id: "PU-020",
+    name: "Sentencia Firme",
+    type: "M\xEDstica",
+    rarity: "Rara",
+    keywords: [],
+    flavorText: "Lo que se condena, no vuelve igual.",
+    paqueteId: "purga",
+    limiteCopias: "2",
+    stats: {
+      cost: 4
+    },
+    efectos: [
+      {
+        tipo: "hechizo",
+        efecto: "destroy",
+        costo: {
+          tipo: "exilia_cementerio_propio",
+          cantidad: 1
+        },
+        objetivo: {
+          tipo: "campeon",
+          controlador: "rival",
+          zona: "campo"
+        },
+        cantidad: 1,
+        texto: "Puedes exiliar 1 Campe\xF3n de tu Cementerio, destruye 1 Campe\xF3n que controla el rival."
+      }
+    ],
+    createdAt: "2026-11-09T20:18:16.399Z",
+    updatedAt: "2026-11-13T01:11:24.706Z"
+  },
+  {
+    id: "PU-021",
+    name: "Nulidad",
+    type: "M\xEDstica",
+    rarity: "Rara",
+    keywords: [],
+    flavorText: "Lo que no cumple el procedimiento, no existi\xF3.",
+    paqueteId: "purga",
+    limiteCopias: "2",
+    stats: {
+      cost: 3
+    },
+    efectos: [
+      {
+        tipo: "hechizo",
+        efecto: "negar",
+        tipoNegacion: "activacion",
+        objetivo: {
+          tipo: "mistica_arcana",
+          controlador: "rival"
+        },
+        texto: "Niega la activaci\xF3n del efecto de una M\xEDstica o Arcana que controla el rival."
+      }
+    ],
+    createdAt: "2026-11-09T20:18:16.399Z",
+    updatedAt: "2026-11-13T01:13:48.324Z"
+  },
+  {
+    id: "PU-022",
+    name: "Amonestaci\xF3n",
+    type: "M\xEDstica",
+    rarity: "Com\xFAn",
+    keywords: [],
+    flavorText: "Una advertencia basta para quien a\xFAn puede enmendarse.",
+    paqueteId: "purga",
+    limiteCopias: "2",
+    stats: {
+      cost: 2
+    },
+    efectos: [
+      {
+        tipo: "hechizo",
+        efecto: "quitar_buffs",
+        duracion: "turno",
+        objetivo: {
+          tipo: "campeon",
+          controlador: "rival",
+          zona: "campo"
+        },
+        cantidad: 1,
+        texto: "Un Campe\xF3n que controla el rival pierde sus incrementos de ATQ y RES, hasta el final del turno."
+      }
+    ],
+    createdAt: "2026-11-09T20:18:16.399Z",
+    updatedAt: "2026-11-13T01:13:33.396Z"
+  },
+  {
+    id: "PU-023",
+    name: "Acta de Acusaci\xF3n",
+    type: "M\xEDstica",
+    rarity: "Com\xFAn",
+    keywords: [],
+    flavorText: "Todo cargo empieza por escrito.",
+    paqueteId: "purga",
+    limiteCopias: "2",
+    stats: {
+      cost: 2
+    },
+    efectos: [
+      {
+        tipo: "hechizo",
+        efecto: "tutor",
+        zonaOrigen: "mazo",
+        objetivo: {
+          tipo: "arcana",
+          zonaDestino: "mano"
+        },
+        texto: "Busca 1 Arcana de tu mazo y agr\xE9gala a tu mano."
+      }
+    ],
+    createdAt: "2026-11-09T20:18:16.399Z",
+    updatedAt: "2026-11-13T01:10:33.897Z"
+  },
+  {
+    id: "PU-024",
+    name: "Indulto",
+    type: "M\xEDstica",
+    rarity: "Com\xFAn",
+    keywords: [],
+    flavorText: "El Tribunal tambi\xE9n sabe perdonar.",
+    paqueteId: "purga",
+    limiteCopias: "2",
+    stats: {
+      cost: 2
+    },
+    efectos: [
+      {
+        tipo: "hechizo",
+        efecto: "grant_keyword",
+        keyword: "Inmortal",
+        duracion: "turno",
+        objetivo: {
+          tipo: "campeon",
+          controlador: "propio",
+          zona: "campo"
+        },
+        cantidad: 1,
+        texto: "1 Campe\xF3n que controles gana Inmortal, hasta el final del turno."
+      }
+    ],
+    createdAt: "2026-11-09T20:18:16.399Z",
+    updatedAt: "2026-11-13T01:14:44.038Z"
+  },
+  {
+    id: "PU-025",
+    name: "Juicio Sumario",
+    type: "M\xEDstica",
+    rarity: "Rara",
+    keywords: [],
+    flavorText: "Sin apelaci\xF3n, sin pr\xF3rroga, sin testigos.",
+    paqueteId: "purga",
+    limiteCopias: "2",
+    stats: {
+      cost: 5
+    },
+    efectos: [
+      {
+        tipo: "hechizo",
+        efecto: "destroy",
+        objetivo: {
+          tipo: "campeon",
+          controlador: "rival",
+          zona: "campo",
+          filtros: {
+            costeMax: 2
+          }
+        },
+        cantidad: 2,
+        texto: "Destruye hasta 2 Campeones coste 2 o menos que controla el rival.",
+        esHasta: true
+      }
+    ],
+    createdAt: "2026-11-09T20:18:16.399Z",
+    updatedAt: "2026-11-13T01:14:55.998Z"
+  },
+  {
+    id: "PU-026",
+    name: "Apelaci\xF3n",
+    type: "Arcana",
+    rarity: "Rara",
+    keywords: [],
+    flavorText: "La sentencia no es definitiva hasta que el Tribunal lo dice.",
+    paqueteId: "purga",
+    limiteCopias: "2",
+    stats: {
+      cost: 3
+    },
+    efectos: [
+      {
+        tipo: "hechizo",
+        trigger: "cuando_campeon_propio_al_cementerio",
+        causaEnvio: [
+          "destruccion",
+          "combate"
+        ],
+        costo: {
+          tipo: "bloqueo_fijo",
+          cantidad: 2
+        },
+        activacion: "una_por_turno",
+        efecto: "recuperar_campo",
+        objetivo: {
+          tipo: "campeon_del_trigger",
+          controlador: "propio",
+          zona: "cementerio",
+          filtros: {
+            faccion: "Purga",
+            costeMin: 1,
+            costeMax: 3
+          }
+        },
+        texto: "Una vez por turno, cuando un Campe\xF3n que controles sea enviado al Cementerio por destrucci\xF3n o combate, bloquea 2 \xC9ter, inv\xF3calo de tu Cementerio si su coste es de 1 a 3. Al inicio de tu Alba reagrupa el \xC9ter usado por este efecto.",
+        reagrupar: {
+          fase: "alba",
+          turno: "propio"
+        }
+      }
+    ],
+    createdAt: "2026-11-09T20:18:16.399Z",
+    updatedAt: "2026-11-13T01:32:04.621Z"
+  },
+  {
+    id: "PU-027",
+    name: "Pena Diferida",
+    type: "Arcana",
+    rarity: "Rara",
+    keywords: [],
+    flavorText: "La condena espera su turno.",
+    paqueteId: "purga",
+    limiteCopias: "2",
+    stats: {
+      cost: 4
+    },
+    efectos: [
+      {
+        tipo: "hechizo",
+        trigger: "cuando_campeon_propio_al_cementerio",
+        causaEnvio: [
+          "destruccion",
+          "combate"
+        ],
+        costo: {
+          tipo: "bloqueo_fijo",
+          cantidad: 3
+        },
+        activacion: "una_por_turno",
+        efecto: "destroy",
+        objetivo: {
+          tipo: "campeon",
+          controlador: "rival",
+          zona: "campo",
+          filtros: {
+            costeMaxDeReferencia: "trigger"
+          }
+        },
+        cantidad: 1,
+        texto: "Una vez por turno, cuando un Campe\xF3n que controles sea enviado al Cementerio por destrucci\xF3n o combate, bloquea 3 \xC9ter, destruye 1 Campe\xF3n que controla el rival de coste igual o menor al de ese Campe\xF3n. Al inicio de tu Alba reagrupa el \xC9ter usado por este efecto.",
+        reagrupar: {
+          fase: "alba",
+          turno: "propio"
+        }
+      }
+    ],
+    createdAt: "2026-11-09T20:18:16.399Z",
+    updatedAt: "2026-11-13T01:14:07.773Z"
+  },
+  {
+    id: "PU-028",
+    name: "Registro del Tribunal",
+    type: "Arcana",
+    rarity: "Com\xFAn",
+    keywords: [],
+    flavorText: "Cada sentencia queda asentada.",
+    paqueteId: "purga",
+    limiteCopias: "3",
+    stats: {
+      cost: 2
+    },
+    efectos: [
+      {
+        tipo: "hechizo",
+        trigger: "cuando_juegas_mistica",
+        costo: {
+          tipo: "bloqueo_fijo",
+          cantidad: 1
+        },
+        activacion: "una_por_turno",
+        efecto: "draw",
+        objetivo: {
+          tipo: "carta",
+          controlador: "propio",
+          zona: "mazo"
+        },
+        cantidad: 1,
+        texto: "Una vez por turno, cuando juegues una M\xEDstica, bloquea 1 \xC9ter, roba 1 carta de tu mazo. Al inicio de tu Alba reagrupa el \xC9ter usado por este efecto.",
+        reagrupar: {
+          fase: "alba",
+          turno: "propio"
+        }
+      }
+    ],
+    createdAt: "2026-11-09T20:18:16.399Z",
+    updatedAt: "2026-11-13T01:32:18.541Z"
+  },
+  {
+    id: "PU-029",
+    name: "Cadena de Custodia",
+    type: "Arcana",
+    rarity: "Com\xFAn",
+    keywords: [],
+    flavorText: "Todo el que llega armado, llega esposado.",
+    paqueteId: "purga",
+    limiteCopias: "3",
+    stats: {
+      cost: 2
+    },
+    efectos: [
+      {
+        tipo: "hechizo",
+        trigger: "al_atacar",
+        controladorTrigger: "rival",
+        costo: {
+          tipo: "bloqueo_fijo",
+          cantidad: 2
+        },
+        activacion: "una_por_turno",
+        efecto: "quitar_buffs",
+        duracion: "turno",
+        objetivo: {
+          tipo: "campeon",
+          controlador: "rival",
+          zona: "campo"
+        },
+        texto: "Al atacar el rival, una vez por turno, bloquea 2 \xC9ter, un Campe\xF3n que controla el rival pierde sus incrementos de ATQ y RES, hasta el final del turno. Al inicio de tu Alba reagrupa el \xC9ter usado por este efecto.",
+        reagrupar: {
+          fase: "alba",
+          turno: "propio"
+        }
+      }
+    ],
+    createdAt: "2026-11-09T20:18:16.399Z",
+    updatedAt: "2026-11-13T01:36:12.114Z"
+  },
+  {
+    id: "PU-030",
+    name: "Cobro de Costas",
+    type: "Arcana",
+    rarity: "Com\xFAn",
+    keywords: [],
+    flavorText: "El que pierde, paga el proceso.",
+    paqueteId: "purga",
+    limiteCopias: "2",
+    stats: {
+      cost: 1
+    },
+    efectos: [
+      {
+        tipo: "hechizo",
+        trigger: "cuando_campeon_propio_al_cementerio",
+        controladorTrigger: "rival",
+        costo: {
+          tipo: "bloqueo_fijo",
+          cantidad: 1
+        },
+        activacion: "una_por_turno",
+        efecto: "buff",
+        duracion: "turno",
+        objetivo: {
+          tipo: "todos_campeones_propios",
+          controlador: "propio",
+          zona: "campo"
+        },
+        texto: "Una vez por turno, cuando un Campe\xF3n del rival sea enviado al Cementerio, bloquea 1 \xC9ter, todos tus Campeones ganan 1 de ATQ, hasta el final del turno. Al inicio de tu Alba reagrupa el \xC9ter usado por este efecto.",
+        reagrupar: {
+          fase: "alba",
+          turno: "propio"
+        },
+        stats: {
+          ATQ: 1,
+          RES: 0
+        }
+      }
+    ],
+    createdAt: "2026-11-09T20:18:16.399Z",
+    updatedAt: "2026-11-13T01:35:28.041Z"
+  },
+  {
+    id: "PU-031",
+    name: "Primer Cargo",
+    type: "V\xEDnculo",
+    rarity: "Com\xFAn",
+    keywords: [],
+    flavorText: "Todo proceso empieza con un cargo.",
+    paqueteId: "purga",
+    limiteCopias: "1",
+    stats: {
+      cost: 0
+    },
+    efectos: [
+      {
+        tipo: "vinculo",
+        trigger: "inicio_alba",
+        efecto: "recuperar_mazo",
+        objetivo: {
+          tipo: "mistica",
+          controlador: "propio",
+          zona: "cementerio"
+        },
+        cantidad: 1,
+        texto: "Al inicio de tu Alba, puedes devolver al mazo de su due\xF1o 1 M\xEDstica de tu Cementerio, una vez por turno.",
+        duracion: "1_por_turno"
+      }
+    ],
+    createdAt: "2026-11-09T20:18:16.399Z",
+    updatedAt: "2026-11-13T01:37:19.523Z"
+  },
+  {
+    id: "PU-032",
+    name: "Pliego de Cargos",
+    type: "V\xEDnculo",
+    rarity: "Com\xFAn",
+    keywords: [],
+    flavorText: "Aqu\xED constan sus m\xE9ritos, uno por uno.",
+    paqueteId: "purga",
+    limiteCopias: "1",
+    stats: {
+      cost: 0
+    },
+    efectos: [
+      {
+        tipo: "vinculo",
+        trigger: "inicio_choque",
+        controladorTrigger: "rival",
+        efecto: "quitar_buffs",
+        duracion: "turno",
+        objetivo: {
+          tipo: "campeon",
+          controlador: "rival",
+          zona: "campo"
+        },
+        cantidad: 1,
+        texto: "Al inicio del Choque del rival, un Campe\xF3n que controla el rival pierde sus incrementos de ATQ y RES, hasta el final del turno."
+      }
+    ],
+    createdAt: "2026-11-09T20:18:16.399Z",
+    updatedAt: "2026-11-13T01:36:29.522Z"
+  },
+  {
+    id: "PU-033",
+    name: "Sala de Audiencias",
+    type: "V\xEDnculo",
+    rarity: "Com\xFAn",
+    keywords: [],
+    flavorText: "Aqu\xED se escucha a todos, y se decide por uno.",
+    paqueteId: "purga",
+    limiteCopias: "1",
+    stats: {
+      cost: 0
+    },
+    efectos: [
+      {
+        tipo: "vinculo",
+        trigger: "inicio_alba",
+        efecto: "draw_discard",
+        objetivo: {
+          tipo: "carta",
+          controlador: "propio",
+          zona: "mazo"
+        },
+        cantidad: 1,
+        texto: "Al inicio de tu Alba, puedes robar 1 carta de tu mazo y descartar 1 carta de tu mano, una vez por turno.",
+        duracion: "1_por_turno"
+      }
+    ],
+    createdAt: "2026-11-09T20:18:16.399Z",
+    updatedAt: "2026-11-13T01:35:55.281Z"
+  },
+  {
+    id: "PU-034",
+    name: "Archivo del Tribunal",
+    type: "V\xEDnculo",
+    rarity: "Poco Com\xFAn",
+    keywords: [],
+    flavorText: "Lo que se archiva ya no vuelve al expediente.",
+    paqueteId: "purga",
+    limiteCopias: "1",
+    stats: {
+      cost: 0
+    },
+    efectos: [
+      {
+        tipo: "vinculo",
+        trigger: "inicio_alba",
+        efecto: "draw",
+        costo: {
+          tipo: "exilia_cementerio_propio",
+          cantidad: 1
+        },
+        objetivo: {
+          tipo: "carta",
+          controlador: "propio",
+          zona: "mazo"
+        },
+        cantidad: 1,
+        texto: "Al inicio de tu Alba, puedes exiliar 1 Campe\xF3n de tu Cementerio, una vez por turno, roba 1 carta de tu mazo.",
+        activacion: "una_por_turno"
+      }
+    ],
+    createdAt: "2026-11-09T20:18:16.399Z",
+    updatedAt: "2026-11-13T01:37:46.955Z"
+  },
+  {
+    id: "PU-035",
+    name: "Cristal del Tribunal",
+    type: "V\xEDnculo",
+    rarity: "Poco Com\xFAn",
+    keywords: [],
+    flavorText: "El cristal no brilla: afila.",
+    paqueteId: "purga",
+    limiteCopias: "1",
+    stats: {
+      cost: 0
+    },
+    efectos: [
+      {
+        tipo: "vinculo",
+        trigger: "inicio_alba",
+        controladorTrigger: "rival",
+        efecto: "grant_keyword",
+        keyword: "Inexiliable",
+        objetivo: {
+          tipo: "campeon",
+          controlador: "propio",
+          zona: "campo"
+        },
+        cantidad: 1,
+        texto: "Al inicio de la Alba del rival, 1 Campe\xF3n que controles gana Inexiliable, una vez por turno.",
+        duracion: "1_por_turno"
+      }
+    ],
+    createdAt: "2026-11-09T20:18:16.399Z",
+    updatedAt: "2026-11-13T01:38:23.844Z"
+  },
+  {
+    id: "PU-036",
+    name: "Lamento de Idris",
+    type: "V\xEDnculo",
+    rarity: "Rara",
+    keywords: [],
+    flavorText: "Pod\xF3 lo que m\xE1s amaba, y a\xFAn no ha terminado.",
+    paqueteId: "purga",
+    limiteCopias: "1",
+    stats: {
+      cost: 0
+    },
+    efectos: [
+      {
+        tipo: "vinculo",
+        efecto: "modificar_regla",
+        texto: "Los Campeones del rival no pueden recibir incrementos de RES.",
+        reglaEnumerada: "rival_sin_incrementos_res"
+      }
+    ],
+    createdAt: "2026-11-09T20:18:16.399Z",
+    updatedAt: "2026-11-13T01:38:10.756Z"
+  },
+  {
+    id: "MU-001",
+    type: "\xC9ter",
+    keywords: [],
+    paqueteId: "mutacion",
+    stats: {
+      cost: 1
+    },
+    name: "\xC9ter de la Muda",
+    rarity: "Com\xFAn",
+    limiteCopias: "3",
+    flavorText: "El primer paso del cambio es soltar lo que eras.",
+    efectos: [
+      {
+        tipo: "pago",
+        trigger: "al_pagar_eter",
+        efecto: "change_type",
+        objetivo: {
+          tipo: "campeon",
+          controlador: "propio",
+          zona: "campo"
+        },
+        cambioTipo: {
+          esenciaElegida: true
+        },
+        duracion: "turno",
+        texto: "Cuando pagues esta carta, un Campe\xF3n que controles se convierte en la esencia que elijas, hasta el final del turno."
+      }
+    ],
+    createdAt: "2026-11-10T00:12:00.082Z",
+    updatedAt: "2026-11-13T04:15:01.549Z"
+  },
+  {
+    id: "MU-002",
+    type: "\xC9ter",
+    keywords: [],
+    paqueteId: "mutacion",
+    stats: {
+      cost: 1
+    },
+    name: "\xC9ter del Brote",
+    rarity: "Com\xFAn",
+    limiteCopias: "2",
+    flavorText: "Donde cae una gota de savia, algo con garras despierta.",
+    efectos: [
+      {
+        tipo: "reserva",
+        trigger: "inicio_choque",
+        efecto: "change_type",
+        objetivo: {
+          tipo: "campeon",
+          controlador: "propio",
+          zona: "campo"
+        },
+        cambioTipo: {
+          esencia: "Bestia"
+        },
+        duracion: "turno",
+        texto: "Mientras est\xE9 en tu Reserva, al inicio de tu Choque, un Campe\xF3n que controles se convierte en esencia Bestia, hasta el final del turno."
+      }
+    ],
+    createdAt: "2026-11-10T00:12:00.082Z",
+    updatedAt: "2026-11-13T04:14:06.997Z"
+  },
+  {
+    id: "MU-003",
+    type: "\xC9ter",
+    keywords: [],
+    paqueteId: "mutacion",
+    stats: {
+      cost: 1
+    },
+    name: "\xC9ter del Derrame",
+    rarity: "Com\xFAn",
+    limiteCopias: "2",
+    flavorText: "Lo que se derrama no espera turno.",
+    efectos: [
+      {
+        tipo: "pago",
+        trigger: "al_pagar_eter",
+        efecto: "grant_keyword",
+        keyword: "Presteza",
+        cantidad: 1,
+        objetivo: {
+          tipo: "campeon",
+          controlador: "propio",
+          zona: "campo"
+        },
+        duracion: "turno",
+        texto: "Cuando pagues esta carta, 1 Campe\xF3n que controles gana Presteza, hasta el final del turno."
+      }
+    ],
+    createdAt: "2026-11-10T00:12:00.082Z",
+    updatedAt: "2026-11-13T19:49:54.542Z"
+  },
+  {
+    id: "MU-004",
+    type: "\xC9ter",
+    keywords: [],
+    paqueteId: "mutacion",
+    stats: {
+      cost: 1
+    },
+    name: "\xC9ter de la Orilla",
+    rarity: "Com\xFAn",
+    limiteCopias: "2",
+    flavorText: "En la orilla nadie es del todo de un lado.",
+    efectos: [
+      {
+        tipo: "bloqueo",
+        efecto: "change_type",
+        objetivo: {
+          tipo: "campeon",
+          controlador: "propio",
+          zona: "campo"
+        },
+        cambioTipo: {
+          esenciaElegida: true
+        },
+        texto: "Mientras est\xE9 bloqueado, el Campe\xF3n que tenga este \xC9ter se convierte en la esencia que elijas."
+      }
+    ],
+    createdAt: "2026-11-10T00:12:00.082Z",
+    updatedAt: "2026-11-13T04:13:15.771Z"
+  },
+  {
+    id: "MU-005",
+    type: "\xC9ter",
+    keywords: [],
+    paqueteId: "mutacion",
+    stats: {
+      cost: 1
+    },
+    name: "\xC9ter de la Mudanza",
+    rarity: "Com\xFAn",
+    limiteCopias: "1",
+    flavorText: "Se mudan juntos los que ya se parecen.",
+    efectos: [
+      {
+        tipo: "pago",
+        trigger: "al_pagar_eter",
+        efecto: "buff",
+        stats: {
+          ATQ: 0,
+          RES: 1
+        },
+        objetivo: {
+          tipo: "todos_campeones_propios",
+          controlador: "propio",
+          zona: "campo",
+          filtros: {
+            comparteEsenciaConOtro: true
+          }
+        },
+        duracion: "turno",
+        texto: "Cuando pagues esta carta, todos tus Campeones que compartan Esencia con otro Campe\xF3n que controles ganan 1 de RES, hasta el final del turno."
+      }
+    ],
+    createdAt: "2026-11-10T00:12:00.082Z",
+    updatedAt: "2026-11-13T04:13:34.340Z"
+  },
+  {
+    id: "MU-006",
+    type: "\xC9ter",
+    keywords: [],
+    paqueteId: "mutacion",
+    stats: {
+      cost: 1
+    },
+    name: "\xC9ter del Contagio",
+    rarity: "Poco Com\xFAn",
+    limiteCopias: "2",
+    flavorText: "Lo que toca, cambia. Lo que cambia, se parece a quien lo toc\xF3.",
+    efectos: [
+      {
+        tipo: "pago",
+        trigger: "al_pagar_eter",
+        efecto: "change_type",
+        objetivo: {
+          tipo: "campeon",
+          controlador: "rival",
+          zona: "campo"
+        },
+        cambioTipo: {
+          esenciaElegida: true
+        },
+        duracion: "turno",
+        texto: "Cuando pagues esta carta, un Campe\xF3n que controla el rival se convierte en la esencia que elijas, hasta el final del turno."
+      }
+    ],
+    createdAt: "2026-11-10T00:12:00.082Z",
+    updatedAt: "2026-11-13T04:16:15.583Z"
+  },
+  {
+    id: "MU-007",
+    type: "\xC9ter",
+    keywords: [],
+    paqueteId: "mutacion",
+    stats: {
+      cost: 1
+    },
+    name: "\xC9ter de la Cosecha",
+    rarity: "Rara",
+    limiteCopias: "1",
+    flavorText: "Quien sabe sembrar sabe a qui\xE9n llamar.",
+    efectos: [
+      {
+        tipo: "pago",
+        trigger: "al_pagar_eter",
+        efecto: "tutor",
+        zonaOrigen: "mazo",
+        objetivo: {
+          tipo: "campeon",
+          zonaDestino: "mano",
+          filtros: {
+            esencia: "Bestia"
+          }
+        },
+        texto: "Cuando pagues esta carta, busca 1 Campe\xF3n de esencia Bestia de tu mazo y agr\xE9galo a tu mano."
+      }
+    ],
+    createdAt: "2026-11-10T00:12:00.082Z",
+    updatedAt: "2026-11-13T04:16:30.999Z"
+  },
+  {
+    id: "MU-008",
+    type: "\xC9ter",
+    keywords: [],
+    paqueteId: "mutacion",
+    stats: {
+      cost: 1
+    },
+    name: "\xC9ter del Injerto",
+    rarity: "Rara",
+    limiteCopias: "1",
+    flavorText: "Una rama nueva sobre un tronco viejo.",
+    efectos: [
+      {
+        tipo: "reserva",
+        trigger: "ninguno",
+        efecto: "buff",
+        stats: {
+          ATQ: 1,
+          RES: 0
+        },
+        objetivo: {
+          tipo: "todos_campeones_propios",
+          controlador: "propio",
+          zona: "campo",
+          filtros: {
+            esencia: "Bestia"
+          }
+        },
+        texto: "Mientras est\xE9 en tu Reserva, todos tus Campeones de esencia Bestia ganan 1 de ATQ."
+      }
+    ],
+    createdAt: "2026-11-10T00:12:00.082Z",
+    updatedAt: "2026-11-13T04:17:18.232Z"
+  },
+  {
+    id: "MU-009",
+    type: "\xC9ter",
+    keywords: [],
+    paqueteId: "mutacion",
+    stats: {
+      cost: 1
+    },
+    name: "\xC9ter del Primog\xE9nito Injertado",
+    rarity: "\xC9pica",
+    limiteCopias: "1",
+    flavorText: "No hered\xF3 el \xC1rbol: lo injert\xF3.",
+    efectos: [
+      {
+        tipo: "bloqueo",
+        efecto: "buff",
+        stats: {
+          ATQ: 1,
+          RES: 1
+        },
+        objetivo: {
+          tipo: "campeon",
+          controlador: "propio",
+          zona: "campo"
+        },
+        texto: "Mientras est\xE9 bloqueado, el Campe\xF3n que tenga este \xC9ter gana 1 de ATQ y 1 de RES."
+      }
+    ],
+    createdAt: "2026-11-10T00:12:00.082Z",
+    updatedAt: "2026-11-13T04:16:54.496Z"
+  },
+  {
+    id: "MU-010",
+    type: "Campe\xF3n",
+    keywords: [],
+    paqueteId: "mutacion",
+    facciones: [
+      "Mutaci\xF3n"
+    ],
+    roles: [
+      "Soberano"
+    ],
+    catHabilidad: [
+      "Singular"
+    ],
+    name: "Yaron, El Injerto",
+    rarity: "\xDAnica",
+    limiteCopias: "1",
+    esencia: "Humano",
+    flavorText: "Juzg\xF3 durante a\xF1os lo que se corta. Ahora sabe lo que se injerta.",
+    stats: {
+      cost: 4,
+      poder: 4,
+      resistencia: 4
+    },
+    efectos: [
+      {
+        tipo: "pasivo",
+        trigger: "cuando_campeon_propio_cambia_esencia",
+        efecto: "return_ether",
+        cantidad: 1,
+        objetivo: {
+          tipo: "eter",
+          controlador: "propio",
+          zona: "pagado",
+          zonaDestino: "reserva",
+          controladorDestino: "propio"
+        },
+        obligatorio: true,
+        duracion: "1_por_turno",
+        texto: "Cuando un Campe\xF3n que controles cambie de Esencia, devuelve 1 \xC9ter de tu zona de pago a tu Reserva, una vez por turno."
+      },
+      {
+        tipo: "disparo",
+        costo: {
+          tipo: "eter",
+          cantidad: 4
+        },
+        activacion: "una_por_turno",
+        requisitoCampo: {
+          tipo: "misma_esencia",
+          minimo: 3
+        },
+        efecto: "destroy",
+        objetivo: {
+          tipo: "todos_campeones",
+          controlador: "ambos",
+          zona: "campo",
+          filtros: {
+            esenciaDeLaCondicion: true
+          }
+        },
+        texto: "Puedes pagar 4 \xC9ter, una vez por turno, si controlas 3 o m\xE1s Campeones de una misma Esencia, destruye todos los Campeones de esa Esencia."
+      }
+    ],
+    createdAt: "2026-11-10T00:12:00.082Z",
+    updatedAt: "2026-11-12T05:25:17.429Z"
+  },
+  {
+    id: "MU-011",
+    type: "Campe\xF3n",
+    keywords: [],
+    paqueteId: "mutacion",
+    facciones: [
+      "Mutaci\xF3n"
+    ],
+    roles: [
+      "Normal"
+    ],
+    catHabilidad: [
+      "Comandante",
+      "Singular"
+    ],
+    name: "Liora, La Hortelana del Cambio",
+    rarity: "\xDAnica",
+    limiteCopias: "1",
+    esencia: "Humano",
+    flavorText: "Lo que cambia no muere: florece.",
+    stats: {
+      cost: 5,
+      poder: 4,
+      resistencia: 6
+    },
+    efectos: [
+      {
+        tipo: "continuo",
+        costo: {
+          tipo: "bloqueo_fijo",
+          cantidad: 2
+        },
+        activacion: "una_mientras_bloqueado",
+        requisitoCampo: {
+          tipo: "misma_esencia",
+          minimo: 2
+        },
+        efecto: "grant_keyword",
+        keyword: "Inmortal",
+        objetivo: {
+          tipo: "todos_campeones_propios",
+          controlador: "propio",
+          zona: "campo"
+        },
+        duracion: "mientras_ester_bloqueado",
+        texto: "Bloquea 2 \xC9ter (solo una vez mientras siga bloqueado), si controlas 2 o m\xE1s Campeones de una misma Esencia, todos tus Campeones ganan Inmortal, mientras ese \xC9ter est\xE9 bloqueado."
+      },
+      {
+        tipo: "disparo",
+        costo: {
+          tipo: "eter",
+          cantidad: 2
+        },
+        activacion: "una_por_turno",
+        efecto: "change_type",
+        objetivo: {
+          tipo: "campeon",
+          controlador: "propio",
+          zona: "campo"
+        },
+        cambioTipo: {
+          esenciaElegida: true
+        },
+        duracion: "turno",
+        texto: "Puedes pagar 2 \xC9ter, una vez por turno, un Campe\xF3n que controles se convierte en la esencia que elijas, hasta el final del turno."
+      }
+    ],
+    createdAt: "2026-11-10T00:12:00.082Z",
+    updatedAt: "2026-11-12T05:25:23.525Z",
+    efectoComandante: [
+      {
+        tipo: "comandante",
+        efecto: "buff",
+        stats: {
+          ATQ: 1,
+          RES: 1
+        },
+        objetivo: {
+          tipo: "todos_campeones_propios",
+          controlador: "propio",
+          zona: "campo",
+          filtros: {
+            comparteEsenciaConOtro: true
+          }
+        },
+        texto: "Todos tus Campeones que compartan Esencia con otro Campe\xF3n que controles ganan 1 de ATQ y 1 de RES."
+      }
+    ]
+  },
+  {
+    id: "MU-012",
+    type: "Campe\xF3n",
+    keywords: [],
+    paqueteId: "mutacion",
+    facciones: [
+      "Mutaci\xF3n"
+    ],
+    roles: [
+      "Normal"
+    ],
+    catHabilidad: [
+      "Efecto"
+    ],
+    name: "Cachorro del Conf\xEDn",
+    rarity: "Com\xFAn",
+    limiteCopias: "3",
+    esencia: "Bestia",
+    flavorText: "Todo Conf\xEDn empieza donde un cachorro se atreve a cruzar.",
+    stats: {
+      cost: 1,
+      poder: 2,
+      resistencia: 2
+    },
+    efectos: [
+      {
+        tipo: "pasivo",
+        trigger: "al_atacar",
+        efecto: "change_type",
+        objetivo: {
+          tipo: "self",
+          controlador: "propio",
+          zona: "campo"
+        },
+        cambioTipo: {
+          esencia: "Elemental"
+        },
+        duracion: "turno",
+        texto: "Al atacar, esta carta se convierte en esencia Elemental, hasta el final del turno."
+      }
+    ],
+    createdAt: "2026-11-10T00:12:00.082Z",
+    updatedAt: "2026-11-13T04:26:26.499Z"
+  },
+  {
+    id: "MU-013",
+    type: "Campe\xF3n",
+    keywords: [],
+    paqueteId: "mutacion",
+    facciones: [
+      "Mutaci\xF3n"
+    ],
+    roles: [
+      "Normal"
+    ],
+    catHabilidad: [
+      "Efecto"
+    ],
+    name: "Ra\xEDz Inquieta",
+    rarity: "Com\xFAn",
+    limiteCopias: "3",
+    esencia: "Elemental",
+    flavorText: "Una ra\xEDz que no se queda quieta es una ra\xEDz que sobrevive.",
+    stats: {
+      cost: 1,
+      poder: 1,
+      resistencia: 3
+    },
+    efectos: [
+      {
+        tipo: "pasivo",
+        trigger: "al_cambiar_de_esencia",
+        efecto: "buff",
+        objetivo: {
+          tipo: "self",
+          controlador: "propio",
+          zona: "campo"
+        },
+        stats: {
+          ATQ: 0,
+          RES: 2
+        },
+        duracion: "turno",
+        texto: "Cuando esta carta cambie de Esencia, esta carta gana 2 de RES, hasta el final del turno."
+      }
+    ],
+    createdAt: "2026-11-10T00:12:00.082Z",
+    updatedAt: "2026-11-13T04:25:40.642Z"
+  },
+  {
+    id: "MU-014",
+    type: "Campe\xF3n",
+    keywords: [],
+    paqueteId: "mutacion",
+    facciones: [
+      "Mutaci\xF3n"
+    ],
+    roles: [
+      "Normal"
+    ],
+    catHabilidad: [
+      "Efecto"
+    ],
+    name: "Quimera de Orilla",
+    rarity: "Com\xFAn",
+    limiteCopias: "2",
+    esencia: "Bestia",
+    flavorText: "Ni de aqu\xED ni de all\xE1: de donde la necesiten.",
+    stats: {
+      cost: 2,
+      poder: 3,
+      resistencia: 3
+    },
+    efectos: [
+      {
+        tipo: "disparo",
+        costo: {
+          tipo: "eter",
+          cantidad: 1
+        },
+        activacion: "una_por_turno",
+        efecto: "change_type",
+        objetivo: {
+          tipo: "campeon",
+          controlador: "propio",
+          zona: "campo"
+        },
+        cambioTipo: {
+          esencia: "Bestia"
+        },
+        duracion: "turno",
+        texto: "Puedes pagar 1 \xC9ter, una vez por turno, un Campe\xF3n que controles se convierte en esencia Bestia, hasta el final del turno."
+      }
+    ],
+    createdAt: "2026-11-10T00:12:00.082Z",
+    updatedAt: "2026-11-13T04:26:42.259Z"
+  },
+  {
+    id: "MU-015",
+    type: "Campe\xF3n",
+    keywords: [],
+    paqueteId: "mutacion",
+    facciones: [
+      "Mutaci\xF3n"
+    ],
+    roles: [
+      "Normal"
+    ],
+    catHabilidad: [
+      "Efecto"
+    ],
+    name: "Eco de Humo",
+    rarity: "Com\xFAn",
+    limiteCopias: "2",
+    esencia: "Elemental",
+    flavorText: "Llama a quien comparte el rugido.",
+    stats: {
+      cost: 2,
+      poder: 2,
+      resistencia: 3
+    },
+    efectos: [
+      {
+        tipo: "pasivo",
+        trigger: "al_invocar",
+        efecto: "tutor",
+        zonaOrigen: "mazo",
+        objetivo: {
+          tipo: "campeon",
+          zonaDestino: "mano",
+          filtros: {
+            esencia: "Bestia",
+            costeMax: 2
+          }
+        },
+        texto: "Al ser invocada, puedes buscar 1 Campe\xF3n coste 2 o menos de esencia Bestia de tu mazo y agr\xE9galo a tu mano."
+      }
+    ],
+    createdAt: "2026-11-10T00:12:00.082Z",
+    updatedAt: "2026-11-13T04:18:29.177Z"
+  },
+  {
+    id: "MU-016",
+    type: "Campe\xF3n",
+    keywords: [],
+    paqueteId: "mutacion",
+    facciones: [
+      "Mutaci\xF3n"
+    ],
+    roles: [
+      "Normal"
+    ],
+    catHabilidad: [
+      "Efecto"
+    ],
+    name: "Taller Vivo",
+    rarity: "Poco Com\xFAn",
+    limiteCopias: "2",
+    esencia: "Constructo",
+    flavorText: "Lo que sale del taller ya no recuerda lo que era.",
+    stats: {
+      cost: 2,
+      poder: 2,
+      resistencia: 4
+    },
+    efectos: [
+      {
+        tipo: "disparo",
+        costo: {
+          tipo: "eter",
+          cantidad: 1
+        },
+        activacion: "una_por_turno",
+        efecto: "change_type",
+        objetivo: {
+          tipo: "campeon",
+          controlador: "rival",
+          zona: "campo"
+        },
+        cambioTipo: {
+          esenciaElegida: true
+        },
+        duracion: "turno",
+        texto: "Puedes pagar 1 \xC9ter, una vez por turno, un Campe\xF3n que controla el rival se convierte en la esencia que elijas, hasta el final del turno."
+      }
+    ],
+    createdAt: "2026-11-10T00:12:00.082Z",
+    updatedAt: "2026-11-13T04:18:00.913Z"
+  },
+  {
+    id: "MU-017",
+    type: "Campe\xF3n",
+    keywords: [],
+    paqueteId: "mutacion",
+    facciones: [
+      "Mutaci\xF3n"
+    ],
+    roles: [
+      "Normal"
+    ],
+    catHabilidad: [
+      "Efecto"
+    ],
+    name: "Pastor de Cenizas",
+    rarity: "Poco Com\xFAn",
+    limiteCopias: "2",
+    esencia: "Humano",
+    flavorText: "Cuida de lo que el fuego dej\xF3 con colmillos.",
+    stats: {
+      cost: 3,
+      poder: 3,
+      resistencia: 4
+    },
+    efectos: [
+      {
+        tipo: "continuo",
+        efecto: "buff",
+        stats: {
+          ATQ: 1,
+          RES: 0
+        },
+        objetivo: {
+          tipo: "todos_campeones_propios",
+          controlador: "propio",
+          zona: "campo",
+          filtros: {
+            esencia: "Bestia"
+          }
+        },
+        duracion: "mientras_en_campo",
+        texto: "Todos tus Campeones de esencia Bestia ganan 1 de ATQ, mientras esta carta est\xE9 en el campo."
+      }
+    ],
+    createdAt: "2026-11-10T00:12:00.082Z",
+    updatedAt: "2026-11-12T05:26:43.927Z"
+  },
+  {
+    id: "MU-018",
+    type: "Campe\xF3n",
+    keywords: [],
+    paqueteId: "mutacion",
+    facciones: [
+      "Mutaci\xF3n"
+    ],
+    roles: [
+      "Normal"
+    ],
+    catHabilidad: [
+      "Efecto"
+    ],
+    name: "Hortelana del Derrame",
+    rarity: "Poco Com\xFAn",
+    limiteCopias: "2",
+    esencia: "Humano",
+    flavorText: "Donde otros ven una plaga, \xE9l ve una cosecha.",
+    stats: {
+      cost: 3,
+      poder: 3,
+      resistencia: 4
+    },
+    efectos: [
+      {
+        tipo: "pasivo",
+        trigger: "cuando_campeon_propio_cambia_esencia",
+        efecto: "draw",
+        objetivo: {
+          tipo: "carta",
+          controlador: "propio",
+          zona: "mazo"
+        },
+        cantidad: 1,
+        obligatorio: true,
+        duracion: "1_por_turno",
+        texto: "Cuando un Campe\xF3n que controles cambie de Esencia, roba 1 carta de tu mazo, una vez por turno."
+      }
+    ],
+    createdAt: "2026-11-10T00:12:00.082Z",
+    updatedAt: "2026-11-13T04:27:08.564Z"
+  },
+  {
+    id: "MU-019",
+    type: "Campe\xF3n",
+    keywords: [
+      "Protector"
+    ],
+    paqueteId: "mutacion",
+    facciones: [
+      "Mutaci\xF3n"
+    ],
+    roles: [
+      "Normal"
+    ],
+    catHabilidad: [
+      "Normal"
+    ],
+    name: "Behemot del Derrame",
+    rarity: "Poco Com\xFAn",
+    limiteCopias: "2",
+    esencia: "Bestia",
+    flavorText: "Cambi\xF3 tanto que ya nada logra cambiarlo.",
+    stats: {
+      cost: 4,
+      poder: 3,
+      resistencia: 6
+    },
+    efectos: [],
+    createdAt: "2026-11-10T00:12:00.082Z",
+    updatedAt: "2026-11-13T04:27:44.317Z"
+  },
+  {
+    id: "MU-020",
+    type: "Campe\xF3n",
+    keywords: [],
+    paqueteId: "mutacion",
+    facciones: [
+      "Mutaci\xF3n"
+    ],
+    roles: [
+      "Normal"
+    ],
+    catHabilidad: [
+      "Efecto"
+    ],
+    name: "Mosaico",
+    rarity: "Rara",
+    limiteCopias: "2",
+    esencia: "Constructo",
+    flavorText: "Cada pieza fue otra cosa antes de ser esta.",
+    stats: {
+      cost: 5,
+      poder: 4,
+      resistencia: 6
+    },
+    efectos: [
+      {
+        tipo: "disparo",
+        costo: {
+          tipo: "eter",
+          cantidad: 3
+        },
+        activacion: "una_por_turno",
+        efecto: "change_type",
+        objetivo: {
+          tipo: "todos_campeones_propios",
+          controlador: "propio",
+          zona: "campo"
+        },
+        cambioTipo: {
+          esenciaElegida: true
+        },
+        duracion: "turno",
+        texto: "Puedes pagar 3 \xC9ter, una vez por turno, todos tus Campeones se convierten en la esencia que elijas, hasta el final del turno."
+      }
+    ],
+    createdAt: "2026-11-10T00:12:00.082Z",
+    updatedAt: "2026-11-13T04:29:39.015Z"
+  },
+  {
+    id: "MU-021",
+    type: "M\xEDstica",
+    keywords: [],
+    paqueteId: "mutacion",
+    name: "Plaga de Facci\xF3n",
+    rarity: "Rara",
+    limiteCopias: "2",
+    flavorText: "Lo que no se deja injertar, se contagia.",
+    stats: {
+      cost: 2
+    },
+    efectos: [
+      {
+        tipo: "hechizo",
+        efecto: "change_type",
+        objetivo: {
+          tipo: "campeon",
+          controlador: "rival",
+          zona: "campo"
+        },
+        cambioTipo: {
+          faccion: "Mutaci\xF3n"
+        },
+        duracion: "turno",
+        texto: "Un Campe\xF3n que controla el rival se convierte en facci\xF3n Mutaci\xF3n, hasta el final del turno."
+      }
+    ],
+    createdAt: "2026-11-10T00:12:00.082Z",
+    updatedAt: "2026-11-13T04:28:40.526Z"
+  },
+  {
+    id: "MU-022",
+    type: "M\xEDstica",
+    keywords: [],
+    paqueteId: "mutacion",
+    name: "Muda S\xFAbita",
+    rarity: "Com\xFAn",
+    limiteCopias: "3",
+    flavorText: "Basta un instante para ser otra cosa.",
+    stats: {
+      cost: 1
+    },
+    efectos: [
+      {
+        tipo: "hechizo",
+        efecto: "change_type",
+        objetivo: {
+          tipo: "campeon",
+          controlador: "propio",
+          zona: "campo"
+        },
+        cambioTipo: {
+          esenciaElegida: true
+        },
+        duracion: "turno",
+        texto: "Un Campe\xF3n que controles se convierte en la esencia que elijas, hasta el final del turno."
+      }
+    ],
+    createdAt: "2026-11-10T00:12:00.082Z",
+    updatedAt: "2026-11-13T04:35:27.326Z"
+  },
+  {
+    id: "MU-023",
+    type: "M\xEDstica",
+    keywords: [],
+    paqueteId: "mutacion",
+    name: "Contagio",
+    rarity: "Rara",
+    limiteCopias: "2",
+    flavorText: "Lo que t\xFA llamas corrupci\xF3n, yo lo llamo hijo.",
+    stats: {
+      cost: 4
+    },
+    efectos: [
+      {
+        tipo: "hechizo",
+        efecto: "change_type",
+        objetivo: {
+          tipo: "todos_campeones_rivales",
+          controlador: "rival",
+          zona: "campo"
+        },
+        cambioTipo: {
+          esenciaElegida: true
+        },
+        duracion: "turno",
+        texto: "Todos los Campeones que controla el rival se convierten en la esencia que elijas, hasta el final del turno."
+      }
+    ],
+    createdAt: "2026-11-10T00:12:00.082Z",
+    updatedAt: "2026-11-13T04:33:00.411Z"
+  },
+  {
+    id: "MU-024",
+    type: "M\xEDstica",
+    keywords: [],
+    paqueteId: "mutacion",
+    name: "Savia Prestada",
+    rarity: "Com\xFAn",
+    limiteCopias: "2",
+    flavorText: "La savia que se presta siempre vuelve, con inter\xE9s.",
+    stats: {
+      cost: 2
+    },
+    efectos: [
+      {
+        tipo: "hechizo",
+        efecto: "return_ether",
+        cantidad: 3,
+        esHasta: true,
+        objetivo: {
+          tipo: "eter",
+          controlador: "propio",
+          zona: "pagado",
+          zonaDestino: "reserva",
+          controladorDestino: "propio"
+        },
+        texto: "Devuelve hasta 3 \xC9ter de tu zona de pago a tu Reserva."
+      }
+    ],
+    createdAt: "2026-11-10T00:12:00.082Z",
+    updatedAt: "2026-11-13T04:31:43.033Z"
+  },
+  {
+    id: "MU-025",
+    type: "M\xEDstica",
+    keywords: [],
+    paqueteId: "mutacion",
+    name: "Furia de Muda",
+    rarity: "Com\xFAn",
+    limiteCopias: "2",
+    flavorText: "Reci\xE9n mudado, a\xFAn no sabe quedarse quieto.",
+    stats: {
+      cost: 1
+    },
+    efectos: [
+      {
+        tipo: "hechizo",
+        efecto: "grant_keyword",
+        keyword: "Carga",
+        cantidad: 1,
+        objetivo: {
+          tipo: "campeon",
+          controlador: "propio",
+          zona: "campo"
+        },
+        duracion: "turno",
+        texto: "1 Campe\xF3n que controles gana Carga, hasta el final del turno."
+      }
+    ],
+    createdAt: "2026-11-10T00:12:00.082Z",
+    updatedAt: "2026-11-13T04:34:03.724Z"
+  },
+  {
+    id: "MU-026",
+    type: "M\xEDstica",
+    keywords: [],
+    paqueteId: "mutacion",
+    name: "Marea de Savia",
+    rarity: "Poco Com\xFAn",
+    limiteCopias: "2",
+    flavorText: "Donde las ra\xEDces se tocan, todo crece a la vez.",
+    stats: {
+      cost: 3
+    },
+    efectos: [
+      {
+        tipo: "hechizo",
+        efecto: "buff",
+        stats: {
+          ATQ: 1,
+          RES: 1
+        },
+        objetivo: {
+          tipo: "todos_campeones_propios",
+          controlador: "propio",
+          zona: "campo",
+          filtros: {
+            comparteEsenciaConOtro: true
+          }
+        },
+        duracion: "turno",
+        texto: "Todos tus Campeones que compartan Esencia con otro Campe\xF3n que controles ganan 1 de ATQ y 1 de RES, hasta el final del turno."
+      }
+    ],
+    createdAt: "2026-11-10T00:12:00.082Z",
+    updatedAt: "2026-11-13T04:33:37.708Z"
+  },
+  {
+    id: "MU-027",
+    type: "Arcana",
+    keywords: [],
+    paqueteId: "mutacion",
+    name: "Cosecha de Muda",
+    rarity: "Com\xFAn",
+    limiteCopias: "3",
+    flavorText: "Cada cambio deja un fruto a quien sabe esperarlo.",
+    stats: {
+      cost: 2
+    },
+    efectos: [
+      {
+        tipo: "hechizo",
+        trigger: "cuando_campeon_propio_cambia_esencia",
+        costo: {
+          tipo: "bloqueo_fijo",
+          cantidad: 1
+        },
+        activacion: "una_por_turno",
+        efecto: "buff",
+        stats: {
+          ATQ: 1,
+          RES: 1
+        },
+        objetivo: {
+          tipo: "campeon",
+          controlador: "propio",
+          zona: "campo"
+        },
+        duracion: "turno",
+        reagrupar: {
+          fase: "alba",
+          turno: "propio"
+        },
+        texto: "Una vez por turno, cuando un Campe\xF3n que controles cambie de Esencia, bloquea 1 \xC9ter, un Campe\xF3n que controles gana 1 de ATQ y 1 de RES, hasta el final del turno. Al inicio de tu Alba reagrupa el \xC9ter usado por este efecto."
+      }
+    ],
+    createdAt: "2026-11-10T00:12:00.082Z",
+    updatedAt: "2026-11-13T19:55:29.635Z"
+  },
+  {
+    id: "MU-028",
+    type: "Arcana",
+    keywords: [],
+    paqueteId: "mutacion",
+    name: "Savia de Emergencia",
+    rarity: "Com\xFAn",
+    limiteCopias: "2",
+    flavorText: "Lo que cae tambi\xE9n siembra.",
+    stats: {
+      cost: 2
+    },
+    efectos: [
+      {
+        tipo: "hechizo",
+        trigger: "cuando_campeon_propio_al_cementerio",
+        costo: {
+          tipo: "bloqueo_fijo",
+          cantidad: 1
+        },
+        activacion: "una_por_turno",
+        efecto: "return_ether",
+        cantidad: 2,
+        esHasta: true,
+        objetivo: {
+          tipo: "eter",
+          controlador: "propio",
+          zona: "pagado",
+          zonaDestino: "reserva",
+          controladorDestino: "propio"
+        },
+        reagrupar: {
+          fase: "alba",
+          turno: "propio"
+        },
+        texto: "Una vez por turno, cuando un Campe\xF3n que controles sea enviado al Cementerio, bloquea 1 \xC9ter, devuelve hasta 2 \xC9ter de tu zona de pago a tu Reserva. Al inicio de tu Alba reagrupa el \xC9ter usado por este efecto."
+      }
+    ],
+    createdAt: "2026-11-10T00:12:00.082Z",
+    updatedAt: "2026-11-13T04:40:10.924Z"
+  },
+  {
+    id: "MU-029",
+    type: "Arcana",
+    keywords: [],
+    paqueteId: "mutacion",
+    name: "Aliento del V\xF3rtice",
+    rarity: "Com\xFAn",
+    limiteCopias: "2",
+    flavorText: "El V\xF3rtice no se detiene: solo respira.",
+    stats: {
+      cost: 2
+    },
+    condicion: {
+      trigger: "inicio_choque",
+      controladorTrigger: "propio",
+      condiciones: [
+        {
+          tipo: "controlar_minimo",
+          cantidad: 2,
+          objetivo: {
+            tipo: "campeon",
+            controlador: "propio"
+          }
+        }
+      ]
+    },
+    efectos: [
+      {
+        tipo: "hechizo",
+        efecto: "return_ether",
+        cantidad: 2,
+        esHasta: true,
+        objetivo: {
+          tipo: "eter",
+          controlador: "propio",
+          zona: "pagado",
+          zonaDestino: "reserva",
+          controladorDestino: "propio"
+        },
+        texto: "Devuelve hasta 2 \xC9ter de tu zona de pago a tu Reserva."
+      }
+    ],
+    createdAt: "2026-11-10T00:12:00.082Z",
+    updatedAt: "2026-11-13T04:36:31.439Z"
+  },
+  {
+    id: "MU-030",
+    type: "Arcana",
+    keywords: [],
+    paqueteId: "mutacion",
+    name: "Reflejo del Cambio",
+    rarity: "Rara",
+    limiteCopias: "2",
+    flavorText: "Quien te mira cambia. Quien te teme, tambi\xE9n.",
+    stats: {
+      cost: 3
+    },
+    efectos: [
+      {
+        tipo: "hechizo",
+        trigger: "cuando_juegas_mistica",
+        controladorTrigger: "rival",
+        costo: {
+          tipo: "bloqueo_fijo",
+          cantidad: 2
+        },
+        activacion: "una_por_turno",
+        efecto: "change_type",
+        objetivo: {
+          tipo: "campeon",
+          controlador: "rival",
+          zona: "campo"
+        },
+        cambioTipo: {
+          esenciaElegida: true
+        },
+        duracion: "turno",
+        reagrupar: {
+          fase: "alba",
+          turno: "propio"
+        },
+        texto: "Una vez por turno, cuando el rival juegue una M\xEDstica, bloquea 2 \xC9ter, un Campe\xF3n que controla el rival se convierte en la esencia que elijas, hasta el final del turno. Al inicio de tu Alba reagrupa el \xC9ter usado por este efecto."
+      }
+    ],
+    createdAt: "2026-11-10T00:12:00.082Z",
+    updatedAt: "2026-11-13T19:56:34.459Z"
+  },
+  {
+    id: "MU-031",
+    type: "Arcana",
+    keywords: [],
+    paqueteId: "mutacion",
+    name: "Floraci\xF3n",
+    rarity: "Rara",
+    limiteCopias: "1",
+    flavorText: "Cuando el huerto est\xE1 lleno, todo florece a la vez.",
+    stats: {
+      cost: 3
+    },
+    condicion: {
+      trigger: "activacion",
+      condiciones: [
+        {
+          tipo: "controlar_minimo",
+          cantidad: 4,
+          objetivo: {
+            tipo: "campeon",
+            controlador: "propio"
+          }
+        }
+      ]
+    },
+    efectos: [
+      {
+        tipo: "hechizo",
+        efecto: "buff",
+        stats: {
+          ATQ: 2,
+          RES: 2
+        },
+        objetivo: {
+          tipo: "todos_campeones_propios",
+          controlador: "propio",
+          zona: "campo"
+        },
+        duracion: "turno",
+        texto: "Todos tus Campeones ganan 2 de ATQ y 2 de RES, hasta el final del turno."
+      }
+    ],
+    createdAt: "2026-11-10T00:12:00.082Z",
+    updatedAt: "2026-11-13T04:37:35.280Z"
+  },
+  {
+    id: "MU-032",
+    type: "V\xEDnculo",
+    keywords: [],
+    paqueteId: "mutacion",
+    limiteCopias: "1",
+    stats: {
+      cost: 0
+    },
+    name: "Primer Injerto",
+    rarity: "Com\xFAn",
+    flavorText: "Todo cambio empieza con una rama que acepta otra.",
+    efectos: [
+      {
+        tipo: "vinculo",
+        trigger: "inicio_alba",
+        efecto: "change_type",
+        objetivo: {
+          tipo: "campeon",
+          controlador: "propio",
+          zona: "campo"
+        },
+        cambioTipo: {
+          esenciaElegida: true
+        },
+        duracion: "turno",
+        texto: "Al inicio de tu Alba, un Campe\xF3n que controles se convierte en la esencia que elijas, hasta el final del turno."
+      }
+    ],
+    createdAt: "2026-11-10T00:12:00.082Z",
+    updatedAt: "2026-11-13T04:43:54.848Z"
+  },
+  {
+    id: "MU-033",
+    type: "V\xEDnculo",
+    keywords: [],
+    paqueteId: "mutacion",
+    limiteCopias: "1",
+    stats: {
+      cost: 0
+    },
+    name: "Cr\xEDa del V\xF3rtice",
+    rarity: "Com\xFAn",
+    flavorText: "Nace ya girando.",
+    efectos: [
+      {
+        tipo: "vinculo",
+        trigger: "inicio_choque",
+        efecto: "grant_keyword",
+        keyword: "Carga",
+        objetivo: {
+          tipo: "campeon",
+          controlador: "propio",
+          zona: "campo"
+        },
+        duracion: "turno",
+        texto: "Al inicio de tu Choque, un Campe\xF3n que controles gana Carga, hasta el final del turno."
+      }
+    ],
+    createdAt: "2026-11-10T00:12:00.082Z",
+    updatedAt: "2026-11-13T04:43:43.008Z"
+  },
+  {
+    id: "MU-034",
+    type: "V\xEDnculo",
+    keywords: [],
+    paqueteId: "mutacion",
+    limiteCopias: "1",
+    stats: {
+      cost: 0
+    },
+    name: "Ra\xEDz Compartida",
+    rarity: "Com\xFAn",
+    flavorText: "Bajo tierra, todas las ra\xEDces se tocan.",
+    efectos: [
+      {
+        tipo: "vinculo",
+        efecto: "buff",
+        stats: {
+          ATQ: 0,
+          RES: 1
+        },
+        objetivo: {
+          tipo: "todos_campeones_propios",
+          controlador: "propio",
+          zona: "campo",
+          filtros: {
+            comparteEsenciaConOtro: true
+          }
+        },
+        duracion: "mientras_en_campo",
+        texto: "Todos tus Campeones que compartan Esencia con otro Campe\xF3n que controles ganan 1 de RES, mientras esta carta est\xE9 en el campo."
+      }
+    ],
+    createdAt: "2026-11-10T00:12:00.082Z",
+    updatedAt: "2026-11-13T04:43:32.248Z"
+  },
+  {
+    id: "MU-035",
+    type: "V\xEDnculo",
+    keywords: [],
+    paqueteId: "mutacion",
+    limiteCopias: "1",
+    stats: {
+      cost: 0
+    },
+    name: "Savia del Conf\xEDn",
+    rarity: "Poco Com\xFAn",
+    flavorText: "En el Conf\xEDn, quien se parece se fortalece.",
+    efectos: [
+      {
+        tipo: "vinculo",
+        trigger: "inicio_alba",
+        requisitoCampo: {
+          tipo: "misma_esencia",
+          minimo: 3
+        },
+        efecto: "buff",
+        stats: {
+          ATQ: 2,
+          RES: 2
+        },
+        objetivo: {
+          tipo: "campeon",
+          controlador: "propio",
+          zona: "campo"
+        },
+        duracion: "turno",
+        texto: "Al inicio de tu Alba, si controlas 3 o m\xE1s Campeones de una misma Esencia, un Campe\xF3n que controles gana 2 de ATQ y 2 de RES, hasta el final del turno."
+      }
+    ],
+    createdAt: "2026-11-10T00:12:00.082Z",
+    updatedAt: "2026-11-13T04:42:29.750Z"
+  },
+  {
+    id: "MU-036",
+    type: "V\xEDnculo",
+    keywords: [],
+    paqueteId: "mutacion",
+    limiteCopias: "1",
+    stats: {
+      cost: 0
+    },
+    name: "Reflejo Vivo",
+    rarity: "Poco Com\xFAn",
+    flavorText: "Responde antes de que termines de preguntar.",
+    efectos: [
+      {
+        tipo: "vinculo",
+        trigger: "inicio_alba",
+        controladorTrigger: "rival",
+        efecto: "grant_keyword",
+        keyword: "Presteza",
+        objetivo: {
+          tipo: "campeon",
+          controlador: "propio",
+          zona: "campo"
+        },
+        duracion: "turno",
+        texto: "Al inicio de la Alba del rival, un Campe\xF3n que controles gana Presteza, hasta el final del turno."
+      }
+    ],
+    createdAt: "2026-11-10T00:12:00.082Z",
+    updatedAt: "2026-11-13T19:56:27.555Z"
+  },
+  {
+    id: "MU-037",
+    type: "V\xEDnculo",
+    keywords: [],
+    paqueteId: "mutacion",
+    limiteCopias: "1",
+    stats: {
+      cost: 0
+    },
+    name: "Plaga Perenne",
+    rarity: "Rara",
+    flavorText: "Lo que t\xFA llamas corrupci\xF3n, yo lo llamo hijo.",
+    efectos: [
+      {
+        tipo: "vinculo",
+        trigger: "inicio_choque",
+        efecto: "change_type",
+        objetivo: {
+          tipo: "campeon",
+          controlador: "rival",
+          zona: "campo"
+        },
+        cambioTipo: {
+          faccion: "Mutaci\xF3n"
+        },
+        duracion: "turno",
+        texto: "Al inicio de tu Choque, un Campe\xF3n que controla el rival se convierte en facci\xF3n Mutaci\xF3n, hasta el final del turno."
+      }
+    ],
+    createdAt: "2026-11-10T00:12:00.082Z",
+    updatedAt: "2026-11-13T04:41:07.029Z"
   }
 ];
 
@@ -2628,6 +5378,8 @@ var FuenteEfectos_default = [
 var ALL_CARDS = FuenteEfectos_default;
 var ESTASIS_CARDS = ALL_CARDS.filter((c) => c.paqueteId === "estasis");
 var DISONANCIA_CARDS = ALL_CARDS.filter((c) => c.paqueteId === "disonancia");
+var PURGA_CARDS = ALL_CARDS.filter((c) => c.paqueteId === "purga");
+var MUTACION_CARDS = ALL_CARDS.filter((c) => c.paqueteId === "mutacion");
 var PAQUETES = [
   {
     id: "estasis",
@@ -2648,12 +5400,29 @@ var PAQUETES = [
     entrega: "Primog\xE9nitos",
     distribucion: { eter: 15, principal: 45, vinculos: 6 },
     lore: 'Disonancia ("La Tormenta") es el mazo tem\xE1tico de la facci\xF3n Caos y la segunda entrega de Los Primog\xE9nitos. En el sur, donde el Eje termina en un Nudo, los primog\xE9nitos de Caos conocidos hasta ahora son hombres: despertaron con el cristal del Nudo clavado en el pecho, y el Nudo aprieta cada vez que el Eje tiembla. Mientras Est\xE1sis ancla, Disonancia aprieta: la Tormenta no retiene lo que toma, lo rompe y lo suelta. Ragnar, Voz del Nudo, es el primero de todos \u2014 el hombre que habla por el sur y el \xFAnico capaz de mirar a Aurora sin pesta\xF1ear.\n\nEl mazo juega con la presi\xF3n y la destrucci\xF3n: romper los Campeones del rival y estrangular su econom\xEDa de \xC9ter mientras los Campeones de Caos avanzan como la tormenta que no se detiene.'
+  },
+  {
+    id: "purga",
+    nombre: "Purga",
+    tipo: "Mazo Tem\xE1tico",
+    color: FACCION_COLORS.Purga,
+    facciones: ["Purga"],
+    entrega: "Primog\xE9nitos",
+    distribucion: { eter: 15, principal: 45, vinculos: 6 },
+    lore: 'Purga ("El Corte") es el mazo tem\xE1tico de la facci\xF3n Purga y la tercera entrega de Los Primog\xE9nitos. Cuando la Escisi\xF3n derram\xF3 el \xC9ter por los costados del Eje, la Casa Ra\xEDz, jardinera del Eje, se dividi\xF3 ante lo que el Derrame hab\xEDa tocado. Idris, el mayor, vio lo que ve un jardinero en una rama infectada: algo que se corta mientras el huerto todav\xEDa puede salvarse. Jur\xF3 podar todo lo que el Derrame tocara, empezando por lo que m\xE1s amaba. Su cristal no brilla: afila.\n\nIdris no pod\xF3 solo. A su lado se sentaron los Magos del Tribunal de la Poda, quienes leen el \xC9ter como una sentencia: cada M\xEDstica es un juicio y cada Arcana, una pena que espera su hora. Son podadores, no verdugos: cortan lo que hay que cortar y nada m\xE1s.\n\nEl mazo juega con la precisi\xF3n: sentenciar, negar, limpiar y destruir. Pocos Campeones, muchos hechizos, y cada hechizo fabrica la carne que el Soberano sacrificar\xE1.'
+  },
+  {
+    id: "mutacion",
+    nombre: "Mutaci\xF3n",
+    tipo: "Mazo Tem\xE1tico",
+    color: FACCION_COLORS.Mutaci\u00F3n,
+    facciones: ["Mutaci\xF3n"],
+    entrega: "Primog\xE9nitos",
+    distribucion: { eter: 15, principal: 45, vinculos: 6 },
+    lore: 'Mutaci\xF3n ("El Cambio") es el mazo tem\xE1tico de la facci\xF3n Mutaci\xF3n y la cuarta entrega de Los Primog\xE9nitos. Liora, la hermana menor de la Casa Ra\xEDz, mir\xF3 lo que el Derrame hab\xEDa tocado y vio lo que ve una jardinera en la primera hoja de una especie que nadie ha visto: un brote. No cree que el cambio sea una enfermedad: cree que es lo \xFAnico que no muere. Para Mutaci\xF3n el Eje no se rompi\xF3: cambi\xF3.\n\nEl Derrame no toc\xF3 solo a un ni\xF1o. Toc\xF3 una manada, una orilla, un taller, una colina entera. Lo que sali\xF3 de ah\xED ya no ten\xEDa nombre en ninguna casa: bestias con voz, elementales sin cauce, humanos que dejaron de parecerlo. Liora los reuni\xF3. Ninguno naci\xF3 as\xED: todos cambiaron.\n\nEl mazo juega con la transformaci\xF3n: cambiar de Esencia, copiar y crecer, y el cambio se alimenta a s\xED mismo.'
   }
 ];
-var CARD_ART_IDS = /* @__PURE__ */ new Set([
-  ...ESTASIS_CARDS.map((c) => c.id),
-  ...DISONANCIA_CARDS.map((c) => c.id)
-]);
+var CARD_ART_IDS = new Set(ALL_CARDS.map((c) => c.id));
 
 // src/online/game/cards.ts
 var INDICE_CARTAS = new Map(ALL_CARDS.map((c) => [c.id, c]));
@@ -2703,12 +5472,18 @@ function esPermanenteEnMesa(card) {
 function esCostoBloqueo(costo) {
   return costo?.tipo === "eter_bloqueado" || costo?.tipo === "bloqueo_fijo";
 }
+function esContinuoAuraDeCampo(e) {
+  if (e.tipo !== "continuo" || e.duracion !== "mientras_en_campo") return false;
+  if (e.costo && e.costo.tipo !== "ninguno") return false;
+  if (e.trigger && e.trigger !== "ninguno") return false;
+  return e.efecto === "buff" || e.efecto === "debuff" || e.efecto === "grant_keyword";
+}
 function efectoActivableDe(card, conObjetivo) {
   if (!("efectos" in card) || !card.efectos) return null;
   if (conObjetivo) {
-    return card.efectos.find((e) => e.tipo === "continuo" && !esCostoBloqueo(e.costo)) ?? null;
+    return card.efectos.find((e) => e.tipo === "continuo" && !esCostoBloqueo(e.costo) && !esContinuoAuraDeCampo(e)) ?? null;
   }
-  const continuoPago = card.efectos.find((e) => e.tipo === "continuo" && !esCostoBloqueo(e.costo));
+  const continuoPago = card.efectos.find((e) => e.tipo === "continuo" && !esCostoBloqueo(e.costo) && !esContinuoAuraDeCampo(e));
   return card.efectos.find((e) => e.tipo === "disparo") ?? continuoPago ?? null;
 }
 function esEfectoDeBloqueoManual(e) {
@@ -3276,7 +6051,10 @@ function ultimoCambio(s, instId, atributo) {
   const lista = s.cambiosAtributo;
   if (!lista?.length) return void 0;
   for (let i = lista.length - 1; i >= 0; i--) {
-    if (lista[i].instId === instId && lista[i].atributo === atributo) return lista[i];
+    const c = lista[i];
+    if (c.instId !== instId || c.atributo !== atributo) continue;
+    if (c.mientrasEter && !(s.instances[instId]?.eterBloqueado ?? []).includes(c.mientrasEter)) continue;
+    return c;
   }
   return void 0;
 }
@@ -3305,6 +6083,38 @@ function faccionesDe(s, instId) {
   const meta = metaDe(s, instId);
   return meta && "facciones" in meta ? meta.facciones : void 0;
 }
+function controladorDeCampeon(s, instId) {
+  for (const j of ["A", "B"]) if (s.players[j].campo.campeones.includes(instId)) return j;
+  return void 0;
+}
+function conteoPorEsencia(s, jugador) {
+  const cuenta = /* @__PURE__ */ new Map();
+  for (const id of s.players[jugador].campo.campeones) {
+    if (!id) continue;
+    const e = esenciaDe(s, id);
+    if (e) cuenta.set(e, (cuenta.get(e) ?? 0) + 1);
+  }
+  return cuenta;
+}
+function esenciaQueCumple(s, jugador, minimo) {
+  const cuenta = conteoPorEsencia(s, jugador);
+  let mejor;
+  for (const e of ESENCIAS) {
+    const c = cuenta.get(e) ?? 0;
+    if (c >= minimo && (mejor === void 0 || c > (cuenta.get(mejor) ?? 0))) mejor = e;
+  }
+  return mejor;
+}
+function requisitoCampoCumple(s, jugador, requisito) {
+  if (!requisito) return true;
+  return esenciaQueCumple(s, jugador, requisito.minimo) !== void 0;
+}
+function comparteEsenciaConOtro(s, instId) {
+  const controlador = controladorDeCampeon(s, instId);
+  const esencia = esenciaDe(s, instId);
+  if (!controlador || !esencia) return false;
+  return s.players[controlador].campo.campeones.some((id) => !!id && id !== instId && esenciaDe(s, id) === esencia);
+}
 
 // src/online/game/efectosInstancia.ts
 function esEfectoCopiable(efecto) {
@@ -3330,7 +6140,7 @@ var SISTEMA_PROPIO = /* @__PURE__ */ new Set([
   "block_ether",
   "redirect"
 ]);
-var SOSTENIBLES = /* @__PURE__ */ new Set(["buff", "debuff", "grant_keyword"]);
+var SOSTENIBLES = /* @__PURE__ */ new Set(["buff", "debuff", "grant_keyword", "quitar_buffs"]);
 function claseDeContinuo(efecto) {
   const accion = efecto.efecto;
   if (!accion || SISTEMA_PROPIO.has(accion)) return "propio";
@@ -3339,12 +6149,12 @@ function claseDeContinuo(efecto) {
   if (SOSTENIBLES.has(accion) && (efecto.duracion === void 0 || efecto.duracion === "mientras_ester_bloqueado")) return "sostenido";
   return "instantaneo";
 }
-var SIN_ELECCION = /* @__PURE__ */ new Set(["draw", "scry", "rival_discard", "block_ether", "double_attack"]);
+var SIN_ELECCION = /* @__PURE__ */ new Set(["draw", "scry", "rival_discard", "block_ether", "double_attack", "mill", "draw_discard"]);
 function eligeObjetivo(efecto) {
   if (!efecto.efecto || SIN_ELECCION.has(efecto.efecto)) return false;
   if (efecto.efecto === "negar" && efecto.tipoNegacion !== "efecto_activo") return false;
   const tipo = efecto.objetivo?.tipo;
-  return !!tipo && !["self", "todos_campeones_propios", "todos_campeones_rivales", "equipped_champion", "invocado", "rival_hand"].includes(tipo);
+  return !!tipo && !["self", "todos_campeones_propios", "todos_campeones_rivales", "todos_campeones", "equipped_champion", "invocado", "rival_hand"].includes(tipo);
 }
 function efectosPrestadosDe(s, instId) {
   const lista = s.efectosPrestados;
@@ -3661,20 +6471,20 @@ function controladorEnCampo(s, id) {
   for (const j of ["A", "B"]) if (s.players[j].campo.campeones.includes(id)) return j;
   return void 0;
 }
-function dispararCampeonAlCementerio(s, ctx, cardInstanceId, controlador) {
+function dispararCampeonAlCementerio(s, ctx, cardInstanceId, controlador, causaEnvio) {
   if (!controlador) return;
   const meta = s.instances[cardInstanceId]?.cardId ? getCardMeta(s.instances[cardInstanceId].cardId) : null;
   if (!meta || !esCampeon(meta)) return;
   const orden = s.turno === "A" ? ["A", "B"] : ["B", "A"];
   for (const j of orden) {
-    dispararTrigger(s, ctx, "cuando-campeon-al-cementerio", j, instanciasEnCampo(s, j), { victimaId: cardInstanceId, controladorVictima: controlador });
+    dispararTrigger(s, ctx, "cuando-campeon-al-cementerio", j, instanciasEnCampo(s, j), { victimaId: cardInstanceId, controladorVictima: controlador, ...causaEnvio ? { causaEnvio } : {} });
   }
 }
 function zonaDeCementerio(s, cardInstanceId) {
   const owner = s.instances[cardInstanceId]?.owner;
   return owner !== void 0 && s.players[owner].exilio.includes(cardInstanceId) ? "1G" : "2G";
 }
-function enviarAlCementerio(s, ctx, cardInstanceId, desde) {
+function enviarAlCementerio(s, ctx, cardInstanceId, desde, causaEnvio) {
   const inst = s.instances[cardInstanceId];
   if (!inst) return;
   const controlador = controladorEnCampo(s, cardInstanceId) ?? (desde === "campo" ? inst.owner : void 0);
@@ -3697,7 +6507,7 @@ function enviarAlCementerio(s, ctx, cardInstanceId, desde) {
   liberarEterBloqueado(s, ctx, cardInstanceId, "1A");
   if (!alExilio) {
     dispararTrigger(s, ctx, "al-ser-enviado-al-cementerio", inst.owner, [cardInstanceId], { zonaOrigen: desde ?? origen });
-    dispararCampeonAlCementerio(s, ctx, cardInstanceId, controlador);
+    dispararCampeonAlCementerio(s, ctx, cardInstanceId, controlador, causaEnvio);
   }
   reiniciarEnCementerio(s, cardInstanceId);
 }
@@ -3840,12 +6650,79 @@ function destruirCarta(s, ctx, cardInstanceId, causa) {
   liberarArtefactosEquipados(s, ctx, cardInstanceId);
   if (!alExilio) {
     dispararTrigger(s, ctx, "al-ser-enviado-al-cementerio", inst.owner, [cardInstanceId], { zonaOrigen: origen });
-    dispararCampeonAlCementerio(s, ctx, cardInstanceId, controlador);
+    dispararCampeonAlCementerio(s, ctx, cardInstanceId, controlador, causa === "combate" ? "combate" : "destruccion");
   }
   ctx.emit({ type: "carta_muerta", cardInstanceId, jugador: inst.owner, causa });
   ctx.emit({ type: "destruccion", cardInstanceId, jugador: inst.owner, causa });
   reiniciarEnCementerio(s, cardInstanceId);
   return true;
+}
+
+// src/online/game/esencia.ts
+var controladorDe = controladorDeCampeon;
+function cambiarAtributo(s, ctx, cambio) {
+  const antes = cambio.atributo === "esencia" ? esenciaDe(s, cambio.instId) : void 0;
+  aplicarCambioAtributo(s, cambio);
+  if (cambio.atributo !== "esencia" || antes === cambio.valor) return;
+  const controlador = controladorDe(s, cambio.instId);
+  if (!controlador) return;
+  dispararTrigger(s, ctx, "al-cambiar-esencia", controlador, [cambio.instId], { victimaId: cambio.instId, controladorVictima: controlador });
+  const orden = s.turno === "A" ? ["A", "B"] : ["B", "A"];
+  for (const j of orden) {
+    dispararTrigger(s, ctx, "cuando-campeon-cambia-esencia", j, instanciasEnCampo(s, j), { victimaId: cambio.instId, controladorVictima: controlador });
+  }
+}
+function campeonesVigentesEsencia(s, p) {
+  return p.instIds.filter((id) => controladorDe(s, id) !== void 0);
+}
+function esenciaActual(s) {
+  const frente = s.esenciaPendientes?.[0];
+  return frente && campeonesVigentesEsencia(s, frente).length > 0 ? frente : void 0;
+}
+function descartarEsenciaMuertas(s) {
+  while (s.esenciaPendientes && s.esenciaPendientes.length > 0 && campeonesVigentesEsencia(s, s.esenciaPendientes[0]).length === 0) {
+    s.esenciaPendientes = s.esenciaPendientes.slice(1);
+  }
+  if (s.esenciaPendientes?.length === 0) delete s.esenciaPendientes;
+}
+function iniciarElegirEsencia(s, jugador, instIds, duracion) {
+  if (instIds.length === 0) return;
+  s.esenciaPendientes = [...s.esenciaPendientes ?? [], { jugador, instIds: [...instIds], duracion }];
+}
+function validarElegirEsencia(state, action) {
+  const pendiente = esenciaActual(state);
+  if (!pendiente) return "no hay una Esencia por elegir";
+  if (action.jugador !== void 0 && action.jugador !== pendiente.jugador) return "la Esencia la elige quien resuelve el efecto";
+  if (!ESENCIAS.includes(action.esencia)) return "esa Esencia no existe";
+  return null;
+}
+function ejecutarElegirEsencia(s, action, ctx) {
+  const pendiente = esenciaActual(s);
+  if (!pendiente) return;
+  s.esenciaPendientes = s.esenciaPendientes.slice(1);
+  if (s.esenciaPendientes.length === 0) delete s.esenciaPendientes;
+  for (const instId of campeonesVigentesEsencia(s, pendiente)) {
+    cambiarAtributo(s, ctx, { instId, atributo: "esencia", valor: action.esencia, ...pendiente.duracion });
+  }
+}
+var ESENCIAS_ELEGIBLES = ESENCIAS;
+function elegirEsenciaBot(s, jugador, pendiente) {
+  const objetivos = campeonesVigentesEsencia(s, pendiente);
+  const sobreRival = objetivos.length > 0 && objetivos.every((id) => controladorDe(s, id) !== jugador);
+  const dueno = sobreRival ? jugador === "A" ? "B" : "A" : jugador;
+  const cuenta = new Map(ESENCIAS.map((e) => [e, 0]));
+  for (const id of s.players[dueno].campo.campeones) {
+    if (!id || objetivos.includes(id)) continue;
+    const e = esenciaDe(s, id);
+    if (e) cuenta.set(e, (cuenta.get(e) ?? 0) + 1);
+  }
+  let mejor = ESENCIAS[0];
+  for (const e of ESENCIAS) {
+    const c = cuenta.get(e) ?? 0;
+    const cm = cuenta.get(mejor) ?? 0;
+    if (sobreRival ? c < cm : c > cm) mejor = e;
+  }
+  return { type: "elegir_esencia", esencia: mejor };
 }
 
 // src/online/game/payments.ts
@@ -4055,6 +6932,11 @@ function bloquearEter(s, ctx, jugador, eterIds, targetInstanceId, efectoIdx) {
   if (fuente?.efecto.costo?.tipo === "bloqueo_fijo" && fuente.efecto.activacion === "una_por_turno") {
     instTarget.efectosUsadosEsteTurno = [...instTarget.efectosUsadosEsteTurno ?? [], fuente.indice];
   }
+  for (const id of eterIds) {
+    const eterMeta = s.instances[id]?.cardId ? getCardMeta(s.instances[id].cardId) : null;
+    const pide = !!eterMeta && "efectos" in eterMeta && !!eterMeta.efectos?.some((e) => e.tipo === "bloqueo" && e.efecto === "change_type" && e.cambioTipo?.esenciaElegida);
+    if (pide) iniciarElegirEsencia(s, jugador, [targetInstanceId], { duenio: jugador, expira: "permanente", mientrasEter: id });
+  }
   ctx.emit({ type: "eter_bloqueado", jugador, eterIds, campeonId: targetInstanceId });
   return null;
 }
@@ -4086,7 +6968,7 @@ var rupturasHechas = (state) => state.rupturasEsteTurno ?? 0;
 var rupturasAgotadas = (state) => rupturasHechas(state) >= reglaNumero(state, "rupturasPorTurno", { jugador: state.turno });
 var atacarBloqueadoPorRuptura = (state) => rupturasHechas(state) > 0 && !reglaBool(state, "atacarTrasRuptura", { jugador: state.turno });
 var rivalDe = (state) => state.turno === "A" ? "B" : "A";
-function controladorDe(s, id) {
+function controladorDe2(s, id) {
   for (const j of ["A", "B"]) {
     if (s.players[j].campo.campeones.includes(id)) return j;
   }
@@ -4207,6 +7089,12 @@ function ejecutarDeclararAtaque(s, atacanteIds, ctx) {
   ctx.emit({ type: "ataque_declarado", jugador: s.turno, atacanteIds });
   const triggers = construirTriggers(s, "al-atacar", s.turno, atacanteIds);
   if (triggers.length === 0) dispararTrigger(s, ctx, "al-atacar", s.turno, atacanteIds);
+  const defensorAtaque = s.turno === "A" ? "B" : "A";
+  const reaccionanAlAtaque = instanciasEnCampo(s, defensorAtaque).filter((id) => {
+    const meta = s.instances[id]?.cardId ? getCardMeta(s.instances[id].cardId) : null;
+    return !!meta && "efectos" in meta && !!meta.efectos?.some((e) => e.trigger === "al_atacar" && e.controladorTrigger === "rival");
+  });
+  if (reaccionanAlAtaque.length > 0) dispararTrigger(s, ctx, "al-atacar", defensorAtaque, reaccionanAlAtaque);
   const apilados = triggers.length > 0 ? armarTriggers(s, ctx, triggers) : [];
   declararVentana(s, ctx, { tipo: "ataque", jugador: s.turno, ...apilados.length > 0 ? { triggers: apilados } : {} }, previos);
 }
@@ -4299,7 +7187,7 @@ function resolverCombate(s, ctx) {
   for (const id of [...muertosAtacantes, ...muertosBloqueadores]) {
     const killerId = killerDe.get(id);
     if (killerId && !controladores.has(killerId)) {
-      const c = controladorDe(s, killerId);
+      const c = controladorDe2(s, killerId);
       if (c) controladores.set(killerId, c);
     }
   }
@@ -4354,6 +7242,26 @@ function ejecutarElegirRuptura(s, atacanteId, vinculoSlot, ctx) {
   s.rupturasEsteTurno = rupturasHechas(s) + 1;
   if (s.combate) s.combate.rupturaUsadaEsteTurno = rupturasAgotadas(s);
   cerrarCombateSiDoubleAttack(s);
+}
+
+// src/online/game/observadores.ts
+var JSON_DE = {
+  "cuando-juegas-mistica": "cuando_juegas_mistica",
+  "cuando-activas-arcana": "cuando_activas_arcana"
+};
+function dispararObservadoresJugada(s, ctx, trigger, jugador, cartaId) {
+  const orden = s.turno === "A" ? ["A", "B"] : ["B", "A"];
+  for (const j of orden) {
+    dispararTrigger(s, ctx, trigger, j, instanciasEnCampo(s, j), { victimaId: cartaId, controladorVictima: jugador });
+  }
+  for (const id of s.players[jugador].campo.campeones) {
+    const inst = id ? s.instances[id] : void 0;
+    const meta = inst?.cardId ? getCardMeta(inst.cardId) : null;
+    if (!id || !inst || !meta || meta.type !== "Campe\xF3n") continue;
+    for (const efecto of efectosComandante(meta.efectoComandante)) {
+      if (efecto.trigger === JSON_DE[trigger] && efecto.controladorTrigger !== "rival") ejecutarComandanteConTrigger(s, ctx, inst, efecto, jugador);
+    }
+  }
 }
 
 // src/online/game/effectRegistry.ts
@@ -4884,6 +7792,9 @@ function declararRespuesta(s, ctx, respuesta, previos) {
       interpretEffect(s, ctx, inst, efecto, { jugador, fromTrigger: true, declararOpener: { efectoIdx }, ...costoPagado ? { costoPagado } : {} });
     }
     dispararTrigger(s, ctx, "al-resolver-cadena", jugador, [cardInstanceId], { declarar: true, cobrarCosto: false });
+    const tipoResp = (inst.cardId ? getCardMeta(inst.cardId) : null)?.type;
+    if (tipoResp === "M\xEDstica") dispararObservadoresJugada(s, ctx, "cuando-juegas-mistica", jugador, cardInstanceId);
+    else if (tipoResp === "Arcana") dispararObservadoresJugada(s, ctx, "cuando-activas-arcana", jugador, cardInstanceId);
   }
   declararVentana(s, ctx, { tipo: "respuesta", jugador, respuesta: { jugador, cardInstanceId, origen } }, previos);
 }
@@ -5480,6 +8391,9 @@ function ejecutarActivarDisparo(s, ctx, targetIds, jugador, efectoData) {
 function interpretEffect(s, ctx, inst, efectoData, payload) {
   const { efecto, objetivo, costo } = efectoData;
   const jugador = payload.jugador;
+  if (!requisitoCampoCumple(s, jugador, efectoData.requisitoCampo)) return;
+  const usoPorTurno = indiceDeUsoPorTurno(s, inst, efectoData);
+  if (usoPorTurno !== -1 && payload.contextoUso !== "objetivo-elegido" && (inst.efectosUsadosEsteTurno ?? []).includes(usoPorTurno)) return;
   if (payload.contextoUso === "objetivo-elegido" && payload.objetivoId) {
     if (!canExecuteEffect(s, efecto, jugador)) {
       return;
@@ -5489,6 +8403,7 @@ function interpretEffect(s, ctx, inst, efectoData, payload) {
       if (!candidatos.includes(payload.objetivoId)) return;
     }
     const targetIds2 = [payload.objetivoId];
+    if (!pagarExiliaCementerio(s, ctx, efectoData, jugador)) return;
     executeEffect(s, ctx, inst, efecto, targetIds2, jugador, efectoData);
     return;
   }
@@ -5518,7 +8433,7 @@ function interpretEffect(s, ctx, inst, efectoData, payload) {
     } else if (objetivo.tipo === "invocado") {
       targetIds = payload.contextoUso === "invocar" && payload.objetivoId && s.instances[payload.objetivoId] ? [payload.objetivoId] : [];
     } else {
-      targetIds = resolveTargets(s, objetivoCompleto(efectoData), jugador, inst.cardInstanceId);
+      targetIds = resolveTargets(s, objetivoConReferencia(s, inst, efectoData, payload), jugador, inst.cardInstanceId);
       if (efecto === "activar_disparo") targetIds = candidatosActivarDisparo(s, jugador, inst.cardInstanceId, efectoData);
     }
   }
@@ -5526,6 +8441,9 @@ function interpretEffect(s, ctx, inst, efectoData, payload) {
   const autoResolver = (efecto === "mover" || efecto === "return_ether" || efecto === "steal_ether") && efectoData.esHasta === true || efecto === "anclar_eter";
   const mergedFiltros = efectoData.filtros ? { ...objetivo?.filtros, ...efectoData.filtros } : objetivo?.filtros;
   const hasAutoSelect = mergedFiltros?.seleccionar != null;
+  if (usoPorTurno !== -1 && payload.contextoUso !== "objetivo-elegido" && !payload.declararOpener && (!objetivo || targetIds.length > 0 || objetivo.tipo === "self")) {
+    inst.efectosUsadosEsteTurno = [...inst.efectosUsadosEsteTurno ?? [], usoPorTurno];
+  }
   const needsPending = isTriggered ? targetIds.length > 0 && !hasAutoSelect : targetIds.length > 1;
   if (needsPlayerChoice(objetivo, efecto, efectoData.tipoNegacion) && !autoResolver && needsPending) {
     if (!canExecuteEffect(s, efecto, jugador)) {
@@ -5542,7 +8460,34 @@ function interpretEffect(s, ctx, inst, efectoData, payload) {
     return;
   }
   if (payload.declararOpener) return;
+  if (!pagarExiliaCementerio(s, ctx, efectoData, jugador)) return;
   executeEffect(s, ctx, inst, efecto, targetIds, jugador, efectoData);
+}
+function pagarExiliaCementerio(s, ctx, efectoData, jugador) {
+  const costo = efectoData.costo;
+  if (costo?.tipo !== "exilia_cementerio_propio") return true;
+  const n = costo.cantidad ?? 1;
+  const costeDe = (id) => (s.instances[id]?.cardId ? getCardMeta(s.instances[id].cardId)?.stats?.cost : void 0) ?? 0;
+  const elegibles = s.players[jugador].cementerio.filter((id) => {
+    const meta = s.instances[id]?.cardId ? getCardMeta(s.instances[id].cardId) : null;
+    return !!meta && esCampeon(meta) && esExiliable(s, id);
+  }).map((id, orden) => ({ id, orden, coste: costeDe(id) })).sort((a, b) => a.coste - b.coste || a.orden - b.orden);
+  if (elegibles.length < n) return false;
+  executeExile(s, ctx, elegibles.slice(0, n).map((e) => e.id));
+  return true;
+}
+function objetivoConReferencia(s, inst, efectoData, payload) {
+  const base = objetivoCompleto(efectoData);
+  const ref = base.filtros?.costeMaxDeReferencia;
+  if (!ref) return base;
+  const coste = ref === "sacrificado" ? inst.costeSacrificado : payload.victimaId ? getCardMeta(s.instances[payload.victimaId]?.cardId ?? "")?.stats?.cost : void 0;
+  if (coste === void 0) return base;
+  return { ...base, filtros: { ...base.filtros, costeMax: Math.min(base.filtros?.costeMax ?? coste, coste) } };
+}
+function indiceDeUsoPorTurno(s, inst, efectoData) {
+  if (efectoData.duracion !== "1_por_turno" || !efectoData.trigger || efectoData.trigger === "ninguno") return -1;
+  const meta = metaDeInstancia(s, inst.cardInstanceId);
+  return meta && "efectos" in meta && meta.efectos ? meta.efectos.indexOf(efectoData) : -1;
 }
 function cobrarCostoDeTrigger(s, ctx, inst, efectoData, jugador) {
   const costo = efectoData.costo;
@@ -5574,15 +8519,18 @@ function objetivoCompleto(efectoData) {
   if (!mergedObjetivo.zona && efectoData.zonaOrigen) {
     mergedObjetivo = { ...mergedObjetivo, zona: efectoData.zonaOrigen };
   }
+  if (mergedObjetivo.filtros?.esenciaDeLaCondicion && efectoData.requisitoCampo) {
+    mergedObjetivo = { ...mergedObjetivo, filtros: { ...mergedObjetivo.filtros, esenciaDeLaCondicionMin: efectoData.requisitoCampo.minimo } };
+  }
   return mergedObjetivo;
 }
 function needsPlayerChoice(objetivo, efecto, tipoNegacion) {
   if (!objetivo) return false;
   if (efecto === "negar" && tipoNegacion === "efecto_activo") return true;
-  if (objetivo.tipo === "self" || objetivo.tipo === "campeon_del_trigger" || objetivo.tipo === "todos_campeones_propios" || objetivo.tipo === "todos_campeones_rivales" || objetivo.tipo === "rival_hand" || objetivo.tipo === "equipped_champion" || objetivo.tipo === "invocado") {
+  if (objetivo.tipo === "self" || objetivo.tipo === "campeon_del_trigger" || objetivo.tipo === "todos_campeones_propios" || objetivo.tipo === "todos_campeones" || objetivo.tipo === "todos_campeones_rivales" || objetivo.tipo === "rival_hand" || objetivo.tipo === "equipped_champion" || objetivo.tipo === "invocado") {
     return false;
   }
-  if (efecto === "draw" || efecto === "scry" || efecto === "rival_discard" || efecto === "block_ether" || efecto === "double_attack" || efecto === "negar") {
+  if (efecto === "draw" || efecto === "scry" || efecto === "rival_discard" || efecto === "block_ether" || efecto === "mill" || efecto === "draw_discard" || efecto === "double_attack" || efecto === "negar") {
     return false;
   }
   return true;
@@ -5606,7 +8554,12 @@ function toHyphenTrigger(trigger) {
     "al_jugar_mistica": "al-jugar-mistica",
     "al_ser_enviado_al_cementerio": "al-ser-enviado-al-cementerio",
     "al_ser_destruido_vinculo": "al-ser-destruido-vinculo",
-    "al_resolver_cadena": "al-resolver-cadena"
+    "al_resolver_cadena": "al-resolver-cadena",
+    "cuando_campeon_propio_al_cementerio": "cuando-campeon-al-cementerio",
+    "al_cambiar_de_esencia": "al-cambiar-esencia",
+    "cuando_campeon_propio_cambia_esencia": "cuando-campeon-cambia-esencia",
+    "cuando_juegas_mistica": "cuando-juegas-mistica",
+    "cuando_activas_arcana": "cuando-activas-arcana"
   };
   return triggerMap[trigger] ?? trigger.replace(/_/g, "-");
 }
@@ -5635,7 +8588,19 @@ function executeEffect(s, ctx, inst, efecto, targetIds, jugador, efectoData) {
       executeDraw(s, ctx, jugador, cantidad ?? 1);
       break;
     case "change_type":
-      executeChangeType(s, targetIds, jugador, efectoData);
+      executeChangeType(s, ctx, targetIds, jugador, efectoData);
+      break;
+    case "quitar_buffs":
+      executeQuitarBuffs(s, targetIds, efectoData, jugador);
+      break;
+    case "igualar_stats_al_menor":
+      executeIgualarStats(s, targetIds, efectoData, jugador);
+      break;
+    case "mill":
+      executeMill(s, ctx, jugador, cantidad ?? 1);
+      break;
+    case "draw_discard":
+      executeDrawDiscard(s, ctx, inst, jugador, cantidad ?? 1);
       break;
     case "redirect":
       ejecutarRedirect(s, ctx, inst, targetIds, jugador);
@@ -5897,7 +8862,7 @@ function dispararUmbralBloqueo(s, ctx, targetInstanceId, activacionIdx) {
     if (!conSuCamino) {
       if (efecto.tipo !== "continuo" || claseDeContinuo(efecto) === "propio") continue;
       if (!fijo && bloqueadosEn(idxEfecto, efecto) < umbralDeBloqueo(efecto)) continue;
-      if (!fijo && inst.efectosUmbralDisparados?.includes(idxEfecto)) continue;
+      if (!fijo && !esQuitarBuffsPorEter(efecto) && inst.efectosUmbralDisparados?.includes(idxEfecto)) continue;
       armarContinuoDeBloqueo(s, ctx, inst, efecto, idxEfecto, fijo);
       continue;
     }
@@ -5925,6 +8890,10 @@ function dispararUmbralBloqueo(s, ctx, targetInstanceId, activacionIdx) {
   }
 }
 function armarContinuoDeBloqueo(s, ctx, inst, efecto, idxEfecto, fijo = false) {
+  if (esQuitarBuffsPorEter(efecto)) {
+    armarQuitarBuffsPorEter(s, inst, efecto, idxEfecto);
+    return;
+  }
   const clase = claseDeContinuo(efecto);
   if (clase === "sostenido" && efecto.efecto !== "fix_exhaust" && !eligeObjetivo(efecto)) return;
   const marcar = () => {
@@ -5942,6 +8911,25 @@ function armarContinuoDeBloqueo(s, ctx, inst, efecto, idxEfecto, fijo = false) {
   }
   marcar();
   interpretEffect(s, ctx, inst, efecto, { jugador: inst.owner, fromTrigger: true, costoPagado: true });
+}
+function esQuitarBuffsPorEter(efecto) {
+  return efecto.efecto === "quitar_buffs" && efecto.buffPerBlockedEther === true;
+}
+function armarQuitarBuffsPorEter(s, inst, efecto, idxEfecto) {
+  const bloqueados = contarEterUmbral(s, inst.cardInstanceId, idxEfecto, efecto);
+  const propias = (inst.sostenidos ?? []).filter((x) => x.efectoIdx === idxEfecto);
+  const otras = (inst.sostenidos ?? []).filter((x) => x.efectoIdx !== idxEfecto);
+  const vigentes = propias.slice(0, bloqueados);
+  const sostenidos = [...otras, ...vigentes];
+  if (sostenidos.length > 0) inst.sostenidos = sostenidos;
+  else delete inst.sostenidos;
+  const encoladas = (s.objetivosPendientes ?? []).filter((p) => p.instId === inst.cardInstanceId && p.efectoUmbralIdx === idxEfecto).length;
+  const faltan = bloqueados - vigentes.length - encoladas;
+  if (faltan <= 0 || !efecto.objetivo) return;
+  const opciones = resolveTargets(s, objetivoCompleto(efecto), inst.owner, inst.cardInstanceId);
+  if (opciones.length === 0) return;
+  const nuevas = Array.from({ length: faltan }, () => ({ jugador: inst.owner, instId: inst.cardInstanceId, trigger: "al-bloquear-eter", opciones, efectoUmbralIdx: idxEfecto }));
+  s.objetivosPendientes = [...nuevas, ...s.objetivosPendientes ?? []];
 }
 function resolverUmbralElegido(s, ctx, fuenteId, efectoIdx, objetivoId) {
   const inst = s.instances[fuenteId];
@@ -6167,16 +9155,61 @@ function duracionTemporal(efectoData, jugador) {
     ...expira === "hasta-fase" && duracionFase ? { expiraFase: duracionFase, expiraFaseJugador: duracionControlador === "rival" ? jugador === "A" ? "B" : "A" : jugador } : {}
   };
 }
-function executeChangeType(s, targetIds, jugador, efectoData) {
+function executeQuitarBuffs(s, targetIds, efectoData, jugador) {
+  const { duenio: _duenio, ...duracion } = duracionTemporal(efectoData, jugador);
+  void _duenio;
+  for (const id of targetIds) {
+    const inst = s.instances[id];
+    if (!inst) continue;
+    inst.modificadores = [...inst.modificadores ?? [], { stat: "poder", valor: 0, anulaIncrementos: true, ...duracion }];
+  }
+}
+function executeIgualarStats(s, targetIds, efectoData, jugador) {
+  const d = duracionTemporal(efectoData, jugador);
+  const hastaFase = d.expira === "hasta-fase" && d.expiraFase && d.expiraFaseJugador ? { fase: d.expiraFase, jugador: d.expiraFaseJugador } : void 0;
+  for (const id of targetIds) {
+    const { poder, resistencia } = statsDe(s, id);
+    const menor = Math.min(poder, resistencia);
+    if (poder !== menor) aplicarMod(s, id, "poder", menor - poder, d.expira, d.turnosRestantes, hastaFase);
+    if (resistencia !== menor) aplicarMod(s, id, "resistencia", menor - resistencia, d.expira, d.turnosRestantes, hastaFase);
+  }
+}
+function executeMill(s, ctx, jugador, cantidad) {
+  const p = s.players[jugador];
+  for (let i = 0; i < cantidad; i++) {
+    const id = p.mazo.shift();
+    if (id === void 0) return;
+    enviarAlCementerio(s, ctx, id, "otra");
+    ctx.emit({ type: "carta_entrada_a_zona", cardInstanceId: id, zona: zonaDeCementerio(s, id), jugador, bocaArriba: true });
+  }
+}
+function executeDrawDiscard(s, ctx, inst, jugador, cantidad) {
+  executeDraw(s, ctx, jugador, cantidad);
+  if (s.fase === "terminada") return;
+  const mano = s.players[jugador].mano;
+  for (let i = 0; i < Math.min(cantidad, mano.length); i++) {
+    s.objetivosPendientes = [...s.objetivosPendientes ?? [], { jugador, instId: inst.cardInstanceId, trigger: "descartar", opciones: [...mano], descartar: true }];
+  }
+}
+function ejecutarComandanteConTrigger(s, ctx, inst, efecto, jugador) {
+  if (!efecto.efecto || efecto.objetivo?.tipo !== "todos_campeones_propios") return;
+  const fuenteFacciones = faccionesDe(s, inst.cardInstanceId);
+  const targetIds = s.players[jugador].campo.campeones.filter(
+    (id) => id !== null && faccionesCompartidas(fuenteFacciones, faccionesDe(s, id))
+  );
+  executeEffect(s, ctx, inst, efecto.efecto, targetIds, jugador, efecto);
+}
+function executeChangeType(s, ctx, targetIds, jugador, efectoData) {
   const cambio = efectoData.cambioTipo;
   if (!cambio) return;
   const duracion = duracionTemporal(efectoData, jugador);
   const atributos = [["esencia", cambio.esencia], ["rol", cambio.rol], ["faccion", cambio.faccion]];
   for (const instId of targetIds) {
     for (const [atributo, valor] of atributos) {
-      if (valor) aplicarCambioAtributo(s, { instId, atributo, valor, ...duracion });
+      if (valor) cambiarAtributo(s, ctx, { instId, atributo, valor, ...duracion });
     }
   }
+  if (cambio.esenciaElegida) iniciarElegirEsencia(s, jugador, targetIds, duracion);
 }
 function executeModificarRegla(s, targetIds, jugador, efectoData) {
   const m = reglaDeEfecto(efectoData);
@@ -6583,6 +9616,7 @@ function validarActivarHabilidad(state, action) {
   if (!efectoSel) {
     return "esta carta se activa bloqueando \xC9ter (usa la acci\xF3n bloquear_eter)";
   }
+  if (!requisitoCampoCumple(state, state.turno, efectoSel.requisitoCampo)) return "no cumples el requisito de campo de esta habilidad";
   if (efectoSel.efecto === "activar_disparo" && candidatosActivarDisparo(state, state.turno, action.cardInstanceId, efectoSel).length === 0) {
     return "no hay otro Campe\xF3n tuyo con un Disparo que activar";
   }
@@ -6642,7 +9676,7 @@ function parejasBloqueoOpcion(s, jugador) {
     if (!metaC || !campeonElegibleBloqueoEter(metaC)) continue;
     for (const eterId of p.eterReserva) {
       const metaE = s.instances[eterId]?.cardId ? getCardMeta(s.instances[eterId].cardId) : null;
-      if (!metaE || !faccionesCompartidas(faccionesDe(s, eterId), faccionesDe(s, campeonId))) continue;
+      if (!metaE) continue;
       if (validarBloqueo(s, jugador, [eterId], campeonId, void 0, { externo: true }) !== null) continue;
       parejas.push({ campeonId, eterId });
     }
@@ -6703,6 +9737,7 @@ function ejecutarActivarArcana(s, action, ctx) {
     s.equiparPendiente = { artefactoId: id, jugador: s.turno, contexto: "activar_arcana" };
     return;
   }
+  dispararObservadoresJugada(s, ctx, "cuando-activas-arcana", s.turno, id);
   declararOpener(s, ctx, { tipo: "arcana", jugador: s.turno, cardInstanceId: id }, previos);
 }
 function ejecutarActivarHabilidad(s, action, ctx) {
@@ -6784,6 +9819,14 @@ function ejecutarElegirObjetivo(s, action, ctx) {
   const enDeclaracion = !!s.declaracionEnEleccion;
   const previos = marcarInicioAccion(s);
   if (!vigente) {
+  } else if (pendiente.descartar) {
+    const mano = s.players[pendiente.jugador].mano;
+    const idx = mano.indexOf(action.objetivoId);
+    if (idx !== -1) {
+      mano.splice(idx, 1);
+      enviarAlCementerio(s, ctx, action.objetivoId, "mano");
+      ctx.emit({ type: "carta_descartada", jugador: pendiente.jugador, cardInstanceIds: [action.objetivoId] });
+    }
   } else if (pendiente.equipar) {
     equiparComoRespuesta(s, ctx, pendiente, action.objetivoId);
   } else if (pendiente.opener) {
@@ -6808,6 +9851,7 @@ function esEfectoStat(efecto) {
 }
 function esAuraZona(efecto) {
   if (!esEfectoStat(efecto)) return false;
+  if (esContinuoAuraDeCampo(efecto)) return true;
   const sinTriggerDeEvento = efecto.trigger === void 0 || efecto.trigger === "ninguno";
   return (efecto.tipo === "pasivo" || efecto.tipo === "reserva" || efecto.tipo === "bloqueo") && sinTriggerDeEvento;
 }
@@ -6878,7 +9922,7 @@ function evaluarAura(s, efecto, fuente, esComandante, objetivoId, objetivoInst, 
           aplica = faccionesCompartidas(faccionesDe(s, fuente.cardInstanceId), faccionesDe(s, objetivoId));
         }
       }
-      excluirSelf = !esComandante && origen === "campo" && esAuraZona(efecto) && !esAuraCondicionada(efecto);
+      excluirSelf = !esComandante && origen === "campo" && esAuraZona(efecto) && !esAuraCondicionada(efecto) && !esContinuoAuraDeCampo(efecto);
       break;
     case "todos_campeones_rivales":
       aplica = !mismoDueno;
@@ -6919,6 +9963,9 @@ function evaluarAura(s, efecto, fuente, esComandante, objetivoId, objetivoInst, 
   }
   if (!aplica) return null;
   if (excluirSelf && objetivoId === fuente.cardInstanceId) return null;
+  if (objetivo.filtros?.esencia && esenciaDe(s, objetivoId) !== objetivo.filtros.esencia) return null;
+  if (objetivo.filtros?.comparteEsenciaConOtro && !comparteEsenciaConOtro(s, objetivoId)) return null;
+  if (efecto.requisitoCampo && !requisitoCampoCumple(s, fuente.owner, efecto.requisitoCampo)) return null;
   if (origen === "reserva") {
     if (!s.players[fuente.owner].eterReserva.includes(fuente.cardInstanceId)) return null;
     if (objetivo.controlador === "rival" && objetivoInst.owner === fuente.owner) return null;
@@ -6958,7 +10005,7 @@ function contribucionDeEfecto(efecto, escala = 1) {
   return resultado;
 }
 function aportesSostenidos(s, objetivoId) {
-  const total = { poder: 0, resistencia: 0, keywords: [] };
+  const total = { poder: 0, resistencia: 0, poderPositivo: 0, resistenciaPositivo: 0, keywords: [] };
   for (const j of ["A", "B"]) {
     for (const fuenteId of s.players[j].campo.campeones) {
       const fuente = fuenteId ? s.instances[fuenteId] : void 0;
@@ -6973,6 +10020,8 @@ function aportesSostenidos(s, objetivoId) {
         const aporte = contribucionDeEfecto(efecto);
         total.poder += aporte.poder ?? 0;
         total.resistencia += aporte.resistencia ?? 0;
+        total.poderPositivo += Math.max(0, aporte.poder ?? 0);
+        total.resistenciaPositivo += Math.max(0, aporte.resistencia ?? 0);
         if (aporte.keywords) total.keywords.push(...aporte.keywords);
       }
     }
@@ -7057,12 +10106,14 @@ function modificadoresJSONDe(s, id) {
   }
   let poder = 0;
   let resistencia = 0;
+  let poderPos = 0;
+  let resistenciaPos = 0;
   const keywords = [];
   for (const c of candidatos) {
     const efectos = [];
     const negada = c.origen === "campo" && efectosNegados(s, c.inst.cardInstanceId);
     if (c.esComandante && c.meta.type === "Campe\xF3n") {
-      efectos.push(...efectosComandante(c.meta.efectoComandante));
+      efectos.push(...efectosComandante(c.meta.efectoComandante).filter((e) => !esComandanteConTrigger(e)));
     }
     if ("efectos" in c.meta && c.meta.efectos) {
       for (const e of c.meta.efectos) {
@@ -7079,14 +10130,18 @@ function modificadoresJSONDe(s, id) {
       if (!resultado) continue;
       poder += resultado.poder ?? 0;
       resistencia += resultado.resistencia ?? 0;
+      poderPos += Math.max(0, resultado.poder ?? 0);
+      resistenciaPos += Math.max(0, resultado.resistencia ?? 0);
       if (resultado.keywords) keywords.push(...resultado.keywords);
     }
   }
   const sostenidos = aportesSostenidos(s, id);
   poder += sostenidos.poder;
   resistencia += sostenidos.resistencia;
+  poderPos += sostenidos.poderPositivo;
+  resistenciaPos += sostenidos.resistenciaPositivo;
   keywords.push(...sostenidos.keywords);
-  return { poder, resistencia, keywords: [...new Set(keywords)] };
+  return { poder, resistencia, poderPositivo: poderPos, resistenciaPositivo: resistenciaPos, keywords: [...new Set(keywords)] };
 }
 function condicionCumple(s, condicion, jugador) {
   if (!condicion || typeof condicion !== "object" || !("trigger" in condicion)) return null;
@@ -7199,7 +10254,11 @@ var TRIGGER_A_JSON = {
   "al-ser-enviado-al-cementerio": "al_ser_enviado_al_cementerio",
   "al-ser-destruido-vinculo": "al_ser_destruido_vinculo",
   "al-resolver-cadena": "al_resolver_cadena",
-  "cuando-campeon-al-cementerio": "cuando_campeon_propio_al_cementerio"
+  "cuando-campeon-al-cementerio": "cuando_campeon_propio_al_cementerio",
+  "al-cambiar-esencia": "al_cambiar_de_esencia",
+  "cuando-campeon-cambia-esencia": "cuando_campeon_propio_cambia_esencia",
+  "cuando-juegas-mistica": "cuando_juegas_mistica",
+  "cuando-activas-arcana": "cuando_activas_arcana"
 };
 function triggersQueMatchean(s, trigger, jugador, ids, opts) {
   const res = [];
@@ -7222,12 +10281,16 @@ function triggersQueMatchean(s, trigger, jugador, ids, opts) {
     const negada = efectosNegados(s, id);
     efectos.forEach((efecto, efectoIdx) => {
       if (negada && efecto.tipo !== "comandante") return;
-      if (trigger === "cuando-campeon-al-cementerio" && opts?.victimaId !== void 0) {
+      if (trigger === "cuando-campeon-al-cementerio" && opts?.victimaId !== void 0 && efecto.causaEnvio?.length) {
+        if (!opts.causaEnvio || !efecto.causaEnvio.includes(opts.causaEnvio)) return;
+      }
+      if ((trigger === "cuando-campeon-al-cementerio" || trigger === "cuando-campeon-cambia-esencia" || trigger === "cuando-juegas-mistica" || trigger === "cuando-activas-arcana") && opts?.victimaId !== void 0) {
         const quiereRival = efecto.controladorTrigger === "rival";
         const esDelRival = opts.controladorVictima !== void 0 && opts.controladorVictima !== jugador;
         if (quiereRival !== esDelRival) return;
         if (efecto.objetivo?.excluyeEsta && opts.victimaId === id) return;
       }
+      if (trigger === "al-atacar" && !opts?.ignorarZonaOrigen && efecto.controladorTrigger === "rival" && s.turno === jugador) return;
       if ((trigger === "al-inicio-alba" || trigger === "al-inicio-choque") && !opts?.ignorarZonaOrigen) {
         const quiereRival = efecto.controladorTrigger === "rival";
         if (quiereRival !== (s.turno !== jugador)) return;
@@ -7259,7 +10322,8 @@ function dispararTrigger(s, ctx, trigger, jugador, instancias, payloadExtra) {
       ignorarZonaOrigen: payload.contextoUso === "objetivo-elegido",
       // resolución de una elección ya armada
       victimaId: payload.victimaId,
-      controladorVictima: payload.controladorVictima
+      controladorVictima: payload.controladorVictima,
+      causaEnvio: payload.causaEnvio
     })[0];
     if (primero) {
       const { efecto, efectoIdx } = primero;
@@ -7315,6 +10379,41 @@ function dispararTrigger(s, ctx, trigger, jugador, instancias, payloadExtra) {
     }
   }
 }
+function esComandanteConTrigger(efecto) {
+  return !!efecto.trigger && efecto.trigger !== "ninguno";
+}
+function incrementosAnulados(s, id) {
+  if (s.instances[id]?.modificadores?.some((m) => m.anulaIncrementos)) return true;
+  for (const j of ["A", "B"]) {
+    for (const fuenteId of s.players[j].campo.campeones) {
+      const fuente = fuenteId ? s.instances[fuenteId] : void 0;
+      if (!fuenteId || !fuente?.sostenidos?.length || !fuente.cardId) continue;
+      const meta = getCardMeta(fuente.cardId);
+      if (!meta || !("efectos" in meta) || !meta.efectos) continue;
+      if (efectosNegados(s, fuenteId)) continue;
+      const vistos = /* @__PURE__ */ new Map();
+      for (const { efectoIdx, objetivoId } of fuente.sostenidos) {
+        const posicion = vistos.get(efectoIdx) ?? 0;
+        vistos.set(efectoIdx, posicion + 1);
+        const efecto = meta.efectos[efectoIdx];
+        if (!efecto || efecto.efecto !== "quitar_buffs" || objetivoId !== id) continue;
+        if (contarEterUmbral(s, fuenteId, efectoIdx, efecto) > posicion) return true;
+      }
+    }
+  }
+  return false;
+}
+function sinIncrementosDeRes(s, id) {
+  const inst = s.instances[id];
+  if (!inst) return false;
+  const controlador = controladorDeCampeon(s, id) ?? inst.owner;
+  const rival = controlador === "A" ? "B" : "A";
+  return s.players[rival].vinculos.some((vId) => {
+    const v = vId ? s.instances[vId] : void 0;
+    const meta = v?.cardId ? getCardMeta(v.cardId) : null;
+    return v?.bocaArriba === true && !!meta && "efectos" in meta && !!meta.efectos?.some((e) => e.reglaEnumerada === "rival_sin_incrementos_res");
+  });
+}
 function statsDe(s, id) {
   const inst = s.instances[id];
   const cardId = inst?.cardId ?? null;
@@ -7322,13 +10421,15 @@ function statsDe(s, id) {
   const esCamp = !!meta && esCampeon(meta);
   let poder = inst?.poder ?? (esCamp && meta.stats ? meta.stats.poder : 0);
   let resistencia = inst?.resistencia ?? (esCamp && meta.stats ? meta.stats.resistencia : 0);
+  const sinIncrementos = esCamp && incrementosAnulados(s, id);
+  const sinIncrementosRes = sinIncrementos || esCamp && sinIncrementosDeRes(s, id);
   for (const m of inst?.modificadores ?? []) {
-    if (m.stat === "poder") poder += m.valor;
-    else resistencia += m.valor;
+    if (m.stat === "poder") poder += sinIncrementos && m.valor > 0 ? 0 : m.valor;
+    else resistencia += sinIncrementosRes && m.valor > 0 ? 0 : m.valor;
   }
   const mods = modificadoresJSONDe(s, id);
-  poder += mods.poder;
-  resistencia += mods.resistencia;
+  poder += mods.poder - (sinIncrementos ? mods.poderPositivo ?? 0 : 0);
+  resistencia += mods.resistencia - (sinIncrementosRes ? mods.resistenciaPositivo ?? 0 : 0);
   return { poder: Math.max(0, poder), resistencia: Math.max(0, resistencia) };
 }
 function keywordsDe(s, id) {
@@ -7436,7 +10537,7 @@ function resolveTargets(s, objetivo, jugador, fuenteId) {
     if (rivalChamps.some(esProtector)) baseTargets = rivalChamps.filter(esProtector);
   }
   if (objetivo.excluyeEsta && fuenteId) baseTargets = baseTargets.filter((id) => id !== fuenteId);
-  const filtered = applyFilters(s, baseTargets, filtros);
+  const filtered = applyFilters(s, baseTargets, filtros, jugador);
   if (filtros?.seleccionar) {
     return selectByRanking(s, filtered, filtros.seleccionar);
   }
@@ -7459,6 +10560,9 @@ function getTargetsByZone(s, tipo, zona, controlador, jugador, fuenteId) {
   const playersToCheck = controlador === "ambos" ? ["A", "B"] : controlador === "rival" ? [rival] : controlador === "ninguno" ? [] : [jugador];
   if (tipo === "self") {
     return [];
+  }
+  if (tipo === "todos_campeones") {
+    return playersToCheck.flatMap((j) => s.players[j].campo.campeones.filter((id) => id !== null));
   }
   if (tipo === "todos_campeones_propios") {
     return s.players[jugador].campo.campeones.filter((id) => id !== null);
@@ -7548,8 +10652,13 @@ function getTargetsByZone(s, tipo, zona, controlador, jugador, fuenteId) {
   }
   return targets;
 }
-function applyFilters(s, targets, filtros) {
+function applyFilters(s, targets, filtros, jugador) {
   if (!filtros || Object.keys(filtros).length === 0) return targets;
+  let esenciaCondicion;
+  if (filtros.esenciaDeLaCondicion) {
+    esenciaCondicion = jugador ? esenciaQueCumple(s, jugador, filtros.esenciaDeLaCondicionMin ?? 2) : void 0;
+    if (!esenciaCondicion) return [];
+  }
   return targets.filter((id) => {
     const inst = s.instances[id];
     if (!inst) return false;
@@ -7567,6 +10676,8 @@ function applyFilters(s, targets, filtros) {
         return false;
       }
     }
+    if (esenciaCondicion && esenciaDe(s, id) !== esenciaCondicion) return false;
+    if (filtros.comparteEsenciaConOtro && !comparteEsenciaConOtro(s, id)) return false;
     if (filtros.rol) {
       const card = meta;
       if ("roles" in card && !rolesDe(s, id)?.includes(filtros.rol)) {
@@ -7655,6 +10766,7 @@ function claveTrigger(efecto) {
 function opcionesVigentes(s, p) {
   const vivas = p.opciones.filter((id) => s.instances[id]);
   if (vivas.length === 0) return vivas;
+  if (p.descartar) return vivas.filter((id) => s.players[p.jugador].mano.includes(id));
   if (p.equipar) return vivas.filter((id) => s.players[p.jugador].campo.campeones.includes(id));
   const fuente = s.instances[p.instId];
   const meta = fuente?.cardId ? getCardMeta(fuente.cardId) : null;
@@ -7731,7 +10843,7 @@ function motivoDerrota(s, jugador) {
   return null;
 }
 function hayPendienteObligatorio(s) {
-  return !!cadenaActiva(s) || !!s.declaracionEnEleccion || !!s.equiparPendiente || (s.preventivosPendientes?.length ?? 0) > 0 || !!electorAjeno(s) || !!scryActual(s);
+  return !!cadenaActiva(s) || !!s.declaracionEnEleccion || !!s.equiparPendiente || (s.preventivosPendientes?.length ?? 0) > 0 || !!electorAjeno(s) || !!scryActual(s) || !!esenciaActual(s);
 }
 function confirmarFinDePartida(s, ctx) {
   if (s.fase === "terminada" || hayPendienteObligatorio(s)) return;
@@ -7962,7 +11074,11 @@ function ejecutarJugarCampeon(s, action, ctx) {
     ctx.emit({ type: "carta_salida_de_zona", cardInstanceId: sacId, zona: zona2, jugador: s.turno });
     p.campo.campeones[slotIdx] = null;
     liberarEterBloqueado(s, ctx, sacId, "2A");
-    enviarAlCementerio(s, ctx, sacId, "campo");
+    if (s.instances[id].costeSacrificado === void 0) {
+      const sacMeta = s.instances[sacId]?.cardId ? getCardMeta(s.instances[sacId].cardId) : null;
+      if (sacMeta?.stats?.cost !== void 0) s.instances[id].costeSacrificado = sacMeta.stats.cost;
+    }
+    enviarAlCementerio(s, ctx, sacId, "campo", "sacrificio");
     ctx.emit({ type: "carta_entrada_a_zona", cardInstanceId: sacId, zona: zonaDeCementerio(s, sacId), jugador: s.turno, bocaArriba: true });
   }
   const manoIdx = p.mano.indexOf(id);
@@ -8001,6 +11117,7 @@ function ejecutarJugarMistica(s, action, ctx) {
   }
   const triggers = construirTriggers(s, "al-jugar-mistica", s.turno, [id]);
   if (triggers.length === 0) dispararTrigger(s, ctx, "al-jugar-mistica", s.turno, [id]);
+  dispararObservadoresJugada(s, ctx, "cuando-juegas-mistica", s.turno, id);
   declararOpener(s, ctx, { tipo: "mistica", jugador: s.turno, cardInstanceId: id }, previos, triggers);
 }
 function ejecutarColocarArcana(s, action, ctx) {
@@ -8048,6 +11165,9 @@ function resolverEfectosArtefacto(s, ctx, id, contexto) {
   if (contexto === "jugar_mistica") {
     triggers = construirTriggers(s, "al-jugar-mistica", s.turno, [id]);
     if (triggers.length === 0) dispararTrigger(s, ctx, "al-jugar-mistica", s.turno, [id]);
+    dispararObservadoresJugada(s, ctx, "cuando-juegas-mistica", s.turno, id);
+  } else {
+    dispararObservadoresJugada(s, ctx, "cuando-activas-arcana", s.turno, id);
   }
   declararOpener(s, ctx, { tipo: contexto === "jugar_mistica" ? "mistica" : "arcana", jugador: s.turno, cardInstanceId: id }, previos, triggers);
 }
@@ -8267,6 +11387,7 @@ function applyAction(state, action, ctx) {
   descartarEquiparMuerto(s);
   descartarFrentesMuertos(s);
   descartarScryMuertos(s);
+  descartarEsenciaMuertas(s);
   reanudarAlba(s, ctx);
   confirmarFinDePartida(s, ctx);
   return { ok: true, state: s, events: [...ctx.events] };
@@ -8278,7 +11399,8 @@ var ACCIONES_CON_CADENA_ABIERTA = /* @__PURE__ */ new Set([
   "bloquear_eter",
   "rendirse",
   "responder_prevenicion",
-  "ordenar_mazo"
+  "ordenar_mazo",
+  "elegir_esencia"
 ]);
 function validarAccion(state, action) {
   const preven = state.preventivosPendientes?.[0];
@@ -8295,6 +11417,9 @@ function validarAccion(state, action) {
   }
   if (scryActual(state) && !state.declaracionEnEleccion && !electorAjeno(state) && !equipando && action.type !== "ordenar_mazo" && action.type !== "rendirse") {
     return "hay un mazo por ordenar antes de continuar";
+  }
+  if (esenciaActual(state) && !state.declaracionEnEleccion && !electorAjeno(state) && !equipando && !scryActual(state) && action.type !== "elegir_esencia" && action.type !== "rendirse") {
+    return "hay una Esencia por elegir antes de continuar";
   }
   const eleccionAntesDeCadena = action.type === "elegir_objetivo" && !!electorAjeno(state);
   if (cadenaActiva(state) && !state.declaracionEnEleccion && !eleccionAntesDeCadena && !ACCIONES_CON_CADENA_ABIERTA.has(action.type)) {
@@ -8335,6 +11460,8 @@ function validarAccion(state, action) {
       return validarElegirObjetivo(state, action);
     case "ordenar_mazo":
       return validarOrdenarMazo(state, action);
+    case "elegir_esencia":
+      return validarElegirEsencia(state, action);
     case "usar_transmutar":
       return validarUsarTransmutar(state, action);
     case "activar_habilidad":
@@ -8432,6 +11559,10 @@ function ejecutarAccion(s, action, ctx) {
       ejecutarOrdenarMazo(s, action, ctx);
       return;
     }
+    case "elegir_esencia": {
+      ejecutarElegirEsencia(s, action, ctx);
+      return;
+    }
     case "usar_transmutar": {
       ejecutarUsarTransmutar(s, action, ctx);
       return;
@@ -8483,6 +11614,8 @@ function actorActual(estado) {
   if (ajeno) return ajeno.jugador;
   const scry = scryActual(estado);
   if (scry) return scry.jugador;
+  const esencia = esenciaActual(estado);
+  if (esencia) return esencia.jugador;
   const cadena = cadenaActiva(estado);
   if (cadena) return cadena.prioridad;
   if (estado.fase === "choque" && estado.combate?.paso === "bloqueo") {
@@ -8638,6 +11771,11 @@ function getValidActions(state, playerId) {
     if (scry.jugador === playerId) acciones.push({ type: "ordenar_mazo", arriba: cartasVigentesScry(state, scry), fondo: [] });
     return acciones;
   }
+  const esencia = esenciaActual(state);
+  if (esencia) {
+    if (esencia.jugador === playerId) for (const e of ESENCIAS_ELEGIBLES) acciones.push({ type: "elegir_esencia", esencia: e });
+    return acciones;
+  }
   if (state.turno === playerId && state.fase === "pre_partida") {
     const p = state.players[playerId];
     if (!p.mulliganUsado) acciones.push({ type: "mulligan" });
@@ -8690,6 +11828,7 @@ function getValidActions(state, playerId) {
       if (efectosNegados(state, champId)) continue;
       const efectoAct = efectoActivableDe(meta, false);
       if (efectoAct && inst) {
+        if (!requisitoCampoCumple(state, playerId, efectoAct.requisitoCampo)) continue;
         const costoBloqueo = esCostoBloqueo(efectoAct.costo);
         const costo = efectoAct.costo?.cantidad ?? 0;
         const zonaAct = costoBloqueo ? eteresPropios(state, efectoAct.costo?.origen === "pagado" ? p.eterPagado : p.eterReserva, playerId) : p.eterReserva;
@@ -9403,6 +12542,11 @@ function botTonto(state, playerId, dificultad = "facil") {
   if (scryActual(state) && !equiparVigente) {
     if (actorActual(state) !== playerId) return null;
     return getValidActions(state, playerId).find((a) => a.type === "ordenar_mazo") ?? null;
+  }
+  const esenciaPend = esenciaActual(state);
+  if (esenciaPend && !equiparVigente) {
+    if (actorActual(state) !== playerId) return null;
+    return elegirEsenciaBot(state, playerId, esenciaPend);
   }
   const cadena = cadenaActiva(state);
   if (cadena) {

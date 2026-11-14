@@ -31,6 +31,7 @@ import {
 } from './triggers'
 import { condicionCumple, condicionEsCandado, dispararTrigger, velocidadDe } from './efectos'
 import { interpretEffect } from './effectInterpreter'
+import { dispararObservadoresJugada } from './observadores'
 import { aplicarPago, etersParaPagar, validarPago, type ContextoUso } from './payments'
 import { enviarAlCementerio, zonaDeCementerio } from './replacements'
 import { efectosNegados } from './reglas'
@@ -448,6 +449,10 @@ function declararRespuesta(s: GameState, ctx: Ctx, respuesta: Omit<RespuestaCade
       interpretEffect(s, ctx, inst, efecto, { jugador, fromTrigger: true, declararOpener: { efectoIdx }, ...(costoPagado ? { costoPagado } : {}) })
     }
     dispararTrigger(s, ctx, 'al-resolver-cadena', jugador, [cardInstanceId], { declarar: true, cobrarCosto: false })
+    // Purga: una Mística jugada / una Arcana activada COMO RESPUESTA también la observan las cartas en juego y el Comandante
+    const tipoResp = (inst.cardId ? getCardMeta(inst.cardId) : null)?.type
+    if (tipoResp === 'Mística') dispararObservadoresJugada(s, ctx, 'cuando-juegas-mistica', jugador, cardInstanceId)
+    else if (tipoResp === 'Arcana') dispararObservadoresJugada(s, ctx, 'cuando-activas-arcana', jugador, cardInstanceId)
   }
   declararVentana(s, ctx, { tipo: 'respuesta', jugador, respuesta: { jugador, cardInstanceId, origen } }, previos)
 }

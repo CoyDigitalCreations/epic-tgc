@@ -1,4 +1,4 @@
-import { ALL_CARDS, ESTASIS_CARDS, DISONANCIA_CARDS, getPaquete } from '../shared/data/paquetes'
+import { ALL_CARDS, ESTASIS_CARDS, DISONANCIA_CARDS, PURGA_CARDS, MUTACION_CARDS, getPaquete } from '../shared/data/paquetes'
 import type { AnyCard } from '../shared/types'
 import { getCardMeta } from './game/cards'
 
@@ -7,8 +7,11 @@ function expandirMazo(cards: AnyCard[]): string[] {
   return cards.flatMap((c) => Array.from({ length: Number(c.limiteCopias ?? 1) }, () => c.id))
 }
 
+/** Sets preestablecidos del modo vs bot. */
+export type SetId = 'estasis' | 'disonancia' | 'purga' | 'mutacion'
+
 export interface MazoJugable {
-  id: 'estasis' | 'disonancia'
+  id: SetId
   nombre: string
   color: string
   /** 66 cardIds (15 Éter + 45 Principal + 6 Vínculos) — listo para createInitialState. */
@@ -29,19 +32,34 @@ export const MAZOS: MazoJugable[] = [
     color: getPaquete('disonancia')?.color ?? '#3b82f6',
     cardIds: expandirMazo(DISONANCIA_CARDS),
   },
+  {
+    id: 'purga',
+    nombre: getPaquete('purga')?.nombre ?? 'Purga',
+    color: getPaquete('purga')?.color ?? '#ec4899',
+    cardIds: expandirMazo(PURGA_CARDS),
+  },
+  {
+    id: 'mutacion',
+    nombre: getPaquete('mutacion')?.nombre ?? 'Mutación',
+    color: getPaquete('mutacion')?.color ?? '#84cc16',
+    cardIds: expandirMazo(MUTACION_CARDS),
+  },
 ]
+
+/** El rival natural de cada set (las parejas espejo del Eje): Estásis↔Disonancia, Purga↔Mutación. */
+const RIVAL_DE: Record<SetId, SetId> = { estasis: 'disonancia', disonancia: 'estasis', purga: 'mutacion', mutacion: 'purga' }
 
 export const mazoPorId = (id: string): MazoJugable | undefined => MAZOS.find((m) => m.id === id)
 
 /**
  * Mazo del bot:
- * - humano con set preestablecido → el otro set (el humano elige con qué rival jugar).
- * - humano con mazo personalizado → uno de los 2 sets, DETERMINISTA desde el seed
+ * - humano con set preestablecido → su pareja espejo (Estásis↔Disonancia, Purga↔Mutación).
+ * - humano con mazo personalizado → Estásis o Disonancia, DETERMINISTA desde el seed
  *   (`seed % 2`): mismo seed → mismo rival (reproducibilidad).
  */
-export function mazoParaBot(seed: number, humano: 'estasis' | 'disonancia' | 'custom'): MazoJugable {
-  if (humano === 'custom') return MAZOS[seed % MAZOS.length]
-  return humano === 'estasis' ? MAZOS[1] : MAZOS[0]
+export function mazoParaBot(seed: number, humano: SetId | 'custom'): MazoJugable {
+  if (humano === 'custom') return MAZOS[seed % 2]
+  return mazoPorId(RIVAL_DE[humano]) ?? MAZOS[0]
 }
 
 /* ─────────────────────────────────────────────

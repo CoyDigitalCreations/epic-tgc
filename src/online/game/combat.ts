@@ -1,6 +1,7 @@
 import { abrirCadena, declararVentana, marcarInicioAccion } from './chain'
-import { dispararTrigger, keywordsDe, statsDe, tieneDoubleAttackActivo } from './efectos'
+import { dispararTrigger, instanciasEnCampo, keywordsDe, statsDe, tieneDoubleAttackActivo } from './efectos'
 import { destruirCarta } from './replacements'
+import { getCardMeta } from './cards'
 import { evaluarFinSteal } from './eter'
 import { armarTriggers, construirTriggers } from './triggers'
 import { reglaBool, reglaNumero } from './reglas'
@@ -238,6 +239,13 @@ export function ejecutarDeclararAtaque(s: GameState, atacanteIds: string[], ctx:
   // handlers opacos siguen por dispararTrigger SOLO cuando la carta no tiene match JSON (como F5d-3/F5d-4).
   const triggers = construirTriggers(s, 'al-atacar', s.turno, atacanteIds)
   if (triggers.length === 0) dispararTrigger(s, ctx, 'al-atacar', s.turno, atacanteIds)
+  // Purga: «al atacar el RIVAL» — las cartas del defensor con ese trigger (Arcana Cadena de Custodia) reaccionan al ataque declarado
+  const defensorAtaque: PlayerId = s.turno === 'A' ? 'B' : 'A'
+  const reaccionanAlAtaque = instanciasEnCampo(s, defensorAtaque).filter((id) => {
+    const meta = s.instances[id]?.cardId ? getCardMeta(s.instances[id]!.cardId!) : null
+    return !!meta && 'efectos' in meta && !!meta.efectos?.some((e) => e.trigger === 'al_atacar' && e.controladorTrigger === 'rival')
+  })
+  if (reaccionanAlAtaque.length > 0) dispararTrigger(s, ctx, 'al-atacar', defensorAtaque, reaccionanAlAtaque)
   const apilados = triggers.length > 0 ? armarTriggers(s, ctx, triggers) : []
   // F5d-1: si el ataque (Recarga, al-atacar) armó elecciones de objetivo, se
   // eligen ANTES de la ventana del defensor; la ventana se abre al elegir la última.

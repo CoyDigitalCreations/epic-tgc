@@ -41,6 +41,8 @@ function claveTrigger(efecto: EfectoData): string {
 export function opcionesVigentes(s: GameState, p: PendienteObjetivo): string[] {
   const vivas = p.opciones.filter((id) => s.instances[id])
   if (vivas.length === 0) return vivas
+  // Purga (`draw_discard`): se descarta una carta de la MANO de quien elige; vale mientras siga en ella
+  if (p.descartar) return vivas.filter((id) => s.players[p.jugador].mano.includes(id))
   // F5f: Campeón al que equipar una respuesta Artefacto — debe seguir en el campo de quien equipa
   if (p.equipar) return vivas.filter((id) => s.players[p.jugador].campo.campeones.includes(id))
   const fuente = s.instances[p.instId]

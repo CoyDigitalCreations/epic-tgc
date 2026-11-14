@@ -104,6 +104,17 @@ export function esCostoBloqueo(costo?: { tipo?: string } | null): boolean {
 }
 
 /**
+ * Un Continuo sin coste que dura «mientras esta carta esté en el campo» (Pastor de Cenizas): no se activa, es un AURA derivada
+ * (estado, efectos.ts esAuraZona). Solo stats y keywords; los que llevan coste o trigger siguen su camino.
+ */
+export function esContinuoAuraDeCampo(e: EfectoData): boolean {
+  if (e.tipo !== 'continuo' || e.duracion !== 'mientras_en_campo') return false
+  if (e.costo && e.costo.tipo !== 'ninguno') return false
+  if (e.trigger && e.trigger !== 'ninguno') return false
+  return e.efecto === 'buff' || e.efecto === 'debuff' || e.efecto === 'grant_keyword'
+}
+
+/**
  * Efecto que activar_habilidad activa en esta carta — SELECCIÓN por tipo de
  * costo (data-driven, sin cardIds). REGLA UNIFICADA (§7.7):
  * - con objetivoId → el continuo de PAGO (aura/buff pagado con objetivo);
@@ -116,9 +127,9 @@ export function esCostoBloqueo(costo?: { tipo?: string } | null): boolean {
 export function efectoActivableDe(card: AnyCard, conObjetivo: boolean): EfectoData | null {
   if (!('efectos' in card) || !card.efectos) return null
   if (conObjetivo) {
-    return card.efectos.find((e) => e.tipo === 'continuo' && !esCostoBloqueo(e.costo)) ?? null
+    return card.efectos.find((e) => e.tipo === 'continuo' && !esCostoBloqueo(e.costo) && !esContinuoAuraDeCampo(e)) ?? null
   }
-  const continuoPago = card.efectos.find((e) => e.tipo === 'continuo' && !esCostoBloqueo(e.costo))
+  const continuoPago = card.efectos.find((e) => e.tipo === 'continuo' && !esCostoBloqueo(e.costo) && !esContinuoAuraDeCampo(e))
   return card.efectos.find((e) => e.tipo === 'disparo') ?? continuoPago ?? null
 }
 

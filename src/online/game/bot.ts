@@ -4,6 +4,7 @@ import { actorActual, getValidActions } from './validActions'
 import { cadenaActiva } from './chain'
 import { electorAjeno } from './pendientes'
 import { scryActual } from './scry'
+import { elegirEsenciaBot, esenciaActual } from './esencia'
 import { createInitialState } from './initialState'
 import type { GameEvent } from './events'
 import type { GameState, PlayerId } from './types'
@@ -45,6 +46,13 @@ export function botTonto(state: GameState, playerId: PlayerId, dificultad: Dific
   if (scryActual(state) && !equiparVigente) {
     if (actorActual(state) !== playerId) return null
     return getValidActions(state, playerId).find((a) => a.type === 'ordenar_mazo') ?? null
+  }
+  // Mutación: «la esencia que elijas» — sobre sus propios Campeones toma la Esencia que más repite (sinergia); sobre los del rival,
+  // la que menos tienen. Determinista: empata por el orden del catálogo.
+  const esenciaPend = esenciaActual(state)
+  if (esenciaPend && !equiparVigente) {
+    if (actorActual(state) !== playerId) return null
+    return elegirEsenciaBot(state, playerId, esenciaPend)
   }
   // Cadena (combate 9.6 O global): el bot nunca encadena cartas
   const cadena = cadenaActiva(state)

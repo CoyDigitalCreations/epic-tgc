@@ -2,6 +2,7 @@ import { esEter, getCardMeta, cartaNecesitaEterBloqueado, efectoBloqueoAccion } 
 import { etiquetarEter, eterDeEfecto, esEterAjeno, eteresPropios, marcarContinuoActivado } from './eter'
 import type { AnyCard } from '../../shared/types'
 import { dispararTrigger } from './efectos'
+import { iniciarElegirEsencia } from './esencia'
 import { efectosNegados, reglaNumero } from './reglas'
 import type { Ctx, GameState, PlayerId } from './types'
 
@@ -376,6 +377,13 @@ export function bloquearEter(
   // Fase B: «una vez por turno» se GASTA al pagar (aunque la activación luego sea negada)
   if (fuente?.efecto.costo?.tipo === 'bloqueo_fijo' && fuente.efecto.activacion === 'una_por_turno') {
     instTarget.efectosUsadosEsteTurno = [...(instTarget.efectosUsadosEsteTurno ?? []), fuente.indice]
+  }
+  // Mutación: un Éter que dice «mientras esté bloqueado, el Campeón que lo tenga se convierte en la esencia que elijas» pide la
+  // Esencia al bloquearse y la mantiene solo mientras ese Éter siga sobre el Campeón (atributos.ts, `mientrasEter`)
+  for (const id of eterIds) {
+    const eterMeta = s.instances[id]?.cardId ? getCardMeta(s.instances[id].cardId!) : null
+    const pide = !!eterMeta && 'efectos' in eterMeta && !!eterMeta.efectos?.some((e) => e.tipo === 'bloqueo' && e.efecto === 'change_type' && e.cambioTipo?.esenciaElegida)
+    if (pide) iniciarElegirEsencia(s, jugador, [targetInstanceId], { duenio: jugador, expira: 'permanente', mientrasEter: id })
   }
   // campeonId = id de instancia target (Campeón o Artefacto) — ver events.ts
   ctx.emit({ type: 'eter_bloqueado', jugador, eterIds, campeonId: targetInstanceId })

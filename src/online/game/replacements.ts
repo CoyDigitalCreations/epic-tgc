@@ -123,13 +123,13 @@ function controladorEnCampo(s: GameState, id: string): PlayerId | undefined {
  * `controlador` es quien lo controlaba al salir del campo (puede no ser su dueño si estaba robado); el filtro por
  * `controladorTrigger` y `excluyeEsta` vive en triggersQueMatchean. Solo Campeones que estaban EN el campo.
  */
-function dispararCampeonAlCementerio(s: GameState, ctx: Ctx, cardInstanceId: string, controlador: PlayerId | undefined): void {
+function dispararCampeonAlCementerio(s: GameState, ctx: Ctx, cardInstanceId: string, controlador: PlayerId | undefined, causaEnvio?: 'destruccion' | 'combate' | 'sacrificio'): void {
   if (!controlador) return
   const meta = s.instances[cardInstanceId]?.cardId ? getCardMeta(s.instances[cardInstanceId]!.cardId!) : null
   if (!meta || !esCampeon(meta)) return
   const orden: PlayerId[] = s.turno === 'A' ? ['A', 'B'] : ['B', 'A']
   for (const j of orden) {
-    dispararTrigger(s, ctx, 'cuando-campeon-al-cementerio', j, instanciasEnCampo(s, j), { victimaId: cardInstanceId, controladorVictima: controlador })
+    dispararTrigger(s, ctx, 'cuando-campeon-al-cementerio', j, instanciasEnCampo(s, j), { victimaId: cardInstanceId, controladorVictima: controlador, ...(causaEnvio ? { causaEnvio } : {}) })
   }
 }
 
@@ -150,7 +150,7 @@ export function zonaDeCementerio(s: GameState, cardInstanceId: string): '2G' | '
  * coste no son evitables por diseño, campeones.test.ts).
  * `desde`: de dónde viene, cuando el llamador YA la sacó de su zona (descarte, sacrificio...) y aquí ya no se puede ver.
  */
-export function enviarAlCementerio(s: GameState, ctx: Ctx, cardInstanceId: string, desde?: ZonaOrigenCementerio): void {
+export function enviarAlCementerio(s: GameState, ctx: Ctx, cardInstanceId: string, desde?: ZonaOrigenCementerio, causaEnvio?: 'sacrificio'): void {
   const inst = s.instances[cardInstanceId]
   if (!inst) return
   const controlador = controladorEnCampo(s, cardInstanceId) ?? (desde === 'campo' ? inst.owner : undefined) // Lote 3
@@ -183,7 +183,7 @@ export function enviarAlCementerio(s: GameState, ctx: Ctx, cardInstanceId: strin
   // N1: lo que se exilia por el Olvido NO fue «enviado al Cementerio»: no dispara ninguno de sus gatillos
   if (!alExilio) {
     dispararTrigger(s, ctx, 'al-ser-enviado-al-cementerio', inst.owner, [cardInstanceId], { zonaOrigen: desde ?? origen })
-    dispararCampeonAlCementerio(s, ctx, cardInstanceId, controlador)
+    dispararCampeonAlCementerio(s, ctx, cardInstanceId, controlador, causaEnvio)
   }
   reiniciarEnCementerio(s, cardInstanceId)
 }
@@ -438,7 +438,7 @@ export function destruirCarta(s: GameState, ctx: Ctx, cardInstanceId: string, ca
   // N1: con el Olvido el Campeón muere (carta_muerta/destruccion) pero va al Exilio: sin gatillos de Cementerio
   if (!alExilio) {
     dispararTrigger(s, ctx, 'al-ser-enviado-al-cementerio', inst.owner, [cardInstanceId], { zonaOrigen: origen })
-    dispararCampeonAlCementerio(s, ctx, cardInstanceId, controlador)
+    dispararCampeonAlCementerio(s, ctx, cardInstanceId, controlador, causa === 'combate' ? 'combate' : 'destruccion')
   }
   ctx.emit({ type: 'carta_muerta', cardInstanceId, jugador: inst.owner, causa })
   ctx.emit({ type: 'destruccion', cardInstanceId, jugador: inst.owner, causa })

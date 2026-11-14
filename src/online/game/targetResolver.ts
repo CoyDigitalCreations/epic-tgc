@@ -6,7 +6,7 @@
  */
 import { getCardMeta, esCampeon, esMistica, esArcana } from './cards'
 import { statsDe } from './efectos'
-import { esenciaDe, faccionesDe, rolesDe } from './atributos'
+import { comparteEsenciaConOtro, esenciaDe, esenciaQueCumple, faccionesDe, rolesDe } from './atributos'
 import type { AnyCard } from '../../shared/types'
 import type { GameState, PlayerId } from './types'
 import type { ObjetivoEfecto, FiltroObjetivo } from '../../shared/types/cards'
@@ -44,7 +44,7 @@ export function resolveTargets(
   if (objetivo.excluyeEsta && fuenteId) baseTargets = baseTargets.filter((id) => id !== fuenteId)
 
   // 2. Apply filters
-  const filtered = applyFilters(s, baseTargets, filtros)
+  const filtered = applyFilters(s, baseTargets, filtros, jugador)
 
   // 3. Handle ranking selection
   if (filtros?.seleccionar) {
@@ -95,6 +95,11 @@ function getTargetsByZone(
   if (tipo === 'self') {
     // Self is always the card itself — caller must handle
     return []
+  }
+
+  // Special case: todos los Campeones del campo de los jugadores que diga el controlador (Yaron: «ambos»)
+  if (tipo === 'todos_campeones') {
+    return playersToCheck.flatMap((j) => s.players[j].campo.campeones.filter((id): id is string => id !== null))
   }
 
   // Special case: todos_campeones_propios/rivales
@@ -223,8 +228,17 @@ function applyFilters(
   s: GameState,
   targets: string[],
   filtros?: FiltroObjetivo,
+  jugador?: PlayerId,
 ): string[] {
   if (!filtros || Object.keys(filtros).length === 0) return targets
+
+  // «De esa Esencia» (Mutación): la Esencia que cumple el requisito de campo de QUIEN resuelve el efecto (`esenciaDeLaCondicionMin`
+  // lo rellena objetivoCompleto desde `requisitoCampo.minimo`). Sin ninguna que lo cumpla no hay objetivos.
+  let esenciaCondicion: string | undefined
+  if (filtros.esenciaDeLaCondicion) {
+    esenciaCondicion = jugador ? esenciaQueCumple(s, jugador, filtros.esenciaDeLaCondicionMin ?? 2) : undefined
+    if (!esenciaCondicion) return []
+  }
 
   return targets.filter((id) => {
     const inst = s.instances[id]
@@ -248,6 +262,10 @@ function applyFilters(
         return false
       }
     }
+
+    // «De esa Esencia» y «que comparta Esencia con otro Campeón que controles» (Mutación)
+    if (esenciaCondicion && esenciaDe(s, id) !== esenciaCondicion) return false
+    if (filtros.comparteEsenciaConOtro && !comparteEsenciaConOtro(s, id)) return false
 
     // Role filter
     if (filtros.rol) {

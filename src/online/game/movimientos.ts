@@ -14,6 +14,7 @@ import { reiniciarCampeon } from './reglasTemporales'
 import { liberarEterBloqueado, enviarAlCementerio, zonaDeCementerio } from './replacements'
 import { aplicarBloqueoAlJugar, bloqueoParaJugar, motivoBloqueoAlJugar } from './bloqueoAlJugar'
 import { declararOpener, declararVentana, marcarInicioAccion } from './chain'
+import { dispararObservadoresJugada } from './observadores'
 import type { Action } from './core'
 import type { Ctx, TriggerApilado } from './types'
 import type { CondicionEfecto } from '../../shared/types'
@@ -180,8 +181,13 @@ export function ejecutarJugarCampeon(s: GameState, action: Extract<Action, { typ
     // vuelve a la Reserva 2A INMEDIATO (glosario, manual §7.2).
     // Fix del gap #1223: antes quedaba atascado en la instancia que iba a 2G.
     liberarEterBloqueado(s, ctx, sacId, '2A')
+    // Purga: el coste del sacrificado es la referencia de «de coste igual o menor al del Campeón sacrificado» (el primero, si son varios)
+    if (s.instances[id]!.costeSacrificado === undefined) {
+      const sacMeta = s.instances[sacId]?.cardId ? getCardMeta(s.instances[sacId]!.cardId!) : null
+      if (sacMeta?.stats?.cost !== undefined) s.instances[id]!.costeSacrificado = sacMeta.stats.cost
+    }
     // C5 (change 4): sacrificio → 2G con trigger al-ser-enviado-al-cementerio
-    enviarAlCementerio(s, ctx, sacId, 'campo')
+    enviarAlCementerio(s, ctx, sacId, 'campo', 'sacrificio')
     ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: sacId, zona: zonaDeCementerio(s, sacId), jugador: s.turno, bocaArriba: true })
   }
   // 3. Invocar: mano → slot, ENDEREZADO con invocación cansada (§5.2): no ataca este turno
@@ -236,6 +242,8 @@ export function ejecutarJugarMistica(s: GameState, action: Extract<Action, { typ
   // tiene match JSON (el intérprete JSON manda, como siempre; ver cabecera de triggers.ts).
   const triggers = construirTriggers(s, 'al-jugar-mistica', s.turno, [id])
   if (triggers.length === 0) dispararTrigger(s, ctx, 'al-jugar-mistica', s.turno, [id])
+  // Purga: las cartas en juego (y el Comandante propio) observan que se jugó una Mística
+  dispararObservadoresJugada(s, ctx, 'cuando-juegas-mistica', s.turno, id)
   // F5b: los hechizos SIN trigger NO se resuelven aquí — el opener (la Mística)
   // resuelve ÚLTIMO, tras las respuestas (chain.ts declararOpener). El objetivo
   // se elige antes de abrir la ventana; el cementerio de un solo uso (§5.3,
@@ -302,6 +310,9 @@ function resolverEfectosArtefacto(s: GameState, ctx: Ctx, id: string, contexto: 
   if (contexto === 'jugar_mistica') {
     triggers = construirTriggers(s, 'al-jugar-mistica', s.turno, [id])
     if (triggers.length === 0) dispararTrigger(s, ctx, 'al-jugar-mistica', s.turno, [id])
+    dispararObservadoresJugada(s, ctx, 'cuando-juegas-mistica', s.turno, id)
+  } else {
+    dispararObservadoresJugada(s, ctx, 'cuando-activas-arcana', s.turno, id)
   }
   // F5b: hechizos SIN trigger → opener de la pila (resuelve último, tras las respuestas)
   declararOpener(s, ctx, { tipo: contexto === 'jugar_mistica' ? 'mistica' : 'arcana', jugador: s.turno, cardInstanceId: id }, previos, triggers)

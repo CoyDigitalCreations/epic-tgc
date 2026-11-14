@@ -40,6 +40,8 @@ export const INTERPRETER_EXEC = new Set<string>([
   'negar',
   // Lote 3 (Estásis): Resonancia de Aurora (resonancia.ts) y Runa de Ancla (eterAnclado + reagruparEter)
   'activar_disparo', 'anclar_eter',
+  // Purga: quitar incrementos, igualar al menor, enviar el mazo al Cementerio y robar + descartar (executeEffect)
+  'quitar_buffs', 'igualar_stats_al_menor', 'mill', 'draw_discard',
 ])
 
 /** No-ops explícitos SIN implementación verificada desde JSON.
@@ -82,6 +84,12 @@ export const DISPATCH: Record<string, {
   al_resolver_cadena: { llamado: true, nota: 'chain.ts:228,257,260', instanciasOk: true },
   // Lote 3: replacements.ts dispararCampeonAlCementerio (destruirCarta + enviarAlCementerio) — cartas en juego de AMBOS jugadores
   cuando_campeon_propio_al_cementerio: { llamado: true, nota: 'replacements.ts dispararCampeonAlCementerio — cartas en juego de ambos jugadores; el filtro propio/rival y excluyeEsta viven en triggersQueMatchean', instanciasOk: true },
+  // Purga: observadores.ts — cartas en juego de ambos jugadores y Comandante propio al jugar una Mística / activar una Arcana
+  cuando_juegas_mistica: { llamado: true, nota: 'observadores.ts dispararObservadoresJugada — al jugar una Mística (movimientos.ts / chain.ts); el filtro propio/rival vive en triggersQueMatchean', instanciasOk: true },
+  cuando_activas_arcana: { llamado: true, nota: 'observadores.ts dispararObservadoresJugada — al activar una Arcana (habilidades.ts / chain.ts); el filtro propio/rival vive en triggersQueMatchean', instanciasOk: true },
+  // Mutación: esencia.ts cambiarAtributo — al cambiar la Esencia VIGENTE de un Campeón en el campo (propia carta / cartas de ambos jugadores)
+  al_cambiar_de_esencia: { llamado: true, nota: 'esencia.ts cambiarAtributo — la propia carta que cambia de Esencia', instanciasOk: true },
+  cuando_campeon_propio_cambia_esencia: { llamado: true, nota: 'esencia.ts cambiarAtributo — cartas en juego de ambos jugadores; el filtro propio/rival vive en triggersQueMatchean', instanciasOk: true },
   inicio_alba: {
     llamado: true,
     nota: 'phases.ts:40-42 — instancias = eterPagado + vínculos (NO eterReserva ni campo)',
@@ -192,7 +200,8 @@ export function clasificarEfecto(
   }
 
   // ── efectoComandante: interpretado como modificador continuo (Fase 1) ──
-  if (origen === 'efectoComandante') {
+  // Un Comandante CON trigger («cuando juegues una Mística…») es una reacción a un evento (observadores.ts), no un aura: sigue la ruta del trigger
+  if (origen === 'efectoComandante' && !(efecto.trigger && efecto.trigger !== 'ninguno')) {
     return {
       ...base,
       estado: 'OK_AURA_JSON',
@@ -328,6 +337,15 @@ export function clasificarEfecto(
           estado: 'OK_AURA_JSON',
           ruta: 'reglas.ts modificadoresReglaDe — regla modificada derivada desde efectos[] mientras la carta está en juego (F1/F9)',
           notas: [...notas, 'Estado derivado en reglaBool/reglaNumero: sin handlers ni estado que limpiar.'],
+        }
+      }
+      // Mutación (MU-004): un Éter que mientras esté bloqueado cambia la Esencia del Campeón a «la que elijas»
+      if (tipo === 'bloqueo' && accion === 'change_type' && efecto.cambioTipo?.esenciaElegida) {
+        return {
+          ...base,
+          estado: 'OK_ACTIVACION',
+          ruta: 'payments.ts bloquearEter → esencia.ts iniciarElegirEsencia (mientrasEter) — la Esencia vale mientras ese Éter siga bloqueado (atributos.ts)',
+          notas: [...notas, 'MU-004: pide la Esencia al bloquear el Éter y la retira al liberarlo.'],
         }
       }
       if (esStat) {

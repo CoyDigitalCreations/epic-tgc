@@ -82,6 +82,19 @@ describe('mazoParaBot (elección determinista del mazo del bot)', () => {
     expect(mazoParaBot(0, 'disonancia').id).toBe('estasis')
     expect(mazoParaBot(99, 'disonancia').id).toBe('estasis')
   })
+
+  it('Purga y Mutación son pareja espejo: cada una juega contra la otra', () => {
+    expect(mazoParaBot(0, 'purga').id).toBe('mutacion')
+    expect(mazoParaBot(7, 'mutacion').id).toBe('purga')
+  })
+
+  it('los cuatro sets son mazos válidos de 66 cartas (15 Éter + 45 Principal + 6 Vínculos)', () => {
+    expect(MAZOS.map((m) => m.id)).toEqual(['estasis', 'disonancia', 'purga', 'mutacion'])
+    for (const m of MAZOS) {
+      expect(conteosDe(m.cardIds), m.id).toEqual({ eter: 15, principal: 45, vinculos: 6 })
+      expect(() => validarDeck(m.cardIds, m.id), m.id).not.toThrow()
+    }
+  })
 })
 
 describe('registrarCartas (catálogo dinámico del motor)', () => {

@@ -10,10 +10,11 @@ import { shuffleFisherYates } from './rng'
 import { aplicarMod, otorgarKeyword, crearOpcionBloqueo, statsDe, keywordsDe, dispararTrigger, esAuraEquipada } from './efectos'
 import { construirTriggers, resolverTriggersDeEfecto } from './triggers'
 import { aplicarCambioAtributo, aplicarEfectosPrestados, aplicarReglaTemporal, reiniciarCampeon } from './reglasTemporales'
-import { faccionesDe } from './atributos'
+import { faccionesDe, requisitoCampoCumple } from './atributos'
 import { claseDeContinuo, eligeObjetivo, esEfectoCopiable, metaDeInstancia, umbralDeBloqueo } from './efectosInstancia'
 import { efectosNegados, jugadoresForzadosDe, reglaBool, reglaDeEfecto } from './reglas'
 import { iniciarScry } from './scry'
+import { cambiarAtributo, iniciarElegirEsencia } from './esencia'
 import { ejecutarRedirect } from './redirect'
 import { REGLAS } from '../../shared/rules/reglas'
 import { aplicarPago, bloquearEter } from './payments'
@@ -21,7 +22,7 @@ import { candidatosActivarDisparo, ejecutarActivarDisparo } from './resonancia'
 import { enviarAlCementerio, zonaDeCementerio, destruirCarta, liberarEterBloqueado, liberarArtefactosEquipados } from './replacements'
 import { esExiliable, permitirExilio } from './exilio'
 import { eteresPropios, eterDeEfecto, contarEterUmbral, quitarEteres, liberarEterA, limpiarFlagsUmbralSiVacia, evaluarFinSteal, retornarCampeonesRobados } from './eter'
-import { esCampeon, getCardMeta, type AnyCard } from './cards'
+import { esCampeon, faccionesCompartidas, getCardMeta, type AnyCard } from './cards'
 import type { EfectoData } from '../../shared/types'
 import type { CardInstance, Ctx, ExpiraModificador, GameState, PlayerId } from './types'
 import type { PayloadEfecto } from './efectos'
@@ -44,6 +45,14 @@ export function interpretEffect(
   const { efecto, objetivo, costo } = efectoData
   const jugador = payload.jugador
 
+  // «Si controlas N o más Campeones de una misma Esencia» (Mutación): sin el requisito el efecto no ocurre
+  if (!requisitoCampoCumple(s, jugador, efectoData.requisitoCampo)) return
+
+  // «Una vez por turno» de un efecto con trigger (`duracion: '1_por_turno'`, p. ej. «cuando cambie de Esencia, roba 1»): ya se gastó
+  // este turno → no vuelve a ocurrir. Solo se comprueba al DISPARARSE (la resolución de una elección ya armada no lo repite).
+  const usoPorTurno = indiceDeUsoPorTurno(s, inst, efectoData)
+  if (usoPorTurno !== -1 && payload.contextoUso !== 'objetivo-elegido' && (inst.efectosUsadosEsteTurno ?? []).includes(usoPorTurno)) return
+
   // RESOLUTION MODE: player already chose a target
   if (payload.contextoUso === 'objetivo-elegido' && payload.objetivoId) {
     // Pre-check at resolution time: can this effect actually be executed?
@@ -60,6 +69,7 @@ export function interpretEffect(
       if (!candidatos.includes(payload.objetivoId)) return
     }
     const targetIds = [payload.objetivoId]
+    if (!pagarExiliaCementerio(s, ctx, efectoData, jugador)) return
     executeEffect(s, ctx, inst, efecto, targetIds, jugador, efectoData)
     return
   }
@@ -118,7 +128,7 @@ export function interpretEffect(
       // 'invocar'; en cualquier otro (jugar una Mística, activar una habilidad) no hay a quién dárselo
       targetIds = payload.contextoUso === 'invocar' && payload.objetivoId && s.instances[payload.objetivoId] ? [payload.objetivoId] : []
     } else {
-      targetIds = resolveTargets(s, objetivoCompleto(efectoData), jugador, inst.cardInstanceId)
+      targetIds = resolveTargets(s, objetivoConReferencia(s, inst, efectoData, payload), jugador, inst.cardInstanceId)
       // Resonancia: solo Campeones con un Disparo copiable
       if (efecto === 'activar_disparo') targetIds = candidatosActivarDisparo(s, jugador, inst.cardInstanceId, efectoData)
     }
@@ -139,6 +149,10 @@ export function interpretEffect(
     ? { ...objetivo?.filtros, ...efectoData.filtros }
     : objetivo?.filtros
   const hasAutoSelect = mergedFiltros?.seleccionar != null
+  // Se gasta el «una vez por turno» solo si el efecto de verdad va a ocurrir (hay a quién aplicarlo)
+  if (usoPorTurno !== -1 && payload.contextoUso !== 'objetivo-elegido' && !payload.declararOpener && (!objetivo || targetIds.length > 0 || objetivo.tipo === 'self')) {
+    inst.efectosUsadosEsteTurno = [...(inst.efectosUsadosEsteTurno ?? []), usoPorTurno]
+  }
   const needsPending = isTriggered ? (targetIds.length > 0 && !hasAutoSelect) : (targetIds.length > 1)
   if (needsPlayerChoice(objetivo, efecto, efectoData.tipoNegacion) && !autoResolver && needsPending) {
     // Pre-check: can this effect actually be executed?
@@ -161,7 +175,55 @@ export function interpretEffect(
   if (payload.declararOpener) return
 
   // Single target or no choice needed → execute directly
+  if (!pagarExiliaCementerio(s, ctx, efectoData, jugador)) return
   executeEffect(s, ctx, inst, efecto, targetIds, jugador, efectoData)
+}
+
+/**
+ * Purga, coste `exilia_cementerio_propio` («puedes exiliar N Campeones de tu Cementerio, …»): se paga AL RESOLVER y, sin N Campeones
+ * exiliables en tu Cementerio, el efecto no ocurre. El motor escoge los de MENOR coste (los más baratos de perder: se conservan los
+ * valiosos para recuperarlos con Citatoria, Apelación…); empata el orden del Cementerio. Devuelve false si no se pudo pagar.
+ */
+function pagarExiliaCementerio(s: GameState, ctx: Ctx, efectoData: EfectoData, jugador: PlayerId): boolean {
+  const costo = efectoData.costo
+  if (costo?.tipo !== 'exilia_cementerio_propio') return true
+  const n = costo.cantidad ?? 1
+  const costeDe = (id: string) => (s.instances[id]?.cardId ? getCardMeta(s.instances[id]!.cardId!)?.stats?.cost : undefined) ?? 0
+  const elegibles = s.players[jugador].cementerio
+    .filter((id) => {
+      const meta = s.instances[id]?.cardId ? getCardMeta(s.instances[id]!.cardId!) : null
+      return !!meta && esCampeon(meta) && esExiliable(s, id)
+    })
+    .map((id, orden) => ({ id, orden, coste: costeDe(id) }))
+    .sort((a, b) => a.coste - b.coste || a.orden - b.orden)
+  if (elegibles.length < n) return false
+  executeExile(s, ctx, elegibles.slice(0, n).map((e) => e.id))
+  return true
+}
+
+/**
+ * El objetivo del efecto con `costeMaxDeReferencia` (Purga) ya traducido a `costeMax`: «de coste igual o menor al del Campeón
+ * sacrificado» (el que se sacrificó para invocar esta carta) o «al de ese Campeón» (el que activó el trigger de «al Cementerio»).
+ * Sin una referencia conocida no se restringe (p. ej. al resolver una elección ya armada, que se restringió al armarla).
+ */
+function objetivoConReferencia(s: GameState, inst: CardInstance, efectoData: EfectoData, payload: PayloadEfecto): NonNullable<EfectoData['objetivo']> {
+  const base = objetivoCompleto(efectoData)
+  const ref = base.filtros?.costeMaxDeReferencia
+  if (!ref) return base
+  const coste = ref === 'sacrificado'
+    ? inst.costeSacrificado
+    : payload.victimaId
+      ? getCardMeta(s.instances[payload.victimaId]?.cardId ?? '')?.stats?.cost
+      : undefined
+  if (coste === undefined) return base
+  return { ...base, filtros: { ...base.filtros, costeMax: Math.min(base.filtros?.costeMax ?? coste, coste) } }
+}
+
+/** Índice (en los efectos vigentes de la carta) de un efecto con trigger y `duracion: '1_por_turno'`; -1 si no aplica. */
+function indiceDeUsoPorTurno(s: GameState, inst: CardInstance, efectoData: EfectoData): number {
+  if (efectoData.duracion !== '1_por_turno' || !efectoData.trigger || efectoData.trigger === 'ninguno') return -1
+  const meta = metaDeInstancia(s, inst.cardInstanceId)
+  return meta && 'efectos' in meta && meta.efectos ? meta.efectos.indexOf(efectoData) : -1
 }
 
 /**
@@ -223,6 +285,10 @@ export function objetivoCompleto(efectoData: EfectoData): NonNullable<EfectoData
   if (!mergedObjetivo.zona && efectoData.zonaOrigen) {
     mergedObjetivo = { ...mergedObjetivo, zona: efectoData.zonaOrigen }
   }
+  // «De esa Esencia» (Mutación): el filtro necesita el mínimo del requisito de campo del efecto
+  if (mergedObjetivo.filtros?.esenciaDeLaCondicion && efectoData.requisitoCampo) {
+    mergedObjetivo = { ...mergedObjetivo, filtros: { ...mergedObjetivo.filtros, esenciaDeLaCondicionMin: efectoData.requisitoCampo.minimo } }
+  }
   return mergedObjetivo
 }
 
@@ -234,7 +300,7 @@ function needsPlayerChoice(objetivo: EfectoData['objetivo'], efecto?: EfectoData
   // negar un «efecto activo» SÍ elige al Campeón al que se lo niega (a diferencia de negar la activación pendiente)
   if (efecto === 'negar' && tipoNegacion === 'efecto_activo') return true
   // Self and auto-targets don't need choice
-  if (objetivo.tipo === 'self' || objetivo.tipo === 'campeon_del_trigger' || objetivo.tipo === 'todos_campeones_propios' || 
+  if (objetivo.tipo === 'self' || objetivo.tipo === 'campeon_del_trigger' || objetivo.tipo === 'todos_campeones_propios' || objetivo.tipo === 'todos_campeones' ||
       objetivo.tipo === 'todos_campeones_rivales' || objetivo.tipo === 'rival_hand' ||
       objetivo.tipo === 'equipped_champion' || objetivo.tipo === 'invocado') { // F5g: el Campeón equipado / invocado es implícito, no se elige
     return false
@@ -245,7 +311,7 @@ function needsPlayerChoice(objetivo: EfectoData['objetivo'], efecto?: EfectoData
   // la ventana; sin elección (el candado con D1 se eliminó).
   // copy (Fase 3c): SÍ necesita elección (D1) — el jugador elige target
   // return_ether: automatic (target is rival's ether in a specific zone)
-  if (efecto === 'draw' || efecto === 'scry' || efecto === 'rival_discard' || efecto === 'block_ether' ||
+  if (efecto === 'draw' || efecto === 'scry' || efecto === 'rival_discard' || efecto === 'block_ether' || efecto === 'mill' || efecto === 'draw_discard' ||
       efecto === 'double_attack' || efecto === 'negar') {
     return false
   }
@@ -289,6 +355,11 @@ export function toHyphenTrigger(trigger?: string): string | undefined {
     'al_ser_enviado_al_cementerio': 'al-ser-enviado-al-cementerio',
     'al_ser_destruido_vinculo': 'al-ser-destruido-vinculo',
     'al_resolver_cadena': 'al-resolver-cadena',
+    'cuando_campeon_propio_al_cementerio': 'cuando-campeon-al-cementerio',
+    'al_cambiar_de_esencia': 'al-cambiar-esencia',
+    'cuando_campeon_propio_cambia_esencia': 'cuando-campeon-cambia-esencia',
+    'cuando_juegas_mistica': 'cuando-juegas-mistica',
+    'cuando_activas_arcana': 'cuando-activas-arcana',
   }
   return triggerMap[trigger] ?? trigger.replace(/_/g, '-')
 }
@@ -338,7 +409,24 @@ function executeEffect(
       break
 
     case 'change_type':
-      executeChangeType(s, targetIds, jugador, efectoData)
+      executeChangeType(s, ctx, targetIds, jugador, efectoData)
+      break
+
+    case 'quitar_buffs':
+      // Purga: el Campeón pierde sus incrementos de ATQ y RES (los sostenidos por Éter bloqueado no pasan por aquí: `sostenidos`)
+      executeQuitarBuffs(s, targetIds, efectoData, jugador)
+      break
+
+    case 'igualar_stats_al_menor':
+      executeIgualarStats(s, targetIds, efectoData, jugador)
+      break
+
+    case 'mill':
+      executeMill(s, ctx, jugador, cantidad ?? 1)
+      break
+
+    case 'draw_discard':
+      executeDrawDiscard(s, ctx, inst, jugador, cantidad ?? 1)
       break
 
     case 'redirect':
@@ -729,7 +817,7 @@ export function dispararUmbralBloqueo(s: GameState, ctx: Ctx, targetInstanceId: 
     if (!conSuCamino) {
       if (efecto.tipo !== 'continuo' || claseDeContinuo(efecto) === 'propio') continue
       if (!fijo && bloqueadosEn(idxEfecto, efecto) < umbralDeBloqueo(efecto)) continue
-      if (!fijo && inst.efectosUmbralDisparados?.includes(idxEfecto)) continue
+      if (!fijo && !esQuitarBuffsPorEter(efecto) && inst.efectosUmbralDisparados?.includes(idxEfecto)) continue
       armarContinuoDeBloqueo(s, ctx, inst, efecto, idxEfecto, fijo)
       continue
     }
@@ -781,6 +869,10 @@ export function dispararUmbralBloqueo(s: GameState, ctx: Ctx, targetInstanceId: 
  * Cada efecto ocurre una vez por ciclo de bloqueo (`efectosUmbralDisparados`, se rearma al liberar el Éter).
  */
 function armarContinuoDeBloqueo(s: GameState, ctx: Ctx, inst: CardInstance, efecto: EfectoData, idxEfecto: number, fijo = false): void {
+  if (esQuitarBuffsPorEter(efecto)) {
+    armarQuitarBuffsPorEter(s, inst, efecto, idxEfecto)
+    return
+  }
   const clase = claseDeContinuo(efecto)
   // Fase B: sostenido SIN elección = aura derivada → cada activación de bloqueo_fijo es idempotente (no apila)
   if (clase === 'sostenido' && efecto.efecto !== 'fix_exhaust' && !eligeObjetivo(efecto)) return
@@ -799,6 +891,33 @@ function armarContinuoDeBloqueo(s: GameState, ctx: Ctx, inst: CardInstance, efec
   }
   marcar()
   interpretEffect(s, ctx, inst, efecto, { jugador: inst.owner, fromTrigger: true, costoPagado: true })
+}
+
+/** Purga (Idris): `quitar_buffs` «por cada Éter bloqueado, un Campeón…»: un Campeón elegido POR ÉTER, no uno por ciclo de bloqueo. */
+function esQuitarBuffsPorEter(efecto: EfectoData): boolean {
+  return efecto.efecto === 'quitar_buffs' && efecto.buffPerBlockedEther === true
+}
+
+/**
+ * Cada Éter bloqueado en la fuente suma UN Campeón elegido que pierde sus incrementos mientras ese Éter siga bloqueado. Aquí se recorta
+ * lo viejo a lo que sigue bloqueado y se arma una elección por cada Éter que aún no tiene Campeón (descontando las que ya esperan en
+ * la cola, para no duplicarlas si se bloquea más Éter antes de elegir). La k-ésima elección vale solo si hay más de k Éter (efectos.ts).
+ */
+function armarQuitarBuffsPorEter(s: GameState, inst: CardInstance, efecto: EfectoData, idxEfecto: number): void {
+  const bloqueados = contarEterUmbral(s, inst.cardInstanceId, idxEfecto, efecto)
+  const propias = (inst.sostenidos ?? []).filter((x) => x.efectoIdx === idxEfecto)
+  const otras = (inst.sostenidos ?? []).filter((x) => x.efectoIdx !== idxEfecto)
+  const vigentes = propias.slice(0, bloqueados)
+  const sostenidos = [...otras, ...vigentes]
+  if (sostenidos.length > 0) inst.sostenidos = sostenidos
+  else delete inst.sostenidos
+  const encoladas = (s.objetivosPendientes ?? []).filter((p) => p.instId === inst.cardInstanceId && p.efectoUmbralIdx === idxEfecto).length
+  const faltan = bloqueados - vigentes.length - encoladas
+  if (faltan <= 0 || !efecto.objetivo) return
+  const opciones = resolveTargets(s, objetivoCompleto(efecto), inst.owner, inst.cardInstanceId)
+  if (opciones.length === 0) return
+  const nuevas = Array.from({ length: faltan }, () => ({ jugador: inst.owner, instId: inst.cardInstanceId, trigger: 'al-bloquear-eter', opciones, efectoUmbralIdx: idxEfecto }))
+  s.objetivosPendientes = [...nuevas, ...(s.objetivosPendientes ?? [])]
 }
 
 /**
@@ -1186,19 +1305,87 @@ function duracionTemporal(efectoData: EfectoData, jugador: PlayerId) {
 }
 
 /**
+ * Purga, `quitar_buffs`: «un Campeón pierde sus incrementos de ATQ y RES, hasta el final del turno». Un modificador `anulaIncrementos` con
+ * la duración del efecto: statsDe ignora los incrementos positivos (modificadores y auras) mientras exista; los decrementos se conservan.
+ */
+function executeQuitarBuffs(s: GameState, targetIds: string[], efectoData: EfectoData, jugador: PlayerId): void {
+  const { duenio: _duenio, ...duracion } = duracionTemporal(efectoData, jugador)
+  void _duenio
+  for (const id of targetIds) {
+    const inst = s.instances[id]
+    if (!inst) continue
+    inst.modificadores = [...(inst.modificadores ?? []), { stat: 'poder', valor: 0, anulaIncrementos: true, ...duracion }]
+  }
+}
+
+/**
+ * Purga, `igualar_stats_al_menor` (La Balanza): el ATQ y la RES ACTUALES del Campeón se igualan al menor de los dos valores durante la
+ * duración del efecto. Se aplica como diferencia (modificadores), igual que un buff/debuff.
+ */
+function executeIgualarStats(s: GameState, targetIds: string[], efectoData: EfectoData, jugador: PlayerId): void {
+  const d = duracionTemporal(efectoData, jugador) as ReturnType<typeof duracionTemporal> & { turnosRestantes?: number; expiraFase?: 'alba' | 'forja' | 'choque' | 'ocaso'; expiraFaseJugador?: PlayerId }
+  const hastaFase = d.expira === 'hasta-fase' && d.expiraFase && d.expiraFaseJugador ? { fase: d.expiraFase, jugador: d.expiraFaseJugador } : undefined
+  for (const id of targetIds) {
+    const { poder, resistencia } = statsDe(s, id)
+    const menor = Math.min(poder, resistencia)
+    if (poder !== menor) aplicarMod(s, id, 'poder', menor - poder, d.expira, d.turnosRestantes, hastaFase)
+    if (resistencia !== menor) aplicarMod(s, id, 'resistencia', menor - resistencia, d.expira, d.turnosRestantes, hastaFase)
+  }
+}
+
+/** Purga, `mill`: las `cantidad` cartas de arriba del mazo propio van al Cementerio (si hay menos, las que haya). */
+function executeMill(s: GameState, ctx: Ctx, jugador: PlayerId, cantidad: number): void {
+  const p = s.players[jugador]
+  for (let i = 0; i < cantidad; i++) {
+    const id = p.mazo.shift()
+    if (id === undefined) return
+    enviarAlCementerio(s, ctx, id, 'otra')
+    ctx.emit({ type: 'carta_entrada_a_zona', cardInstanceId: id, zona: zonaDeCementerio(s, id), jugador, bocaArriba: true })
+  }
+}
+
+/**
+ * Purga, `draw_discard` («roba 1 y descarta 1»): roba primero y después el jugador ELIGE qué carta de su mano descarta (una elección por
+ * carta, `PendienteObjetivo.descartar`). Con la mano vacía no hay nada que descartar.
+ */
+function executeDrawDiscard(s: GameState, ctx: Ctx, inst: CardInstance, jugador: PlayerId, cantidad: number): void {
+  executeDraw(s, ctx, jugador, cantidad)
+  if (s.fase === 'terminada') return
+  const mano = s.players[jugador].mano
+  for (let i = 0; i < Math.min(cantidad, mano.length); i++) {
+    s.objetivosPendientes = [...(s.objetivosPendientes ?? []), { jugador, instId: inst.cardInstanceId, trigger: 'descartar', opciones: [...mano], descartar: true }]
+  }
+}
+
+/**
+ * Efecto de COMANDANTE con trigger (Idris): se ejecuta al ocurrir el evento, sobre «todos tus Campeones» DE LA FACCIÓN del Comandante
+ * (§10: el Comandante solo alcanza a su facción). Sin elección ni coste: es inmutable.
+ */
+export function ejecutarComandanteConTrigger(s: GameState, ctx: Ctx, inst: CardInstance, efecto: EfectoData, jugador: PlayerId): void {
+  if (!efecto.efecto || efecto.objetivo?.tipo !== 'todos_campeones_propios') return
+  const fuenteFacciones = faccionesDe(s, inst.cardInstanceId)
+  const targetIds = s.players[jugador].campo.campeones.filter(
+    (id): id is string => id !== null && faccionesCompartidas(fuenteFacciones, faccionesDe(s, id)),
+  )
+  executeEffect(s, ctx, inst, efecto.efecto, targetIds, jugador, efecto)
+}
+
+/**
  * Execute change_type (F9e): los Campeones objetivo cambian de Esencia, Rol y/o Facción (`cambioTipo`). Cada atributo
  * presente SUSTITUYE al de la carta y dura lo que la duración del efecto (sin duración, permanente). Ver atributos.ts.
  */
-function executeChangeType(s: GameState, targetIds: string[], jugador: PlayerId, efectoData: EfectoData): void {
+function executeChangeType(s: GameState, ctx: Ctx, targetIds: string[], jugador: PlayerId, efectoData: EfectoData): void {
   const cambio = efectoData.cambioTipo
   if (!cambio) return
   const duracion = duracionTemporal(efectoData, jugador)
   const atributos = [['esencia', cambio.esencia], ['rol', cambio.rol], ['faccion', cambio.faccion]] as const
   for (const instId of targetIds) {
     for (const [atributo, valor] of atributos) {
-      if (valor) aplicarCambioAtributo(s, { instId, atributo, valor, ...duracion })
+      if (valor) cambiarAtributo(s, ctx, { instId, atributo, valor, ...duracion })
     }
   }
+  // «La esencia que elijas»: quien resuelve el efecto la elige (elegir_esencia) y se aplica a todos los objetivos
+  if (cambio.esenciaElegida) iniciarElegirEsencia(s, jugador, targetIds, duracion)
 }
 
 function executeModificarRegla(s: GameState, targetIds: string[], jugador: PlayerId, efectoData: EfectoData): void {

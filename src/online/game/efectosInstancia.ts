@@ -47,7 +47,7 @@ export type ClaseContinuo = 'sostenido' | 'instantaneo' | 'propio'
 const SISTEMA_PROPIO = new Set([
   'steal_champion', 'invocar_y_equipar', 'double_attack', 'prevent_destroy', 'modificar_regla', 'direct_attack', 'copy', 'block_ether', 'redirect',
 ])
-const SOSTENIBLES = new Set(['buff', 'debuff', 'grant_keyword'])
+const SOSTENIBLES = new Set(['buff', 'debuff', 'grant_keyword', 'quitar_buffs'])
 
 export function claseDeContinuo(efecto: EfectoData): ClaseContinuo {
   const accion = efecto.efecto
@@ -59,14 +59,14 @@ export function claseDeContinuo(efecto: EfectoData): ClaseContinuo {
 }
 
 /** Efectos cuyo «objetivo» solo DESCRIBE de dónde sale algo: no se elige (mismo criterio que `needsPlayerChoice` del intérprete). */
-const SIN_ELECCION = new Set(['draw', 'scry', 'rival_discard', 'block_ether', 'double_attack'])
+const SIN_ELECCION = new Set(['draw', 'scry', 'rival_discard', 'block_ether', 'double_attack', 'mill', 'draw_discard'])
 
 /** ¿El objetivo del efecto se ELIGE («un Campeón...») o está fijado por el propio efecto (tú mismo, todos, robar...)? */
 export function eligeObjetivo(efecto: EfectoData): boolean {
   if (!efecto.efecto || SIN_ELECCION.has(efecto.efecto)) return false
   if (efecto.efecto === 'negar' && efecto.tipoNegacion !== 'efecto_activo') return false
   const tipo = efecto.objetivo?.tipo
-  return !!tipo && !['self', 'todos_campeones_propios', 'todos_campeones_rivales', 'equipped_champion', 'invocado', 'rival_hand'].includes(tipo)
+  return !!tipo && !['self', 'todos_campeones_propios', 'todos_campeones_rivales', 'todos_campeones', 'equipped_champion', 'invocado', 'rival_hand'].includes(tipo)
 }
 
 /** Los efectos que `instId` tiene prestados ahora, en el orden en que los copió. */

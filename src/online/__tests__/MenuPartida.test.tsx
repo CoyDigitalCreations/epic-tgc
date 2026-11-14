@@ -38,7 +38,7 @@ describe('MenuPartida: elegir mazo', () => {
     expect(screen.getByRole('button', { name: /Disonancia/ })).toHaveAttribute('aria-pressed', 'true')
     expect(screen.getByRole('button', { name: /Estásis/ })).toHaveAttribute('aria-pressed', 'false')
     // 15 Éter + 45 Principal + 6 Vínculos = 66 (manual §3.1)
-    expect(screen.getAllByText(/66 cartas · Éter 15 · Principal 45 · Vínculos 6/)).toHaveLength(2)
+    expect(screen.getAllByText(/66 cartas · Éter 15 · Principal 45 · Vínculos 6/)).toHaveLength(MAZOS.length)
   })
 
   it('el clic en un set lo elige', async () => {

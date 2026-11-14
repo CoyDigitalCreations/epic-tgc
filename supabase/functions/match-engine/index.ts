@@ -624,11 +624,11 @@ Deno.serve(async (req) => {
       return err('playerAction required')
     }
 
-    // `rendirse` y `elegir_objetivo` traen `jugador` desde el cliente: nunca se confía, se fija al
+    // `rendirse`, `elegir_objetivo` y `elegir_esencia` traen `jugador` desde el cliente: nunca se confía, se fija al
     // autenticado (si no, en su turno podría rendir al rival o elegir el pendiente del rival).
     const tipoAccion = (playerAction as { type: string }).type
     const accion =
-      tipoAccion === 'rendirse' || tipoAccion === 'elegir_objetivo'
+      tipoAccion === 'rendirse' || tipoAccion === 'elegir_objetivo' || tipoAccion === 'elegir_esencia'
         ? { ...(playerAction as object), jugador: playerId }
         : playerAction
 

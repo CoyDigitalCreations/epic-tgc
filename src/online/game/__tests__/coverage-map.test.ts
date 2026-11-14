@@ -8,7 +8,7 @@
  * `pctOK` sube; el piso de cobertura de clasificación es 100%.
  */
 import { describe, it, expect } from 'vitest'
-import { readFileSync } from 'node:fs'
+import { readdirSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import type { AnyCard } from '../../../shared/types'
 import { efectosComandante } from '../../../shared/efectoComandante'
@@ -33,13 +33,14 @@ describe('coverageMap — mapa de cobertura motor vs fuente de verdad', () => {
     expect(faltantes).toEqual([])
   })
 
-  it('los efectoComandante presentes en la fuente de verdad quedan clasificados como OK_AURA_JSON (Fase 1)', () => {
+  it('los efectoComandante presentes en la fuente de verdad quedan clasificados como OK_AURA_JSON (Fase 1); los que llevan trigger, como OK_INTERPRETER', () => {
     // efectoComandante puede ser un arreglo (Aurora lleva dos): cada entrada es un item
     const entradas = CARDS.flatMap((c) => (c.type === 'Campeón' ? efectosComandante(c.efectoComandante) : []))
     const items = reporte.items.filter((i) => i.origen === 'efectoComandante')
     expect(items.length).toBe(entradas.length)
     for (const it of items) {
-      expect(it.estado).toBe('OK_AURA_JSON')
+      // Un Comandante CON trigger (Idris: «cuando juegues una Mística…») es una reacción, no un aura: lo ejecuta observadores.ts
+      expect(it.estado).toBe(it.trigger && it.trigger !== '(sin trigger)' ? 'OK_INTERPRETER' : 'OK_AURA_JSON')
     }
   })
 
@@ -71,21 +72,6 @@ describe('coverageMap — mapa de cobertura motor vs fuente de verdad', () => {
   // Cada entrada es «idDeCarta:ESTADO». Al implementar el motor de una carta, BORRA su entrada: el test siguiente falla
   // si una entrada ya no es un hueco, para que esta lista nunca quede desactualizada.
   const PENDIENTES_MOTOR_PURGA_MUTACION = [
-    'PU-001:HUECO_NOOP',
-    'PU-004:HUECO_NOOP',
-    'PU-005:HUECO_NOOP',
-    'PU-010:HUECO_NOOP',
-    'PU-017:HUECO_NOOP',
-    'PU-028:HUECO_TRIGGER',
-    'PU-029:HUECO_NOOP',
-    'PU-032:HUECO_NOOP',
-    'PU-033:HUECO_NOOP',
-    'MU-004:HUECO_SIN_RUTA',
-    'MU-010:HUECO_TRIGGER',
-    'MU-013:HUECO_TRIGGER',
-    'MU-018:HUECO_TRIGGER',
-    'MU-027:HUECO_TRIGGER',
-    'MU-030:HUECO_TRIGGER',
   ]
   const huecosActuales = () => reporte.items.filter((i) => i.estado.startsWith('HUECO')).map((i) => `${i.cardId}:${i.estado}`)
 
@@ -106,6 +92,42 @@ describe('coverageMap — mapa de cobertura motor vs fuente de verdad', () => {
     const vorlag = reporte.items.filter((i) => i.cardId === 'DS-017')
     expect(vorlag.length).toBeGreaterThan(0)
     for (const it of vorlag) expect(it.estado.startsWith('HUECO')).toBe(false)
+  })
+
+  it('todo CAMPO del esquema que usa una carta del seed lo lee el motor (el mapa clasifica por verbo y trigger, no por campo)', () => {
+    // Lección de Purga/Mutación: cartas con `esenciaElegida`, `requisitoCampo`, `causaEnvio`... salían «OK» en el mapa y no hacían nada,
+    // porque el motor no leía esos campos. Si una carta nueva usa un campo que NINGÚN archivo del motor menciona, este test avisa.
+    // Excepciones: campos heredados del clásico sin lectura conocida (descriptivos o por revisar), anotados aquí a propósito.
+    const SIN_LECTURA_CONOCIDA: Record<string, string> = {
+      opcionFondo: 'FB-006 (clásico): sin lectura en el motor',
+      sinActivarEfecto: 'FB-017 (clásico): sin lectura en el motor',
+      alAzar: 'DS-004, DS-023, DS-026 (clásico): el descarte del rival ya es siempre aleatorio (ctx.next)',
+    }
+    const dir = resolve(__dirname, '..')
+    const fuentes = [dir, resolve(dir, 'handlers')]
+      .flatMap((d) => readdirSync(d).filter((f) => f.endsWith('.ts') && !f.endsWith('.test.ts')).map((f) => readFileSync(resolve(d, f), 'utf8')))
+      .join('\n')
+    const usados = new Map<string, Set<string>>()
+    const recorrer = (o: unknown, cardId: string): void => {
+      if (Array.isArray(o)) o.forEach((x) => recorrer(x, cardId))
+      else if (o && typeof o === 'object') {
+        for (const [k, v] of Object.entries(o)) {
+          if (!usados.has(k)) usados.set(k, new Set())
+          usados.get(k)!.add(cardId)
+          recorrer(v, cardId)
+        }
+      }
+    }
+    for (const c of CARDS) {
+      const efectos = [...((c as { efectos?: unknown[] }).efectos ?? []), ...(c.type === 'Campeón' ? efectosComandante(c.efectoComandante) : [])]
+      efectos.forEach((e) => recorrer(e, c.id))
+      const cond = (c as { condicion?: unknown }).condicion
+      if (cond && typeof cond === 'object') recorrer(cond, c.id)
+    }
+    const sinLectura = [...usados.keys()]
+      .filter((k) => !/^\d+$/.test(k) && !(k in SIN_LECTURA_CONOCIDA) && !new RegExp(`\\b${k}\\b`).test(fuentes))
+      .map((k) => `${k} (${[...usados.get(k)!].slice(0, 5).join(', ')})`)
+    expect(sinLectura, 'campos del esquema que usan cartas del seed y el motor no lee').toEqual([])
   })
 
   it('el registro de handlers del mapa coincide con los archivos de handlers/ y effects-guards.ts', () => {

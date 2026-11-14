@@ -12,6 +12,7 @@ import { TileCarta } from '../../shared/ui/TileCarta'
 import { ElegirBloqueoModal } from './ElegirBloqueoModal'
 import { ElegirObjetivoModal } from './ElegirObjetivoModal'
 import { ScryModal } from './ScryModal'
+import { ElegirEsenciaModal } from './ElegirEsenciaModal'
 import { MiniCard } from './MiniCard'
 import { InspectorCarta } from './InspectorCarta'
 import { AnchoTableroContext, CompactoContext, InspeccionContext, useAnchoCarta, useCompacto } from './tableroContext'
@@ -1533,6 +1534,7 @@ export function Tablero({
     if (a.type === 'elegir_opcion' && parejasOpcion.length > 0) return false // se resuelve en ElegirBloqueoModal
     if (a.type === 'elegir_objetivo') return false // se lista como opciones con label de zona (OpcionTutor)
     if (a.type === 'ordenar_mazo') return false // vive en el ScryModal
+    if (a.type === 'elegir_esencia') return false // vive en el ElegirEsenciaModal
     if (a.type === 'descartar_carta') return false // va debajo de la carta de la mano
     if (a.type === 'pasar_prioridad') return false // vive SOLO en el PriorityModal (2026-10-14)
     if (esDeMano(a)) return false // va sobre la carta de la mano
@@ -1552,6 +1554,8 @@ export function Tablero({
   const tutores = acciones.filter(
     (a): a is Extract<Action, { type: 'elegir_objetivo' }> => a.type === 'elegir_objetivo',
   )
+  /** Esencias entre las que elegir («la esencia que elijas»): una acción `elegir_esencia` por Esencia. */
+  const esenciasElegibles = acciones.filter((a): a is Extract<Action, { type: 'elegir_esencia' }> => a.type === 'elegir_esencia').map((a) => a.esencia)
   /** Scry pendiente de quien mira (F9c): el motor ofrece la jugada canónica con las cartas vigentes. */
   const accionScry = acciones.find((a): a is Extract<Action, { type: 'ordenar_mazo' }> => a.type === 'ordenar_mazo')
   /** Carta fuente del pendiente actual (para el label: "Enviada de las Casas" + "Búsqueda de mazo"). */
@@ -1579,7 +1583,7 @@ export function Tablero({
       'jugar_campeon', 'jugar_mistica', 'colocar_arcana', 'colocar_vinculo',
       'activar_habilidad', 'equipar_artefacto', 'activar_arcana', 'bloquear_eter',
       'declarar_ataque', 'declarar_bloqueo', 'responder_cadena', 'responder_prevenicion',
-      'elegir_objetivo', 'elegir_opcion', 'elegir_ruptura', 'usar_transmutar', 'ordenar_mazo',
+      'elegir_objetivo', 'elegir_opcion', 'elegir_ruptura', 'usar_transmutar', 'ordenar_mazo', 'elegir_esencia',
     ].includes(a.type),
   )
   const cadenaVista = cadenaActiva(vista)
@@ -2255,6 +2259,16 @@ export function Tablero({
           vista={vista}
           cartas={accionScry.arriba}
           onConfirmar={(arriba, fondo) => onAccion({ type: 'ordenar_mazo', arriba, fondo })}
+        />
+      )}
+
+      {/* ── Mutación: «la esencia que elijas». Obligatorio: la partida espera ── */}
+      {leTocaA && esenciasElegibles.length > 0 && (
+        <ElegirEsenciaModal
+          vista={vista}
+          esencias={esenciasElegibles}
+          objetivos={vista.esenciaPendientes?.[0]?.instIds ?? []}
+          onElegir={(esencia) => onAccion({ type: 'elegir_esencia', esencia })}
         />
       )}
 

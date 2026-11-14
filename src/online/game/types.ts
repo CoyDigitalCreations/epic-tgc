@@ -39,6 +39,11 @@ export interface Modificador {
   expiraFase?: 'alba' | 'forja' | 'choque' | 'ocaso'
   /** B6: de QUIÉN es esa fase (se compara con s.turno al entrar la fase). */
   expiraFaseJugador?: PlayerId
+  /**
+   * Purga (`quitar_buffs`): este modificador no suma nada, ANULA los incrementos positivos de ATQ y RES del Campeón mientras
+   * dure (los decrementos se conservan). Mismo ciclo de vida que el resto de modificadores. Ver efectos.ts `incrementosAnulados`.
+   */
+  anulaIncrementos?: boolean
 }
 
 /**
@@ -77,6 +82,8 @@ export interface CambioAtributo {
   turnosRestantes?: number
   expiraFase?: 'alba' | 'forja' | 'choque' | 'ocaso'
   expiraFaseJugador?: PlayerId
+  /** Solo un cambio ligado a un Éter bloqueado (MU-004): vale mientras ese Éter siga bloqueado sobre el Campeón. */
+  mientrasEter?: string
 }
 
 /**
@@ -230,6 +237,8 @@ export interface CardInstance {
     /** IDs de los campeones invocados por esta carta (invocar_y_equipar). Si esta carta sale, todos ellos también
      * (un bloqueo_fijo repetido invoca uno por activación). */
     vinculadoA?: string[]
+    /** Purga: coste del Campeón que se sacrificó para invocar esta carta (`costeMaxDeReferencia: 'sacrificado'`). */
+    costeSacrificado?: number
 }
 
 export interface PlayerState {
@@ -425,6 +434,17 @@ export interface ScryPendiente {
   cartas: string[]
 }
 
+/**
+ * Elección de Esencia pendiente (`change_type` con «la esencia que elijas», esencia.ts): `jugador` elige UNA Esencia con
+ * `elegir_esencia` y se aplica a todos los `instIds` (los Campeones objetivo) con la duración guardada. Mientras exista,
+ * el juego espera a `jugador`.
+ */
+export interface EsenciaPendiente {
+  jugador: PlayerId
+  instIds: string[]
+  duracion: Pick<CambioAtributo, 'duenio' | 'expira' | 'turnosRestantes' | 'expiraFase' | 'expiraFaseJugador' | 'mientrasEter'>
+}
+
 /** Elección de objetivo pendiente (entrada de GameState.objetivosPendientes); ver ese campo y pendientes.ts (vigencia y obsolescencia, F5h). */
 export interface PendienteObjetivo {
   jugador: PlayerId
@@ -439,6 +459,8 @@ export interface PendienteObjetivo {
   efectoUmbralIdx?: number
   opener?: { efectoIdx: number }
   equipar?: boolean
+  /** Purga (`draw_discard`): la elección es qué carta de la MANO de `jugador` se descarta. Ver habilidades.ejecutarElegirObjetivo. */
+  descartar?: boolean
 }
 
 /** Estado completo de partida — JSON-serializable (sin referencias circulares). */
@@ -487,6 +509,8 @@ export interface GameState {
   objetivosPendientes?: PendienteObjetivo[]
   /** Scry (F9c): mazos por ordenar, cola FIFO. Ver scry.ts. */
   scryPendientes?: ScryPendiente[]
+  /** Elecciones de Esencia por hacer («la esencia que elijas»), cola FIFO. Ver esencia.ts. */
+  esenciaPendientes?: EsenciaPendiente[]
   /**
    * Alba EN ESPERA de un Scry (decisión del usuario, 2026-10-27): un efecto «al inicio del Alba» que mira y ordena el
    * mazo debe resolverse ANTES de robar. El Alba se detiene tras sus efectos de inicio y el robo (con la comprobación de
