@@ -7,6 +7,8 @@ import type { AnyCard } from '../../shared/types'
 import { getCardMeta } from '../game'
 import type { CardInstance } from '../game'
 import { useAnimacionActiva, useEnVuelo } from '../animacion/contexto'
+import { useDorsos } from '../dorsos/contexto'
+import { DorsoCarta } from '../dorsos/DorsoCarta'
 import { useInspeccionar } from './tableroContext'
 
 const ANCHO_CARTA = 744
@@ -130,6 +132,8 @@ export function MiniCard({
   // Su fantasma está en vuelo: la carta real espera invisible (conserva el hueco)
   const visibility = useEnVuelo(inst.cardInstanceId) ? 'hidden' : undefined
   const inspeccionar = useInspeccionar()
+  // Reverso de la carta: el que eligió su DUEÑO (el rival ve sus dorsos con el reverso que ese rival escogió)
+  const dorso = useDorsos()[inst.owner] ?? 0
   const ancla = sinAncla ? undefined : inst.cardInstanceId
   // Rotación SOLO en campo (rotarSiAgotado): modales/mano/cadena siempre vertical
   const agotada = rotarSiAgotado && (agotado ?? inst.agotado === true)
@@ -257,19 +261,13 @@ export function MiniCard({
             borderRadius: 6,
             border: '1px solid #3b3b5c',
             background: 'linear-gradient(135deg, #14142b 0%, #1e1e3a 60%, #2a2a4e 100%)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
+            overflow: 'hidden',
             cursor: alHacerClic ? 'pointer' : 'default',
           }}
           onClick={alHacerClic}
           aria-label="Carta boca abajo"
         >
-          <span
-            style={{ color: '#4b4b7a', fontFamily: '"Cinzel", serif', fontSize: tamano === 'sm' ? 10 : 14, fontWeight: 700 }}
-          >
-            ✦
-          </span>
+          <DorsoCarta id={dorso} />
         </div>
         {menuNode}
         {children}
@@ -368,18 +366,12 @@ export function MiniCard({
               borderRadius: 6,
               border: '1px solid #3b3b5c',
               background: 'linear-gradient(135deg, #14142b 0%, #1e1e3a 60%, #2a2a4e 100%)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#4b4b7a',
-              fontFamily: '"Cinzel", serif',
-              fontSize: tamano === 'sm' ? 10 : 14,
-              fontWeight: 700,
+              overflow: 'hidden',
               pointerEvents: 'none',
               zIndex: 5,
             }}
           >
-            ✦
+            <DorsoCarta id={dorso} />
           </div>
         )}
 

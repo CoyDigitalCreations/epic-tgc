@@ -5,6 +5,8 @@ import type { Dificultad } from './game/bot'
 import { faccionDeSet, MAZOS, mazoParaBot, type RivalElegido, type SetId } from './mazos'
 import { SelectorRival } from './components/SelectorRival'
 import { TarjetaMazo } from './components/TarjetaMazo'
+import { SelectorDorsoBot } from './dorsos/SelectorDorsoBot'
+import type { DorsoBotElegido } from './dorsos/dorsos'
 import type { MazoPersonalizado } from './useMazosStore'
 
 /** Selección del humano: un set preestablecido o un mazo personalizado guardado. */
@@ -25,6 +27,9 @@ export interface MenuProps {
   /** Mazo del bot: un set oficial o 'auto' (el espejo del tuyo). Opcional: sin él, siempre 'auto'. */
   rivalElegido?: RivalElegido
   onRival?: (r: RivalElegido) => void
+  /** Reverso con el que el bot muestra sus cartas ocultas. Opcional: sin él, no se ofrece el selector. */
+  dorsoBot?: DorsoBotElegido
+  onDorsoBot?: (d: DorsoBotElegido) => void
   onEmpezar: () => void
 }
 
@@ -62,6 +67,8 @@ export function MenuPartida({
   onDificultad,
   rivalElegido = 'auto',
   onRival,
+  dorsoBot = 'auto',
+  onDorsoBot,
   onEmpezar,
 }: MenuProps) {
   const rival = mazoParaBot(seed, mazoHumano.tipo === 'set' ? mazoHumano.id : 'custom', rivalElegido)
@@ -84,12 +91,20 @@ export function MenuPartida({
             <h1 className="font-display text-2xl font-bold tracking-wider text-gray-100">Éter Online</h1>
             <p className="font-body text-xs text-gray-500">Modo en línea · partida local vs bot</p>
           </div>
-          <Link
-            to="/"
-            className="rounded bg-ether-600/20 px-3 py-1.5 text-xs text-ether-200 transition-colors hover:bg-ether-600/40"
-          >
-            ← Inicio
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              to="/epiconline/perfil"
+              className="rounded bg-white/5 px-3 py-1.5 text-xs text-gray-200 transition-colors hover:bg-white/10"
+            >
+              Perfil
+            </Link>
+            <Link
+              to="/"
+              className="rounded bg-ether-600/20 px-3 py-1.5 text-xs text-ether-200 transition-colors hover:bg-ether-600/40"
+            >
+              ← Inicio
+            </Link>
+          </div>
         </div>
       </header>
 
@@ -176,6 +191,14 @@ export function MenuPartida({
                   onCambiar={onRival}
                   automatico={mazoParaBot(seed, mazoHumano.tipo === 'set' ? mazoHumano.id : 'custom')}
                 />
+              )}
+
+              {/* Reverso del rival: el tuyo se elige en el Perfil */}
+              {onDorsoBot && (
+                <>
+                  <Seccion>Reverso del rival</Seccion>
+                  <SelectorDorsoBot valor={dorsoBot} onCambiar={onDorsoBot} />
+                </>
               )}
 
               {/* Dificultad */}

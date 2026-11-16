@@ -24,6 +24,8 @@ import { useOnlineMatch } from './useOnlineMatch'
 import { guardarPartida, leerPartidaGuardada, olvidarPartida } from './partidaGuardada'
 import { PiedraPapelTijera } from './PiedraPapelTijera'
 import { ContadorInactividad } from './ContadorInactividad'
+import { DorsosContext } from '../dorsos/contexto'
+import { useDorsosDePartida } from '../dorsos/useDorsos'
 import type { PptVista } from '../game'
 import { subirMazo } from '../backend/mazosNube'
 import { useMazosStore } from '../useMazosStore'
@@ -538,6 +540,8 @@ function PartidaOnline({
   onSalir: () => void
 }) {
   const partida = useOnlineMatch(gameId, player, code)
+  // Reverso de cada asiento (el del rival llega de Supabase). Va ANTES del return temprano de «Cargando partida…»
+  const dorsos = useDorsosDePartida(gameId, player)
   const vista = useMemo(
     () => (partida.estado ? visibleState(partida.estado, player) : null),
     [partida.estado, player],
@@ -561,7 +565,7 @@ function PartidaOnline({
   }
 
   return (
-    <>
+    <DorsosContext.Provider value={dorsos}>
       <Tablero
         vista={vista}
         yoId={player}
@@ -608,6 +612,6 @@ function PartidaOnline({
           )}
         </Modal>
       )}
-    </>
+    </DorsosContext.Provider>
   )
 }

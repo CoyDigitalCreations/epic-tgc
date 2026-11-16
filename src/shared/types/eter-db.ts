@@ -20,6 +20,8 @@ export interface EterProfile {
   id: string
   username: string | null
   display_name: string | null
+  /** Reverso de las cartas que eligió el jugador (0-4, ver src/online/dorsos). */
+  dorso: number
   created_at: string
   updated_at: string
 }

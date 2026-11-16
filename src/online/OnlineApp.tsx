@@ -11,6 +11,10 @@ import { usePartida, type PartidaConfig } from './usePartida'
 import { Tablero } from './components/Tablero'
 import { MazoEditor } from './components/MazoEditor'
 import { EffectPreviewModal } from './components/EffectPreviewModal'
+import { DorsosContext } from './dorsos/contexto'
+import { guardarDorsoBotLocal, leerDorsoBotLocal } from './dorsos/dorsoApi'
+import type { DorsoBotElegido } from './dorsos/dorsos'
+import { useDorsosContraBot } from './dorsos/useDorsos'
 
 /**
  * Éter Online — modo vs bot (local).
@@ -29,6 +33,12 @@ export default function OnlineApp() {
   const [seed, setSeed] = useState(() => Math.floor(Math.random() * 100_000))
   const [dificultad, setDificultad] = useState<Dificultad>('medio')
   const [rivalElegido, setRivalElegido] = useState<RivalElegido>('auto')
+  // Reverso del bot: se recuerda en este navegador (el bot no es un jugador de la base)
+  const [dorsoBot, setDorsoBot] = useState<DorsoBotElegido>(() => leerDorsoBotLocal())
+  const elegirDorsoBot = (d: DorsoBotElegido) => {
+    setDorsoBot(d)
+    guardarDorsoBotLocal(d)
+  }
   const coleccion = useCardStore((s) => s.cards)
   const mazosPersonalizados = useMazosStore((s) => s.mazosPersonalizados)
 
@@ -98,6 +108,8 @@ export default function OnlineApp() {
         onDificultad={setDificultad}
         rivalElegido={rivalElegido}
         onRival={setRivalElegido}
+        dorsoBot={dorsoBot}
+        onDorsoBot={elegirDorsoBot}
         onEmpezar={empezar}
       />
     )
@@ -112,18 +124,19 @@ export default function OnlineApp() {
   const config: PartidaConfig = { deckA, deckB, seed, delayMs: 350, dificultad }
   const keyPartida = `${mazoHumano.tipo}:${mazoHumano.id}-${rivalElegido}-${seed}-${mazoCustomElegido?.cardIds.length ?? 0}`
   return (
-    <Partida key={keyPartida} config={config} onAbandonar={salir} />
+    <Partida key={keyPartida} config={config} dorsoBot={dorsoBot} onAbandonar={salir} />
   )
 }
 
-function Partida({ config, onAbandonar }: { config: PartidaConfig; onAbandonar: () => void }) {
+function Partida({ config, dorsoBot, onAbandonar }: { config: PartidaConfig; dorsoBot: DorsoBotElegido; onAbandonar: () => void }) {
   const partida = usePartida(config)
+  const dorsos = useDorsosContraBot(dorsoBot, config.seed)
   const vista = useMemo(() => visibleState(partida.estado, 'A'), [partida.estado])
   const previewInst = partida.preview
     ? partida.estado.instances[partida.preview.cardInstanceId]
     : undefined
   return (
-    <>
+    <DorsosContext.Provider value={dorsos}>
       <Tablero
         vista={vista}
         acciones={partida.acciones}
@@ -144,6 +157,6 @@ function Partida({ config, onAbandonar }: { config: PartidaConfig; onAbandonar: 
           onCancelar={partida.cancelarPreview}
         />
       )}
-    </>
+    </DorsosContext.Provider>
   )
 }

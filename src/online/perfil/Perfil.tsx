@@ -5,6 +5,7 @@ import { Campo, CLASE_CAMPO } from '../../shared/ui/Campo'
 import { Seccion } from '../../shared/ui/Seccion'
 import { supabaseConfigurado } from '../backend/supabase'
 import { cerrarSesion, enlazarGoogle, entrarConGoogle, guardarNombre, leerPerfil, NOMBRE_MAX, validarNombre, type Perfil as PerfilJugador } from '../backend/perfilApi'
+import { SelectorDorso } from '../dorsos/SelectorDorso'
 import { useMazosStore } from '../useMazosStore'
 
 /** Perfil del jugador: nombre visible, estado de la cuenta y sus mazos personalizados. */
@@ -140,6 +141,8 @@ export default function Perfil() {
             )}
           </section>
         )}
+
+        <SelectorDorso />
 
         <section aria-label="Mis mazos">
           <Seccion cantidad={mazos.length}>Mis mazos</Seccion>
