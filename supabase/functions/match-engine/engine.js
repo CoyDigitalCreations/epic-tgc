@@ -4413,6 +4413,22 @@ var FuenteEfectos_default = [
         },
         duracion: "turno",
         texto: "Al atacar, esta carta se convierte en esencia Elemental, hasta el final del turno."
+      },
+      {
+        tipo: "pasivo",
+        trigger: "al_cambiar_de_esencia",
+        efecto: "buff",
+        stats: {
+          ATQ: 1,
+          RES: 0
+        },
+        objetivo: {
+          tipo: "self",
+          controlador: "propio",
+          zona: "campo"
+        },
+        duracion: "turno",
+        texto: "Cuando esta carta cambie de Esencia, esta carta gana 1 de ATQ, hasta el final del turno."
       }
     ],
     createdAt: "2026-11-10T00:12:00.082Z",
@@ -4533,7 +4549,7 @@ var FuenteEfectos_default = [
     stats: {
       cost: 2,
       poder: 2,
-      resistencia: 3
+      resistencia: 4
     },
     efectos: [
       {
@@ -4625,7 +4641,7 @@ var FuenteEfectos_default = [
     stats: {
       cost: 3,
       poder: 3,
-      resistencia: 4
+      resistencia: 3
     },
     efectos: [
       {
@@ -4645,6 +4661,21 @@ var FuenteEfectos_default = [
         },
         duracion: "mientras_en_campo",
         texto: "Todos tus Campeones de esencia Bestia ganan 1 de ATQ, mientras esta carta est\xE9 en el campo."
+      },
+      {
+        tipo: "continuo",
+        efecto: "grant_keyword",
+        keyword: "Presteza",
+        objetivo: {
+          tipo: "todos_campeones_propios",
+          controlador: "propio",
+          zona: "campo",
+          filtros: {
+            comparteEsenciaConOtro: true
+          }
+        },
+        duracion: "mientras_en_campo",
+        texto: "Todos tus Campeones que compartan Esencia con otro Campe\xF3n que controles ganan Presteza, mientras esta carta est\xE9 en el campo."
       }
     ],
     createdAt: "2026-11-10T00:12:00.082Z",
@@ -4672,7 +4703,7 @@ var FuenteEfectos_default = [
     stats: {
       cost: 3,
       poder: 3,
-      resistencia: 4
+      resistencia: 5
     },
     efectos: [
       {
@@ -4707,7 +4738,7 @@ var FuenteEfectos_default = [
       "Normal"
     ],
     catHabilidad: [
-      "Normal"
+      "Efecto"
     ],
     name: "Behemot del Derrame",
     rarity: "Poco Com\xFAn",
@@ -4717,9 +4748,26 @@ var FuenteEfectos_default = [
     stats: {
       cost: 4,
       poder: 3,
-      resistencia: 6
+      resistencia: 5
     },
-    efectos: [],
+    efectos: [
+      {
+        tipo: "continuo",
+        requisitoCampo: {
+          tipo: "misma_esencia",
+          minimo: 2
+        },
+        efecto: "grant_keyword",
+        keyword: "Indestructible",
+        objetivo: {
+          tipo: "self",
+          controlador: "propio",
+          zona: "campo"
+        },
+        duracion: "mientras_en_campo",
+        texto: "Si controlas 2 o m\xE1s Campeones de una misma Esencia, esta carta gana Indestructible, mientras esta carta est\xE9 en el campo."
+      }
+    ],
     createdAt: "2026-11-10T00:12:00.082Z",
     updatedAt: "2026-11-13T04:27:44.317Z"
   },
@@ -4744,8 +4792,8 @@ var FuenteEfectos_default = [
     flavorText: "Cada pieza fue otra cosa antes de ser esta.",
     stats: {
       cost: 5,
-      poder: 4,
-      resistencia: 6
+      poder: 5,
+      resistencia: 7
     },
     efectos: [
       {
@@ -4766,6 +4814,22 @@ var FuenteEfectos_default = [
         },
         duracion: "turno",
         texto: "Puedes pagar 3 \xC9ter, una vez por turno, todos tus Campeones se convierten en la esencia que elijas, hasta el final del turno."
+      },
+      {
+        tipo: "pasivo",
+        trigger: "cuando_campeon_propio_cambia_esencia",
+        efecto: "buff",
+        stats: {
+          ATQ: 1,
+          RES: 0
+        },
+        objetivo: {
+          tipo: "campeon_del_trigger",
+          controlador: "propio",
+          zona: "campo"
+        },
+        duracion: "turno",
+        texto: "Cuando un Campe\xF3n que controles cambie de Esencia, ese Campe\xF3n gana 1 de ATQ, hasta el final del turno."
       }
     ],
     createdAt: "2026-11-10T00:12:00.082Z",

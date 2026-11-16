@@ -1,5 +1,5 @@
 import { ALL_CARDS, ESTASIS_CARDS, DISONANCIA_CARDS, PURGA_CARDS, MUTACION_CARDS, getPaquete } from '../shared/data/paquetes'
-import type { AnyCard } from '../shared/types'
+import type { AnyCard, Faccion } from '../shared/types'
 import { getCardMeta } from './game/cards'
 
 /** Expande diseños a copias según limiteCopias (mazo jugable de 66 cardIds). */
@@ -48,6 +48,9 @@ export const MAZOS: MazoJugable[] = [
 
 /** El rival natural de cada set (las parejas espejo del Eje): Estásis↔Disonancia, Purga↔Mutación. */
 const RIVAL_DE: Record<SetId, SetId> = { estasis: 'disonancia', disonancia: 'estasis', purga: 'mutacion', mutacion: 'purga' }
+
+/** Facción de un set oficial (Estásis → Orden, Disonancia → Caos, Purga → Purga, Mutación → Mutación), tomada de su paquete. */
+export const faccionDeSet = (id: SetId): Faccion => (getPaquete(id)?.facciones?.[0] as Faccion | undefined) ?? 'Orden'
 
 export const mazoPorId = (id: string): MazoJugable | undefined => MAZOS.find((m) => m.id === id)
 

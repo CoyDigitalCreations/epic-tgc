@@ -2,7 +2,8 @@ import { Link } from 'react-router'
 import { Boton } from '../shared/ui/Boton'
 import { Seccion } from '../shared/ui/Seccion'
 import type { Dificultad } from './game/bot'
-import { MAZOS, mazoParaBot, type RivalElegido, type SetId } from './mazos'
+import { faccionDeSet, MAZOS, mazoParaBot, type RivalElegido, type SetId } from './mazos'
+import { SelectorRival } from './components/SelectorRival'
 import { TarjetaMazo } from './components/TarjetaMazo'
 import type { MazoPersonalizado } from './useMazosStore'
 
@@ -108,7 +109,7 @@ export function MenuPartida({
                   key={mazo.id}
                   nombre={mazo.nombre}
                   color={mazo.color}
-                  etiqueta={`Set oficial · facción ${mazo.id === 'estasis' ? 'Orden' : 'Caos'}`}
+                  etiqueta={`Set oficial · facción ${faccionDeSet(mazo.id)}`}
                   cardIds={mazo.cardIds}
                   seleccionado={mazoHumano.tipo === 'set' && mazoHumano.id === mazo.id}
                   onSeleccionar={() => onMazo({ tipo: 'set', id: mazo.id })}
@@ -170,25 +171,11 @@ export function MenuPartida({
                 </div>
               </div>
               {onRival && (
-                <div role="group" aria-label="Mazo del rival" className="-mt-2 mb-5 flex flex-wrap gap-1.5">
-                  {[{ id: 'auto' as const, nombre: 'Automático', color: '#9ca3af' }, ...MAZOS.map((m) => ({ id: m.id as SetId, nombre: m.nombre, color: m.color }))].map((op) => {
-                    const activo = rivalElegido === op.id
-                    return (
-                      <button
-                        key={op.id}
-                        type="button"
-                        aria-pressed={activo}
-                        onClick={() => onRival(op.id)}
-                        className={`cursor-pointer rounded-full border px-3 py-1 text-[11px] font-semibold transition-colors ${
-                          activo ? 'border-transparent text-[#0a0a12]' : 'border-white/15 text-gray-300 hover:border-white/35'
-                        }`}
-                        style={activo ? { background: op.color } : undefined}
-                      >
-                        {`Rival: ${op.nombre}`}
-                      </button>
-                    )
-                  })}
-                </div>
+                <SelectorRival
+                  valor={rivalElegido}
+                  onCambiar={onRival}
+                  automatico={mazoParaBot(seed, mazoHumano.tipo === 'set' ? mazoHumano.id : 'custom')}
+                />
               )}
 
               {/* Dificultad */}

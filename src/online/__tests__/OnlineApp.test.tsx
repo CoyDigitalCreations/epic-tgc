@@ -39,8 +39,8 @@ describe('OnlineApp', () => {
     expect(screen.getByRole('heading', { name: 'Éter Online' })).toBeInTheDocument()
     expect(screen.getByText('Nueva partida')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Comenzar partida' })).toBeInTheDocument()
-    expect(screen.getByText('Estásis')).toBeInTheDocument()
-    expect(screen.getByText('Disonancia')).toBeInTheDocument()
+    expect(screen.getAllByText('Estásis').length).toBeGreaterThan(0) // la tarjeta del set y su ficha en el selector de rival
+    expect(screen.getAllByText('Disonancia').length).toBeGreaterThan(0) // la tarjeta del set y su ficha en el selector de rival
   })
 
   it('tiene un botón para volver a la landing inicial', () => {
@@ -165,8 +165,8 @@ describe('OnlineApp — mazo personalizado', () => {
   it('un mazo personalizado no pisa los sets (los sets siguen con diseños originales)', () => {
     renderApp()
     // Ambos sets preestablecidos siguen en el menú
-    expect(screen.getByText('Estásis')).toBeInTheDocument()
-    expect(screen.getByText('Disonancia')).toBeInTheDocument()
+    expect(screen.getAllByText('Estásis').length).toBeGreaterThan(0) // la tarjeta del set y su ficha en el selector de rival
+    expect(screen.getAllByText('Disonancia').length).toBeGreaterThan(0) // la tarjeta del set y su ficha en el selector de rival
   })
 
   it('la card del mazo personalizado muestra miniaturas de sus cartas', async () => {
