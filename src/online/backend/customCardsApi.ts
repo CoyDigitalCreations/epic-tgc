@@ -4,7 +4,9 @@
  * Las cartas custom del Forge se suben aquí para que estén disponibles
  * en partidas JvJ. La Edge Function las carga al crear/unirse a salas.
  *
- * RLS: INSERT solo las propias (created_by = auth.uid()), SELECT todas.
+ * RLS: INSERT/UPDATE/DELETE solo administradores (eter.es_admin(), ver el login del Card-Maker); SELECT todas.
+ * La tabla vive en el esquema `eter`: sin `.schema('eter')` PostgREST busca en `public` y falla (antes de este arreglo la subida
+ * fallaba en silencio por eso).
  */
 import { getSupabase } from './supabase'
 import type { AnyCard } from '../../shared/types'
@@ -21,9 +23,12 @@ export async function subirCartaCustom(card: AnyCard): Promise<void> {
   void hasImage
   try {
     const { data } = await supabase.auth.getSession()
-    const userId = data.session?.user?.id
-    if (!userId) return
+    const usuario = data.session?.user
+    // Las sesiones anónimas (jugadores) no pueden escribir: ni se intenta
+    if (!usuario || usuario.is_anonymous) return
+    const userId = usuario.id
     await supabase
+      .schema('eter')
       .from(TABLE)
       .upsert(
         {
@@ -44,6 +49,7 @@ export async function bajarCartasCustom(): Promise<AnyCard[]> {
   if (!supabase) return []
   try {
     const { data } = await supabase
+      .schema('eter')
       .from(TABLE)
       .select('definition')
     if (!data) return []

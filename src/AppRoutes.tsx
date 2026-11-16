@@ -4,6 +4,7 @@ import { BotonPantallaCompleta } from './BotonPantallaCompleta'
 import Landing from './Landing'
 
 const ForgeApp = lazy(() => import('./forge/App'))
+const AdminGate = lazy(() => import('./forge/auth/AdminGate'))
 const OnlineApp = lazy(() => import('./online/OnlineApp'))
 const Lobby = lazy(() => import('./online/lobby/Lobby'))
 const Perfil = lazy(() => import('./online/perfil/Perfil'))
@@ -28,7 +29,9 @@ export function AppRoutes() {
         path="/card-maker"
         element={
           <Suspense fallback={<AppFallback />}>
-            <ForgeApp />
+            <AdminGate>
+              <ForgeApp />
+            </AdminGate>
           </Suspense>
         }
       />
