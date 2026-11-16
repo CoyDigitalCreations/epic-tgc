@@ -9,7 +9,9 @@
  *   Vista     = estuvo en la mano después del mulligan (cuenta una vez por partida, aunque haya varias copias)
  *   Jugada    = el jugador la bajó/colocó/respondió con ella (acciones jugar_*, colocar_*, equipar, responder_cadena)
  *   Activ.    = activar_habilidad / activar_arcana / usar_transmutar con ella
- *   Murió     = evento carta_muerta de una copia suya
+ *   Trig      = trigger_apilado de ella (efectos «al invocar / al atacar / al jugar Mística»: lo que Activ NO cuenta)
+ *   Murió     = carta_muerta de una copia suya (combate o efecto; una ruptura NO emite carta_muerta)
+ *   VRot      = veces que una copia suya, puesta de Vínculo, fue ROTA (ruptura_realizada; el Vínculo roto se queda boca arriba en su slot)
  *   Mano fin  = partidas en que terminó en la mano (la vio y nunca la bajó)
  *   Pagos     = (solo Éter) veces que se pagó como Éter
  *   WR vista / WR jugada = % de victorias de ese mazo en las partidas donde la vio / donde la jugó. Con pocas partidas es ruido:
@@ -21,6 +23,9 @@
  *   --procs  procesos en paralelo (default: núcleos - 1)
  *   --mazos  par de mazos a enfrentar, p. ej. mutacion,estasis (default estasis,disonancia)
  *   --json   imprime el resumen crudo (lo usan los procesos hijos)
+ *
+ * Además de la tabla por carta imprime un «Panorama de partida» por mazo: cómo termina (Vínculos / mazo vacío), tempo (turnos, primera
+ * ruptura), presión (ataques, rupturas hechas, Vínculos que le quedan al terminar) y de qué mueren sus cartas.
  */
 import { spawn } from 'node:child_process'
 import os from 'node:os'
@@ -56,12 +61,44 @@ interface Ficha {
   vista: number; jugada: number; manoFin: number; vicVista: number; vicJugada: number
   /** Eventos (todas las copias) */
   jugadas: number; activaciones: number; muertes: number; pagos: number
+  /** Triggers apilados de la carta y veces que una copia suya fue rota estando de Vínculo. */
+  triggers: number; vinculosRotos: number
 }
-type Resumen = { [mazo: string]: Record<string, Ficha> | Record<Mazo, number> } & { partidas: Record<Mazo, number>; victorias: Record<Mazo, number> }
 
-const ficha = (): Ficha => ({ copias: 0, vista: 0, jugada: 0, manoFin: 0, vicVista: 0, vicJugada: 0, jugadas: 0, activaciones: 0, muertes: 0, pagos: 0 })
-const vacio = (): Resumen => ({ [NOMBRE_1]: {}, [NOMBRE_2]: {}, partidas: { [NOMBRE_1]: 0, [NOMBRE_2]: 0 }, victorias: { [NOMBRE_1]: 0, [NOMBRE_2]: 0 } }) as Resumen
-const de = (res: Resumen, m: Mazo, id: string): Ficha => ((res[m] as Record<string, Ficha>)[id] ??= ficha())
+/** Panorama de partida de un MAZO (todo se suma por partida; se divide por `partidas` al imprimir). */
+interface Juego {
+  primero: number; victPrimero: number
+  victVinculos: number; victMazo: number; derrVinculos: number; derrMazo: number; otros: number
+  /** Turnos propios jugados */
+  turnos: number
+  ataques: number; atacantes: number; bloqueos: number
+  /** Vínculos rivales que ROMPIÓ; y el turno propio (1 = su primer turno) de su primera ruptura, solo en partidas donde rompió alguno */
+  rupturas: number; primeraRupturaTurno: number; primeraRupturaN: number
+  /** Al terminar: Vínculos propios SIN romper y Campeones propios en campo */
+  vinculosFin: number; campeonesFin: number
+  /** Cartas suyas muertas, por causa */
+  muertesCombate: number; muertesEfecto: number
+}
+interface Resumen {
+  cartas: Record<Mazo, Record<string, Ficha>>
+  juego: Record<Mazo, Juego>
+  partidas: Record<Mazo, number>
+  victorias: Record<Mazo, number>
+}
+
+const ficha = (): Ficha => ({ copias: 0, vista: 0, jugada: 0, manoFin: 0, vicVista: 0, vicJugada: 0, jugadas: 0, activaciones: 0, muertes: 0, pagos: 0, triggers: 0, vinculosRotos: 0 })
+const juegoVacio = (): Juego => ({
+  primero: 0, victPrimero: 0, victVinculos: 0, victMazo: 0, derrVinculos: 0, derrMazo: 0, otros: 0, turnos: 0,
+  ataques: 0, atacantes: 0, bloqueos: 0, rupturas: 0, primeraRupturaTurno: 0, primeraRupturaN: 0,
+  vinculosFin: 0, campeonesFin: 0, muertesCombate: 0, muertesEfecto: 0,
+})
+const vacio = (): Resumen => ({
+  cartas: { [NOMBRE_1]: {}, [NOMBRE_2]: {} },
+  juego: { [NOMBRE_1]: juegoVacio(), [NOMBRE_2]: juegoVacio() },
+  partidas: { [NOMBRE_1]: 0, [NOMBRE_2]: 0 },
+  victorias: { [NOMBRE_1]: 0, [NOMBRE_2]: 0 },
+})
+const de = (res: Resumen, m: Mazo, id: string): Ficha => (res.cartas[m][id] ??= ficha())
 
 function jugar(nombreBot: string, seed: number, mazoA: Mazo, res: Resumen): void {
   const crearBot = () => resolverBot(nombreBot)!
@@ -74,6 +111,9 @@ function jugar(nombreBot: string, seed: number, mazoA: Mazo, res: Resumen): void
   const vistas: Record<PlayerId, Set<string>> = { A: new Set(), B: new Set() }
   const jugadas: Record<PlayerId, Set<string>> = { A: new Set(), B: new Set() }
   const cardIdDe = (id: string) => estado.instances[id]?.cardId as string | undefined
+  const turnosPropios: Record<PlayerId, number> = { A: 0, B: 0 }
+  const primeraRuptura: Record<PlayerId, number | null> = { A: null, B: null }
+  const jg = (j: PlayerId): Juego => res.juego[mazoDe[j]]
   let it = 0
   while (estado.fase !== 'terminada' && it < 6000) {
     const actor: PlayerId = actorActual(estado) ?? estado.turno
@@ -94,7 +134,26 @@ function jugar(nombreBot: string, seed: number, mazoA: Mazo, res: Resumen): void
     for (const e of r.events) {
       if (e.type === 'carta_muerta') {
         const cid = r.state.instances[e.cardInstanceId]?.cardId as string | undefined
+        const g = jg(e.jugador)
+        if (e.causa === 'combate') g.muertesCombate++
+        else g.muertesEfecto++
         if (cid) de(res, mazoDe[e.jugador], cid).muertes++
+      }
+      if (e.type === 'trigger_apilado') {
+        const cid = r.state.instances[e.cardInstanceId]?.cardId as string | undefined
+        if (cid) de(res, mazoDe[e.jugador], cid).triggers++
+      }
+      if (e.type === 'turno_iniciado') turnosPropios[e.jugador]++
+      if (e.type === 'ataque_declarado') { const g = jg(e.jugador); g.ataques++; g.atacantes += e.atacanteIds.length }
+      if (e.type === 'bloqueo_declarado') jg(e.jugador).bloqueos++
+      // La ruptura la hace quien tiene el turno (el rival del dueño del Vínculo)
+      if (e.type === 'ruptura_realizada') {
+        jg(estado.turno).rupturas++
+        primeraRuptura[estado.turno] ??= turnosPropios[estado.turno]
+        // La víctima es el rival del que ataca; el Vínculo roto sigue en su slot (boca arriba), así que su cardId se lee del estado
+        const rival: PlayerId = estado.turno === 'A' ? 'B' : 'A'
+        const cid = r.state.instances[e.vinculoId]?.cardId as string | undefined
+        if (cid) de(res, mazoDe[rival], cid).vinculosRotos++
       }
       // Un pago se atribuye al DUEÑO de la carta Éter: el Éter arrebatado (steal_ether) paga costes del rival pero sigue siendo del otro mazo
       if (e.type === 'eter_pagado') for (const eid of e.eterIds) {
@@ -126,6 +185,19 @@ function jugar(nombreBot: string, seed: number, mazoA: Mazo, res: Resumen): void
     }
     res.partidas[m]++
     if (gano) res.victorias[m]++
+    // Panorama de partida
+    const g = res.juego[m]
+    const perdio = estado.ganador != null && !gano
+    if (j === estado.primerJugador) { g.primero++; if (gano) g.victPrimero++ }
+    if (estado.motivo === 'vinculos' && gano) g.victVinculos++
+    else if (estado.motivo === 'vinculos' && perdio) g.derrVinculos++
+    else if (estado.motivo === 'mazo_vacio' && gano) g.victMazo++
+    else if (estado.motivo === 'mazo_vacio' && perdio) g.derrMazo++
+    else g.otros++
+    g.turnos += turnosPropios[j]
+    if (primeraRuptura[j] != null) { g.primeraRupturaTurno += primeraRuptura[j]!; g.primeraRupturaN++ }
+    g.vinculosFin += estado.players[j].vinculos.filter((id) => id && !estado.instances[id]?.bocaArriba).length
+    g.campeonesFin += estado.players[j].campo.campeones.filter(Boolean).length
   }
 }
 
@@ -142,10 +214,11 @@ const unir = (partes: Resumen[]): Resumen => {
   const r = vacio()
   for (const p of partes) for (const m of [NOMBRE_1, NOMBRE_2]) {
     r.partidas[m] += p.partidas[m]; r.victorias[m] += p.victorias[m]
-    for (const [cid, f] of Object.entries(p[m] as Record<string, Ficha>)) {
+    for (const [cid, f] of Object.entries(p.cartas[m])) {
       const t = de(r, m, cid)
       for (const k of Object.keys(t) as (keyof Ficha)[]) t[k] += f[k]
     }
+    for (const k of Object.keys(r.juego[m]) as (keyof Juego)[]) r.juego[m][k] += p.juego[m][k]
   }
   return r
 }
@@ -176,11 +249,11 @@ const wr = (v: number, p: number) => (p >= MIN_WR ? pct(v, p) : '—')
 function imprimir(r: Resumen, m: Mazo): void {
   const partidas = r.partidas[m]
   const meta = new Map(CARTAS[m].map((c) => [c.id, c as unknown as { id: string; name: string; type: string; limiteCopias?: string | number }]))
-  const filas = Object.entries(r[m]).map(([cid, f]) => ({ cid, f, c: meta.get(cid) }))
+  const filas = Object.entries(r.cartas[m]).map(([cid, f]) => ({ cid, f, c: meta.get(cid) }))
   const noEter = filas.filter((x) => x.c?.type !== 'Éter')
   const eter = filas.filter((x) => x.c?.type === 'Éter')
   console.log(`\n=== ${m} · ${partidas} partidas · victorias ${pct(r.victorias[m], partidas)} ===`)
-  console.log('Carta (id · tipo)'.padEnd(46), 'Cop', 'Vista', 'Jugada', '%Jug', 'Activ', 'Murió', 'ManoFin', 'WRvista', 'WRjug')
+  console.log('Carta (id · tipo)'.padEnd(46), 'Cop', 'Vista', 'Jugada', '%Jug', 'Activ', ' Trig', 'Murió', ' VRot', 'ManoFin', 'WRvista', 'WRjug')
   // Las que menos se juegan primero: ahí está el hallazgo
   noEter.sort((a, b) => a.f.jugada / Math.max(1, a.f.vista) - b.f.jugada / Math.max(1, b.f.vista))
   for (const { cid, f, c } of noEter) {
@@ -188,13 +261,25 @@ function imprimir(r: Resumen, m: Mazo): void {
     console.log(
       etiqueta.padEnd(46),
       String(c?.limiteCopias ?? 1).padStart(3), String(f.vista).padStart(5), String(f.jugada).padStart(6), pct(f.jugada, f.vista).padStart(4),
-      (f.activaciones / Math.max(1, partidas)).toFixed(2).padStart(5), (f.muertes / Math.max(1, partidas)).toFixed(2).padStart(5), pct(f.manoFin, f.vista).padStart(7),
+      (f.activaciones / Math.max(1, partidas)).toFixed(2).padStart(5), (f.triggers / Math.max(1, partidas)).toFixed(2).padStart(5),
+      (f.muertes / Math.max(1, partidas)).toFixed(2).padStart(5), (f.vinculosRotos / Math.max(1, partidas)).toFixed(2).padStart(5), pct(f.manoFin, f.vista).padStart(7),
       wr(f.vicVista, f.vista).padStart(7), wr(f.vicJugada, f.jugada).padStart(5),
     )
   }
   console.log(`\nÉteres (pagos por partida; la mano no los cuenta: salen de la Reserva)`)
   eter.sort((a, b) => b.f.pagos - a.f.pagos)
   for (const { cid, f, c } of eter) console.log(`  ${(`${c?.name ?? cid} (${cid})`).padEnd(44)} pagos/partida ${(f.pagos / Math.max(1, partidas)).toFixed(2)}`)
+
+  const g = r.juego[m]
+  const por = (x: number) => (x / Math.max(1, partidas)).toFixed(2)
+  const segundo = partidas - g.primero
+  console.log(`\nPanorama de partida (promedios por partida)`)
+  console.log(`  Victorias yendo primero ${pct(g.victPrimero, g.primero)} (${g.primero} partidas) · yendo segundo ${pct(r.victorias[m] - g.victPrimero, segundo)} (${segundo} partidas)`)
+  console.log(`  Gana por: Vínculos ${g.victVinculos} · mazo vacío ${g.victMazo}   |   Pierde por: Vínculos ${g.derrVinculos} · mazo vacío ${g.derrMazo}   |   otros/empate ${g.otros}`)
+  console.log(`  Turnos propios ${por(g.turnos)} · ataques ${por(g.ataques)} (${(g.atacantes / Math.max(1, g.ataques)).toFixed(2)} atacantes c/u) · bloqueos ${por(g.bloqueos)}`)
+  console.log(`  Rupturas hechas ${por(g.rupturas)} · 1ª ruptura en su turno ${(g.primeraRupturaTurno / Math.max(1, g.primeraRupturaN)).toFixed(1)} (en ${g.primeraRupturaN} partidas)`)
+  console.log(`  Al terminar: Vínculos propios sin romper ${por(g.vinculosFin)} · Campeones en campo ${por(g.campeonesFin)}`)
+  console.log(`  Campeones propios muertos: combate ${por(g.muertesCombate)} · efecto ${por(g.muertesEfecto)}`)
 }
 
 async function main(): Promise<void> {
