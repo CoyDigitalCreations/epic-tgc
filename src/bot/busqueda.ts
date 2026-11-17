@@ -58,6 +58,22 @@ export function atacantesRelevantes(s: GameState, acciones: Action[]): Action[] 
   return acciones.filter((a) => a.type !== 'declarar_ataque' || permitidos.has(clave(a.atacanteIds)))
 }
 
+/**
+ * Acciones del RIVAL que solo existen porque tiene información oculta para quien busca: una respuesta que sale de su mano
+ * (`jugar_respuesta`) o de una carta suya boca abajo (`responder_cadena`, `activar_arcana`). Bloquear, pasar prioridad o activar la
+ * habilidad de un Campeón en mesa son públicas: se deducen del tablero.
+ */
+export const ACCIONES_CON_INFO_OCULTA: ReadonlySet<Action['type']> = new Set<Action['type']>(['jugar_respuesta', 'responder_cadena', 'activar_arcana'])
+
+/**
+ * Lo que un jugador real puede suponer que hará el rival: sin sus cartas ocultas. Si no queda nada público (no debería pasar: en una
+ * ventana siempre se puede pasar prioridad) se devuelve la lista entera para no dejar la búsqueda sin salida.
+ */
+export function soloPublicas(acciones: Action[]): Action[] {
+  const publicas = acciones.filter((a) => !ACCIONES_CON_INFO_OCULTA.has(a.type))
+  return publicas.length > 0 ? publicas : acciones
+}
+
 /** Jugada «libre»: el que actúa elige a gusto (no es una respuesta forzosa a algo pendiente). */
 export function esLibre(s: GameState, acciones: Action[]): boolean {
   return !s.combate && acciones.some((a) => a.type === 'pasar_turno')
@@ -73,6 +89,12 @@ export interface Config {
   presupuesto: number
   /** Probabilidad (0-1) de elegir al azar una de las 3 mejores jugadas en vez de la mejor: es lo que baja el nivel. Determinista. */
   ruido: number
+  /**
+   * Experimento de información oculta. Con `true`, en los nodos del RIVAL la búsqueda no considera respuestas que salen de su mano
+   * ni de sus cartas boca abajo (ver `soloPublicas`): asume que pasa prioridad, como lo haría quien no puede ver esas cartas.
+   * Por defecto (ausente/false) el rival se explora con sus acciones reales, que incluyen lo oculto.
+   */
+  infoPublica?: boolean
 }
 
 /** Contador mutable de simulaciones que le quedan a UNA alternativa raíz. */
@@ -89,7 +111,7 @@ export function valor(s: GameState, yo: PlayerId, prof: number, cfg: Config, gas
   if (esLibre(s, acciones)) return evaluar(s, yo, cfg.pesos) // hoja: alguien juega a gusto
 
   const mio = actor === yo
-  const candidatas = mio ? acciones : acciones.slice(0, cfg.anchoRival)
+  const candidatas = mio ? acciones : (cfg.infoPublica ? soloPublicas(acciones) : acciones).slice(0, cfg.anchoRival)
   let mejor = mio ? -Infinity : Infinity
   for (const a of candidatas) {
     gasto.restante--

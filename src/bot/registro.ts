@@ -19,6 +19,11 @@ export const BOTS: Record<string, Bot> = {
   /** El Difícil sin el bonus por Arcana colocada: línea base para medir ESE cambio por separado (conserva la valoración nueva del Éter). */
   'dificil-sin-arcana': crearBotBusqueda({ ...CONFIG, pesos: PESOS_SIN_ARCANA }),
   'dificil-sin-mano-campeon': crearBotBusqueda({ ...CONFIG, pesos: PESOS_SIN_MANO_CAMPEON }),
+  /**
+   * El Difícil SIN ver la información oculta del rival (su mano y sus cartas boca abajo) al buscar: experimento para medir cuánto sesga
+   * la arena que el bot normal la vea (ver `Config.infoPublica`).
+   */
+  'dificil-publico': crearBotBusqueda({ ...CONFIG, infoPublica: true }),
 }
 
 /**
@@ -34,6 +39,7 @@ export function resolverBot(nombre: string): Bot | undefined {
     else if (k === 'pres') cfg.presupuesto = n
     else if (k === 'ancho') cfg.anchoRival = n
     else if (k === 'ruido') cfg.ruido = n
+    else if (k === 'publica') cfg.infoPublica = n === 1
   }
   return crearBotBusqueda(cfg)
 }
