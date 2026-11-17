@@ -12,6 +12,8 @@
  *   Trig      = trigger_apilado de ella (efectos «al invocar / al atacar / al jugar Mística»: lo que Activ NO cuenta)
  *   Murió     = carta_muerta de una copia suya (combate o efecto; una ruptura NO emite carta_muerta)
  *   VRot      = veces que una copia suya, puesta de Vínculo, fue ROTA (ruptura_realizada; el Vínculo roto se queda boca arriba en su slot)
+ *   Desc      = veces por partida que una copia suya se DESCARTÓ de la mano (límite de 6 al terminar el turno): explica las cartas que se
+ *               vieron, no se jugaron y tampoco quedaron en la mano al final
  *   Mano fin  = partidas en que terminó en la mano (la vio y nunca la bajó)
  *   Pagos     = (solo Éter) veces que se pagó como Éter
  *   WR vista / WR jugada = % de victorias de ese mazo en las partidas donde la vio / donde la jugó. Con pocas partidas es ruido:
@@ -63,6 +65,8 @@ interface Ficha {
   jugadas: number; activaciones: number; muertes: number; pagos: number
   /** Triggers apilados de la carta y veces que una copia suya fue rota estando de Vínculo. */
   triggers: number; vinculosRotos: number
+  /** Copias suyas descartadas de la mano (carta_descartada) */
+  descartes: number
 }
 
 /** Panorama de partida de un MAZO (todo se suma por partida; se divide por `partidas` al imprimir). */
@@ -93,7 +97,7 @@ interface Resumen {
   victorias: Record<Mazo, number>
 }
 
-const ficha = (): Ficha => ({ copias: 0, vista: 0, jugada: 0, manoFin: 0, vicVista: 0, vicJugada: 0, jugadas: 0, activaciones: 0, muertes: 0, pagos: 0, triggers: 0, vinculosRotos: 0 })
+const ficha = (): Ficha => ({ copias: 0, vista: 0, jugada: 0, manoFin: 0, vicVista: 0, vicJugada: 0, jugadas: 0, activaciones: 0, muertes: 0, pagos: 0, triggers: 0, vinculosRotos: 0, descartes: 0 })
 const juegoVacio = (): Juego => ({
   primero: 0, victPrimero: 0, victVinculos: 0, victMazo: 0, derrVinculos: 0, derrMazo: 0, otros: 0, turnos: 0,
   ataques: 0, atacantes: 0, bloqueos: 0, rupturas: 0, primeraRupturaTurno: 0, primeraRupturaN: 0,
@@ -150,6 +154,12 @@ function jugar(nombreBot: string, seed: number, mazoA: Mazo, res: Resumen): void
         if (e.causa === 'combate') g.muertesCombate++
         else g.muertesEfecto++
         if (cid) de(res, mazoDe[e.jugador], cid).muertes++
+      }
+      if (e.type === 'carta_descartada') {
+        for (const did of e.cardInstanceIds) {
+          const cid = r.state.instances[did]?.cardId as string | undefined
+          if (cid) de(res, mazoDe[e.jugador], cid).descartes++
+        }
       }
       if (e.type === 'trigger_apilado') {
         const cid = r.state.instances[e.cardInstanceId]?.cardId as string | undefined
@@ -274,7 +284,7 @@ function imprimir(r: Resumen, m: Mazo): void {
   const noEter = filas.filter((x) => x.c?.type !== 'Éter')
   const eter = filas.filter((x) => x.c?.type === 'Éter')
   console.log(`\n=== ${m} · ${partidas} partidas · victorias ${pct(r.victorias[m], partidas)} ===`)
-  console.log('Carta (id · tipo)'.padEnd(46), 'Cop', 'Vista', 'Jugada', '%Jug', 'Activ', ' Trig', 'Murió', ' VRot', 'ManoFin', 'WRvista', 'WRjug')
+  console.log('Carta (id · tipo)'.padEnd(46), 'Cop', 'Vista', 'Jugada', '%Jug', 'Activ', ' Trig', 'Murió', ' VRot', ' Desc', 'ManoFin', 'WRvista', 'WRjug')
   // Las que menos se juegan primero: ahí está el hallazgo
   noEter.sort((a, b) => a.f.jugada / Math.max(1, a.f.vista) - b.f.jugada / Math.max(1, b.f.vista))
   for (const { cid, f, c } of noEter) {
@@ -283,7 +293,7 @@ function imprimir(r: Resumen, m: Mazo): void {
       etiqueta.padEnd(46),
       String(c?.limiteCopias ?? 1).padStart(3), String(f.vista).padStart(5), String(f.jugada).padStart(6), pct(f.jugada, f.vista).padStart(4),
       (f.activaciones / Math.max(1, partidas)).toFixed(2).padStart(5), (f.triggers / Math.max(1, partidas)).toFixed(2).padStart(5),
-      (f.muertes / Math.max(1, partidas)).toFixed(2).padStart(5), (f.vinculosRotos / Math.max(1, partidas)).toFixed(2).padStart(5), pct(f.manoFin, f.vista).padStart(7),
+      (f.muertes / Math.max(1, partidas)).toFixed(2).padStart(5), (f.vinculosRotos / Math.max(1, partidas)).toFixed(2).padStart(5), (f.descartes / Math.max(1, partidas)).toFixed(2).padStart(5), pct(f.manoFin, f.vista).padStart(7),
       wr(f.vicVista, f.vista).padStart(7), wr(f.vicJugada, f.jugada).padStart(5),
     )
   }
