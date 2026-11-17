@@ -3331,11 +3331,11 @@ var FuenteEfectos_default = [
   },
   {
     id: "PU-019",
-    name: "Revocaci\xF3n",
+    name: "Embargo",
     type: "M\xEDstica",
     rarity: "Rara",
     keywords: [],
-    flavorText: "Lo que se anula, se anula por completo.",
+    flavorText: "Lo que se embarga ya no responde ante nadie.",
     paqueteId: "purga",
     limiteCopias: "2",
     stats: {
@@ -3344,21 +3344,22 @@ var FuenteEfectos_default = [
     efectos: [
       {
         tipo: "hechizo",
-        efecto: "recuperar_exilio",
-        objetivo: {
-          tipo: "campeon",
-          controlador: "propio",
-          zona: "exilio",
-          filtros: {
-            faccion: "Purga",
-            costeMin: 1
-          }
+        efecto: "destroy",
+        costo: {
+          tipo: "exilia_cementerio_propio",
+          cantidad: 1
         },
-        texto: "Devuelve del Exilio 1 Campe\xF3n de facci\xF3n Purga de coste 1 o m\xE1s."
+        objetivo: {
+          tipo: "mistica_arcana",
+          controlador: "rival",
+          zona: "campo"
+        },
+        cantidad: 1,
+        texto: "Puedes exiliar 1 Campe\xF3n de tu Cementerio, destruye 1 M\xEDstica o Arcana que controla el rival."
       }
     ],
     createdAt: "2026-11-09T20:18:16.399Z",
-    updatedAt: "2026-11-13T01:12:42.307Z"
+    updatedAt: "2026-11-17T05:36:36.698Z"
   },
   {
     id: "PU-020",
@@ -4937,18 +4938,29 @@ var FuenteEfectos_default = [
     type: "M\xEDstica",
     keywords: [],
     paqueteId: "mutacion",
-    name: "Savia Prestada",
-    rarity: "Com\xFAn",
+    name: "Marchitez F\xE9rtil",
+    rarity: "Poco Com\xFAn",
     limiteCopias: "2",
-    flavorText: "La savia que se presta siempre vuelve, con inter\xE9s.",
+    flavorText: "Lo que se pudre abona lo que viene.",
     stats: {
-      cost: 2
+      cost: 3
     },
     efectos: [
       {
         tipo: "hechizo",
+        efecto: "destroy",
+        objetivo: {
+          tipo: "mistica_arcana",
+          controlador: "rival",
+          zona: "campo"
+        },
+        cantidad: 1,
+        texto: "Destruye 1 M\xEDstica o Arcana que controla el rival."
+      },
+      {
+        tipo: "hechizo",
         efecto: "return_ether",
-        cantidad: 3,
+        cantidad: 1,
         esHasta: true,
         objetivo: {
           tipo: "eter",
@@ -4957,11 +4969,11 @@ var FuenteEfectos_default = [
           zonaDestino: "reserva",
           controladorDestino: "propio"
         },
-        texto: "Devuelve hasta 3 \xC9ter de tu zona de pago a tu Reserva."
+        texto: "Devuelve hasta 1 \xC9ter de tu zona de pago a tu Reserva."
       }
     ],
     createdAt: "2026-11-10T00:12:00.082Z",
-    updatedAt: "2026-11-13T04:31:43.033Z"
+    updatedAt: "2026-11-17T05:36:36.698Z"
   },
   {
     id: "MU-025",
