@@ -6805,7 +6805,10 @@ function costeAPagar(state, jugador, cardId, invocacion) {
   return invocacion ? costeDeCampeon(state, jugador, cardId) : getCardMeta(cardId)?.stats.cost ?? 0;
 }
 function validarPago(state, jugador, eterIds, objetivoCardId, invocacion = false) {
-  if (eterIds.length === 0) return { ok: false, error: "no indicaste \xC9teres para pagar" };
+  if (eterIds.length === 0) {
+    if (getCardMeta(objetivoCardId) && costeAPagar(state, jugador, objetivoCardId, invocacion) === 0) return { ok: true, aportado: 0 };
+    return { ok: false, error: "no indicaste \xC9teres para pagar" };
+  }
   const objetivo = getCardMeta(objetivoCardId);
   if (!objetivo) return { ok: false, error: `carta objetivo desconocida: ${objetivoCardId}` };
   const p = state.players[jugador];
@@ -6829,6 +6832,7 @@ function aplicarPago(s, ctx, jugador, eterIds, objetivoCardId, contextoUso) {
   const invocacion = contextoUso?.tipo === "invocar";
   const validado = validarPago(s, jugador, eterIds, objetivoCardId, invocacion);
   if (!validado.ok || validado.aportado === void 0) return s;
+  if (eterIds.length === 0) return s;
   const objetivo = getCardMeta(objetivoCardId);
   if (!objetivo) return s;
   const p = s.players[jugador];

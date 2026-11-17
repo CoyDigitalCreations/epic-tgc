@@ -73,7 +73,12 @@ export function validarPago(
   objetivoCardId: string,
   invocacion = false,
 ): ResultadoPago {
-  if (eterIds.length === 0) return { ok: false, error: 'no indicaste Éteres para pagar' }
+  if (eterIds.length === 0) {
+    // Una carta de coste 0 (Idris, el Soberano de Purga: su precio es el Campeón que sacrifica) se paga SIN Éter. Con coste a pagar
+    // mayor que 0 (también si una regla le suma recargo) la lista vacía sigue siendo un error.
+    if (getCardMeta(objetivoCardId) && costeAPagar(state, jugador, objetivoCardId, invocacion) === 0) return { ok: true, aportado: 0 }
+    return { ok: false, error: 'no indicaste Éteres para pagar' }
+  }
   const objetivo = getCardMeta(objetivoCardId)
   if (!objetivo) return { ok: false, error: `carta objetivo desconocida: ${objetivoCardId}` }
   const p = state.players[jugador]
@@ -106,6 +111,8 @@ export function aplicarPago(
   const invocacion = contextoUso?.tipo === 'invocar'
   const validado = validarPago(s, jugador, eterIds, objetivoCardId, invocacion)
   if (!validado.ok || validado.aportado === undefined) return s
+  // Coste 0: no hay Éter que mover, ni evento `eter_pagado` (el log y las animaciones esperan al menos un Éter), ni gatillos «al pagar»
+  if (eterIds.length === 0) return s
   const objetivo = getCardMeta(objetivoCardId)
   if (!objetivo) return s // defensivo: validarPago ya lo comprobó
   const p = s.players[jugador]
