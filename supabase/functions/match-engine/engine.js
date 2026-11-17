@@ -8114,6 +8114,9 @@ function resolverOpener(s, ctx, opener) {
           costoPagado: true
           // activar_habilidad ya cobró el coste (Reserva → 1A / bloqueado): no se vuelve a exigir
         });
+        for (const extra of opener.objetivosExtra?.[opener.efectoIdx ?? -1] ?? []) {
+          interpretEffect(s, ctx, inst, efecto, { jugador: opener.jugador, contextoUso: "objetivo-elegido", objetivoId: extra, costoPagado: true });
+        }
       }
     } else {
       for (const { efecto, efectoIdx } of hechizosDelOpener(s, opener.cardInstanceId).hechizos) {
@@ -8526,9 +8529,9 @@ function interpretEffect(s, ctx, inst, efectoData, payload) {
   }
   const isTriggered = payload.fromTrigger === true;
   const topeHasta = efectoData.cantidad ?? 1;
-  const esEterHasta = efecto === "return_ether" && efectoData.esHasta === true || efecto === "anclar_eter";
+  const esEterHasta = (efecto === "return_ether" || efecto === "steal_ether") && efectoData.esHasta === true || efecto === "anclar_eter";
   const eleccionEterHasta = esEterHasta && targetIds.length > topeHasta;
-  const autoResolver = (efecto === "mover" || efecto === "steal_ether") && efectoData.esHasta === true || esEterHasta && !eleccionEterHasta;
+  const autoResolver = efecto === "mover" && efectoData.esHasta === true || esEterHasta && !eleccionEterHasta;
   const mergedFiltros = efectoData.filtros ? { ...objetivo?.filtros, ...efectoData.filtros } : objetivo?.filtros;
   const hasAutoSelect = mergedFiltros?.seleccionar != null;
   if (usoPorTurno !== -1 && payload.contextoUso !== "objetivo-elegido" && !payload.declararOpener && (!objetivo || targetIds.length > 0 || objetivo.tipo === "self")) {

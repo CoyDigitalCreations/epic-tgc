@@ -841,6 +841,10 @@ function resolverOpener(s: GameState, ctx: Ctx, opener: OpenerCadena): void {
           objetivoId,
           costoPagado: true, // activar_habilidad ya cobró el coste (Reserva → 1A / bloqueado): no se vuelve a exigir
         })
+        // efecto «hasta N» (Ragnar): se aplica también a cada elección adicional, sin volver a cobrar el coste
+        for (const extra of opener.objetivosExtra?.[opener.efectoIdx ?? -1] ?? []) {
+          interpretEffect(s, ctx, inst, efecto, { jugador: opener.jugador, contextoUso: 'objetivo-elegido', objetivoId: extra, costoPagado: true })
+        }
       }
     } else {
       for (const { efecto, efectoIdx } of hechizosDelOpener(s, opener.cardInstanceId).hechizos) {

@@ -168,7 +168,7 @@ describe('R1 · el Éter arrebatado no se puede bloquear', () => {
   })
 })
 
-describe('R1 · Ragnar (DS-010) «Arrebato»: paga 2 Éter, una vez por turno, arrebata hasta 2 sin elegir', () => {
+describe('R1 · Ragnar (DS-010) «Arrebato»: paga 2 Éter, una vez por turno, arrebata hasta 2 (el jugador elige cuáles)', () => {
   function escena(reservaRival: number): GameState {
     const s = escenaVacia('forja'); conMazo(s, 'A', 3); conMazo(s, 'B', 3)
     conCampeon(s, 'A', 'ragnar', 'DS-010', 0)
@@ -176,20 +176,35 @@ describe('R1 · Ragnar (DS-010) «Arrebato»: paga 2 Éter, una vez por turno, a
     return s
   }
   const activar = (s: GameState, ctx: Ctx) => aplicar(s, { type: 'activar_habilidad', cardInstanceId: 'ragnar', eterIds: ['eter-A-0', 'eter-A-1'] }, ctx)
-  /** Resuelve la ventana de respuesta de la activación (nadie responde). */
+  /** Contesta las elecciones pendientes (siempre la primera opción) y resuelve la ventana de respuesta de la activación (nadie responde). */
   function resolver(s: GameState, ctx: Ctx): GameState {
     let e = s
-    for (let i = 0; i < 6 && e.cadena; i++) e = aplicar(e, { type: 'pasar_prioridad' }, ctx)
+    for (let i = 0; i < 10 && (e.cadena || e.objetivosPendientes?.length); i++) {
+      const p = e.objetivosPendientes?.[0]
+      e = p ? aplicar(e, { type: 'elegir_objetivo', objetivoId: p.opciones[0] }, ctx) : aplicar(e, { type: 'pasar_prioridad' }, ctx)
+    }
     return e
   }
-  it('con 3 Éter en la Reserva rival arrebata los primeros 2 (sin elegir) y paga 2 a su zona de pago', () => {
+  it('con 3 Éter en la Reserva rival el jugador ELIGE 2 (no los dos primeros) y paga 2 a su zona de pago', () => {
     const ctx = crearCtx()
-    const s = resolver(activar(escena(3), ctx), ctx)
+    let s = activar(escena(3), ctx)
+    expect(s.objetivosPendientes?.[0].opciones).toEqual(['eter-B-0', 'eter-B-1', 'eter-B-2'])
+    s = aplicar(s, { type: 'elegir_objetivo', objetivoId: 'eter-B-2' }, ctx)
+    expect(s.objetivosPendientes?.[0].opciones).toEqual(['eter-B-0', 'eter-B-1']) // el elegido ya no es candidato
+    s = aplicar(s, { type: 'elegir_objetivo', objetivoId: 'eter-B-0' }, ctx)
+    s = resolver(s, ctx)
     expect(s.objetivosPendientes ?? []).toEqual([])
-    expect(s.players.A.eterReserva).toEqual(['eter-B-0', 'eter-B-1'])
-    expect(s.players.B.eterReserva).toEqual(['eter-B-2'])
+    expect([...s.players.A.eterReserva].sort()).toEqual(['eter-B-0', 'eter-B-2'])
+    expect(s.players.B.eterReserva).toEqual(['eter-B-1'])
     expect(s.players.A.eterPagado).toEqual(['eter-A-0', 'eter-A-1'])
-    expect(s.instances['eter-B-0'].owner).toBe('B')
+    expect(s.instances['eter-B-2'].owner).toBe('B')
+  })
+  it('con solo 2 Éter (el tope) no hay nada que elegir: los arrebata sin preguntar', () => {
+    const ctx = crearCtx()
+    const s0 = activar(escena(2), ctx)
+    expect(s0.objetivosPendientes ?? []).toEqual([])
+    const s = resolver(s0, ctx)
+    expect([...s.players.A.eterReserva].sort()).toEqual(['eter-B-0', 'eter-B-1'])
   })
   it('«hasta 2»: con solo 1 Éter en la Reserva rival arrebata ese 1', () => {
     const ctx = crearCtx()
