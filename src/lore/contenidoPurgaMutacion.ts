@@ -173,8 +173,8 @@ export const CICLO_PURGA: readonly PasoCiclo[] = [
   {
     titulo: 'La sentencia',
     texto:
-      'Cuando el expediente está completo, se dicta: la Magistrada destruye a quien tiene poco ATQ, la Sentencia Firme destruye al que sea a cambio de exiliar a un Campeón caído, el Juicio Sumario despacha hasta dos Campeones baratos de una vez, y el Embargo cobra con otro Campeón caído la Mística o la Arcana tras la que el rival creía estar a salvo.',
-    cartas: 'Magistrada · Sentencia Firme · Juicio Sumario · Embargo · Pena Diferida',
+      'Cuando el expediente está completo, se dicta: la Magistrada destruye a quien tiene poco ATQ, la Sentencia Firme destruye al que sea a cambio de exiliar a un Campeón caído, y el Juicio Sumario despacha hasta dos Campeones baratos de una vez.',
+    cartas: 'Magistrada · Sentencia Firme · Juicio Sumario · Pena Diferida',
     arte: 'PU-015',
   },
   {
@@ -187,8 +187,8 @@ export const CICLO_PURGA: readonly PasoCiclo[] = [
   {
     titulo: 'La apelación',
     texto:
-      'Un Fuero sabe que también se equivoca: la Citatoria busca un Campeón de Purga y lo invoca, la Apelación lo levanta del Cementerio si su coste era bajo, y el Indulto lo vuelve Inmortal por un turno. Podar no es matar por matar.',
-    cartas: 'Citatoria · Apelación · Indulto · Éter del Fuero',
+      'Un Fuero sabe que también se equivoca: la Citatoria busca un Campeón de Purga y lo invoca, la Revocación lo devuelve del Exilio, la Apelación lo levanta del Cementerio si su coste era bajo, y el Indulto lo vuelve Inmortal por un turno. Podar no es matar por matar.',
+    cartas: 'Citatoria · Revocación · Apelación · Indulto · Éter del Fuero',
     arte: 'PU-026',
   },
 ]
@@ -245,8 +245,8 @@ export const CICLO_MUTACION: readonly PasoCiclo[] = [
   {
     titulo: 'El fruto del cambio',
     texto:
-      'Cambiar no sale gratis, pero se cobra con intereses: la Hortelana del Derrame roba una carta por cada cambio, Raíz Inquieta se endurece, Cosecha de Muda refuerza a un Campeón, la Marchitez Fértil pudre la Mística o la Arcana del rival y recupera parte de la savia, y Savia de Emergencia y el Aliento del Vórtice devuelven a tu Reserva el Éter que gastaste. El cambio se alimenta.',
-    cartas: 'Hortelana del Derrame · Raíz Inquieta · Cosecha de Muda · Marchitez Fértil · Savia de Emergencia · Aliento del Vórtice',
+      'Cambiar no sale gratis, pero se cobra con intereses: la Hortelana del Derrame roba una carta por cada cambio, Raíz Inquieta se endurece, Cosecha de Muda refuerza a un Campeón y las Savias devuelven a tu Reserva el Éter que gastaste. El cambio se alimenta.',
+    cartas: 'Hortelana del Derrame · Raíz Inquieta · Cosecha de Muda · Savia Prestada · Savia de Emergencia · Aliento del Vórtice',
     arte: 'MU-018',
   },
   {
