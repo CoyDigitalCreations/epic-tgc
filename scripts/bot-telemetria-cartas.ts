@@ -78,6 +78,13 @@ interface Juego {
   vinculosFin: number; campeonesFin: number
   /** Cartas suyas muertas, por causa */
   muertesCombate: number; muertesEfecto: number
+  /**
+   * Cuando ME atacan (medido al declararse el ataque): ataques recibidos, sus atacantes, mis Campeones en mesa, cuántos de ellos podían
+   * bloquear (un Campeón agotado no bloquea) y en cuántos ataques había MÁS atacantes que defensores disponibles (rompen seguro).
+   */
+  ataquesRecibidos: number; atacantesRecibidos: number; enMesaAlRecibir: number; disponiblesAlRecibir: number; superadosEnNumero: number
+  /** Campeones míos que pasaron de enderezados a agotados por una acción del RIVAL (efectos que cambian o fijan el agotamiento) */
+  agotadosPorRival: number
 }
 interface Resumen {
   cartas: Record<Mazo, Record<string, Ficha>>
@@ -91,6 +98,7 @@ const juegoVacio = (): Juego => ({
   primero: 0, victPrimero: 0, victVinculos: 0, victMazo: 0, derrVinculos: 0, derrMazo: 0, otros: 0, turnos: 0,
   ataques: 0, atacantes: 0, bloqueos: 0, rupturas: 0, primeraRupturaTurno: 0, primeraRupturaN: 0,
   vinculosFin: 0, campeonesFin: 0, muertesCombate: 0, muertesEfecto: 0,
+  ataquesRecibidos: 0, atacantesRecibidos: 0, enMesaAlRecibir: 0, disponiblesAlRecibir: 0, superadosEnNumero: 0, agotadosPorRival: 0,
 })
 const vacio = (): Resumen => ({
   cartas: { [NOMBRE_1]: {}, [NOMBRE_2]: {} },
@@ -119,8 +127,12 @@ function jugar(nombreBot: string, seed: number, mazoA: Mazo, res: Resumen): void
     const actor: PlayerId = actorActual(estado) ?? estado.turno
     const accion = (actor === 'A' ? botA : botB)(estado, actor)
     if (!accion) break
+    // Campeones del RIVAL del que actúa que ahora están enderezados: si tras la acción están agotados, lo causó el que actuó
+    const victima: PlayerId = actor === 'A' ? 'B' : 'A'
+    const enderezados = new Set(estado.players[victima].campo.campeones.filter((c): c is string => !!c && !estado.instances[c]?.agotado))
     const r = applyAction(estado, accion, ctx)
     if (!r.ok) break
+    for (const c of r.state.players[victima].campo.campeones) if (c && enderezados.has(c) && r.state.instances[c]?.agotado) jg(victima).agotadosPorRival++
     // «Vista»: en la mano ya terminado el mulligan (pre_partida)
     if (r.state.fase !== 'pre_partida') for (const j of ['A', 'B'] as PlayerId[]) for (const id of r.state.players[j].mano) vistas[j].add(id)
     const id = (accion as { cardInstanceId?: string }).cardInstanceId
@@ -144,7 +156,16 @@ function jugar(nombreBot: string, seed: number, mazoA: Mazo, res: Resumen): void
         if (cid) de(res, mazoDe[e.jugador], cid).triggers++
       }
       if (e.type === 'turno_iniciado') turnosPropios[e.jugador]++
-      if (e.type === 'ataque_declarado') { const g = jg(e.jugador); g.ataques++; g.atacantes += e.atacanteIds.length }
+      if (e.type === 'ataque_declarado') {
+        const g = jg(e.jugador); g.ataques++; g.atacantes += e.atacanteIds.length
+        // El que defiende: cuántos Campeones tiene en mesa y cuántos pueden bloquear (los agotados no)
+        const defensor: PlayerId = e.jugador === 'A' ? 'B' : 'A'
+        const mesa = r.state.players[defensor].campo.campeones.filter((c): c is string => !!c)
+        const disponibles = mesa.filter((c) => !r.state.instances[c]?.agotado).length
+        const d = jg(defensor)
+        d.ataquesRecibidos++; d.atacantesRecibidos += e.atacanteIds.length; d.enMesaAlRecibir += mesa.length; d.disponiblesAlRecibir += disponibles
+        if (e.atacanteIds.length > disponibles) d.superadosEnNumero++
+      }
       if (e.type === 'bloqueo_declarado') jg(e.jugador).bloqueos++
       // La ruptura la hace quien tiene el turno (el rival del dueño del Vínculo)
       if (e.type === 'ruptura_realizada') {
@@ -280,6 +301,9 @@ function imprimir(r: Resumen, m: Mazo): void {
   console.log(`  Rupturas hechas ${por(g.rupturas)} · 1ª ruptura en su turno ${(g.primeraRupturaTurno / Math.max(1, g.primeraRupturaN)).toFixed(1)} (en ${g.primeraRupturaN} partidas)`)
   console.log(`  Al terminar: Vínculos propios sin romper ${por(g.vinculosFin)} · Campeones en campo ${por(g.campeonesFin)}`)
   console.log(`  Campeones propios muertos: combate ${por(g.muertesCombate)} · efecto ${por(g.muertesEfecto)}`)
+  const rec = Math.max(1, g.ataquesRecibidos)
+  console.log(`  Cuando me atacan (${por(g.ataquesRecibidos)} ataques por partida): atacantes ${(g.atacantesRecibidos / rec).toFixed(2)} · mis Campeones en mesa ${(g.enMesaAlRecibir / rec).toFixed(2)} · pueden bloquear ${(g.disponiblesAlRecibir / rec).toFixed(2)}`)
+  console.log(`  Ataques con MÁS atacantes que defensores disponibles (rompen seguro): ${pct(g.superadosEnNumero, g.ataquesRecibidos)} · Campeones míos agotados por acciones del rival: ${por(g.agotadosPorRival)} por partida`)
 }
 
 async function main(): Promise<void> {
