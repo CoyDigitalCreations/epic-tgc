@@ -1,6 +1,6 @@
 import type { Bot } from './arena'
 import { botBase } from './base'
-import { CONFIG } from './busqueda'
+import { CONFIG, CONFIG_CONTINUO } from './busqueda'
 import type { Config } from './busqueda'
 import { crearBotBusqueda } from './dificil'
 import { PESOS_ANTES, PESOS_SIN_ARCANA, PESOS_SIN_MANO_CAMPEON } from './evaluar'
@@ -24,6 +24,11 @@ export const BOTS: Record<string, Bot> = {
    * la arena que el bot normal la vea (ver `Config.infoPublica`).
    */
   'dificil-publico': crearBotBusqueda({ ...CONFIG, infoPublica: true }),
+  /**
+   * El Difícil completando el turno en la búsqueda (ver `Config.continuarTurno`): ve lo que los trucos, las Cargas y los buffs de
+   * «hasta el final del turno» logran en el combate. Presupuesto doble porque cada alternativa ahora simula también el ataque.
+   */
+  'dificil-continuo': crearBotBusqueda(CONFIG_CONTINUO),
 }
 
 /**
@@ -40,6 +45,7 @@ export function resolverBot(nombre: string): Bot | undefined {
     else if (k === 'ancho') cfg.anchoRival = n
     else if (k === 'ruido') cfg.ruido = n
     else if (k === 'publica') cfg.infoPublica = n === 1
+    else if (k === 'cont') cfg.continuarTurno = n === 1
   }
   return crearBotBusqueda(cfg)
 }

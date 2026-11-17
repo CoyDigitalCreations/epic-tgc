@@ -95,6 +95,14 @@ export interface Config {
    * Por defecto (ausente/false) el rival se explora con sus acciones reales, que incluyen lo oculto.
    */
   infoPublica?: boolean
+  /**
+   * Completar el turno al llegar a un estado libre MÍO (ver `completarTurno`). Sin esto la búsqueda corta en el primer estado libre y
+   * evalúa en el acto, así que un efecto que rinde en el combate de ESTE turno (un truco «hasta el final del turno», una Carga, un
+   * Inmortal, +ATQ, un Campeón recién invocado con Carga) es invisible: solo se ven los stats permanentes. Con `true` se simula también
+   * pasar a Choque y el mejor ataque, y se evalúa el resultado real, para CUALQUIER carta sin describir cuánto vale cada efecto.
+   * Cuesta más simulaciones por decisión: súbele el `presupuesto`. Por defecto (ausente/false) la búsqueda es la de siempre.
+   */
+  continuarTurno?: boolean
 }
 
 /** Contador mutable de simulaciones que le quedan a UNA alternativa raíz. */
@@ -102,13 +110,20 @@ export interface Gasto { restante: number }
 
 export const CONFIG: Config = { pesos: PESOS, profundidad: 7, anchoRival: 3, presupuesto: 1500, ruido: 0 }
 
+/** El Difícil completando el turno en la búsqueda (ver `Config.continuarTurno`). Presupuesto doble: cada alternativa simula también el ataque. */
+export const CONFIG_CONTINUO: Config = { ...CONFIG, continuarTurno: true, presupuesto: 3000 }
+
 /** Valor para `yo` del estado `s`, buscando `prof` pasos más. */
 export function valor(s: GameState, yo: PlayerId, prof: number, cfg: Config, gasto: Gasto): number {
   if (s.fase === 'terminada' || prof <= 0 || gasto.restante <= 0) return evaluar(s, yo, cfg.pesos)
   const actor: PlayerId = actorActual(s) ?? s.turno
   const acciones = sinRepetidos(getValidActions(s, actor).filter(esUtil))
   if (acciones.length === 0) return evaluar(s, yo, cfg.pesos)
-  if (esLibre(s, acciones)) return evaluar(s, yo, cfg.pesos) // hoja: alguien juega a gusto
+  if (esLibre(s, acciones)) {
+    // Hoja: alguien juega a gusto. Si es mi turno y la opción está activa, no se evalúa en frío: se completa el turno para ver lo que rinde
+    if (cfg.continuarTurno && actor === yo && prof > 0) return completarTurno(s, yo, prof, cfg, gasto)
+    return evaluar(s, yo, cfg.pesos)
+  }
 
   const mio = actor === yo
   const candidatas = mio ? acciones : (cfg.infoPublica ? soloPublicas(acciones) : acciones).slice(0, cfg.anchoRival)
@@ -121,6 +136,35 @@ export function valor(s: GameState, yo: PlayerId, prof: number, cfg: Config, gas
     if (mio ? v > mejor : v < mejor) mejor = v
   }
   return Number.isFinite(mejor) ? mejor : evaluar(s, yo, cfg.pesos)
+}
+
+/**
+ * Valor de un estado LIBRE mío (Forja o Choque sin combate) completando el turno: desde Forja se pasa a Choque, y en Choque se toma lo
+ * mejor entre no atacar (evaluar tal cual) y cada ataque relevante, que la búsqueda de siempre resuelve contra la mejor defensa del
+ * rival. Así un truco, una Carga o un +ATQ que solo importan en el combate de este turno se evalúan por lo que DE VERDAD logran.
+ *
+ * Se aplica igual a TODAS las alternativas (jugar algo, invocar o pasar), así que ninguna sale favorecida: lo que cambia es que ahora
+ * todas se miden después de su mejor ataque. No recursiona sin fin: cada paso resta profundidad y un estado con combate (o en Ocaso)
+ * se evalúa sin más.
+ */
+function completarTurno(s: GameState, yo: PlayerId, prof: number, cfg: Config, gasto: Gasto): number {
+  let actual = s
+  if (actual.fase === 'forja') {
+    const siguiente = simular(actual, { type: 'pasar_turno' })
+    if (!siguiente) return evaluar(s, yo, cfg.pesos)
+    actual = siguiente
+  }
+  if (actual.fase !== 'choque' || actual.combate || (actorActual(actual) ?? actual.turno) !== yo) return evaluar(actual, yo, cfg.pesos)
+  const ataques = atacantesRelevantes(actual, sinRepetidos(getValidActions(actual, yo).filter(esUtil))).filter((a) => a.type === 'declarar_ataque')
+  let mejor = evaluar(actual, yo, cfg.pesos) // no atacar
+  for (const a of ataques) {
+    if (gasto.restante <= 0) break
+    gasto.restante--
+    const n = simular(actual, a)
+    if (!n) continue
+    mejor = Math.max(mejor, valor(n, yo, prof - 1, cfg, gasto))
+  }
+  return mejor
 }
 
 /** Valor de jugar `a` ahora (desde un estado donde actúa `yo`). */
