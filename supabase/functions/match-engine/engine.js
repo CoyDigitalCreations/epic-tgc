@@ -3397,7 +3397,9 @@ var FuenteEfectos_default = [
     name: "Nulidad",
     type: "M\xEDstica",
     rarity: "Rara",
-    keywords: [],
+    keywords: [
+      "Presteza"
+    ],
     flavorText: "Lo que no cumple el procedimiento, no existi\xF3.",
     paqueteId: "purga",
     limiteCopias: "2",
@@ -3480,7 +3482,9 @@ var FuenteEfectos_default = [
     name: "Indulto",
     type: "M\xEDstica",
     rarity: "Com\xFAn",
-    keywords: [],
+    keywords: [
+      "Presteza"
+    ],
     flavorText: "El Tribunal tambi\xE9n sabe perdonar.",
     paqueteId: "purga",
     limiteCopias: "2",

@@ -3371,7 +3371,9 @@
     "name": "Nulidad",
     "type": "Mística",
     "rarity": "Rara",
-    "keywords": [],
+    "keywords": [
+      "Presteza"
+    ],
     "flavorText": "Lo que no cumple el procedimiento, no existió.",
     "paqueteId": "purga",
     "limiteCopias": "2",
@@ -3454,7 +3456,9 @@
     "name": "Indulto",
     "type": "Mística",
     "rarity": "Común",
-    "keywords": [],
+    "keywords": [
+      "Presteza"
+    ],
     "flavorText": "El Tribunal también sabe perdonar.",
     "paqueteId": "purga",
     "limiteCopias": "2",
