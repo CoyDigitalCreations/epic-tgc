@@ -150,10 +150,15 @@ describe('anclar_eter — Runa de Ancla', () => {
   }
   const jugarRuna = (s: GameState) => {
     const pago = etersParaPagar(s, 'A', RUNA)!
-    return aplicar(s, { type: 'jugar_mistica', cardInstanceId: 'runa', slot: 0, eterIds: pago }, crearCtx())
+    const ctx = crearCtx()
+    let e = aplicar(s, { type: 'jugar_mistica', cardInstanceId: 'runa', slot: 0, eterIds: pago }, ctx)
+    // «Selecciona hasta 2 Éter»: con más candidatos que el tope el jugador ELIGE cuáles (aquí, siempre el primero que se le ofrece: los
+    // dos primeros). La elección en sí se prueba en anclarEterEleccion.test.ts
+    while (e.objetivosPendientes?.length) e = aplicar(e, { type: 'elegir_objetivo', objetivoId: e.objetivosPendientes[0].opciones[0] }, ctx)
+    return e
   }
 
-  it('ancla hasta 2 Éter de la zona de pago del rival (sin elección)', () => {
+  it('ancla hasta 2 Éter de la zona de pago del rival (los que elige el jugador)', () => {
     const { s, pagados } = escena()
     const e = jugarRuna(s)
     expect(e.players.B.eterAnclado).toEqual(pagados.slice(0, 2))

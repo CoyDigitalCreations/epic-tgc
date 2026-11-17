@@ -66,6 +66,23 @@ function puedeResponder(vel: Velocidad, requerida: Velocidad): boolean {
 }
 
 /**
+ * Triggers que NO son un evento externo sino el MOMENTO en que resuelve la propia activación manual de la carta: «ninguno» (sin
+ * trigger) y `al_resolver_cadena` («al resolver la cadena», con la pila). Los efectos con estos triggers se activan a mano.
+ */
+const TRIGGERS_DE_ACTIVACION_MANUAL: readonly string[] = ['ninguno', 'al_resolver_cadena']
+
+/**
+ * ¿Todos los efectos de esta carta esperan un EVENTO externo (cualquier trigger salvo los de activación manual)? Una Arcana así
+ * («cuando un Campeón que controles sea enviado al Cementerio», «cuando juegues una Mística», «al atacar»…) la dispara el motor
+ * SOLA al ocurrir el evento (dispararTrigger), boca abajo o arriba: no hay nada que activar a mano. Es genérico: no mira ninguna
+ * carta concreta.
+ */
+export function efectosSoloPorEvento(meta: AnyCard): boolean {
+  const efectos = 'efectos' in meta ? meta.efectos : undefined
+  return !!efectos && efectos.length > 0 && efectos.every((e) => !!e.trigger && !TRIGGERS_DE_ACTIVACION_MANUAL.includes(e.trigger))
+}
+
+/**
  * ¿La Arcana `id` de `jugador` puede activarse AHORA? (F5f) Condiciones comunes de activar_arcana y de
  * responder con ella, para que nunca diverjan: en su campo y boca abajo; NO el turno en que se colocó
  * (§5.4: sí desde el turno siguiente, el del rival o cualquiera posterior); su `condicion` JSON: con trigger
@@ -80,6 +97,8 @@ export function motivoArcanaNoActivable(state: GameState, jugador: PlayerId, id:
   const p = state.players[jugador]
   if (!p.campo.arcanasCombate.includes(id)) return 'la Arcana no está en el campo'
   if (inst.bocaArriba) return 'la Arcana ya está boca arriba'
+  // Sin evento no hay nada que activar: activarla a mano cobraba su coste por nada y gastaba su «una vez por turno» antes de tiempo
+  if (efectosSoloPorEvento(meta)) return 'esta Arcana se dispara sola cuando ocurre su evento: no se activa a mano'
   if (inst.entradaEsteTurno) return 'la Arcana no se puede activar el turno en que fue colocada (§5.4)'
   const condicion = 'condicion' in meta ? (meta as { condicion?: CondicionEfecto }).condicion : undefined
   if (condicionEsCandado(condicion)) {
@@ -538,6 +557,10 @@ function resolverRespuesta(s: GameState, ctx: Ctx, id: string, datos: RespuestaA
     for (const { efecto, efectoIdx } of hechizosDeRespuesta(s, id, origen)) {
       const objetivoId = objetivos?.[efectoIdx]
       interpretEffect(s, ctx, inst, efecto, { ...opciones, contextoUso: objetivoId ? 'objetivo-elegido' : undefined, objetivoId })
+      // efecto «hasta N»: se aplica también a cada elección adicional
+      for (const extra of datos?.objetivosExtra?.[efectoIdx] ?? []) {
+        interpretEffect(s, ctx, inst, efecto, { ...opciones, contextoUso: 'objetivo-elegido', objetivoId: extra })
+      }
     }
   }
   const trigger = () => dispararTrigger(s, ctx, 'al-resolver-cadena', jugador, [id], { sinEleccion: true, revalidarObjetivo: true, objetivosElegidos: objetivos })
@@ -763,7 +786,11 @@ export function registrarObjetivoOpener(
   if (registrarObjetivoTrigger(s, pendiente, objetivoId)) return
   const destino = s.declaracionEnEleccion?.opener ?? s.declaracionEnEleccion?.respuesta
   if (!destino || !pendiente.opener) return
-  if (s.instances[objetivoId]) destino.objetivos = { ...destino.objetivos, [pendiente.opener.efectoIdx]: objetivoId }
+  if (!s.instances[objetivoId]) return
+  const idx = pendiente.opener.efectoIdx
+  if (destino.objetivos?.[idx] === undefined) destino.objetivos = { ...destino.objetivos, [idx]: objetivoId }
+  // un efecto «hasta N» recibe más de una elección: la primera va en `objetivos`, el resto aquí
+  else destino.objetivosExtra = { ...destino.objetivosExtra, [idx]: [...(destino.objetivosExtra?.[idx] ?? []), objetivoId] }
 }
 
 /** Abre la ventana con el opener al fondo (gate con mano Presteza pagable) o, si nadie puede responder, resuelve ya. */
@@ -824,6 +851,10 @@ function resolverOpener(s: GameState, ctx: Ctx, opener: OpenerCadena): void {
           contextoUso: objetivoId ? 'objetivo-elegido' : undefined,
           objetivoId,
         })
+        // efecto «hasta N»: se aplica también a cada elección adicional
+        for (const extra of opener.objetivosExtra?.[efectoIdx] ?? []) {
+          interpretEffect(s, ctx, inst, efecto, { jugador: opener.jugador, fromTrigger: true, contextoUso: 'objetivo-elegido', objetivoId: extra })
+        }
       }
     }
   }

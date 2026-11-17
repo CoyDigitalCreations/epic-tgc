@@ -7628,6 +7628,11 @@ function puedeResponder(vel, requerida) {
   if (requerida === "presteza") return vel === "presteza" || vel === "fugaz";
   return true;
 }
+var TRIGGERS_DE_ACTIVACION_MANUAL = ["ninguno", "al_resolver_cadena"];
+function efectosSoloPorEvento(meta) {
+  const efectos = "efectos" in meta ? meta.efectos : void 0;
+  return !!efectos && efectos.length > 0 && efectos.every((e) => !!e.trigger && !TRIGGERS_DE_ACTIVACION_MANUAL.includes(e.trigger));
+}
 function motivoArcanaNoActivable(state, jugador, id) {
   const inst = state.instances[id];
   const meta = inst?.cardId ? getCardMeta(inst.cardId) : null;
@@ -7636,6 +7641,7 @@ function motivoArcanaNoActivable(state, jugador, id) {
   const p = state.players[jugador];
   if (!p.campo.arcanasCombate.includes(id)) return "la Arcana no est\xE1 en el campo";
   if (inst.bocaArriba) return "la Arcana ya est\xE1 boca arriba";
+  if (efectosSoloPorEvento(meta)) return "esta Arcana se dispara sola cuando ocurre su evento: no se activa a mano";
   if (inst.entradaEsteTurno) return "la Arcana no se puede activar el turno en que fue colocada (\xA75.4)";
   const condicion = "condicion" in meta ? meta.condicion : void 0;
   if (condicionEsCandado(condicion)) {
@@ -7924,6 +7930,9 @@ function resolverRespuesta(s, ctx, id, datos) {
     for (const { efecto, efectoIdx } of hechizosDeRespuesta(s, id, origen)) {
       const objetivoId = objetivos?.[efectoIdx];
       interpretEffect(s, ctx, inst, efecto, { ...opciones, contextoUso: objetivoId ? "objetivo-elegido" : void 0, objetivoId });
+      for (const extra of datos?.objetivosExtra?.[efectoIdx] ?? []) {
+        interpretEffect(s, ctx, inst, efecto, { ...opciones, contextoUso: "objetivo-elegido", objetivoId: extra });
+      }
     }
   };
   const trigger = () => dispararTrigger(s, ctx, "al-resolver-cadena", jugador, [id], { sinEleccion: true, revalidarObjetivo: true, objetivosElegidos: objetivos });
@@ -8061,7 +8070,10 @@ function registrarObjetivoOpener(s, pendiente, objetivoId) {
   if (registrarObjetivoTrigger(s, pendiente, objetivoId)) return;
   const destino = s.declaracionEnEleccion?.opener ?? s.declaracionEnEleccion?.respuesta;
   if (!destino || !pendiente.opener) return;
-  if (s.instances[objetivoId]) destino.objetivos = { ...destino.objetivos, [pendiente.opener.efectoIdx]: objetivoId };
+  if (!s.instances[objetivoId]) return;
+  const idx = pendiente.opener.efectoIdx;
+  if (destino.objetivos?.[idx] === void 0) destino.objetivos = { ...destino.objetivos, [idx]: objetivoId };
+  else destino.objetivosExtra = { ...destino.objetivosExtra, [idx]: [...destino.objetivosExtra?.[idx] ?? [], objetivoId] };
 }
 function abrirOpener(s, ctx, opener, triggers) {
   const meta = s.instances[opener.cardInstanceId]?.cardId ? getCardMeta(s.instances[opener.cardInstanceId].cardId) : null;
@@ -8112,6 +8124,9 @@ function resolverOpener(s, ctx, opener) {
           contextoUso: objetivoId ? "objetivo-elegido" : void 0,
           objetivoId
         });
+        for (const extra of opener.objetivosExtra?.[efectoIdx] ?? []) {
+          interpretEffect(s, ctx, inst, efecto, { jugador: opener.jugador, fromTrigger: true, contextoUso: "objetivo-elegido", objetivoId: extra });
+        }
       }
     }
   }
@@ -8511,8 +8526,9 @@ function interpretEffect(s, ctx, inst, efectoData, payload) {
   }
   const isTriggered = payload.fromTrigger === true;
   const topeHasta = efectoData.cantidad ?? 1;
-  const eleccionEterHasta = efecto === "return_ether" && efectoData.esHasta === true && targetIds.length > topeHasta;
-  const autoResolver = (efecto === "mover" || efecto === "steal_ether") && efectoData.esHasta === true || efecto === "return_ether" && efectoData.esHasta === true && !eleccionEterHasta || efecto === "anclar_eter";
+  const esEterHasta = efecto === "return_ether" && efectoData.esHasta === true || efecto === "anclar_eter";
+  const eleccionEterHasta = esEterHasta && targetIds.length > topeHasta;
+  const autoResolver = (efecto === "mover" || efecto === "steal_ether") && efectoData.esHasta === true || esEterHasta && !eleccionEterHasta;
   const mergedFiltros = efectoData.filtros ? { ...objetivo?.filtros, ...efectoData.filtros } : objetivo?.filtros;
   const hasAutoSelect = mergedFiltros?.seleccionar != null;
   if (usoPorTurno !== -1 && payload.contextoUso !== "objetivo-elegido" && !payload.declararOpener && (!objetivo || targetIds.length > 0 || objetivo.tipo === "self")) {
@@ -9906,6 +9922,7 @@ function ejecutarElegirObjetivo(s, action, ctx) {
     equiparComoRespuesta(s, ctx, pendiente, action.objetivoId);
   } else if (pendiente.opener) {
     registrarObjetivoOpener(s, pendiente, action.objetivoId);
+    encadenarEleccionesOpener(s, pendiente, action.objetivoId);
   } else if (pendiente.efectoUmbralIdx !== void 0) {
     resolverUmbralElegido(s, ctx, pendiente.instId, pendiente.efectoUmbralIdx, action.objetivoId);
   } else if (pendiente.tramoUmbral !== void 0) {
@@ -9918,6 +9935,17 @@ function ejecutarElegirObjetivo(s, action, ctx) {
     encadenarEleccionesHasta(s, ctx, pendiente, action.objetivoId);
   }
   if (enDeclaracion) continuarDeclaracion(s, ctx, previos);
+}
+function encadenarEleccionesOpener(s, pendiente, elegido) {
+  const restantes = pendiente.restantes ?? 0;
+  if (restantes <= 0) return;
+  const quedan = opcionesVigentes(s, { ...pendiente, opciones: pendiente.opciones.filter((id) => id !== elegido) });
+  if (quedan.length === 0) return;
+  if (quedan.length <= restantes) {
+    for (const id of quedan) registrarObjetivoOpener(s, pendiente, id);
+    return;
+  }
+  s.objetivosPendientes = [{ ...pendiente, opciones: quedan, restantes: restantes - 1 }, ...s.objetivosPendientes ?? []];
 }
 function encadenarEleccionesHasta(s, ctx, pendiente, elegido) {
   const restantes = pendiente.restantes ?? 0;

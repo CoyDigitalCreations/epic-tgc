@@ -436,6 +436,7 @@ export function ejecutarElegirObjetivo(s: GameState, action: Extract<Action, { t
   } else if (pendiente.opener) {
     // F5b: objetivo de un hechizo del opener — solo se captura (resuelve al cierre de la ventana)
     registrarObjetivoOpener(s, pendiente, action.objetivoId)
+    encadenarEleccionesOpener(s, pendiente, action.objetivoId)
   } else if (pendiente.efectoUmbralIdx !== undefined) {
     // Efecto raíz de un Continuo con coste de Éter bloqueado: se fija (sostenido) o se ejecuta (instantáneo) con el objetivo elegido
     resolverUmbralElegido(s, ctx, pendiente.instId, pendiente.efectoUmbralIdx, action.objetivoId)
@@ -452,6 +453,23 @@ export function ejecutarElegirObjetivo(s: GameState, action: Extract<Action, { t
     encadenarEleccionesHasta(s, ctx, pendiente, action.objetivoId)
   }
   if (enDeclaracion) continuarDeclaracion(s, ctx, previos)
+}
+
+/**
+ * Lo mismo para un efecto «hasta N» de un OPENER (Mística / Arcana / habilidad que pasa por la cadena): el efecto no resuelve hasta
+ * cerrar la ventana, así que cada elección solo se REGISTRA (la primera en `objetivos`, el resto en `objetivosExtra`). Con tantos
+ * candidatos como elecciones pendientes no se pregunta más: se registran todos.
+ */
+function encadenarEleccionesOpener(s: GameState, pendiente: PendienteObjetivo, elegido: string): void {
+  const restantes = pendiente.restantes ?? 0
+  if (restantes <= 0) return
+  const quedan = opcionesVigentes(s, { ...pendiente, opciones: pendiente.opciones.filter((id) => id !== elegido) })
+  if (quedan.length === 0) return
+  if (quedan.length <= restantes) {
+    for (const id of quedan) registrarObjetivoOpener(s, pendiente, id)
+    return
+  }
+  s.objetivosPendientes = [{ ...pendiente, opciones: quedan, restantes: restantes - 1 }, ...(s.objetivosPendientes ?? [])]
 }
 
 /**

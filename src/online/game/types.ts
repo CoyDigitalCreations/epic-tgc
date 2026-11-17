@@ -349,6 +349,8 @@ export interface RespuestaApilada {
   origen: 'mano' | 'campo'
   /** Objetivos ya elegidos al responder, por índice en efectos[]. */
   objetivos?: Record<number, string>
+  /** Elecciones ADICIONALES de un efecto «hasta N» (la primera va en `objetivos`), por índice en efectos[]. */
+  objetivosExtra?: Record<number, string[]>
 }
 
 /**
@@ -374,6 +376,8 @@ export interface OpenerCadena {
   efectoIdx?: number
   /** Objetivos ya elegidos, por índice en efectos[] (habilidad: el de la acción). */
   objetivos?: Record<number, string>
+  /** Elecciones ADICIONALES de un efecto «hasta N» (la primera va en `objetivos`), por índice en efectos[]. */
+  objetivosExtra?: Record<number, string[]>
   /** true si una negación (tipoNegacion 'activacion') la canceló: no resuelve; el pago NO se devuelve. */
   negada?: boolean
 }

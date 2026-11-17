@@ -147,11 +147,12 @@ export function interpretEffect(
   // return_ether + esHasta («devuelve hasta 2 Éter», Mira): se ELIGE cuáles cuando hay más candidatos que el tope; con N o menos,
   // devolverlos todos es lo único que hay (sin elección). `restantes` encadena las N elecciones (ver habilidades.encadenarEleccionesHasta).
   const topeHasta = efectoData.cantidad ?? 1
-  const eleccionEterHasta = efecto === 'return_ether' && efectoData.esHasta === true && targetIds.length > topeHasta
+  // «Selecciona / devuelve hasta N Éter» (Mira, Runa de Ancla): el jugador ELIGE cuáles cuando hay más candidatos que el tope; con N o
+  // menos no hay nada que decidir y se aplican todos. `anclar_eter` es siempre «hasta N» (su texto dice «selecciona hasta N Éter»).
+  const esEterHasta = (efecto === 'return_ether' && efectoData.esHasta === true) || efecto === 'anclar_eter'
+  const eleccionEterHasta = esEterHasta && targetIds.length > topeHasta
   const autoResolver =
-    (((efecto === 'mover' || efecto === 'steal_ether') && efectoData.esHasta === true) ||
-      (efecto === 'return_ether' && efectoData.esHasta === true && !eleccionEterHasta)) ||
-    efecto === 'anclar_eter'
+    ((efecto === 'mover' || efecto === 'steal_ether') && efectoData.esHasta === true) || (esEterHasta && !eleccionEterHasta)
   const mergedFiltros = efectoData.filtros
     ? { ...objetivo?.filtros, ...efectoData.filtros }
     : objetivo?.filtros
