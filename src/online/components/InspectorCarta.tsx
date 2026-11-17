@@ -1,4 +1,4 @@
-import { describirEfectosDeCarta } from '../describirEfecto'
+import { textosDeEfectosParaJugador } from '../describirEfecto'
 import { MiniCard } from './MiniCard'
 import type { Inspeccion } from './tableroContext'
 
@@ -25,7 +25,7 @@ export function InspectorCarta({ seleccion, vacioAncho = ANCHO_INSPECTOR * 0.5 }
   }
 
   const { inst, carta } = seleccion
-  const lineas = describirEfectosDeCarta(carta)
+  const lineas = textosDeEfectosParaJugador(carta)
   const keywords = carta.keywords ?? []
 
   return (

@@ -18,7 +18,7 @@ import { Seccion } from '../../shared/ui/Seccion'
 import { MiniCard } from './MiniCard'
 import type { CardInstance } from '../game/types'
 import { getCardMeta } from '../game/cards'
-import { describirEfectosDeCarta } from '../describirEfecto'
+import { textosDeEfectosParaJugador } from '../describirEfecto'
 
 export interface PreviewEfectos {
   /** Instance id de la carta que dispara (para MiniCard). */
@@ -42,7 +42,7 @@ export function EffectPreviewModal({ preview, instancia, onAceptar, onCancelar }
   const meta = instancia?.cardId ? getCardMeta(instancia.cardId) : null
   const lineas = preview.lineas.length > 0
     ? preview.lineas
-    : describirEfectosDeCarta(meta)
+    : textosDeEfectosParaJugador(meta)
   const esBot = preview.actor === 'B'
 
   // Teclado: Enter acepta (preventDefault evita el doble disparo si el botón tiene el foco); Escape cancela solo lo propio

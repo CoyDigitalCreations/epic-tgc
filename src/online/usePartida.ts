@@ -7,7 +7,7 @@ import { crearMotorBot } from '../bot/cliente'
 import type { MotorBot } from '../bot/cliente'
 import { eventosParaLog } from './log'
 import { eventosDetalladosParaLog, diagnosticarActor, resumenJugador } from './logDetallado'
-import { describirEfectosDeCarta } from './describirEfecto'
+import { describirEfectosDeCarta, textosDeEfectosParaJugador } from './describirEfecto'
 import type { PreviewEfectos } from './components/EffectPreviewModal'
 
 export interface PartidaConfig {
@@ -294,7 +294,7 @@ export function usePartida(config: PartidaConfig) {
       const meta = inst?.cardId ? getCardMeta(inst.cardId) : null
       const efectos = meta && 'efectos' in meta ? meta.efectos : undefined
       if (!efectosSeActivanCon(accion, efectos)) return false
-      const lineas = describirEfectosDeCarta(meta)
+      const lineas = textosDeEfectosParaJugador(meta) // el modal lo lee el jugador: texto natural, no la descripción técnica del log
       if (lineas.length === 0) return false
       previewAccionRef.current = accion
       previewEsBotRef.current = esBot

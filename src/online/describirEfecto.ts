@@ -145,7 +145,31 @@ export function describirEfecto(e: EfectoData): string {
   }
 }
 
-/** Todas las líneas de efectos[] de una carta (para modal pre-ejecución). */
+/**
+ * Texto de UN efecto para el JUGADOR: el `texto` que Card-Maker genera en lenguaje natural («Puedes pagar 3 Éter, una vez por turno,
+ * todos tus Campeones se convierten en la esencia que elijas…»). `describirEfecto` es la descripción TÉCNICA (para el log de depuración):
+ * enseña nombres internos («change_type sobre todos tus Campeones», «cuando_campeon_propio_cambia_esencia → …») que un jugador no
+ * entiende, así que solo se usa de respaldo cuando el efecto no trae texto.
+ */
+export function textoEfectoParaJugador(e: EfectoData): string {
+  const texto = e.texto?.trim()
+  return texto ? texto : describirEfecto(e)
+}
+
+/** Los efectos de una carta en lenguaje del jugador (modal de pre-efectos, inspector). Mismo orden y alcance que `describirEfectosDeCarta`. */
+export function textosDeEfectosParaJugador(meta: { efectos?: EfectoData[]; efectoComandante?: EfectoData | EfectoData[]; type?: string } | null): string[] {
+  if (!meta) return []
+  const lineas: string[] = []
+  if (meta.efectos?.length) {
+    for (const e of meta.efectos) lineas.push(textoEfectoParaJugador(e))
+  }
+  for (const e of efectosComandante(meta.efectoComandante)) {
+    lineas.push(`Comandante: ${textoEfectoParaJugador(e)}`)
+  }
+  return lineas
+}
+
+/** Todas las líneas de efectos[] de una carta (para el log de depuración: descripción técnica). */
 export function describirEfectosDeCarta(meta: { efectos?: EfectoData[]; efectoComandante?: EfectoData | EfectoData[]; type?: string } | null): string[] {
   if (!meta) return []
   const lineas: string[] = []
