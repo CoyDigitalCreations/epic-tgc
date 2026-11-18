@@ -18,16 +18,9 @@ export function encontrarImportsDeFuenteArte(texto: string): string[] {
 /**
  * Cartas que ya existen en el seed pero cuya ilustración aún no se ha entregado (el usuario la sube después). La guardia sigue
  * exigiendo arte para todas las demás; si una de estas YA tiene su .webp la guardia falla para obligar a sacarla de la lista.
- * Hoy vacía: FB-033 «Runa de Ancla» ya tiene su arte en FuenteArte.json y en public/cartas/FB-033.webp.
+ * Hoy vacía: FB-033 «Runa de Ancla» y las 28 del set Estándar (ST-xxx) ya tienen su arte en FuenteArte.json y en public/cartas/.
  */
-export const SIN_ARTE_PENDIENTE: readonly string[] = [
-  // Set estándar (28 cartas): el arte se hace en el Card-Maker
-  'ST-001', 'ST-002', 'ST-003', 'ST-004', 'ST-005',
-  'ST-010', 'ST-011', 'ST-012', 'ST-013', 'ST-014', 'ST-015', 'ST-016', 'ST-017',
-  'ST-020', 'ST-021', 'ST-022', 'ST-023', 'ST-024',
-  'ST-030', 'ST-031', 'ST-032', 'ST-033', 'ST-034',
-  'ST-040', 'ST-041', 'ST-042', 'ST-043', 'ST-044',
-]
+export const SIN_ARTE_PENDIENTE: readonly string[] = []
 
 const RAIZ = resolve(__dirname, '../..')
 const DIR_SRC = join(RAIZ, 'src')
