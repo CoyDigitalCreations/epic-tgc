@@ -96,7 +96,9 @@ function validarEfectos(card: Partial<AnyCard>): ValidationError[] {
       return falta('la «Activación» «una vez por turno» necesita un coste (Éter, Bloqueo fijo, Agotar...)')
     }
     // «Ese Campeón» solo existe cuando un Campeón va al Cementerio (el trigger lo fija)
-    if (e.objetivo?.tipo === 'campeon_del_trigger' && e.trigger !== 'cuando_campeon_propio_al_cementerio') {
+    // (con «Cuando el rival juegue una Mística», `negar` usa ese objetivo para decir «la Mística que se juega»: Silencio)
+    const negaLaJugada = e.efecto === 'negar' && e.trigger === 'cuando_juegas_mistica'
+    if (e.objetivo?.tipo === 'campeon_del_trigger' && e.trigger !== 'cuando_campeon_propio_al_cementerio' && !negaLaJugada) {
       return falta('el objetivo «El Campeón del trigger» necesita el trigger «Cuando un Campeón va al Cementerio»')
     }
     if (e.trigger === 'cuando_campeon_propio_al_cementerio' && !e.objetivo) {

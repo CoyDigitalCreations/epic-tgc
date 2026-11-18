@@ -5413,5 +5413,887 @@
     ],
     "createdAt": "2026-11-10T00:12:00.082Z",
     "updatedAt": "2026-11-13T04:41:07.029Z"
+  },
+  {
+    "id": "ST-001",
+    "name": "Éter del Olvido",
+    "type": "Éter",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "Hay muertos que es mejor no despertar.",
+    "paqueteId": "estandar",
+    "limiteCopias": "2",
+    "createdAt": "2026-11-17T12:00:00.000Z",
+    "updatedAt": "2026-11-17T12:00:00.000Z",
+    "stats": {
+      "cost": 1
+    },
+    "efectos": [
+      {
+        "tipo": "pago",
+        "trigger": "al_pagar_eter",
+        "efecto": "exile",
+        "objetivo": {
+          "tipo": "carta",
+          "controlador": "rival",
+          "zona": "cementerio"
+        },
+        "cantidad": 1,
+        "texto": "Cuando pagues esta carta, exilia 1 carta del Cementerio del rival."
+      }
+    ]
+  },
+  {
+    "id": "ST-002",
+    "name": "Éter del Impulso",
+    "type": "Éter",
+    "rarity": "Poco Común",
+    "keywords": [],
+    "flavorText": "Un empujón a tiempo vale más que un plan perfecto.",
+    "paqueteId": "estandar",
+    "limiteCopias": "3",
+    "createdAt": "2026-11-17T12:00:00.000Z",
+    "updatedAt": "2026-11-17T12:00:00.000Z",
+    "stats": {
+      "cost": 1
+    },
+    "efectos": [
+      {
+        "tipo": "pago",
+        "trigger": "al_pagar_eter",
+        "efecto": "buff",
+        "stats": {
+          "ATQ": 1,
+          "RES": 1
+        },
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "campo"
+        },
+        "duracion": "turno",
+        "texto": "Cuando pagues esta carta, un Campeón que controles gana 1 de ATQ y 1 de RES, hasta el final del turno."
+      }
+    ]
+  },
+  {
+    "id": "ST-003",
+    "name": "Éter del Baluarte",
+    "type": "Éter",
+    "rarity": "Rara",
+    "keywords": [],
+    "flavorText": "Lo que se ancla con cuidado no cede con facilidad.",
+    "paqueteId": "estandar",
+    "limiteCopias": "2",
+    "createdAt": "2026-11-17T12:00:00.000Z",
+    "updatedAt": "2026-11-17T12:00:00.000Z",
+    "stats": {
+      "cost": 1
+    },
+    "efectos": [
+      {
+        "tipo": "bloqueo",
+        "efecto": "grant_keyword",
+        "keyword": "Indestructible",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "campo"
+        },
+        "texto": "Mientras esté bloqueado, el Campeón que tenga este Éter gana Indestructible."
+      }
+    ]
+  },
+  {
+    "id": "ST-004",
+    "name": "Éter del Umbral",
+    "type": "Éter",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "Antes de cada choque, hasta el Éter contiene el aliento.",
+    "paqueteId": "estandar",
+    "limiteCopias": "3",
+    "createdAt": "2026-11-17T12:00:00.000Z",
+    "updatedAt": "2026-11-17T12:00:00.000Z",
+    "stats": {
+      "cost": 1
+    },
+    "efectos": [
+      {
+        "tipo": "reserva",
+        "trigger": "inicio_choque",
+        "efecto": "buff",
+        "stats": {
+          "ATQ": 1,
+          "RES": 0
+        },
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "campo"
+        },
+        "duracion": "turno",
+        "texto": "Mientras esté en tu Reserva, al inicio de tu Choque, un Campeón que controles gana 1 de ATQ, hasta el final del turno."
+      }
+    ]
+  },
+  {
+    "id": "ST-005",
+    "name": "Éter del Desgaste",
+    "type": "Éter",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "Todo se gasta, incluso la voluntad del enemigo.",
+    "paqueteId": "estandar",
+    "limiteCopias": "3",
+    "createdAt": "2026-11-17T12:00:00.000Z",
+    "updatedAt": "2026-11-17T12:00:00.000Z",
+    "stats": {
+      "cost": 1
+    },
+    "efectos": [
+      {
+        "tipo": "pago",
+        "trigger": "al_pagar_eter",
+        "efecto": "debuff",
+        "stats": {
+          "ATQ": 1,
+          "RES": 1
+        },
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "duracion": "turno",
+        "texto": "Cuando pagues esta carta, un Campeón que controla el rival pierde 1 de ATQ y 1 de RES, hasta el final del turno."
+      }
+    ]
+  },
+  {
+    "id": "ST-010",
+    "name": "Escudera de Casa Serena",
+    "type": "Campeón",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "Se planta donde otros dudan.",
+    "paqueteId": "estandar",
+    "limiteCopias": "3",
+    "createdAt": "2026-11-17T12:00:00.000Z",
+    "updatedAt": "2026-11-17T12:00:00.000Z",
+    "stats": {
+      "cost": 2,
+      "poder": 2,
+      "resistencia": 4
+    },
+    "efectos": [],
+    "facciones": [
+      "Orden"
+    ],
+    "esencia": "Céleste",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ]
+  },
+  {
+    "id": "ST-011",
+    "name": "Guardiana de Casa Alba",
+    "type": "Campeón",
+    "rarity": "Común",
+    "keywords": [
+      "Protector"
+    ],
+    "flavorText": "Mientras ella vigila, el resto descansa.",
+    "paqueteId": "estandar",
+    "limiteCopias": "3",
+    "createdAt": "2026-11-17T12:00:00.000Z",
+    "updatedAt": "2026-11-17T12:00:00.000Z",
+    "stats": {
+      "cost": 3,
+      "poder": 3,
+      "resistencia": 5
+    },
+    "efectos": [],
+    "facciones": [
+      "Orden"
+    ],
+    "esencia": "Céleste",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ]
+  },
+  {
+    "id": "ST-012",
+    "name": "Saqueador del Sur",
+    "type": "Campeón",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "Lo que no se defiende, se lleva.",
+    "paqueteId": "estandar",
+    "limiteCopias": "3",
+    "createdAt": "2026-11-17T12:00:00.000Z",
+    "updatedAt": "2026-11-17T12:00:00.000Z",
+    "stats": {
+      "cost": 2,
+      "poder": 3,
+      "resistencia": 3
+    },
+    "efectos": [],
+    "facciones": [
+      "Caos"
+    ],
+    "esencia": "Abisal",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ]
+  },
+  {
+    "id": "ST-013",
+    "name": "Jinete del Nudo",
+    "type": "Campeón",
+    "rarity": "Común",
+    "keywords": [
+      "Carga"
+    ],
+    "flavorText": "Llega antes que su propio aviso.",
+    "paqueteId": "estandar",
+    "limiteCopias": "3",
+    "createdAt": "2026-11-17T12:00:00.000Z",
+    "updatedAt": "2026-11-17T12:00:00.000Z",
+    "stats": {
+      "cost": 3,
+      "poder": 4,
+      "resistencia": 3
+    },
+    "efectos": [],
+    "facciones": [
+      "Caos"
+    ],
+    "esencia": "Abisal",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ]
+  },
+  {
+    "id": "ST-014",
+    "name": "Portero del Tribunal",
+    "type": "Campeón",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "Nadie entra sin que conste.",
+    "paqueteId": "estandar",
+    "limiteCopias": "3",
+    "createdAt": "2026-11-17T12:00:00.000Z",
+    "updatedAt": "2026-11-17T12:00:00.000Z",
+    "stats": {
+      "cost": 2,
+      "poder": 3,
+      "resistencia": 3
+    },
+    "efectos": [],
+    "facciones": [
+      "Purga"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ]
+  },
+  {
+    "id": "ST-015",
+    "name": "Alabardero del Tribunal",
+    "type": "Campeón",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "La ley también necesita brazos.",
+    "paqueteId": "estandar",
+    "limiteCopias": "3",
+    "createdAt": "2026-11-17T12:00:00.000Z",
+    "updatedAt": "2026-11-17T12:00:00.000Z",
+    "stats": {
+      "cost": 3,
+      "poder": 4,
+      "resistencia": 4
+    },
+    "efectos": [],
+    "facciones": [
+      "Purga"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ]
+  },
+  {
+    "id": "ST-016",
+    "name": "Retoño del Confín",
+    "type": "Campeón",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "Aún no sabe qué será, pero ya sabe resistir.",
+    "paqueteId": "estandar",
+    "limiteCopias": "3",
+    "createdAt": "2026-11-17T12:00:00.000Z",
+    "updatedAt": "2026-11-17T12:00:00.000Z",
+    "stats": {
+      "cost": 2,
+      "poder": 2,
+      "resistencia": 4
+    },
+    "efectos": [],
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Elemental",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ]
+  },
+  {
+    "id": "ST-017",
+    "name": "Jabalí del Derrame",
+    "type": "Campeón",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "Todo lo que cambia a su paso, él lo atraviesa.",
+    "paqueteId": "estandar",
+    "limiteCopias": "3",
+    "createdAt": "2026-11-17T12:00:00.000Z",
+    "updatedAt": "2026-11-17T12:00:00.000Z",
+    "stats": {
+      "cost": 3,
+      "poder": 3,
+      "resistencia": 5
+    },
+    "efectos": [],
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Bestia",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ]
+  },
+  {
+    "id": "ST-020",
+    "name": "Desmantelar",
+    "type": "Mística",
+    "rarity": "Poco Común",
+    "keywords": [],
+    "flavorText": "Todo lo que se levanta con prisa se deshace con calma.",
+    "paqueteId": "estandar",
+    "limiteCopias": "3",
+    "createdAt": "2026-11-17T12:00:00.000Z",
+    "updatedAt": "2026-11-17T12:00:00.000Z",
+    "stats": {
+      "cost": 2
+    },
+    "efectos": [
+      {
+        "tipo": "hechizo",
+        "efecto": "destroy",
+        "objetivo": {
+          "tipo": "mistica_arcana",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "cantidad": 1,
+        "texto": "Destruye 1 Mística o Arcana que controla el rival."
+      }
+    ]
+  },
+  {
+    "id": "ST-021",
+    "name": "Golpe Seco",
+    "type": "Mística",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "No hizo falta un segundo golpe.",
+    "paqueteId": "estandar",
+    "limiteCopias": "3",
+    "createdAt": "2026-11-17T12:00:00.000Z",
+    "updatedAt": "2026-11-17T12:00:00.000Z",
+    "stats": {
+      "cost": 3
+    },
+    "efectos": [
+      {
+        "tipo": "hechizo",
+        "efecto": "destroy",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo",
+          "filtros": {
+            "atqMax": 4
+          }
+        },
+        "texto": "Destruye 1 Campeón ATQ 4 o menos que controla el rival."
+      }
+    ]
+  },
+  {
+    "id": "ST-022",
+    "name": "Resguardo",
+    "type": "Mística",
+    "rarity": "Común",
+    "keywords": [
+      "Presteza"
+    ],
+    "flavorText": "Hay quien cae, y hay quien se queda en pie.",
+    "paqueteId": "estandar",
+    "limiteCopias": "3",
+    "createdAt": "2026-11-17T12:00:00.000Z",
+    "updatedAt": "2026-11-17T12:00:00.000Z",
+    "stats": {
+      "cost": 2
+    },
+    "efectos": [
+      {
+        "tipo": "hechizo",
+        "efecto": "grant_keyword",
+        "keyword": "Indestructible",
+        "duracion": "turno",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "campo"
+        },
+        "cantidad": 1,
+        "texto": "1 Campeón que controles gana Indestructible, hasta el final del turno."
+      }
+    ]
+  },
+  {
+    "id": "ST-023",
+    "name": "Segundo Aliento",
+    "type": "Mística",
+    "rarity": "Poco Común",
+    "keywords": [],
+    "flavorText": "El Éter no olvida a quien todavía tiene algo que dar.",
+    "paqueteId": "estandar",
+    "limiteCopias": "3",
+    "createdAt": "2026-11-17T12:00:00.000Z",
+    "updatedAt": "2026-11-17T12:00:00.000Z",
+    "stats": {
+      "cost": 3
+    },
+    "efectos": [
+      {
+        "tipo": "hechizo",
+        "efecto": "recuperar_campo",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "cementerio",
+          "filtros": {
+            "costeMax": 3
+          }
+        },
+        "cantidad": 1,
+        "texto": "Invoca 1 Campeón de coste 3 o menos de tu Cementerio."
+      }
+    ]
+  },
+  {
+    "id": "ST-024",
+    "name": "Cambio de Rumbo",
+    "type": "Mística",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "Un buen plan sabe cuándo dejar de serlo.",
+    "paqueteId": "estandar",
+    "limiteCopias": "3",
+    "createdAt": "2026-11-17T12:00:00.000Z",
+    "updatedAt": "2026-11-17T12:00:00.000Z",
+    "stats": {
+      "cost": 2
+    },
+    "efectos": [
+      {
+        "tipo": "hechizo",
+        "efecto": "draw_discard",
+        "objetivo": {
+          "tipo": "carta",
+          "controlador": "propio",
+          "zona": "mazo"
+        },
+        "cantidad": 2,
+        "cantidadDescarte": 1,
+        "texto": "Roba 2 cartas de tu mazo y descarta 1 carta de tu mano."
+      }
+    ]
+  },
+  {
+    "id": "ST-030",
+    "name": "Silencio",
+    "type": "Arcana",
+    "rarity": "Rara",
+    "keywords": [],
+    "flavorText": "Algunas palabras mueren antes de ser dichas.",
+    "paqueteId": "estandar",
+    "limiteCopias": "2",
+    "createdAt": "2026-11-17T12:00:00.000Z",
+    "updatedAt": "2026-11-17T12:00:00.000Z",
+    "stats": {
+      "cost": 3
+    },
+    "efectos": [
+      {
+        "tipo": "hechizo",
+        "trigger": "cuando_juegas_mistica",
+        "controladorTrigger": "rival",
+        "costo": {
+          "tipo": "libera_eter_propio",
+          "cantidad": 3
+        },
+        "activacion": "una_por_turno",
+        "efecto": "negar",
+        "tipoNegacion": "activacion",
+        "objetivo": {
+          "tipo": "campeon_del_trigger",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "texto": "Puedes bloquear hasta un máximo de 3 Éter (Max. 3) sobre esta carta. Una vez por turno, cuando el rival juegue una Mística, devuelve 1 Éter bloqueado de esta carta a tu Reserva, niega la activación de su efecto. Cuando esta carta no tenga Éter bloqueado, envíala al Cementerio."
+      }
+    ]
+  },
+  {
+    "id": "ST-031",
+    "name": "Memoria del Campo",
+    "type": "Arcana",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "Cada caído le deja una lección a quien se queda.",
+    "paqueteId": "estandar",
+    "limiteCopias": "3",
+    "createdAt": "2026-11-17T12:00:00.000Z",
+    "updatedAt": "2026-11-17T12:00:00.000Z",
+    "stats": {
+      "cost": 2
+    },
+    "efectos": [
+      {
+        "tipo": "hechizo",
+        "trigger": "cuando_campeon_propio_al_cementerio",
+        "costo": {
+          "tipo": "bloqueo_fijo",
+          "cantidad": 1
+        },
+        "activacion": "una_por_turno",
+        "efecto": "draw",
+        "objetivo": {
+          "tipo": "carta",
+          "controlador": "propio",
+          "zona": "mazo"
+        },
+        "cantidad": 1,
+        "reagrupar": {
+          "fase": "alba",
+          "turno": "propio"
+        },
+        "texto": "Una vez por turno, cuando un Campeón que controles sea enviado al Cementerio, bloquea 1 Éter, roba 1 carta de tu mazo. Al inicio de tu Alba reagrupa el Éter usado por este efecto."
+      }
+    ]
+  },
+  {
+    "id": "ST-032",
+    "name": "Parapeto",
+    "type": "Arcana",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "Detrás de la muralla, hasta el miedo se ordena.",
+    "paqueteId": "estandar",
+    "limiteCopias": "3",
+    "createdAt": "2026-11-17T12:00:00.000Z",
+    "updatedAt": "2026-11-17T12:00:00.000Z",
+    "stats": {
+      "cost": 2
+    },
+    "efectos": [
+      {
+        "tipo": "hechizo",
+        "trigger": "al_atacar",
+        "controladorTrigger": "rival",
+        "costo": {
+          "tipo": "bloqueo_fijo",
+          "cantidad": 2
+        },
+        "activacion": "una_por_turno",
+        "efecto": "buff",
+        "stats": {
+          "ATQ": 0,
+          "RES": 2
+        },
+        "duracion": "turno",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "campo"
+        },
+        "reagrupar": {
+          "fase": "alba",
+          "turno": "propio"
+        },
+        "texto": "Al atacar el rival, una vez por turno, bloquea 2 Éter, un Campeón que controles gana 2 de RES, hasta el final del turno. Al inicio de tu Alba reagrupa el Éter usado por este efecto."
+      }
+    ]
+  },
+  {
+    "id": "ST-033",
+    "name": "Ímpetu",
+    "type": "Arcana",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "Cuando uno avanza, todos avanzan.",
+    "paqueteId": "estandar",
+    "limiteCopias": "3",
+    "createdAt": "2026-11-17T12:00:00.000Z",
+    "updatedAt": "2026-11-17T12:00:00.000Z",
+    "stats": {
+      "cost": 2
+    },
+    "efectos": [
+      {
+        "tipo": "hechizo",
+        "efecto": "buff",
+        "stats": {
+          "ATQ": 1,
+          "RES": 0
+        },
+        "duracion": "turno",
+        "objetivo": {
+          "tipo": "todos_campeones_propios",
+          "controlador": "propio",
+          "zona": "campo"
+        },
+        "texto": "Todos tus Campeones ganan 1 de ATQ, hasta el final del turno."
+      }
+    ]
+  },
+  {
+    "id": "ST-034",
+    "name": "Coraza",
+    "type": "Arcana",
+    "rarity": "Común",
+    "keywords": [
+      "Artefacto"
+    ],
+    "flavorText": "Pesa lo justo para que valga la pena.",
+    "paqueteId": "estandar",
+    "limiteCopias": "3",
+    "createdAt": "2026-11-17T12:00:00.000Z",
+    "updatedAt": "2026-11-17T12:00:00.000Z",
+    "stats": {
+      "cost": 2
+    },
+    "efectos": [
+      {
+        "tipo": "hechizo",
+        "efecto": "buff",
+        "stats": {
+          "ATQ": 0,
+          "RES": 2
+        },
+        "objetivo": {
+          "tipo": "equipped_champion",
+          "controlador": "propio",
+          "zona": "campo"
+        },
+        "texto": "El Campeón equipado con esta carta gana 2 de RES."
+      }
+    ]
+  },
+  {
+    "id": "ST-040",
+    "name": "Primer Lazo",
+    "type": "Vínculo",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "Antes de dar un paso, conviene mirar el camino.",
+    "paqueteId": "estandar",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-17T12:00:00.000Z",
+    "updatedAt": "2026-11-17T12:00:00.000Z",
+    "stats": {
+      "cost": 0
+    },
+    "efectos": [
+      {
+        "tipo": "vinculo",
+        "trigger": "inicio_alba",
+        "efecto": "scry",
+        "cantidad": 1,
+        "opcionFondo": true,
+        "objetivo": {
+          "tipo": "carta",
+          "controlador": "propio",
+          "zona": "mazo"
+        },
+        "duracion": "1_por_turno",
+        "texto": "Al inicio de tu Alba, puedes mirar la carta superior de tu mazo y puedes enviarla al fondo, una vez por turno."
+      }
+    ]
+  },
+  {
+    "id": "ST-041",
+    "name": "Rescoldo",
+    "type": "Vínculo",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "Basta una brasa para que vuelva el fuego.",
+    "paqueteId": "estandar",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-17T12:00:00.000Z",
+    "updatedAt": "2026-11-17T12:00:00.000Z",
+    "stats": {
+      "cost": 0
+    },
+    "efectos": [
+      {
+        "tipo": "vinculo",
+        "trigger": "inicio_choque",
+        "efecto": "toggle_exhaust",
+        "cantidad": 1,
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "campo",
+          "filtros": {
+            "agotado": true
+          }
+        },
+        "texto": "Al inicio del Choque del rival, puedes cambiar el agotamiento de 1 Campeón agotado que controles.",
+        "controladorTrigger": "rival"
+      }
+    ]
+  },
+  {
+    "id": "ST-042",
+    "name": "Guardia de Vigilia",
+    "type": "Vínculo",
+    "rarity": "Común",
+    "keywords": [],
+    "flavorText": "Mientras duermen, alguien vela.",
+    "paqueteId": "estandar",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-17T12:00:00.000Z",
+    "updatedAt": "2026-11-17T12:00:00.000Z",
+    "stats": {
+      "cost": 0
+    },
+    "efectos": [
+      {
+        "tipo": "vinculo",
+        "trigger": "inicio_alba",
+        "controladorTrigger": "rival",
+        "efecto": "grant_keyword",
+        "keyword": "Indestructible",
+        "duracion": "turno",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "campo"
+        },
+        "texto": "Al inicio de la Alba del rival, un Campeón que controles gana Indestructible, hasta el final del turno."
+      }
+    ]
+  },
+  {
+    "id": "ST-043",
+    "name": "Hilo Tenso",
+    "type": "Vínculo",
+    "rarity": "Poco Común",
+    "keywords": [],
+    "flavorText": "Tirar del hilo cansa hasta al más fuerte.",
+    "paqueteId": "estandar",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-17T12:00:00.000Z",
+    "updatedAt": "2026-11-17T12:00:00.000Z",
+    "stats": {
+      "cost": 0
+    },
+    "efectos": [
+      {
+        "tipo": "vinculo",
+        "trigger": "inicio_choque",
+        "controladorTrigger": "rival",
+        "efecto": "debuff",
+        "stats": {
+          "ATQ": 2,
+          "RES": 0
+        },
+        "duracion": "turno",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "texto": "Al inicio del Choque del rival, un Campeón que controla el rival pierde 2 de ATQ, hasta el final del turno."
+      }
+    ]
+  },
+  {
+    "id": "ST-044",
+    "name": "Cimiento",
+    "type": "Vínculo",
+    "rarity": "Poco Común",
+    "keywords": [],
+    "flavorText": "Todo gigante tiene un peso que cargar.",
+    "paqueteId": "estandar",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-17T12:00:00.000Z",
+    "updatedAt": "2026-11-17T12:00:00.000Z",
+    "stats": {
+      "cost": 0
+    },
+    "efectos": [
+      {
+        "tipo": "vinculo",
+        "efecto": "debuff",
+        "stats": {
+          "ATQ": 1,
+          "RES": 0
+        },
+        "duracion": "mientras_en_campo",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo",
+          "filtros": {
+            "seleccionar": {
+              "stat": "poder",
+              "orden": "mayor"
+            }
+          }
+        },
+        "texto": "El Campeón con mayor ATQ que controla el rival pierde 1 de ATQ, mientras esta carta esté en el campo."
+      }
+    ]
   }
 ]

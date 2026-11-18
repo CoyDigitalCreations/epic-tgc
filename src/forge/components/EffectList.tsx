@@ -354,6 +354,9 @@ export function generateEffectText(data: EfectoData): string {
     } else if (data.costo.tipo === 'exilia_cementerio_propio') {
       const n = data.costo.cantidad ?? 1
       addPart(`puedes exiliar ${n} Campeón${n > 1 ? 'es' : ''} de tu Cementerio,`)
+    } else if (data.costo.tipo === 'libera_eter_propio') {
+      // Silencio: la oración de carga va ANTES y la del Cementerio DESPUÉS (ver el armado final); aquí, el gasto
+      addPart('devuelve 1 Éter bloqueado de esta carta a tu Reserva,')
     }
     // «Una vez por turno» con cualquier otro coste: se dice justo tras la cláusula del coste («Puedes pagar 1 Éter, una vez por turno, …»)
     if (data.activacion === 'una_por_turno' && data.costo.tipo !== 'bloqueo_fijo' && !unaVezAntesDelTrigger) addPart('una vez por turno,')
@@ -518,7 +521,9 @@ export function generateEffectText(data: EfectoData): string {
         'robo': 'Niega el robo',
       }
       const negText = negacionTexts[data.tipoNegacion || 'activacion'] || 'Niega'
-      targetText = `${negText} de ${targetText}`
+      // Observador («cuando el rival juegue una Mística, niega…», Silencio): lo negado es la carta que dispara el trigger
+      if (objetivo.tipo === 'campeon_del_trigger' && (data.tipoNegacion ?? 'activacion') === 'activacion') targetText = 'niega la activación de su efecto'
+      else targetText = `${negText} de ${targetText}`
     } else {
       // steal_ether sobre Éter del rival en su Reserva / zona de pago: «arrebata» (no «toma control de», que es de Campeones)
       const esArrebato = data.efecto === 'steal_ether' && objetivo.tipo === 'eter' && objetivo.controlador === 'rival' && (objetivo.zona === 'reserva' || objetivo.zona === 'pagado')
@@ -598,7 +603,9 @@ export function generateEffectText(data: EfectoData): string {
       } else if (data.efecto === 'draw_discard') {
         const qty = data.cantidad ?? 1
         const cartas = `${qty} carta${qty > 1 ? 's' : ''}`
-        targetText = `${effectVerb} ${cartas} de tu mazo y ${effectVerb.startsWith('puedes') ? 'descartar' : 'descarta'} ${cartas} de tu mano`
+        const nDescarte = data.cantidadDescarte ?? qty
+        const cartasDescarte = `${nDescarte} carta${nDescarte > 1 ? 's' : ''}`
+        targetText = `${effectVerb} ${cartas} de tu mazo y ${effectVerb.startsWith('puedes') ? 'descartar' : 'descarta'} ${cartasDescarte} de tu mano`
       } else if (data.efecto === 'rival_discard') {
         const qty = data.cantidad ?? 1
         // Quien descarta es el rival: «el rival descarta…» / «puedes hacer que el rival descarte…» (sin él, «su mano» no tiene antecedente)
@@ -742,6 +749,11 @@ export function generateEffectText(data: EfectoData): string {
   text = text.replace(/,\./g, '.').replace(/,\s*,/g, ',').replace(/\s+/g, ' ').trim()
   if (reagrupaTodo) text = text ? `${text} ${reagrupaTodo}` : reagrupaTodo
   if (text.length > 0) text = text.charAt(0).toUpperCase() + text.slice(1)
+  // Silencio (`libera_eter_propio`): oración de carga antes, y la regla del Cementerio después
+  if (data.costo?.tipo === 'libera_eter_propio') {
+    const n = data.costo.cantidad ?? 1
+    text = `Puedes bloquear hasta un máximo de ${n} Éter (Max. ${n}) sobre esta carta. ${text} Cuando esta carta no tenga Éter bloqueado, envíala al Cementerio.`
+  }
   return text
 }
 

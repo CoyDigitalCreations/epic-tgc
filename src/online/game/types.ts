@@ -540,6 +540,12 @@ export interface GameState {
    * ya (decisión g de triggers.ts); sirve además de tope contra recursión.
    */
   profundidadTriggers?: number
+  /**
+   * Silencio («cuando el rival juegue una Mística, niega la activación de su efecto»): los observadores corren ANTES de que la Mística
+   * sea opener de la cadena, así que su `negar` deja aquí el id de la Mística recién jugada y `declararOpener` la declara negada.
+   * Transitorio (dentro de una sola acción): lo borra el siguiente observador de jugadas o el propio `declararOpener`.
+   */
+  negarJugada?: { cartaId: string; fuenteId: string; jugador: PlayerId }
   /** Posición (en `ordenResolucion`) del paso de la pila que se está resolviendo (F9d, transitorio como profundidadTriggers). Ver redirect.ts. */
   pasoResolviendo?: number
   /**

@@ -263,7 +263,7 @@ describe('CardList — paquetes personalizados', () => {
     render(<CardList />)
     // Progreso de Estásis: 1 copia / 66 total
     expect(screen.getByText(/1\/66/)).toBeInTheDocument()
-    // Los cuatro paquetes estáticos (Estásis, Disonancia, Purga y Mutación) mantienen su botón "Agregar a mi colección"
-    expect(screen.getAllByText(/Agregar a mi colección/)).toHaveLength(4)
+    // Los cinco paquetes estáticos (Estásis, Disonancia, Purga, Mutación y Estándar) mantienen su botón "Agregar a mi colección"
+    expect(screen.getAllByText(/Agregar a mi colección/)).toHaveLength(5)
   })
 })

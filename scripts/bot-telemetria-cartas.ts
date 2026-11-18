@@ -31,7 +31,8 @@
  */
 import { spawn } from 'node:child_process'
 import os from 'node:os'
-import { ESTASIS_CARDS, DISONANCIA_CARDS, PURGA_CARDS, MUTACION_CARDS } from '../src/shared/data/paquetes'
+import { ALL_CARDS } from '../src/shared/data/paquetes'
+import { mazoPorId, type SetId } from '../src/online/mazos'
 import { actorActual, applyAction, createInitialState } from '../src/online/game'
 import type { GameState, PlayerId } from '../src/online/game'
 import { resolverBot } from '../src/bot/registro'
@@ -41,17 +42,21 @@ function arg(nombre: string, defecto: string): string {
   return i !== -1 && process.argv[i + 1] ? process.argv[i + 1] : defecto
 }
 
-const expandir = (cards: { id: string; limiteCopias?: string | number }[]) =>
-  cards.flatMap((c) => Array.from({ length: Number(c.limiteCopias ?? 1) }, () => c.id))
-
-const TODOS = { estasis: ['Estasis', ESTASIS_CARDS], disonancia: ['Disonancia', DISONANCIA_CARDS], purga: ['Purga', PURGA_CARDS], mutacion: ['Mutacion', MUTACION_CARDS] } as const
+/** Los mazos son los OFICIALES (con recortes de copias y set estándar): `Cop` es el número de copias que lleva ESE mazo, no el tope del diseño. */
+const NOMBRES: Record<SetId, string> = { estasis: 'Estasis', disonancia: 'Disonancia', purga: 'Purga', mutacion: 'Mutacion' }
+const diseñosDe = (id: SetId): { id: string; limiteCopias: number }[] => {
+  const copias = new Map<string, number>()
+  for (const cid of mazoPorId(id)!.cardIds) copias.set(cid, (copias.get(cid) ?? 0) + 1)
+  return [...copias].map(([cid, n]) => ({ ...(ALL_CARDS.find((c) => c.id === cid) as object), id: cid, limiteCopias: n }) as { id: string; limiteCopias: number })
+}
+const TODOS = Object.fromEntries((Object.keys(NOMBRES) as SetId[]).map((id) => [id, [NOMBRES[id], diseñosDe(id)] as const])) as Record<SetId, readonly [string, { id: string; limiteCopias: number }[]]>
 const nombresMazos = arg('mazos', 'estasis,disonancia')
 const elegidos = nombresMazos.split(',').map((m) => TODOS[m.trim() as keyof typeof TODOS])
 if (elegidos.length !== 2 || elegidos.some((e) => !e)) { console.error(`--mazos inválido. Usa dos de: ${Object.keys(TODOS).join(', ')}`); process.exit(1) }
 type Mazo = string
 const [NOMBRE_1, NOMBRE_2] = elegidos.map((e) => e[0]) as [Mazo, Mazo]
 const CARTAS: Record<Mazo, readonly { id: string; limiteCopias?: string | number }[]> = Object.fromEntries(elegidos.map((e) => [e[0], e[1]]))
-const MAZOS: Record<Mazo, string[]> = Object.fromEntries(elegidos.map((e) => [e[0], expandir(e[1])]))
+const MAZOS: Record<Mazo, string[]> = Object.fromEntries(elegidos.map((e) => [e[0], e[1].flatMap((c) => Array.from({ length: c.limiteCopias }, () => c.id))]))
 
 /** Acciones que BAJAN una carta de la mano (o la usan desde la mano). */
 const ACCIONES_JUGAR = new Set(['jugar_campeon', 'jugar_mistica', 'jugar_respuesta', 'colocar_vinculo', 'colocar_arcana', 'equipar_artefacto', 'responder_cadena'])

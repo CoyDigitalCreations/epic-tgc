@@ -108,6 +108,8 @@ export interface EfectoData {
   // ── Capa 6d: HASTA (para cantidades flexibles) ──
   /** When true, the quantity is "up to N" instead of exact */
   esHasta?: boolean
+  /** `draw_discard`: cuántas cartas se descartan tras robar `cantidad` («roba 2 y descarta 1»). Sin él, se descartan tantas como se roban. */
+  cantidadDescarte?: number
 
   // ── Capa 7: CANTIDAD (opcional) ──
   /** How many cards this affects (for draw, destroy, exile, scry, etc.) */
@@ -238,6 +240,12 @@ export interface CostoEfecto {
   tipo: 'ninguno' | 'eter' | 'eter_bloqueado' | 'bloqueo_fijo' | 'exhaust' | 'exile_self' | 'cemetery_self'
     /** «Puedes exiliar N Campeón(es) de tu Cementerio» (`cantidad` = N, por defecto 1) */
     | 'exilia_cementerio_propio'
+    /**
+     * Silencio (set estándar): la carta se CARGA con Éter propio («puedes bloquear hasta N Éter sobre esta carta», `cantidad` = N, como
+     * `eter_bloqueado`) y cada vez que el efecto se dispara GASTA 1 de esos Éter, que vuelve a tu Reserva. Sin Éter cargado el efecto no
+     * ocurre; al gastar el último, la carta se envía al Cementerio.
+     */
+    | 'libera_eter_propio'
   /** Amount (for ether costs) */
   cantidad?: number
   /** eter_bloqueado: umbral mínimo de Éter bloqueado para activar el efecto

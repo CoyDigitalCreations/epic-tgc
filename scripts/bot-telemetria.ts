@@ -15,7 +15,7 @@
  */
 import { spawn } from 'node:child_process'
 import os from 'node:os'
-import { ESTASIS_CARDS, DISONANCIA_CARDS } from '../src/shared/data/paquetes'
+import { mazoPorId } from '../src/online/mazos'
 import { actorActual, applyAction, createInitialState } from '../src/online/game'
 import type { GameEvent, GameState, PlayerId } from '../src/online/game'
 import { resolverBot } from '../src/bot/registro'
@@ -28,7 +28,7 @@ function arg(nombre: string, defecto: string): string {
 const expandir = (cards: { id: string; limiteCopias?: string | number }[]) =>
   cards.flatMap((c) => Array.from({ length: Number(c.limiteCopias ?? 1) }, () => c.id))
 
-const MAZOS = { Estasis: expandir(ESTASIS_CARDS), Disonancia: expandir(DISONANCIA_CARDS) }
+const MAZOS = { Estasis: mazoPorId('estasis')!.cardIds, Disonancia: mazoPorId('disonancia')!.cardIds }
 type Mazo = keyof typeof MAZOS
 
 /** Contadores por mazo. `partidas` y `turnos` sirven para normalizar a «por partida». */

@@ -49,6 +49,7 @@ const COSTO_OPTIONS = [
   { value: 'eter_bloqueado', label: 'Éter bloqueado (hasta)' }, { value: 'bloqueo_fijo', label: 'Bloqueo fijo' },
   { value: 'exhaust', label: 'Agotar' },
   { value: 'exilia_cementerio_propio', label: 'Exiliar Campeón(es) de tu Cementerio' },
+  { value: 'libera_eter_propio', label: 'Cargar Éter en la carta y gastar 1 al usarla (Silencio)' },
 ]
 const REQUISITO_OPTIONS = [
   { value: 'ninguno', label: 'Sin requisito' },

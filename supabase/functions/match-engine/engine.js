@@ -5439,6 +5439,888 @@ var FuenteEfectos_default = [
     ],
     createdAt: "2026-11-10T00:12:00.082Z",
     updatedAt: "2026-11-13T04:41:07.029Z"
+  },
+  {
+    id: "ST-001",
+    name: "\xC9ter del Olvido",
+    type: "\xC9ter",
+    rarity: "Com\xFAn",
+    keywords: [],
+    flavorText: "Hay muertos que es mejor no despertar.",
+    paqueteId: "estandar",
+    limiteCopias: "2",
+    createdAt: "2026-11-17T12:00:00.000Z",
+    updatedAt: "2026-11-17T12:00:00.000Z",
+    stats: {
+      cost: 1
+    },
+    efectos: [
+      {
+        tipo: "pago",
+        trigger: "al_pagar_eter",
+        efecto: "exile",
+        objetivo: {
+          tipo: "carta",
+          controlador: "rival",
+          zona: "cementerio"
+        },
+        cantidad: 1,
+        texto: "Cuando pagues esta carta, exilia 1 carta del Cementerio del rival."
+      }
+    ]
+  },
+  {
+    id: "ST-002",
+    name: "\xC9ter del Impulso",
+    type: "\xC9ter",
+    rarity: "Poco Com\xFAn",
+    keywords: [],
+    flavorText: "Un empuj\xF3n a tiempo vale m\xE1s que un plan perfecto.",
+    paqueteId: "estandar",
+    limiteCopias: "3",
+    createdAt: "2026-11-17T12:00:00.000Z",
+    updatedAt: "2026-11-17T12:00:00.000Z",
+    stats: {
+      cost: 1
+    },
+    efectos: [
+      {
+        tipo: "pago",
+        trigger: "al_pagar_eter",
+        efecto: "buff",
+        stats: {
+          ATQ: 1,
+          RES: 1
+        },
+        objetivo: {
+          tipo: "campeon",
+          controlador: "propio",
+          zona: "campo"
+        },
+        duracion: "turno",
+        texto: "Cuando pagues esta carta, un Campe\xF3n que controles gana 1 de ATQ y 1 de RES, hasta el final del turno."
+      }
+    ]
+  },
+  {
+    id: "ST-003",
+    name: "\xC9ter del Baluarte",
+    type: "\xC9ter",
+    rarity: "Rara",
+    keywords: [],
+    flavorText: "Lo que se ancla con cuidado no cede con facilidad.",
+    paqueteId: "estandar",
+    limiteCopias: "2",
+    createdAt: "2026-11-17T12:00:00.000Z",
+    updatedAt: "2026-11-17T12:00:00.000Z",
+    stats: {
+      cost: 1
+    },
+    efectos: [
+      {
+        tipo: "bloqueo",
+        efecto: "grant_keyword",
+        keyword: "Indestructible",
+        objetivo: {
+          tipo: "campeon",
+          controlador: "propio",
+          zona: "campo"
+        },
+        texto: "Mientras est\xE9 bloqueado, el Campe\xF3n que tenga este \xC9ter gana Indestructible."
+      }
+    ]
+  },
+  {
+    id: "ST-004",
+    name: "\xC9ter del Umbral",
+    type: "\xC9ter",
+    rarity: "Com\xFAn",
+    keywords: [],
+    flavorText: "Antes de cada choque, hasta el \xC9ter contiene el aliento.",
+    paqueteId: "estandar",
+    limiteCopias: "3",
+    createdAt: "2026-11-17T12:00:00.000Z",
+    updatedAt: "2026-11-17T12:00:00.000Z",
+    stats: {
+      cost: 1
+    },
+    efectos: [
+      {
+        tipo: "reserva",
+        trigger: "inicio_choque",
+        efecto: "buff",
+        stats: {
+          ATQ: 1,
+          RES: 0
+        },
+        objetivo: {
+          tipo: "campeon",
+          controlador: "propio",
+          zona: "campo"
+        },
+        duracion: "turno",
+        texto: "Mientras est\xE9 en tu Reserva, al inicio de tu Choque, un Campe\xF3n que controles gana 1 de ATQ, hasta el final del turno."
+      }
+    ]
+  },
+  {
+    id: "ST-005",
+    name: "\xC9ter del Desgaste",
+    type: "\xC9ter",
+    rarity: "Com\xFAn",
+    keywords: [],
+    flavorText: "Todo se gasta, incluso la voluntad del enemigo.",
+    paqueteId: "estandar",
+    limiteCopias: "3",
+    createdAt: "2026-11-17T12:00:00.000Z",
+    updatedAt: "2026-11-17T12:00:00.000Z",
+    stats: {
+      cost: 1
+    },
+    efectos: [
+      {
+        tipo: "pago",
+        trigger: "al_pagar_eter",
+        efecto: "debuff",
+        stats: {
+          ATQ: 1,
+          RES: 1
+        },
+        objetivo: {
+          tipo: "campeon",
+          controlador: "rival",
+          zona: "campo"
+        },
+        duracion: "turno",
+        texto: "Cuando pagues esta carta, un Campe\xF3n que controla el rival pierde 1 de ATQ y 1 de RES, hasta el final del turno."
+      }
+    ]
+  },
+  {
+    id: "ST-010",
+    name: "Escudera de Casa Serena",
+    type: "Campe\xF3n",
+    rarity: "Com\xFAn",
+    keywords: [],
+    flavorText: "Se planta donde otros dudan.",
+    paqueteId: "estandar",
+    limiteCopias: "3",
+    createdAt: "2026-11-17T12:00:00.000Z",
+    updatedAt: "2026-11-17T12:00:00.000Z",
+    stats: {
+      cost: 2,
+      poder: 2,
+      resistencia: 4
+    },
+    efectos: [],
+    facciones: [
+      "Orden"
+    ],
+    esencia: "C\xE9leste",
+    roles: [
+      "Normal"
+    ],
+    catHabilidad: [
+      "Normal"
+    ]
+  },
+  {
+    id: "ST-011",
+    name: "Guardiana de Casa Alba",
+    type: "Campe\xF3n",
+    rarity: "Com\xFAn",
+    keywords: [
+      "Protector"
+    ],
+    flavorText: "Mientras ella vigila, el resto descansa.",
+    paqueteId: "estandar",
+    limiteCopias: "3",
+    createdAt: "2026-11-17T12:00:00.000Z",
+    updatedAt: "2026-11-17T12:00:00.000Z",
+    stats: {
+      cost: 3,
+      poder: 3,
+      resistencia: 5
+    },
+    efectos: [],
+    facciones: [
+      "Orden"
+    ],
+    esencia: "C\xE9leste",
+    roles: [
+      "Normal"
+    ],
+    catHabilidad: [
+      "Normal"
+    ]
+  },
+  {
+    id: "ST-012",
+    name: "Saqueador del Sur",
+    type: "Campe\xF3n",
+    rarity: "Com\xFAn",
+    keywords: [],
+    flavorText: "Lo que no se defiende, se lleva.",
+    paqueteId: "estandar",
+    limiteCopias: "3",
+    createdAt: "2026-11-17T12:00:00.000Z",
+    updatedAt: "2026-11-17T12:00:00.000Z",
+    stats: {
+      cost: 2,
+      poder: 3,
+      resistencia: 3
+    },
+    efectos: [],
+    facciones: [
+      "Caos"
+    ],
+    esencia: "Abisal",
+    roles: [
+      "Normal"
+    ],
+    catHabilidad: [
+      "Normal"
+    ]
+  },
+  {
+    id: "ST-013",
+    name: "Jinete del Nudo",
+    type: "Campe\xF3n",
+    rarity: "Com\xFAn",
+    keywords: [
+      "Carga"
+    ],
+    flavorText: "Llega antes que su propio aviso.",
+    paqueteId: "estandar",
+    limiteCopias: "3",
+    createdAt: "2026-11-17T12:00:00.000Z",
+    updatedAt: "2026-11-17T12:00:00.000Z",
+    stats: {
+      cost: 3,
+      poder: 4,
+      resistencia: 3
+    },
+    efectos: [],
+    facciones: [
+      "Caos"
+    ],
+    esencia: "Abisal",
+    roles: [
+      "Normal"
+    ],
+    catHabilidad: [
+      "Normal"
+    ]
+  },
+  {
+    id: "ST-014",
+    name: "Portero del Tribunal",
+    type: "Campe\xF3n",
+    rarity: "Com\xFAn",
+    keywords: [],
+    flavorText: "Nadie entra sin que conste.",
+    paqueteId: "estandar",
+    limiteCopias: "3",
+    createdAt: "2026-11-17T12:00:00.000Z",
+    updatedAt: "2026-11-17T12:00:00.000Z",
+    stats: {
+      cost: 2,
+      poder: 3,
+      resistencia: 3
+    },
+    efectos: [],
+    facciones: [
+      "Purga"
+    ],
+    esencia: "Humano",
+    roles: [
+      "Normal"
+    ],
+    catHabilidad: [
+      "Normal"
+    ]
+  },
+  {
+    id: "ST-015",
+    name: "Alabardero del Tribunal",
+    type: "Campe\xF3n",
+    rarity: "Com\xFAn",
+    keywords: [],
+    flavorText: "La ley tambi\xE9n necesita brazos.",
+    paqueteId: "estandar",
+    limiteCopias: "3",
+    createdAt: "2026-11-17T12:00:00.000Z",
+    updatedAt: "2026-11-17T12:00:00.000Z",
+    stats: {
+      cost: 3,
+      poder: 4,
+      resistencia: 4
+    },
+    efectos: [],
+    facciones: [
+      "Purga"
+    ],
+    esencia: "Humano",
+    roles: [
+      "Normal"
+    ],
+    catHabilidad: [
+      "Normal"
+    ]
+  },
+  {
+    id: "ST-016",
+    name: "Reto\xF1o del Conf\xEDn",
+    type: "Campe\xF3n",
+    rarity: "Com\xFAn",
+    keywords: [],
+    flavorText: "A\xFAn no sabe qu\xE9 ser\xE1, pero ya sabe resistir.",
+    paqueteId: "estandar",
+    limiteCopias: "3",
+    createdAt: "2026-11-17T12:00:00.000Z",
+    updatedAt: "2026-11-17T12:00:00.000Z",
+    stats: {
+      cost: 2,
+      poder: 2,
+      resistencia: 4
+    },
+    efectos: [],
+    facciones: [
+      "Mutaci\xF3n"
+    ],
+    esencia: "Elemental",
+    roles: [
+      "Normal"
+    ],
+    catHabilidad: [
+      "Normal"
+    ]
+  },
+  {
+    id: "ST-017",
+    name: "Jabal\xED del Derrame",
+    type: "Campe\xF3n",
+    rarity: "Com\xFAn",
+    keywords: [],
+    flavorText: "Todo lo que cambia a su paso, \xE9l lo atraviesa.",
+    paqueteId: "estandar",
+    limiteCopias: "3",
+    createdAt: "2026-11-17T12:00:00.000Z",
+    updatedAt: "2026-11-17T12:00:00.000Z",
+    stats: {
+      cost: 3,
+      poder: 3,
+      resistencia: 5
+    },
+    efectos: [],
+    facciones: [
+      "Mutaci\xF3n"
+    ],
+    esencia: "Bestia",
+    roles: [
+      "Normal"
+    ],
+    catHabilidad: [
+      "Normal"
+    ]
+  },
+  {
+    id: "ST-020",
+    name: "Desmantelar",
+    type: "M\xEDstica",
+    rarity: "Poco Com\xFAn",
+    keywords: [],
+    flavorText: "Todo lo que se levanta con prisa se deshace con calma.",
+    paqueteId: "estandar",
+    limiteCopias: "3",
+    createdAt: "2026-11-17T12:00:00.000Z",
+    updatedAt: "2026-11-17T12:00:00.000Z",
+    stats: {
+      cost: 2
+    },
+    efectos: [
+      {
+        tipo: "hechizo",
+        efecto: "destroy",
+        objetivo: {
+          tipo: "mistica_arcana",
+          controlador: "rival",
+          zona: "campo"
+        },
+        cantidad: 1,
+        texto: "Destruye 1 M\xEDstica o Arcana que controla el rival."
+      }
+    ]
+  },
+  {
+    id: "ST-021",
+    name: "Golpe Seco",
+    type: "M\xEDstica",
+    rarity: "Com\xFAn",
+    keywords: [],
+    flavorText: "No hizo falta un segundo golpe.",
+    paqueteId: "estandar",
+    limiteCopias: "3",
+    createdAt: "2026-11-17T12:00:00.000Z",
+    updatedAt: "2026-11-17T12:00:00.000Z",
+    stats: {
+      cost: 3
+    },
+    efectos: [
+      {
+        tipo: "hechizo",
+        efecto: "destroy",
+        objetivo: {
+          tipo: "campeon",
+          controlador: "rival",
+          zona: "campo",
+          filtros: {
+            atqMax: 4
+          }
+        },
+        texto: "Destruye 1 Campe\xF3n ATQ 4 o menos que controla el rival."
+      }
+    ]
+  },
+  {
+    id: "ST-022",
+    name: "Resguardo",
+    type: "M\xEDstica",
+    rarity: "Com\xFAn",
+    keywords: [
+      "Presteza"
+    ],
+    flavorText: "Hay quien cae, y hay quien se queda en pie.",
+    paqueteId: "estandar",
+    limiteCopias: "3",
+    createdAt: "2026-11-17T12:00:00.000Z",
+    updatedAt: "2026-11-17T12:00:00.000Z",
+    stats: {
+      cost: 2
+    },
+    efectos: [
+      {
+        tipo: "hechizo",
+        efecto: "grant_keyword",
+        keyword: "Indestructible",
+        duracion: "turno",
+        objetivo: {
+          tipo: "campeon",
+          controlador: "propio",
+          zona: "campo"
+        },
+        cantidad: 1,
+        texto: "1 Campe\xF3n que controles gana Indestructible, hasta el final del turno."
+      }
+    ]
+  },
+  {
+    id: "ST-023",
+    name: "Segundo Aliento",
+    type: "M\xEDstica",
+    rarity: "Poco Com\xFAn",
+    keywords: [],
+    flavorText: "El \xC9ter no olvida a quien todav\xEDa tiene algo que dar.",
+    paqueteId: "estandar",
+    limiteCopias: "3",
+    createdAt: "2026-11-17T12:00:00.000Z",
+    updatedAt: "2026-11-17T12:00:00.000Z",
+    stats: {
+      cost: 3
+    },
+    efectos: [
+      {
+        tipo: "hechizo",
+        efecto: "recuperar_campo",
+        objetivo: {
+          tipo: "campeon",
+          controlador: "propio",
+          zona: "cementerio",
+          filtros: {
+            costeMax: 3
+          }
+        },
+        cantidad: 1,
+        texto: "Invoca 1 Campe\xF3n de coste 3 o menos de tu Cementerio."
+      }
+    ]
+  },
+  {
+    id: "ST-024",
+    name: "Cambio de Rumbo",
+    type: "M\xEDstica",
+    rarity: "Com\xFAn",
+    keywords: [],
+    flavorText: "Un buen plan sabe cu\xE1ndo dejar de serlo.",
+    paqueteId: "estandar",
+    limiteCopias: "3",
+    createdAt: "2026-11-17T12:00:00.000Z",
+    updatedAt: "2026-11-17T12:00:00.000Z",
+    stats: {
+      cost: 2
+    },
+    efectos: [
+      {
+        tipo: "hechizo",
+        efecto: "draw_discard",
+        objetivo: {
+          tipo: "carta",
+          controlador: "propio",
+          zona: "mazo"
+        },
+        cantidad: 2,
+        cantidadDescarte: 1,
+        texto: "Roba 2 cartas de tu mazo y descarta 1 carta de tu mano."
+      }
+    ]
+  },
+  {
+    id: "ST-030",
+    name: "Silencio",
+    type: "Arcana",
+    rarity: "Rara",
+    keywords: [],
+    flavorText: "Algunas palabras mueren antes de ser dichas.",
+    paqueteId: "estandar",
+    limiteCopias: "2",
+    createdAt: "2026-11-17T12:00:00.000Z",
+    updatedAt: "2026-11-17T12:00:00.000Z",
+    stats: {
+      cost: 3
+    },
+    efectos: [
+      {
+        tipo: "hechizo",
+        trigger: "cuando_juegas_mistica",
+        controladorTrigger: "rival",
+        costo: {
+          tipo: "libera_eter_propio",
+          cantidad: 3
+        },
+        activacion: "una_por_turno",
+        efecto: "negar",
+        tipoNegacion: "activacion",
+        objetivo: {
+          tipo: "campeon_del_trigger",
+          controlador: "rival",
+          zona: "campo"
+        },
+        texto: "Puedes bloquear hasta un m\xE1ximo de 3 \xC9ter (Max. 3) sobre esta carta. Una vez por turno, cuando el rival juegue una M\xEDstica, devuelve 1 \xC9ter bloqueado de esta carta a tu Reserva, niega la activaci\xF3n de su efecto. Cuando esta carta no tenga \xC9ter bloqueado, env\xEDala al Cementerio."
+      }
+    ]
+  },
+  {
+    id: "ST-031",
+    name: "Memoria del Campo",
+    type: "Arcana",
+    rarity: "Com\xFAn",
+    keywords: [],
+    flavorText: "Cada ca\xEDdo le deja una lecci\xF3n a quien se queda.",
+    paqueteId: "estandar",
+    limiteCopias: "3",
+    createdAt: "2026-11-17T12:00:00.000Z",
+    updatedAt: "2026-11-17T12:00:00.000Z",
+    stats: {
+      cost: 2
+    },
+    efectos: [
+      {
+        tipo: "hechizo",
+        trigger: "cuando_campeon_propio_al_cementerio",
+        costo: {
+          tipo: "bloqueo_fijo",
+          cantidad: 1
+        },
+        activacion: "una_por_turno",
+        efecto: "draw",
+        objetivo: {
+          tipo: "carta",
+          controlador: "propio",
+          zona: "mazo"
+        },
+        cantidad: 1,
+        reagrupar: {
+          fase: "alba",
+          turno: "propio"
+        },
+        texto: "Una vez por turno, cuando un Campe\xF3n que controles sea enviado al Cementerio, bloquea 1 \xC9ter, roba 1 carta de tu mazo. Al inicio de tu Alba reagrupa el \xC9ter usado por este efecto."
+      }
+    ]
+  },
+  {
+    id: "ST-032",
+    name: "Parapeto",
+    type: "Arcana",
+    rarity: "Com\xFAn",
+    keywords: [],
+    flavorText: "Detr\xE1s de la muralla, hasta el miedo se ordena.",
+    paqueteId: "estandar",
+    limiteCopias: "3",
+    createdAt: "2026-11-17T12:00:00.000Z",
+    updatedAt: "2026-11-17T12:00:00.000Z",
+    stats: {
+      cost: 2
+    },
+    efectos: [
+      {
+        tipo: "hechizo",
+        trigger: "al_atacar",
+        controladorTrigger: "rival",
+        costo: {
+          tipo: "bloqueo_fijo",
+          cantidad: 2
+        },
+        activacion: "una_por_turno",
+        efecto: "buff",
+        stats: {
+          ATQ: 0,
+          RES: 2
+        },
+        duracion: "turno",
+        objetivo: {
+          tipo: "campeon",
+          controlador: "propio",
+          zona: "campo"
+        },
+        reagrupar: {
+          fase: "alba",
+          turno: "propio"
+        },
+        texto: "Al atacar el rival, una vez por turno, bloquea 2 \xC9ter, un Campe\xF3n que controles gana 2 de RES, hasta el final del turno. Al inicio de tu Alba reagrupa el \xC9ter usado por este efecto."
+      }
+    ]
+  },
+  {
+    id: "ST-033",
+    name: "\xCDmpetu",
+    type: "Arcana",
+    rarity: "Com\xFAn",
+    keywords: [],
+    flavorText: "Cuando uno avanza, todos avanzan.",
+    paqueteId: "estandar",
+    limiteCopias: "3",
+    createdAt: "2026-11-17T12:00:00.000Z",
+    updatedAt: "2026-11-17T12:00:00.000Z",
+    stats: {
+      cost: 2
+    },
+    efectos: [
+      {
+        tipo: "hechizo",
+        efecto: "buff",
+        stats: {
+          ATQ: 1,
+          RES: 0
+        },
+        duracion: "turno",
+        objetivo: {
+          tipo: "todos_campeones_propios",
+          controlador: "propio",
+          zona: "campo"
+        },
+        texto: "Todos tus Campeones ganan 1 de ATQ, hasta el final del turno."
+      }
+    ]
+  },
+  {
+    id: "ST-034",
+    name: "Coraza",
+    type: "Arcana",
+    rarity: "Com\xFAn",
+    keywords: [
+      "Artefacto"
+    ],
+    flavorText: "Pesa lo justo para que valga la pena.",
+    paqueteId: "estandar",
+    limiteCopias: "3",
+    createdAt: "2026-11-17T12:00:00.000Z",
+    updatedAt: "2026-11-17T12:00:00.000Z",
+    stats: {
+      cost: 2
+    },
+    efectos: [
+      {
+        tipo: "hechizo",
+        efecto: "buff",
+        stats: {
+          ATQ: 0,
+          RES: 2
+        },
+        objetivo: {
+          tipo: "equipped_champion",
+          controlador: "propio",
+          zona: "campo"
+        },
+        texto: "El Campe\xF3n equipado con esta carta gana 2 de RES."
+      }
+    ]
+  },
+  {
+    id: "ST-040",
+    name: "Primer Lazo",
+    type: "V\xEDnculo",
+    rarity: "Com\xFAn",
+    keywords: [],
+    flavorText: "Antes de dar un paso, conviene mirar el camino.",
+    paqueteId: "estandar",
+    limiteCopias: "1",
+    createdAt: "2026-11-17T12:00:00.000Z",
+    updatedAt: "2026-11-17T12:00:00.000Z",
+    stats: {
+      cost: 0
+    },
+    efectos: [
+      {
+        tipo: "vinculo",
+        trigger: "inicio_alba",
+        efecto: "scry",
+        cantidad: 1,
+        opcionFondo: true,
+        objetivo: {
+          tipo: "carta",
+          controlador: "propio",
+          zona: "mazo"
+        },
+        duracion: "1_por_turno",
+        texto: "Al inicio de tu Alba, puedes mirar la carta superior de tu mazo y puedes enviarla al fondo, una vez por turno."
+      }
+    ]
+  },
+  {
+    id: "ST-041",
+    name: "Rescoldo",
+    type: "V\xEDnculo",
+    rarity: "Com\xFAn",
+    keywords: [],
+    flavorText: "Basta una brasa para que vuelva el fuego.",
+    paqueteId: "estandar",
+    limiteCopias: "1",
+    createdAt: "2026-11-17T12:00:00.000Z",
+    updatedAt: "2026-11-17T12:00:00.000Z",
+    stats: {
+      cost: 0
+    },
+    efectos: [
+      {
+        tipo: "vinculo",
+        trigger: "inicio_choque",
+        efecto: "toggle_exhaust",
+        cantidad: 1,
+        objetivo: {
+          tipo: "campeon",
+          controlador: "propio",
+          zona: "campo",
+          filtros: {
+            agotado: true
+          }
+        },
+        texto: "Al inicio del Choque del rival, puedes cambiar el agotamiento de 1 Campe\xF3n agotado que controles.",
+        controladorTrigger: "rival"
+      }
+    ]
+  },
+  {
+    id: "ST-042",
+    name: "Guardia de Vigilia",
+    type: "V\xEDnculo",
+    rarity: "Com\xFAn",
+    keywords: [],
+    flavorText: "Mientras duermen, alguien vela.",
+    paqueteId: "estandar",
+    limiteCopias: "1",
+    createdAt: "2026-11-17T12:00:00.000Z",
+    updatedAt: "2026-11-17T12:00:00.000Z",
+    stats: {
+      cost: 0
+    },
+    efectos: [
+      {
+        tipo: "vinculo",
+        trigger: "inicio_alba",
+        controladorTrigger: "rival",
+        efecto: "grant_keyword",
+        keyword: "Indestructible",
+        duracion: "turno",
+        objetivo: {
+          tipo: "campeon",
+          controlador: "propio",
+          zona: "campo"
+        },
+        texto: "Al inicio de la Alba del rival, un Campe\xF3n que controles gana Indestructible, hasta el final del turno."
+      }
+    ]
+  },
+  {
+    id: "ST-043",
+    name: "Hilo Tenso",
+    type: "V\xEDnculo",
+    rarity: "Poco Com\xFAn",
+    keywords: [],
+    flavorText: "Tirar del hilo cansa hasta al m\xE1s fuerte.",
+    paqueteId: "estandar",
+    limiteCopias: "1",
+    createdAt: "2026-11-17T12:00:00.000Z",
+    updatedAt: "2026-11-17T12:00:00.000Z",
+    stats: {
+      cost: 0
+    },
+    efectos: [
+      {
+        tipo: "vinculo",
+        trigger: "inicio_choque",
+        controladorTrigger: "rival",
+        efecto: "debuff",
+        stats: {
+          ATQ: 2,
+          RES: 0
+        },
+        duracion: "turno",
+        objetivo: {
+          tipo: "campeon",
+          controlador: "rival",
+          zona: "campo"
+        },
+        texto: "Al inicio del Choque del rival, un Campe\xF3n que controla el rival pierde 2 de ATQ, hasta el final del turno."
+      }
+    ]
+  },
+  {
+    id: "ST-044",
+    name: "Cimiento",
+    type: "V\xEDnculo",
+    rarity: "Poco Com\xFAn",
+    keywords: [],
+    flavorText: "Todo gigante tiene un peso que cargar.",
+    paqueteId: "estandar",
+    limiteCopias: "1",
+    createdAt: "2026-11-17T12:00:00.000Z",
+    updatedAt: "2026-11-17T12:00:00.000Z",
+    stats: {
+      cost: 0
+    },
+    efectos: [
+      {
+        tipo: "vinculo",
+        efecto: "debuff",
+        stats: {
+          ATQ: 1,
+          RES: 0
+        },
+        duracion: "mientras_en_campo",
+        objetivo: {
+          tipo: "campeon",
+          controlador: "rival",
+          zona: "campo",
+          filtros: {
+            seleccionar: {
+              stat: "poder",
+              orden: "mayor"
+            }
+          }
+        },
+        texto: "El Campe\xF3n con mayor ATQ que controla el rival pierde 1 de ATQ, mientras esta carta est\xE9 en el campo."
+      }
+    ]
   }
 ];
 
@@ -5448,6 +6330,7 @@ var ESTASIS_CARDS = ALL_CARDS.filter((c) => c.paqueteId === "estasis");
 var DISONANCIA_CARDS = ALL_CARDS.filter((c) => c.paqueteId === "disonancia");
 var PURGA_CARDS = ALL_CARDS.filter((c) => c.paqueteId === "purga");
 var MUTACION_CARDS = ALL_CARDS.filter((c) => c.paqueteId === "mutacion");
+var ESTANDAR_CARDS = ALL_CARDS.filter((c) => c.paqueteId === "estandar");
 var PAQUETES = [
   {
     id: "estasis",
@@ -5488,6 +6371,19 @@ var PAQUETES = [
     entrega: "Primog\xE9nitos",
     distribucion: { eter: 15, principal: 45, vinculos: 6 },
     lore: 'Mutaci\xF3n ("El Cambio") es el mazo tem\xE1tico de la facci\xF3n Mutaci\xF3n y la cuarta entrega de Los Primog\xE9nitos. Liora, la hermana menor de la Casa Ra\xEDz, mir\xF3 lo que el Derrame hab\xEDa tocado y vio lo que ve una jardinera en la primera hoja de una especie que nadie ha visto: un brote. No cree que el cambio sea una enfermedad: cree que es lo \xFAnico que no muere. Para Mutaci\xF3n el Eje no se rompi\xF3: cambi\xF3.\n\nEl Derrame no toc\xF3 solo a un ni\xF1o. Toc\xF3 una manada, una orilla, un taller, una colina entera. Lo que sali\xF3 de ah\xED ya no ten\xEDa nombre en ninguna casa: bestias con voz, elementales sin cauce, humanos que dejaron de parecerlo. Liora los reuni\xF3. Ninguno naci\xF3 as\xED: todos cambiaron.\n\nEl mazo juega con la transformaci\xF3n: cambiar de Esencia, copiar y crecer, y el cambio se alimenta a s\xED mismo.'
+  },
+  {
+    id: "estandar",
+    nombre: "Est\xE1ndar",
+    tipo: "Set B\xE1sico",
+    color: "#9ca3af",
+    // No es de una facción: lo usan todos los mazos. Sus Campeones sí son de una facción (2 por cada una) y los de otra no se
+    // eligen en su mazo oficial; la runa del paquete toma la primera.
+    facciones: ["Orden", "Caos", "Purga", "Mutaci\xF3n"],
+    entrega: "Est\xE1ndar",
+    // Copias del set completo (suma de `limiteCopias`): 5 Éter, 5 Místicas, 5 Arcanas, 8 Campeones y 5 Vínculos de diseño
+    distribucion: { eter: 13, principal: 53, vinculos: 5 },
+    lore: "El set Est\xE1ndar re\xFAne lo que sirve en cualquier mazo: \xC9ter que se adapta, M\xEDsticas y Arcanas sencillas, V\xEDnculos discretos y Campeones sin historia propia. No cuenta una historia: permite ajustar la estrategia de cada mazo a lo que el jugador necesita, y por eso aparece en los cuatro mazos oficiales y en los personalizados."
   }
 ];
 var CARD_ART_IDS = new Set(ALL_CARDS.map((c) => c.id));
@@ -5530,7 +6426,7 @@ function esArtefactoEquipable(card) {
 }
 function esPermanenteEnMesa(card) {
   if ("efectos" in card && card.efectos) {
-    if (card.efectos.some((e) => e.costo?.tipo === "eter_bloqueado" || e.costo?.tipo === "bloqueo_fijo")) {
+    if (card.efectos.some((e) => e.costo?.tipo === "eter_bloqueado" || e.costo?.tipo === "bloqueo_fijo" || e.costo?.tipo === "libera_eter_propio")) {
       return true;
     }
   }
@@ -5555,6 +6451,7 @@ function efectoActivableDe(card, conObjetivo) {
   return card.efectos.find((e) => e.tipo === "disparo") ?? continuoPago ?? null;
 }
 function esEfectoDeBloqueoManual(e) {
+  if (e.costo?.tipo === "libera_eter_propio") return true;
   return esCostoBloqueo(e.costo) && e.tipo !== "disparo" && (!e.trigger || e.trigger === "ninguno");
 }
 function efectoBloqueoAccion(card) {
@@ -5577,7 +6474,7 @@ function campeonNecesitaEterBloqueado(card) {
 function cartaNecesitaEterBloqueado(card) {
   if ("efectos" in card && card.efectos) {
     for (const e of card.efectos) {
-      if (e.costo?.tipo === "eter_bloqueado" || e.costo?.tipo === "bloqueo_fijo") return true;
+      if (e.costo?.tipo === "eter_bloqueado" || e.costo?.tipo === "bloqueo_fijo" || e.costo?.tipo === "libera_eter_propio") return true;
     }
   }
   return false;
@@ -6970,7 +7867,7 @@ function validarBloqueo(state, jugador, eterIds, targetInstanceId, efectoIdx, op
 function maxEterBloqueado(card) {
   if ("efectos" in card && card.efectos) {
     for (const e of card.efectos) {
-      if (e.costo?.tipo === "eter_bloqueado" && e.costo.cantidad !== void 0) {
+      if ((e.costo?.tipo === "eter_bloqueado" || e.costo?.tipo === "libera_eter_propio") && e.costo.cantidad !== void 0) {
         return e.costo.cantidad;
       }
       if (e.costo?.tipo === "bloqueo_fijo" && e.costo.cantidad !== void 0) {
@@ -7322,6 +8219,7 @@ var JSON_DE = {
   "cuando-activas-arcana": "cuando_activas_arcana"
 };
 function dispararObservadoresJugada(s, ctx, trigger, jugador, cartaId) {
+  delete s.negarJugada;
   const orden = s.turno === "A" ? ["A", "B"] : ["B", "A"];
   for (const j of orden) {
     dispararTrigger(s, ctx, trigger, j, instanciasEnCampo(s, j), { victimaId: cartaId, controladorVictima: jugador });
@@ -8055,6 +8953,14 @@ function abrirVentana(s, ctx, declaracion) {
   }
 }
 function declararOpener(s, ctx, opener, previos = marcarInicioAccion(s), triggers) {
+  if (s.negarJugada !== void 0) {
+    const { cartaId, fuenteId, jugador } = s.negarJugada;
+    if (cartaId === opener.cardInstanceId && opener.tipo === "mistica" && !opener.negada) {
+      opener.negada = true;
+      ctx.emit({ type: "activacion_negada", jugador, cardInstanceId: opener.cardInstanceId, fuente: fuenteId });
+    }
+    delete s.negarJugada;
+  }
   if (opener.tipo !== "habilidad") {
     const { inst, hechizos } = hechizosDelOpener(s, opener.cardInstanceId);
     if (inst) {
@@ -8504,7 +9410,8 @@ function interpretEffect(s, ctx, inst, efectoData, payload) {
       }
     }
   }
-  if (payload.cobrarCosto && costo && (costo.tipo === "eter" || costo.tipo === "bloqueo_fijo") && inst.cardId) {
+  if (payload.cobrarCosto && costo && (costo.tipo === "eter" || costo.tipo === "bloqueo_fijo" || costo.tipo === "libera_eter_propio") && inst.cardId) {
+    if (costo.tipo === "libera_eter_propio" && payload.victimaId && cadenaActiva(s)) return;
     if (!cobrarCostoDeTrigger(s, ctx, inst, efectoData, jugador)) return;
   }
   if (efectoData.contextoUso && efectoData.contextoUso !== "ninguno") {
@@ -8557,6 +9464,20 @@ function interpretEffect(s, ctx, inst, efectoData, payload) {
   if (!pagarExiliaCementerio(s, ctx, efectoData, jugador)) return;
   executeEffect(s, ctx, inst, efecto, targetIds, jugador, efectoData);
 }
+function liberarEterPropioDeTrigger(s, ctx, inst, efectoData, jugador) {
+  const meta = metaDeInstancia(s, inst.cardInstanceId);
+  const idx = meta && "efectos" in meta && meta.efectos ? meta.efectos.indexOf(efectoData) : -1;
+  if (idx === -1) return false;
+  const usado = efectoData.activacion === "una_por_turno" && (inst.efectosUsadosEsteTurno ?? []).includes(idx);
+  const cargados = eterDeEfecto(s, inst.cardInstanceId, idx);
+  if (usado || cargados.length === 0) return false;
+  quitarEteres(s, inst.cardInstanceId, [cargados[0]]);
+  liberarEterA(s, [cargados[0]], "2A", jugador);
+  limpiarFlagsUmbralSiVacia(s, inst.cardInstanceId);
+  if (efectoData.activacion === "una_por_turno") inst.efectosUsadosEsteTurno = [...inst.efectosUsadosEsteTurno ?? [], idx];
+  if ((inst.eterBloqueado?.length ?? 0) === 0) enviarAlCementerio(s, ctx, inst.cardInstanceId, "campo");
+  return true;
+}
 function pagarExiliaCementerio(s, ctx, efectoData, jugador) {
   const costo = efectoData.costo;
   if (costo?.tipo !== "exilia_cementerio_propio") return true;
@@ -8587,6 +9508,7 @@ function cobrarCostoDeTrigger(s, ctx, inst, efectoData, jugador) {
   const costo = efectoData.costo;
   if (!costo || !inst.cardId) return true;
   if (costo.tipo === "eter") return cobrarCostoEter(s, ctx, inst, costo, jugador);
+  if (costo.tipo === "libera_eter_propio") return liberarEterPropioDeTrigger(s, ctx, inst, efectoData, jugador);
   if (costo.tipo !== "bloqueo_fijo") return true;
   const meta = metaDeInstancia(s, inst.cardInstanceId);
   const idx = meta && "efectos" in meta && meta.efectos ? meta.efectos.indexOf(efectoData) : -1;
@@ -8694,7 +9616,7 @@ function executeEffect(s, ctx, inst, efecto, targetIds, jugador, efectoData) {
       executeMill(s, ctx, jugador, cantidad ?? 1);
       break;
     case "draw_discard":
-      executeDrawDiscard(s, ctx, inst, jugador, cantidad ?? 1);
+      executeDrawDiscard(s, ctx, inst, jugador, cantidad ?? 1, efectoData.cantidadDescarte);
       break;
     case "redirect":
       ejecutarRedirect(s, ctx, inst, targetIds, jugador);
@@ -8763,6 +9685,14 @@ function executeEffect(s, ctx, inst, efecto, targetIds, jugador, efectoData) {
     case "negar": {
       if (efectoData.tipoNegacion === "efecto_activo") {
         executeNegarEfectosActivos(s, ctx, inst, targetIds, jugador, efectoData);
+        break;
+      }
+      if (efectoData.objetivo?.tipo === "campeon_del_trigger") {
+        const jugada = targetIds[0] ? s.instances[targetIds[0]] : void 0;
+        const jugadaMeta = jugada?.cardId ? getCardMeta(jugada.cardId) : null;
+        if (jugada && jugadaMeta?.type === "M\xEDstica" && jugada.owner !== jugador && reglaBool(s, "puedeSerNegada", { instId: jugada.cardInstanceId })) {
+          s.negarJugada = { cartaId: jugada.cardInstanceId, fuenteId: inst.cardInstanceId, jugador };
+        }
         break;
       }
       const cadenaNeg = cadenaActiva(s);
@@ -9277,11 +10207,11 @@ function executeMill(s, ctx, jugador, cantidad) {
     ctx.emit({ type: "carta_entrada_a_zona", cardInstanceId: id, zona: zonaDeCementerio(s, id), jugador, bocaArriba: true });
   }
 }
-function executeDrawDiscard(s, ctx, inst, jugador, cantidad) {
+function executeDrawDiscard(s, ctx, inst, jugador, cantidad, descartar = cantidad) {
   executeDraw(s, ctx, jugador, cantidad);
   if (s.fase === "terminada") return;
   const mano = s.players[jugador].mano;
-  for (let i = 0; i < Math.min(cantidad, mano.length); i++) {
+  for (let i = 0; i < Math.min(descartar, mano.length); i++) {
     s.objetivosPendientes = [...s.objetivosPendientes ?? [], { jugador, instId: inst.cardInstanceId, trigger: "descartar", opciones: [...mano], descartar: true }];
   }
 }

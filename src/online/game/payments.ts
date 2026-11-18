@@ -325,7 +325,7 @@ export function validarBloqueo(
 export function maxEterBloqueado(card: AnyCard): number {
   if ('efectos' in card && card.efectos) {
     for (const e of card.efectos) {
-      if (e.costo?.tipo === 'eter_bloqueado' && e.costo.cantidad !== undefined) {
+      if ((e.costo?.tipo === 'eter_bloqueado' || e.costo?.tipo === 'libera_eter_propio') && e.costo.cantidad !== undefined) {
         return e.costo.cantidad
       }
       if (e.costo?.tipo === 'bloqueo_fijo' && e.costo.cantidad !== undefined) {

@@ -23,6 +23,7 @@ const JSON_DE: Record<TriggerJugada, string> = {
 
 /** `jugador` acaba de jugar la Mística / activar la Arcana `cartaId`: avisa a las cartas en juego y al Comandante propio. */
 export function dispararObservadoresJugada(s: GameState, ctx: Ctx, trigger: TriggerJugada, jugador: PlayerId, cartaId: string): void {
+  delete s.negarJugada // una marca de una jugada anterior (p. ej. una Mística respondida) no debe filtrarse a esta
   const orden: PlayerId[] = s.turno === 'A' ? ['A', 'B'] : ['B', 'A']
   for (const j of orden) {
     dispararTrigger(s, ctx, trigger, j, instanciasEnCampo(s, j), { victimaId: cartaId, controladorVictima: jugador })

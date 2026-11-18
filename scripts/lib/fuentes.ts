@@ -87,7 +87,7 @@ function validarEfecto(efecto: Json, idx: number, diag: Diagnostico): void {
   if (efecto.costo != null) {
     const costo = efecto.costo as Json
     const ct = costo.tipo
-    const costosOk = new Set(['ninguno', 'eter', 'eter_bloqueado', 'bloqueo_fijo', 'exhaust', 'exile_self', 'cemetery_self', 'exilia_cementerio_propio'])
+    const costosOk = new Set(['ninguno', 'eter', 'eter_bloqueado', 'bloqueo_fijo', 'exhaust', 'exile_self', 'cemetery_self', 'exilia_cementerio_propio', 'libera_eter_propio'])
     if (ct == null) {
       // Dato Card-Maker histórico (p.ej. FB-024 costo:{cantidad:1} sin tipo) — el motor lo tolera
       diag.avisos.push(`${label}.costo sin tipo — el motor no lo trata como eter_bloqueado/bloqueo_fijo; preferible completar tipo`)

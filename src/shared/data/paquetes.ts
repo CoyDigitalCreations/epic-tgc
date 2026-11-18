@@ -19,6 +19,7 @@ export const ESTASIS_CARDS: AnyCard[] = ALL_CARDS.filter((c) => c.paqueteId === 
 export const DISONANCIA_CARDS: AnyCard[] = ALL_CARDS.filter((c) => c.paqueteId === 'disonancia')
 export const PURGA_CARDS: AnyCard[] = ALL_CARDS.filter((c) => c.paqueteId === 'purga')
 export const MUTACION_CARDS: AnyCard[] = ALL_CARDS.filter((c) => c.paqueteId === 'mutacion')
+export const ESTANDAR_CARDS: AnyCard[] = ALL_CARDS.filter((c) => c.paqueteId === 'estandar')
 
 export const getCardById = (id?: string) => ALL_CARDS.find((c) => c.id === id)
 
@@ -113,6 +114,23 @@ export const PAQUETES: Paquete[] = [
       'nació así: todos cambiaron.\n\n' +
       'El mazo juega con la transformación: cambiar de Esencia, copiar y crecer, ' +
       'y el cambio se alimenta a sí mismo.',
+  },
+  {
+    id: 'estandar',
+    nombre: 'Estándar',
+    tipo: 'Set Básico',
+    color: '#9ca3af',
+    // No es de una facción: lo usan todos los mazos. Sus Campeones sí son de una facción (2 por cada una) y los de otra no se
+    // eligen en su mazo oficial; la runa del paquete toma la primera.
+    facciones: ['Orden', 'Caos', 'Purga', 'Mutación'],
+    entrega: 'Estándar',
+    // Copias del set completo (suma de `limiteCopias`): 5 Éter, 5 Místicas, 5 Arcanas, 8 Campeones y 5 Vínculos de diseño
+    distribucion: { eter: 13, principal: 53, vinculos: 5 },
+    lore:
+      'El set Estándar reúne lo que sirve en cualquier mazo: Éter que se adapta, Místicas y Arcanas ' +
+      'sencillas, Vínculos discretos y Campeones sin historia propia. No cuenta una historia: ' +
+      'permite ajustar la estrategia de cada mazo a lo que el jugador necesita, y por eso aparece ' +
+      'en los cuatro mazos oficiales y en los personalizados.',
   },
 ]
 export const getPaquete = (id?: string) => PAQUETES.find((p) => p.id === id)

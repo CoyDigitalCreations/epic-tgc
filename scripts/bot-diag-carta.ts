@@ -11,7 +11,7 @@
  * Es solo lectura: no toca motor ni bot. Cuesta una búsqueda extra por decisión con alguna de las cartas en la mano.
  * Acepta también `--carta ID` (una sola).
  */
-import { ESTASIS_CARDS, DISONANCIA_CARDS, PURGA_CARDS, MUTACION_CARDS } from '../src/shared/data/paquetes'
+import { mazoPorId } from '../src/online/mazos'
 import { actorActual, applyAction, createInitialState, getCardMeta, getValidActions, statsDe } from '../src/online/game'
 import type { Action, GameState, PlayerId } from '../src/online/game'
 import { resolverBot } from '../src/bot/registro'
@@ -24,10 +24,10 @@ function arg(nombre: string, defecto: string): string {
 const expandir = (cards: { id: string; limiteCopias?: string | number }[]) =>
   cards.flatMap((c) => Array.from({ length: Number(c.limiteCopias ?? 1) }, () => c.id))
 
-const TODOS = { estasis: ESTASIS_CARDS, disonancia: DISONANCIA_CARDS, purga: PURGA_CARDS, mutacion: MUTACION_CARDS } as const
+const TODOS = { estasis: 'estasis', disonancia: 'disonancia', purga: 'purga', mutacion: 'mutacion' } as const
 const nombres = arg('mazos', 'purga,disonancia').split(',').map((m) => m.trim()) as (keyof typeof TODOS)[]
 if (nombres.length !== 2 || nombres.some((m) => !TODOS[m])) { console.error(`--mazos inválido. Usa dos de: ${Object.keys(TODOS).join(', ')}`); process.exit(1) }
-const MAZOS = nombres.map((m) => expandir(TODOS[m]))
+const MAZOS = nombres.map((m) => mazoPorId(TODOS[m])!.cardIds)
 const CARTAS = (arg('cartas', arg('carta', 'PU-010'))).split(',').map((c) => c.trim())
 const nombreBot = arg('bot', 'dificil')
 const n = Number(arg('n', '2'))

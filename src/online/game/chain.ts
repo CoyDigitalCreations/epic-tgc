@@ -757,6 +757,16 @@ export function declararOpener(
   previos: MarcadorAccion = marcarInicioAccion(s),
   triggers?: readonly TriggerApilado[],
 ): void {
+  // Silencio: un observador dejó marcada esta Mística para negarla (ver GameState.negarJugada). Cuenta como negación de la activación:
+  // no resuelve y el pago NO se devuelve, igual que con Marcha de las Primeras.
+  if (s.negarJugada !== undefined) {
+    const { cartaId, fuenteId, jugador } = s.negarJugada
+    if (cartaId === opener.cardInstanceId && opener.tipo === 'mistica' && !opener.negada) {
+      opener.negada = true
+      ctx.emit({ type: 'activacion_negada', jugador, cardInstanceId: opener.cardInstanceId, fuente: fuenteId })
+    }
+    delete s.negarJugada
+  }
   if (opener.tipo !== 'habilidad') {
     const { inst, hechizos } = hechizosDelOpener(s, opener.cardInstanceId)
     if (inst) {

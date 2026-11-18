@@ -12,7 +12,7 @@
  */
 import { spawn } from 'node:child_process'
 import os from 'node:os'
-import { ESTASIS_CARDS, DISONANCIA_CARDS, PURGA_CARDS, MUTACION_CARDS } from '../src/shared/data/paquetes'
+import { mazoPorId } from '../src/online/mazos'
 import { torneo, unir } from '../src/bot/arena'
 import type { ResumenTorneo } from '../src/bot/arena'
 import { BOTS, resolverBot } from '../src/bot/registro'
@@ -30,11 +30,11 @@ const ny = arg('y', 'base-dificil')
 const n = Number(arg('n', '40'))
 const desde = Number(arg('desde', '1'))
 const procs = Math.max(1, Math.min(n, Number(arg('procs', String(Math.max(1, os.cpus().length - 1))))))
-const MAZOS_DISPONIBLES: Record<string, { nombre: string; cartas: { id: string; limiteCopias?: string | number }[] }> = {
-  estasis: { nombre: 'Estasis', cartas: ESTASIS_CARDS },
-  disonancia: { nombre: 'Disonancia', cartas: DISONANCIA_CARDS },
-  purga: { nombre: 'Purga', cartas: PURGA_CARDS },
-  mutacion: { nombre: 'Mutacion', cartas: MUTACION_CARDS },
+const MAZOS_DISPONIBLES: Record<string, { nombre: string; cartas: string[] }> = {
+  estasis: { nombre: 'Estasis', cartas: mazoPorId('estasis')!.cardIds },
+  disonancia: { nombre: 'Disonancia', cartas: mazoPorId('disonancia')!.cardIds },
+  purga: { nombre: 'Purga', cartas: mazoPorId('purga')!.cardIds },
+  mutacion: { nombre: 'Mutacion', cartas: mazoPorId('mutacion')!.cardIds },
 }
 const nombresMazos = arg('mazos', 'estasis,disonancia')
 const [mazoA, mazoB] = nombresMazos.split(',').map((m) => MAZOS_DISPONIBLES[m.trim()])
@@ -52,8 +52,8 @@ if (!botX || !botY) {
 
 function correrAqui(d: number, cuantas: number): ResumenTorneo {
   return torneo(botX!, botY!, [
-    { nombre: mazoA!.nombre, cartas: expandir(mazoA!.cartas) },
-    { nombre: mazoB!.nombre, cartas: expandir(mazoB!.cartas) },
+    { nombre: mazoA!.nombre, cartas: mazoA!.cartas },
+    { nombre: mazoB!.nombre, cartas: mazoB!.cartas },
   ], cuantas, d)
 }
 

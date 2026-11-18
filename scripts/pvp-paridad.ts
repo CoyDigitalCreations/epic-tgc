@@ -13,7 +13,7 @@
  *   C. ACEPTACIÓN: toda acción que el cliente ofrece la acepta el servidor (si no, el jugador vería un botón que falla);
  *   D. ATASCOS: el actor siempre tiene al menos una acción útil, y la partida termina.
  */
-import { ESTASIS_CARDS, DISONANCIA_CARDS } from '../src/shared/data/paquetes'
+import { mazoPorId } from '../src/online/mazos'
 import { actorActual, applyAction, createCtxFromDraws, createInitialState, getValidActions, visibleState } from '../src/online/game'
 import type { Action, GameState, PlayerId } from '../src/online/game'
 import { crearBotNivel } from '../src/bot/niveles'
@@ -31,8 +31,8 @@ const MAX_PASOS = 4000
 const expandir = (cards: { id: string; limiteCopias?: string | number }[]) =>
   cards.flatMap((c) => Array.from({ length: Number(c.limiteCopias ?? 1) }, () => c.id))
 const MAZOS = [
-  { nombre: 'Estasis', cartas: expandir(ESTASIS_CARDS) },
-  { nombre: 'Disonancia', cartas: expandir(DISONANCIA_CARDS) },
+  { nombre: 'Estasis', cartas: mazoPorId('estasis')!.cardIds },
+  { nombre: 'Disonancia', cartas: mazoPorId('disonancia')!.cardIds },
 ]
 
 const clave = (a: Action) => JSON.stringify(a)

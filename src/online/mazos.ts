@@ -10,6 +10,47 @@ function expandirMazo(cards: AnyCard[]): string[] {
 /** Sets preestablecidos del modo vs bot. */
 export type SetId = 'estasis' | 'disonancia' | 'purga' | 'mutacion'
 
+/**
+ * Receta de un mazo oficial con el set estándar (ST-xxx): qué COPIAS se recortan del paquete temático (no se quita ningún diseño) y
+ * qué cartas estándar entran. Siempre 10 espacios: 1 Vínculo, 2 Éter y 7 de Principal. Vive aquí y NO en `limiteCopias` porque ese
+ * tope también rige los mazos personalizados (bajarlo invalidaría mazos ya guardados). Los Campeones estándar son de la facción del mazo.
+ */
+interface RecetaOficial {
+  quitar: Record<string, number>
+  poner: Record<string, number>
+}
+
+const RECETAS: Record<SetId, RecetaOficial> = {
+  estasis: {
+    quitar: { 'FB-009': 1, 'FB-008': 1, 'FB-011': 1, 'FB-015': 1, 'FB-014': 1, 'FB-020': 2, 'FB-021': 1, 'FB-032': 1, 'FB-027': 1 },
+    poner: { 'ST-001': 1, 'ST-003': 1, 'ST-010': 2, 'ST-011': 1, 'ST-020': 1, 'ST-021': 1, 'ST-024': 2, 'ST-040': 1 },
+  },
+  disonancia: {
+    quitar: { 'DS-006': 1, 'DS-009': 1, 'DS-013': 1, 'DS-012': 1, 'DS-015': 1, 'DS-019': 1, 'DS-022': 1, 'DS-032': 1, 'DS-023': 1, 'DS-027': 1 },
+    poner: { 'ST-002': 1, 'ST-004': 1, 'ST-012': 2, 'ST-013': 1, 'ST-020': 1, 'ST-022': 1, 'ST-030': 1, 'ST-031': 1, 'ST-042': 1 },
+  },
+  purga: {
+    quitar: { 'PU-004': 1, 'PU-006': 1, 'PU-012': 1, 'PU-011': 1, 'PU-022': 1, 'PU-024': 1, 'PU-030': 1, 'PU-029': 1, 'PU-026': 1, 'PU-033': 1 },
+    poner: { 'ST-001': 1, 'ST-003': 1, 'ST-014': 1, 'ST-015': 1, 'ST-020': 1, 'ST-023': 1, 'ST-034': 2, 'ST-033': 1, 'ST-041': 1 },
+  },
+  mutacion: {
+    quitar: { 'MU-006': 1, 'MU-003': 1, 'MU-013': 1, 'MU-016': 1, 'MU-012': 1, 'MU-025': 1, 'MU-023': 1, 'MU-029': 1, 'MU-030': 1, 'MU-035': 1 },
+    poner: { 'ST-005': 1, 'ST-004': 1, 'ST-016': 2, 'ST-017': 1, 'ST-020': 1, 'ST-021': 1, 'ST-030': 1, 'ST-031': 1, 'ST-043': 1 },
+  },
+}
+
+/** Mazo oficial: el paquete expandido por `limiteCopias`, menos las copias recortadas, más las cartas estándar de su receta. */
+function mazoOficial(cards: AnyCard[], receta: RecetaOficial): string[] {
+  const pendientes = { ...receta.quitar }
+  const base = expandirMazo(cards).filter((id) => {
+    if ((pendientes[id] ?? 0) <= 0) return true
+    pendientes[id] -= 1
+    return false
+  })
+  const agregados = Object.entries(receta.poner).flatMap(([id, n]) => Array.from({ length: n }, () => id))
+  return [...base, ...agregados]
+}
+
 export interface MazoJugable {
   id: SetId
   nombre: string
@@ -24,25 +65,25 @@ export const MAZOS: MazoJugable[] = [
     id: 'estasis',
     nombre: getPaquete('estasis')?.nombre ?? 'Estásis',
     color: getPaquete('estasis')?.color ?? '#e5e7eb',
-    cardIds: expandirMazo(ESTASIS_CARDS),
+    cardIds: mazoOficial(ESTASIS_CARDS, RECETAS.estasis),
   },
   {
     id: 'disonancia',
     nombre: getPaquete('disonancia')?.nombre ?? 'Disonancia',
     color: getPaquete('disonancia')?.color ?? '#3b82f6',
-    cardIds: expandirMazo(DISONANCIA_CARDS),
+    cardIds: mazoOficial(DISONANCIA_CARDS, RECETAS.disonancia),
   },
   {
     id: 'purga',
     nombre: getPaquete('purga')?.nombre ?? 'Purga',
     color: getPaquete('purga')?.color ?? '#ec4899',
-    cardIds: expandirMazo(PURGA_CARDS),
+    cardIds: mazoOficial(PURGA_CARDS, RECETAS.purga),
   },
   {
     id: 'mutacion',
     nombre: getPaquete('mutacion')?.nombre ?? 'Mutación',
     color: getPaquete('mutacion')?.color ?? '#84cc16',
-    cardIds: expandirMazo(MUTACION_CARDS),
+    cardIds: mazoOficial(MUTACION_CARDS, RECETAS.mutacion),
   },
 ]
 

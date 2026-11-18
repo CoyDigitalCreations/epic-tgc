@@ -97,7 +97,10 @@ export function interpretEffect(
   // en Reserva → fizzled: ni cobra ni resuelve.
   // Lote 3: lo mismo con `bloqueo_fijo` (antes un efecto con trigger y «bloquea N Éter» salía GRATIS): se bloquean en la propia
   // carta, con «una vez por turno», etiquetado y reagrupar como en el flujo normal (bloquearEter). Sin Éter → fizzled.
-  if (payload.cobrarCosto && costo && (costo.tipo === 'eter' || costo.tipo === 'bloqueo_fijo') && inst.cardId) {
+  if (payload.cobrarCosto && costo && (costo.tipo === 'eter' || costo.tipo === 'bloqueo_fijo' || costo.tipo === 'libera_eter_propio') && inst.cardId) {
+    // Silencio: solo alcanza a la Mística que se está jugando como jugada ABIERTA (opener). Una Mística jugada como respuesta
+    // dentro de una cadena ya abierta no se puede negar todavía: no se gasta el Éter en balde.
+    if (costo.tipo === 'libera_eter_propio' && payload.victimaId && cadenaActiva(s)) return
     if (!cobrarCostoDeTrigger(s, ctx, inst, efectoData, jugador)) return
   }
 
@@ -189,6 +192,28 @@ export function interpretEffect(
 }
 
 /**
+ * Silencio, coste `libera_eter_propio`: gasta UN Éter de los que esta carta tiene bloqueados para ESTE efecto y lo devuelve a la
+ * Reserva de quien lo pagó («devuelve 1 Éter bloqueado de esta carta a tu Reserva»). «Una vez por turno» se gasta al pagar. Al gastar
+ * el último, la carta se envía al Cementerio («cuando esta carta no tenga Éter bloqueado»). Sin Éter cargado o ya usada este turno:
+ * false (el efecto no ocurre y no se cobra nada). La regla del Cementerio vive aquí, no en un chequeo de estado, porque una Silencio
+ * recién puesta aún no tiene Éter y no debe irse.
+ */
+function liberarEterPropioDeTrigger(s: GameState, ctx: Ctx, inst: CardInstance, efectoData: EfectoData, jugador: PlayerId): boolean {
+  const meta = metaDeInstancia(s, inst.cardInstanceId)
+  const idx = meta && 'efectos' in meta && meta.efectos ? meta.efectos.indexOf(efectoData) : -1
+  if (idx === -1) return false
+  const usado = efectoData.activacion === 'una_por_turno' && (inst.efectosUsadosEsteTurno ?? []).includes(idx)
+  const cargados = eterDeEfecto(s, inst.cardInstanceId, idx)
+  if (usado || cargados.length === 0) return false
+  quitarEteres(s, inst.cardInstanceId, [cargados[0]])
+  liberarEterA(s, [cargados[0]], '2A', jugador)
+  limpiarFlagsUmbralSiVacia(s, inst.cardInstanceId)
+  if (efectoData.activacion === 'una_por_turno') inst.efectosUsadosEsteTurno = [...(inst.efectosUsadosEsteTurno ?? []), idx]
+  if ((inst.eterBloqueado?.length ?? 0) === 0) enviarAlCementerio(s, ctx, inst.cardInstanceId, 'campo')
+  return true
+}
+
+/**
  * Purga, coste `exilia_cementerio_propio` («puedes exiliar N Campeones de tu Cementerio, …»): se paga AL RESOLVER y, sin N Campeones
  * exiliables en tu Cementerio, el efecto no ocurre. El motor escoge los de MENOR coste (los más baratos de perder: se conservan los
  * valiosos para recuperarlos con Citatoria, Apelación…); empata el orden del Cementerio. Devuelve false si no se pudo pagar.
@@ -248,6 +273,7 @@ export function cobrarCostoDeTrigger(s: GameState, ctx: Ctx, inst: CardInstance,
   const costo = efectoData.costo
   if (!costo || !inst.cardId) return true
   if (costo.tipo === 'eter') return cobrarCostoEter(s, ctx, inst, costo, jugador)
+  if (costo.tipo === 'libera_eter_propio') return liberarEterPropioDeTrigger(s, ctx, inst, efectoData, jugador)
   if (costo.tipo !== 'bloqueo_fijo') return true
   const meta = metaDeInstancia(s, inst.cardInstanceId)
   const idx = meta && 'efectos' in meta && meta.efectos ? meta.efectos.indexOf(efectoData) : -1
@@ -435,7 +461,7 @@ function executeEffect(
       break
 
     case 'draw_discard':
-      executeDrawDiscard(s, ctx, inst, jugador, cantidad ?? 1)
+      executeDrawDiscard(s, ctx, inst, jugador, cantidad ?? 1, efectoData.cantidadDescarte)
       break
 
     case 'redirect':
@@ -544,6 +570,17 @@ function executeEffect(
       // El candado championNegado (negadoTargetId) se eliminó — el rival
       // PUEDE volver a activar. Los otros 7 tipoNegacion siguen sin
       // implementar (B3).
+      // Observador («cuando el rival juegue una Mística», Silencio): el objetivo es la Mística que se está jugando. Aún NO es el opener
+      // (los observadores corren antes de declararOpener), así que se deja una marca que declararOpener aplica: queda negada.
+      // Aquí no se toca el opener de otra jugada que ya estuviera en la cadena.
+      if (efectoData.objetivo?.tipo === 'campeon_del_trigger') {
+        const jugada = targetIds[0] ? s.instances[targetIds[0]] : undefined
+        const jugadaMeta = jugada?.cardId ? getCardMeta(jugada.cardId) : null
+        if (jugada && jugadaMeta?.type === 'Mística' && jugada.owner !== jugador && reglaBool(s, 'puedeSerNegada', { instId: jugada.cardInstanceId })) {
+          s.negarJugada = { cartaId: jugada.cardInstanceId, fuenteId: inst.cardInstanceId, jugador }
+        }
+        break
+      }
       const cadenaNeg = cadenaActiva(s)
       const pend = cadenaNeg?.opener
       // INEGABLE (§10): los efectos de una carta con la regla `puedeSerNegada` apagada no se pueden negar (la Marcha
@@ -1357,11 +1394,11 @@ function executeMill(s: GameState, ctx: Ctx, jugador: PlayerId, cantidad: number
  * Purga, `draw_discard` («roba 1 y descarta 1»): roba primero y después el jugador ELIGE qué carta de su mano descarta (una elección por
  * carta, `PendienteObjetivo.descartar`). Con la mano vacía no hay nada que descartar.
  */
-function executeDrawDiscard(s: GameState, ctx: Ctx, inst: CardInstance, jugador: PlayerId, cantidad: number): void {
+function executeDrawDiscard(s: GameState, ctx: Ctx, inst: CardInstance, jugador: PlayerId, cantidad: number, descartar: number = cantidad): void {
   executeDraw(s, ctx, jugador, cantidad)
   if (s.fase === 'terminada') return
   const mano = s.players[jugador].mano
-  for (let i = 0; i < Math.min(cantidad, mano.length); i++) {
+  for (let i = 0; i < Math.min(descartar, mano.length); i++) {
     s.objetivosPendientes = [...(s.objetivosPendientes ?? []), { jugador, instId: inst.cardInstanceId, trigger: 'descartar', opciones: [...mano], descartar: true }]
   }
 }

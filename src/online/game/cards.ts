@@ -82,7 +82,7 @@ export function esArtefactoEquipable(card: AnyCard): boolean {
  */
 export function esPermanenteEnMesa(card: AnyCard): boolean {
   if ('efectos' in card && card.efectos) {
-    if (card.efectos.some((e) => e.costo?.tipo === 'eter_bloqueado' || e.costo?.tipo === 'bloqueo_fijo')) {
+    if (card.efectos.some((e) => e.costo?.tipo === 'eter_bloqueado' || e.costo?.tipo === 'bloqueo_fijo' || e.costo?.tipo === 'libera_eter_propio')) {
       return true
     }
     // REDISEÑO obs 1874: la excepción 'negar' se ELIMINÓ — Marcha es un
@@ -139,6 +139,8 @@ export function efectoActivableDe(card: AnyCard, conObjetivo: boolean): EfectoDa
  * manual también se ofrecía para ellos y bloqueaba el Éter sin producir nada (fuga de Éter).
  */
 export function esEfectoDeBloqueoManual(e: EfectoData): boolean {
+  // `libera_eter_propio` (Silencio) lleva trigger Y se carga a mano: la carga es la acción bloquear_eter, el gasto lo hace el trigger
+  if (e.costo?.tipo === 'libera_eter_propio') return true
   return esCostoBloqueo(e.costo) && e.tipo !== 'disparo' && (!e.trigger || e.trigger === 'ninguno')
 }
 
@@ -195,7 +197,7 @@ export function campeonNecesitaEterBloqueado(card: AnyCard): boolean {
 export function cartaNecesitaEterBloqueado(card: AnyCard): boolean {
   if ('efectos' in card && card.efectos) {
     for (const e of card.efectos) {
-      if (e.costo?.tipo === 'eter_bloqueado' || e.costo?.tipo === 'bloqueo_fijo') return true
+      if (e.costo?.tipo === 'eter_bloqueado' || e.costo?.tipo === 'bloqueo_fijo' || e.costo?.tipo === 'libera_eter_propio') return true
     }
   }
   return false
