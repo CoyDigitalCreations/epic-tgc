@@ -3,6 +3,7 @@ import { createJSONStorage, persist } from 'zustand/middleware'
 import { v4 as uuid } from 'uuid'
 import type { AnyCard, CardType, Paquete } from '../../shared/types'
 import { FACCION_COLORS } from '../../shared/types'
+import { PAQUETES } from '../../shared/data/paquetes'
 import {
   saveCardImage,
   deleteCardImage,
@@ -346,7 +347,11 @@ export const useCardStore = create<CardStore>()(
         const { nombre, tipo, facciones, lore, entrega, id: idExplicito } = datos
         set((state) => {
           const base = slugify(idExplicito ?? nombre)
-          const usados = new Set(state.userPacks.map((p) => p.id))
+          // Un paquete personalizado nunca puede reusar el id de uno oficial
+          const usados = new Set([
+            ...PAQUETES.map((p) => p.id),
+            ...state.userPacks.map((p) => p.id),
+          ])
           let id = base
           for (let i = 2; usados.has(id); i++) id = `${base}-${i}`
           const faccion = facciones?.[0]
@@ -433,7 +438,18 @@ export const useCardStore = create<CardStore>()(
           coleccionActivaId: activa.id,
           // La vista `cards` SIEMPRE refleja la colección activa
           cards: activa.cards,
-          userPacks: p.userPacks ?? current.userPacks ?? [],
+          // Autosanación: si un paquete que antes era personalizado (ej. Purga,
+          // Mutación) pasó a ser oficial, se descarta la copia vieja. Solo es
+          // metadata: las cartas conservan su paqueteId y siguen apuntando al oficial.
+          // Se compara por id Y por nombre: la copia vieja pudo quedar con otro id (ej. «purga-2»).
+          userPacks: (p.userPacks ?? current.userPacks ?? []).filter(
+            (up) =>
+              !PAQUETES.some(
+                (oficial) =>
+                  oficial.id === up.id ||
+                  oficial.nombre.trim().toLowerCase() === up.nombre?.trim().toLowerCase(),
+              ),
+          ),
         }
       },
       storage: createJSONStorage(() => ({

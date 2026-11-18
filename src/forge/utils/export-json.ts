@@ -28,7 +28,9 @@ export async function conArteEmbebido(cards: AnyCard[]): Promise<AnyCard[]> {
       if (staticPath) {
         try {
           const res = await fetch(staticPath)
-          if (res.ok) {
+          // Vite (dev) y Vercel devuelven 200 + index.html para rutas inexistentes (SPA fallback):
+          // solo se embebe si la respuesta es realmente una imagen.
+          if (res.ok && (res.headers.get('content-type') ?? '').startsWith('image/')) {
             const blob = await res.blob()
             const dataUrl = await new Promise<string>((resolve) => {
               const reader = new FileReader()
