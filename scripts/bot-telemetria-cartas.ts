@@ -12,6 +12,8 @@
  *   Trig      = trigger_apilado de ella (efectos «al invocar / al atacar / al jugar Mística»: lo que Activ NO cuenta)
  *   Murió     = carta_muerta de una copia suya (combate o efecto; una ruptura NO emite carta_muerta)
  *   VRot      = veces que una copia suya, puesta de Vínculo, fue ROTA (ruptura_realizada; el Vínculo roto se queda boca arriba en su slot)
+ *   Neg       = veces por partida que esta carta NEGÓ algo (evento activacion_negada con ella como `fuente`: Silencio, Marcha...).
+ *               Si una carta de negación tiene Neg ≈ 0, el bot no la está aprovechando (o nunca se arma a tiempo).
  *   Desc      = veces por partida que una copia suya se DESCARTÓ de la mano (límite de 6 al terminar el turno): explica las cartas que se
  *               vieron, no se jugaron y tampoco quedaron en la mano al final
  *   Mano fin  = partidas en que terminó en la mano (la vio y nunca la bajó)
@@ -72,6 +74,8 @@ interface Ficha {
   triggers: number; vinculosRotos: number
   /** Copias suyas descartadas de la mano (carta_descartada) */
   descartes: number
+  /** Veces que una copia suya negó una activación/jugada (activacion_negada con ella de `fuente`) */
+  negaciones: number
 }
 
 /** Panorama de partida de un MAZO (todo se suma por partida; se divide por `partidas` al imprimir). */
@@ -102,7 +106,7 @@ interface Resumen {
   victorias: Record<Mazo, number>
 }
 
-const ficha = (): Ficha => ({ copias: 0, vista: 0, jugada: 0, manoFin: 0, vicVista: 0, vicJugada: 0, jugadas: 0, activaciones: 0, muertes: 0, pagos: 0, triggers: 0, vinculosRotos: 0, descartes: 0 })
+const ficha = (): Ficha => ({ copias: 0, vista: 0, jugada: 0, manoFin: 0, vicVista: 0, vicJugada: 0, jugadas: 0, activaciones: 0, muertes: 0, pagos: 0, triggers: 0, vinculosRotos: 0, descartes: 0, negaciones: 0 })
 const juegoVacio = (): Juego => ({
   primero: 0, victPrimero: 0, victVinculos: 0, victMazo: 0, derrVinculos: 0, derrMazo: 0, otros: 0, turnos: 0,
   ataques: 0, atacantes: 0, bloqueos: 0, rupturas: 0, primeraRupturaTurno: 0, primeraRupturaN: 0,
@@ -169,6 +173,11 @@ function jugar(nombreBot: string, seed: number, mazoA: Mazo, res: Resumen): void
       if (e.type === 'trigger_apilado') {
         const cid = r.state.instances[e.cardInstanceId]?.cardId as string | undefined
         if (cid) de(res, mazoDe[e.jugador], cid).triggers++
+      }
+      // `jugador` = quien niega y `fuente` = la carta que niega: se atribuye a la ficha de ESA carta en el mazo de quien niega
+      if (e.type === 'activacion_negada') {
+        const cid = r.state.instances[e.fuente]?.cardId as string | undefined
+        if (cid) de(res, mazoDe[e.jugador], cid).negaciones++
       }
       if (e.type === 'turno_iniciado') turnosPropios[e.jugador]++
       if (e.type === 'ataque_declarado') {
@@ -289,7 +298,7 @@ function imprimir(r: Resumen, m: Mazo): void {
   const noEter = filas.filter((x) => x.c?.type !== 'Éter')
   const eter = filas.filter((x) => x.c?.type === 'Éter')
   console.log(`\n=== ${m} · ${partidas} partidas · victorias ${pct(r.victorias[m], partidas)} ===`)
-  console.log('Carta (id · tipo)'.padEnd(46), 'Cop', 'Vista', 'Jugada', '%Jug', 'Activ', ' Trig', 'Murió', ' VRot', ' Desc', 'ManoFin', 'WRvista', 'WRjug')
+  console.log('Carta (id · tipo)'.padEnd(46), 'Cop', 'Vista', 'Jugada', '%Jug', 'Activ', ' Trig', 'Murió', ' VRot', ' Desc', '  Neg', 'ManoFin', 'WRvista', 'WRjug')
   // Las que menos se juegan primero: ahí está el hallazgo
   noEter.sort((a, b) => a.f.jugada / Math.max(1, a.f.vista) - b.f.jugada / Math.max(1, b.f.vista))
   for (const { cid, f, c } of noEter) {
@@ -298,7 +307,7 @@ function imprimir(r: Resumen, m: Mazo): void {
       etiqueta.padEnd(46),
       String(c?.limiteCopias ?? 1).padStart(3), String(f.vista).padStart(5), String(f.jugada).padStart(6), pct(f.jugada, f.vista).padStart(4),
       (f.activaciones / Math.max(1, partidas)).toFixed(2).padStart(5), (f.triggers / Math.max(1, partidas)).toFixed(2).padStart(5),
-      (f.muertes / Math.max(1, partidas)).toFixed(2).padStart(5), (f.vinculosRotos / Math.max(1, partidas)).toFixed(2).padStart(5), (f.descartes / Math.max(1, partidas)).toFixed(2).padStart(5), pct(f.manoFin, f.vista).padStart(7),
+      (f.muertes / Math.max(1, partidas)).toFixed(2).padStart(5), (f.vinculosRotos / Math.max(1, partidas)).toFixed(2).padStart(5), (f.descartes / Math.max(1, partidas)).toFixed(2).padStart(5), (f.negaciones / Math.max(1, partidas)).toFixed(2).padStart(5), pct(f.manoFin, f.vista).padStart(7),
       wr(f.vicVista, f.vista).padStart(7), wr(f.vicJugada, f.jugada).padStart(5),
     )
   }
