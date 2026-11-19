@@ -2,12 +2,12 @@ import { Link } from 'react-router'
 import { Boton } from '../shared/ui/Boton'
 import { Seccion } from '../shared/ui/Seccion'
 import type { Dificultad } from './game/bot'
-import { faccionDeSet, MAZOS, mazoParaBot, type RivalElegido, type SetId } from './mazos'
+import { faccionDeSet, MAZOS, mazoParaBot, type MazoJugable, type RivalElegido, type SetId } from './mazos'
 import { SelectorRival } from './components/SelectorRival'
 import { TarjetaMazo } from './components/TarjetaMazo'
 import { SelectorDorsoBot } from './dorsos/SelectorDorsoBot'
 import type { DorsoBotElegido } from './dorsos/dorsos'
-import type { MazoPersonalizado } from './useMazosStore'
+import { MAX_MAZOS, type MazoPersonalizado } from './useMazosStore'
 
 /** Selección del humano: un set preestablecido o un mazo personalizado guardado. */
 export type MazoSeleccionado =
@@ -20,6 +20,10 @@ export interface MenuProps {
   mazosPersonalizados: MazoPersonalizado[]
   onNuevoMazo: () => void
   onEditarMazo: (m: MazoPersonalizado) => void
+  /** Ver la lista de cartas de un mazo oficial (solo lectura). Opcional: sin él, no se ofrece «Ver». */
+  onVerMazo?: (m: MazoJugable) => void
+  /** Copiar un mazo oficial a los personalizados. Opcional: sin él, no se ofrece «Copiar». */
+  onCopiarMazo?: (m: MazoJugable) => void
   seed: number
   onSeed: (n: number) => void
   dificultad: Dificultad
@@ -61,6 +65,8 @@ export function MenuPartida({
   mazosPersonalizados,
   onNuevoMazo,
   onEditarMazo,
+  onVerMazo,
+  onCopiarMazo,
   seed,
   onSeed,
   dificultad,
@@ -72,6 +78,7 @@ export function MenuPartida({
   onEmpezar,
 }: MenuProps) {
   const rival = mazoParaBot(seed, mazoHumano.tipo === 'set' ? mazoHumano.id : 'custom', rivalElegido)
+  const copiaBloqueada = mazosPersonalizados.length >= MAX_MAZOS ? `Ya tienes ${MAX_MAZOS} mazos personalizados: borra uno para copiar este.` : undefined
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#0a0a12] font-body text-gray-100">
@@ -128,6 +135,9 @@ export function MenuPartida({
                   cardIds={mazo.cardIds}
                   seleccionado={mazoHumano.tipo === 'set' && mazoHumano.id === mazo.id}
                   onSeleccionar={() => onMazo({ tipo: 'set', id: mazo.id })}
+                  onVer={onVerMazo && (() => onVerMazo(mazo))}
+                  onCopiar={onCopiarMazo && (() => onCopiarMazo(mazo))}
+                  copiaBloqueada={copiaBloqueada}
                 />
               ))}
 

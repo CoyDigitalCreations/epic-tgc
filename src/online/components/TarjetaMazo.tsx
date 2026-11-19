@@ -42,10 +42,19 @@ export interface TarjetaMazoProps {
   onSeleccionar: () => void
   /** Solo los mazos personalizados se pueden editar. */
   onEditar?: () => void
+  /** Mazos oficiales: abre su lista de cartas en solo lectura. */
+  onVer?: () => void
+  /** Mazos oficiales: copia el mazo a los personalizados. */
+  onCopiar?: () => void
+  /** Por qué no se puede copiar (p. ej. ya hay 5 mazos); deshabilita «Copiar». */
+  copiaBloqueada?: string
 }
 
+const BOTON_ESQUINA =
+  'cursor-pointer rounded-lg border border-white/15 bg-[#0a0a12]/80 px-3 py-1 text-[11px] text-gray-200 backdrop-blur transition-colors hover:border-white/30 hover:bg-[#0a0a12] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-white/15 disabled:hover:bg-[#0a0a12]/80'
+
 /** Tarjeta de un mazo: abanico de portada, nombre, etiqueta y composición. Es un botón de selección. */
-export function TarjetaMazo({ nombre, color, etiqueta, cardIds, seleccionado, onSeleccionar, onEditar }: TarjetaMazoProps) {
+export function TarjetaMazo({ nombre, color, etiqueta, cardIds, seleccionado, onSeleccionar, onEditar, onVer, onCopiar, copiaBloqueada }: TarjetaMazoProps) {
   const portada = useMemo(() => cartasDePortada(cardIds), [cardIds])
   const r = useMemo(() => resumenMazo(cardIds), [cardIds])
   const total = Math.max(1, r.eter + r.principal + r.vinculos)
@@ -108,14 +117,24 @@ export function TarjetaMazo({ nombre, color, etiqueta, cardIds, seleccionado, on
         </div>
       </button>
 
-      {onEditar && (
-        <button
-          type="button"
-          onClick={onEditar}
-          className="absolute right-3 top-3 z-10 cursor-pointer rounded-lg border border-white/15 bg-[#0a0a12]/80 px-3 py-1 text-[11px] text-gray-200 backdrop-blur transition-colors hover:border-white/30 hover:bg-[#0a0a12]"
-        >
-          Editar
-        </button>
+      {(onEditar || onVer || onCopiar) && (
+        <div className="absolute right-3 top-3 z-10 flex gap-1.5">
+          {onVer && (
+            <button type="button" onClick={onVer} className={BOTON_ESQUINA}>
+              Ver
+            </button>
+          )}
+          {onCopiar && (
+            <button type="button" onClick={onCopiar} disabled={!!copiaBloqueada} title={copiaBloqueada} className={BOTON_ESQUINA}>
+              Copiar
+            </button>
+          )}
+          {onEditar && (
+            <button type="button" onClick={onEditar} className={BOTON_ESQUINA}>
+              Editar
+            </button>
+          )}
+        </div>
       )}
     </div>
   )

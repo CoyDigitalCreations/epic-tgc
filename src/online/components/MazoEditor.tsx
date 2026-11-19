@@ -33,7 +33,16 @@ const GRUPOS_MAZO: { tipo: CardType; plural: string; color: string }[] = [
 
 interface MazoEditorProps {
   inicial?: MazoPersonalizado
-  onGuardar: (mazo: { nombre: string; cardIds: string[] }) => void
+  /** Punto de partida de un mazo NUEVO (la copia de uno oficial): no edita nada existente, al guardar se crea otro mazo. */
+  borrador?: { nombre: string; cardIds: string[] }
+  /** Solo lectura (mazos oficiales): se ve la lista y el detalle de cada carta, sin catálogo ni edición. */
+  soloLectura?: boolean
+  /** En solo lectura: copia el mazo a los personalizados para poder modificarlo. */
+  onCopiar?: () => void
+  /** Por qué no se puede copiar (p. ej. ya hay 5 mazos); deshabilita «Copiar a mis mazos». */
+  copiaBloqueada?: string
+  /** Devuelve `{ ok: false, error }` si no se pudo guardar: el editor se queda abierto y muestra el motivo. */
+  onGuardar: (mazo: { nombre: string; cardIds: string[] }) => { ok: boolean; error?: string } | void
   onCancelar: () => void
 }
 
@@ -104,11 +113,13 @@ const TOPE_CUPO = { eter: MAX_ETER, vinculos: MAX_VINCULOS, principal: MAX_PRINC
  * - Centro: filtros y catálogo de cartas.
  * - Derecha: el mazo — barras de progreso por cupo, lista agrupada por tipo y qué falta para guardar.
  */
-export function MazoEditor({ inicial, onGuardar, onCancelar }: MazoEditorProps) {
+export function MazoEditor({ inicial, borrador, soloLectura = false, onCopiar, copiaBloqueada, onGuardar, onCancelar }: MazoEditorProps) {
   const coleccion = useCardStore((s) => s.cards)
-  const [nombre, setNombre] = useState(inicial?.nombre ?? '')
+  const base = inicial ?? borrador
+  const [nombre, setNombre] = useState(base?.nombre ?? '')
+  const [error, setError] = useState<string | undefined>(undefined)
   const [seleccion, setSeleccion] = useState<Map<string, number>>(
-    () => (inicial ? seleccionDesdeCardIds(inicial.cardIds) : new Map()),
+    () => (base ? seleccionDesdeCardIds(base.cardIds) : new Map()),
   )
   const [tipo, setTipo] = useState<'' | CardType>('')
   const [faccion, setFaccion] = useState<'' | Faccion>('')
@@ -200,35 +211,59 @@ export function MazoEditor({ inicial, onGuardar, onCancelar }: MazoEditorProps) 
       <header className="flex shrink-0 flex-wrap items-center gap-x-5 gap-y-2 border-b border-card-border/70 bg-surface/90 px-4 py-2.5">
         <div className="min-w-0">
           <h1 className="font-display text-xl font-bold tracking-wider text-gray-100">
-            {inicial ? 'Editar mazo personalizado' : 'Nuevo mazo personalizado'}
+            {soloLectura ? `Mazo oficial: ${nombre}` : inicial ? 'Editar mazo personalizado' : 'Nuevo mazo personalizado'}
           </h1>
-          <p className="text-xs text-gray-500">15 Éter + 45 Principal + 6 Vínculos = 66 cartas</p>
+          <p className="text-xs text-gray-500">
+            {soloLectura ? 'Solo lectura · para modificarlo, cópialo a tus mazos' : '15 Éter + 45 Principal + 6 Vínculos = 66 cartas'}
+          </p>
         </div>
 
-        <input
-          value={nombre}
-          onChange={(e) => setNombre(e.target.value)}
-          placeholder="Nombre del mazo"
-          className="w-64 rounded-lg border border-white/10 bg-[#0a0a12] px-3 py-2 text-sm text-gray-100 transition-colors focus:border-ether-400 focus:outline-none"
-        />
+        {!soloLectura && (
+          <input
+            value={nombre}
+            onChange={(e) => setNombre(e.target.value)}
+            placeholder="Nombre del mazo"
+            className="w-64 rounded-lg border border-white/10 bg-[#0a0a12] px-3 py-2 text-sm text-gray-100 transition-colors focus:border-ether-400 focus:outline-none"
+          />
+        )}
 
         <div className="ml-auto flex flex-wrap items-center gap-3">
-          <p className={`text-xs ${valido ? 'font-semibold text-emerald-300' : 'text-gray-400'}`}>
-            {valido ? '✓ Mazo listo para guardar' : `Falta: ${faltantes.join(' · ')}`}
-          </p>
+          {soloLectura ? (
+            copiaBloqueada && <p className="text-xs text-amber-300">{copiaBloqueada}</p>
+          ) : (
+            <p className={`text-xs ${valido ? 'font-semibold text-emerald-300' : 'text-gray-400'}`}>
+              {valido ? '✓ Mazo listo para guardar' : `Falta: ${faltantes.join(' · ')}`}
+            </p>
+          )}
+          {error && (
+            <p role="alert" className="text-xs font-semibold text-red-300">
+              {error}
+            </p>
+          )}
           <Boton onClick={onCancelar}>Volver</Boton>
-          <Boton
-            variante="primario"
-            onClick={() => onGuardar({ nombre: nombre.trim(), cardIds: buildDeck(seleccion) })}
-            disabled={!valido}
-          >
-            Guardar mazo
-          </Boton>
+          {soloLectura ? (
+            onCopiar && (
+              <Boton variante="primario" onClick={onCopiar} disabled={!!copiaBloqueada}>
+                Copiar a mis mazos
+              </Boton>
+            )
+          ) : (
+            <Boton
+              variante="primario"
+              onClick={() => {
+                const resultado = onGuardar({ nombre: nombre.trim(), cardIds: buildDeck(seleccion) })
+                setError(resultado && !resultado.ok ? (resultado.error ?? 'No se pudo guardar el mazo.') : undefined)
+              }}
+              disabled={!valido}
+            >
+              Guardar mazo
+            </Boton>
+          )}
         </div>
       </header>
 
       {/* ── 3 columnas ─────────────────────────────────────────── */}
-      <div className="grid min-h-0 flex-1 gap-3 p-3 lg:grid-cols-[300px_minmax(0,1fr)_360px]">
+      <div className={`grid min-h-0 flex-1 gap-3 p-3 ${soloLectura ? 'lg:grid-cols-[300px_minmax(0,1fr)]' : 'lg:grid-cols-[300px_minmax(0,1fr)_360px]'}`}>
         {/* Izquierda: inspector */}
         <section aria-label="Inspector de carta" className="flex min-h-0 flex-col gap-3 overflow-y-auto rounded-2xl border border-white/10 bg-gradient-to-b from-[#161626] to-[#0f0f1a] p-3">
           {activeCard ? (
@@ -244,7 +279,8 @@ export function MazoEditor({ inicial, onGuardar, onCancelar }: MazoEditorProps) 
           )}
         </section>
 
-        {/* Centro: catálogo */}
+        {/* Centro: catálogo (en solo lectura no hay nada que agregar) */}
+        {!soloLectura && (
         <section aria-label="Catálogo de cartas" className="flex min-h-0 min-w-0 flex-col gap-3">
           <div className="flex flex-wrap gap-2">
             <select
@@ -300,12 +336,13 @@ export function MazoEditor({ inicial, onGuardar, onCancelar }: MazoEditorProps) 
             )}
           </div>
         </section>
+        )}
 
         {/* Derecha: el mazo */}
         <section aria-label="Tu mazo" className="flex min-h-0 flex-col rounded-2xl border border-white/10 bg-gradient-to-b from-[#161626] to-[#0f0f1a]">
           <div className="space-y-3 border-b border-white/5 p-4">
             <div className="flex items-baseline justify-between">
-              <h2 className="font-display text-lg font-bold tracking-wide text-gray-50">Tu mazo</h2>
+              <h2 className="font-display text-lg font-bold tracking-wide text-gray-50">{soloLectura ? 'Lista del mazo' : 'Tu mazo'}</h2>
               <p className={`font-display text-2xl font-bold ${total === TOTAL_MAZO ? 'text-emerald-300' : 'text-gray-100'}`}>
                 {total}
                 <span className="text-base text-gray-500">/{TOTAL_MAZO}</span>
@@ -345,6 +382,7 @@ export function MazoEditor({ inicial, onGuardar, onCancelar }: MazoEditorProps) 
                           count={count}
                           limite={copiasDe(card)}
                           cupoLleno={conteos[cupoDe(card)] >= TOPE_CUPO[cupoDe(card)]}
+                          editable={!soloLectura}
                           onSelect={setCartaActiva}
                           onAgregar={agregar}
                           onQuitar={quitar}
@@ -395,6 +433,7 @@ function FilaMazo({
   count,
   limite,
   cupoLleno,
+  editable,
   onSelect,
   onAgregar,
   onQuitar,
@@ -403,6 +442,8 @@ function FilaMazo({
   count: number
   limite: number
   cupoLleno: boolean
+  /** Sin edición (mazo oficial en solo lectura) no hay botones +/−. */
+  editable: boolean
   onSelect: (card: AnyCard) => void
   onAgregar: (card: AnyCard) => void
   onQuitar: (card: AnyCard) => void
@@ -429,6 +470,7 @@ function FilaMazo({
       </div>
       <span className="min-w-0 flex-1 truncate text-xs text-gray-200">{card.name}</span>
       <span className="font-mono text-[11px] text-ether-300">×{count}</span>
+      {editable && (
       <div className="flex gap-0.5" onClick={(e) => e.stopPropagation()}>
         <button
           type="button"
@@ -448,6 +490,7 @@ function FilaMazo({
           +
         </button>
       </div>
+      )}
     </div>
   )
 }

@@ -10,7 +10,8 @@ export interface MazoPersonalizado {
   cardIds: string[]
 }
 
-const MAX_MAZOS = 5
+/** Tope de mazos personalizados por jugador. */
+export const MAX_MAZOS = 5
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 

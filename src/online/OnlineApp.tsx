@@ -3,10 +3,10 @@ import { useCardStore } from '../forge/store/useCardStore'
 import { ALL_CARDS } from '../shared/data/paquetes'
 import { registrarCartas, visibleState } from './game'
 import type { Dificultad } from './game/bot'
-import { MAZOS, mazoParaBot, type RivalElegido } from './mazos'
+import { MAZOS, mazoParaBot, type MazoJugable, type RivalElegido } from './mazos'
 import { MenuPartida } from './MenuPartida'
 import type { MazoSeleccionado } from './MenuPartida'
-import { useMazosStore, type MazoPersonalizado } from './useMazosStore'
+import { MAX_MAZOS, useMazosStore, type MazoPersonalizado } from './useMazosStore'
 import { usePartida, type PartidaConfig } from './usePartida'
 import { Tablero } from './components/Tablero'
 import { MazoEditor } from './components/MazoEditor'
@@ -30,6 +30,10 @@ export default function OnlineApp() {
   const [enEditor, setEnEditor] = useState(false)
   const [mazoHumano, setMazoHumano] = useState<MazoSeleccionado>({ tipo: 'set', id: 'estasis' })
   const [mazoEditando, setMazoEditando] = useState<MazoPersonalizado | undefined>(undefined)
+  /** Mazo oficial que se está mirando en solo lectura. */
+  const [mazoOficialVer, setMazoOficialVer] = useState<MazoJugable | undefined>(undefined)
+  /** Copia de un mazo oficial pendiente de guardar como mazo personalizado NUEVO. */
+  const [borrador, setBorrador] = useState<{ nombre: string; cardIds: string[] } | undefined>(undefined)
   const [seed, setSeed] = useState(() => Math.floor(Math.random() * 100_000))
   const [dificultad, setDificultad] = useState<Dificultad>('medio')
   const [rivalElegido, setRivalElegido] = useState<RivalElegido>('auto')
@@ -66,22 +70,55 @@ export default function OnlineApp() {
     setSeed(Math.floor(Math.random() * 100_000))
   }
 
+  const copiaBloqueada =
+    mazosPersonalizados.length >= MAX_MAZOS ? `Ya tienes ${MAX_MAZOS} mazos personalizados: borra uno para copiar este.` : undefined
+
+  /** Abre el editor con una copia del mazo oficial: se nombra y se guarda como un mazo personalizado NUEVO. */
+  const copiarOficial = (m: MazoJugable) => {
+    setMazoEditando(undefined)
+    setBorrador({ nombre: `${m.nombre} (copia)`, cardIds: m.cardIds })
+    setMazoOficialVer(undefined)
+    setEnEditor(true)
+  }
+
+  if (mazoOficialVer) {
+    return (
+      <MazoEditor
+        // `key` distinta a la del editor: si no, React reutiliza la instancia al pasar de ver a copiar y su estado (nombre, cartas) no se reinicia
+        key={`ver-${mazoOficialVer.id}`}
+        soloLectura
+        borrador={{ nombre: mazoOficialVer.nombre, cardIds: mazoOficialVer.cardIds }}
+        onCopiar={() => copiarOficial(mazoOficialVer)}
+        copiaBloqueada={copiaBloqueada}
+        onGuardar={() => undefined}
+        onCancelar={() => setMazoOficialVer(undefined)}
+      />
+    )
+  }
+
   if (enEditor) {
     return (
       <MazoEditor
+        key={`editor-${mazoEditando?.id ?? borrador?.nombre ?? 'nuevo'}`}
         inicial={mazoEditando}
+        borrador={borrador}
         onGuardar={(mazo) => {
           if (mazoEditando) {
             useMazosStore.getState().actualizarMazo(mazoEditando.id, mazo.cardIds)
             useMazosStore.getState().renombrarMazo(mazoEditando.id, mazo.nombre)
           } else {
-            useMazosStore.getState().agregarMazo(mazo)
+            // Si no se pudo guardar (p. ej. ya hay 5 mazos) el editor se queda abierto y muestra el motivo
+            const resultado = useMazosStore.getState().agregarMazo(mazo)
+            if (!resultado.ok) return resultado
           }
           setMazoEditando(undefined)
+          setBorrador(undefined)
           setEnEditor(false)
+          return { ok: true }
         }}
         onCancelar={() => {
           setMazoEditando(undefined)
+          setBorrador(undefined)
           setEnEditor(false)
         }}
       />
@@ -96,8 +133,11 @@ export default function OnlineApp() {
         mazosPersonalizados={mazosPersonalizados}
         onNuevoMazo={() => {
           setMazoEditando(undefined)
+          setBorrador(undefined)
           setEnEditor(true)
         }}
+        onVerMazo={setMazoOficialVer}
+        onCopiarMazo={copiarOficial}
         onEditarMazo={(m) => {
           setMazoEditando(m)
           setEnEditor(true)
