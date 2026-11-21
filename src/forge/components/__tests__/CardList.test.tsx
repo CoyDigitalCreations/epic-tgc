@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, within } from '@testing-library/react'
 import { CardList } from '../CardList'
 import { useCardStore } from '../../store/useCardStore'
 import { exportCollectionSinArte, exportCollectionToJson } from '../../utils/export-json'
@@ -265,5 +265,62 @@ describe('CardList — paquetes personalizados', () => {
     expect(screen.getByText(/1\/66/)).toBeInTheDocument()
     // Los cinco paquetes estáticos (Estásis, Disonancia, Purga, Mutación y Estándar) mantienen su botón "Agregar a mi colección"
     expect(screen.getAllByText(/Agregar a mi colección/)).toHaveLength(5)
+  })
+})
+
+describe('CardList · balance de una carta', () => {
+  const brutal = {
+    id: 'card-brutal',
+    name: 'Brutal',
+    type: 'Campeón',
+    rarity: 'Común',
+    keywords: [],
+    flavorText: '',
+    createdAt: '2024-01-01',
+    updatedAt: '2024-01-01',
+    stats: { cost: 2, poder: 9, resistencia: 1 },
+  } as import('../../../shared/types').CampeonCard
+
+  it('cada carta tiene un botón para ver su balance', () => {
+    useCardStore.setState({ cards: [brutal] })
+    render(<CardList />)
+    expect(screen.getByRole('button', { name: 'Ver balance de Brutal' })).toBeInTheDocument()
+  })
+
+  it('el botón abre el modal con lo que rebasa esa carta (carga bajo demanda)', async () => {
+    useCardStore.setState({ cards: [brutal] })
+    render(<CardList />)
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Ver balance de Brutal' }))
+    const dialogo = await screen.findByRole('dialog', { name: /Balance de Brutal/ })
+    expect(within(dialogo).getByRole('status')).toHaveTextContent(/Rebasa/)
+  })
+
+  it('abrir el balance no selecciona ni edita la carta', async () => {
+    useCardStore.setState({ cards: [brutal], selectedCardId: null })
+    render(<CardList />)
+    fireEvent.click(screen.getByRole('button', { name: 'Ver balance de Brutal' }))
+    await screen.findByRole('dialog')
+    expect(useCardStore.getState().selectedCardId).toBeNull()
+  })
+
+  it('se cierra y deja la lista como estaba', async () => {
+    useCardStore.setState({ cards: [brutal] })
+    render(<CardList />)
+    fireEvent.click(screen.getByRole('button', { name: 'Ver balance de Brutal' }))
+    const dialogo = await screen.findByRole('dialog')
+    fireEvent.click(within(dialogo).getByRole('button', { name: 'Listo' }))
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(useCardStore.getState().cards).toHaveLength(1)
+  })
+
+  it('si la carta se borra con el modal abierto, el modal se va con ella', async () => {
+    useCardStore.setState({ cards: [brutal] })
+    render(<CardList />)
+    fireEvent.click(screen.getByRole('button', { name: 'Ver balance de Brutal' }))
+    await screen.findByRole('dialog')
+    useCardStore.setState({ cards: [] })
+    expect(await screen.findByText('No hay cartas todavía')).toBeInTheDocument()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 })

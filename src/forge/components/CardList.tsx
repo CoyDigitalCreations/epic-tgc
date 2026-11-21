@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useEffect } from 'react'
+import { lazy, Suspense, useState, useMemo, useRef, useEffect } from 'react'
 import { useCardStore } from '../store/useCardStore'
 import { exportCollectionToJson, importCollectionFromJson, exportCollectionSinArte, FUENTE_ARTE, FUENTE_EFECTOS } from '../utils/export-json'
 import { exportPaqueteToJson, importPaqueteFromJson } from '../utils/export-paquete'
@@ -10,6 +10,9 @@ import { ColeccionModal } from './modals/ColeccionModal'
 import { PaqueteModal } from './modals/PaqueteModal'
 import { useCardImage } from '../hooks/useCardImage'
 import type { AnyCard } from '../../shared/types'
+
+/** El balance se carga bajo demanda: el Card-Maker no trae el código del balanceador hasta que alguien pide ver una carta. */
+const BalanceCartaModal = lazy(() => import('./modals/BalanceCartaModal').then((m) => ({ default: m.BalanceCartaModal })))
 
 /** Cartas disponibles por paquete (clave = paquete.id) — el import los agrega a la colección */
 const CARTAS_POR_PAQUETE: Record<string, AnyCard[]> = {
@@ -43,11 +46,12 @@ interface CardGridItemProps {
   selected: boolean
   onSelect: () => void
   onEdit: () => void
+  onBalance: () => void
   onDelete: () => void
 }
 
 /** Single grid tile. Hooks are required here (can't be inside a .map). */
-function CardGridItem({ card, selected, onSelect, onEdit, onDelete }: CardGridItemProps) {
+function CardGridItem({ card, selected, onSelect, onEdit, onBalance, onDelete }: CardGridItemProps) {
   const imageUrl = useCardImage(card.id, card.hasImage, card.imageUrl)
   return (
     <div
@@ -171,6 +175,18 @@ function CardGridItem({ card, selected, onSelect, onEdit, onDelete }: CardGridIt
         <button
           onClick={(e) => {
             e.stopPropagation()
+            onBalance()
+          }}
+          title="Ver el balance de esta carta"
+          aria-label={`Ver balance de ${card.name || "carta"}`}
+          className="flex-1 text-[10px] bg-amber-500/15 hover:bg-amber-500/30 text-amber-200 py-0.5
+                     rounded-md transition-colors cursor-pointer"
+        >
+          📊
+        </button>
+        <button
+          onClick={(e) => {
+            e.stopPropagation()
             onDelete()
           }}
           title="Eliminar"
@@ -269,6 +285,10 @@ export function CardList({ onPlegar }: { onPlegar?: () => void } = {}) {
       }),
     [cards, search, typeFilter, paqueteFilter, costeFilter, faccionFilter, keywordFilter, rarityFilter],
   )
+
+  // Balance de una carta (modal bajo demanda); se guarda el id para mostrar siempre la carta tal como está en la colección
+  const [balanceCardId, setBalanceCardId] = useState<string | null>(null)
+  const balanceCard = useMemo(() => cards.find((c) => c.id === balanceCardId) ?? null, [cards, balanceCardId])
 
   const handleEdit = (card: (typeof cards)[number]) => {
     setSelectedCardId(card.id)
@@ -881,6 +901,7 @@ export function CardList({ onPlegar }: { onPlegar?: () => void } = {}) {
               selected={selectedCardId === card.id}
               onSelect={() => setSelectedCardId(card.id)}
               onEdit={() => handleEdit(card)}
+              onBalance={() => setBalanceCardId(card.id)}
               onDelete={() => {
                 if (confirm(`¿Eliminar "${card.name}"?`)) {
                   deleteCard(card.id)
@@ -891,6 +912,13 @@ export function CardList({ onPlegar }: { onPlegar?: () => void } = {}) {
         </div>
       )}
       </div>
+
+      {/* Balance de una carta (solo lectura, carga bajo demanda) */}
+      {balanceCard && (
+        <Suspense fallback={null}>
+          <BalanceCartaModal card={balanceCard} onCerrar={() => setBalanceCardId(null)} />
+        </Suspense>
+      )}
 
       {/* Clear confirmation modal */}
       <ConfirmModal

@@ -629,3 +629,20 @@ export function AnalisisCarta({
     </section>
   )
 }
+
+/**
+ * El análisis de una carta SIN lo que depende del pool de las demás (letalidad, ajuste propuesto, identidad del mazo): solo sus
+ * presupuestos e índices. Lo usa el Card-Maker para orientar al diseñar. Solo lectura.
+ */
+export function DetallePresupuestos({ carta, analisis }: { carta: CartaBalance; analisis: Analisis }) {
+  return (
+    <div className="space-y-4">
+      <Estadisticas carta={carta} analisis={analisis} />
+      {analisis.margenes.length > 0 && <Margenes margenes={analisis.margenes} />}
+      <PoderDeLaCarta analisis={analisis} />
+      <Tabu analisis={analisis} carta={carta} />
+      <Razones analisis={analisis} />
+      <Desglose analisis={analisis} />
+    </div>
+  )
+}
