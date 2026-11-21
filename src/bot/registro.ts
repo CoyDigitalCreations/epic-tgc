@@ -3,7 +3,7 @@ import { botBase } from './base'
 import { CONFIG, CONFIG_CONTINUO } from './busqueda'
 import type { Config } from './busqueda'
 import { crearBotBusqueda } from './dificil'
-import { PESOS_ANTES, PESOS_SIN_ARCANA, PESOS_SIN_MANO_CAMPEON } from './evaluar'
+import { PESOS_ANTES, PESOS_SIN_ARCANA, PESOS_SIN_MANO_CAMPEON, PESOS_SIN_PODER_EFECTO } from './evaluar'
 import { botDificilNuevo, botFacilNuevo, botMedioNuevo } from './niveles'
 
 /** Todos los bots que la arena sabe enfrentar, por nombre. */
@@ -19,6 +19,8 @@ export const BOTS: Record<string, Bot> = {
   /** El Difícil sin el bonus por Arcana colocada: línea base para medir ESE cambio por separado (conserva la valoración nueva del Éter). */
   'dificil-sin-arcana': crearBotBusqueda({ ...CONFIG, pesos: PESOS_SIN_ARCANA }),
   'dificil-sin-mano-campeon': crearBotBusqueda({ ...CONFIG, pesos: PESOS_SIN_MANO_CAMPEON }),
+  /** El Difícil sin valorar el poder de los efectos de los Campeones: línea base para medir ESE cambio (conserva todo lo demás). */
+  'dificil-sin-poder-efecto': crearBotBusqueda({ ...CONFIG, pesos: PESOS_SIN_PODER_EFECTO }),
   /**
    * El Difícil SIN ver la información oculta del rival (su mano y sus cartas boca abajo) al buscar: experimento para medir cuánto sesga
    * la arena que el bot normal la vea (ver `Config.infoPublica`).

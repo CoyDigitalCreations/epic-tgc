@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import { createInitialState } from '../online/game'
 import type { GameState, PlayerId } from '../online/game'
-import { DISONANCIA_CARDS, ESTASIS_CARDS } from '../shared/data/paquetes'
-import { evaluar, PESOS, PESOS_ANTES, PESOS_SIN_ARCANA, PESOS_SIN_MANO_CAMPEON } from './evaluar'
+import { ALL_CARDS, DISONANCIA_CARDS, ESTASIS_CARDS } from '../shared/data/paquetes'
+import { evaluar, PESOS, PESOS_ANTES, PESOS_SIN_ARCANA, PESOS_SIN_MANO_CAMPEON, PESOS_SIN_PODER_EFECTO } from './evaluar'
+import { poderEfectoDe } from './poderCarta'
 
 const expandir = (cards: { id: string; limiteCopias?: string | number }[]) =>
   cards.flatMap((c) => Array.from({ length: Number(c.limiteCopias ?? 1) }, () => c.id))
@@ -102,7 +103,7 @@ describe('evaluar · Arcana colocada (el bot ya no las deja atascadas en la mano
   it('PESOS_ANTES conserva la valoración original (sin el bonus)', () => {
     expect(PESOS_ANTES.arcanaColocada).toBe(0)
     const { puesta } = parejas('A', 'FB-023')
-    expect(evaluar(puesta, 'A', PESOS_ANTES)).toBeCloseTo(evaluar(puesta, 'A', { ...PESOS, arcanaColocada: 0, eterRobado: 0, eterPrestado: 1, manoCampeon: 0 }), 9)
+    expect(evaluar(puesta, 'A', PESOS_ANTES)).toBeCloseTo(evaluar(puesta, 'A', { ...PESOS, arcanaColocada: 0, eterRobado: 0, eterPrestado: 1, manoCampeon: 0, efectoCampo: 0, efectoMano: 0 }), 9)
   })
 })
 
@@ -130,5 +131,47 @@ describe('evaluar · Campeones en la mano (el tutor ya distingue a Ragnar de otr
     sin.players.A.mano = sin.players.A.mano.filter((id) => id !== 'm-FB-032')
     const aporte = (w: typeof PESOS) => evaluar(base, 'A', w) - evaluar(sin, 'A', w)
     expect(aporte(PESOS)).toBeCloseTo(aporte(PESOS_SIN_MANO_CAMPEON), 9)
+  })
+})
+
+describe('evaluar · poder de los efectos (la estratega se distingue de un Campeón vanilla, sin tabla por carta)', () => {
+  /** Mismo estado, pero `A` tiene a `cardId` en la mano o en el campo (se le añade una instancia nueva). */
+  const con = (cardId: string, donde: 'mano' | 'campo'): GameState => {
+    const s = structuredClone(inicial())
+    const id = `p-${cardId}`
+    s.instances[id] = { ...Object.values(s.instances)[0], cardInstanceId: id, cardId, owner: 'A', controller: 'A', agotado: false } as GameState['instances'][string]
+    if (donde === 'mano') s.players.A.mano = [...s.players.A.mano, id]
+    else s.players.A.campo.campeones[0] = id
+    return s
+  }
+
+  it('en la mano: Ragnar (efectos) vale más que Isolde aun quitando el criterio de stats', () => {
+    const w = { ...PESOS, manoCampeon: 0 }
+    expect(evaluar(con('DS-010', 'mano'), 'A', w)).toBeGreaterThan(evaluar(con('FB-014', 'mano'), 'A', w))
+  })
+
+  it('en el campo suma por el poder de sus efectos; con el peso en 0 vuelve a depender solo de stats', () => {
+    const delta = (w: typeof PESOS) => evaluar(con('DS-010', 'campo'), 'A', w) - evaluar(con('DS-010', 'mano'), 'A', w)
+    expect(delta(PESOS)).toBeGreaterThan(delta(PESOS_SIN_PODER_EFECTO))
+  })
+
+  it('invocar a una estratega gana más que invocar a un Campeón vanilla del mismo coste (el incentivo a jugarla)', () => {
+    const ganancia = (cardId: string) => evaluar(con(cardId, 'campo'), 'A', PESOS) - evaluar(con(cardId, 'mano'), 'A', PESOS)
+    const gananciaSin = (cardId: string) => evaluar(con(cardId, 'campo'), 'A', PESOS_SIN_PODER_EFECTO) - evaluar(con(cardId, 'mano'), 'A', PESOS_SIN_PODER_EFECTO)
+    // Ragnar sube respecto a como se valoraba antes, y lo hace más que Isolde
+    expect(ganancia('DS-010') - gananciaSin('DS-010')).toBeGreaterThan(ganancia('FB-014') - gananciaSin('FB-014'))
+  })
+
+  it('un Campeón sin efectos ni keywords no cambia con el peso nuevo (los vanilla no se mueven)', () => {
+    const vanilla = ALL_CARDS.find((c) => c.type === 'Campeón' && poderEfectoDe(c.id) === 0)
+    expect(vanilla).toBeDefined()
+    // La mano inicial ya trae Campeones con efectos: se compara lo que CAMBIA al invocarlo, que es lo único que decide la jugada
+    const ganancia = (w: typeof PESOS) => evaluar(con(vanilla!.id, 'campo'), 'A', w) - evaluar(con(vanilla!.id, 'mano'), 'A', w)
+    expect(ganancia(PESOS)).toBeCloseTo(ganancia(PESOS_SIN_PODER_EFECTO), 9)
+  })
+
+  it('las estratega de cada mazo puntúan por encima de la mediana de los Campeones (no es cosa de una carta)', () => {
+    const estratega = ['DS-010', 'FB-010', 'PU-010', 'MU-011'].map(poderEfectoDe)
+    for (const p of estratega) expect(p).toBeGreaterThan(5)
   })
 })
