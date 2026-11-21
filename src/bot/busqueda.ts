@@ -6,7 +6,7 @@
  * - La búsqueda se corta en el primer estado «libre» (alguien puede jugar a gusto: Forja, Choque sin combate u Ocaso) y se evalúa.
  * - Se simula con un RNG de mentira: nunca se toca el flujo aleatorio real de la partida.
  */
-import { actorActual, applyAction, getValidActions, statsDe } from '../online/game'
+import { actorActual, applyAction, campeonesSacrificables, getCardMeta, getValidActions, sacrificiosRequeridos, statsDe } from '../online/game'
 import type { Action, Ctx, GameState, PlayerId } from '../online/game'
 import { evaluar, PESOS } from './evaluar'
 import type { Pesos } from './evaluar'
@@ -23,6 +23,41 @@ export function simular(s: GameState, a: Action): GameState | null {
 
 /** Acciones que el bot nunca juega por su cuenta. */
 export const esUtil = (a: Action): boolean => a.type !== 'rendirse' && a.type !== 'usar_transmutar'
+
+/** Combinaciones de `k` elementos de `xs` (en orden, sin repetir). */
+function combinaciones<T>(xs: readonly T[], k: number): T[][] {
+  if (k === 0) return [[]]
+  if (xs.length < k) return []
+  const [x, ...resto] = xs
+  return [...combinaciones(resto, k - 1).map((c) => [x, ...c]), ...combinaciones(resto, k)]
+}
+
+/**
+ * El motor ofrece UNA sola jugada por Campeón de la mano: para un Soberano o un Emperador sacrifica a los PRIMEROS sacrificables por
+ * orden de slot (`generarAccionesForja`), y el bot no puede escoger a quién. Con un Centinela 3/7 en el primer slot, jugar a Idris
+ * (3/3) siempre cuesta lo mismo que no jugarlo, aunque sacrificar a un 2/4 sí compensara. Aquí se añade una variante por cada
+ * sacrificio posible (todas legales: el motor las valida igual). Genérico: vale para cualquier carta con `sacrificiosRequeridos` > 0.
+ * El slot sigue la misma regla que el generador: el del primer sacrificado.
+ */
+export function conVariantesDeSacrificio(s: GameState, acciones: Action[], yo: PlayerId): Action[] {
+  const extra: Action[] = []
+  for (const a of acciones) {
+    if (a.type !== 'jugar_campeon' || !a.sacrificios || a.sacrificios.length === 0) continue
+    const cardId = s.instances[a.cardInstanceId]?.cardId
+    const meta = cardId ? getCardMeta(cardId) : null
+    if (!meta) continue
+    const requeridos = sacrificiosRequeridos(meta.roles)
+    if (requeridos === 0) continue
+    const base = new Set(a.sacrificios)
+    for (const combo of combinaciones(campeonesSacrificables(s, yo, meta.id), requeridos)) {
+      if (combo.length === base.size && combo.every((id) => base.has(id))) continue
+      const slot = s.players[yo].campo.campeones.indexOf(combo[0])
+      if (slot === -1) continue
+      extra.push({ ...a, slot, sacrificios: combo })
+    }
+  }
+  return extra.length === 0 ? acciones : [...acciones, ...extra]
+}
 
 /**
  * Quita alternativas equivalentes que solo multiplicarían la búsqueda: los distintos Éter con que se paga el mismo bloqueo, y los
@@ -103,6 +138,11 @@ export interface Config {
    * Cuesta más simulaciones por decisión: súbele el `presupuesto`. Por defecto (ausente/false) la búsqueda es la de siempre.
    */
   continuarTurno?: boolean
+  /**
+   * Elegir a quién sacrifica un Soberano o un Emperador (ver `conVariantesDeSacrificio`). Por defecto (ausente/true) el bot considera
+   * cada sacrificio posible; con `false` juega como antes, con el único que ofrece el motor (el primero del campo). Línea base de la arena.
+   */
+  elegirSacrificio?: boolean
 }
 
 /** Contador mutable de simulaciones que le quedan a UNA alternativa raíz. */

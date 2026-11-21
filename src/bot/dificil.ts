@@ -5,7 +5,7 @@
 import { actorActual, getValidActions } from '../online/game'
 import type { Action, GameState, PlayerId } from '../online/game'
 import type { Bot } from './arena'
-import { atacantesRelevantes, CONFIG, esUtil, sinRepetidos, valorDe } from './busqueda'
+import { atacantesRelevantes, CONFIG, conVariantesDeSacrificio, esUtil, sinRepetidos, valorDe } from './busqueda'
 import type { Config } from './busqueda'
 
 /** Número en [0,1) que solo depende del estado (y de una sal): misma posición, misma "suerte". No toca el RNG de la partida. */
@@ -26,7 +26,7 @@ export function crearBotBusqueda(cfg: Config = CONFIG): Bot {
 
   return (s: GameState, yo: PlayerId): Action | null => {
     if (actorActual(s) !== yo) return null
-    const acciones = atacantesRelevantes(s, sinRepetidos(getValidActions(s, yo).filter(esUtil)))
+    const acciones = atacantesRelevantes(s, sinRepetidos(cfg.elegirSacrificio === false ? getValidActions(s, yo).filter(esUtil) : conVariantesDeSacrificio(s, getValidActions(s, yo).filter(esUtil), yo)))
     if (acciones.length === 0) return null
     if (acciones.length === 1) return acciones[0]
 

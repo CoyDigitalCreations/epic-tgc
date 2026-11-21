@@ -21,6 +21,8 @@ export const BOTS: Record<string, Bot> = {
   'dificil-sin-mano-campeon': crearBotBusqueda({ ...CONFIG, pesos: PESOS_SIN_MANO_CAMPEON }),
   /** El Difícil sin valorar el poder de los efectos de los Campeones: línea base para medir ESE cambio (conserva todo lo demás). */
   'dificil-sin-poder-efecto': crearBotBusqueda({ ...CONFIG, pesos: PESOS_SIN_PODER_EFECTO }),
+  /** El Difícil sin elegir a quién sacrifica un Soberano (solo el primero que ofrece el motor): línea base para medir ESE cambio. */
+  'dificil-sin-sacrificio': crearBotBusqueda({ ...CONFIG, elegirSacrificio: false }),
   /**
    * El Difícil SIN ver la información oculta del rival (su mano y sus cartas boca abajo) al buscar: experimento para medir cuánto sesga
    * la arena que el bot normal la vea (ver `Config.infoPublica`).
