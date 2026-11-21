@@ -1,6 +1,6 @@
 import { CONFIG_V1 } from './config'
 import type { OpcionesPool } from './letalidad'
-import { bonoDeTabu, esExento } from './presupuesto'
+import { bonoDeTabu, esElite, tabuMaxBase } from './presupuesto'
 
 export { bonoDeTabu }
 import type { CartaBalance, ConfigBalance, EfectoBalance, MazoId, ReglaTabu } from './tipos'
@@ -111,51 +111,46 @@ export function tabuDeCarta(carta: CartaBalance, cfg: ConfigBalance = CONFIG_V1)
 
 /* ───────────── presupuesto de tabú por coste ───────────── */
 
-export type EstadoTabu = 'dentro' | 'en-limite' | 'excede' | 'exenta' | 'sin-presupuesto'
+export type EstadoTabu = 'dentro' | 'en-limite' | 'excede' | 'sin-presupuesto'
 
 export interface EvaluacionTabu extends TabuCarta {
-  /** Máximo de puntos de tabú que permite la carta (el de su coste más el bono por déficit de stats); null con coste 0 o sin fila en la tabla. */
+  /** Máximo de puntos de tabú que permite la carta (el de su coste, más lo de sus sacrificios y su rareza si es élite, más el bono por stats sin gastar); null con coste 0 o sin fila en la tabla. */
   max: number | null
-  /** Máximo que da solo su coste, sin el bono. */
+  /** Máximo que dan su coste, sus sacrificios y su rareza, sin el bono por stats sin gastar. */
   maxBase: number | null
-  /** Bono de tabú por déficit de stats (0 si no tiene déficit, es exenta o no es Campeón). */
+  /** Bono de tabú por stats sin gastar (0 si no hay déficit o no es Campeón). */
   bono: number
   /** Cuántos puntos pasa del máximo (0 si no lo pasa). */
   exceso: number
   estado: EstadoTabu
-  /** Campeón con salvedad por sacrificio (Soberano, Emperador, Única): se reporta pero nunca excede. */
-  exento: boolean
-  /** Una carta exenta que, sin la exención, pasaría su presupuesto. Solo informativo. */
-  excederiaSinExencion: boolean
+  /** Soberano, Emperador o Única: su máximo es mayor (sacrificios y rareza), pero puede exceder igual que cualquiera. */
+  elite: boolean
 }
 
 export const ETIQUETA_ESTADO_TABU: Record<EstadoTabu, string> = {
   dentro: 'Dentro del presupuesto de tabú',
   'en-limite': 'En el límite del presupuesto de tabú',
   excede: 'Excede el presupuesto de tabú',
-  exenta: 'Exenta del presupuesto de tabú',
   'sin-presupuesto': 'Sin presupuesto de tabú',
 }
 
 /**
- * «A mayor tabú, mayor coste»: la carta puede gastar hasta `tabuMaxPorCoste[coste]` puntos más su bono por déficit de stats.
- * Excede si pasa el máximo; en el límite si ya no puede sumar otro punto entero (con al menos 1 punto); dentro en otro caso. Mismas exenciones que el tope de efecto
- * por coste: un Campeón Soberano, Emperador o Única se reporta como «exenta» y nunca excede; coste 0 (Vínculos) no tiene veredicto.
- * Los Éteres NO se eximen: cuestan 1 y no pueden subir, así que todo lo que rompan lo pagan con su presupuesto de coste 1.
+ * «A mayor tabú, mayor coste»: la carta puede gastar hasta `tabuMaxBase` puntos (el de su coste, y si es élite más lo de sus sacrificios y su
+ * rareza) más su bono por stats sin gastar. Excede si pasa el máximo; en el límite si ya no puede sumar otro punto entero (con al menos 1 punto);
+ * dentro en otro caso. Nadie está exento: un Soberano, Emperador o Única excede igual que una carta normal; coste 0 (Vínculos) no tiene veredicto.
+ * Los Éteres tampoco se eximen: cuestan 1 y no pueden subir, así que todo lo que rompan lo pagan con su presupuesto de coste 1.
  */
 export function evaluarTabu(carta: CartaBalance, cfg: ConfigBalance = CONFIG_V1): EvaluacionTabu {
   const tabu = tabuDeCarta(carta, cfg)
-  const maxBase = carta.coste < 1 ? null : (cfg.tabu.tabuMaxPorCoste[carta.coste] ?? null)
+  const maxBase = tabuMaxBase(carta, cfg)
   const bono = maxBase === null ? 0 : bonoDeTabu(carta, cfg)
   const max = maxBase === null ? null : Math.round((maxBase + bono) * 10) / 10
   const exceso = max === null ? 0 : Math.max(0, tabu.puntos - max)
-  const exento = carta.tipo === 'Campeón' && esExento(carta, cfg)
   let estado: EstadoTabu
   if (max === null) estado = 'sin-presupuesto'
-  else if (exento) estado = 'exenta'
   else if (exceso > 0) estado = 'excede'
   else estado = tabu.puntos === Math.floor(max) && tabu.puntos > 0 ? 'en-limite' : 'dentro'
-  return { ...tabu, max, maxBase, bono, exceso, estado, exento, excederiaSinExencion: exento && exceso > 0 }
+  return { ...tabu, max, maxBase, bono, exceso, estado, elite: esElite(carta, cfg) }
 }
 
 /* ───────────── resumen por mazo ───────────── */
@@ -172,8 +167,6 @@ export interface ResumenTabuMazo {
   /** Cartas que exceden su presupuesto de tabú. */
   excede: number
   enLimite: number
-  /** Exentas que excederían sin la exención (informativo). */
-  exentasQueExcederian: number
 }
 
 const MAZOS: readonly MazoId[] = ['estasis', 'disonancia']
@@ -197,7 +190,6 @@ export function resumenTabuPorMazo(
       porNivel,
       excede: evals.filter((ev) => ev.estado === 'excede').length,
       enLimite: evals.filter((ev) => ev.estado === 'en-limite').length,
-      exentasQueExcederian: evals.filter((ev) => ev.excederiaSinExencion).length,
     }
   })
 }

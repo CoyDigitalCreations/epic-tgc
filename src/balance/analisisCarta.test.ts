@@ -7,7 +7,7 @@ import { poolLetalidad, techosDelPool } from './letalidad'
 import { semaforoDe } from './metricas'
 import { evaluarEfectoPorCoste } from './efectoPorCoste'
 import { poderDeCarta } from './poderEfecto'
-import { esExento } from './presupuesto'
+import { esElite } from './presupuesto'
 import type { CartaBalance } from './tipos'
 import { CARTAS, CARTAS_ANTES, CARTAS_DS_ANTES, CARTAS_ELENA_32, TEXTO_ISOLDE_LEGADO, carta, legado, legadoDS } from './test/cartasReales'
 import { efectosComandante } from '../shared/efectoComandante'
@@ -75,12 +75,15 @@ describe('margenesDeStats: estados', () => {
     expect(suma.holgura).toBeGreaterThanOrEqual(0)
   })
 
-  it('S1.5: Aurora y Ragnar son exentas, con su tope propio 18/9/9 y sin rojo ni bajo', () => {
+  it('S1.5: Aurora y Ragnar se miden contra su presupuesto de élite (21, tope 14): sin rojo ni bajo, con la suma casi al límite', () => {
     for (const n of ['Aurora', 'Ragnar']) {
       const { atq, res, suma } = porStat(n)
-      expect([atq.estado, res.estado, suma.estado]).toEqual(['exenta', 'exenta', 'exenta'])
-      expect([atq.tope, res.tope, suma.tope]).toEqual([9, 9, 18])
-      expect([atq.puedeSubir, res.puedeSubir, suma.puedeSubir]).toEqual([null, null, null])
+      expect([atq.estado, res.estado]).toEqual(['verde', 'verde'])
+      expect(suma.estado).toBe('amarillo') // 18 de 18.4: el impuesto de su efecto (2.6) deja 0.4 de holgura
+      expect([atq.tope, res.tope, suma.tope]).toEqual([14, 14, 18.4])
+      expect(suma.minimo).toBe(0) // una élite no tiene piso de suma
+      expect(suma.puedeSubir).toBe(0)
+      expect(atq.puedeSubir).toBe(0) // la suma no deja subir ni un punto más
     }
   })
 
@@ -286,9 +289,9 @@ describe('estadoDeCarta', () => {
     expect(estadoDe(carta('Korr')).estado).toBe('en-limite')
   })
 
-  it('Aurora y Ragnar son exentas', () => {
-    expect(estadoDe(carta('Aurora')).estado).toBe('exenta')
-    expect(estadoDe(carta('Ragnar')).estado).toBe('exenta')
+  it('Aurora y Ragnar ya no son exentas: quedan en el límite de su presupuesto de élite', () => {
+    expect(estadoDe(carta('Aurora')).estado).toBe('en-limite')
+    expect(estadoDe(carta('Ragnar')).estado).toBe('en-limite')
   })
 
   it('S6.2: una Mística no tiene márgenes y usa el color de semaforoDe', () => {
@@ -456,9 +459,9 @@ describe('razonesDeCarta', () => {
     expect(suma!.texto).toMatch(/coste 3/)
   })
 
-  it('S4.4: una carta dentro de rango o exenta no tiene razones', () => {
+  it('S4.4: una carta dentro de rango no tiene razones; una élite pegada a su presupuesto solo avisa en informativo', () => {
     expect(razones(carta('Rowena'))).toEqual([])
-    expect(razones(carta('Aurora'))).toEqual([])
+    expect(razones(carta('Aurora'))).toEqual([{ nivel: 'info', texto: 'suma 18 está a 0.4 de su límite de 18.4: cerca del tope.' }])
   })
 
   it('un stat cerca del tope es solo informativo (Korr, RES 5 con tope 5 del coste 3 y suma 8 en el máximo)', () => {
@@ -516,12 +519,12 @@ describe('razonesDeCarta', () => {
     expect(estadoDe(sangre).estado).not.toBe('excede')
     expect(razones(sangre).map((x) => x.texto).join(' ')).not.toMatch(/exige coste mínimo/)
     // Un Campeón de coste 1 con ese mismo verbo SÍ incumple el coste mínimo.
-    const campeon: CartaBalance = { ...CARTAS.find((c) => c.tipo === 'Campeón' && c.stats !== null && !esExento(c))!, id: 'T-021', coste: 1, efectos: sangre.efectos }
+    const campeon: CartaBalance = { ...CARTAS.find((c) => c.tipo === 'Campeón' && c.stats !== null && !esElite(c))!, id: 'T-021', coste: 1, efectos: sangre.efectos }
     expect(razones(campeon).map((x) => x.texto)).toContain('El verbo draw exige coste mínimo 2, pero la carta cuesta 1.')
   })
 
   it('razona el tope de efecto de un Campeón y el coste mínimo de un verbo', () => {
-    const base = CARTAS.find((c) => c.tipo === 'Campeón' && c.stats !== null && c.coste === 2 && !esExento(c))!
+    const base = CARTAS.find((c) => c.tipo === 'Campeón' && c.stats !== null && c.coste === 2 && !esElite(c))!
     const verboCaro = CARTAS.flatMap((c) => c.efectos).find((e) => e.verbo === 'destroy')!
     const cara: CartaBalance = {
       ...base,

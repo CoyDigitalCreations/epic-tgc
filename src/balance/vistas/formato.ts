@@ -16,7 +16,6 @@ const VEREDICTO_TABU_CORTO: Record<EstadoTabu, string> = {
   dentro: 'Dentro',
   'en-limite': 'En el límite',
   excede: 'Excede',
-  exenta: 'Exenta',
   'sin-presupuesto': 'Sin veredicto',
 }
 
@@ -27,7 +26,7 @@ export function textoTabu(ev: EvaluacionTabu): string {
 
 /** Veredicto en palabras de la evaluación de presupuesto de un Campeón. */
 export function veredictoDe(ev: EvaluacionPresupuesto): string {
-  if (!ev.fueraDeBanda) return ev.exento ? 'Exenta: dentro de su tope propio' : 'Dentro de banda'
+  if (!ev.fueraDeBanda) return ev.elite ? 'Dentro de su presupuesto de élite' : 'Dentro de banda'
   if (ev.estado === 'bajo') return 'Fuera de banda: por debajo'
   if (ev.estado === 'sobre') return 'Fuera de banda: por encima'
   return 'Fuera de banda: excede un tope individual'

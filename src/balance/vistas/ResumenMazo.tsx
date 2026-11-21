@@ -54,7 +54,7 @@ export function ResumenMazo({ cartas }: PropsVista) {
       />
       <p className="mt-3 text-xs text-gray-500">
         El tabú mide cuántas reglas del manual rompen los efectos de una carta. Niveles: {ESCALA_TABU} A mayor tabú, más debería costar:
-        cada coste permite un máximo de puntos y una carta lo excede al pasarse. Las Únicas y los Soberanos quedan exentos; los Éteres no.
+        cada coste permite un máximo de puntos y una carta lo excede al pasarse. Las Únicas, los Soberanos y los Emperadores tienen un máximo mayor (por sus sacrificios y su rareza), pero no están exentos.
       </p>
     </section>
   )

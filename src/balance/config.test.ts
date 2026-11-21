@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { sacrificiosRequeridos } from '../online/game'
 import { KEYWORDS } from '../shared/types/enums'
 import { CONFIG_V1 } from './config'
 
@@ -31,14 +32,28 @@ describe('CONFIG_V1', () => {
     expect(CONFIG_V1.pesos.res).toBeGreaterThan(CONFIG_V1.pesos.atq)
   })
 
-  it('exenta a Soberanos, Emperadores y Únicas con un tope propio 18/9/9', () => {
-    expect(CONFIG_V1.excepciones.rolesExentos).toEqual(['Soberano', 'Emperador'])
-    expect(CONFIG_V1.excepciones.rarezasExentas).toEqual(['Única'])
-    expect(CONFIG_V1.excepciones.tope).toEqual({ suma: 18, atq: 9, res: 9 })
+  it('da a Soberanos, Emperadores y Únicas un presupuesto mayor (no una exención): 6 por sacrificio y 5 por Única', () => {
+    expect(CONFIG_V1.elite).toEqual({
+      sacrificiosPorRol: { Soberano: 1, Emperador: 2 },
+      rarezasUnica: ['Única'],
+      bonoStatsSacrificio: 6,
+      bonoStatsUnica: 5,
+      bonoTabuSacrificio: 2,
+      bonoTabuUnica: 1,
+      costeEquivalenteSacrificio: 2,
+      proporcionTope: 0.65,
+    })
+    expect('excepciones' in CONFIG_V1).toBe(false)
   })
 
-  it('define el impuesto por poder de efecto con tope', () => {
-    expect(CONFIG_V1.impuesto).toEqual({ umbral: 2, puntosPorPoder: 0.5, maxImpuesto: 3 })
+  it('define el impuesto por poder de efecto SIN tope (un tope sería una exención disfrazada)', () => {
+    expect(CONFIG_V1.impuesto).toEqual({ umbral: 2, puntosPorPoder: 0.5 })
+  })
+
+  it('los sacrificios por rol coinciden con los que exige el motor', () => {
+    for (const rol of ['Soberano', 'Emperador', 'Normal'] as const) {
+      expect(CONFIG_V1.elite.sacrificiosPorRol[rol] ?? 0, rol).toBe(sacrificiosRequeridos([rol]))
+    }
   })
 
   it('clasifica la identidad de cada mazo', () => {

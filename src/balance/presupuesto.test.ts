@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { ALL_CARDS } from './test/seedClasico'
 import { cargarCartas } from './cargador'
 import { CONFIG_V1 } from './config'
-import { evaluarConImpuesto, evaluarPresupuesto, impuestoDe } from './presupuesto'
+import { bandaDe, bonoDeTabu, esElite, esUnica, evaluarConImpuesto, evaluarPresupuesto, impuestoDe, sacrificiosDe } from './presupuesto'
 import { poderDeCarta } from './poderEfecto'
 import type { CartaBalance, ConfigBalance } from './tipos'
 import { legadoDS } from './test/cartasReales'
@@ -80,12 +80,13 @@ describe('evaluarPresupuesto con el seed real', () => {
     expect(sobreTope?.fueraDeBanda).toBe(true)
   })
 
-  it('S3.3: Aurora y Ragnar 9/9 quedan dentro por excepción contra el tope propio', () => {
+  it('S3.3: Aurora y Ragnar 9/9 (Soberano + Única, coste 4) caben en su presupuesto de élite: 10 + 6 + 5 = 21', () => {
     for (const id of ['FB-010', 'DS-010']) {
-      const ev = evaluarPresupuesto(carta(id))
-      expect(ev?.exento).toBe(true)
-      expect(ev?.banda.sumaMax).toBe(CONFIG_V1.excepciones.tope.suma)
-      expect(ev?.fueraDeBanda).toBe(false)
+      const ev = evaluarConImpuesto(carta(id))
+      expect(ev?.elite).toBe(true)
+      expect(ev?.banda).toEqual({ sumaMin: 0, sumaMax: 21, topeAtq: 14, topeRes: 14 })
+      expect(ev?.impuesto).toBe(2.6) // el impuesto de efecto SÍ se cobra: 18 + 2.6 = 20.6 ≤ 21
+      expect(ev?.fueraDeBanda, id).toBe(false)
     }
   })
 })
@@ -211,9 +212,11 @@ describe('impuesto por efecto y suma objetivo', () => {
     expect(impuestoDe(c, sinUmbral)).toBeGreaterThan(impuestoDe(c))
   })
 
-  it('el impuesto no pasa del máximo de la config', () => {
+  it('el impuesto NO tiene tope: un efecto 40 de poder paga mucho más que uno de 8', () => {
     const muchos: CartaBalance = { ...campeon(3, 4, 4), efectos: Array(10).fill(efectoFuerte) }
-    expect(impuestoDe(muchos)).toBe(CONFIG_V1.impuesto.maxImpuesto)
+    const pocos: CartaBalance = { ...campeon(3, 4, 4), efectos: Array(3).fill(efectoFuerte) }
+    expect(impuestoDe(muchos)).toBeGreaterThan(3)
+    expect(impuestoDe(muchos)).toBeGreaterThan(impuestoDe(pocos))
   })
 
   it('solo los Campeones pagan impuesto', () => {
@@ -221,12 +224,11 @@ describe('impuesto por efecto y suma objetivo', () => {
     expect(impuestoDe(mistica)).toBe(0)
   })
 
-  it('los Campeones exentos (Únicas y Soberanos) no pagan impuesto aunque su índice sea alto', () => {
+  it('las élites (Únicas, Soberanos, Emperadores) pagan el MISMO impuesto que las demás: nadie está exento', () => {
     const aurora = carta('FB-010')
     expect(poderDeCarta(aurora).indice).toBeGreaterThan(0)
-    expect(impuestoDe(aurora)).toBe(0)
-    expect(evaluarConImpuesto(aurora)?.fueraDeBanda).toBe(false)
-    expect(evaluarConImpuesto(carta('DS-010'))?.fueraDeBanda).toBe(false)
+    expect(impuestoDe(aurora)).toBeGreaterThan(0)
+    expect(impuestoDe(aurora)).toBe(impuestoDe({ ...aurora, roles: [], rareza: 'Rara' }))
   })
 
   it('cambiar los puntos por poder cambia la suma objetivo', () => {
@@ -245,5 +247,70 @@ describe('impuesto por efecto y suma objetivo', () => {
 
   it('devuelve null para una carta que no es Campeón', () => {
     expect(evaluarConImpuesto({ ...campeon(3, 4, 4), tipo: 'Mística', stats: null })).toBeNull()
+  })
+})
+
+describe('presupuesto de élite (Soberano, Emperador, Única): más presupuesto, no exención', () => {
+  const cartaDe = (p: Partial<CartaBalance>): CartaBalance => ({ ...campeon(4, 5, 5), ...p })
+  const sumaMax = (p: Partial<CartaBalance>) => bandaDe(cartaDe(p))?.sumaMax
+
+  it('suma máxima = banda + 6 por sacrificio + 5 si es Única (reparto 6/5)', () => {
+    expect(sumaMax({})).toBe(10) // normal coste 4
+    expect(sumaMax({ rareza: 'Única' })).toBe(15)
+    expect(sumaMax({ roles: ['Soberano'] })).toBe(16)
+    expect(sumaMax({ roles: ['Soberano'], rareza: 'Única' })).toBe(21)
+    expect(sumaMax({ roles: ['Emperador'] })).toBe(22)
+    expect(sumaMax({ roles: ['Emperador'], rareza: 'Única' })).toBe(27)
+  })
+
+  it('reproduce la tabla de diseño por coste (suma máxima / tope de ATQ y RES)', () => {
+    const t = (coste: number, p: Partial<CartaBalance>) => { const b = bandaDe(cartaDe({ coste, ...p })); return `${b?.sumaMax}/${b?.topeAtq}` }
+    expect(t(1, { roles: ['Soberano'] })).toBe('10/7')
+    expect(t(4, { roles: ['Soberano'], rareza: 'Única' })).toBe('21/14')
+    expect(t(5, { roles: ['Emperador'], rareza: 'Única' })).toBe('30/20')
+    expect(t(10, { roles: ['Emperador'], rareza: 'Única' })).toBe('47/31')
+  })
+
+  it('el tope de ATQ y RES es el 65 % del presupuesto, la misma regla de las bandas normales', () => {
+    const b = bandaDe(cartaDe({ roles: ['Soberano'], rareza: 'Única' }))
+    expect(b?.topeAtq).toBe(Math.round(21 * CONFIG_V1.elite.proporcionTope))
+    expect(b?.topeRes).toBe(b?.topeAtq)
+  })
+
+  it('una élite no tiene piso de suma: puede gastar poco en stats y el resto en efectos o tabú', () => {
+    expect(bandaDe(cartaDe({ roles: ['Soberano'] }))?.sumaMin).toBe(0)
+    expect(evaluarConImpuesto(cartaDe({ roles: ['Soberano'], stats: { atq: 1, res: 1 } }))?.estado).toBe('dentro')
+  })
+
+  it('Idris (coste 0) se trata como coste 1', () => {
+    expect(sumaMax({ coste: 0, roles: ['Soberano'], rareza: 'Única' })).toBe(CONFIG_V1.bandas[1].sumaMax + 6 + 5)
+  })
+
+  it('una élite que se pasa de su presupuesto SÍ queda fuera de banda (no hay exención)', () => {
+    expect(evaluarConImpuesto(cartaDe({ roles: ['Soberano'], rareza: 'Única', stats: { atq: 11, res: 11 } }))).toMatchObject({ estado: 'sobre', fueraDeBanda: true })
+    expect(evaluarConImpuesto(cartaDe({ roles: ['Soberano'], rareza: 'Única', stats: { atq: 15, res: 1 } }))?.excesoAtq).toBe(1) // tope 14
+  })
+
+  it('el impuesto de efecto se resta del presupuesto de la élite: el poder y los stats comparten billetera', () => {
+    const sin = evaluarConImpuesto(cartaDe({ roles: ['Soberano'], rareza: 'Única', stats: { atq: 9, res: 9 } }))
+    const con = evaluarConImpuesto(cartaDe({ roles: ['Soberano'], rareza: 'Única', stats: { atq: 9, res: 9 }, efectos: Array(6).fill(efectoFuerte) }))
+    expect(con?.objetivoSuma).toBeLessThan(sin?.objetivoSuma ?? 0)
+    expect(con?.estado).toBe('sobre')
+  })
+
+  it('el bono de tabú también existe para las élites: stats sin gastar se convierten en tabú', () => {
+    // Emperador Única coste 5 (30 de presupuesto) con 4/4: déficit enorme → bono al tope
+    expect(bonoDeTabu(cartaDe({ coste: 5, roles: ['Emperador'], rareza: 'Única', stats: { atq: 4, res: 4 } }))).toBe(CONFIG_V1.tabu.bonoMax)
+  })
+
+  it('las funciones de apoyo: sacrificios por rol, Única y élite', () => {
+    expect(sacrificiosDe(cartaDe({ roles: ['Soberano'] }))).toBe(1)
+    expect(sacrificiosDe(cartaDe({ roles: ['Emperador'] }))).toBe(2)
+    expect(sacrificiosDe(cartaDe({}))).toBe(0)
+    expect(esUnica(cartaDe({ rareza: 'Única' }))).toBe(true)
+    expect(esElite(cartaDe({ rareza: 'Única' }))).toBe(true)
+    expect(esElite(cartaDe({ roles: ['Soberano'] }))).toBe(true)
+    expect(esElite(cartaDe({}))).toBe(false)
+    expect(esElite(cartaDe({ tipo: 'Mística', rareza: 'Única', stats: null }))).toBe(false) // solo los Campeones
   })
 })

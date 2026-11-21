@@ -127,9 +127,9 @@ describe('resumenPorMazo', () => {
     }
     // Con el rediseño de Disonancia (Lote 2) solo queda fuera Isolde (índice 4.75, impuesto 1.4: su suma 9 pasa el máximo 8.6).
     expect(r[0].fueraDeBanda + r[1].fueraDeBanda).toBe(1)
-    // Antes: tres de coste 2 sobre el máximo (Kael, Draven, Emisario), Marek y además Isolde = 5
+    // Antes: tres de coste 2 sobre el máximo (Kael, Draven, Emisario), Marek, Isolde y el Ragnar de antes (poder 10.4, pasa su presupuesto de élite) = 6
     const antes = resumenPorMazo(CARTAS_DS_ANTES)
-    expect(antes[0].fueraDeBanda + antes[1].fueraDeBanda).toBe(5)
+    expect(antes[0].fueraDeBanda + antes[1].fueraDeBanda).toBe(6)
   })
 
   it('las cartas rotas son las que pasan su presupuesto', () => {
@@ -224,7 +224,7 @@ describe('rankingPoder', () => {
   })
 
   // Rediseño de Disonancia (Lote 2): Ragnar bajó de índice 10.4 (destroy + Indestructible a todos) a 7.10 y Aurora (FB-010) lo supera.
-  it('Aurora y Ragnar, los dos Soberanos exentos, encabezan el ranking de poder', () => {
+  it('Aurora y Ragnar, los dos Soberanos Única, encabezan el ranking de poder', () => {
     expect(r[0].id).toBe('FB-010')
     expect(r[1].id).toBe('DS-010')
   })

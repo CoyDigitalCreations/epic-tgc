@@ -60,10 +60,10 @@ describe('ResumenMazo', () => {
       expect(celdasTabu('Disonancia')).toEqual(['Disonancia', '17', '0.52', '21', '11', '1', '0', '3'])
     })
 
-    it('explica la escala y que las Únicas y los Soberanos quedan exentos pero los Éteres no', () => {
+    it('explica la escala y que las élites tienen un máximo mayor pero no están exentas', () => {
       render(<ResumenMazo cartas={CARTAS} />)
       expect(screen.getByText(/mide cuántas reglas del manual rompen/i, { selector: 'p' })).toHaveTextContent(/invariante del motor/)
-      expect(screen.getByText(/mide cuántas reglas del manual rompen/i, { selector: 'p' })).toHaveTextContent(/los Éteres no/)
+      expect(screen.getByText(/mide cuántas reglas del manual rompen/i, { selector: 'p' })).toHaveTextContent(/pero no están exentos/)
     })
 
     it('con un solo mazo visible no muestra el otro en la tabla de tabú', () => {

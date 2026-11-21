@@ -32,11 +32,22 @@ export const CONFIG_V1: ConfigBalance = {
     10: { sumaMin: 24, sumaMax: 30, topeAtq: 20, topeRes: 20 },
   },
 
-  // SUPUESTO 1: el sacrificio de Campeones paga la suma de Soberanos y Únicas.
-  excepciones: {
-    rolesExentos: ['Soberano', 'Emperador'],
-    rarezasExentas: ['Única'],
-    tope: { suma: 18, atq: 9, res: 9 },
+  // Presupuesto ÉLITE (Soberano, Emperador, Única): NO es una exención. Pasan por la misma fórmula que las normales, con más presupuesto.
+  //   suma máxima = banda(coste).sumaMax + 6 × sacrificios + 5 si es Única   (coste 0 se trata como coste 1)
+  //   ATQ y RES máximos = 65 % de esa suma (la regla de las bandas)
+  //   tabú máximo = tabú del coste + 2 × sacrificios + 1 si es Única + bono por stats sin gastar
+  // Reparto 6/5 (decisión de diseño): con 6 por sacrificio este cuesta algo en stats netos (el Campeón sacrificado vale ~8) y ser Única
+  // se nota; Aurora y Ragnar (Soberano + Única, coste 4: 9/9, índice de poder ~7.2) quedan dentro con 21 de presupuesto. BORRADOR calibrable:
+  // solo hay dos cartas reales como apoyo y no existe ninguna élite de coste >= 5; validar con cartas de referencia en la arena.
+  elite: {
+    sacrificiosPorRol: { Soberano: 1, Emperador: 2 },
+    rarezasUnica: ['Única'],
+    bonoStatsSacrificio: 6,
+    bonoStatsUnica: 5,
+    bonoTabuSacrificio: 2,
+    bonoTabuUnica: 1,
+    costeEquivalenteSacrificio: 2,
+    proporcionTope: 0.65,
   },
 
   poder: {
@@ -126,8 +137,8 @@ export const CONFIG_V1: ConfigBalance = {
   },
 
   // Franquicia: los primeros 2 puntos de poder son gratis (un efecto menor o una keyword
-  // no deben rebajar la suma); lo que pasa del umbral paga 0.5 de suma por punto, máx. 3.
-  impuesto: { umbral: 2, puntosPorPoder: 0.5, maxImpuesto: 3 },
+  // no deben rebajar la suma); lo que pasa del umbral paga 0.5 de suma por punto, sin tope (un tope sería una exención).
+  impuesto: { umbral: 2, puntosPorPoder: 0.5 },
 
   // El JSON exportado lleva sangría de dos espacios.
   exportacion: { sangria: 2 },
@@ -290,7 +301,7 @@ export const CONFIG_V1: ConfigBalance = {
     // Bono por déficit de stats (BORRADOR calibrable): los puntos de ATQ+RES que le faltan a un Campeón (contra la sumaMax de su coste, ya
     // descontado el impuesto de efecto para no pagar dos veces los mismos puntos) se convierten en presupuesto de tabú. Como la banda crece
     // con el coste, un coste 8 sin stats gana mucho más que un coste 1 sin stats sin necesitar un multiplicador aparte.
-    // Los exentos (Soberano, Emperador, Única) no lo reciben: su calibración queda pendiente.
+    // Las élites (Soberano, Emperador, Única) también lo reciben, contra su presupuesto de suma mayor (ver `elite`).
     bonoPorDeficit: 0.2,
     bonoMax: 4,
   },

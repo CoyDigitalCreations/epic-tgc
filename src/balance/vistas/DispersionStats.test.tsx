@@ -44,7 +44,7 @@ describe('DispersionStats', () => {
     expect(celdas(/^Vaela/).at(-1)).toBe('Dentro de banda')
     expect(celdas(/^Kael/).at(-1)).toBe('Dentro de banda') // Kael 4/2 tras el rediseño de Disonancia (Lote 2)
     expect(celdas(/^Seraphina/).at(-1)).toBe('Dentro de banda')
-    expect(celdas(/^Aurora/).at(-1)).toBe('Exenta: dentro de su tope propio')
+    expect(celdas(/^Aurora/).at(-1)).toBe('Dentro de su presupuesto de élite')
   })
 
   it('la Kael de antes (5/3, coste 2) lleva el veredicto «por encima»', () => {

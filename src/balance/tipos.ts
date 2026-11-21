@@ -11,11 +11,30 @@ export interface BandaCoste {
   topeRes: number
 }
 
-/** Umbrales de la excepción para Soberanos, Emperadores y Únicas. */
-export interface TopeExcepcion {
-  suma: number
-  atq: number
-  res: number
+/**
+ * Presupuesto de las cartas ÉLITE (Soberano, Emperador, Única). NO es una exención: pasan por la misma fórmula que las normales
+ * (stats + impuesto de efecto ≤ presupuesto; tabú ≤ máximo), pero su presupuesto es mayor porque pagan un sacrificio y/o son de una sola copia.
+ */
+export interface ConfigElite {
+  /** Sacrificios de Campeones que exige cada rol (misma regla que `sacrificiosRequeridos` del motor). */
+  sacrificiosPorRol: Partial<Record<Rol, number>>
+  /** Rarezas que cuentan como «Única» (1 copia). */
+  rarezasUnica: Rarity[]
+  /** Puntos de suma de stats que se suman al presupuesto por cada sacrificio: lo que se devuelve del Campeón que se pierde. */
+  bonoStatsSacrificio: number
+  /** Puntos de suma de stats que se suman por ser Única (solo hay una copia en 40 cartas). */
+  bonoStatsUnica: number
+  /** Puntos de tabú máximo que se suman por cada sacrificio. */
+  bonoTabuSacrificio: number
+  /** Puntos de tabú máximo que se suman por ser Única. */
+  bonoTabuUnica: number
+  /**
+   * Puntos de coste que vale cada sacrificio al comprobar el coste mínimo por verbo (p. ej. `destroy` pide coste 3). Equivale a los 6 puntos de
+   * suma que da un sacrificio: las bandas suben ~3 de suma por punto de coste, así que 6 de suma son ~2 de coste.
+   */
+  costeEquivalenteSacrificio: number
+  /** ATQ y RES máximos como fracción del presupuesto de suma (la misma regla de las bandas por coste: 65 %). */
+  proporcionTope: number
 }
 
 export interface ConfigBalance {
@@ -25,11 +44,8 @@ export interface ConfigBalance {
   pesos: { atq: number; res: number }
   /** Bandas por coste del Campeón. */
   bandas: Record<number, BandaCoste>
-  excepciones: {
-    rolesExentos: Rol[]
-    rarezasExentas: Rarity[]
-    tope: TopeExcepcion
-  }
+  /** Presupuesto extra de Soberanos, Emperadores y Únicas (no es una exención). */
+  elite: ConfigElite
   /** Pesos del índice de poder de los efectos. */
   poder: {
     verbo: Record<string, number>
@@ -49,9 +65,10 @@ export interface ConfigBalance {
   }
   /**
    * Impuesto de stats por efecto, forma «franquicia»: solo se paga lo que el índice
-   * de poder pasa de `umbral`, a razón de `puntosPorPoder` por punto, con tope `maxImpuesto`.
+   * de poder pasa de `umbral`, a razón de `puntosPorPoder` por punto. SIN tope: un tope sería una exención disfrazada
+   * (el efecto de 8 de poder y el de 40 pagarían lo mismo).
    */
-  impuesto: { umbral: number; puntosPorPoder: number; maxImpuesto: number }
+  impuesto: { umbral: number; puntosPorPoder: number }
   /** Formato de la exportación JSON. */
   exportacion: { sangria: number }
   /** Umbrales de la métrica de letalidad. */
@@ -179,9 +196,10 @@ export interface EvaluacionPresupuesto {
   suma: number
   /** ATQ y RES ponderados con los pesos de la config. */
   puntos: number
-  /** Banda aplicada: la del coste, o el tope propio si el Campeón está exento. */
+  /** Banda aplicada: la de su coste, ampliada si el Campeón es élite (Soberano, Emperador, Única). */
   banda: BandaCoste
-  exento: boolean
+  /** Soberano, Emperador o Única: se mide contra un presupuesto mayor, no está exento. */
+  elite: boolean
   /** Impuesto de efecto que se descontó de la banda. */
   impuesto: number
   /** Suma máxima permitida tras el impuesto. */

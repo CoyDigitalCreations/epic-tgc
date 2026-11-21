@@ -43,6 +43,6 @@ describe('formato de las vistas', () => {
     expect(veredictoDe(kaelAntes)).toBe('Fuera de banda: por encima')
     expect(veredictoDe(ev('Kael'))).toBe('Dentro de banda')
     expect(veredictoDe(ev('Seraphina'))).toBe('Dentro de banda')
-    expect(veredictoDe(ev('Aurora'))).toBe('Exenta: dentro de su tope propio')
+    expect(veredictoDe(ev('Aurora'))).toBe('Dentro de su presupuesto de élite')
   })
 })

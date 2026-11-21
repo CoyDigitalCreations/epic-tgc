@@ -18,24 +18,24 @@ import type { EvaluacionTabu } from './tabu'
 import type { CartaBalance, ConfigBalance, EvaluacionPresupuesto } from './tipos'
 
 /** Estado de un stat dentro del análisis. `Semaforo` y `semaforoDe` no cambian: este tipo vive solo aquí. */
-export type SemaforoStat = 'verde' | 'amarillo' | 'rojo' | 'bajo' | 'exenta'
+export type SemaforoStat = 'verde' | 'amarillo' | 'rojo' | 'bajo'
 
-export type EstadoAnalisis = 'excede' | 'bajo-banda' | 'en-limite' | 'dentro' | 'exenta' | 'sin-semaforo'
+export type EstadoAnalisis = 'excede' | 'bajo-banda' | 'en-limite' | 'dentro' | 'sin-semaforo'
 
 export interface MargenStat {
   stat: 'atq' | 'res' | 'suma'
   valor: number
   /** Tope individual, o suma objetivo (ya con impuesto) en `suma`. */
   tope: number
-  /** Mínimo de la suma con impuesto; null en ATQ, RES y exentas. */
+  /** Mínimo de la suma con impuesto; null en ATQ y RES (0 en una élite: no tiene piso). */
   minimo: number | null
   /** tope − valor (negativo = se pasa). */
   holgura: number
   estado: SemaforoStat
   /** Texto visible del estado (no solo color). */
   texto: string
-  /** Cuánto se puede subir sin pasar el presupuesto; null en exentas. */
-  puedeSubir: number | null
+  /** Cuánto se puede subir sin pasar el presupuesto. */
+  puedeSubir: number
   /** ATQ o RES más altos del pool de letalidad; null en la suma. */
   techoPool: number | null
   /** Subir `pasoSubida` pasaría el techo del pool: solo un aviso, no cambia `puedeSubir`. */
@@ -79,7 +79,6 @@ const TEXTO_ESTADO: Record<SemaforoStat, string> = {
   amarillo: 'Cerca del tope',
   rojo: 'Excede el tope',
   bajo: 'Bajo banda: puede subir',
-  exenta: 'Exenta: tope propio',
 }
 
 /** ATQ y RES solo tienen tope (no hay mínimo por stat): rojo, amarillo o verde, nunca «bajo». */
@@ -94,7 +93,7 @@ function margen(base: Omit<MargenStat, 'texto' | 'techoPool' | 'superaTecho' | '
 
 /**
  * Márgenes de ATQ, RES y suma de un Campeón contra su presupuesto (con impuesto).
- * Devuelve [] si la carta no tiene stats o presupuesto. Los exentos se miden contra su tope propio.
+ * Devuelve [] si la carta no tiene stats o presupuesto. Las élites (Soberano, Emperador, Única) se miden contra su presupuesto mayor, igual que el resto.
  */
 export function margenesDeStats(carta: CartaBalance, ctx: ContextoAnalisis, cfg: ConfigBalance = CONFIG_V1): MargenStat[] {
   const ev = evaluarConImpuesto(carta, cfg)
@@ -102,7 +101,7 @@ export function margenesDeStats(carta: CartaBalance, ctx: ContextoAnalisis, cfg:
 
   const holguraSuma = redondear(ev.objetivoSuma - ev.suma)
   const libreSuma = Math.floor(holguraSuma)
-  const minimoSuma = ev.exento ? null : redondear(Math.max(0, ev.banda.sumaMin - ev.impuesto))
+  const minimoSuma = redondear(Math.max(0, ev.banda.sumaMin - ev.impuesto))
 
   const paso = cfg.analisis.pasoSubida
   const actual = letalidad(carta, ctx.pool, cfg)
@@ -126,8 +125,8 @@ export function margenesDeStats(carta: CartaBalance, ctx: ContextoAnalisis, cfg:
       tope,
       minimo: null,
       holgura,
-      estado: ev.exento ? 'exenta' : estadoPorTope(holgura, cfg),
-      puedeSubir: ev.exento ? null : Math.max(0, Math.min(Math.floor(holgura), libreSuma)),
+      estado: estadoPorTope(holgura, cfg),
+      puedeSubir: Math.max(0, Math.min(Math.floor(holgura), libreSuma)),
       }),
       techoPool,
       superaTecho: valor + paso > techoPool,
@@ -136,8 +135,7 @@ export function margenesDeStats(carta: CartaBalance, ctx: ContextoAnalisis, cfg:
   }
 
   let estadoSuma: SemaforoStat
-  if (ev.exento) estadoSuma = 'exenta'
-  else if (holguraSuma < 0) estadoSuma = 'rojo'
+  if (holguraSuma < 0) estadoSuma = 'rojo'
   // Si la carta usa su bono de tabú, evaluarConImpuesto ya la dejó en 'dentro': sus stats bajos son deliberados y no se avisan.
     else if (minimoSuma !== null && ev.suma < minimoSuma && ev.estado !== 'dentro') estadoSuma = 'bajo'
   else estadoSuma = holguraSuma <= cfg.analisis.cercaDelTope ? 'amarillo' : 'verde'
@@ -152,7 +150,7 @@ export function margenesDeStats(carta: CartaBalance, ctx: ContextoAnalisis, cfg:
       minimo: minimoSuma,
       holgura: holguraSuma,
       estado: estadoSuma,
-      puedeSubir: ev.exento ? null : Math.max(0, libreSuma),
+      puedeSubir: Math.max(0, libreSuma),
     }),
   ]
 }
@@ -190,14 +188,13 @@ const ETIQUETA_ESTADO: Record<EstadoAnalisis, string> = {
   'bajo-banda': TEXTO_ESTADO.bajo,
   'en-limite': 'En el límite del presupuesto',
   dentro: 'Dentro del presupuesto',
-  exenta: 'Exenta del presupuesto por coste',
   'sin-semaforo': 'Sin semáforo',
 }
 
 const COLOR_A_ESTADO: Record<Semaforo, EstadoAnalisis> = { verde: 'dentro', amarillo: 'en-limite', rojo: 'excede' }
 
 /**
- * Estado general: rojo en algún stat excede; luego bajo banda, en el límite, exenta o dentro. Sin stats,
+ * Estado general: rojo en algún stat excede; luego bajo banda, en el límite o dentro. Sin stats,
  * el color de `semaforoDe`. Una carta que no pasa el chequeo de efecto por coste nunca queda en un
  * estado favorable: sube a «excede» (la razón visible sale de `razonesDeCarta`).
  */
@@ -224,7 +221,7 @@ function estadoBase(
     if (estados.includes('rojo')) return con('excede')
     if (estados.includes('bajo')) return con('bajo-banda')
     if (estados.includes('amarillo')) return con('en-limite')
-    return con(estados.includes('exenta') ? 'exenta' : 'dentro')
+    return con('dentro')
   }
   if (desglose.esperado === null) return con('sin-semaforo')
   return con(COLOR_A_ESTADO[semaforoDe(carta, cfg).semaforo])
@@ -278,7 +275,7 @@ function razonesDeAjuste(m: MargenStat, ajuste: Ajuste): Razon | null {
 
 /**
  * Frases en español neutro de México que explican por qué una carta se sale de rango.
- * Una carta dentro de rango o exenta no tiene razones. El «qué stat causa el exceso» se lee
+ * Una carta dentro de rango no tiene razones. El «qué stat causa el exceso» se lee
  * del `Ajuste` de `simularAjustes` (después − antes por stat); aquí no se repite su lógica.
  */
 export function razonesDeCarta(
@@ -304,7 +301,7 @@ export function razonesDeCarta(
   const ev = evaluarConImpuesto(carta, cfg)
   for (const m of margenes) {
     const nombre = NOMBRE_STAT[m.stat]
-    if (m.estado === 'verde' || m.estado === 'exenta') continue
+    if (m.estado === 'verde') continue
     if (m.estado === 'rojo') {
       const texto =
         m.stat === 'suma'
@@ -312,7 +309,7 @@ export function razonesDeCarta(
           : `${nombre} ${m.valor} pasa el tope de ${m.tope} para coste ${carta.coste} (exceso ${redondear(-m.holgura)}).`
       razones.push({ nivel: 'error', texto })
     } else if (m.estado === 'bajo') {
-      razones.push({ nivel: 'aviso', texto: `La suma ${m.valor} queda por debajo del mínimo de ${m.minimo ?? 0} para coste ${carta.coste}: puede subir hasta ${m.puedeSubir ?? 0}.` })
+      razones.push({ nivel: 'aviso', texto: `La suma ${m.valor} queda por debajo del mínimo de ${m.minimo ?? 0} para coste ${carta.coste}: puede subir hasta ${m.puedeSubir}.` })
     } else {
       razones.push({ nivel: 'info', texto: `${nombre} ${m.valor} está a ${m.holgura} de su límite de ${m.tope}: cerca del tope.` })
     }
@@ -329,10 +326,10 @@ export function razonesDeCarta(
   return [...razones, ...razonesDeEfectoPorCoste(carta, cfg)]
 }
 
-/** Razones del tope de efecto por coste y del coste mínimo por verbo. Una carta exenta no genera ninguna. */
+/** Razones del tope de efecto por coste y del coste mínimo por verbo. Una carta sin coste no genera ninguna. */
 function razonesDeEfectoPorCoste(carta: CartaBalance, cfg: ConfigBalance): Razon[] {
   const ev = evaluarEfectoPorCoste(carta, cfg)
-  if (ev.exento || ev.indiceMax === null) return []
+  if (ev.indiceMax === null) return []
   const razones: Razon[] = []
   if (ev.aplicaTope && ev.excesoIndice > 0) {
     razones.push({
@@ -341,7 +338,7 @@ function razonesDeEfectoPorCoste(carta: CartaBalance, cfg: ConfigBalance): Razon
     })
   }
   for (const v of ev.verbosBajoCosto) {
-    razones.push({ nivel: 'error', texto: `El verbo ${v.verbo} exige coste mínimo ${v.costeMinimo}, pero la carta cuesta ${carta.coste}.` })
+    razones.push({ nivel: 'error', texto: `El verbo ${v.verbo} exige coste mínimo ${v.costeMinimo}, pero la carta cuesta ${ev.costeVerbo === carta.coste ? carta.coste : `${carta.coste} (${ev.costeVerbo} contando sus sacrificios)`}.` })
   }
   return razones
 }

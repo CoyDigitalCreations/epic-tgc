@@ -27,8 +27,8 @@ interface Grupo {
 }
 
 /**
- * Suma media de ATQ y RES por coste, mazo o rareza. Por coste se compara con la banda; los exentos
- * (Únicas y Soberanos) quedan fuera de esa cuenta porque viven con su propio tope.
+ * Suma media de ATQ y RES por coste, mazo o rareza. Por coste se compara con la banda; las élites
+ * (Únicas, Soberanos y Emperadores) quedan fuera de esa cuenta porque tienen su propio presupuesto.
  */
 export function PresupuestoCoste({ cartas, ancho, alto }: PropsVista) {
   const [criterio, setCriterio] = useState<Criterio>('coste')

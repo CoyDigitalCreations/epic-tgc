@@ -72,7 +72,7 @@ describe('evaluarEfectoPorCoste: tope de efecto', () => {
 
   it('un Campeón bajo el tope está ok', () => {
     const ev = evaluarEfectoPorCoste(carta({ coste: 2, efectos: conIndice(3) }))
-    expect(ev).toMatchObject({ indiceMax: 4, indice: 3, excesoIndice: 0, verbosBajoCosto: [], exento: false, ok: true })
+    expect(ev).toMatchObject({ indiceMax: 4, indice: 3, excesoIndice: 0, verbosBajoCosto: [], elite: false, ok: true })
   })
 
   it('justo en el tope sigue ok', () => {
@@ -87,17 +87,20 @@ describe('evaluarEfectoPorCoste: tope de efecto', () => {
     expect(ev).toMatchObject({ indiceMax: 4, indice: 5, excesoIndice: 1, aplicaTope: true, ok: false })
   })
 
-  it('un Campeón exento reporta el exceso pero nunca falla', () => {
+  it('una élite (Soberano, Única) no tiene el tope plano coste × 2: su poder se cobra en el presupuesto de stats y de tabú', () => {
     const soberano = evaluarEfectoPorCoste(carta({ coste: 2, roles: ['Soberano'], efectos: conIndice(8) }))
-    expect(soberano).toMatchObject({ exento: true, aplicaTope: false, excesoIndice: 4, ok: true })
+    expect(soberano).toMatchObject({ elite: true, aplicaTope: false, excesoIndice: 4, ok: true })
     const unica = evaluarEfectoPorCoste(carta({ coste: 2, rareza: 'Única', efectos: conIndice(8) }))
-    expect(unica).toMatchObject({ exento: true, ok: true })
+    expect(unica).toMatchObject({ elite: true, ok: true })
   })
 
-  it('un exento no falla ni por verbo bajo su coste', () => {
-    const ev = evaluarEfectoPorCoste(carta({ coste: 1, roles: ['Soberano'], efectos: [efecto({ verbo: 'destroy' })] }))
-    expect(ev.verbosBajoCosto).toEqual([{ verbo: 'destroy', costeMinimo: 3 }])
-    expect(ev.ok).toBe(true)
+  it('el coste mínimo por verbo SÍ aplica a las élites, contando sus sacrificios como coste (2 cada uno)', () => {
+    // destroy pide coste 3: un Soberano de coste 1 llega a 1 + 2 = 3
+    const ok = evaluarEfectoPorCoste(carta({ coste: 1, roles: ['Soberano'], efectos: [efecto({ verbo: 'destroy' })] }))
+    expect(ok).toMatchObject({ costeVerbo: 3, verbosBajoCosto: [], ok: true })
+    // Una Única sin sacrificio de coste 1 no llega: la Única no suma coste, solo presupuesto
+    const falla = evaluarEfectoPorCoste(carta({ coste: 1, rareza: 'Única', efectos: [efecto({ verbo: 'destroy' })] }))
+    expect(falla).toMatchObject({ costeVerbo: 1, verbosBajoCosto: [{ verbo: 'destroy', costeMinimo: 3 }], ok: false })
   })
 
   it('el tope es estricto también para las cartas que no son Campeón, sin la tolerancia del semáforo', () => {
@@ -204,7 +207,7 @@ describe('exención del coste mínimo para Éteres (Lote 3)', () => {
 })
 
 describe('motivoEfectoPorCoste', () => {
-  it('es null si la carta pasa, está exenta o no tiene coste', () => {
+  it('es null si la carta pasa, es una élite sin tope plano o no tiene coste', () => {
     expect(motivoEfectoPorCoste(evaluarEfectoPorCoste(carta({ coste: 2, efectos: conIndice(3) })))).toBeNull()
     expect(motivoEfectoPorCoste(evaluarEfectoPorCoste(carta({ coste: 2, roles: ['Soberano'], efectos: conIndice(8) })))).toBeNull()
     expect(motivoEfectoPorCoste(evaluarEfectoPorCoste(carta({ coste: 0, efectos: conIndice(8) })))).toBeNull()

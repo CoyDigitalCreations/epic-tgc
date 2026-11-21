@@ -36,8 +36,9 @@ describe('Auditoria', () => {
     expect(celdas(/^DS-012/)[11]).toBe('Fuera de banda: por encima')
     // Intención cambiada con el tope de costo del 50 %: Isolde (3/6, suma 9) ya no cabe con su impuesto 1.4 (máximo 8.6)
     expect(celdas(/^FB-014/)[11]).toBe('Fuera de banda: por encima')
-    expect(celdas(/^FB-010/)[11]).toBe('Exenta: dentro de su tope propio')
-    expect(celdas(/^DS-010/)[11]).toBe('Exenta: dentro de su tope propio')
+    expect(celdas(/^FB-010/)[11]).toBe('Dentro de su presupuesto de élite')
+    // Ragnar de antes (poder 10.4): su impuesto de 4.2 deja 16.8 de presupuesto y tiene 18, así que ya no pasa por élite
+    expect(celdas(/^DS-010/)[11]).toBe('Fuera de banda: por encima')
   })
 
   it('una carta que no es Campeón muestra rayas en los stats', () => {
@@ -70,7 +71,7 @@ describe('Auditoria', () => {
     render(<Auditoria cartas={CARTAS} avisos={AVISOS} />)
     const tabu = (id: RegExp) => celdas(id)[14]
     expect(tabu(/^FB-015/)).toBe('2 · nivel 2 · En el límite') // Elena declara 2 ataques
-    expect(tabu(/^FB-010/)).toBe('6 · nivel 2 · Exenta') // Aurora: Única
+    expect(tabu(/^FB-010/)).toBe('6 · nivel 2 · En el límite') // Aurora: 6 de 6.1 (3 del coste + 2 del sacrificio + 1 de Única)
     expect(tabu(/^DS-007/)).toBe('1 · nivel 1 · Excede') // Éter de coste 1 que arrebata Éter
     expect(tabu(/^FB-021/)).toBe('0 · nivel 0 · Dentro')
     expect(tabu(/^FB-025/)).toBe('0 · nivel 0 · Sin veredicto') // Vínculo de coste 0
@@ -142,7 +143,7 @@ describe('Auditoria', () => {
     })
 
     it('descarga un Blob JSON con el formato de simulación', async () => {
-      // Con la Elena de antes (3/2) y la Disonancia de antes hay 6 ajustes (Elena, Isolde y cuatro de Disonancia); con las reales (Lote 2) solo queda Isolde.
+      // Con la Elena de antes (3/2) y la Disonancia de antes hay 7 ajustes (Elena, Isolde, el Ragnar de antes y cuatro de Disonancia); con las reales (Lote 2) solo queda Isolde.
       render(<Auditoria cartas={CARTAS_ELENA_32_DS_ANTES} avisos={AVISOS} />)
       await userEvent.click(screen.getByRole('button', { name: 'Exportar JSON' }))
       expect(blobs).toHaveLength(1)
@@ -152,8 +153,8 @@ describe('Auditoria', () => {
       const texto = await blobs[0].text()
       const json = JSON.parse(texto) as { version: string; cambios: { id: string; antes: unknown; despues: unknown; motivo: string }[] }
       expect(json.version).toBe('v1')
-      expect(json.cambios).toHaveLength(6)
-      expect(json.cambios[0].id).toBe('DS-011')
+      expect(json.cambios).toHaveLength(7)
+      expect(json.cambios[0].id).toBe('DS-010')
       expect(json.cambios.find((c) => c.id === 'FB-015')).toMatchObject({
         antes: { poder: 3, resistencia: 2 },
         despues: { poder: 4, resistencia: 2 },
@@ -167,7 +168,7 @@ describe('Auditoria', () => {
       await userEvent.click(screen.getByRole('button', { name: 'Exportar JSON' }))
       await waitFor(() => expect(blobs).toHaveLength(1))
       const json = JSON.parse(await blobs[0].text()) as { cambios: { id: string }[] }
-      expect(json.cambios.map((c) => c.id)).toHaveLength(6)
+      expect(json.cambios.map((c) => c.id)).toHaveLength(7)
       expect(json.cambios.map((c) => c.id)).toContain('DS-011')
       expect(json.cambios.map((c) => c.id)).not.toContain('PR-999')
     })

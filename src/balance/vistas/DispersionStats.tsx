@@ -82,7 +82,7 @@ export function DispersionStats({ cartas, ancho, alto }: PropsVista) {
         </select>
         <p className="text-xs text-gray-500">
           Coste {coste}: suma de {banda.sumaMin} a {banda.sumaMax}, tope de {banda.topeAtq} de ATQ y {banda.topeRes} de RES.
-          Las cartas exentas (Únicas y Soberanos) tienen su propio tope y no entran en estas bandas.
+          Las élites (Únicas, Soberanos y Emperadores) tienen su propio presupuesto, más amplio, y no entran en estas bandas.
         </p>
       </div>
       <GraficaBase

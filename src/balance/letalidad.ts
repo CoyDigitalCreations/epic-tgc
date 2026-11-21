@@ -1,5 +1,5 @@
 import { CONFIG_V1 } from './config'
-import { esExento } from './presupuesto'
+import { esElite } from './presupuesto'
 import type { CartaBalance, ConfigBalance } from './tipos'
 
 /**
@@ -55,8 +55,8 @@ function pct(parte: number, total: number): number {
 }
 
 /**
- * Pool de letalidad: Campeones con stats que NO están exentos (Únicas y Soberanos
- * viven fuera de la economía normal de combate). La referencia solo entra si se pide.
+ * Pool de letalidad: Campeones con stats que NO son élite (Únicas, Soberanos y Emperadores
+ * viven fuera de la economía normal de combate: no es una exención de balance, solo el pool de referencia contra el que se mide). La referencia solo entra si se pide.
  */
 export function poolLetalidad(
   cartas: readonly CartaBalance[],
@@ -67,7 +67,7 @@ export function poolLetalidad(
     (c) =>
       c.tipo === 'Campeón' &&
       c.stats !== null &&
-      !esExento(c, cfg) &&
+      !esElite(c, cfg) &&
       (opciones.incluirReferencia === true || c.esReferencia !== true),
   )
 }

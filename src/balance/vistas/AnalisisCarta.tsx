@@ -45,7 +45,6 @@ const COLOR_ESTADO: Record<SemaforoStat, { barra: string; insignia: string }> = 
   amarillo: { barra: 'bg-yellow-500', insignia: 'border-yellow-500/50 bg-yellow-500/15 text-yellow-300' },
   rojo: { barra: 'bg-red-500', insignia: 'border-red-500/50 bg-red-500/15 text-red-300' },
   bajo: { barra: 'bg-sky-500', insignia: 'border-sky-500/50 bg-sky-500/15 text-sky-300' },
-  exenta: { barra: 'bg-violet-500', insignia: 'border-violet-500/50 bg-violet-500/15 text-violet-300' },
 }
 
 /** Color del veredicto de tabú; el texto del veredicto siempre se muestra al lado, nunca solo el color. */
@@ -53,16 +52,14 @@ const COLOR_TABU: Record<EstadoTabu, string> = {
   dentro: 'border-green-500/50 bg-green-500/15 text-green-300',
   'en-limite': 'border-yellow-500/50 bg-yellow-500/15 text-yellow-300',
   excede: 'border-red-500/50 bg-red-500/15 text-red-300',
-  exenta: 'border-violet-500/50 bg-violet-500/15 text-violet-300',
   'sin-presupuesto': 'border-card-border bg-surface-2 text-gray-300',
 }
 
-/** Color de la barra de tabú, el mismo código que su insignia (verde dentro, amarillo en el límite, rojo excede, violeta exenta). */
+/** Color de la barra de tabú, el mismo código que su insignia (verde dentro, amarillo en el límite, rojo excede). */
 const COLOR_BARRA_TABU: Record<EstadoTabu, string> = {
   dentro: 'bg-green-500',
   'en-limite': 'bg-yellow-500',
   excede: 'bg-red-500',
-  exenta: 'bg-violet-500',
   'sin-presupuesto': 'bg-gray-500',
 }
 
@@ -122,9 +119,8 @@ function Estadisticas({ carta, analisis }: { carta: CartaBalance; analisis: Anal
   )
 }
 
-/** «Puede subir hasta +N», «No puede subir» o nada si la carta está exenta. */
+/** «Puede subir hasta +N» o «No puede subir». */
 function textoPuedeSubir(m: MargenStat): string {
-  if (m.puedeSubir === null) return `Tope propio: ${num(m.tope)}`
   return m.puedeSubir > 0 ? `Puede subir hasta +${m.puedeSubir}` : 'No puede subir'
 }
 
@@ -288,11 +284,6 @@ function veredictoDeTabu(t: EvaluacionTabu, coste: number): string {
   if (t.max === null) return 'Las cartas de coste 0 no tienen presupuesto de tabú, así que no hay veredicto.'
   const base = `${t.puntos} ${plural(t.puntos, 'punto', 'puntos')} de tabú contra un máximo de ${t.max} para coste ${coste}`
   if (t.estado === 'excede') return `${base}: se pasa por ${t.exceso}. Para arreglarlo hay que subir el coste o quitarle una regla rota.`
-  if (t.estado === 'exenta') {
-    return t.excederiaSinExencion
-      ? `${base}: la exención de Soberano, Emperador o Única la libera; sin ella se pasaría por ${t.exceso}.`
-      : `${base}: exenta, aunque cabría de todos modos.`
-  }
   if (t.estado === 'en-limite') return `${base}: usa todo su presupuesto.`
   return `${base}: dentro de su presupuesto.`
 }
@@ -303,7 +294,7 @@ function Tabu({ analisis, carta }: { analisis: Analisis; carta: CartaBalance }) 
   const filas: [string, string][] = [
     ['Puntos de tabú', String(tabu.puntos)],
     ['Nivel máximo', String(tabu.nivelMax)],
-    [`Máximo por coste ${carta.coste}`, num(tabu.maxBase)],
+    [tabu.elite ? `Máximo de élite (coste ${Math.max(1, carta.coste)} + sacrificios y rareza)` : `Máximo por coste ${carta.coste}`, num(tabu.maxBase)],
     ...(tabu.bono > 0 ? ([['Bono por stats bajos', `+${num(tabu.bono)}`]] as [string, string][]) : []),
   ]
   return (

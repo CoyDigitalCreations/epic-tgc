@@ -221,10 +221,14 @@ describe('AnalisisCarta: contenido', () => {
     expect(within(avisos).getByText(/RES.*sin efecto práctico en el pool/i)).toBeInTheDocument()
   })
 
-  it('Aurora (Única, exenta) muestra su tope propio y nunca rojo ni «bajo banda»', () => {
+  it('Aurora (Soberano + Única) se mide contra su presupuesto de élite (tope 14, suma 18.4 tras el impuesto): sin rojo ni «bajo banda»', () => {
     render(<Arnes inicial="FB-010" />)
     const margenes = bloque('Márgenes de los stats')
-    expect(within(margenes).getAllByText('Exenta: tope propio')).toHaveLength(3)
+    expect(within(margenes).queryByText(/Exenta/)).not.toBeInTheDocument()
+    expect(within(margenes).getAllByText('Dentro del rango')).toHaveLength(2) // ATQ y RES: 9 de 14
+    expect(within(margenes).getByText('Cerca del tope')).toBeInTheDocument() // suma 18 de 18.4: casi gasta todo el presupuesto
+    expect(within(margenes).getAllByText('9 de 14')).toHaveLength(2)
+    expect(within(margenes).getByText('18 de 18.4')).toBeInTheDocument()
     expect(within(margenes).queryByText('Excede el tope')).not.toBeInTheDocument()
     expect(within(margenes).queryByText('Bajo banda: puede subir')).not.toBeInTheDocument()
     expect(within(margenes).queryByText(/Puede subir hasta/)).not.toBeInTheDocument()
@@ -344,14 +348,14 @@ describe('AnalisisCarta: contenido', () => {
 describe('AnalisisCarta: tabú', () => {
   const porId = (id: string) => CARTAS.find((c) => c.id === id)?.nombre ?? id
 
-  it('Aurora (Única): puntos, nivel máximo, reglas que rompe con la regla del manual y veredicto exenta', () => {
+  it('Aurora (Soberano + Única): puntos, nivel máximo, reglas que rompe y su veredicto contra el máximo de élite (en el límite)', () => {
     render(<Arnes inicial="FB-010" />)
     const tabu = bloque('Tabú')
     expect(within(tabu).getByRole('heading', { level: 4, name: 'Tabú' })).toBeInTheDocument()
     const valorDe = (etiqueta: string) => within(tabu).getByText(etiqueta, { selector: 'dt' }).nextElementSibling?.textContent
-    expect([valorDe('Puntos de tabú'), valorDe('Nivel máximo'), valorDe('Máximo por coste 4')]).toEqual(['6', '2', '3'])
-    expect(within(tabu).getByText('Exenta del presupuesto de tabú')).toBeInTheDocument()
-    expect(within(tabu).getByText(/sin ella se pasaría por 3/)).toBeInTheDocument()
+    expect([valorDe('Puntos de tabú'), valorDe('Nivel máximo'), valorDe('Máximo de élite (coste 4 + sacrificios y rareza)')]).toEqual(['6', '2', '6'])
+    expect(within(tabu).getByText('En el límite del presupuesto de tabú')).toBeInTheDocument()
+    expect(within(tabu).getByText(/usa todo su presupuesto/)).toBeInTheDocument()
     const reglas = within(tabu).getByRole('list', { name: 'Reglas que rompe' })
     expect(within(reglas).getAllByRole('listitem')).toHaveLength(5)
     expect(within(reglas).getByText('sin_pagar_costo').closest('li')).toHaveTextContent(/\(nivel 2\): §8\.3a: un Disparo se activa pagando su costo/)
@@ -396,7 +400,7 @@ describe('AnalisisCarta: tabú', () => {
 
   it('la barra de tabú muestra los puntos contra el máximo y usa el color de su veredicto', () => {
     const casos: [string, string, string, string][] = [
-      ['FB-010', '6 de 3', 'bg-violet-500', 'exenta'], // Aurora: se pasa del máximo pero está exenta
+      ['FB-010', '6 de 6.1', 'bg-yellow-500', 'en el límite'], // Aurora: casi todo su máximo de élite (3 + 2 + 1, más 0.1 de bono)
       ['DS-007', '1 de 0', 'bg-red-500', 'excede'],
       ['FB-015', '', 'bg-yellow-500', 'en el límite'], // Elena: usa todo el presupuesto
       ['FB-021', '', 'bg-green-500', 'dentro'],
@@ -411,11 +415,11 @@ describe('AnalisisCarta: tabú', () => {
   })
 
   it('la barra de tabú nunca pasa del 100 % aunque los puntos superen el máximo', () => {
-    render(<Arnes inicial="FB-010" />) // 6 puntos contra un máximo de 3
+    render(<Arnes inicial="DS-007" />) // 1 punto contra un máximo de 0 (Éter de coste 1)
     const barra = within(bloque('Tabú')).getByRole('meter', { name: 'Tabú' })
     expect((barra.firstElementChild as HTMLElement).style.width).toBe('100%')
-    expect(barra).toHaveAttribute('aria-valuemax', '6')
-    expect(barra).toHaveAttribute('aria-valuenow', '6')
+    expect(barra).toHaveAttribute('aria-valuemax', '1')
+    expect(barra).toHaveAttribute('aria-valuenow', '1')
   })
 
   it('un Vínculo de coste 0 no tiene presupuesto, así que no dibuja barra de tabú', () => {

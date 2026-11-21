@@ -41,7 +41,7 @@ describe('calibración de CONFIG_V1 con los Campeones del seed', () => {
     expect(antes).toContain('FB-015')
   })
 
-  it('deja dentro a Aurora y Ragnar (exentos) y a los de coste 3-4 que ya cumplen la banda v1.1', () => {
+  it('deja dentro a Aurora y Ragnar (élites, dentro de su presupuesto de 21) y a los de coste 3-4 que ya cumplen la banda v1.1', () => {
     // Seraphina, Varek y Thane (coste 3, suma 7) y Cassandra (coste 4, suma 8) ahora caben: antes eran «bajo».
     for (const id of ['FB-010', 'DS-010', 'FB-013', 'DS-013', 'DS-014', 'FB-016']) expect(fuera).not.toContain(id)
   })
@@ -83,12 +83,12 @@ describe('calibración de CONFIG_V1 con impuesto de efecto', () => {
     expect(idsFuera()).toEqual(['FB-014'])
   })
 
-  it('con la Disonancia de antes salían 5: los 4 de siempre más Isolde, con las bandas v1.1', () => {
+  it('con la Disonancia de antes salían 6: los 4 de siempre, Isolde y el Ragnar de antes (poder 10.4: su impuesto de 4.2 deja 16.8 de 21, y tiene 18)', () => {
     const antes = CARTAS_DS_ANTES.filter((c) => c.tipo === 'Campeón')
-    expect(idsFuera(CONFIG_V1, antes)).toEqual(['DS-011', 'DS-012', 'DS-015', 'DS-031', 'FB-014'])
+    expect(idsFuera(CONFIG_V1, antes)).toEqual(['DS-010', 'DS-011', 'DS-012', 'DS-015', 'DS-031', 'FB-014'])
   })
 
-  it('Aurora y Ragnar siguen exentos aunque su índice de poder es el más alto', () => {
+  it('Aurora y Ragnar caben en su presupuesto de élite aunque su índice de poder es el más alto (el impuesto sí se les cobra)', () => {
     expect(idsFuera()).not.toContain('FB-010')
     expect(idsFuera()).not.toContain('DS-010')
   })

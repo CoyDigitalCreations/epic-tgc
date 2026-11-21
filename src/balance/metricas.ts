@@ -5,7 +5,7 @@ import { clasificarVerbo, resumenIdentidad } from './identidad'
 import type { ClaseIdentidad, ResumenIdentidad } from './identidad'
 import type { OpcionesPool } from './letalidad'
 import { poderDeCarta } from './poderEfecto'
-import { esExento, evaluarConImpuesto, impuestoDe } from './presupuesto'
+import { esElite, evaluarConImpuesto, impuestoDe } from './presupuesto'
 import type { CartaBalance, ConfigBalance, EvaluacionPresupuesto, MazoId } from './tipos'
 
 const MAZOS: readonly MazoId[] = ['estasis', 'disonancia']
@@ -54,7 +54,7 @@ export interface EvaluacionCarta {
   mazo: MazoId | null
   /** Índice de poder de efectos y keywords. */
   indice: number
-  /** Impuesto de stats por efecto (solo Campeones no exentos). */
+  /** Impuesto de stats por efecto (solo Campeones). */
   impuesto: number
   presupuesto: EvaluacionPresupuesto | null
   /** Cuánto se pasa de lo esperado (negativo = le sobra espacio). */
@@ -307,14 +307,14 @@ export interface PromedioCoste {
   sumaMedia: number | null
 }
 
-/** Suma media de los Campeones por coste. Los exentos (Únicas, Soberanos) se dejan fuera: viven fuera de la banda. */
+/** Suma media de los Campeones por coste. Las élites (Únicas, Soberanos, Emperadores) se dejan fuera: tienen su propio presupuesto y distorsionarían la media de la banda normal. */
 export function promedioPorCoste(
   cartas: readonly CartaBalance[],
   cfg: ConfigBalance = CONFIG_V1,
   opciones: OpcionesPool = {},
 ): PromedioCoste[] {
   const campeones = sinReferencia(cartas, opciones).filter(
-    (c) => c.tipo === 'Campeón' && c.stats !== null && !esExento(c, cfg),
+    (c) => c.tipo === 'Campeón' && c.stats !== null && !esElite(c, cfg),
   )
   const costes = [...new Set(campeones.map((c) => c.coste))].sort((a, b) => a - b)
   return costes.map((coste) => {

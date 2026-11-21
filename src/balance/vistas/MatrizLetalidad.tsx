@@ -14,7 +14,7 @@ function equivalencia(etiqueta: string, valores: readonly { valor: number; cuent
 }
 
 /**
- * Quién mata a quién entre los Campeones no exentos (un Campeón muere si el daño recibido es mayor o
+ * Quién mata a quién entre los Campeones que no son élite (un Campeón muere si el daño recibido es mayor o
  * igual a su RES). Los filtros solo recortan las filas de la primera tabla: el pool siempre es completo.
  */
 export function MatrizLetalidad({ cartas, publicadas }: PropsVistaConPool) {
@@ -39,7 +39,7 @@ export function MatrizLetalidad({ cartas, publicadas }: PropsVistaConPool) {
         descripcion="Quién mata a quién. Un Campeón muere cuando el ATQ que recibe es mayor o igual a su RES, y el daño es simultáneo."
       />
       <p className="mb-4 text-xs text-gray-500">
-        El pool son los {pool.length} Campeones publicados que no están exentos. No cambia con los filtros: ellos solo
+        El pool son los {pool.length} Campeones publicados que no son élite (Únicas, Soberanos y Emperadores). No cambia con los filtros: ellos solo
         recortan las filas de la primera tabla.
       </p>
 

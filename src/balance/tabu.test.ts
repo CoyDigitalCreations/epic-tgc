@@ -312,7 +312,7 @@ describe('cartas reales: la justificación de cada nivel', () => {
 describe('evaluarTabu: presupuesto por coste', () => {
   it('dentro: sobra presupuesto o no rompe nada', () => {
     const ev = evaluarTabu(cartaDe({ coste: 4, efectos: [efecto({ verbo: 'steal_ether' })] }))
-    expect(ev).toMatchObject({ max: 3, exceso: 0, estado: 'dentro', exento: false, excederiaSinExencion: false })
+    expect(ev).toMatchObject({ max: 3, exceso: 0, estado: 'dentro', elite: false })
   })
 
   it('en el límite: agota su presupuesto con al menos 1 punto', () => {
@@ -332,24 +332,37 @@ describe('evaluarTabu: presupuesto por coste', () => {
 
   it('los Éteres NO están exentos: steal_ether en un Éter de coste 1 excede', () => {
     const ev = evaluarTabu(carta('Éter del Desgarro'))
-    expect(ev).toMatchObject({ puntos: 1, max: 0, exceso: 1, estado: 'excede', exento: false })
+    expect(ev).toMatchObject({ puntos: 1, max: 0, exceso: 1, estado: 'excede', elite: false })
     expect(evaluarTabu(carta('Éter del Primogénito')).estado).toBe('excede')
     expect(evaluarTabu(carta('Éter del Viento')).estado).toBe('excede')
   })
 
-  it('exenta: un Campeón Única, Soberano o Emperador se reporta pero nunca excede (y avisa si lo haría)', () => {
+  it('élite: Soberano, Emperador y Única tienen un máximo mayor (sacrificios y rareza), pero NO están exentos', () => {
+    // Aurora (Soberano + Única, coste 4): 3 del coste + 2 del sacrificio + 1 de Única = 6, más un bono mínimo por stats sin gastar
     const aurora = evaluarTabu(carta('Aurora'))
-    expect(aurora).toMatchObject({ puntos: 6, max: 3, exceso: 3, estado: 'exenta', exento: true, excederiaSinExencion: true })
-    expect(evaluarTabu(carta('Ragnar'))).toMatchObject({ estado: 'exenta', excederiaSinExencion: true })
-    const soberano = evaluarTabu(cartaDe({ roles: ['Soberano'], coste: 2, efectos: [efecto({ verbo: 'double_attack' })] }))
-    expect(soberano).toMatchObject({ estado: 'exenta', excederiaSinExencion: true })
-    const unica = evaluarTabu(cartaDe({ rareza: 'Única', coste: 4 }))
-    expect(unica).toMatchObject({ estado: 'exenta', excederiaSinExencion: false })
+    expect(aurora).toMatchObject({ puntos: 6, maxBase: 6, exceso: 0, estado: 'en-limite', elite: true })
+    expect(evaluarTabu(carta('Ragnar'))).toMatchObject({ puntos: 5, maxBase: 6, estado: 'dentro', elite: true })
+    // Una Única sin sacrificio suma solo 1; un Soberano común solo 2; un Emperador común 4
+    expect(evaluarTabu(cartaDe({ rareza: 'Única', coste: 4 })).maxBase).toBe(4)
+    expect(evaluarTabu(cartaDe({ roles: ['Soberano'], coste: 4 })).maxBase).toBe(5)
+    expect(evaluarTabu(cartaDe({ roles: ['Emperador'], coste: 4 })).maxBase).toBe(7)
+    expect(evaluarTabu(cartaDe({ roles: ['Emperador'], rareza: 'Única', coste: 4 })).maxBase).toBe(8)
   })
 
-  it('la exención es solo de Campeones: una Mística Única sí puede exceder', () => {
+  it('una élite que rompe más de lo que su presupuesto permite EXCEDE (no hay exención)', () => {
+    const efectos = [efecto({ verbo: 'double_attack' }), efecto({ verbo: 'double_attack' }), efecto({ verbo: 'fix_exhaust' })]
+    const soberano = evaluarTabu(cartaDe({ roles: ['Soberano'], coste: 1, stats: { atq: 4, res: 4 }, efectos }))
+    expect(soberano).toMatchObject({ elite: true, maxBase: 2, estado: 'excede' })
+    expect(soberano.exceso).toBeGreaterThan(0)
+  })
+
+  it('el coste 0 de una élite (Idris) se trata como coste 1', () => {
+    expect(evaluarTabu(cartaDe({ roles: ['Soberano'], rareza: 'Única', coste: 0 })).maxBase).toBe(0 + 2 + 1)
+  })
+
+  it('el presupuesto élite es solo de Campeones: una Mística Única sí puede exceder', () => {
     const ev = evaluarTabu(cartaDe({ tipo: 'Mística', rareza: 'Única', coste: 2, efectos: [efecto({ verbo: 'double_attack' })] }))
-    expect(ev.estado).toBe('excede')
+    expect(ev).toMatchObject({ estado: 'excede', elite: false })
   })
 
   it('coste 0 (Vínculos) no tiene presupuesto ni veredicto', () => {
@@ -365,7 +378,7 @@ describe('evaluarTabu: presupuesto por coste', () => {
   })
 
   it('cada estado tiene su etiqueta en español', () => {
-    expect(Object.keys(ETIQUETA_ESTADO_TABU).sort()).toEqual(['dentro', 'en-limite', 'excede', 'exenta', 'sin-presupuesto'])
+    expect(Object.keys(ETIQUETA_ESTADO_TABU).sort()).toEqual(['dentro', 'en-limite', 'excede', 'sin-presupuesto'])
   })
 })
 
@@ -374,12 +387,12 @@ describe('calibración: Estásis y Disonancia con el catálogo y el presupuesto 
   const de = (mazo: string) => resumen.find((r) => r.mazo === mazo)
 
   it('Estásis (rediseñada y aceptada) queda casi toda dentro: ninguna carta excede', () => {
-    expect(de('estasis')).toMatchObject({ cartas: 33, total: 18, medio: 0.55, excede: 0, enLimite: 2, exentasQueExcederian: 1 })
+    expect(de('estasis')).toMatchObject({ cartas: 33, total: 18, medio: 0.55, excede: 0, enLimite: 3 })
     expect(de('estasis')?.porNivel).toEqual({ 0: 23, 1: 6, 2: 4, 3: 0 })
   })
 
   it('Disonancia: los tres Éteres de coste 1 con tabú (DS-006, DS-007, DS-008) exceden', () => {
-    expect(de('disonancia')).toMatchObject({ cartas: 33, total: 17, medio: 0.52, excede: 3, enLimite: 3, exentasQueExcederian: 1 })
+    expect(de('disonancia')).toMatchObject({ cartas: 33, total: 17, medio: 0.52, excede: 3, enLimite: 3 })
     expect(de('disonancia')?.porNivel).toEqual({ 0: 21, 1: 11, 2: 1, 3: 0 })
     const excedidas = CARTAS.filter((c) => evaluarTabu(c).estado === 'excede').map((c) => c.id)
     expect(excedidas.sort()).toEqual(['DS-006', 'DS-007', 'DS-008'])
@@ -437,10 +450,25 @@ describe('bono de tabú por déficit de stats', () => {
     expect(evaluarTabu(conStats(3, 0, 0, { efectos })).estado).not.toBe('excede')
   })
 
-  it('los exentos (Soberano, Emperador, Única) y lo que no es Campeón no reciben bono', () => {
-    expect(bonoDeTabu(conStats(4, 0, 0, { roles: ['Soberano'] }))).toBe(0)
-    expect(bonoDeTabu(conStats(4, 0, 0, { rareza: 'Única' }))).toBe(0)
+  it('las élites (Soberano, Emperador, Única) SÍ reciben bono, contra su presupuesto mayor; lo que no es Campeón no', () => {
+    // Soberano coste 4: presupuesto 10 + 6 = 16; con 0/0 el déficit es 16 → 3.2
+    expect(bonoDeTabu(conStats(4, 0, 0, { roles: ['Soberano'] }))).toBe(3.2)
+    // Única coste 4: presupuesto 10 + 5 = 15 → 3
+    expect(bonoDeTabu(conStats(4, 0, 0, { rareza: 'Única' }))).toBe(3)
+    // Emperador Única coste 5 (13 + 12 + 5 = 30): con 0/0 llega al tope del bono
+    expect(bonoDeTabu(conStats(5, 0, 0, { roles: ['Emperador'], rareza: 'Única' }))).toBe(4)
     expect(bonoDeTabu(conStats(4, 0, 0, { tipo: 'Mística' }))).toBe(0)
+  })
+
+  it('un Emperador Única de stats modestos y efectos muy cargados cabe en su presupuesto; uno sobrecargado excede', () => {
+    // El tabú se cuenta por regla distinta (no por efecto repetido): se usan verbos y reglas diferentes
+    const verbos = ['double_attack', 'fix_exhaust', 'anclar_eter', 'steal_ether', 'direct_attack', 'prevent_destroy', 'return_ether', 'steal_champion', 'activar_disparo']
+    const reglas = ['derrotaPorVinculos', 'primerTurnoSinAtaques', 'cartasPorAlba', 'ataquesPorTurno']
+    const deVerbos = (n: number) => verbos.slice(0, n).map((verbo) => efecto({ verbo }))
+    const base = { coste: 5, roles: ['Emperador' as const], rareza: 'Única' as const, stats: { atq: 4, res: 4 } }
+    expect(evaluarTabu(cartaDe({ ...base, efectos: deVerbos(5) })).estado).not.toBe('excede') // 8 puntos contra 9 de base + bono
+    const sobrecargado = [...deVerbos(9), ...reglas.map((reglaCatalogo) => efecto({ verbo: 'modificar_regla', reglaCatalogo }))]
+    expect(evaluarTabu(cartaDe({ ...base, efectos: sobrecargado })).estado).toBe('excede')
   })
 
   it('en el límite se mide contra el máximo entero: con bono fraccionario no puede sumar otro punto', () => {
