@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, useLocation } from 'react-router'
+import cartasPruebaJson from '../../seed/CartasPrueba.json'
 import { ALL_CARDS } from '../shared/data/paquetes'
 import Balance from './Balance'
 import { cargarCartas } from './cargador'
@@ -173,7 +174,7 @@ describe('Balance', () => {
 
       await userEvent.click(screen.getByRole('switch', { name: NOMBRE_INTERRUPTOR }))
       await waitFor(() => expect(grupoRef()).toBeInTheDocument())
-      expect(within(grupoRef()!).getAllByRole('option')).toHaveLength(58)
+      expect(within(grupoRef()!).getAllByRole('option')).toHaveLength(cartasPruebaJson.length)
 
       await userEvent.selectOptions(selector(), 'PR-030')
       expect(screen.getByTestId('url')).not.toHaveTextContent('carta=')

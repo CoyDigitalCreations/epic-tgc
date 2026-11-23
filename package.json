@@ -12,6 +12,7 @@
     "sync:cards": "tsx scripts/sync-forge-to-engine.ts",
     "sync:fuentes": "tsx scripts/sync-fuentes.ts",
     "regenerar:textos": "tsx scripts/regenerar-textos.ts",
+    "generar:cartas-elite": "tsx scripts/generar-cartas-elite.ts",
     "test": "vitest run",
     "test:watch": "vitest"
   },

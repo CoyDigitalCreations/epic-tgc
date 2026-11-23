@@ -26,6 +26,15 @@ import type { CardInstance, Ctx, GameState, PlayerId } from '../../types'
 /** Todas las cartas del set de prueba, tal como las exporta el Card-Maker. */
 export const CARTAS_PRUEBA = cartasPruebaJson as unknown as AnyCard[]
 
+/** ¿El id es del banco del balance de élites (PR-100 en adelante)? El resto (PR-001..PR-075) es el banco del motor. */
+export const esCartaDelBancoDeBalance = (id: string): boolean => /^PR-[1-9]\d{2,}$/.test(id)
+
+/**
+ * Solo el banco del MOTOR (PR-001..PR-075). Lo usan las auditorías y los mapas de cobertura del motor: el banco del balance
+ * (scripts/lib/cartasBalanceElite.ts) tiene Soberanos/Emperadores a propósito y su propia auditoría en src/balance/cartasPruebaElite.test.ts.
+ */
+export const CARTAS_MOTOR = CARTAS_PRUEBA.filter((c) => !esCartaDelBancoDeBalance(c.id))
+
 let cargado = false
 
 /**
@@ -66,9 +75,13 @@ export const PR = {
 
 /* ───────────────────────── Armado de mazos / partidas ───────────────────────── */
 
-/** Mazo válido de 66 cartas (15 Éter + 45 Principal + 6 Vínculos) hecho solo con cartas PR. */
+/**
+ * Mazo válido de 66 cartas (15 Éter + 45 Principal + 6 Vínculos) hecho solo con cartas PR del banco del MOTOR (PR-001..PR-075).
+ * El banco del balance de élites (PR-100 en adelante, scripts/lib/cartasBalanceElite.ts) NO entra: son cartas para el Tablero de
+ * balance, tienen stats fuera de escala y sacrificios, y desplazarían a las cartas que los tests del motor esperan en el mazo.
+ */
 export function mazoPrueba(): string[] {
-  const porTipo = (t: AnyCard['type']) => CARTAS_PRUEBA.filter((c) => c.type === t).map((c) => c.id)
+  const porTipo = (t: AnyCard['type']) => CARTAS_MOTOR.filter((c) => c.type === t).map((c) => c.id)
   const llenar = (ids: string[], n: number) => Array.from({ length: n }, (_, i) => ids[i % ids.length])
   const eteres = llenar(porTipo('Éter'), 15)
   const principal = llenar([...porTipo('Campeón'), ...porTipo('Mística'), ...porTipo('Arcana')], 45)

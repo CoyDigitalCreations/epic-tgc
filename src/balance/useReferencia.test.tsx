@@ -15,13 +15,14 @@ describe('useReferencia', () => {
     expect(result.current.crudas.size).toBe(0)
   })
 
-  it('al activarla pasa por cargando y queda lista con 58 cartas marcadas como referencia', async () => {
+  it('al activarla pasa por cargando y queda lista con las cartas del paquete marcadas como referencia', async () => {
     const { result } = renderHook(() => useReferencia())
     act(() => result.current.setActiva(true))
     expect(result.current.activa).toBe(true)
     expect(result.current.estado).toBe('cargando')
     await waitFor(() => expect(result.current.estado).toBe('lista'))
-    expect(result.current.cartas).toHaveLength(58)
+    // 58 del banco del motor (PR-001..PR-075) + el banco del balance de élites (PR-100 en adelante)
+    expect(result.current.cartas.length).toBeGreaterThanOrEqual(58)
     expect(result.current.cartas.every((c) => c.esReferencia === true && c.id.startsWith('PR-'))).toBe(true)
   })
 
@@ -29,7 +30,7 @@ describe('useReferencia', () => {
     const { result } = renderHook(() => useReferencia())
     act(() => result.current.setActiva(true))
     await waitFor(() => expect(result.current.estado).toBe('lista'))
-    expect(result.current.crudas.size).toBe(58)
+    expect(result.current.crudas.size).toBe(result.current.cartas.length)
     for (const c of result.current.cartas) expect(result.current.crudas.get(c.id)?.id).toBe(c.id)
   })
 

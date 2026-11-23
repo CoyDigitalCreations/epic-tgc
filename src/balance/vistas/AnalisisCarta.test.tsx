@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import cartasPruebaJson from '../../../seed/CartasPrueba.json'
 import { cardArtPath } from '../../shared/data/paquetes'
 import type { FiltrosBalance } from '../metricas'
 import { FILTROS_VACIOS, filtrarCartas } from '../metricas'
@@ -63,7 +64,7 @@ describe('AnalisisCarta: selector', () => {
   it('con la referencia activada aparecen las PR-xxx en su grupo etiquetado', async () => {
     render(<Arnes />)
     await userEvent.click(screen.getByRole('button', { name: 'Alternar referencia' }))
-    await waitFor(() => expect(opciones('Referencia (no publicadas)')).toHaveLength(58))
+    await waitFor(() => expect(opciones('Referencia (no publicadas)')).toHaveLength(cartasPruebaJson.length))
     expect(opciones('Referencia (no publicadas)').every((o) => /\(PR-\d+\)/.test(o.textContent ?? ''))).toBe(true)
     expect(opciones('Publicadas')).toHaveLength(66)
   })
@@ -110,7 +111,7 @@ describe('AnalisisCarta: selector', () => {
     const alElegir = vi.fn()
     render(<Arnes inicial="FB-015" onCarta={alElegir} />)
     await userEvent.click(screen.getByRole('button', { name: 'Alternar referencia' }))
-    await waitFor(() => expect(opciones('Referencia (no publicadas)')).toHaveLength(58))
+    await waitFor(() => expect(opciones('Referencia (no publicadas)')).toHaveLength(cartasPruebaJson.length))
     await userEvent.selectOptions(selector(), 'PR-030')
     expect(alElegir).toHaveBeenLastCalledWith(null)
     expect(screen.getByRole('heading', { level: 3 })).toHaveTextContent(/Muro Doble.*PR-030/)
@@ -133,7 +134,7 @@ describe('AnalisisCarta: arte', () => {
   it('una carta de referencia no tiene arte y lo dice', async () => {
     render(<Arnes />)
     await userEvent.click(screen.getByRole('button', { name: 'Alternar referencia' }))
-    await waitFor(() => expect(opciones('Referencia (no publicadas)')).toHaveLength(58))
+    await waitFor(() => expect(opciones('Referencia (no publicadas)')).toHaveLength(cartasPruebaJson.length))
     await userEvent.selectOptions(selector(), 'PR-010')
     expect(screen.queryByRole('img')).not.toBeInTheDocument()
     expect(screen.getByText('Sin arte (carta de referencia)')).toBeInTheDocument()
@@ -294,7 +295,7 @@ describe('AnalisisCarta: contenido', () => {
   it('las cartas de referencia son de solo lectura: sin ajuste ni exportación', async () => {
     render(<Arnes />)
     await userEvent.click(screen.getByRole('button', { name: 'Alternar referencia' }))
-    await waitFor(() => expect(opciones('Referencia (no publicadas)')).toHaveLength(58))
+    await waitFor(() => expect(opciones('Referencia (no publicadas)')).toHaveLength(cartasPruebaJson.length))
     await userEvent.selectOptions(selector(), 'PR-023')
     expect(screen.getByRole('heading', { level: 3 })).toBeInTheDocument()
     expect(screen.queryByRole('region', { name: 'Ajuste propuesto' })).not.toBeInTheDocument()
@@ -440,7 +441,7 @@ describe('AnalisisCarta: tabú', () => {
   it('una carta de referencia también muestra su tabú', async () => {
     render(<Arnes />)
     await userEvent.click(screen.getByRole('button', { name: 'Alternar referencia' }))
-    await waitFor(() => expect(opciones('Referencia (no publicadas)')).toHaveLength(58))
+    await waitFor(() => expect(opciones('Referencia (no publicadas)')).toHaveLength(cartasPruebaJson.length))
     await userEvent.selectOptions(selector(), 'PR-023')
     expect(bloque('Tabú')).toBeInTheDocument()
   })

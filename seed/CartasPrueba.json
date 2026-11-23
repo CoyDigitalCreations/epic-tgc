@@ -2328,5 +2328,7201 @@
         "duracion": "1_por_turno"
       }
     ]
+  },
+  {
+    "id": "PR-100",
+    "name": "Normal c6 Dentro",
+    "type": "Campeón",
+    "rarity": "Rara",
+    "keywords": [],
+    "flavorText": "Campeón normal · coste 6 · 7/7 (suma 14 de 16, tope 10). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 6,
+      "poder": 7,
+      "resistencia": 7
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-101",
+    "name": "Normal c6 Límite",
+    "type": "Campeón",
+    "rarity": "Rara",
+    "keywords": [],
+    "flavorText": "Campeón normal · coste 6 · 8/8 (suma 16 de 16, tope 10). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 6,
+      "poder": 8,
+      "resistencia": 8
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-102",
+    "name": "Normal c6 Exceso de suma",
+    "type": "Campeón",
+    "rarity": "Rara",
+    "keywords": [],
+    "flavorText": "Campeón normal · coste 6 · 10/9 (suma 19 de 16, tope 10). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 6,
+      "poder": 10,
+      "resistencia": 9
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-103",
+    "name": "Normal c7 Dentro",
+    "type": "Campeón",
+    "rarity": "Rara",
+    "keywords": [],
+    "flavorText": "Campeón normal · coste 7 · 9/9 (suma 18 de 20, tope 13). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 7,
+      "poder": 9,
+      "resistencia": 9
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-104",
+    "name": "Normal c7 Límite",
+    "type": "Campeón",
+    "rarity": "Rara",
+    "keywords": [],
+    "flavorText": "Campeón normal · coste 7 · 10/10 (suma 20 de 20, tope 13). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 7,
+      "poder": 10,
+      "resistencia": 10
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-105",
+    "name": "Normal c7 Exceso de suma",
+    "type": "Campeón",
+    "rarity": "Rara",
+    "keywords": [],
+    "flavorText": "Campeón normal · coste 7 · 12/11 (suma 23 de 20, tope 13). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 7,
+      "poder": 12,
+      "resistencia": 11
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-106",
+    "name": "Normal c8 Dentro",
+    "type": "Campeón",
+    "rarity": "Rara",
+    "keywords": [],
+    "flavorText": "Campeón normal · coste 8 · 12/11 (suma 23 de 25, tope 16). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 8,
+      "poder": 12,
+      "resistencia": 11
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-107",
+    "name": "Normal c8 Límite",
+    "type": "Campeón",
+    "rarity": "Rara",
+    "keywords": [],
+    "flavorText": "Campeón normal · coste 8 · 13/12 (suma 25 de 25, tope 16). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 8,
+      "poder": 13,
+      "resistencia": 12
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-108",
+    "name": "Normal c8 Exceso de suma",
+    "type": "Campeón",
+    "rarity": "Rara",
+    "keywords": [],
+    "flavorText": "Campeón normal · coste 8 · 14/14 (suma 28 de 25, tope 16). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 8,
+      "poder": 14,
+      "resistencia": 14
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-109",
+    "name": "Normal c9 Dentro",
+    "type": "Campeón",
+    "rarity": "Rara",
+    "keywords": [],
+    "flavorText": "Campeón normal · coste 9 · 13/12 (suma 25 de 27, tope 18). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 9,
+      "poder": 13,
+      "resistencia": 12
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-110",
+    "name": "Normal c9 Límite",
+    "type": "Campeón",
+    "rarity": "Rara",
+    "keywords": [],
+    "flavorText": "Campeón normal · coste 9 · 14/13 (suma 27 de 27, tope 18). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 9,
+      "poder": 14,
+      "resistencia": 13
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-111",
+    "name": "Normal c9 Exceso de suma",
+    "type": "Campeón",
+    "rarity": "Rara",
+    "keywords": [],
+    "flavorText": "Campeón normal · coste 9 · 15/15 (suma 30 de 27, tope 18). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 9,
+      "poder": 15,
+      "resistencia": 15
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-112",
+    "name": "Normal c10 Dentro",
+    "type": "Campeón",
+    "rarity": "Rara",
+    "keywords": [],
+    "flavorText": "Campeón normal · coste 10 · 14/14 (suma 28 de 30, tope 20). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 10,
+      "poder": 14,
+      "resistencia": 14
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-113",
+    "name": "Normal c10 Límite",
+    "type": "Campeón",
+    "rarity": "Rara",
+    "keywords": [],
+    "flavorText": "Campeón normal · coste 10 · 15/15 (suma 30 de 30, tope 20). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 10,
+      "poder": 15,
+      "resistencia": 15
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-114",
+    "name": "Normal c10 Exceso de suma",
+    "type": "Campeón",
+    "rarity": "Rara",
+    "keywords": [],
+    "flavorText": "Campeón normal · coste 10 · 17/16 (suma 33 de 30, tope 20). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 10,
+      "poder": 17,
+      "resistencia": 16
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-115",
+    "name": "Soberano c0 Dentro",
+    "type": "Campeón",
+    "rarity": "Épica",
+    "keywords": [],
+    "flavorText": "Soberano · 1 sacrificio · coste 0 · 4/3 (suma 7 de 10, tope 7). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "2",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Soberano"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 0,
+      "poder": 4,
+      "resistencia": 3
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-116",
+    "name": "Soberano c0 Límite",
+    "type": "Campeón",
+    "rarity": "Épica",
+    "keywords": [],
+    "flavorText": "Soberano · 1 sacrificio · coste 0 · 5/5 (suma 10 de 10, tope 7). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "2",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Soberano"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 0,
+      "poder": 5,
+      "resistencia": 5
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-117",
+    "name": "Soberano c0 Exceso de suma",
+    "type": "Campeón",
+    "rarity": "Épica",
+    "keywords": [],
+    "flavorText": "Soberano · 1 sacrificio · coste 0 · 7/6 (suma 13 de 10, tope 7). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "2",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Soberano"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 0,
+      "poder": 7,
+      "resistencia": 6
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-118",
+    "name": "Soberano c2 Dentro",
+    "type": "Campeón",
+    "rarity": "Épica",
+    "keywords": [],
+    "flavorText": "Soberano · 1 sacrificio · coste 2 · 5/4 (suma 9 de 12, tope 8). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "2",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Soberano"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 2,
+      "poder": 5,
+      "resistencia": 4
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-119",
+    "name": "Soberano c2 Límite",
+    "type": "Campeón",
+    "rarity": "Épica",
+    "keywords": [],
+    "flavorText": "Soberano · 1 sacrificio · coste 2 · 6/6 (suma 12 de 12, tope 8). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "2",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Soberano"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 2,
+      "poder": 6,
+      "resistencia": 6
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-120",
+    "name": "Soberano c2 Exceso de suma",
+    "type": "Campeón",
+    "rarity": "Épica",
+    "keywords": [],
+    "flavorText": "Soberano · 1 sacrificio · coste 2 · 8/7 (suma 15 de 12, tope 8). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "2",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Soberano"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 2,
+      "poder": 8,
+      "resistencia": 7
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-121",
+    "name": "Soberano c5 Dentro",
+    "type": "Campeón",
+    "rarity": "Épica",
+    "keywords": [],
+    "flavorText": "Soberano · 1 sacrificio · coste 5 · 8/8 (suma 16 de 19, tope 12). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "2",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Soberano"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 5,
+      "poder": 8,
+      "resistencia": 8
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-122",
+    "name": "Soberano c5 Límite",
+    "type": "Campeón",
+    "rarity": "Épica",
+    "keywords": [],
+    "flavorText": "Soberano · 1 sacrificio · coste 5 · 10/9 (suma 19 de 19, tope 12). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "2",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Soberano"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 5,
+      "poder": 10,
+      "resistencia": 9
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-123",
+    "name": "Soberano c5 Exceso de suma",
+    "type": "Campeón",
+    "rarity": "Épica",
+    "keywords": [],
+    "flavorText": "Soberano · 1 sacrificio · coste 5 · 11/11 (suma 22 de 19, tope 12). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "2",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Soberano"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 5,
+      "poder": 11,
+      "resistencia": 11
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-124",
+    "name": "Soberano c8 Dentro",
+    "type": "Campeón",
+    "rarity": "Épica",
+    "keywords": [],
+    "flavorText": "Soberano · 1 sacrificio · coste 8 · 14/14 (suma 28 de 31, tope 20). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "2",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Soberano"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 8,
+      "poder": 14,
+      "resistencia": 14
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-125",
+    "name": "Soberano c8 Límite",
+    "type": "Campeón",
+    "rarity": "Épica",
+    "keywords": [],
+    "flavorText": "Soberano · 1 sacrificio · coste 8 · 16/15 (suma 31 de 31, tope 20). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "2",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Soberano"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 8,
+      "poder": 16,
+      "resistencia": 15
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-126",
+    "name": "Soberano c8 Exceso de suma",
+    "type": "Campeón",
+    "rarity": "Épica",
+    "keywords": [],
+    "flavorText": "Soberano · 1 sacrificio · coste 8 · 17/17 (suma 34 de 31, tope 20). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "2",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Soberano"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 8,
+      "poder": 17,
+      "resistencia": 17
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-127",
+    "name": "Emperador c0 Dentro",
+    "type": "Campeón",
+    "rarity": "Épica",
+    "keywords": [],
+    "flavorText": "Emperador · 2 sacrificios · coste 0 · 7/6 (suma 13 de 16, tope 10). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "2",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Emperador"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 0,
+      "poder": 7,
+      "resistencia": 6
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-128",
+    "name": "Emperador c0 Límite",
+    "type": "Campeón",
+    "rarity": "Épica",
+    "keywords": [],
+    "flavorText": "Emperador · 2 sacrificios · coste 0 · 8/8 (suma 16 de 16, tope 10). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "2",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Emperador"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 0,
+      "poder": 8,
+      "resistencia": 8
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-129",
+    "name": "Emperador c0 Exceso de suma",
+    "type": "Campeón",
+    "rarity": "Épica",
+    "keywords": [],
+    "flavorText": "Emperador · 2 sacrificios · coste 0 · 10/9 (suma 19 de 16, tope 10). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "2",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Emperador"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 0,
+      "poder": 10,
+      "resistencia": 9
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-130",
+    "name": "Emperador c2 Dentro",
+    "type": "Campeón",
+    "rarity": "Épica",
+    "keywords": [],
+    "flavorText": "Emperador · 2 sacrificios · coste 2 · 8/7 (suma 15 de 18, tope 12). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "2",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Emperador"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 2,
+      "poder": 8,
+      "resistencia": 7
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-131",
+    "name": "Emperador c2 Límite",
+    "type": "Campeón",
+    "rarity": "Épica",
+    "keywords": [],
+    "flavorText": "Emperador · 2 sacrificios · coste 2 · 9/9 (suma 18 de 18, tope 12). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "2",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Emperador"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 2,
+      "poder": 9,
+      "resistencia": 9
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-132",
+    "name": "Emperador c2 Exceso de suma",
+    "type": "Campeón",
+    "rarity": "Épica",
+    "keywords": [],
+    "flavorText": "Emperador · 2 sacrificios · coste 2 · 11/10 (suma 21 de 18, tope 12). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "2",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Emperador"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 2,
+      "poder": 11,
+      "resistencia": 10
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-133",
+    "name": "Emperador c5 Dentro",
+    "type": "Campeón",
+    "rarity": "Épica",
+    "keywords": [],
+    "flavorText": "Emperador · 2 sacrificios · coste 5 · 11/11 (suma 22 de 25, tope 16). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "2",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Emperador"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 5,
+      "poder": 11,
+      "resistencia": 11
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-134",
+    "name": "Emperador c5 Límite",
+    "type": "Campeón",
+    "rarity": "Épica",
+    "keywords": [],
+    "flavorText": "Emperador · 2 sacrificios · coste 5 · 13/12 (suma 25 de 25, tope 16). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "2",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Emperador"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 5,
+      "poder": 13,
+      "resistencia": 12
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-135",
+    "name": "Emperador c5 Exceso de suma",
+    "type": "Campeón",
+    "rarity": "Épica",
+    "keywords": [],
+    "flavorText": "Emperador · 2 sacrificios · coste 5 · 14/14 (suma 28 de 25, tope 16). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "2",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Emperador"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 5,
+      "poder": 14,
+      "resistencia": 14
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-136",
+    "name": "Emperador c8 Dentro",
+    "type": "Campeón",
+    "rarity": "Épica",
+    "keywords": [],
+    "flavorText": "Emperador · 2 sacrificios · coste 8 · 17/17 (suma 34 de 37, tope 24). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "2",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Emperador"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 8,
+      "poder": 17,
+      "resistencia": 17
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-137",
+    "name": "Emperador c8 Límite",
+    "type": "Campeón",
+    "rarity": "Épica",
+    "keywords": [],
+    "flavorText": "Emperador · 2 sacrificios · coste 8 · 19/18 (suma 37 de 37, tope 24). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "2",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Emperador"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 8,
+      "poder": 19,
+      "resistencia": 18
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-138",
+    "name": "Emperador c8 Exceso de suma",
+    "type": "Campeón",
+    "rarity": "Épica",
+    "keywords": [],
+    "flavorText": "Emperador · 2 sacrificios · coste 8 · 20/20 (suma 40 de 37, tope 24). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "2",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Emperador"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 8,
+      "poder": 20,
+      "resistencia": 20
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-139",
+    "name": "Única c0 Dentro",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [],
+    "flavorText": "Única · coste 0 · 3/3 (suma 6 de 9, tope 6). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 0,
+      "poder": 3,
+      "resistencia": 3
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-140",
+    "name": "Única c0 Límite",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [],
+    "flavorText": "Única · coste 0 · 5/4 (suma 9 de 9, tope 6). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 0,
+      "poder": 5,
+      "resistencia": 4
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-141",
+    "name": "Única c0 Exceso de suma",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [],
+    "flavorText": "Única · coste 0 · 6/6 (suma 12 de 9, tope 6). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 0,
+      "poder": 6,
+      "resistencia": 6
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-142",
+    "name": "Única c2 Dentro",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [],
+    "flavorText": "Única · coste 2 · 4/4 (suma 8 de 11, tope 7). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 2,
+      "poder": 4,
+      "resistencia": 4
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-143",
+    "name": "Única c2 Límite",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [],
+    "flavorText": "Única · coste 2 · 6/5 (suma 11 de 11, tope 7). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 2,
+      "poder": 6,
+      "resistencia": 5
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-144",
+    "name": "Única c2 Exceso de suma",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [],
+    "flavorText": "Única · coste 2 · 7/7 (suma 14 de 11, tope 7). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 2,
+      "poder": 7,
+      "resistencia": 7
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-145",
+    "name": "Única c5 Dentro",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [],
+    "flavorText": "Única · coste 5 · 8/7 (suma 15 de 18, tope 12). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 5,
+      "poder": 8,
+      "resistencia": 7
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-146",
+    "name": "Única c5 Límite",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [],
+    "flavorText": "Única · coste 5 · 9/9 (suma 18 de 18, tope 12). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 5,
+      "poder": 9,
+      "resistencia": 9
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-147",
+    "name": "Única c5 Exceso de suma",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [],
+    "flavorText": "Única · coste 5 · 11/10 (suma 21 de 18, tope 12). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 5,
+      "poder": 11,
+      "resistencia": 10
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-148",
+    "name": "Única c8 Dentro",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [],
+    "flavorText": "Única · coste 8 · 14/13 (suma 27 de 30, tope 20). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 8,
+      "poder": 14,
+      "resistencia": 13
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-149",
+    "name": "Única c8 Límite",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [],
+    "flavorText": "Única · coste 8 · 15/15 (suma 30 de 30, tope 20). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 8,
+      "poder": 15,
+      "resistencia": 15
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-150",
+    "name": "Única c8 Exceso de suma",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [],
+    "flavorText": "Única · coste 8 · 17/16 (suma 33 de 30, tope 20). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 8,
+      "poder": 17,
+      "resistencia": 16
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-151",
+    "name": "Soberano Única c0 Dentro",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [],
+    "flavorText": "Soberano Única · 1 sacrificio · coste 0 · 6/6 (suma 12 de 15, tope 10). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Soberano"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 0,
+      "poder": 6,
+      "resistencia": 6
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-152",
+    "name": "Soberano Única c0 Límite",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [],
+    "flavorText": "Soberano Única · 1 sacrificio · coste 0 · 8/7 (suma 15 de 15, tope 10). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Soberano"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 0,
+      "poder": 8,
+      "resistencia": 7
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-153",
+    "name": "Soberano Única c0 Exceso de suma",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [],
+    "flavorText": "Soberano Única · 1 sacrificio · coste 0 · 9/9 (suma 18 de 15, tope 10). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Soberano"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 0,
+      "poder": 9,
+      "resistencia": 9
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-154",
+    "name": "Soberano Única c2 Dentro",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [],
+    "flavorText": "Soberano Única · 1 sacrificio · coste 2 · 7/7 (suma 14 de 17, tope 11). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Soberano"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 2,
+      "poder": 7,
+      "resistencia": 7
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-155",
+    "name": "Soberano Única c2 Límite",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [],
+    "flavorText": "Soberano Única · 1 sacrificio · coste 2 · 9/8 (suma 17 de 17, tope 11). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Soberano"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 2,
+      "poder": 9,
+      "resistencia": 8
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-156",
+    "name": "Soberano Única c2 Exceso de suma",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [],
+    "flavorText": "Soberano Única · 1 sacrificio · coste 2 · 10/10 (suma 20 de 17, tope 11). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Soberano"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 2,
+      "poder": 10,
+      "resistencia": 10
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-157",
+    "name": "Soberano Única c5 Dentro",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [],
+    "flavorText": "Soberano Única · 1 sacrificio · coste 5 · 11/10 (suma 21 de 24, tope 16). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Soberano"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 5,
+      "poder": 11,
+      "resistencia": 10
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-158",
+    "name": "Soberano Única c5 Límite",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [],
+    "flavorText": "Soberano Única · 1 sacrificio · coste 5 · 12/12 (suma 24 de 24, tope 16). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Soberano"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 5,
+      "poder": 12,
+      "resistencia": 12
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-159",
+    "name": "Soberano Única c5 Exceso de suma",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [],
+    "flavorText": "Soberano Única · 1 sacrificio · coste 5 · 14/13 (suma 27 de 24, tope 16). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Soberano"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 5,
+      "poder": 14,
+      "resistencia": 13
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-160",
+    "name": "Soberano Única c8 Dentro",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [],
+    "flavorText": "Soberano Única · 1 sacrificio · coste 8 · 17/16 (suma 33 de 36, tope 23). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Soberano"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 8,
+      "poder": 17,
+      "resistencia": 16
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-161",
+    "name": "Soberano Única c8 Límite",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [],
+    "flavorText": "Soberano Única · 1 sacrificio · coste 8 · 18/18 (suma 36 de 36, tope 23). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Soberano"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 8,
+      "poder": 18,
+      "resistencia": 18
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-162",
+    "name": "Soberano Única c8 Exceso de suma",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [],
+    "flavorText": "Soberano Única · 1 sacrificio · coste 8 · 20/19 (suma 39 de 36, tope 23). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Soberano"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 8,
+      "poder": 20,
+      "resistencia": 19
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-163",
+    "name": "Emperador Única c0 Dentro",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [],
+    "flavorText": "Emperador Única · 2 sacrificios · coste 0 · 9/9 (suma 18 de 21, tope 14). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Emperador"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 0,
+      "poder": 9,
+      "resistencia": 9
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-164",
+    "name": "Emperador Única c0 Límite",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [],
+    "flavorText": "Emperador Única · 2 sacrificios · coste 0 · 11/10 (suma 21 de 21, tope 14). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Emperador"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 0,
+      "poder": 11,
+      "resistencia": 10
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-165",
+    "name": "Emperador Única c0 Exceso de suma",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [],
+    "flavorText": "Emperador Única · 2 sacrificios · coste 0 · 12/12 (suma 24 de 21, tope 14). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Emperador"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 0,
+      "poder": 12,
+      "resistencia": 12
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-166",
+    "name": "Emperador Única c2 Dentro",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [],
+    "flavorText": "Emperador Única · 2 sacrificios · coste 2 · 10/10 (suma 20 de 23, tope 15). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Emperador"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 2,
+      "poder": 10,
+      "resistencia": 10
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-167",
+    "name": "Emperador Única c2 Límite",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [],
+    "flavorText": "Emperador Única · 2 sacrificios · coste 2 · 12/11 (suma 23 de 23, tope 15). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Emperador"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 2,
+      "poder": 12,
+      "resistencia": 11
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-168",
+    "name": "Emperador Única c2 Exceso de suma",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [],
+    "flavorText": "Emperador Única · 2 sacrificios · coste 2 · 13/13 (suma 26 de 23, tope 15). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Emperador"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 2,
+      "poder": 13,
+      "resistencia": 13
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-169",
+    "name": "Emperador Única c5 Dentro",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [],
+    "flavorText": "Emperador Única · 2 sacrificios · coste 5 · 14/13 (suma 27 de 30, tope 20). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Emperador"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 5,
+      "poder": 14,
+      "resistencia": 13
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-170",
+    "name": "Emperador Única c5 Límite",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [],
+    "flavorText": "Emperador Única · 2 sacrificios · coste 5 · 15/15 (suma 30 de 30, tope 20). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Emperador"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 5,
+      "poder": 15,
+      "resistencia": 15
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-171",
+    "name": "Emperador Única c5 Exceso de suma",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [],
+    "flavorText": "Emperador Única · 2 sacrificios · coste 5 · 17/16 (suma 33 de 30, tope 20). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Emperador"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 5,
+      "poder": 17,
+      "resistencia": 16
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-172",
+    "name": "Emperador Única c8 Dentro",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [],
+    "flavorText": "Emperador Única · 2 sacrificios · coste 8 · 20/19 (suma 39 de 42, tope 27). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Emperador"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 8,
+      "poder": 20,
+      "resistencia": 19
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-173",
+    "name": "Emperador Única c8 Límite",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [],
+    "flavorText": "Emperador Única · 2 sacrificios · coste 8 · 21/21 (suma 42 de 42, tope 27). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Emperador"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 8,
+      "poder": 21,
+      "resistencia": 21
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-174",
+    "name": "Emperador Única c8 Exceso de suma",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [],
+    "flavorText": "Emperador Única · 2 sacrificios · coste 8 · 23/22 (suma 45 de 42, tope 27). Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Emperador"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 8,
+      "poder": 23,
+      "resistencia": 22
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-175",
+    "name": "Normal c6 Exceso de ATQ",
+    "type": "Campeón",
+    "rarity": "Rara",
+    "keywords": [],
+    "flavorText": "Campeón normal · coste 6 · 12/4 (tope 10, suma 16 de 16). Un solo stat pasa el tope. Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 6,
+      "poder": 12,
+      "resistencia": 4
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-176",
+    "name": "Normal c6 Exceso de RES",
+    "type": "Campeón",
+    "rarity": "Rara",
+    "keywords": [],
+    "flavorText": "Campeón normal · coste 6 · 4/12 (tope 10, suma 16 de 16). Un solo stat pasa el tope. Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 6,
+      "poder": 4,
+      "resistencia": 12
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-177",
+    "name": "Normal c10 Exceso de ATQ",
+    "type": "Campeón",
+    "rarity": "Rara",
+    "keywords": [],
+    "flavorText": "Campeón normal · coste 10 · 22/8 (tope 20, suma 30 de 30). Un solo stat pasa el tope. Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 10,
+      "poder": 22,
+      "resistencia": 8
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-178",
+    "name": "Normal c10 Exceso de RES",
+    "type": "Campeón",
+    "rarity": "Rara",
+    "keywords": [],
+    "flavorText": "Campeón normal · coste 10 · 8/22 (tope 20, suma 30 de 30). Un solo stat pasa el tope. Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 10,
+      "poder": 8,
+      "resistencia": 22
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-179",
+    "name": "Soberano c5 Exceso de ATQ",
+    "type": "Campeón",
+    "rarity": "Épica",
+    "keywords": [],
+    "flavorText": "Soberano · 1 sacrificio · coste 5 · 14/5 (tope 12, suma 19 de 19). Un solo stat pasa el tope. Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "2",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Soberano"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 5,
+      "poder": 14,
+      "resistencia": 5
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-180",
+    "name": "Soberano c5 Exceso de RES",
+    "type": "Campeón",
+    "rarity": "Épica",
+    "keywords": [],
+    "flavorText": "Soberano · 1 sacrificio · coste 5 · 5/14 (tope 12, suma 19 de 19). Un solo stat pasa el tope. Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "2",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Soberano"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 5,
+      "poder": 5,
+      "resistencia": 14
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-181",
+    "name": "Emperador c5 Exceso de ATQ",
+    "type": "Campeón",
+    "rarity": "Épica",
+    "keywords": [],
+    "flavorText": "Emperador · 2 sacrificios · coste 5 · 18/7 (tope 16, suma 25 de 25). Un solo stat pasa el tope. Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "2",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Emperador"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 5,
+      "poder": 18,
+      "resistencia": 7
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-182",
+    "name": "Emperador c5 Exceso de RES",
+    "type": "Campeón",
+    "rarity": "Épica",
+    "keywords": [],
+    "flavorText": "Emperador · 2 sacrificios · coste 5 · 7/18 (tope 16, suma 25 de 25). Un solo stat pasa el tope. Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "2",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Emperador"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 5,
+      "poder": 7,
+      "resistencia": 18
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-183",
+    "name": "Única c5 Exceso de ATQ",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [],
+    "flavorText": "Única · coste 5 · 14/4 (tope 12, suma 18 de 18). Un solo stat pasa el tope. Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 5,
+      "poder": 14,
+      "resistencia": 4
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-184",
+    "name": "Única c5 Exceso de RES",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [],
+    "flavorText": "Única · coste 5 · 4/14 (tope 12, suma 18 de 18). Un solo stat pasa el tope. Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 5,
+      "poder": 4,
+      "resistencia": 14
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-185",
+    "name": "Soberano Única c5 Exceso de ATQ",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [],
+    "flavorText": "Soberano Única · 1 sacrificio · coste 5 · 18/6 (tope 16, suma 24 de 24). Un solo stat pasa el tope. Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Soberano"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 5,
+      "poder": 18,
+      "resistencia": 6
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-186",
+    "name": "Soberano Única c5 Exceso de RES",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [],
+    "flavorText": "Soberano Única · 1 sacrificio · coste 5 · 6/18 (tope 16, suma 24 de 24). Un solo stat pasa el tope. Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Soberano"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 5,
+      "poder": 6,
+      "resistencia": 18
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-187",
+    "name": "Emperador Única c5 Exceso de ATQ",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [],
+    "flavorText": "Emperador Única · 2 sacrificios · coste 5 · 22/8 (tope 20, suma 30 de 30). Un solo stat pasa el tope. Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Emperador"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 5,
+      "poder": 22,
+      "resistencia": 8
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-188",
+    "name": "Emperador Única c5 Exceso de RES",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [],
+    "flavorText": "Emperador Única · 2 sacrificios · coste 5 · 8/22 (tope 20, suma 30 de 30). Un solo stat pasa el tope. Sin efecto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Emperador"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 5,
+      "poder": 8,
+      "resistencia": 22
+    },
+    "efectos": []
+  },
+  {
+    "id": "PR-189",
+    "name": "Normal c6 Efecto medio ajustada",
+    "type": "Campeón",
+    "rarity": "Rara",
+    "keywords": [],
+    "flavorText": "Campeón normal · coste 6 · 8/8 (suma 16 de 16, impuesto de efecto 0). Efecto medio, stats ajustada.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 6,
+      "poder": 8,
+      "resistencia": 8
+    },
+    "efectos": [
+      {
+        "tipo": "disparo",
+        "efecto": "destroy",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 2
+        },
+        "cantidad": 1,
+        "texto": "Puedes pagar 2 Éter, destruye 1 Campeón que controla el rival."
+      }
+    ]
+  },
+  {
+    "id": "PR-190",
+    "name": "Normal c6 Efecto fuerte ajustada",
+    "type": "Campeón",
+    "rarity": "Rara",
+    "keywords": [
+      "Inmortal",
+      "Indestructible"
+    ],
+    "flavorText": "Campeón normal · coste 6 · 6/5 (suma 11 de 16, impuesto de efecto 4.8). Efecto fuerte, stats ajustada.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 6,
+      "poder": 6,
+      "resistencia": 5
+    },
+    "efectos": [
+      {
+        "tipo": "pasivo",
+        "trigger": "al_invocar",
+        "efecto": "destroy",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "cantidad": 1,
+        "texto": "Al ser invocada, puedes destruir 1 Campeón que controla el rival."
+      },
+      {
+        "tipo": "continuo",
+        "efecto": "steal_champion",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "costo": {
+          "tipo": "bloqueo_fijo",
+          "cantidad": 2
+        },
+        "duracion": "mientras_ester_bloqueado",
+        "reagrupar": {
+          "fase": "alba",
+          "turno": "propio"
+        },
+        "texto": "Bloquea 2 Éter, toma control de 1 Campeón que controla el rival, mientras ese Éter esté bloqueado. Al inicio de tu Alba reagrupa el Éter usado por este efecto."
+      },
+      {
+        "tipo": "disparo",
+        "efecto": "exile",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 3
+        },
+        "cantidad": 1,
+        "texto": "Puedes pagar 3 Éter, exilia 1 Campeón que controla el rival."
+      }
+    ]
+  },
+  {
+    "id": "PR-191",
+    "name": "Normal c6 Efecto fuerte sin impuesto",
+    "type": "Campeón",
+    "rarity": "Rara",
+    "keywords": [
+      "Inmortal",
+      "Indestructible"
+    ],
+    "flavorText": "Campeón normal · coste 6 · 8/8 (suma 16 de 16, impuesto de efecto 4.8). Efecto fuerte, stats sin impuesto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 6,
+      "poder": 8,
+      "resistencia": 8
+    },
+    "efectos": [
+      {
+        "tipo": "pasivo",
+        "trigger": "al_invocar",
+        "efecto": "destroy",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "cantidad": 1,
+        "texto": "Al ser invocada, puedes destruir 1 Campeón que controla el rival."
+      },
+      {
+        "tipo": "continuo",
+        "efecto": "steal_champion",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "costo": {
+          "tipo": "bloqueo_fijo",
+          "cantidad": 2
+        },
+        "duracion": "mientras_ester_bloqueado",
+        "reagrupar": {
+          "fase": "alba",
+          "turno": "propio"
+        },
+        "texto": "Bloquea 2 Éter, toma control de 1 Campeón que controla el rival, mientras ese Éter esté bloqueado. Al inicio de tu Alba reagrupa el Éter usado por este efecto."
+      },
+      {
+        "tipo": "disparo",
+        "efecto": "exile",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 3
+        },
+        "cantidad": 1,
+        "texto": "Puedes pagar 3 Éter, exilia 1 Campeón que controla el rival."
+      }
+    ]
+  },
+  {
+    "id": "PR-192",
+    "name": "Normal c6 Efecto con tabú ajustada",
+    "type": "Campeón",
+    "rarity": "Rara",
+    "keywords": [],
+    "flavorText": "Campeón normal · coste 6 · 7/7 (suma 14 de 16, impuesto de efecto 1.3). Efecto con tabú, stats ajustada.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 6,
+      "poder": 7,
+      "resistencia": 7
+    },
+    "efectos": [
+      {
+        "tipo": "pasivo",
+        "efecto": "modificar_regla",
+        "objetivo": {
+          "tipo": "todos_campeones_propios",
+          "controlador": "propio",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "regla": {
+          "id": "cartasPorAlba",
+          "operacion": "sumar",
+          "valor": 1
+        },
+        "texto": "Cartas que se roban en el Alba +1."
+      },
+      {
+        "tipo": "continuo",
+        "efecto": "modificar_regla",
+        "costo": {
+          "tipo": "bloqueo_fijo",
+          "cantidad": 3
+        },
+        "activacion": "una_por_turno",
+        "reglaEnumerada": "rival_sin_incrementos_res",
+        "duracion": "mientras_tenga_eter_bloqueado",
+        "reagrupar": {
+          "fase": "alba",
+          "turno": "propio"
+        },
+        "texto": "Una vez por turno, bloquea 3 Éter, los Campeones del rival no pueden recibir incrementos de RES, mientras tenga Éter bloqueado. Al inicio de tu Alba reagrupa el Éter usado por este efecto."
+      },
+      {
+        "tipo": "disparo",
+        "efecto": "activar_disparo",
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 2
+        },
+        "activacion": "una_por_turno",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "campo",
+          "excluyeEsta": true
+        },
+        "sinPagarCosto": true,
+        "sinAgotar": true,
+        "texto": "Puedes pagar 2 Éter, una vez por turno, activa un efecto Disparo de otro Campeón que controles sin pagar su costo ni agotarlo."
+      }
+    ]
+  },
+  {
+    "id": "PR-193",
+    "name": "Normal c6 Efecto con tabú sin impuesto",
+    "type": "Campeón",
+    "rarity": "Rara",
+    "keywords": [],
+    "flavorText": "Campeón normal · coste 6 · 8/8 (suma 16 de 16, impuesto de efecto 1.3). Efecto con tabú, stats sin impuesto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 6,
+      "poder": 8,
+      "resistencia": 8
+    },
+    "efectos": [
+      {
+        "tipo": "pasivo",
+        "efecto": "modificar_regla",
+        "objetivo": {
+          "tipo": "todos_campeones_propios",
+          "controlador": "propio",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "regla": {
+          "id": "cartasPorAlba",
+          "operacion": "sumar",
+          "valor": 1
+        },
+        "texto": "Cartas que se roban en el Alba +1."
+      },
+      {
+        "tipo": "continuo",
+        "efecto": "modificar_regla",
+        "costo": {
+          "tipo": "bloqueo_fijo",
+          "cantidad": 3
+        },
+        "activacion": "una_por_turno",
+        "reglaEnumerada": "rival_sin_incrementos_res",
+        "duracion": "mientras_tenga_eter_bloqueado",
+        "reagrupar": {
+          "fase": "alba",
+          "turno": "propio"
+        },
+        "texto": "Una vez por turno, bloquea 3 Éter, los Campeones del rival no pueden recibir incrementos de RES, mientras tenga Éter bloqueado. Al inicio de tu Alba reagrupa el Éter usado por este efecto."
+      },
+      {
+        "tipo": "disparo",
+        "efecto": "activar_disparo",
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 2
+        },
+        "activacion": "una_por_turno",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "campo",
+          "excluyeEsta": true
+        },
+        "sinPagarCosto": true,
+        "sinAgotar": true,
+        "texto": "Puedes pagar 2 Éter, una vez por turno, activa un efecto Disparo de otro Campeón que controles sin pagar su costo ni agotarlo."
+      }
+    ]
+  },
+  {
+    "id": "PR-194",
+    "name": "Normal c9 Efecto medio ajustada",
+    "type": "Campeón",
+    "rarity": "Rara",
+    "keywords": [],
+    "flavorText": "Campeón normal · coste 9 · 14/13 (suma 27 de 27, impuesto de efecto 0). Efecto medio, stats ajustada.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 9,
+      "poder": 14,
+      "resistencia": 13
+    },
+    "efectos": [
+      {
+        "tipo": "disparo",
+        "efecto": "destroy",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 2
+        },
+        "cantidad": 1,
+        "texto": "Puedes pagar 2 Éter, destruye 1 Campeón que controla el rival."
+      }
+    ]
+  },
+  {
+    "id": "PR-195",
+    "name": "Normal c9 Efecto fuerte ajustada",
+    "type": "Campeón",
+    "rarity": "Rara",
+    "keywords": [
+      "Inmortal",
+      "Indestructible"
+    ],
+    "flavorText": "Campeón normal · coste 9 · 11/11 (suma 22 de 27, impuesto de efecto 4.8). Efecto fuerte, stats ajustada.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 9,
+      "poder": 11,
+      "resistencia": 11
+    },
+    "efectos": [
+      {
+        "tipo": "pasivo",
+        "trigger": "al_invocar",
+        "efecto": "destroy",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "cantidad": 1,
+        "texto": "Al ser invocada, puedes destruir 1 Campeón que controla el rival."
+      },
+      {
+        "tipo": "continuo",
+        "efecto": "steal_champion",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "costo": {
+          "tipo": "bloqueo_fijo",
+          "cantidad": 2
+        },
+        "duracion": "mientras_ester_bloqueado",
+        "reagrupar": {
+          "fase": "alba",
+          "turno": "propio"
+        },
+        "texto": "Bloquea 2 Éter, toma control de 1 Campeón que controla el rival, mientras ese Éter esté bloqueado. Al inicio de tu Alba reagrupa el Éter usado por este efecto."
+      },
+      {
+        "tipo": "disparo",
+        "efecto": "exile",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 3
+        },
+        "cantidad": 1,
+        "texto": "Puedes pagar 3 Éter, exilia 1 Campeón que controla el rival."
+      }
+    ]
+  },
+  {
+    "id": "PR-196",
+    "name": "Normal c9 Efecto fuerte sin impuesto",
+    "type": "Campeón",
+    "rarity": "Rara",
+    "keywords": [
+      "Inmortal",
+      "Indestructible"
+    ],
+    "flavorText": "Campeón normal · coste 9 · 14/13 (suma 27 de 27, impuesto de efecto 4.8). Efecto fuerte, stats sin impuesto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 9,
+      "poder": 14,
+      "resistencia": 13
+    },
+    "efectos": [
+      {
+        "tipo": "pasivo",
+        "trigger": "al_invocar",
+        "efecto": "destroy",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "cantidad": 1,
+        "texto": "Al ser invocada, puedes destruir 1 Campeón que controla el rival."
+      },
+      {
+        "tipo": "continuo",
+        "efecto": "steal_champion",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "costo": {
+          "tipo": "bloqueo_fijo",
+          "cantidad": 2
+        },
+        "duracion": "mientras_ester_bloqueado",
+        "reagrupar": {
+          "fase": "alba",
+          "turno": "propio"
+        },
+        "texto": "Bloquea 2 Éter, toma control de 1 Campeón que controla el rival, mientras ese Éter esté bloqueado. Al inicio de tu Alba reagrupa el Éter usado por este efecto."
+      },
+      {
+        "tipo": "disparo",
+        "efecto": "exile",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 3
+        },
+        "cantidad": 1,
+        "texto": "Puedes pagar 3 Éter, exilia 1 Campeón que controla el rival."
+      }
+    ]
+  },
+  {
+    "id": "PR-197",
+    "name": "Normal c9 Efecto con tabú ajustada",
+    "type": "Campeón",
+    "rarity": "Rara",
+    "keywords": [],
+    "flavorText": "Campeón normal · coste 9 · 13/12 (suma 25 de 27, impuesto de efecto 1.3). Efecto con tabú, stats ajustada.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 9,
+      "poder": 13,
+      "resistencia": 12
+    },
+    "efectos": [
+      {
+        "tipo": "pasivo",
+        "efecto": "modificar_regla",
+        "objetivo": {
+          "tipo": "todos_campeones_propios",
+          "controlador": "propio",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "regla": {
+          "id": "cartasPorAlba",
+          "operacion": "sumar",
+          "valor": 1
+        },
+        "texto": "Cartas que se roban en el Alba +1."
+      },
+      {
+        "tipo": "continuo",
+        "efecto": "modificar_regla",
+        "costo": {
+          "tipo": "bloqueo_fijo",
+          "cantidad": 3
+        },
+        "activacion": "una_por_turno",
+        "reglaEnumerada": "rival_sin_incrementos_res",
+        "duracion": "mientras_tenga_eter_bloqueado",
+        "reagrupar": {
+          "fase": "alba",
+          "turno": "propio"
+        },
+        "texto": "Una vez por turno, bloquea 3 Éter, los Campeones del rival no pueden recibir incrementos de RES, mientras tenga Éter bloqueado. Al inicio de tu Alba reagrupa el Éter usado por este efecto."
+      },
+      {
+        "tipo": "disparo",
+        "efecto": "activar_disparo",
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 2
+        },
+        "activacion": "una_por_turno",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "campo",
+          "excluyeEsta": true
+        },
+        "sinPagarCosto": true,
+        "sinAgotar": true,
+        "texto": "Puedes pagar 2 Éter, una vez por turno, activa un efecto Disparo de otro Campeón que controles sin pagar su costo ni agotarlo."
+      }
+    ]
+  },
+  {
+    "id": "PR-198",
+    "name": "Normal c9 Efecto con tabú sin impuesto",
+    "type": "Campeón",
+    "rarity": "Rara",
+    "keywords": [],
+    "flavorText": "Campeón normal · coste 9 · 14/13 (suma 27 de 27, impuesto de efecto 1.3). Efecto con tabú, stats sin impuesto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "3",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 9,
+      "poder": 14,
+      "resistencia": 13
+    },
+    "efectos": [
+      {
+        "tipo": "pasivo",
+        "efecto": "modificar_regla",
+        "objetivo": {
+          "tipo": "todos_campeones_propios",
+          "controlador": "propio",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "regla": {
+          "id": "cartasPorAlba",
+          "operacion": "sumar",
+          "valor": 1
+        },
+        "texto": "Cartas que se roban en el Alba +1."
+      },
+      {
+        "tipo": "continuo",
+        "efecto": "modificar_regla",
+        "costo": {
+          "tipo": "bloqueo_fijo",
+          "cantidad": 3
+        },
+        "activacion": "una_por_turno",
+        "reglaEnumerada": "rival_sin_incrementos_res",
+        "duracion": "mientras_tenga_eter_bloqueado",
+        "reagrupar": {
+          "fase": "alba",
+          "turno": "propio"
+        },
+        "texto": "Una vez por turno, bloquea 3 Éter, los Campeones del rival no pueden recibir incrementos de RES, mientras tenga Éter bloqueado. Al inicio de tu Alba reagrupa el Éter usado por este efecto."
+      },
+      {
+        "tipo": "disparo",
+        "efecto": "activar_disparo",
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 2
+        },
+        "activacion": "una_por_turno",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "campo",
+          "excluyeEsta": true
+        },
+        "sinPagarCosto": true,
+        "sinAgotar": true,
+        "texto": "Puedes pagar 2 Éter, una vez por turno, activa un efecto Disparo de otro Campeón que controles sin pagar su costo ni agotarlo."
+      }
+    ]
+  },
+  {
+    "id": "PR-199",
+    "name": "Soberano c4 Efecto medio ajustada",
+    "type": "Campeón",
+    "rarity": "Épica",
+    "keywords": [],
+    "flavorText": "Soberano · 1 sacrificio · coste 4 · 8/8 (suma 16 de 16, impuesto de efecto 0). Efecto medio, stats ajustada.",
+    "paqueteId": "prueba",
+    "limiteCopias": "2",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Soberano"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 4,
+      "poder": 8,
+      "resistencia": 8
+    },
+    "efectos": [
+      {
+        "tipo": "disparo",
+        "efecto": "destroy",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 2
+        },
+        "cantidad": 1,
+        "texto": "Puedes pagar 2 Éter, destruye 1 Campeón que controla el rival."
+      }
+    ]
+  },
+  {
+    "id": "PR-200",
+    "name": "Soberano c4 Efecto fuerte ajustada",
+    "type": "Campeón",
+    "rarity": "Épica",
+    "keywords": [
+      "Inmortal",
+      "Indestructible"
+    ],
+    "flavorText": "Soberano · 1 sacrificio · coste 4 · 6/5 (suma 11 de 16, impuesto de efecto 4.8). Efecto fuerte, stats ajustada.",
+    "paqueteId": "prueba",
+    "limiteCopias": "2",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Soberano"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 4,
+      "poder": 6,
+      "resistencia": 5
+    },
+    "efectos": [
+      {
+        "tipo": "pasivo",
+        "trigger": "al_invocar",
+        "efecto": "destroy",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "cantidad": 1,
+        "texto": "Al ser invocada, puedes destruir 1 Campeón que controla el rival."
+      },
+      {
+        "tipo": "continuo",
+        "efecto": "steal_champion",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "costo": {
+          "tipo": "bloqueo_fijo",
+          "cantidad": 2
+        },
+        "duracion": "mientras_ester_bloqueado",
+        "reagrupar": {
+          "fase": "alba",
+          "turno": "propio"
+        },
+        "texto": "Bloquea 2 Éter, toma control de 1 Campeón que controla el rival, mientras ese Éter esté bloqueado. Al inicio de tu Alba reagrupa el Éter usado por este efecto."
+      },
+      {
+        "tipo": "disparo",
+        "efecto": "exile",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 3
+        },
+        "cantidad": 1,
+        "texto": "Puedes pagar 3 Éter, exilia 1 Campeón que controla el rival."
+      }
+    ]
+  },
+  {
+    "id": "PR-201",
+    "name": "Soberano c4 Efecto fuerte sin impuesto",
+    "type": "Campeón",
+    "rarity": "Épica",
+    "keywords": [
+      "Inmortal",
+      "Indestructible"
+    ],
+    "flavorText": "Soberano · 1 sacrificio · coste 4 · 8/8 (suma 16 de 16, impuesto de efecto 4.8). Efecto fuerte, stats sin impuesto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "2",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Soberano"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 4,
+      "poder": 8,
+      "resistencia": 8
+    },
+    "efectos": [
+      {
+        "tipo": "pasivo",
+        "trigger": "al_invocar",
+        "efecto": "destroy",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "cantidad": 1,
+        "texto": "Al ser invocada, puedes destruir 1 Campeón que controla el rival."
+      },
+      {
+        "tipo": "continuo",
+        "efecto": "steal_champion",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "costo": {
+          "tipo": "bloqueo_fijo",
+          "cantidad": 2
+        },
+        "duracion": "mientras_ester_bloqueado",
+        "reagrupar": {
+          "fase": "alba",
+          "turno": "propio"
+        },
+        "texto": "Bloquea 2 Éter, toma control de 1 Campeón que controla el rival, mientras ese Éter esté bloqueado. Al inicio de tu Alba reagrupa el Éter usado por este efecto."
+      },
+      {
+        "tipo": "disparo",
+        "efecto": "exile",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 3
+        },
+        "cantidad": 1,
+        "texto": "Puedes pagar 3 Éter, exilia 1 Campeón que controla el rival."
+      }
+    ]
+  },
+  {
+    "id": "PR-202",
+    "name": "Soberano c4 Efecto con tabú ajustada",
+    "type": "Campeón",
+    "rarity": "Épica",
+    "keywords": [],
+    "flavorText": "Soberano · 1 sacrificio · coste 4 · 7/7 (suma 14 de 16, impuesto de efecto 1.3). Efecto con tabú, stats ajustada.",
+    "paqueteId": "prueba",
+    "limiteCopias": "2",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Soberano"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 4,
+      "poder": 7,
+      "resistencia": 7
+    },
+    "efectos": [
+      {
+        "tipo": "pasivo",
+        "efecto": "modificar_regla",
+        "objetivo": {
+          "tipo": "todos_campeones_propios",
+          "controlador": "propio",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "regla": {
+          "id": "cartasPorAlba",
+          "operacion": "sumar",
+          "valor": 1
+        },
+        "texto": "Cartas que se roban en el Alba +1."
+      },
+      {
+        "tipo": "continuo",
+        "efecto": "modificar_regla",
+        "costo": {
+          "tipo": "bloqueo_fijo",
+          "cantidad": 3
+        },
+        "activacion": "una_por_turno",
+        "reglaEnumerada": "rival_sin_incrementos_res",
+        "duracion": "mientras_tenga_eter_bloqueado",
+        "reagrupar": {
+          "fase": "alba",
+          "turno": "propio"
+        },
+        "texto": "Una vez por turno, bloquea 3 Éter, los Campeones del rival no pueden recibir incrementos de RES, mientras tenga Éter bloqueado. Al inicio de tu Alba reagrupa el Éter usado por este efecto."
+      },
+      {
+        "tipo": "disparo",
+        "efecto": "activar_disparo",
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 2
+        },
+        "activacion": "una_por_turno",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "campo",
+          "excluyeEsta": true
+        },
+        "sinPagarCosto": true,
+        "sinAgotar": true,
+        "texto": "Puedes pagar 2 Éter, una vez por turno, activa un efecto Disparo de otro Campeón que controles sin pagar su costo ni agotarlo."
+      }
+    ]
+  },
+  {
+    "id": "PR-203",
+    "name": "Soberano c4 Efecto con tabú sin impuesto",
+    "type": "Campeón",
+    "rarity": "Épica",
+    "keywords": [],
+    "flavorText": "Soberano · 1 sacrificio · coste 4 · 8/8 (suma 16 de 16, impuesto de efecto 1.3). Efecto con tabú, stats sin impuesto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "2",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Soberano"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 4,
+      "poder": 8,
+      "resistencia": 8
+    },
+    "efectos": [
+      {
+        "tipo": "pasivo",
+        "efecto": "modificar_regla",
+        "objetivo": {
+          "tipo": "todos_campeones_propios",
+          "controlador": "propio",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "regla": {
+          "id": "cartasPorAlba",
+          "operacion": "sumar",
+          "valor": 1
+        },
+        "texto": "Cartas que se roban en el Alba +1."
+      },
+      {
+        "tipo": "continuo",
+        "efecto": "modificar_regla",
+        "costo": {
+          "tipo": "bloqueo_fijo",
+          "cantidad": 3
+        },
+        "activacion": "una_por_turno",
+        "reglaEnumerada": "rival_sin_incrementos_res",
+        "duracion": "mientras_tenga_eter_bloqueado",
+        "reagrupar": {
+          "fase": "alba",
+          "turno": "propio"
+        },
+        "texto": "Una vez por turno, bloquea 3 Éter, los Campeones del rival no pueden recibir incrementos de RES, mientras tenga Éter bloqueado. Al inicio de tu Alba reagrupa el Éter usado por este efecto."
+      },
+      {
+        "tipo": "disparo",
+        "efecto": "activar_disparo",
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 2
+        },
+        "activacion": "una_por_turno",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "campo",
+          "excluyeEsta": true
+        },
+        "sinPagarCosto": true,
+        "sinAgotar": true,
+        "texto": "Puedes pagar 2 Éter, una vez por turno, activa un efecto Disparo de otro Campeón que controles sin pagar su costo ni agotarlo."
+      }
+    ]
+  },
+  {
+    "id": "PR-204",
+    "name": "Soberano c7 Efecto medio ajustada",
+    "type": "Campeón",
+    "rarity": "Épica",
+    "keywords": [],
+    "flavorText": "Soberano · 1 sacrificio · coste 7 · 13/13 (suma 26 de 26, impuesto de efecto 0). Efecto medio, stats ajustada.",
+    "paqueteId": "prueba",
+    "limiteCopias": "2",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Soberano"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 7,
+      "poder": 13,
+      "resistencia": 13
+    },
+    "efectos": [
+      {
+        "tipo": "disparo",
+        "efecto": "destroy",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 2
+        },
+        "cantidad": 1,
+        "texto": "Puedes pagar 2 Éter, destruye 1 Campeón que controla el rival."
+      }
+    ]
+  },
+  {
+    "id": "PR-205",
+    "name": "Soberano c7 Efecto fuerte ajustada",
+    "type": "Campeón",
+    "rarity": "Épica",
+    "keywords": [
+      "Inmortal",
+      "Indestructible"
+    ],
+    "flavorText": "Soberano · 1 sacrificio · coste 7 · 11/10 (suma 21 de 26, impuesto de efecto 4.8). Efecto fuerte, stats ajustada.",
+    "paqueteId": "prueba",
+    "limiteCopias": "2",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Soberano"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 7,
+      "poder": 11,
+      "resistencia": 10
+    },
+    "efectos": [
+      {
+        "tipo": "pasivo",
+        "trigger": "al_invocar",
+        "efecto": "destroy",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "cantidad": 1,
+        "texto": "Al ser invocada, puedes destruir 1 Campeón que controla el rival."
+      },
+      {
+        "tipo": "continuo",
+        "efecto": "steal_champion",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "costo": {
+          "tipo": "bloqueo_fijo",
+          "cantidad": 2
+        },
+        "duracion": "mientras_ester_bloqueado",
+        "reagrupar": {
+          "fase": "alba",
+          "turno": "propio"
+        },
+        "texto": "Bloquea 2 Éter, toma control de 1 Campeón que controla el rival, mientras ese Éter esté bloqueado. Al inicio de tu Alba reagrupa el Éter usado por este efecto."
+      },
+      {
+        "tipo": "disparo",
+        "efecto": "exile",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 3
+        },
+        "cantidad": 1,
+        "texto": "Puedes pagar 3 Éter, exilia 1 Campeón que controla el rival."
+      }
+    ]
+  },
+  {
+    "id": "PR-206",
+    "name": "Soberano c7 Efecto fuerte sin impuesto",
+    "type": "Campeón",
+    "rarity": "Épica",
+    "keywords": [
+      "Inmortal",
+      "Indestructible"
+    ],
+    "flavorText": "Soberano · 1 sacrificio · coste 7 · 13/13 (suma 26 de 26, impuesto de efecto 4.8). Efecto fuerte, stats sin impuesto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "2",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Soberano"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 7,
+      "poder": 13,
+      "resistencia": 13
+    },
+    "efectos": [
+      {
+        "tipo": "pasivo",
+        "trigger": "al_invocar",
+        "efecto": "destroy",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "cantidad": 1,
+        "texto": "Al ser invocada, puedes destruir 1 Campeón que controla el rival."
+      },
+      {
+        "tipo": "continuo",
+        "efecto": "steal_champion",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "costo": {
+          "tipo": "bloqueo_fijo",
+          "cantidad": 2
+        },
+        "duracion": "mientras_ester_bloqueado",
+        "reagrupar": {
+          "fase": "alba",
+          "turno": "propio"
+        },
+        "texto": "Bloquea 2 Éter, toma control de 1 Campeón que controla el rival, mientras ese Éter esté bloqueado. Al inicio de tu Alba reagrupa el Éter usado por este efecto."
+      },
+      {
+        "tipo": "disparo",
+        "efecto": "exile",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 3
+        },
+        "cantidad": 1,
+        "texto": "Puedes pagar 3 Éter, exilia 1 Campeón que controla el rival."
+      }
+    ]
+  },
+  {
+    "id": "PR-207",
+    "name": "Soberano c7 Efecto con tabú ajustada",
+    "type": "Campeón",
+    "rarity": "Épica",
+    "keywords": [],
+    "flavorText": "Soberano · 1 sacrificio · coste 7 · 12/12 (suma 24 de 26, impuesto de efecto 1.3). Efecto con tabú, stats ajustada.",
+    "paqueteId": "prueba",
+    "limiteCopias": "2",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Soberano"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 7,
+      "poder": 12,
+      "resistencia": 12
+    },
+    "efectos": [
+      {
+        "tipo": "pasivo",
+        "efecto": "modificar_regla",
+        "objetivo": {
+          "tipo": "todos_campeones_propios",
+          "controlador": "propio",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "regla": {
+          "id": "cartasPorAlba",
+          "operacion": "sumar",
+          "valor": 1
+        },
+        "texto": "Cartas que se roban en el Alba +1."
+      },
+      {
+        "tipo": "continuo",
+        "efecto": "modificar_regla",
+        "costo": {
+          "tipo": "bloqueo_fijo",
+          "cantidad": 3
+        },
+        "activacion": "una_por_turno",
+        "reglaEnumerada": "rival_sin_incrementos_res",
+        "duracion": "mientras_tenga_eter_bloqueado",
+        "reagrupar": {
+          "fase": "alba",
+          "turno": "propio"
+        },
+        "texto": "Una vez por turno, bloquea 3 Éter, los Campeones del rival no pueden recibir incrementos de RES, mientras tenga Éter bloqueado. Al inicio de tu Alba reagrupa el Éter usado por este efecto."
+      },
+      {
+        "tipo": "disparo",
+        "efecto": "activar_disparo",
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 2
+        },
+        "activacion": "una_por_turno",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "campo",
+          "excluyeEsta": true
+        },
+        "sinPagarCosto": true,
+        "sinAgotar": true,
+        "texto": "Puedes pagar 2 Éter, una vez por turno, activa un efecto Disparo de otro Campeón que controles sin pagar su costo ni agotarlo."
+      }
+    ]
+  },
+  {
+    "id": "PR-208",
+    "name": "Soberano c7 Efecto con tabú sin impuesto",
+    "type": "Campeón",
+    "rarity": "Épica",
+    "keywords": [],
+    "flavorText": "Soberano · 1 sacrificio · coste 7 · 13/13 (suma 26 de 26, impuesto de efecto 1.3). Efecto con tabú, stats sin impuesto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "2",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Soberano"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 7,
+      "poder": 13,
+      "resistencia": 13
+    },
+    "efectos": [
+      {
+        "tipo": "pasivo",
+        "efecto": "modificar_regla",
+        "objetivo": {
+          "tipo": "todos_campeones_propios",
+          "controlador": "propio",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "regla": {
+          "id": "cartasPorAlba",
+          "operacion": "sumar",
+          "valor": 1
+        },
+        "texto": "Cartas que se roban en el Alba +1."
+      },
+      {
+        "tipo": "continuo",
+        "efecto": "modificar_regla",
+        "costo": {
+          "tipo": "bloqueo_fijo",
+          "cantidad": 3
+        },
+        "activacion": "una_por_turno",
+        "reglaEnumerada": "rival_sin_incrementos_res",
+        "duracion": "mientras_tenga_eter_bloqueado",
+        "reagrupar": {
+          "fase": "alba",
+          "turno": "propio"
+        },
+        "texto": "Una vez por turno, bloquea 3 Éter, los Campeones del rival no pueden recibir incrementos de RES, mientras tenga Éter bloqueado. Al inicio de tu Alba reagrupa el Éter usado por este efecto."
+      },
+      {
+        "tipo": "disparo",
+        "efecto": "activar_disparo",
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 2
+        },
+        "activacion": "una_por_turno",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "campo",
+          "excluyeEsta": true
+        },
+        "sinPagarCosto": true,
+        "sinAgotar": true,
+        "texto": "Puedes pagar 2 Éter, una vez por turno, activa un efecto Disparo de otro Campeón que controles sin pagar su costo ni agotarlo."
+      }
+    ]
+  },
+  {
+    "id": "PR-209",
+    "name": "Emperador c4 Efecto medio ajustada",
+    "type": "Campeón",
+    "rarity": "Épica",
+    "keywords": [],
+    "flavorText": "Emperador · 2 sacrificios · coste 4 · 11/11 (suma 22 de 22, impuesto de efecto 0). Efecto medio, stats ajustada.",
+    "paqueteId": "prueba",
+    "limiteCopias": "2",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Emperador"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 4,
+      "poder": 11,
+      "resistencia": 11
+    },
+    "efectos": [
+      {
+        "tipo": "disparo",
+        "efecto": "destroy",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 2
+        },
+        "cantidad": 1,
+        "texto": "Puedes pagar 2 Éter, destruye 1 Campeón que controla el rival."
+      }
+    ]
+  },
+  {
+    "id": "PR-210",
+    "name": "Emperador c4 Efecto fuerte ajustada",
+    "type": "Campeón",
+    "rarity": "Épica",
+    "keywords": [
+      "Inmortal",
+      "Indestructible"
+    ],
+    "flavorText": "Emperador · 2 sacrificios · coste 4 · 9/8 (suma 17 de 22, impuesto de efecto 4.8). Efecto fuerte, stats ajustada.",
+    "paqueteId": "prueba",
+    "limiteCopias": "2",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Emperador"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 4,
+      "poder": 9,
+      "resistencia": 8
+    },
+    "efectos": [
+      {
+        "tipo": "pasivo",
+        "trigger": "al_invocar",
+        "efecto": "destroy",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "cantidad": 1,
+        "texto": "Al ser invocada, puedes destruir 1 Campeón que controla el rival."
+      },
+      {
+        "tipo": "continuo",
+        "efecto": "steal_champion",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "costo": {
+          "tipo": "bloqueo_fijo",
+          "cantidad": 2
+        },
+        "duracion": "mientras_ester_bloqueado",
+        "reagrupar": {
+          "fase": "alba",
+          "turno": "propio"
+        },
+        "texto": "Bloquea 2 Éter, toma control de 1 Campeón que controla el rival, mientras ese Éter esté bloqueado. Al inicio de tu Alba reagrupa el Éter usado por este efecto."
+      },
+      {
+        "tipo": "disparo",
+        "efecto": "exile",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 3
+        },
+        "cantidad": 1,
+        "texto": "Puedes pagar 3 Éter, exilia 1 Campeón que controla el rival."
+      }
+    ]
+  },
+  {
+    "id": "PR-211",
+    "name": "Emperador c4 Efecto fuerte sin impuesto",
+    "type": "Campeón",
+    "rarity": "Épica",
+    "keywords": [
+      "Inmortal",
+      "Indestructible"
+    ],
+    "flavorText": "Emperador · 2 sacrificios · coste 4 · 11/11 (suma 22 de 22, impuesto de efecto 4.8). Efecto fuerte, stats sin impuesto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "2",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Emperador"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 4,
+      "poder": 11,
+      "resistencia": 11
+    },
+    "efectos": [
+      {
+        "tipo": "pasivo",
+        "trigger": "al_invocar",
+        "efecto": "destroy",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "cantidad": 1,
+        "texto": "Al ser invocada, puedes destruir 1 Campeón que controla el rival."
+      },
+      {
+        "tipo": "continuo",
+        "efecto": "steal_champion",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "costo": {
+          "tipo": "bloqueo_fijo",
+          "cantidad": 2
+        },
+        "duracion": "mientras_ester_bloqueado",
+        "reagrupar": {
+          "fase": "alba",
+          "turno": "propio"
+        },
+        "texto": "Bloquea 2 Éter, toma control de 1 Campeón que controla el rival, mientras ese Éter esté bloqueado. Al inicio de tu Alba reagrupa el Éter usado por este efecto."
+      },
+      {
+        "tipo": "disparo",
+        "efecto": "exile",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 3
+        },
+        "cantidad": 1,
+        "texto": "Puedes pagar 3 Éter, exilia 1 Campeón que controla el rival."
+      }
+    ]
+  },
+  {
+    "id": "PR-212",
+    "name": "Emperador c4 Efecto con tabú ajustada",
+    "type": "Campeón",
+    "rarity": "Épica",
+    "keywords": [],
+    "flavorText": "Emperador · 2 sacrificios · coste 4 · 10/10 (suma 20 de 22, impuesto de efecto 1.3). Efecto con tabú, stats ajustada.",
+    "paqueteId": "prueba",
+    "limiteCopias": "2",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Emperador"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 4,
+      "poder": 10,
+      "resistencia": 10
+    },
+    "efectos": [
+      {
+        "tipo": "pasivo",
+        "efecto": "modificar_regla",
+        "objetivo": {
+          "tipo": "todos_campeones_propios",
+          "controlador": "propio",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "regla": {
+          "id": "cartasPorAlba",
+          "operacion": "sumar",
+          "valor": 1
+        },
+        "texto": "Cartas que se roban en el Alba +1."
+      },
+      {
+        "tipo": "continuo",
+        "efecto": "modificar_regla",
+        "costo": {
+          "tipo": "bloqueo_fijo",
+          "cantidad": 3
+        },
+        "activacion": "una_por_turno",
+        "reglaEnumerada": "rival_sin_incrementos_res",
+        "duracion": "mientras_tenga_eter_bloqueado",
+        "reagrupar": {
+          "fase": "alba",
+          "turno": "propio"
+        },
+        "texto": "Una vez por turno, bloquea 3 Éter, los Campeones del rival no pueden recibir incrementos de RES, mientras tenga Éter bloqueado. Al inicio de tu Alba reagrupa el Éter usado por este efecto."
+      },
+      {
+        "tipo": "disparo",
+        "efecto": "activar_disparo",
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 2
+        },
+        "activacion": "una_por_turno",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "campo",
+          "excluyeEsta": true
+        },
+        "sinPagarCosto": true,
+        "sinAgotar": true,
+        "texto": "Puedes pagar 2 Éter, una vez por turno, activa un efecto Disparo de otro Campeón que controles sin pagar su costo ni agotarlo."
+      }
+    ]
+  },
+  {
+    "id": "PR-213",
+    "name": "Emperador c4 Efecto con tabú sin impuesto",
+    "type": "Campeón",
+    "rarity": "Épica",
+    "keywords": [],
+    "flavorText": "Emperador · 2 sacrificios · coste 4 · 11/11 (suma 22 de 22, impuesto de efecto 1.3). Efecto con tabú, stats sin impuesto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "2",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Emperador"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 4,
+      "poder": 11,
+      "resistencia": 11
+    },
+    "efectos": [
+      {
+        "tipo": "pasivo",
+        "efecto": "modificar_regla",
+        "objetivo": {
+          "tipo": "todos_campeones_propios",
+          "controlador": "propio",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "regla": {
+          "id": "cartasPorAlba",
+          "operacion": "sumar",
+          "valor": 1
+        },
+        "texto": "Cartas que se roban en el Alba +1."
+      },
+      {
+        "tipo": "continuo",
+        "efecto": "modificar_regla",
+        "costo": {
+          "tipo": "bloqueo_fijo",
+          "cantidad": 3
+        },
+        "activacion": "una_por_turno",
+        "reglaEnumerada": "rival_sin_incrementos_res",
+        "duracion": "mientras_tenga_eter_bloqueado",
+        "reagrupar": {
+          "fase": "alba",
+          "turno": "propio"
+        },
+        "texto": "Una vez por turno, bloquea 3 Éter, los Campeones del rival no pueden recibir incrementos de RES, mientras tenga Éter bloqueado. Al inicio de tu Alba reagrupa el Éter usado por este efecto."
+      },
+      {
+        "tipo": "disparo",
+        "efecto": "activar_disparo",
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 2
+        },
+        "activacion": "una_por_turno",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "campo",
+          "excluyeEsta": true
+        },
+        "sinPagarCosto": true,
+        "sinAgotar": true,
+        "texto": "Puedes pagar 2 Éter, una vez por turno, activa un efecto Disparo de otro Campeón que controles sin pagar su costo ni agotarlo."
+      }
+    ]
+  },
+  {
+    "id": "PR-214",
+    "name": "Emperador c7 Efecto medio ajustada",
+    "type": "Campeón",
+    "rarity": "Épica",
+    "keywords": [],
+    "flavorText": "Emperador · 2 sacrificios · coste 7 · 16/16 (suma 32 de 32, impuesto de efecto 0). Efecto medio, stats ajustada.",
+    "paqueteId": "prueba",
+    "limiteCopias": "2",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Emperador"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 7,
+      "poder": 16,
+      "resistencia": 16
+    },
+    "efectos": [
+      {
+        "tipo": "disparo",
+        "efecto": "destroy",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 2
+        },
+        "cantidad": 1,
+        "texto": "Puedes pagar 2 Éter, destruye 1 Campeón que controla el rival."
+      }
+    ]
+  },
+  {
+    "id": "PR-215",
+    "name": "Emperador c7 Efecto fuerte ajustada",
+    "type": "Campeón",
+    "rarity": "Épica",
+    "keywords": [
+      "Inmortal",
+      "Indestructible"
+    ],
+    "flavorText": "Emperador · 2 sacrificios · coste 7 · 14/13 (suma 27 de 32, impuesto de efecto 4.8). Efecto fuerte, stats ajustada.",
+    "paqueteId": "prueba",
+    "limiteCopias": "2",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Emperador"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 7,
+      "poder": 14,
+      "resistencia": 13
+    },
+    "efectos": [
+      {
+        "tipo": "pasivo",
+        "trigger": "al_invocar",
+        "efecto": "destroy",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "cantidad": 1,
+        "texto": "Al ser invocada, puedes destruir 1 Campeón que controla el rival."
+      },
+      {
+        "tipo": "continuo",
+        "efecto": "steal_champion",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "costo": {
+          "tipo": "bloqueo_fijo",
+          "cantidad": 2
+        },
+        "duracion": "mientras_ester_bloqueado",
+        "reagrupar": {
+          "fase": "alba",
+          "turno": "propio"
+        },
+        "texto": "Bloquea 2 Éter, toma control de 1 Campeón que controla el rival, mientras ese Éter esté bloqueado. Al inicio de tu Alba reagrupa el Éter usado por este efecto."
+      },
+      {
+        "tipo": "disparo",
+        "efecto": "exile",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 3
+        },
+        "cantidad": 1,
+        "texto": "Puedes pagar 3 Éter, exilia 1 Campeón que controla el rival."
+      }
+    ]
+  },
+  {
+    "id": "PR-216",
+    "name": "Emperador c7 Efecto fuerte sin impuesto",
+    "type": "Campeón",
+    "rarity": "Épica",
+    "keywords": [
+      "Inmortal",
+      "Indestructible"
+    ],
+    "flavorText": "Emperador · 2 sacrificios · coste 7 · 16/16 (suma 32 de 32, impuesto de efecto 4.8). Efecto fuerte, stats sin impuesto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "2",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Emperador"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 7,
+      "poder": 16,
+      "resistencia": 16
+    },
+    "efectos": [
+      {
+        "tipo": "pasivo",
+        "trigger": "al_invocar",
+        "efecto": "destroy",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "cantidad": 1,
+        "texto": "Al ser invocada, puedes destruir 1 Campeón que controla el rival."
+      },
+      {
+        "tipo": "continuo",
+        "efecto": "steal_champion",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "costo": {
+          "tipo": "bloqueo_fijo",
+          "cantidad": 2
+        },
+        "duracion": "mientras_ester_bloqueado",
+        "reagrupar": {
+          "fase": "alba",
+          "turno": "propio"
+        },
+        "texto": "Bloquea 2 Éter, toma control de 1 Campeón que controla el rival, mientras ese Éter esté bloqueado. Al inicio de tu Alba reagrupa el Éter usado por este efecto."
+      },
+      {
+        "tipo": "disparo",
+        "efecto": "exile",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 3
+        },
+        "cantidad": 1,
+        "texto": "Puedes pagar 3 Éter, exilia 1 Campeón que controla el rival."
+      }
+    ]
+  },
+  {
+    "id": "PR-217",
+    "name": "Emperador c7 Efecto con tabú ajustada",
+    "type": "Campeón",
+    "rarity": "Épica",
+    "keywords": [],
+    "flavorText": "Emperador · 2 sacrificios · coste 7 · 15/15 (suma 30 de 32, impuesto de efecto 1.3). Efecto con tabú, stats ajustada.",
+    "paqueteId": "prueba",
+    "limiteCopias": "2",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Emperador"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 7,
+      "poder": 15,
+      "resistencia": 15
+    },
+    "efectos": [
+      {
+        "tipo": "pasivo",
+        "efecto": "modificar_regla",
+        "objetivo": {
+          "tipo": "todos_campeones_propios",
+          "controlador": "propio",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "regla": {
+          "id": "cartasPorAlba",
+          "operacion": "sumar",
+          "valor": 1
+        },
+        "texto": "Cartas que se roban en el Alba +1."
+      },
+      {
+        "tipo": "continuo",
+        "efecto": "modificar_regla",
+        "costo": {
+          "tipo": "bloqueo_fijo",
+          "cantidad": 3
+        },
+        "activacion": "una_por_turno",
+        "reglaEnumerada": "rival_sin_incrementos_res",
+        "duracion": "mientras_tenga_eter_bloqueado",
+        "reagrupar": {
+          "fase": "alba",
+          "turno": "propio"
+        },
+        "texto": "Una vez por turno, bloquea 3 Éter, los Campeones del rival no pueden recibir incrementos de RES, mientras tenga Éter bloqueado. Al inicio de tu Alba reagrupa el Éter usado por este efecto."
+      },
+      {
+        "tipo": "disparo",
+        "efecto": "activar_disparo",
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 2
+        },
+        "activacion": "una_por_turno",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "campo",
+          "excluyeEsta": true
+        },
+        "sinPagarCosto": true,
+        "sinAgotar": true,
+        "texto": "Puedes pagar 2 Éter, una vez por turno, activa un efecto Disparo de otro Campeón que controles sin pagar su costo ni agotarlo."
+      }
+    ]
+  },
+  {
+    "id": "PR-218",
+    "name": "Emperador c7 Efecto con tabú sin impuesto",
+    "type": "Campeón",
+    "rarity": "Épica",
+    "keywords": [],
+    "flavorText": "Emperador · 2 sacrificios · coste 7 · 16/16 (suma 32 de 32, impuesto de efecto 1.3). Efecto con tabú, stats sin impuesto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "2",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Emperador"
+    ],
+    "catHabilidad": [
+      "Normal"
+    ],
+    "stats": {
+      "cost": 7,
+      "poder": 16,
+      "resistencia": 16
+    },
+    "efectos": [
+      {
+        "tipo": "pasivo",
+        "efecto": "modificar_regla",
+        "objetivo": {
+          "tipo": "todos_campeones_propios",
+          "controlador": "propio",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "regla": {
+          "id": "cartasPorAlba",
+          "operacion": "sumar",
+          "valor": 1
+        },
+        "texto": "Cartas que se roban en el Alba +1."
+      },
+      {
+        "tipo": "continuo",
+        "efecto": "modificar_regla",
+        "costo": {
+          "tipo": "bloqueo_fijo",
+          "cantidad": 3
+        },
+        "activacion": "una_por_turno",
+        "reglaEnumerada": "rival_sin_incrementos_res",
+        "duracion": "mientras_tenga_eter_bloqueado",
+        "reagrupar": {
+          "fase": "alba",
+          "turno": "propio"
+        },
+        "texto": "Una vez por turno, bloquea 3 Éter, los Campeones del rival no pueden recibir incrementos de RES, mientras tenga Éter bloqueado. Al inicio de tu Alba reagrupa el Éter usado por este efecto."
+      },
+      {
+        "tipo": "disparo",
+        "efecto": "activar_disparo",
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 2
+        },
+        "activacion": "una_por_turno",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "campo",
+          "excluyeEsta": true
+        },
+        "sinPagarCosto": true,
+        "sinAgotar": true,
+        "texto": "Puedes pagar 2 Éter, una vez por turno, activa un efecto Disparo de otro Campeón que controles sin pagar su costo ni agotarlo."
+      }
+    ]
+  },
+  {
+    "id": "PR-219",
+    "name": "Única c4 Efecto medio ajustada",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [],
+    "flavorText": "Única · coste 4 · 8/7 (suma 15 de 15, impuesto de efecto 0). Efecto medio, stats ajustada.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 4,
+      "poder": 8,
+      "resistencia": 7
+    },
+    "efectos": [
+      {
+        "tipo": "disparo",
+        "efecto": "destroy",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 2
+        },
+        "cantidad": 1,
+        "texto": "Puedes pagar 2 Éter, destruye 1 Campeón que controla el rival."
+      }
+    ]
+  },
+  {
+    "id": "PR-220",
+    "name": "Única c4 Efecto fuerte ajustada",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [
+      "Inmortal",
+      "Indestructible"
+    ],
+    "flavorText": "Única · coste 4 · 5/5 (suma 10 de 15, impuesto de efecto 4.8). Efecto fuerte, stats ajustada.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 4,
+      "poder": 5,
+      "resistencia": 5
+    },
+    "efectos": [
+      {
+        "tipo": "pasivo",
+        "trigger": "al_invocar",
+        "efecto": "destroy",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "cantidad": 1,
+        "texto": "Al ser invocada, puedes destruir 1 Campeón que controla el rival."
+      },
+      {
+        "tipo": "continuo",
+        "efecto": "steal_champion",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "costo": {
+          "tipo": "bloqueo_fijo",
+          "cantidad": 2
+        },
+        "duracion": "mientras_ester_bloqueado",
+        "reagrupar": {
+          "fase": "alba",
+          "turno": "propio"
+        },
+        "texto": "Bloquea 2 Éter, toma control de 1 Campeón que controla el rival, mientras ese Éter esté bloqueado. Al inicio de tu Alba reagrupa el Éter usado por este efecto."
+      },
+      {
+        "tipo": "disparo",
+        "efecto": "exile",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 3
+        },
+        "cantidad": 1,
+        "texto": "Puedes pagar 3 Éter, exilia 1 Campeón que controla el rival."
+      }
+    ]
+  },
+  {
+    "id": "PR-221",
+    "name": "Única c4 Efecto fuerte sin impuesto",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [
+      "Inmortal",
+      "Indestructible"
+    ],
+    "flavorText": "Única · coste 4 · 8/7 (suma 15 de 15, impuesto de efecto 4.8). Efecto fuerte, stats sin impuesto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 4,
+      "poder": 8,
+      "resistencia": 7
+    },
+    "efectos": [
+      {
+        "tipo": "pasivo",
+        "trigger": "al_invocar",
+        "efecto": "destroy",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "cantidad": 1,
+        "texto": "Al ser invocada, puedes destruir 1 Campeón que controla el rival."
+      },
+      {
+        "tipo": "continuo",
+        "efecto": "steal_champion",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "costo": {
+          "tipo": "bloqueo_fijo",
+          "cantidad": 2
+        },
+        "duracion": "mientras_ester_bloqueado",
+        "reagrupar": {
+          "fase": "alba",
+          "turno": "propio"
+        },
+        "texto": "Bloquea 2 Éter, toma control de 1 Campeón que controla el rival, mientras ese Éter esté bloqueado. Al inicio de tu Alba reagrupa el Éter usado por este efecto."
+      },
+      {
+        "tipo": "disparo",
+        "efecto": "exile",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 3
+        },
+        "cantidad": 1,
+        "texto": "Puedes pagar 3 Éter, exilia 1 Campeón que controla el rival."
+      }
+    ]
+  },
+  {
+    "id": "PR-222",
+    "name": "Única c4 Efecto con tabú ajustada",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [],
+    "flavorText": "Única · coste 4 · 7/6 (suma 13 de 15, impuesto de efecto 1.3). Efecto con tabú, stats ajustada.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 4,
+      "poder": 7,
+      "resistencia": 6
+    },
+    "efectos": [
+      {
+        "tipo": "pasivo",
+        "efecto": "modificar_regla",
+        "objetivo": {
+          "tipo": "todos_campeones_propios",
+          "controlador": "propio",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "regla": {
+          "id": "cartasPorAlba",
+          "operacion": "sumar",
+          "valor": 1
+        },
+        "texto": "Cartas que se roban en el Alba +1."
+      },
+      {
+        "tipo": "continuo",
+        "efecto": "modificar_regla",
+        "costo": {
+          "tipo": "bloqueo_fijo",
+          "cantidad": 3
+        },
+        "activacion": "una_por_turno",
+        "reglaEnumerada": "rival_sin_incrementos_res",
+        "duracion": "mientras_tenga_eter_bloqueado",
+        "reagrupar": {
+          "fase": "alba",
+          "turno": "propio"
+        },
+        "texto": "Una vez por turno, bloquea 3 Éter, los Campeones del rival no pueden recibir incrementos de RES, mientras tenga Éter bloqueado. Al inicio de tu Alba reagrupa el Éter usado por este efecto."
+      },
+      {
+        "tipo": "disparo",
+        "efecto": "activar_disparo",
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 2
+        },
+        "activacion": "una_por_turno",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "campo",
+          "excluyeEsta": true
+        },
+        "sinPagarCosto": true,
+        "sinAgotar": true,
+        "texto": "Puedes pagar 2 Éter, una vez por turno, activa un efecto Disparo de otro Campeón que controles sin pagar su costo ni agotarlo."
+      }
+    ]
+  },
+  {
+    "id": "PR-223",
+    "name": "Única c4 Efecto con tabú sin impuesto",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [],
+    "flavorText": "Única · coste 4 · 8/7 (suma 15 de 15, impuesto de efecto 1.3). Efecto con tabú, stats sin impuesto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 4,
+      "poder": 8,
+      "resistencia": 7
+    },
+    "efectos": [
+      {
+        "tipo": "pasivo",
+        "efecto": "modificar_regla",
+        "objetivo": {
+          "tipo": "todos_campeones_propios",
+          "controlador": "propio",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "regla": {
+          "id": "cartasPorAlba",
+          "operacion": "sumar",
+          "valor": 1
+        },
+        "texto": "Cartas que se roban en el Alba +1."
+      },
+      {
+        "tipo": "continuo",
+        "efecto": "modificar_regla",
+        "costo": {
+          "tipo": "bloqueo_fijo",
+          "cantidad": 3
+        },
+        "activacion": "una_por_turno",
+        "reglaEnumerada": "rival_sin_incrementos_res",
+        "duracion": "mientras_tenga_eter_bloqueado",
+        "reagrupar": {
+          "fase": "alba",
+          "turno": "propio"
+        },
+        "texto": "Una vez por turno, bloquea 3 Éter, los Campeones del rival no pueden recibir incrementos de RES, mientras tenga Éter bloqueado. Al inicio de tu Alba reagrupa el Éter usado por este efecto."
+      },
+      {
+        "tipo": "disparo",
+        "efecto": "activar_disparo",
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 2
+        },
+        "activacion": "una_por_turno",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "campo",
+          "excluyeEsta": true
+        },
+        "sinPagarCosto": true,
+        "sinAgotar": true,
+        "texto": "Puedes pagar 2 Éter, una vez por turno, activa un efecto Disparo de otro Campeón que controles sin pagar su costo ni agotarlo."
+      }
+    ]
+  },
+  {
+    "id": "PR-224",
+    "name": "Única c7 Efecto medio ajustada",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [],
+    "flavorText": "Única · coste 7 · 13/12 (suma 25 de 25, impuesto de efecto 0). Efecto medio, stats ajustada.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 7,
+      "poder": 13,
+      "resistencia": 12
+    },
+    "efectos": [
+      {
+        "tipo": "disparo",
+        "efecto": "destroy",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 2
+        },
+        "cantidad": 1,
+        "texto": "Puedes pagar 2 Éter, destruye 1 Campeón que controla el rival."
+      }
+    ]
+  },
+  {
+    "id": "PR-225",
+    "name": "Única c7 Efecto fuerte ajustada",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [
+      "Inmortal",
+      "Indestructible"
+    ],
+    "flavorText": "Única · coste 7 · 10/10 (suma 20 de 25, impuesto de efecto 4.8). Efecto fuerte, stats ajustada.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 7,
+      "poder": 10,
+      "resistencia": 10
+    },
+    "efectos": [
+      {
+        "tipo": "pasivo",
+        "trigger": "al_invocar",
+        "efecto": "destroy",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "cantidad": 1,
+        "texto": "Al ser invocada, puedes destruir 1 Campeón que controla el rival."
+      },
+      {
+        "tipo": "continuo",
+        "efecto": "steal_champion",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "costo": {
+          "tipo": "bloqueo_fijo",
+          "cantidad": 2
+        },
+        "duracion": "mientras_ester_bloqueado",
+        "reagrupar": {
+          "fase": "alba",
+          "turno": "propio"
+        },
+        "texto": "Bloquea 2 Éter, toma control de 1 Campeón que controla el rival, mientras ese Éter esté bloqueado. Al inicio de tu Alba reagrupa el Éter usado por este efecto."
+      },
+      {
+        "tipo": "disparo",
+        "efecto": "exile",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 3
+        },
+        "cantidad": 1,
+        "texto": "Puedes pagar 3 Éter, exilia 1 Campeón que controla el rival."
+      }
+    ]
+  },
+  {
+    "id": "PR-226",
+    "name": "Única c7 Efecto fuerte sin impuesto",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [
+      "Inmortal",
+      "Indestructible"
+    ],
+    "flavorText": "Única · coste 7 · 13/12 (suma 25 de 25, impuesto de efecto 4.8). Efecto fuerte, stats sin impuesto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 7,
+      "poder": 13,
+      "resistencia": 12
+    },
+    "efectos": [
+      {
+        "tipo": "pasivo",
+        "trigger": "al_invocar",
+        "efecto": "destroy",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "cantidad": 1,
+        "texto": "Al ser invocada, puedes destruir 1 Campeón que controla el rival."
+      },
+      {
+        "tipo": "continuo",
+        "efecto": "steal_champion",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "costo": {
+          "tipo": "bloqueo_fijo",
+          "cantidad": 2
+        },
+        "duracion": "mientras_ester_bloqueado",
+        "reagrupar": {
+          "fase": "alba",
+          "turno": "propio"
+        },
+        "texto": "Bloquea 2 Éter, toma control de 1 Campeón que controla el rival, mientras ese Éter esté bloqueado. Al inicio de tu Alba reagrupa el Éter usado por este efecto."
+      },
+      {
+        "tipo": "disparo",
+        "efecto": "exile",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 3
+        },
+        "cantidad": 1,
+        "texto": "Puedes pagar 3 Éter, exilia 1 Campeón que controla el rival."
+      }
+    ]
+  },
+  {
+    "id": "PR-227",
+    "name": "Única c7 Efecto con tabú ajustada",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [],
+    "flavorText": "Única · coste 7 · 12/11 (suma 23 de 25, impuesto de efecto 1.3). Efecto con tabú, stats ajustada.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 7,
+      "poder": 12,
+      "resistencia": 11
+    },
+    "efectos": [
+      {
+        "tipo": "pasivo",
+        "efecto": "modificar_regla",
+        "objetivo": {
+          "tipo": "todos_campeones_propios",
+          "controlador": "propio",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "regla": {
+          "id": "cartasPorAlba",
+          "operacion": "sumar",
+          "valor": 1
+        },
+        "texto": "Cartas que se roban en el Alba +1."
+      },
+      {
+        "tipo": "continuo",
+        "efecto": "modificar_regla",
+        "costo": {
+          "tipo": "bloqueo_fijo",
+          "cantidad": 3
+        },
+        "activacion": "una_por_turno",
+        "reglaEnumerada": "rival_sin_incrementos_res",
+        "duracion": "mientras_tenga_eter_bloqueado",
+        "reagrupar": {
+          "fase": "alba",
+          "turno": "propio"
+        },
+        "texto": "Una vez por turno, bloquea 3 Éter, los Campeones del rival no pueden recibir incrementos de RES, mientras tenga Éter bloqueado. Al inicio de tu Alba reagrupa el Éter usado por este efecto."
+      },
+      {
+        "tipo": "disparo",
+        "efecto": "activar_disparo",
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 2
+        },
+        "activacion": "una_por_turno",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "campo",
+          "excluyeEsta": true
+        },
+        "sinPagarCosto": true,
+        "sinAgotar": true,
+        "texto": "Puedes pagar 2 Éter, una vez por turno, activa un efecto Disparo de otro Campeón que controles sin pagar su costo ni agotarlo."
+      }
+    ]
+  },
+  {
+    "id": "PR-228",
+    "name": "Única c7 Efecto con tabú sin impuesto",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [],
+    "flavorText": "Única · coste 7 · 13/12 (suma 25 de 25, impuesto de efecto 1.3). Efecto con tabú, stats sin impuesto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Normal"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 7,
+      "poder": 13,
+      "resistencia": 12
+    },
+    "efectos": [
+      {
+        "tipo": "pasivo",
+        "efecto": "modificar_regla",
+        "objetivo": {
+          "tipo": "todos_campeones_propios",
+          "controlador": "propio",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "regla": {
+          "id": "cartasPorAlba",
+          "operacion": "sumar",
+          "valor": 1
+        },
+        "texto": "Cartas que se roban en el Alba +1."
+      },
+      {
+        "tipo": "continuo",
+        "efecto": "modificar_regla",
+        "costo": {
+          "tipo": "bloqueo_fijo",
+          "cantidad": 3
+        },
+        "activacion": "una_por_turno",
+        "reglaEnumerada": "rival_sin_incrementos_res",
+        "duracion": "mientras_tenga_eter_bloqueado",
+        "reagrupar": {
+          "fase": "alba",
+          "turno": "propio"
+        },
+        "texto": "Una vez por turno, bloquea 3 Éter, los Campeones del rival no pueden recibir incrementos de RES, mientras tenga Éter bloqueado. Al inicio de tu Alba reagrupa el Éter usado por este efecto."
+      },
+      {
+        "tipo": "disparo",
+        "efecto": "activar_disparo",
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 2
+        },
+        "activacion": "una_por_turno",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "campo",
+          "excluyeEsta": true
+        },
+        "sinPagarCosto": true,
+        "sinAgotar": true,
+        "texto": "Puedes pagar 2 Éter, una vez por turno, activa un efecto Disparo de otro Campeón que controles sin pagar su costo ni agotarlo."
+      }
+    ]
+  },
+  {
+    "id": "PR-229",
+    "name": "Soberano Única c4 Efecto medio ajustada",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [],
+    "flavorText": "Soberano Única · 1 sacrificio · coste 4 · 11/10 (suma 21 de 21, impuesto de efecto 0). Efecto medio, stats ajustada.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Soberano"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 4,
+      "poder": 11,
+      "resistencia": 10
+    },
+    "efectos": [
+      {
+        "tipo": "disparo",
+        "efecto": "destroy",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 2
+        },
+        "cantidad": 1,
+        "texto": "Puedes pagar 2 Éter, destruye 1 Campeón que controla el rival."
+      }
+    ]
+  },
+  {
+    "id": "PR-230",
+    "name": "Soberano Única c4 Efecto fuerte ajustada",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [
+      "Inmortal",
+      "Indestructible"
+    ],
+    "flavorText": "Soberano Única · 1 sacrificio · coste 4 · 8/8 (suma 16 de 21, impuesto de efecto 4.8). Efecto fuerte, stats ajustada.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Soberano"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 4,
+      "poder": 8,
+      "resistencia": 8
+    },
+    "efectos": [
+      {
+        "tipo": "pasivo",
+        "trigger": "al_invocar",
+        "efecto": "destroy",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "cantidad": 1,
+        "texto": "Al ser invocada, puedes destruir 1 Campeón que controla el rival."
+      },
+      {
+        "tipo": "continuo",
+        "efecto": "steal_champion",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "costo": {
+          "tipo": "bloqueo_fijo",
+          "cantidad": 2
+        },
+        "duracion": "mientras_ester_bloqueado",
+        "reagrupar": {
+          "fase": "alba",
+          "turno": "propio"
+        },
+        "texto": "Bloquea 2 Éter, toma control de 1 Campeón que controla el rival, mientras ese Éter esté bloqueado. Al inicio de tu Alba reagrupa el Éter usado por este efecto."
+      },
+      {
+        "tipo": "disparo",
+        "efecto": "exile",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 3
+        },
+        "cantidad": 1,
+        "texto": "Puedes pagar 3 Éter, exilia 1 Campeón que controla el rival."
+      }
+    ]
+  },
+  {
+    "id": "PR-231",
+    "name": "Soberano Única c4 Efecto fuerte sin impuesto",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [
+      "Inmortal",
+      "Indestructible"
+    ],
+    "flavorText": "Soberano Única · 1 sacrificio · coste 4 · 11/10 (suma 21 de 21, impuesto de efecto 4.8). Efecto fuerte, stats sin impuesto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Soberano"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 4,
+      "poder": 11,
+      "resistencia": 10
+    },
+    "efectos": [
+      {
+        "tipo": "pasivo",
+        "trigger": "al_invocar",
+        "efecto": "destroy",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "cantidad": 1,
+        "texto": "Al ser invocada, puedes destruir 1 Campeón que controla el rival."
+      },
+      {
+        "tipo": "continuo",
+        "efecto": "steal_champion",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "costo": {
+          "tipo": "bloqueo_fijo",
+          "cantidad": 2
+        },
+        "duracion": "mientras_ester_bloqueado",
+        "reagrupar": {
+          "fase": "alba",
+          "turno": "propio"
+        },
+        "texto": "Bloquea 2 Éter, toma control de 1 Campeón que controla el rival, mientras ese Éter esté bloqueado. Al inicio de tu Alba reagrupa el Éter usado por este efecto."
+      },
+      {
+        "tipo": "disparo",
+        "efecto": "exile",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 3
+        },
+        "cantidad": 1,
+        "texto": "Puedes pagar 3 Éter, exilia 1 Campeón que controla el rival."
+      }
+    ]
+  },
+  {
+    "id": "PR-232",
+    "name": "Soberano Única c4 Efecto con tabú ajustada",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [],
+    "flavorText": "Soberano Única · 1 sacrificio · coste 4 · 10/9 (suma 19 de 21, impuesto de efecto 1.3). Efecto con tabú, stats ajustada.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Soberano"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 4,
+      "poder": 10,
+      "resistencia": 9
+    },
+    "efectos": [
+      {
+        "tipo": "pasivo",
+        "efecto": "modificar_regla",
+        "objetivo": {
+          "tipo": "todos_campeones_propios",
+          "controlador": "propio",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "regla": {
+          "id": "cartasPorAlba",
+          "operacion": "sumar",
+          "valor": 1
+        },
+        "texto": "Cartas que se roban en el Alba +1."
+      },
+      {
+        "tipo": "continuo",
+        "efecto": "modificar_regla",
+        "costo": {
+          "tipo": "bloqueo_fijo",
+          "cantidad": 3
+        },
+        "activacion": "una_por_turno",
+        "reglaEnumerada": "rival_sin_incrementos_res",
+        "duracion": "mientras_tenga_eter_bloqueado",
+        "reagrupar": {
+          "fase": "alba",
+          "turno": "propio"
+        },
+        "texto": "Una vez por turno, bloquea 3 Éter, los Campeones del rival no pueden recibir incrementos de RES, mientras tenga Éter bloqueado. Al inicio de tu Alba reagrupa el Éter usado por este efecto."
+      },
+      {
+        "tipo": "disparo",
+        "efecto": "activar_disparo",
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 2
+        },
+        "activacion": "una_por_turno",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "campo",
+          "excluyeEsta": true
+        },
+        "sinPagarCosto": true,
+        "sinAgotar": true,
+        "texto": "Puedes pagar 2 Éter, una vez por turno, activa un efecto Disparo de otro Campeón que controles sin pagar su costo ni agotarlo."
+      }
+    ]
+  },
+  {
+    "id": "PR-233",
+    "name": "Soberano Única c4 Efecto con tabú sin impuesto",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [],
+    "flavorText": "Soberano Única · 1 sacrificio · coste 4 · 11/10 (suma 21 de 21, impuesto de efecto 1.3). Efecto con tabú, stats sin impuesto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Soberano"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 4,
+      "poder": 11,
+      "resistencia": 10
+    },
+    "efectos": [
+      {
+        "tipo": "pasivo",
+        "efecto": "modificar_regla",
+        "objetivo": {
+          "tipo": "todos_campeones_propios",
+          "controlador": "propio",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "regla": {
+          "id": "cartasPorAlba",
+          "operacion": "sumar",
+          "valor": 1
+        },
+        "texto": "Cartas que se roban en el Alba +1."
+      },
+      {
+        "tipo": "continuo",
+        "efecto": "modificar_regla",
+        "costo": {
+          "tipo": "bloqueo_fijo",
+          "cantidad": 3
+        },
+        "activacion": "una_por_turno",
+        "reglaEnumerada": "rival_sin_incrementos_res",
+        "duracion": "mientras_tenga_eter_bloqueado",
+        "reagrupar": {
+          "fase": "alba",
+          "turno": "propio"
+        },
+        "texto": "Una vez por turno, bloquea 3 Éter, los Campeones del rival no pueden recibir incrementos de RES, mientras tenga Éter bloqueado. Al inicio de tu Alba reagrupa el Éter usado por este efecto."
+      },
+      {
+        "tipo": "disparo",
+        "efecto": "activar_disparo",
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 2
+        },
+        "activacion": "una_por_turno",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "campo",
+          "excluyeEsta": true
+        },
+        "sinPagarCosto": true,
+        "sinAgotar": true,
+        "texto": "Puedes pagar 2 Éter, una vez por turno, activa un efecto Disparo de otro Campeón que controles sin pagar su costo ni agotarlo."
+      }
+    ]
+  },
+  {
+    "id": "PR-234",
+    "name": "Soberano Única c7 Efecto medio ajustada",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [],
+    "flavorText": "Soberano Única · 1 sacrificio · coste 7 · 16/15 (suma 31 de 31, impuesto de efecto 0). Efecto medio, stats ajustada.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Soberano"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 7,
+      "poder": 16,
+      "resistencia": 15
+    },
+    "efectos": [
+      {
+        "tipo": "disparo",
+        "efecto": "destroy",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 2
+        },
+        "cantidad": 1,
+        "texto": "Puedes pagar 2 Éter, destruye 1 Campeón que controla el rival."
+      }
+    ]
+  },
+  {
+    "id": "PR-235",
+    "name": "Soberano Única c7 Efecto fuerte ajustada",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [
+      "Inmortal",
+      "Indestructible"
+    ],
+    "flavorText": "Soberano Única · 1 sacrificio · coste 7 · 13/13 (suma 26 de 31, impuesto de efecto 4.8). Efecto fuerte, stats ajustada.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Soberano"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 7,
+      "poder": 13,
+      "resistencia": 13
+    },
+    "efectos": [
+      {
+        "tipo": "pasivo",
+        "trigger": "al_invocar",
+        "efecto": "destroy",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "cantidad": 1,
+        "texto": "Al ser invocada, puedes destruir 1 Campeón que controla el rival."
+      },
+      {
+        "tipo": "continuo",
+        "efecto": "steal_champion",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "costo": {
+          "tipo": "bloqueo_fijo",
+          "cantidad": 2
+        },
+        "duracion": "mientras_ester_bloqueado",
+        "reagrupar": {
+          "fase": "alba",
+          "turno": "propio"
+        },
+        "texto": "Bloquea 2 Éter, toma control de 1 Campeón que controla el rival, mientras ese Éter esté bloqueado. Al inicio de tu Alba reagrupa el Éter usado por este efecto."
+      },
+      {
+        "tipo": "disparo",
+        "efecto": "exile",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 3
+        },
+        "cantidad": 1,
+        "texto": "Puedes pagar 3 Éter, exilia 1 Campeón que controla el rival."
+      }
+    ]
+  },
+  {
+    "id": "PR-236",
+    "name": "Soberano Única c7 Efecto fuerte sin impuesto",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [
+      "Inmortal",
+      "Indestructible"
+    ],
+    "flavorText": "Soberano Única · 1 sacrificio · coste 7 · 16/15 (suma 31 de 31, impuesto de efecto 4.8). Efecto fuerte, stats sin impuesto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Soberano"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 7,
+      "poder": 16,
+      "resistencia": 15
+    },
+    "efectos": [
+      {
+        "tipo": "pasivo",
+        "trigger": "al_invocar",
+        "efecto": "destroy",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "cantidad": 1,
+        "texto": "Al ser invocada, puedes destruir 1 Campeón que controla el rival."
+      },
+      {
+        "tipo": "continuo",
+        "efecto": "steal_champion",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "costo": {
+          "tipo": "bloqueo_fijo",
+          "cantidad": 2
+        },
+        "duracion": "mientras_ester_bloqueado",
+        "reagrupar": {
+          "fase": "alba",
+          "turno": "propio"
+        },
+        "texto": "Bloquea 2 Éter, toma control de 1 Campeón que controla el rival, mientras ese Éter esté bloqueado. Al inicio de tu Alba reagrupa el Éter usado por este efecto."
+      },
+      {
+        "tipo": "disparo",
+        "efecto": "exile",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 3
+        },
+        "cantidad": 1,
+        "texto": "Puedes pagar 3 Éter, exilia 1 Campeón que controla el rival."
+      }
+    ]
+  },
+  {
+    "id": "PR-237",
+    "name": "Soberano Única c7 Efecto con tabú ajustada",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [],
+    "flavorText": "Soberano Única · 1 sacrificio · coste 7 · 15/14 (suma 29 de 31, impuesto de efecto 1.3). Efecto con tabú, stats ajustada.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Soberano"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 7,
+      "poder": 15,
+      "resistencia": 14
+    },
+    "efectos": [
+      {
+        "tipo": "pasivo",
+        "efecto": "modificar_regla",
+        "objetivo": {
+          "tipo": "todos_campeones_propios",
+          "controlador": "propio",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "regla": {
+          "id": "cartasPorAlba",
+          "operacion": "sumar",
+          "valor": 1
+        },
+        "texto": "Cartas que se roban en el Alba +1."
+      },
+      {
+        "tipo": "continuo",
+        "efecto": "modificar_regla",
+        "costo": {
+          "tipo": "bloqueo_fijo",
+          "cantidad": 3
+        },
+        "activacion": "una_por_turno",
+        "reglaEnumerada": "rival_sin_incrementos_res",
+        "duracion": "mientras_tenga_eter_bloqueado",
+        "reagrupar": {
+          "fase": "alba",
+          "turno": "propio"
+        },
+        "texto": "Una vez por turno, bloquea 3 Éter, los Campeones del rival no pueden recibir incrementos de RES, mientras tenga Éter bloqueado. Al inicio de tu Alba reagrupa el Éter usado por este efecto."
+      },
+      {
+        "tipo": "disparo",
+        "efecto": "activar_disparo",
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 2
+        },
+        "activacion": "una_por_turno",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "campo",
+          "excluyeEsta": true
+        },
+        "sinPagarCosto": true,
+        "sinAgotar": true,
+        "texto": "Puedes pagar 2 Éter, una vez por turno, activa un efecto Disparo de otro Campeón que controles sin pagar su costo ni agotarlo."
+      }
+    ]
+  },
+  {
+    "id": "PR-238",
+    "name": "Soberano Única c7 Efecto con tabú sin impuesto",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [],
+    "flavorText": "Soberano Única · 1 sacrificio · coste 7 · 16/15 (suma 31 de 31, impuesto de efecto 1.3). Efecto con tabú, stats sin impuesto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Soberano"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 7,
+      "poder": 16,
+      "resistencia": 15
+    },
+    "efectos": [
+      {
+        "tipo": "pasivo",
+        "efecto": "modificar_regla",
+        "objetivo": {
+          "tipo": "todos_campeones_propios",
+          "controlador": "propio",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "regla": {
+          "id": "cartasPorAlba",
+          "operacion": "sumar",
+          "valor": 1
+        },
+        "texto": "Cartas que se roban en el Alba +1."
+      },
+      {
+        "tipo": "continuo",
+        "efecto": "modificar_regla",
+        "costo": {
+          "tipo": "bloqueo_fijo",
+          "cantidad": 3
+        },
+        "activacion": "una_por_turno",
+        "reglaEnumerada": "rival_sin_incrementos_res",
+        "duracion": "mientras_tenga_eter_bloqueado",
+        "reagrupar": {
+          "fase": "alba",
+          "turno": "propio"
+        },
+        "texto": "Una vez por turno, bloquea 3 Éter, los Campeones del rival no pueden recibir incrementos de RES, mientras tenga Éter bloqueado. Al inicio de tu Alba reagrupa el Éter usado por este efecto."
+      },
+      {
+        "tipo": "disparo",
+        "efecto": "activar_disparo",
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 2
+        },
+        "activacion": "una_por_turno",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "campo",
+          "excluyeEsta": true
+        },
+        "sinPagarCosto": true,
+        "sinAgotar": true,
+        "texto": "Puedes pagar 2 Éter, una vez por turno, activa un efecto Disparo de otro Campeón que controles sin pagar su costo ni agotarlo."
+      }
+    ]
+  },
+  {
+    "id": "PR-239",
+    "name": "Emperador Única c4 Efecto medio ajustada",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [],
+    "flavorText": "Emperador Única · 2 sacrificios · coste 4 · 14/13 (suma 27 de 27, impuesto de efecto 0). Efecto medio, stats ajustada.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Emperador"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 4,
+      "poder": 14,
+      "resistencia": 13
+    },
+    "efectos": [
+      {
+        "tipo": "disparo",
+        "efecto": "destroy",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 2
+        },
+        "cantidad": 1,
+        "texto": "Puedes pagar 2 Éter, destruye 1 Campeón que controla el rival."
+      }
+    ]
+  },
+  {
+    "id": "PR-240",
+    "name": "Emperador Única c4 Efecto fuerte ajustada",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [
+      "Inmortal",
+      "Indestructible"
+    ],
+    "flavorText": "Emperador Única · 2 sacrificios · coste 4 · 11/11 (suma 22 de 27, impuesto de efecto 4.8). Efecto fuerte, stats ajustada.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Emperador"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 4,
+      "poder": 11,
+      "resistencia": 11
+    },
+    "efectos": [
+      {
+        "tipo": "pasivo",
+        "trigger": "al_invocar",
+        "efecto": "destroy",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "cantidad": 1,
+        "texto": "Al ser invocada, puedes destruir 1 Campeón que controla el rival."
+      },
+      {
+        "tipo": "continuo",
+        "efecto": "steal_champion",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "costo": {
+          "tipo": "bloqueo_fijo",
+          "cantidad": 2
+        },
+        "duracion": "mientras_ester_bloqueado",
+        "reagrupar": {
+          "fase": "alba",
+          "turno": "propio"
+        },
+        "texto": "Bloquea 2 Éter, toma control de 1 Campeón que controla el rival, mientras ese Éter esté bloqueado. Al inicio de tu Alba reagrupa el Éter usado por este efecto."
+      },
+      {
+        "tipo": "disparo",
+        "efecto": "exile",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 3
+        },
+        "cantidad": 1,
+        "texto": "Puedes pagar 3 Éter, exilia 1 Campeón que controla el rival."
+      }
+    ]
+  },
+  {
+    "id": "PR-241",
+    "name": "Emperador Única c4 Efecto fuerte sin impuesto",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [
+      "Inmortal",
+      "Indestructible"
+    ],
+    "flavorText": "Emperador Única · 2 sacrificios · coste 4 · 14/13 (suma 27 de 27, impuesto de efecto 4.8). Efecto fuerte, stats sin impuesto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Emperador"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 4,
+      "poder": 14,
+      "resistencia": 13
+    },
+    "efectos": [
+      {
+        "tipo": "pasivo",
+        "trigger": "al_invocar",
+        "efecto": "destroy",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "cantidad": 1,
+        "texto": "Al ser invocada, puedes destruir 1 Campeón que controla el rival."
+      },
+      {
+        "tipo": "continuo",
+        "efecto": "steal_champion",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "costo": {
+          "tipo": "bloqueo_fijo",
+          "cantidad": 2
+        },
+        "duracion": "mientras_ester_bloqueado",
+        "reagrupar": {
+          "fase": "alba",
+          "turno": "propio"
+        },
+        "texto": "Bloquea 2 Éter, toma control de 1 Campeón que controla el rival, mientras ese Éter esté bloqueado. Al inicio de tu Alba reagrupa el Éter usado por este efecto."
+      },
+      {
+        "tipo": "disparo",
+        "efecto": "exile",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 3
+        },
+        "cantidad": 1,
+        "texto": "Puedes pagar 3 Éter, exilia 1 Campeón que controla el rival."
+      }
+    ]
+  },
+  {
+    "id": "PR-242",
+    "name": "Emperador Única c4 Efecto con tabú ajustada",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [],
+    "flavorText": "Emperador Única · 2 sacrificios · coste 4 · 13/12 (suma 25 de 27, impuesto de efecto 1.3). Efecto con tabú, stats ajustada.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Emperador"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 4,
+      "poder": 13,
+      "resistencia": 12
+    },
+    "efectos": [
+      {
+        "tipo": "pasivo",
+        "efecto": "modificar_regla",
+        "objetivo": {
+          "tipo": "todos_campeones_propios",
+          "controlador": "propio",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "regla": {
+          "id": "cartasPorAlba",
+          "operacion": "sumar",
+          "valor": 1
+        },
+        "texto": "Cartas que se roban en el Alba +1."
+      },
+      {
+        "tipo": "continuo",
+        "efecto": "modificar_regla",
+        "costo": {
+          "tipo": "bloqueo_fijo",
+          "cantidad": 3
+        },
+        "activacion": "una_por_turno",
+        "reglaEnumerada": "rival_sin_incrementos_res",
+        "duracion": "mientras_tenga_eter_bloqueado",
+        "reagrupar": {
+          "fase": "alba",
+          "turno": "propio"
+        },
+        "texto": "Una vez por turno, bloquea 3 Éter, los Campeones del rival no pueden recibir incrementos de RES, mientras tenga Éter bloqueado. Al inicio de tu Alba reagrupa el Éter usado por este efecto."
+      },
+      {
+        "tipo": "disparo",
+        "efecto": "activar_disparo",
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 2
+        },
+        "activacion": "una_por_turno",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "campo",
+          "excluyeEsta": true
+        },
+        "sinPagarCosto": true,
+        "sinAgotar": true,
+        "texto": "Puedes pagar 2 Éter, una vez por turno, activa un efecto Disparo de otro Campeón que controles sin pagar su costo ni agotarlo."
+      }
+    ]
+  },
+  {
+    "id": "PR-243",
+    "name": "Emperador Única c4 Efecto con tabú sin impuesto",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [],
+    "flavorText": "Emperador Única · 2 sacrificios · coste 4 · 14/13 (suma 27 de 27, impuesto de efecto 1.3). Efecto con tabú, stats sin impuesto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Emperador"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 4,
+      "poder": 14,
+      "resistencia": 13
+    },
+    "efectos": [
+      {
+        "tipo": "pasivo",
+        "efecto": "modificar_regla",
+        "objetivo": {
+          "tipo": "todos_campeones_propios",
+          "controlador": "propio",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "regla": {
+          "id": "cartasPorAlba",
+          "operacion": "sumar",
+          "valor": 1
+        },
+        "texto": "Cartas que se roban en el Alba +1."
+      },
+      {
+        "tipo": "continuo",
+        "efecto": "modificar_regla",
+        "costo": {
+          "tipo": "bloqueo_fijo",
+          "cantidad": 3
+        },
+        "activacion": "una_por_turno",
+        "reglaEnumerada": "rival_sin_incrementos_res",
+        "duracion": "mientras_tenga_eter_bloqueado",
+        "reagrupar": {
+          "fase": "alba",
+          "turno": "propio"
+        },
+        "texto": "Una vez por turno, bloquea 3 Éter, los Campeones del rival no pueden recibir incrementos de RES, mientras tenga Éter bloqueado. Al inicio de tu Alba reagrupa el Éter usado por este efecto."
+      },
+      {
+        "tipo": "disparo",
+        "efecto": "activar_disparo",
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 2
+        },
+        "activacion": "una_por_turno",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "campo",
+          "excluyeEsta": true
+        },
+        "sinPagarCosto": true,
+        "sinAgotar": true,
+        "texto": "Puedes pagar 2 Éter, una vez por turno, activa un efecto Disparo de otro Campeón que controles sin pagar su costo ni agotarlo."
+      }
+    ]
+  },
+  {
+    "id": "PR-244",
+    "name": "Emperador Única c7 Efecto medio ajustada",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [],
+    "flavorText": "Emperador Única · 2 sacrificios · coste 7 · 19/18 (suma 37 de 37, impuesto de efecto 0). Efecto medio, stats ajustada.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Emperador"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 7,
+      "poder": 19,
+      "resistencia": 18
+    },
+    "efectos": [
+      {
+        "tipo": "disparo",
+        "efecto": "destroy",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 2
+        },
+        "cantidad": 1,
+        "texto": "Puedes pagar 2 Éter, destruye 1 Campeón que controla el rival."
+      }
+    ]
+  },
+  {
+    "id": "PR-245",
+    "name": "Emperador Única c7 Efecto fuerte ajustada",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [
+      "Inmortal",
+      "Indestructible"
+    ],
+    "flavorText": "Emperador Única · 2 sacrificios · coste 7 · 16/16 (suma 32 de 37, impuesto de efecto 4.8). Efecto fuerte, stats ajustada.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Emperador"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 7,
+      "poder": 16,
+      "resistencia": 16
+    },
+    "efectos": [
+      {
+        "tipo": "pasivo",
+        "trigger": "al_invocar",
+        "efecto": "destroy",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "cantidad": 1,
+        "texto": "Al ser invocada, puedes destruir 1 Campeón que controla el rival."
+      },
+      {
+        "tipo": "continuo",
+        "efecto": "steal_champion",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "costo": {
+          "tipo": "bloqueo_fijo",
+          "cantidad": 2
+        },
+        "duracion": "mientras_ester_bloqueado",
+        "reagrupar": {
+          "fase": "alba",
+          "turno": "propio"
+        },
+        "texto": "Bloquea 2 Éter, toma control de 1 Campeón que controla el rival, mientras ese Éter esté bloqueado. Al inicio de tu Alba reagrupa el Éter usado por este efecto."
+      },
+      {
+        "tipo": "disparo",
+        "efecto": "exile",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 3
+        },
+        "cantidad": 1,
+        "texto": "Puedes pagar 3 Éter, exilia 1 Campeón que controla el rival."
+      }
+    ]
+  },
+  {
+    "id": "PR-246",
+    "name": "Emperador Única c7 Efecto fuerte sin impuesto",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [
+      "Inmortal",
+      "Indestructible"
+    ],
+    "flavorText": "Emperador Única · 2 sacrificios · coste 7 · 19/18 (suma 37 de 37, impuesto de efecto 4.8). Efecto fuerte, stats sin impuesto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Emperador"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 7,
+      "poder": 19,
+      "resistencia": 18
+    },
+    "efectos": [
+      {
+        "tipo": "pasivo",
+        "trigger": "al_invocar",
+        "efecto": "destroy",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "cantidad": 1,
+        "texto": "Al ser invocada, puedes destruir 1 Campeón que controla el rival."
+      },
+      {
+        "tipo": "continuo",
+        "efecto": "steal_champion",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "costo": {
+          "tipo": "bloqueo_fijo",
+          "cantidad": 2
+        },
+        "duracion": "mientras_ester_bloqueado",
+        "reagrupar": {
+          "fase": "alba",
+          "turno": "propio"
+        },
+        "texto": "Bloquea 2 Éter, toma control de 1 Campeón que controla el rival, mientras ese Éter esté bloqueado. Al inicio de tu Alba reagrupa el Éter usado por este efecto."
+      },
+      {
+        "tipo": "disparo",
+        "efecto": "exile",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "rival",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 3
+        },
+        "cantidad": 1,
+        "texto": "Puedes pagar 3 Éter, exilia 1 Campeón que controla el rival."
+      }
+    ]
+  },
+  {
+    "id": "PR-247",
+    "name": "Emperador Única c7 Efecto con tabú ajustada",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [],
+    "flavorText": "Emperador Única · 2 sacrificios · coste 7 · 18/17 (suma 35 de 37, impuesto de efecto 1.3). Efecto con tabú, stats ajustada.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Emperador"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 7,
+      "poder": 18,
+      "resistencia": 17
+    },
+    "efectos": [
+      {
+        "tipo": "pasivo",
+        "efecto": "modificar_regla",
+        "objetivo": {
+          "tipo": "todos_campeones_propios",
+          "controlador": "propio",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "regla": {
+          "id": "cartasPorAlba",
+          "operacion": "sumar",
+          "valor": 1
+        },
+        "texto": "Cartas que se roban en el Alba +1."
+      },
+      {
+        "tipo": "continuo",
+        "efecto": "modificar_regla",
+        "costo": {
+          "tipo": "bloqueo_fijo",
+          "cantidad": 3
+        },
+        "activacion": "una_por_turno",
+        "reglaEnumerada": "rival_sin_incrementos_res",
+        "duracion": "mientras_tenga_eter_bloqueado",
+        "reagrupar": {
+          "fase": "alba",
+          "turno": "propio"
+        },
+        "texto": "Una vez por turno, bloquea 3 Éter, los Campeones del rival no pueden recibir incrementos de RES, mientras tenga Éter bloqueado. Al inicio de tu Alba reagrupa el Éter usado por este efecto."
+      },
+      {
+        "tipo": "disparo",
+        "efecto": "activar_disparo",
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 2
+        },
+        "activacion": "una_por_turno",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "campo",
+          "excluyeEsta": true
+        },
+        "sinPagarCosto": true,
+        "sinAgotar": true,
+        "texto": "Puedes pagar 2 Éter, una vez por turno, activa un efecto Disparo de otro Campeón que controles sin pagar su costo ni agotarlo."
+      }
+    ]
+  },
+  {
+    "id": "PR-248",
+    "name": "Emperador Única c7 Efecto con tabú sin impuesto",
+    "type": "Campeón",
+    "rarity": "Única",
+    "keywords": [],
+    "flavorText": "Emperador Única · 2 sacrificios · coste 7 · 19/18 (suma 37 de 37, impuesto de efecto 1.3). Efecto con tabú, stats sin impuesto.",
+    "paqueteId": "prueba",
+    "limiteCopias": "1",
+    "createdAt": "2026-11-23T00:00:00.000Z",
+    "updatedAt": "2026-11-23T00:00:00.000Z",
+    "facciones": [
+      "Mutación"
+    ],
+    "esencia": "Humano",
+    "roles": [
+      "Emperador"
+    ],
+    "catHabilidad": [
+      "Singular"
+    ],
+    "stats": {
+      "cost": 7,
+      "poder": 19,
+      "resistencia": 18
+    },
+    "efectos": [
+      {
+        "tipo": "pasivo",
+        "efecto": "modificar_regla",
+        "objetivo": {
+          "tipo": "todos_campeones_propios",
+          "controlador": "propio",
+          "zona": "campo"
+        },
+        "stats": {
+          "ATQ": 0,
+          "RES": 0
+        },
+        "regla": {
+          "id": "cartasPorAlba",
+          "operacion": "sumar",
+          "valor": 1
+        },
+        "texto": "Cartas que se roban en el Alba +1."
+      },
+      {
+        "tipo": "continuo",
+        "efecto": "modificar_regla",
+        "costo": {
+          "tipo": "bloqueo_fijo",
+          "cantidad": 3
+        },
+        "activacion": "una_por_turno",
+        "reglaEnumerada": "rival_sin_incrementos_res",
+        "duracion": "mientras_tenga_eter_bloqueado",
+        "reagrupar": {
+          "fase": "alba",
+          "turno": "propio"
+        },
+        "texto": "Una vez por turno, bloquea 3 Éter, los Campeones del rival no pueden recibir incrementos de RES, mientras tenga Éter bloqueado. Al inicio de tu Alba reagrupa el Éter usado por este efecto."
+      },
+      {
+        "tipo": "disparo",
+        "efecto": "activar_disparo",
+        "costo": {
+          "tipo": "eter",
+          "cantidad": 2
+        },
+        "activacion": "una_por_turno",
+        "objetivo": {
+          "tipo": "campeon",
+          "controlador": "propio",
+          "zona": "campo",
+          "excluyeEsta": true
+        },
+        "sinPagarCosto": true,
+        "sinAgotar": true,
+        "texto": "Puedes pagar 2 Éter, una vez por turno, activa un efecto Disparo de otro Campeón que controles sin pagar su costo ni agotarlo."
+      }
+    ]
   }
 ]

@@ -39,7 +39,7 @@ import { validarDeck } from '../initialState'
 import { applyAction } from '../actions'
 import type { Ctx, GameState } from '../types'
 import {
-  CARTAS_PRUEBA, PR, cargarCartasPrueba, mazoPrueba, crearPartidaPrueba, escenaVacia, crearCtx, aplicar,
+  CARTAS_PRUEBA, CARTAS_MOTOR, PR, cargarCartasPrueba, mazoPrueba, crearPartidaPrueba, escenaVacia, crearCtx, aplicar,
   conMano, conEteres, conMazo, conCampeon, conMistica, conArcana, conVinculo, enCementerio, enExilio, inst,
 } from './helpers/cartasPrueba'
 
@@ -101,7 +101,7 @@ describe('(a) auditoría — validateCard y reglas de configuración del Card-Ma
     expect(validateCard(carta)).toEqual([])
   })
 
-  it.each(CARTAS_PRUEBA.map((c) => [c.id, c.name, c] as const))('%s %s: respeta las reglas de configuración', (id, _name, carta) => {
+  it.each(CARTAS_MOTOR.map((c) => [c.id, c.name, c] as const))('%s %s: respeta las reglas de configuración', (id, _name, carta) => {
     const efectos = efectosDe(carta)
     // El editor ofrece como máximo 3 efectos y UN efecto por tipo (usedTypes se filtra en EffectList)
     expect(efectos.length).toBeLessThanOrEqual(3)
@@ -189,12 +189,12 @@ describe('(a) auditoría — validateCard y reglas de configuración del Card-Ma
 const HUECOS_CONOCIDOS: Record<string, string> = {}
 
 describe('(b) cobertura — coverageMap sobre el set', () => {
-  const reporte = buildReporte(CARTAS_PRUEBA)
+  const reporte = buildReporte(CARTAS_MOTOR)
 
   it('clasifica el 100% de los efectos del set (todo item con estado y ruta)', () => {
     expect(reporte.totalEfectos).toBeGreaterThan(0)
     expect(reporte.items.filter((i) => !i.estado || !i.ruta)).toEqual([])
-    for (const c of CARTAS_PRUEBA.filter((c) => efectosDe(c).length > 0)) {
+    for (const c of CARTAS_MOTOR.filter((c) => efectosDe(c).length > 0)) {
       expect(reporte.items.some((i) => i.cardId === c.id), c.id).toBe(true)
     }
   })
@@ -227,7 +227,7 @@ describe('(b) cobertura — coverageMap sobre el set', () => {
   })
 
   it('cada trigger configurable del Card-Maker aparece al menos una vez en el set (salvo los sin dispatch)', () => {
-    const usados = new Set(CARTAS_PRUEBA.flatMap((c) => efectosDe(c).map((e) => e.trigger).filter(Boolean)))
+    const usados = new Set(CARTAS_MOTOR.flatMap((c) => efectosDe(c).map((e) => e.trigger).filter(Boolean)))
     const sinCubrir = ['al_ser_destruido_vinculo'] // sin carta real ni dispatch con efecto: ningún Vínculo lo usa aún
     for (const t of TRIGGERS_CARD_MAKER) {
       if (sinCubrir.includes(t)) continue

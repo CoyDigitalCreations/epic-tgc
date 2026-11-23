@@ -10,7 +10,8 @@
  *
  * Archivos: seed/FuenteEfectos.json (siempre) y seed/FuenteArte.json (si existe en esta PC; es local, fuera de git).
  * Solo reescribe un archivo si algún texto cambia; conserva el formato (2 espacios, sin salto de línea final).
- * seed/CartasPrueba.json NO se toca (nunca se modifica); la guardia src/shared/data/textos-seed.test.ts lo verifica.
+ * seed/CartasPrueba.json NO se toca desde aquí; la guardia src/shared/data/textos-seed.test.ts verifica que sus textos coinciden con el
+ * generador. Su banco de élites (PR-100 en adelante) lo regenera `npm run generar:cartas-elite`, que ya escribe los textos con `generateEffectText`.
  */
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'

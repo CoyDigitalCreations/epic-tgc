@@ -10,7 +10,10 @@ import { cargarReferencia, rankingReferencia } from './referencia'
 
 const cartasPrueba = cartasPruebaJson as unknown as AnyCard[]
 const referencia = cargarReferencia(cartasPrueba)
-const campeones = referencia.filter((c) => c.tipo === 'Campeón')
+/** El banco del balance de élites (PR-100 en adelante) se prueba en cartasPruebaElite.test.ts; aquí cuenta el banco del motor. */
+const delBancoDeBalance = (id: string) => /^PR-[1-9]\d{2,}$/.test(id)
+const delMotor = referencia.filter((c) => !delBancoDeBalance(c.id))
+const campeones = delMotor.filter((c) => c.tipo === 'Campeón')
 const ref = (id: string) => {
   const c = referencia.find((x) => x.id === id)
   if (!c) throw new Error(`Falta ${id} en la referencia`)
@@ -18,9 +21,10 @@ const ref = (id: string) => {
 }
 
 describe('R11: paquete de pruebas como referencia opcional', () => {
-  it('carga las 58 cartas marcadas esReferencia', () => {
-    expect(referencia).toHaveLength(58)
+  it('carga todas las cartas del paquete marcadas esReferencia (58 del motor + el banco de élites)', () => {
+    expect(referencia).toHaveLength(cartasPrueba.length)
     expect(referencia.every((c) => c.esReferencia === true)).toBe(true)
+    expect(delMotor).toHaveLength(58)
     expect(campeones).toHaveLength(21)
   })
 
@@ -66,7 +70,7 @@ describe('referencia: casos de forma', () => {
   })
 
   it('Ladrona de Prueba (PR-025, steal_champion) está entre los índices de poder más altos de los Campeones de prueba', () => {
-    const ranking = rankingReferencia(referencia).filter((r) => r.tipo === 'Campeón')
+    const ranking = rankingReferencia(delMotor).filter((r) => r.tipo === 'Campeón')
     const posicion = ranking.findIndex((r) => r.id === 'PR-025')
     expect(posicion).toBeGreaterThanOrEqual(0)
     // Intención conservada con otro número: con el tope de costo del 50 % El Doble Filo (PR-023) sube a 2.5 y empata con la Ladrona (el desempate es por id),

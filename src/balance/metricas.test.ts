@@ -63,7 +63,7 @@ describe('filtrarCartas', () => {
   it('R11: la referencia queda fuera por defecto y entra si se pide', () => {
     const mezcla = [...cartas, ...referencia]
     expect(filtrarCartas(mezcla, FILTROS_VACIOS)).toHaveLength(66)
-    expect(filtrarCartas(mezcla, FILTROS_VACIOS, { incluirReferencia: true })).toHaveLength(66 + 58)
+    expect(filtrarCartas(mezcla, FILTROS_VACIOS, { incluirReferencia: true })).toHaveLength(66 + referencia.length)
   })
 })
 
