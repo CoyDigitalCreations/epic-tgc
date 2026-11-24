@@ -2,7 +2,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const sesion = vi.fn()
 const rpc = vi.fn()
-const iniciar = vi.fn()
 const cerrar = vi.fn()
 const oauth = vi.fn()
 let hayCliente = true
@@ -11,27 +10,17 @@ vi.mock('../../../online/backend/supabase', () => ({
   getSupabase: () =>
     hayCliente
       ? {
-          auth: { getSession: sesion, signInWithPassword: iniciar, signInWithOAuth: oauth, signOut: cerrar },
+          auth: { getSession: sesion, signInWithOAuth: oauth, signOut: cerrar },
           schema: (nombre: string) => ({ rpc: (fn: string) => rpc(nombre, fn) }),
         }
       : null,
 }))
 
-import { correoDeUsuario, DOMINIO_ADMIN, entrarAdminConGoogle, entrarComoAdmin, estadoAdmin, salirDeAdmin } from '../adminApi'
+import { entrarAdminConGoogle, estadoAdmin, salirDeAdmin } from '../adminApi'
 
 beforeEach(() => {
   vi.clearAllMocks()
   hayCliente = true
-})
-
-describe('correoDeUsuario', () => {
-  it('completa un usuario sin «@» con el dominio reservado y lo pasa a minúsculas', () => {
-    expect(correoDeUsuario('  Maker ')).toBe(`maker@${DOMINIO_ADMIN}`)
-  })
-
-  it('respeta un correo completo', () => {
-    expect(correoDeUsuario('Alguien@Correo.com')).toBe('alguien@correo.com')
-  })
 })
 
 describe('estadoAdmin', () => {
@@ -69,25 +58,6 @@ describe('estadoAdmin', () => {
     sesion.mockResolvedValue({ data: { session: { user: { id: 'u', is_anonymous: false } } } })
     rpc.mockResolvedValue({ data: null, error: { message: 'JWT expired' } })
     expect(await estadoAdmin()).toBe('no-sesion')
-  })
-})
-
-describe('entrarComoAdmin', () => {
-  it('inicia sesión con el correo completado y la contraseña', async () => {
-    iniciar.mockResolvedValue({ error: null })
-    await entrarComoAdmin('maker', 'secreto')
-    expect(iniciar).toHaveBeenCalledWith({ email: `maker@${DOMINIO_ADMIN}`, password: 'secreto' })
-  })
-
-  it('un fallo de Supabase da un mensaje genérico, sin revelar si el usuario existe', async () => {
-    iniciar.mockResolvedValue({ error: { message: 'Invalid login credentials' } })
-    await expect(entrarComoAdmin('maker', 'mala')).rejects.toThrow('Usuario o contraseña incorrectos.')
-  })
-
-  it('no llama a Supabase con campos vacíos', async () => {
-    await expect(entrarComoAdmin('  ', 'x')).rejects.toThrow(/usuario y tu contraseña/)
-    await expect(entrarComoAdmin('maker', '')).rejects.toThrow(/usuario y tu contraseña/)
-    expect(iniciar).not.toHaveBeenCalled()
   })
 })
 

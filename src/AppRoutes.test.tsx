@@ -25,7 +25,6 @@ vi.mock('./balance/Balance', () => ({
 const puerta = vi.hoisted(() => ({ estado: 'sin-supabase' as string }))
 vi.mock('./forge/auth/adminApi', () => ({
   estadoAdmin: () => Promise.resolve(puerta.estado),
-  entrarComoAdmin: vi.fn(),
   entrarAdminConGoogle: vi.fn(),
   salirDeAdmin: vi.fn(),
 }))

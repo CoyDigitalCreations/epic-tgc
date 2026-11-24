@@ -1,9 +1,9 @@
 /**
  * adminApi — acceso de administración al Card-Maker.
  *
- * La contraseña la guarda Supabase Auth (hash en auth.users); aquí solo se inicia y se cierra sesión y se pregunta si esa sesión es de
+ * Las cuentas las gestiona Supabase Auth con Google; aquí solo se inicia y se cierra sesión y se pregunta si esa sesión es de
  * un administrador (`eter.es_admin()`, que lee la lista `eter.admins`). Esta pantalla es solo comodidad: lo que protege las cartas
- * custom es la RLS de `eter.custom_cards` (solo admins escriben), no el hecho de ver o no el formulario.
+ * custom es la RLS de `eter.custom_cards` (solo admins escriben), no el hecho de ver o no la pantalla de acceso.
  */
 import { getSupabase } from '../../online/backend/supabase'
 
@@ -16,18 +16,6 @@ export type EstadoAdmin =
   | 'no-admin'
   | 'admin'
 
-/**
- * Dominio con el que se completa un usuario escrito sin «@». Es el dominio reservado `example.com` (RFC 2606): un correo de
- * recuperación a esa dirección no llega a nadie, así que nadie puede apropiarse de la cuenta pidiéndolo.
- */
-export const DOMINIO_ADMIN = 'example.com'
-
-/** Correo con el que se inicia sesión: lo escrito tal cual si ya trae «@», o `usuario@example.com`. */
-export function correoDeUsuario(usuario: string): string {
-  const limpio = usuario.trim().toLowerCase()
-  return limpio.includes('@') ? limpio : `${limpio}@${DOMINIO_ADMIN}`
-}
-
 /** Qué es la sesión actual respecto al Card-Maker. */
 export async function estadoAdmin(): Promise<EstadoAdmin> {
   const supabase = getSupabase()
@@ -39,15 +27,6 @@ export async function estadoAdmin(): Promise<EstadoAdmin> {
   // Token caducado o usuario borrado: se trata como sin sesión para que pida entrar de nuevo
   if (error) return 'no-sesion'
   return esAdmin === true ? 'admin' : 'no-admin'
-}
-
-/** Inicia sesión con usuario y contraseña. Lanza un mensaje genérico: no revela si el usuario existe. */
-export async function entrarComoAdmin(usuario: string, contrasena: string): Promise<void> {
-  const supabase = getSupabase()
-  if (!supabase) throw new Error('Supabase no está configurado.')
-  if (!usuario.trim() || !contrasena) throw new Error('Escribe tu usuario y tu contraseña.')
-  const { error } = await supabase.auth.signInWithPassword({ email: correoDeUsuario(usuario), password: contrasena })
-  if (error) throw new Error('Usuario o contraseña incorrectos.')
 }
 
 /**

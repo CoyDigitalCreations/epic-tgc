@@ -1,21 +1,17 @@
-import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from 'react'
+import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { Link } from 'react-router'
 import { Boton } from '../../shared/ui/Boton'
-import { Campo, CLASE_CAMPO } from '../../shared/ui/Campo'
-import { entrarAdminConGoogle, entrarComoAdmin, estadoAdmin, salirDeAdmin } from './adminApi'
+import { entrarAdminConGoogle, estadoAdmin, salirDeAdmin } from './adminApi'
 import type { EstadoAdmin } from './adminApi'
 
 /**
- * Puerta de administración (Card-Maker y Tablero de balance): entra con Google o con usuario y contraseña (Supabase Auth) y solo deja
+ * Puerta de administración (Card-Maker y Tablero de balance): entra con Google (Supabase Auth) y solo deja
  * pasar a quien esté en `eter.admins`. El resto de la app sigue siendo pública.
  * Sin Supabase configurado (desarrollo local) no bloquea: no hay nada que proteger porque tampoco hay a dónde subir.
  */
 export default function AdminGate({ children, titulo = 'Card-Maker' }: { children: ReactNode; titulo?: string }) {
   const [estado, setEstado] = useState<EstadoAdmin | 'cargando'>('cargando')
-  const [usuario, setUsuario] = useState('')
-  const [contrasena, setContrasena] = useState('')
   const [error, setError] = useState<string | null>(null)
-  const [entrando, setEntrando] = useState(false)
 
   const revisar = useCallback(async () => {
     try {
@@ -29,21 +25,6 @@ export default function AdminGate({ children, titulo = 'Card-Maker' }: { childre
     void revisar()
   }, [revisar])
 
-  async function enviar(e: FormEvent) {
-    e.preventDefault()
-    setError(null)
-    setEntrando(true)
-    try {
-      await entrarComoAdmin(usuario, contrasena)
-      setContrasena('')
-      await revisar()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo iniciar sesión.')
-    } finally {
-      setEntrando(false)
-    }
-  }
-
   async function conGoogle() {
     setError(null)
     try {
@@ -55,7 +36,6 @@ export default function AdminGate({ children, titulo = 'Card-Maker' }: { childre
 
   async function salir() {
     await salirDeAdmin()
-    setUsuario('')
     await revisar()
   }
 
@@ -84,8 +64,7 @@ export default function AdminGate({ children, titulo = 'Card-Maker' }: { childre
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-[#0a0a12] px-6 font-body text-gray-100">
-      <form
-        onSubmit={(e) => void enviar(e)}
+      <section
         aria-label="Acceso de administración"
         className="w-full max-w-sm space-y-5 rounded-2xl border border-white/10 bg-white/[0.02] p-6 shadow-[0_0_40px_-12px_rgba(32,32,255,0.4)]"
       >
@@ -104,43 +83,16 @@ export default function AdminGate({ children, titulo = 'Card-Maker' }: { childre
         <Boton type="button" variante="primario" tam="md" className="w-full" onClick={() => void conGoogle()}>
           Entrar con Google
         </Boton>
-        <p className="text-center text-[11px] uppercase tracking-widest text-gray-600">o con usuario</p>
-
-        <Campo etiqueta="Usuario">
-          <input
-            className={CLASE_CAMPO}
-            autoComplete="username"
-            autoCapitalize="none"
-            spellCheck={false}
-            value={usuario}
-            onChange={(e) => setUsuario(e.target.value)}
-          />
-        </Campo>
-        <Campo etiqueta="Contraseña">
-          <input
-            className={CLASE_CAMPO}
-            type="password"
-            autoComplete="current-password"
-            value={contrasena}
-            onChange={(e) => setContrasena(e.target.value)}
-          />
-        </Campo>
-
         {error && (
           <p role="alert" className="text-xs text-rose-300">
             {error}
           </p>
         )}
 
-        <div className="flex items-center justify-between gap-3">
-          <Link to="/" className="text-xs text-gray-500 hover:text-gray-300">
-            ← Volver al inicio
-          </Link>
-          <Boton type="submit" variante="primario" tam="md" disabled={entrando}>
-            {entrando ? 'Entrando…' : 'Entrar'}
-          </Boton>
-        </div>
-      </form>
+        <Link to="/" className="block text-center text-xs text-gray-500 hover:text-gray-300">
+          ← Volver al inicio
+        </Link>
+      </section>
     </div>
   )
 }

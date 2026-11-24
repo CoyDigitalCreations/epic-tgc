@@ -4,13 +4,11 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
 
 const estadoAdmin = vi.fn()
-const entrarComoAdmin = vi.fn()
 const salirDeAdmin = vi.fn()
 const entrarAdminConGoogle = vi.fn()
 
 vi.mock('../adminApi', () => ({
   estadoAdmin: () => estadoAdmin(),
-  entrarComoAdmin: (u: string, c: string) => entrarComoAdmin(u, c),
   entrarAdminConGoogle: () => entrarAdminConGoogle(),
   salirDeAdmin: () => salirDeAdmin(),
 }))
@@ -41,30 +39,7 @@ describe('AdminGate', () => {
   it('sin sesión muestra el acceso y NO el Card-Maker', async () => {
     estadoAdmin.mockResolvedValue('no-sesion')
     montar()
-    expect(await screen.findByRole('form', { name: 'Acceso de administración' })).toBeInTheDocument()
-    expect(screen.queryByText('Contenido del Card-Maker')).not.toBeInTheDocument()
-  })
-
-  it('entra con usuario y contraseña y muestra el Card-Maker', async () => {
-    estadoAdmin.mockResolvedValueOnce('no-sesion').mockResolvedValue('admin')
-    entrarComoAdmin.mockResolvedValue(undefined)
-    montar()
-    const usuario = await screen.findByLabelText('Usuario')
-    await userEvent.type(usuario, 'maker')
-    await userEvent.type(screen.getByLabelText('Contraseña'), 'secreto')
-    await userEvent.click(screen.getByRole('button', { name: 'Entrar' }))
-    expect(await screen.findByText('Contenido del Card-Maker')).toBeInTheDocument()
-    expect(entrarComoAdmin).toHaveBeenCalledWith('maker', 'secreto')
-  })
-
-  it('con credenciales incorrectas muestra el error y sigue sin dejar pasar', async () => {
-    estadoAdmin.mockResolvedValue('no-sesion')
-    entrarComoAdmin.mockRejectedValue(new Error('Usuario o contraseña incorrectos.'))
-    montar()
-    await userEvent.type(await screen.findByLabelText('Usuario'), 'maker')
-    await userEvent.type(screen.getByLabelText('Contraseña'), 'mala')
-    await userEvent.click(screen.getByRole('button', { name: 'Entrar' }))
-    expect(await screen.findByText('Usuario o contraseña incorrectos.')).toBeInTheDocument()
+    expect(await screen.findByRole('region', { name: 'Acceso de administración' })).toBeInTheDocument()
     expect(screen.queryByText('Contenido del Card-Maker')).not.toBeInTheDocument()
   })
 
@@ -95,11 +70,11 @@ describe('AdminGate', () => {
     expect(screen.queryByText('Contenido del Card-Maker')).not.toBeInTheDocument()
   })
 
-  it('una cuenta que no es de administración recibe el aviso y el formulario', async () => {
+  it('una cuenta que no es de administración recibe el aviso y puede entrar con otra cuenta', async () => {
     estadoAdmin.mockResolvedValue('no-admin')
     montar()
     expect(await screen.findByText(/no es de administración/i)).toBeInTheDocument()
-    expect(screen.getByLabelText('Usuario')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Entrar con Google' })).toBeInTheDocument()
     expect(screen.queryByText('Contenido del Card-Maker')).not.toBeInTheDocument()
   })
 
@@ -110,6 +85,6 @@ describe('AdminGate', () => {
     expect(await screen.findByText('Contenido del Card-Maker')).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: /Cerrar sesión de administración/ }))
     expect(salirDeAdmin).toHaveBeenCalled()
-    expect(await screen.findByRole('form', { name: 'Acceso de administración' })).toBeInTheDocument()
+    expect(await screen.findByRole('region', { name: 'Acceso de administración' })).toBeInTheDocument()
   })
 })
