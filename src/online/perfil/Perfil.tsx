@@ -4,11 +4,11 @@ import { Boton } from '../../shared/ui/Boton'
 import { Campo, CLASE_CAMPO } from '../../shared/ui/Campo'
 import { Seccion } from '../../shared/ui/Seccion'
 import { supabaseConfigurado } from '../backend/supabase'
-import { cerrarSesion, enlazarGoogle, entrarConGoogle, guardarNombre, leerPerfil, NOMBRE_MAX, validarNombre, type Perfil as PerfilJugador } from '../backend/perfilApi'
+import { cerrarSesion, entrarConGoogle, guardarNombre, leerPerfil, NOMBRE_MAX, validarNombre, type Perfil as PerfilJugador } from '../backend/perfilApi'
 import { SelectorDorso } from '../dorsos/SelectorDorso'
 import { useMazosStore } from '../useMazosStore'
 
-/** Perfil del jugador: nombre visible, estado de la cuenta y sus mazos personalizados. */
+/** Perfil del jugador: nombre visible, estado de la cuenta (o invitado) y sus mazos personalizados. */
 export default function Perfil() {
   const mazos = useMazosStore((s) => s.mazosPersonalizados)
   const [perfil, setPerfil] = useState<PerfilJugador | null>(null)
@@ -53,7 +53,7 @@ export default function Perfil() {
     }
   }
 
-  // Ambos redirigen a Google; si algo falla antes de salir (proveedor sin activar, cuenta ya enlazada) se avisa aquí
+  // Redirige a Google; si algo falla antes de salir (proveedor sin activar) se avisa aquí
   const conGoogle = async (accion: () => Promise<void>) => {
     setMensaje(null)
     try {
@@ -102,42 +102,34 @@ export default function Perfil() {
                     </p>
                   )}
                 </div>
-                {perfil.anonimo ? (
-                  <div className="space-y-2 rounded-xl border border-white/10 bg-white/[0.02] p-4">
-                    <p className="text-xs text-gray-400">
-                      Sesión anónima: tu perfil y tus mazos viven solo en este navegador. Enlaza tu cuenta de Google para conservarlos y usarlos desde
-                      otros dispositivos.
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      <Boton variante="primario" tam="md" onClick={() => void conGoogle(enlazarGoogle)}>
-                        Enlazar con Google
-                      </Boton>
-                      <Boton variante="secundario" tam="md" onClick={() => void conGoogle(entrarConGoogle)}>
-                        Ya tengo cuenta: entrar con Google
-                      </Boton>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex flex-wrap items-center gap-3">
-                    <p className="text-xs text-gray-500">{perfil.email ? `Cuenta enlazada a ${perfil.email}.` : 'Cuenta enlazada.'}</p>
-                    <Boton
-                      variante="secundario"
-                      tam="sm"
-                      onClick={() =>
-                        void conGoogle(async () => {
-                          await cerrarSesion()
-                          // Recarga completa: arranca limpia, con una sesión anónima nueva y sin nada de la cuenta anterior
-                          window.location.assign('/epiconline/perfil')
-                        })
-                      }
-                    >
-                      Cerrar sesión
-                    </Boton>
-                  </div>
-                )}
+                <div className="flex flex-wrap items-center gap-3">
+                  <p className="text-xs text-gray-500">{perfil.email ? `Cuenta enlazada a ${perfil.email}.` : 'Cuenta enlazada.'}</p>
+                  <Boton
+                    variante="secundario"
+                    tam="sm"
+                    onClick={() =>
+                      void conGoogle(async () => {
+                        await cerrarSesion()
+                        // Recarga completa: arranca limpia y sin nada de la cuenta anterior
+                        window.location.assign('/epiconline/perfil')
+                      })
+                    }
+                  >
+                    Cerrar sesión
+                  </Boton>
+                </div>
               </>
             ) : (
-              mensaje && <p className="text-sm text-rose-300">{mensaje.texto}</p>
+              <div className="space-y-3 rounded-xl border border-white/10 bg-white/[0.02] p-4">
+                <p className="text-xs text-gray-400">
+                  Juegas como invitado: puedes jugar contra el bot, armar mazos y elegir tu reverso, y todo se queda solo en este navegador. Inicia
+                  sesión con Google para jugar con otras personas y conservar tu perfil y tus mazos en cualquier dispositivo.
+                </p>
+                {mensaje && <p className="text-sm text-rose-300">{mensaje.texto}</p>}
+                <Boton variante="primario" tam="md" onClick={() => void conGoogle(() => entrarConGoogle())}>
+                  Iniciar sesión con Google
+                </Boton>
+              </div>
             )}
           </section>
         )}

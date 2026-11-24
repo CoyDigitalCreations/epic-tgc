@@ -20,7 +20,8 @@ vi.mock('../../backend/supabase', () => ({
         }
       : null,
 }))
-vi.mock('../../backend/matchApi', () => ({ asegurarSesion: async () => 'usuario-1' }))
+const cuenta = vi.hoisted(() => ({ id: 'usuario-1' as string | null }))
+vi.mock('../../backend/matchApi', () => ({ usuarioConSesion: async () => cuenta.id }))
 void eq
 
 import { dorsosDePartida, guardarDorso, guardarDorsoBotLocal, leerDorsoBotLocal, leerDorsoLocal, leerDorsoPerfil } from '../dorsoApi'
@@ -28,6 +29,7 @@ import { dorsosDePartida, guardarDorso, guardarDorsoBotLocal, leerDorsoBotLocal,
 beforeEach(() => {
   vi.clearAllMocks()
   hayCliente = true
+  cuenta.id = 'usuario-1'
   window.localStorage.clear()
 })
 
@@ -84,6 +86,13 @@ describe('guardarDorso', () => {
     expect(update).toHaveBeenCalledWith('eter', 'profiles', { dorso: 2 }, 'id', 'usuario-1')
   })
 
+  it('como invitado (sin cuenta) solo guarda la copia local y no toca la base', async () => {
+    cuenta.id = null
+    await guardarDorso(3)
+    expect(leerDorsoLocal()).toBe(3)
+    expect(update).not.toHaveBeenCalled()
+  })
+
   it('si falla el perfil lanza, pero la copia local ya quedó', async () => {
     update.mockResolvedValue({ error: { message: 'permission denied' } })
     await expect(guardarDorso(4)).rejects.toThrow('permission denied')
@@ -101,6 +110,12 @@ describe('leerDorsoPerfil', () => {
   it('lee el reverso del perfil', async () => {
     maybeSingle.mockResolvedValue({ data: { dorso: 3 }, error: null })
     expect(await leerDorsoPerfil()).toBe(3)
+  })
+
+  it('como invitado no hay perfil que leer', async () => {
+    cuenta.id = null
+    expect(await leerDorsoPerfil()).toBeNull()
+    expect(maybeSingle).not.toHaveBeenCalled()
   })
 
   it('sin Supabase o con error devuelve null (no inventa uno)', async () => {

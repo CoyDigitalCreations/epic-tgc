@@ -2,14 +2,15 @@
 /**
  * Lobby online: UI mínima.
  * - Sin env Supabase → aviso de configuración
- * - Con env + auth mock → menú crear/unirse
+ * - Con env + cuenta de Google → menú crear/unirse directo
+ * - Con env como invitado → pide iniciar sesión con Google (no hay sesiones anónimas)
  */
 import { cleanup, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { MemoryRouter } from 'react-router'
 
-const estado = vi.hoisted(() => ({ configurado: false }))
+const estado = vi.hoisted(() => ({ configurado: false, sesion: 'user-1' as string | null }))
 
 vi.mock('../../backend/supabase', () => ({
   supabaseConfigurado: () => estado.configurado,
@@ -17,8 +18,10 @@ vi.mock('../../backend/supabase', () => ({
   getSupabase: () => null,
 }))
 
+vi.mock('../../backend/perfilApi', () => ({ entrarConGoogle: vi.fn(async () => undefined) }))
+
 vi.mock('../../backend/matchApi', () => ({
-  asegurarSesion: vi.fn(async () => 'user-1'),
+  usuarioConSesion: vi.fn(async () => estado.sesion),
   crearSala: vi.fn(async () => ({ gameId: 'g1', code: 'ABCDEF', seed: 1, player: 'A' })),
   unirseASala: vi.fn(async () => ({ gameId: 'g1', code: 'ABCDEF', seed: 1, player: 'B' })),
   iniciarPartida: vi.fn(),
@@ -35,7 +38,8 @@ vi.mock('../../backend/matchApi', () => ({
 }))
 
 import Lobby from '../Lobby'
-import { asegurarSesion, crearSala, iniciarPartida, obtenerEstado, rendirse } from '../../backend/matchApi'
+import { entrarConGoogle } from '../../backend/perfilApi'
+import { crearSala, usuarioConSesion, iniciarPartida, obtenerEstado, rendirse } from '../../backend/matchApi'
 
 describe('Lobby online', () => {
   it('sin env vars muestra instrucciones de configuración', () => {
@@ -49,19 +53,33 @@ describe('Lobby online', () => {
     expect(screen.getAllByText(/VITE_SUPABASE_URL/).length).toBeGreaterThan(0)
   })
 
-  it('con env: botón Entrar → menú crear/unirse', async () => {
-    const user = userEvent.setup()
+  it('con env y cuenta de Google: entra directo al menú crear/unirse', async () => {
     estado.configurado = true
+    estado.sesion = 'user-1'
     render(
       <MemoryRouter>
         <Lobby />
       </MemoryRouter>,
     )
-    await user.click(screen.getByRole('button', { name: /entrar/i }))
-    expect(asegurarSesion).toHaveBeenCalled()
     expect(await screen.findByRole('button', { name: /^crear sala$/i })).toBeInTheDocument()
+    expect(usuarioConSesion).toHaveBeenCalled()
     expect(screen.getByRole('heading', { name: /unirse con código/i })).toBeInTheDocument()
     expect(screen.getByPlaceholderText(/Ej\. /i)).toBeInTheDocument()
+  })
+
+  it('como invitado pide iniciar sesión con Google y no ofrece salas', async () => {
+    const user = userEvent.setup()
+    estado.configurado = true
+    estado.sesion = null
+    render(
+      <MemoryRouter>
+        <Lobby />
+      </MemoryRouter>,
+    )
+    await user.click(await screen.findByRole('button', { name: /iniciar sesión con google/i }))
+    expect(entrarConGoogle).toHaveBeenCalledWith('/epiconline/amigos')
+    expect(screen.queryByRole('button', { name: /^crear sala$/i })).not.toBeInTheDocument()
+    estado.sesion = 'user-1'
   })
 })
 
@@ -75,7 +93,6 @@ describe('Lobby online: reconexión tras refrescar', () => {
         <Lobby />
       </MemoryRouter>,
     )
-    await user.click(screen.getByRole('button', { name: /entrar/i }))
   }
 
   beforeEach(() => {
@@ -148,7 +165,6 @@ describe('Lobby online: piedra, papel o tijera antes de la partida', () => {
         <Lobby />
       </MemoryRouter>,
     )
-    await user.click(screen.getByRole('button', { name: /entrar/i }))
     await user.type(await screen.findByPlaceholderText(/Ej\. /i), 'ABCDEF')
     await user.click(screen.getByRole('button', { name: /unirse/i }))
     expect(await screen.findByText('¿Quién empieza?')).toBeInTheDocument()
@@ -173,7 +189,6 @@ describe('Lobby online: piedra, papel o tijera antes de la partida', () => {
         <Lobby />
       </MemoryRouter>,
     )
-    await user.click(screen.getByRole('button', { name: /entrar/i }))
     await waitFor(() => expect(iniciarPartida).toHaveBeenCalledWith('g9'), { timeout: 4000 })
   })
 
@@ -193,7 +208,6 @@ describe('Lobby online: piedra, papel o tijera antes de la partida', () => {
         <Lobby />
       </MemoryRouter>,
     )
-    await user.click(screen.getByRole('button', { name: /entrar/i }))
     await screen.findByText('¿Quién empieza?')
     await new Promise((r) => setTimeout(r, 1800)) // un poll completo (1.5 s)
     expect(iniciarPartida).not.toHaveBeenCalled()
@@ -214,7 +228,6 @@ describe('Lobby online: tiempo para responder', () => {
         <Lobby />
       </MemoryRouter>,
     )
-    await user.click(screen.getByRole('button', { name: /entrar/i }))
     await screen.findByRole('button', { name: /^crear sala$/i })
     return user
   }

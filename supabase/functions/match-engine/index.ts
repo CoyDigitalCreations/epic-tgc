@@ -163,6 +163,19 @@ function userIdFromJwt(req: Request): string | null {
   }
 }
 
+/**
+ * ¿La sesión es anónima? Las partidas contra personas son solo para cuentas de Google: el invitado juega contra el bot en su
+ * navegador y no necesita servidor. El claim `is_anonymous` lo pone Supabase Auth en el JWT (que la plataforma ya verificó).
+ */
+function esSesionAnonima(req: Request): boolean {
+  const token = (req.headers.get('Authorization') ?? '').replace(/^Bearer\s+/i, '')
+  try {
+    return JSON.parse(atob(token.split('.')[1])).is_anonymous === true
+  } catch {
+    return true // un token ilegible no es una cuenta
+  }
+}
+
 /** Código de sala: 6 chars, sin confusibles (0/O/1/I). */
 function generarCodigoSala(): string {
   const alfabeto = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
@@ -237,6 +250,7 @@ Deno.serve(async (req) => {
 
   const userId = userIdFromJwt(req)
   if (!userId) return err('unauthorized', 401)
+  if (esSesionAnonima(req)) return err('Inicia sesión con Google para jugar con otras personas.', 403)
 
   let body: {
     action?: 'create' | 'join' | 'start' | 'act' | 'state' | 'forfeit' | 'ppt' | 'ppt_decidir'

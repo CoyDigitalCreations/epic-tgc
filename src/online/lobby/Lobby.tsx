@@ -9,7 +9,6 @@ import { Seccion } from '../../shared/ui/Seccion'
 import { TarjetaMazo } from '../components/TarjetaMazo'
 import { supabaseConfigurado, supabaseUrl } from '../backend/supabase'
 import {
-  asegurarSesion,
   crearSala,
   type MazoDeSala,
   decidirPrimero,
@@ -18,8 +17,10 @@ import {
   obtenerEstado,
   rendirse,
   unirseASala,
+  usuarioConSesion,
   type RoomInfo,
 } from '../backend/matchApi'
+import { entrarConGoogle } from '../backend/perfilApi'
 import { useOnlineMatch } from './useOnlineMatch'
 import { guardarPartida, leerPartidaGuardada, olvidarPartida } from './partidaGuardada'
 import { PiedraPapelTijera } from './PiedraPapelTijera'
@@ -37,7 +38,7 @@ const etiquetaLimite = (segundos: number) => `${segundos / 60} min`
 
 /**
  * Lobby de salas para jugar con amigos (server-authoritative).
- * Auth anónimo (MVP) → crear/unirse con código → sala de espera → partida.
+ * Cuenta de Google (el invitado solo juega contra el bot) → crear/unirse con código → sala de espera → partida.
  */
 export default function Lobby() {
   const [vista, setVista] = useState<Vista>('auth')
@@ -106,20 +107,34 @@ export default function Lobby() {
     olvidarPartida()
   }, [])
 
+  // Con una cuenta de Google ya iniciada se entra directo al menú; el invitado ve la pantalla para iniciar sesión
+  useEffect(() => {
+    if (!supabaseConfigurado()) return
+    let vivo = true
+    usuarioConSesion()
+      .then(async (id) => {
+        if (!vivo || !id) return
+        setUserId(id)
+        setVista('menu')
+        await reconectar()
+      })
+      .catch((e) => vivo && setErrorAuth(e instanceof Error ? e.message : String(e)))
+    return () => {
+      vivo = false
+    }
+  }, [reconectar])
+
   const entrar = useCallback(async () => {
     setCargandoAuth(true)
     setErrorAuth(null)
     try {
-      const id = await asegurarSesion()
-      setUserId(id)
-      setVista('menu')
-      await reconectar()
+      // Redirige a Google y vuelve aquí ya con sesión
+      await entrarConGoogle('/epiconline/amigos')
     } catch (e) {
       setErrorAuth(e instanceof Error ? e.message : String(e))
-    } finally {
       setCargandoAuth(false)
     }
-  }, [reconectar])
+  }, [])
 
   // Poll de sala: cuando ambos jugadores están → start → partida.
   // Server-authoritative: NO query-eamos eter.games (RLS prohíbe SELECT al
@@ -252,7 +267,7 @@ VITE_SUPABASE_ANON_KEY=sb_publishable_...`}
   // ── Auth gate ────────────────────────────────────────────────────────────
   if (vista === 'auth') {
     return (
-      <Shell titulo="Jugar con amigos" sub="Conéctate para crear o unirte a una sala" ancho="md">
+      <Shell titulo="Jugar con amigos" sub="Inicia sesión para crear o unirte a una sala" ancho="md">
         <Panel className="text-center">
           <span
             aria-hidden="true"
@@ -261,11 +276,12 @@ VITE_SUPABASE_ANON_KEY=sb_publishable_...`}
             ⚔
           </span>
           <p className="mb-5 text-sm leading-relaxed text-gray-400">
-            Inicio de sesión anónimo (MVP). Tus amigos entran con el mismo código de sala.
+            Para jugar con otras personas necesitas una cuenta de Google. Tus amigos entran con el mismo código de sala. Contra el bot puedes
+            jugar sin cuenta.
           </p>
           {errorAuth && <Aviso>{errorAuth}</Aviso>}
           <Boton variante="primario" tam="lg" className="w-full" onClick={entrar} disabled={cargandoAuth}>
-            {cargandoAuth ? 'Conectando…' : 'Entrar'}
+            {cargandoAuth ? 'Conectando…' : 'Iniciar sesión con Google'}
           </Boton>
         </Panel>
       </Shell>

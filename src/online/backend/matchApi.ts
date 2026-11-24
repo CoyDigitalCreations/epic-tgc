@@ -134,29 +134,31 @@ export async function rendirse(gameId: string): Promise<{ ok: boolean; winner?: 
   return callMatchEngine({ action: 'forfeit', gameId })
 }
 
-/** Una sola comprobación contra el servidor por carga de página (no una por cada llamada que pida la sesión). */
-let sesionVerificada: Promise<string> | null = null
+/** Mensaje cuando una acción de cuenta o de partida contra personas se intenta sin haber iniciado sesión con Google. */
+export const MENSAJE_SESION_REQUERIDA = 'Inicia sesión con Google para jugar con otras personas.'
 
-async function abrirSesion(): Promise<string> {
+/** Una sola comprobación contra el servidor por carga de página (no una por cada llamada que pida la sesión). */
+let sesionVerificada: Promise<string | null> | null = null
+
+/**
+ * Id de la cuenta con la que se juega, o null si es invitado. Solo cuenta una sesión de Google (no anónima): el invitado juega contra
+ * el bot en local y no tiene cuenta, así que ya no se abre ninguna sesión anónima. Una sesión anónima que quedara de antes en este
+ * navegador se ignora (sin cuenta no hay nada que conservar).
+ */
+async function abrirSesion(): Promise<string | null> {
   const supabase = getSupabase()
-  if (!supabase) throw new Error('Supabase no configurado')
+  if (!supabase) return null
   const { data } = await supabase.auth.getSession()
-  if (data.session?.user?.id) {
-    // El token guardado en el navegador puede ser de un usuario que ya no existe (p. ej. se borró en la base): getSession solo lee el
-    // almacenamiento local, getUser consulta al servidor. Si ya no vale, se descarta y se abre una sesión anónima nueva.
-    const { error } = await supabase.auth.getUser()
-    if (!error) return data.session.user.id
+  if (!data.session?.user?.id) return null
+  // El token guardado en el navegador puede ser de un usuario que ya no existe (p. ej. se borró en la base): getSession solo lee el
+  // almacenamiento local, getUser consulta al servidor. Si ya no vale, se descarta y se queda como invitado.
+  const { data: servidor, error } = await supabase.auth.getUser()
+  if (error) {
     await supabase.auth.signOut({ scope: 'local' })
+    return null
   }
-  // Anónimo: MVP de amigos sin email/SMTP
-  const { data: anon, error } = await supabase.auth.signInAnonymously()
-  if (error || !anon.user) {
-    throw new Error(
-      error?.message ??
-        'No se pudo iniciar sesión. Habilita anonymous sign-ins en Supabase → Authentication → Providers.',
-    )
-  }
-  return anon.user.id
+  if (servidor?.user?.is_anonymous ?? data.session.user.is_anonymous) return null
+  return data.session.user.id
 }
 
 /** Olvida la sesión verificada (tras cerrar sesión): la siguiente petición abre una nueva. */
@@ -164,13 +166,26 @@ export function olvidarSesionVerificada(): void {
   sesionVerificada = null
 }
 
-/** ¿Listo para jugar online? (env vars + sesión) */
-export function asegurarSesion(): Promise<string> {
+/** Id de la cuenta de Google con sesión, o null si es invitado (o no hay Supabase). Nunca crea una sesión. */
+export function usuarioConSesion(): Promise<string | null> {
   if (!sesionVerificada) {
-    sesionVerificada = abrirSesion().catch((e) => {
-      sesionVerificada = null // un fallo (sin red, sin config) no se queda cacheado: el siguiente intento vuelve a probar
-      throw e
-    })
+    sesionVerificada = abrirSesion().then(
+      (id) => {
+        if (id === null) sesionVerificada = null // sin cuenta no se cachea: tras iniciar sesión la siguiente consulta debe verla
+        return id
+      },
+      (e) => {
+        sesionVerificada = null // un fallo (sin red, sin config) no se queda cacheado: el siguiente intento vuelve a probar
+        throw e
+      },
+    )
   }
   return sesionVerificada
+}
+
+/** Como `usuarioConSesion`, pero un invitado es un error: para lo que exige cuenta (salas, amigos, mazos y perfil en la nube). */
+export async function asegurarSesion(): Promise<string> {
+  const id = await usuarioConSesion()
+  if (!id) throw new Error(MENSAJE_SESION_REQUERIDA)
+  return id
 }

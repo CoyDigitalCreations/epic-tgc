@@ -5,7 +5,7 @@
  * copia en localStorage para pintar al instante, en las partidas contra el bot y sin conexión. El rival lo lee con la función SQL
  * `eter.dorsos_de_partida`, que solo contesta a quien juega esa partida.
  */
-import { asegurarSesion } from '../backend/matchApi'
+import { usuarioConSesion } from '../backend/matchApi'
 import { getSupabase } from '../backend/supabase'
 import type { PlayerId } from '../game'
 import type { DorsosPorAsiento } from './contexto'
@@ -52,12 +52,13 @@ export function guardarDorsoBotLocal(eleccion: DorsoBotElegido): void {
   }
 }
 
-/** Reverso guardado en el perfil de la sesión actual; null si no hay Supabase o no se pudo leer. */
+/** Reverso guardado en el perfil de la cuenta; null si es invitado, no hay Supabase o no se pudo leer. */
 export async function leerDorsoPerfil(): Promise<DorsoId | null> {
   const supabase = getSupabase()
   if (!supabase) return null
   try {
-    const id = await asegurarSesion()
+    const id = await usuarioConSesion()
+    if (!id) return null // invitado: sin perfil, vale el reverso de este navegador
     const { data, error } = await supabase.schema('eter').from('profiles').select('dorso').eq('id', id).maybeSingle()
     if (error || !data) return null
     return normalizarDorso(data.dorso)
@@ -67,7 +68,7 @@ export async function leerDorsoPerfil(): Promise<DorsoId | null> {
 }
 
 /**
- * Elige el reverso: se guarda al instante en este navegador y, con Supabase, en el perfil (para que lo vea el rival).
+ * Elige el reverso: se guarda al instante en este navegador y, con una cuenta de Google, en el perfil (para que lo vea el rival).
  * Lanza si falla el guardado en el perfil; la copia local ya quedó hecha.
  */
 export async function guardarDorso(id: DorsoId): Promise<void> {
@@ -75,7 +76,8 @@ export async function guardarDorso(id: DorsoId): Promise<void> {
   guardarDorsoLocal(valido)
   const supabase = getSupabase()
   if (!supabase) return
-  const usuario = await asegurarSesion()
+  const usuario = await usuarioConSesion()
+  if (!usuario) return // invitado: el reverso queda solo en este navegador
   const { error } = await supabase.schema('eter').from('profiles').update({ dorso: valido }).eq('id', usuario)
   if (error) throw new Error(error.message)
 }
