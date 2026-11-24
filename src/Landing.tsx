@@ -1,5 +1,7 @@
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { Link } from 'react-router'
+import { useEstadoAdmin } from './forge/auth/useEstadoAdmin'
+import { Boton } from './shared/ui/Boton'
 
 /** Cartas del abanico del hero (imágenes ya publicadas para el manual). */
 const ABANICO = [
@@ -61,6 +63,33 @@ function Destino({ titulo, descripcion, glifo, acento, to, href, principal }: De
 }
 
 export default function Landing() {
+  const { estado, refrescar } = useEstadoAdmin()
+  const [errorSesion, setErrorSesion] = useState<string | null>(null)
+  // Card Maker y Tablero de balance solo se muestran a administración. Sin Supabase (desarrollo local) no hay cuentas: se muestran.
+  const esAdmin = estado === 'admin' || estado === 'sin-supabase'
+  const conSesion = estado === 'admin' || estado === 'no-admin'
+
+  async function iniciarSesion() {
+    setErrorSesion(null)
+    try {
+      const { entrarAdminConGoogle } = await import('./forge/auth/adminApi')
+      await entrarAdminConGoogle()
+    } catch (err) {
+      setErrorSesion(err instanceof Error ? err.message : 'No se pudo iniciar sesión.')
+    }
+  }
+
+  async function cerrarSesion() {
+    setErrorSesion(null)
+    try {
+      const { cerrarSesion: salir } = await import('./online/backend/perfilApi')
+      await salir()
+      await refrescar()
+    } catch (err) {
+      setErrorSesion(err instanceof Error ? err.message : 'No se pudo cerrar la sesión.')
+    }
+  }
+
   return (
     <div className="min-h-screen bg-[#0d0d14] font-body text-gray-100">
       {/* Resplandor de fondo, fijo: no hay nada animado */}
@@ -82,8 +111,23 @@ export default function Landing() {
             <Link to="/lore" className="transition-colors hover:text-ether-200">
               Primogénitos
             </Link>
+            {estado === 'no-sesion' && (
+              <Boton variante="primario" tam="sm" onClick={() => void iniciarSesion()}>
+                Iniciar sesión con Google
+              </Boton>
+            )}
+            {conSesion && (
+              <Boton variante="secundario" tam="sm" onClick={() => void cerrarSesion()}>
+                Cerrar sesión
+              </Boton>
+            )}
           </nav>
         </div>
+        {errorSesion && (
+          <p role="alert" className="mx-auto max-w-7xl px-6 pb-3 text-xs text-rose-300">
+            {errorSesion}
+          </p>
+        )}
       </header>
 
       <main className="relative mx-auto max-w-7xl px-6 pb-16 pt-10 lg:pt-16">
@@ -123,15 +167,17 @@ export default function Landing() {
 
         {/* Destinos */}
         <section className="mt-14 space-y-5" aria-label="Aplicaciones">
-          <div className="grid gap-5 sm:grid-cols-2">
-            <Destino
-              to="/card-maker"
-              titulo="Card Maker"
-              descripcion="Crea y edita tus cartas de Éter TCG"
-              glifo="✦"
-              acento="text-ether-200"
-              principal
-            />
+          <div className={`grid gap-5 ${esAdmin ? 'sm:grid-cols-2' : 'sm:grid-cols-1'}`}>
+            {esAdmin && (
+              <Destino
+                to="/card-maker"
+                titulo="Card Maker"
+                descripcion="Crea y edita tus cartas de Éter TCG"
+                glifo="✦"
+                acento="text-ether-200"
+                principal
+              />
+            )}
             <Destino
               to="/epiconline"
               titulo="Éter Online"
@@ -141,7 +187,7 @@ export default function Landing() {
               principal
             />
           </div>
-          <div className="grid gap-5 sm:grid-cols-3">
+          <div className={`grid gap-5 ${esAdmin ? 'sm:grid-cols-3' : 'sm:grid-cols-2'}`}>
             <Destino
               href="/manual.html"
               titulo="Manual de reglas"
@@ -156,13 +202,15 @@ export default function Landing() {
               glifo="☾"
               acento="text-card-mistica"
             />
-            <Destino
-              to="/balance"
-              titulo="Tablero de balance"
-              descripcion="Mide el poder y los stats de cada carta"
-              glifo="⚖"
-              acento="text-ether-200"
-            />
+            {esAdmin && (
+              <Destino
+                to="/balance"
+                titulo="Tablero de balance"
+                descripcion="Mide el poder y los stats de cada carta"
+                glifo="⚖"
+                acento="text-ether-200"
+              />
+            )}
           </div>
         </section>
       </main>

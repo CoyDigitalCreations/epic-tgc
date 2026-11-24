@@ -35,13 +35,14 @@ describe('AppRoutes', () => {
     puerta.estado = 'sin-supabase'
   })
 
-  it('renderiza la landing en / sin montar el card maker (lazy)', () => {
+  it('renderiza la landing en / sin montar el card maker (lazy)', async () => {
     render(
       <MemoryRouter initialEntries={['/']}>
         <AppRoutes />
       </MemoryRouter>,
     )
-    expect(screen.getByRole('link', { name: /card maker/i })).toBeInTheDocument()
+    // El enlace al Card Maker solo aparece cuando la sesión es de administración (aquí: «sin-supabase», desarrollo local)
+    expect(await screen.findByRole('link', { name: /card maker/i })).toBeInTheDocument()
     // El chunk de forge no se monta en la raíz: su header no debe existir
     expect(screen.queryByText('Card Creator — Alpha')).not.toBeInTheDocument()
   })
