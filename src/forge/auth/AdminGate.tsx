@@ -2,14 +2,15 @@ import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from
 import { Link } from 'react-router'
 import { Boton } from '../../shared/ui/Boton'
 import { Campo, CLASE_CAMPO } from '../../shared/ui/Campo'
-import { entrarComoAdmin, estadoAdmin, salirDeAdmin } from './adminApi'
+import { entrarAdminConGoogle, entrarComoAdmin, estadoAdmin, salirDeAdmin } from './adminApi'
 import type { EstadoAdmin } from './adminApi'
 
 /**
- * Puerta del Card-Maker: pide usuario y contraseña de administración (Supabase Auth). El resto de la app sigue siendo pública.
+ * Puerta de administración (Card-Maker y Tablero de balance): entra con Google o con usuario y contraseña (Supabase Auth) y solo deja
+ * pasar a quien esté en `eter.admins`. El resto de la app sigue siendo pública.
  * Sin Supabase configurado (desarrollo local) no bloquea: no hay nada que proteger porque tampoco hay a dónde subir.
  */
-export default function AdminGate({ children }: { children: ReactNode }) {
+export default function AdminGate({ children, titulo = 'Card-Maker' }: { children: ReactNode; titulo?: string }) {
   const [estado, setEstado] = useState<EstadoAdmin | 'cargando'>('cargando')
   const [usuario, setUsuario] = useState('')
   const [contrasena, setContrasena] = useState('')
@@ -40,6 +41,15 @@ export default function AdminGate({ children }: { children: ReactNode }) {
       setError(err instanceof Error ? err.message : 'No se pudo iniciar sesión.')
     } finally {
       setEntrando(false)
+    }
+  }
+
+  async function conGoogle() {
+    setError(null)
+    try {
+      await entrarAdminConGoogle()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo iniciar sesión con Google.')
     }
   }
 
@@ -81,7 +91,7 @@ export default function AdminGate({ children }: { children: ReactNode }) {
       >
         <div className="space-y-1 text-center">
           <p className="font-display text-3xl text-ether-300" aria-hidden="true">✦</p>
-          <h1 className="font-display text-xl font-bold tracking-wider">Card-Maker</h1>
+          <h1 className="font-display text-xl font-bold tracking-wider">{titulo}</h1>
           <p className="text-xs text-gray-500">Acceso solo para administración.</p>
         </div>
 
@@ -90,6 +100,11 @@ export default function AdminGate({ children }: { children: ReactNode }) {
             La cuenta con la que estás conectado no es de administración. Entra con la cuenta correcta.
           </p>
         )}
+
+        <Boton type="button" variante="primario" tam="md" className="w-full" onClick={() => void conGoogle()}>
+          Entrar con Google
+        </Boton>
+        <p className="text-center text-[11px] uppercase tracking-widest text-gray-600">o con usuario</p>
 
         <Campo etiqueta="Usuario">
           <input

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest'
+import { beforeEach, describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
 import { AppFallback, AppRoutes } from './AppRoutes'
@@ -21,7 +21,20 @@ vi.mock('./balance/Balance', () => ({
   default: () => <h1>Tablero de balance (mock)</h1>,
 }))
 
+// La puerta de administración consulta a Supabase: aquí se controla el resultado. Por defecto «sin-supabase» (desarrollo local: no bloquea).
+const puerta = vi.hoisted(() => ({ estado: 'sin-supabase' as string }))
+vi.mock('./forge/auth/adminApi', () => ({
+  estadoAdmin: () => Promise.resolve(puerta.estado),
+  entrarComoAdmin: vi.fn(),
+  entrarAdminConGoogle: vi.fn(),
+  salirDeAdmin: vi.fn(),
+}))
+
 describe('AppRoutes', () => {
+  beforeEach(() => {
+    puerta.estado = 'sin-supabase'
+  })
+
   it('renderiza la landing en / sin montar el card maker (lazy)', () => {
     render(
       <MemoryRouter initialEntries={['/']}>
@@ -80,6 +93,51 @@ describe('AppRoutes', () => {
       </MemoryRouter>,
     )
     expect(await screen.findByText('Tablero de balance (mock)')).toBeInTheDocument()
+  })
+
+  it.each([
+    ['/balance', 'Tablero de balance (mock)', 'Tablero de balance'],
+    ['/card-maker', 'Card Creator — Alpha', 'Card-Maker'],
+  ])('%s pide acceso de administración: sin sesión no monta su contenido', async (ruta, contenido, titulo) => {
+    puerta.estado = 'no-sesion'
+    render(
+      <MemoryRouter initialEntries={[ruta]}>
+        <AppRoutes />
+      </MemoryRouter>,
+    )
+    expect(await screen.findByRole('heading', { name: titulo })).toBeInTheDocument()
+    expect(screen.queryByText(contenido)).not.toBeInTheDocument()
+  })
+
+  it('una cuenta que no es de administración tampoco ve el tablero de balance', async () => {
+    puerta.estado = 'no-admin'
+    render(
+      <MemoryRouter initialEntries={['/balance']}>
+        <AppRoutes />
+      </MemoryRouter>,
+    )
+    expect(await screen.findByText(/no es de administración/i)).toBeInTheDocument()
+    expect(screen.queryByText('Tablero de balance (mock)')).not.toBeInTheDocument()
+  })
+
+  it('un administrador ve el tablero de balance', async () => {
+    puerta.estado = 'admin'
+    render(
+      <MemoryRouter initialEntries={['/balance']}>
+        <AppRoutes />
+      </MemoryRouter>,
+    )
+    expect(await screen.findByText('Tablero de balance (mock)')).toBeInTheDocument()
+  })
+
+  it('el menú online sigue siendo público aunque no haya sesión de administración', async () => {
+    puerta.estado = 'no-sesion'
+    render(
+      <MemoryRouter initialEntries={['/epiconline']}>
+        <AppRoutes />
+      </MemoryRouter>,
+    )
+    expect(await screen.findByRole('button', { name: 'Comenzar partida' })).toBeInTheDocument()
   })
 })
 

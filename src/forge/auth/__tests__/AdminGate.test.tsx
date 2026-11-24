@@ -6,19 +6,21 @@ import { MemoryRouter } from 'react-router'
 const estadoAdmin = vi.fn()
 const entrarComoAdmin = vi.fn()
 const salirDeAdmin = vi.fn()
+const entrarAdminConGoogle = vi.fn()
 
 vi.mock('../adminApi', () => ({
   estadoAdmin: () => estadoAdmin(),
   entrarComoAdmin: (u: string, c: string) => entrarComoAdmin(u, c),
+  entrarAdminConGoogle: () => entrarAdminConGoogle(),
   salirDeAdmin: () => salirDeAdmin(),
 }))
 
 import AdminGate from '../AdminGate'
 
-function montar() {
+function montar(titulo?: string) {
   return render(
     <MemoryRouter>
-      <AdminGate>
+      <AdminGate titulo={titulo}>
         <div>Contenido del Card-Maker</div>
       </AdminGate>
     </MemoryRouter>,
@@ -63,6 +65,33 @@ describe('AdminGate', () => {
     await userEvent.type(screen.getByLabelText('Contraseña'), 'mala')
     await userEvent.click(screen.getByRole('button', { name: 'Entrar' }))
     expect(await screen.findByText('Usuario o contraseña incorrectos.')).toBeInTheDocument()
+    expect(screen.queryByText('Contenido del Card-Maker')).not.toBeInTheDocument()
+  })
+
+  it('el título de la puerta es configurable (Card-Maker por defecto, Tablero de balance en /balance)', async () => {
+    estadoAdmin.mockResolvedValue('no-sesion')
+    const { unmount } = montar()
+    expect(await screen.findByRole('heading', { name: 'Card-Maker' })).toBeInTheDocument()
+    unmount()
+    montar('Tablero de balance')
+    expect(await screen.findByRole('heading', { name: 'Tablero de balance' })).toBeInTheDocument()
+    expect(screen.queryByText('Contenido del Card-Maker')).not.toBeInTheDocument()
+  })
+
+  it('ofrece entrar con Google', async () => {
+    estadoAdmin.mockResolvedValue('no-sesion')
+    entrarAdminConGoogle.mockResolvedValue(undefined)
+    montar()
+    await userEvent.click(await screen.findByRole('button', { name: 'Entrar con Google' }))
+    expect(entrarAdminConGoogle).toHaveBeenCalledTimes(1)
+  })
+
+  it('si falla el acceso con Google muestra el error y no deja pasar', async () => {
+    estadoAdmin.mockResolvedValue('no-sesion')
+    entrarAdminConGoogle.mockRejectedValue(new Error('No se pudo iniciar sesión con Google.'))
+    montar()
+    await userEvent.click(await screen.findByRole('button', { name: 'Entrar con Google' }))
+    expect(await screen.findByText('No se pudo iniciar sesión con Google.')).toBeInTheDocument()
     expect(screen.queryByText('Contenido del Card-Maker')).not.toBeInTheDocument()
   })
 

@@ -50,6 +50,18 @@ export async function entrarComoAdmin(usuario: string, contrasena: string): Prom
   if (error) throw new Error('Usuario o contraseña incorrectos.')
 }
 
+/**
+ * Inicia sesión de administración con Google y vuelve a la misma pantalla (Card-Maker o Tablero). Que la cuenta sea administradora no
+ * lo decide Google: lo decide `eter.admins` (`estadoAdmin`). La dirección de vuelta debe estar en las URL de redirección de Supabase.
+ */
+export async function entrarAdminConGoogle(): Promise<void> {
+  const supabase = getSupabase()
+  if (!supabase) throw new Error('Supabase no está configurado.')
+  const volver = `${window.location.origin}${window.location.pathname}`
+  const { error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: volver } })
+  if (error) throw new Error('No se pudo iniciar sesión con Google.')
+}
+
 /** Cierra la sesión de este navegador (las partidas vuelven a abrir una sesión anónima nueva). */
 export async function salirDeAdmin(): Promise<void> {
   const supabase = getSupabase()

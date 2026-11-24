@@ -4,19 +4,20 @@ const sesion = vi.fn()
 const rpc = vi.fn()
 const iniciar = vi.fn()
 const cerrar = vi.fn()
+const oauth = vi.fn()
 let hayCliente = true
 
 vi.mock('../../../online/backend/supabase', () => ({
   getSupabase: () =>
     hayCliente
       ? {
-          auth: { getSession: sesion, signInWithPassword: iniciar, signOut: cerrar },
+          auth: { getSession: sesion, signInWithPassword: iniciar, signInWithOAuth: oauth, signOut: cerrar },
           schema: (nombre: string) => ({ rpc: (fn: string) => rpc(nombre, fn) }),
         }
       : null,
 }))
 
-import { correoDeUsuario, DOMINIO_ADMIN, entrarComoAdmin, estadoAdmin, salirDeAdmin } from '../adminApi'
+import { correoDeUsuario, DOMINIO_ADMIN, entrarAdminConGoogle, entrarComoAdmin, estadoAdmin, salirDeAdmin } from '../adminApi'
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -87,6 +88,28 @@ describe('entrarComoAdmin', () => {
     await expect(entrarComoAdmin('  ', 'x')).rejects.toThrow(/usuario y tu contraseña/)
     await expect(entrarComoAdmin('maker', '')).rejects.toThrow(/usuario y tu contraseña/)
     expect(iniciar).not.toHaveBeenCalled()
+  })
+})
+
+describe('entrarAdminConGoogle', () => {
+  it('abre Google y vuelve a la misma pantalla (sin parámetros ni fragmento de la URL)', async () => {
+    oauth.mockResolvedValue({ error: null })
+    await entrarAdminConGoogle()
+    expect(oauth).toHaveBeenCalledWith({
+      provider: 'google',
+      options: { redirectTo: `${window.location.origin}${window.location.pathname}` },
+    })
+  })
+
+  it('un fallo de Supabase da un mensaje en claro', async () => {
+    oauth.mockResolvedValue({ error: { message: 'provider is not enabled' } })
+    await expect(entrarAdminConGoogle()).rejects.toThrow('No se pudo iniciar sesión con Google.')
+  })
+
+  it('sin Supabase configurado avisa', async () => {
+    hayCliente = false
+    await expect(entrarAdminConGoogle()).rejects.toThrow('Supabase no está configurado.')
+    expect(oauth).not.toHaveBeenCalled()
   })
 })
 

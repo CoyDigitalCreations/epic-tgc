@@ -71,7 +71,9 @@ export function AppRoutes() {
         path="/balance"
         element={
           <Suspense fallback={<AppFallback />}>
-            <Balance />
+            <AdminGate titulo="Tablero de balance">
+              <Balance />
+            </AdminGate>
           </Suspense>
         }
       />
