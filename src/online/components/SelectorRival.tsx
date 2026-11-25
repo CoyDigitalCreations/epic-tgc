@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { MedallonFaccion } from '../../forge/components/card-art/arte-codigo'
 import { RuneIcon } from '../../forge/components/card-art/RuneIcon'
 import { faccionDeSet, MAZOS, type MazoJugable, type RivalElegido, type SetId } from '../mazos'
+import { COLOR_ETER } from '../../shared/colorEter'
 import { COLOR_PRINCIPAL_BASE, COLORES_PRINCIPAL, resumenMazo } from '../resumenMazo'
 
 export interface SelectorRivalProps {
@@ -18,7 +19,7 @@ function BarraMini({ cardIds }: { cardIds: string[] }) {
   const otros = Math.max(0, r.principal - r.campeones - r.misticas - r.arcanas)
   return (
     <span aria-hidden="true" className="flex h-1 w-full overflow-hidden rounded-full bg-white/10">
-      <span style={{ flex: r.eter, background: '#22d3ee' }} />
+      <span style={{ flex: r.eter, background: COLOR_ETER }} />
       <span style={{ flex: r.campeones, background: COLORES_PRINCIPAL.campeones }} />
       <span style={{ flex: r.misticas, background: COLORES_PRINCIPAL.misticas }} />
       <span style={{ flex: r.arcanas, background: COLORES_PRINCIPAL.arcanas }} />

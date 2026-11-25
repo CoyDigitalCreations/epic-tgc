@@ -9,6 +9,7 @@ import { CardFrame, CostGem, EtherHexagon, NamePlate, RuneIcon, StatBadge, TextS
 import { MedallonFaccion } from './card-art/arte-codigo'
 import { tamanoQueEntra } from './card-art/ajusteTexto'
 import { efectosComandante } from '../../shared/efectoComandante'
+import { COLOR_ETER, COLOR_ETER_BORDE, COLOR_ETER_SOMBRA } from '../../shared/colorEter'
 import { condicionArcanaTexto } from './fields/CondicionArcanaField'
 
 /** Wrap keywords in bold tags within a text string */
@@ -45,9 +46,9 @@ const TYPE_THEME: Record<
     border: '#d97706',
   },
   Éter: {
-    color: '#fbbf24',
-    gradient: 'linear-gradient(180deg, #fbbf24 0%, #a16207 60%, #0d0d1a 100%)',
-    border: '#f59e0b',
+    color: COLOR_ETER,
+    gradient: `linear-gradient(180deg, ${COLOR_ETER} 0%, ${COLOR_ETER_SOMBRA} 60%, #0d0d1a 100%)`,
+    border: COLOR_ETER_BORDE,
   },
   Vínculo: {
     color: '#34d399',

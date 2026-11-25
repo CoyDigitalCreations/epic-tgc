@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import { useCardStore } from '../../forge/store/useCardStore'
 import { useCardImage } from '../../forge/hooks/useCardImage'
 import { RenderCarta } from '../../forge/components/CardPreview'
+import { COLOR_ETER } from '../../shared/colorEter'
 import { Boton } from '../../shared/ui/Boton'
 import { Seccion } from '../../shared/ui/Seccion'
 import { ArteCompletoModal } from './ArteCompletoModal'
@@ -18,13 +19,12 @@ const MAX_VINCULOS = 6
 const TOTAL_MAZO = MAX_ETER + MAX_PRINCIPAL + MAX_VINCULOS // 66
 
 /** Colores de las tres barras del mazo (los mismos que usa el menú de partida). */
-const COLOR_ETER = '#22d3ee'
 const COLOR_PRINCIPAL = '#7070ff'
 const COLOR_VINCULOS = '#ec4899'
 
 /** Orden y color con que se agrupa la lista del mazo. */
 const GRUPOS_MAZO: { tipo: CardType; plural: string; color: string }[] = [
-  { tipo: 'Éter', plural: 'Éter', color: '#fbbf24' },
+  { tipo: 'Éter', plural: 'Éter', color: COLOR_ETER },
   { tipo: 'Campeón', plural: 'Campeones', color: '#ef4444' },
   { tipo: 'Mística', plural: 'Místicas', color: '#a855f7' },
   { tipo: 'Arcana', plural: 'Arcanas', color: '#f59e0b' },

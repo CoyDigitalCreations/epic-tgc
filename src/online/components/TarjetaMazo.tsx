@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import type { CSSProperties } from 'react'
 import { useCardImage } from '../../forge/hooks/useCardImage'
 import { getCardMeta } from '../game'
+import { COLOR_ETER } from '../../shared/colorEter'
 import { cartasDePortada, COLOR_PRINCIPAL_BASE, COLORES_PRINCIPAL, resumenMazo } from '../resumenMazo'
 
 /** Una carta del abanico de portada, con su arte real (diseño → /cartas, custom → IndexedDB). */
@@ -99,7 +100,7 @@ export function TarjetaMazo({ nombre, color, etiqueta, cardIds, seleccionado, on
 
           {/* Composición: Éter / Principal (Campeones, Místicas, Arcanas) / Vínculos */}
           <div className="mt-3 flex h-1.5 overflow-hidden rounded-full bg-white/10" aria-hidden="true">
-            <span data-segmento="eter" style={{ flex: r.eter, background: '#22d3ee' }} />
+            <span data-segmento="eter" style={{ flex: r.eter, background: COLOR_ETER }} />
             <span data-segmento="campeones" style={{ flex: r.campeones, background: COLORES_PRINCIPAL.campeones }} />
             <span data-segmento="misticas" style={{ flex: r.misticas, background: COLORES_PRINCIPAL.misticas }} />
             <span data-segmento="arcanas" style={{ flex: r.arcanas, background: COLORES_PRINCIPAL.arcanas }} />

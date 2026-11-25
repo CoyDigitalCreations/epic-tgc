@@ -40,6 +40,7 @@ import { CapaAnuncios } from '../animacion/CapaAnuncios'
 import { useAnimacionCartas } from '../animacion/useAnimacionCartas'
 import type { Velocidad } from '../animacion/useAnimacionCartas'
 import type { VistaPrevia } from '../usePartida'
+import { COLOR_ETER } from '../../shared/colorEter'
 import { ManoAbanico } from './ManoAbanico'
 import type { OpcionMano } from './ManoAbanico'
 
@@ -349,9 +350,9 @@ function temaZona(zona: string): { nombre: string; color: string } {
   const fila = zona[0]
   const col = zona[1] ?? ''
   if (fila === '1') {
-    if (col === 'A') return { nombre: 'Éter pagado', color: '#22d3ee' }
+    if (col === 'A') return { nombre: 'Éter pagado', color: COLOR_ETER }
     if (col === 'G') return { nombre: 'Exilio', color: '#94a3b8' }
-    return { nombre: 'Éter bloq.', color: '#22d3ee' }
+    return { nombre: 'Éter bloq.', color: COLOR_ETER }
   }
   if (fila === '2') {
     if (col === 'A') return { nombre: 'Reserva', color: '#fbbf24' }

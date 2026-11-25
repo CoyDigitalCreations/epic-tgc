@@ -14,12 +14,13 @@ import { EffectManualModal } from './EffectManualModal'
 import { ImageUpload } from './ImageUpload'
 import { PAQUETES } from '../../shared/data/paquetes'
 import { efectosComandante } from '../../shared/efectoComandante'
+import { COLOR_ETER } from '../../shared/colorEter'
 import { Boton } from '../../shared/ui/Boton'
 import { CLASE_CAMPO } from '../../shared/ui/Campo'
 
 /** Color de acento por tipo de carta (mismos tonos del tema). */
 const COLOR_TIPO: Record<string, string> = {
-  Éter: '#fbbf24',
+  Éter: COLOR_ETER,
   Campeón: '#ef4444',
   Mística: '#a855f7',
   Arcana: '#22d3ee',

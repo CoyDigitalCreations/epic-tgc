@@ -19,7 +19,7 @@
   --color-card-tactica: #22d3ee;
   --color-card-arcana: #f59e0b;
   --color-card-combate: #ec4899;
-  --color-card-eter: #fbbf24;
+  --color-card-eter: #93c5fd; /* = COLOR_ETER en src/shared/colorEter.ts */
   --color-card-bg: #1e1e2e;
   --color-card-border: #3b3b5c;
   --color-surface: #16161e;
