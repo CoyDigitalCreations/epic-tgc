@@ -41,6 +41,10 @@ export function PriorityModal({ state, playerId, acciones, onAccion, onElegirPag
   // F5e: una respuesta que está eligiendo objetivos (la cadena sigue abierta) no se puede
   // responder ni pasar: la elección de objetivo la muestra su propio modal
   if (state.declaracionEnEleccion) return null
+  // Sin «pasar prioridad» el motor NO te está dando la cadena: antes hay una elección tuya pendiente (p. ej. el objetivo del «al pagar»
+  // de un Éter que pagaste al bloquear, H4: `electorAjeno`) y solo ofrece esa elección. Su modal va ahora; este, sin botones, la
+  // taparía y ninguna de las dos ventanas se podría usar (partida atascada, 2026-11-24).
+  if (!acciones.some((a) => a.type === 'pasar_prioridad')) return null
 
   // Modal SIEMPRE visible con tu prioridad (decisión 2026-10-14): un solo lugar
   // para responder/pasar — aunque no tengas respondibles, muestra el estado y

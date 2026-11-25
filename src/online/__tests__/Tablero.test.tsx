@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { ESTASIS_CARDS } from '../../shared/data/paquetes'
 import {
   applyAction,
+  createCtx,
   createInitialState,
   getCardMeta,
   getValidActions,
@@ -1250,6 +1251,58 @@ describe('PriorityModal — unificación de respuesta a cadenas (2026-10-14)', (
       />,
     )
     expect(container.firstChild).toBeNull()
+  })
+
+  /**
+   * Partida real atascada (2026-11-24): al bloquear, A pagó un Éter cuyo «al pagar» pide un objetivo (pendiente de A en el turno de B)
+   * y se abrió la cadena de combate con la prioridad de A. El motor congela la cadena hasta que A elija (`electorAjeno`): solo ofrece
+   * `elegir_objetivo`. El modal de la cadena salía igual, sin botones, encima de la elección → ni responder, ni pasar, ni elegir.
+   */
+  function estadoConEleccionPendienteYCadena(): GameState {
+    const s = estadoConCadena()
+    s.turno = 'B'
+    s.objetivosPendientes = [{ instId: 'inst-efecto', jugador: 'A', trigger: 'al-pagar-eter', opciones: s.players.A.mano.slice(0, 2) }]
+    return s
+  }
+
+  it('con una elección pendiente tuya, el motor solo ofrece elegir (la cadena espera)', () => {
+    const acciones = getValidActions(estadoConEleccionPendienteYCadena(), 'A')
+    expect(acciones.some((a) => a.type === 'elegir_objetivo')).toBe(true)
+    expect(acciones.some((a) => a.type === 'pasar_prioridad' || a.type === 'responder_cadena')).toBe(false)
+  })
+
+  it('con una elección pendiente tuya NO tapa la elección con el modal de la cadena', () => {
+    const s = estadoConEleccionPendienteYCadena()
+    const { container } = render(
+      <PriorityModal state={visibleState(s, 'A')} playerId="A" acciones={getValidActions(s, 'A')} onAccion={vi.fn()} onZoom={vi.fn()} />,
+    )
+    expect(container.firstChild).toBeNull()
+  })
+
+  it('en el Tablero con esa elección pendiente no aparece la cadena y sí las opciones para elegir', () => {
+    const s = estadoConEleccionPendienteYCadena()
+    render(
+      <Tablero
+        vista={visibleState(s, 'A')}
+        acciones={getValidActions(s, 'A')}
+        leTocaA={true}
+        log={[]}
+        onAccion={vi.fn()}
+        onAbandonar={vi.fn()}
+      />,
+    )
+    expect(screen.queryByText('Cadena Global')).not.toBeInTheDocument()
+    expect(screen.queryByText(/Cadena de Combate/)).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Pasar prioridad' })).not.toBeInTheDocument()
+    expect(screen.getAllByRole('dialog').length).toBeGreaterThan(0) // la ventana de la elección
+  })
+
+  it('tras elegir el objetivo pendiente, la cadena vuelve a ofrecer pasar prioridad', () => {
+    const s = estadoConEleccionPendienteYCadena()
+    const elegir = getValidActions(s, 'A').find((a) => a.type === 'elegir_objetivo')!
+    const r = applyAction(s, elegir, createCtx(s.seed))
+    expect(r.ok).toBe(true)
+    expect(getValidActions(r.state, 'A').some((a) => a.type === 'pasar_prioridad')).toBe(true)
   })
 
   it('el botón Pasar prioridad no existe suelto en Acciones generales del Tablero', () => {
