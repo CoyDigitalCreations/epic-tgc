@@ -1,6 +1,5 @@
 export { CardFrame } from './CardFrame'
 export { CostGem } from './CostGem'
-export { EtherDiamond } from './EtherDiamond'
 export { EtherHexagon } from './EtherHexagon'
 export { NamePlate } from './NamePlate'
 export { TextScroll } from './TextScroll'

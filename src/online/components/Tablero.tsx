@@ -355,7 +355,7 @@ function temaZona(zona: string): { nombre: string; color: string } {
     return { nombre: 'Éter bloq.', color: COLOR_ETER }
   }
   if (fila === '2') {
-    if (col === 'A') return { nombre: 'Reserva', color: '#fbbf24' }
+    if (col === 'A') return { nombre: 'Reserva', color: COLOR_ETER }
     if (col === 'G') return { nombre: 'Cementerio', color: '#94a3b8' }
     return { nombre: 'Campeón', color: '#ef4444' }
   }
